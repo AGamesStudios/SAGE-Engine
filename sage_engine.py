@@ -1,184 +1,183 @@
-import logging
-from ursina import *
+import glfw
+from OpenGL.GL import *
+from OpenGL.GL.shaders import compileProgram, compileShader
+import numpy as np
+from pyglm import glm  # Исправленный импорт
+import ctypes
+import pygame
+
+# Инициализация Pygame для аудио
+pygame.mixer.init()
 
 
-# Centralized logging setup
-logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
-logger = logging.getLogger('SAGEEngine')
+# Класс окна
+class SAGEWindow:
+    def __init__(self, width=800, height=600, title="SAGE Engine"):
+        if not glfw.init():
+            raise Exception("Не удалось инициализировать GLFW")
+        self.window = glfw.create_window(width, height, title, None, None)
+        if not self.window:
+            glfw.terminate()
+            raise Exception("Не удалось создать окно")
+        glfw.make_context_current(self.window)
+        glfw.set_window_size_callback(self.window, self._resize_callback)
+
+    def _resize_callback(self, window, width, height):
+        glViewport(0, 0, width, height)
+
+    def should_close(self):
+        return glfw.window_should_close(self.window)
+
+    def poll_events(self):
+        glfw.poll_events()
+        if glfw.get_key(self.window, glfw.KEY_ESCAPE) == glfw.PRESS:
+            glfw.set_window_should_close(self.window, True)
+
+    def swap_buffers(self):
+        glfw.swap_buffers(self.window)
+
+    def get_framebuffer_size(self):
+        return glfw.get_framebuffer_size(self.window)
+
+    def terminate(self):
+        glfw.terminate()
 
 
-# ==================== SAGERole ====================
-class SAGERole(Entity):
-    """
-    The base class for all game objects (roles).
-    Easily extendable via inheritance.
-    """
-    def __init__(self, role_name: str, **kwargs: Any):
-        super().__init__()
-        self.role = role_name
-        self.position = kwargs.get('position', Vec3(0, 0, 0))
-        self.rotation = kwargs.get('rotation', Vec3(0, 0, 0))
-        self.scale = kwargs.get('scale', Vec3(1, 1, 1))
-        self.model = kwargs.get('model', 'cube')
-        self.texture = kwargs.get('texture', 'white_cube')
-        self.collider = kwargs.get('collider', 'box')
-        self.visible = kwargs.get('visible', True)
+# Класс шейдеров
+class SAGEShader:
+    def __init__(self, vertex_source, fragment_source):
+        self.program = compileProgram(
+            compileShader(vertex_source, GL_VERTEX_SHADER),
+            compileShader(fragment_source, GL_FRAGMENT_SHADER)
+        )
 
-        self._setup_role()
+    def use(self):
+        glUseProgram(self.program)
 
-    def _setup_role(self):
-        """Sets up the role depending on its type."""
-        if self.role == 'player':
-            self.model = 'models/SAGE Bot.obj'
-            self.collider = 'box'
-            self.texture = 'white_cube'
-        elif self.role == 'map':
-            self.model = 'plane'
-            self.scale = Vec3(50, 1, 50)
-            self.texture = 'grass'
-            self.collider = 'mesh'
-        elif self.role == 'camera':
-            camera.position = self.position
-            camera.rotation = self.rotation
-            self.visible = False
+    def set_mat4(self, name, matrix):
+        glUniformMatrix4fv(glGetUniformLocation(self.program, name), 1, GL_FALSE, glm.value_ptr(matrix))
 
-    def update(self):
-        """Updates the role's state."""
-        pass  # Add custom logic for updates, physics, etc. (can be overridden)
+    def cleanup(self):
+        glDeleteProgram(self.program)
 
 
-# ==================== SAGEEngine ====================
-class SAGEEngine(Ursina):
-    """
-    Main game engine based on Ursina.
-    Version: 0.3 (optimized and easily extendable)
-    """
-    def __init__(self, width: int = 1920, height: int = 1080, title: str = "SAGE Engine"):
-        super().__init__()
+# Класс меша
+class SAGEMesh:
+    def __init__(self, vertices, indices):
+        self.vertices = vertices
+        self.indices = indices
+        self._setup_mesh()
 
-        self.window_title = title
-        window.size = (width, height)
-        self.gravity = 0.5
+    def _setup_mesh(self):
+        self.vao = glGenVertexArrays(1)
+        self.vbo = glGenBuffers(1)
+        self.ebo = glGenBuffers(1)
+        glBindVertexArray(self.vao)
+        glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
+        glBufferData(GL_ARRAY_BUFFER, self.vertices.nbytes, self.vertices, GL_STATIC_DRAW)
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.ebo)
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, self.indices.nbytes, self.indices, GL_STATIC_DRAW)
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), ctypes.c_void_p(0))
+        glEnableVertexAttribArray(0)
+        glBindVertexArray(0)
 
-        self.roles = []
-        self.script_manager = SAGEScriptManager(self)
+    def draw(self):
+        glBindVertexArray(self.vao)
+        glDrawElements(GL_TRIANGLES, len(self.indices), GL_UNSIGNED_INT, None)
+        glBindVertexArray(0)
 
-        # Setup default scene
-        self.setup_default_scene()
+    def cleanup(self):
+        glDeleteVertexArrays(1, [self.vao])
+        glDeleteBuffers(1, [self.vbo])
+        glDeleteBuffers(1, [self.ebo])
 
-    def setup_default_scene(self):
-        """Creates a default scene if no roles were loaded."""
-        if not self.roles:
-            self.script_manager.set_window_position((192, 108))
-            self.script_manager.set_gravity(0.5)
-            self.script_manager.set_map(scale=(50, 1, 50), texture='grass')
-            self.script_manager.create_role('player', position=(0, 1, 0), model='models/SAGE Bot.obj', collider='box')
-            self.script_manager.create_role('light', position=(5, 5, 5), light_type='directional')
-            self.script_manager.create_role('camera', position=(0, 10, -10))
 
-            self.script_manager.bind_input('w', 'player', 'move', (0, 0, -0.1))
-            self.script_manager.bind_input('s', 'player', 'move', (0, 0, 0.1))
-            self.script_manager.bind_input('a', 'player', 'move', (-0.1, 0, 0))
-            self.script_manager.bind_input('d', 'player', 'move', (0.1, 0, 0))
-            self.script_manager.bind_input('space', 'player', 'jump', 5)
+# Класс рендеринга
+class SAGERenderer:
+    def __init__(self):
+        glClearColor(0.1, 0.1, 0.1, 1.0)
+        glEnable(GL_DEPTH_TEST)
 
-    def update(self):
-        """Main engine update loop."""
-        for role in self.roles:
-            role.update()
+    def clear(self):
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
-    def add_role(self, role: SAGERole):
-        """Adds a new role to the engine."""
-        self.roles.append(role)
+    def render(self, mesh, shader, model, view, projection):
+        shader.use()
+        shader.set_mat4("model", model)
+        shader.set_mat4("view", view)
+        shader.set_mat4("projection", projection)
+        mesh.draw()
+
+
+# Класс UI
+class SAGEUI:
+    def draw_text(self, text, x, y):
+        print(f"Отрисовка текста '{text}' в позиции ({x}, {y})")
+
+
+# Класс аудио
+class SAGEAudio:
+    def play_sound(self, sound_file):
+        sound = pygame.mixer.Sound(sound_file)
+        sound.play()
+
+
+# Основной класс движка
+class SAGEEngine:
+    def __init__(self):
+        self.window = SAGEWindow()
+        self.renderer = SAGERenderer()
+        self.ui = SAGEUI()
+        self.audio = SAGEAudio()
+
+        # Шейдеры
+        vertex_shader = """
+        #version 330 core
+        layout (location = 0) in vec3 aPos;
+        uniform mat4 model;
+        uniform mat4 view;
+        uniform mat4 projection;
+        void main() {
+            gl_Position = projection * view * model * vec4(aPos, 1.0);
+        }
+        """
+        fragment_shader = """
+        #version 330 core
+        out vec4 FragColor;
+        void main() {
+            FragColor = vec4(1.0); // Белый цвет
+        }
+        """
+        self.shader = SAGEShader(vertex_shader, fragment_shader)
+
+        # Тестовый куб
+        vertices = np.array([-0.5, -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, -0.5,
+                             -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 0.5], dtype=np.float32)
+        indices = np.array([0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4, 0, 1, 5, 5, 4, 0,
+                            2, 3, 7, 7, 6, 2, 0, 3, 7, 7, 4, 0, 1, 2, 6, 6, 5, 1], dtype=np.uint32)
+        self.cube = SAGEMesh(vertices, indices)
+
+        self.view = glm.lookAt(glm.vec3(0, 0, 5), glm.vec3(0, 0, 0), glm.vec3(0, 1, 0))
 
     def run(self):
-        """Runs the engine."""
-        logger.info("Running the engine...")
-        self.app.run()
+        while not self.window.should_close():
+            self.window.poll_events()
+            self.renderer.clear()
+
+            width, height = self.window.get_framebuffer_size()
+            projection = glm.perspective(glm.radians(45.0), width / height, 0.1, 100.0)
+            model = glm.rotate(glm.mat4(1.0), glfw.get_time(), glm.vec3(0, 1, 0))
+
+            self.renderer.render(self.cube, self.shader, model, self.view, projection)
+            self.ui.draw_text("SAGE Engine", 10, 10)
+            self.window.swap_buffers()
+
+        self.cube.cleanup()
+        self.shader.cleanup()
+        self.window.terminate()
 
 
-# ==================== SAGEScriptManager ====================
-class SAGEScriptManager:
-    """
-    Manages parsing and execution of commands from scripts (.ssc).
-    The API for commands remains unchanged.
-    Supports dynamically adding new commands.
-    """
-    def __init__(self, engine: 'SAGEEngine'):
-        self.engine = engine
-        self.commands = {
-            'create_role': self.create_role,
-            'set_map': self.set_map,
-            'bind_input': self.bind_input,
-            'set_window_position': self.set_window_position,
-            'set_gravity': self.set_gravity,
-        }
-
-    def execute(self, command_name: str, args: Tuple[Any, ...], kwargs: Dict[str, Any]):
-        """Executes a command from the script."""
-        if command_name in self.commands:
-            try:
-                self.commands[command_name](*args, **kwargs)
-            except Exception as e:
-                logger.error(f"Error in command '{command_name}': {e}")
-        else:
-            logger.warning(f"Unknown command: '{command_name}'")
-
-    def create_role(self, role_name: str, **kwargs):
-        """Creates a new role with parameters."""
-        logger.info(f"Creating role: {role_name} with parameters: {kwargs}")
-        try:
-            role = SAGERole(role_name, **kwargs)
-            self.engine.add_role(role)
-        except Exception as e:
-            logger.error(f"Error creating role '{role_name}': {e}")
-
-    def set_map(self, **kwargs):
-        """Sets up the map as a role."""
-        logger.info(f"Setting up map with parameters: {kwargs}")
-        try:
-            map_role = SAGERole('map', **kwargs)
-            self.engine.add_role(map_role)
-        except Exception as e:
-            logger.error(f"Error setting up map: {e}")
-
-    def bind_input(self, key: str, role_name: str, action: str, value: Any):
-        """Binds input to a role's action."""
-        role = next((role for role in self.engine.roles if role.role == role_name), None)
-        if not role:
-            logger.error(f"Role '{role_name}' not found")
-            return
-        if action not in ('move', 'rotate', 'scale', 'jump'):
-            logger.error(f"Invalid action '{action}'")
-            return
-        vector = Vec3(*value) if action != 'jump' else value
-
-        def perform_action():
-            if action == 'move':
-                role.position += vector
-            elif action == 'rotate':
-                role.rotation += vector
-            elif action == 'scale':
-                role.scale += vector
-            elif action == 'jump' and role.on_ground:
-                role.velocity_y = vector
-                role.on_ground = False
-
-        self.engine.input.bind(key, perform_action)
-        logger.info(f"Bound '{key}' to {action} for {role_name} with {value}")
-
-    def set_window_position(self, position: Tuple[int, int]):
-        """Sets the window position."""
-        window.position = Vec2(*position)
-        logger.info(f"Window position set to: {position}")
-
-    def set_gravity(self, value: float):
-        """Sets gravity strength."""
-        self.engine.gravity = value
-        logger.info(f"Gravity set to: {value}")
-
-
-# ==================== Engine Execution ====================
-if __name__ == '__main__':
+# Запуск
+if __name__ == "__main__":
     engine = SAGEEngine()
     engine.run()
