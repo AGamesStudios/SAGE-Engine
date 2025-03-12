@@ -1,30 +1,8 @@
 {
     "obj_file": "models/SAGE Bot.obj",
     "shader": {
-        "vertex": "#version 330 core\nlayout(location = 0) in vec3 aPos;\nlayout(location = 2) in vec3 aNormal;\nuniform mat4 model;\nuniform mat4 view;\nuniform mat4 projection;\nout vec3 FragPos;\nout vec3 Normal;\nvoid main() {\n    FragPos = vec3(model * vec4(aPos, 1.0));\n    Normal = mat3(transpose(inverse(model))) * aNormal;\n    gl_Position = projection * view * vec4(FragPos, 1.0);\n}",
-        "fragment": "#version 330 core\nout vec4 FragColor;\nin vec3 FragPos;\nin vec3 Normal;\nuniform vec3 lightPos;\nuniform vec3 lightColor;\nuniform vec3 objectColor;\nvoid main() {\n    float ambientStrength = 0.1;\n    vec3 ambient = ambientStrength * lightColor;\n    vec3 norm = normalize(Normal);\n    vec3 lightDir = normalize(lightPos - FragPos);\n    float diff = max(dot(norm, lightDir), 0.0);\n    vec3 diffuse = diff * lightColor;\n    vec3 result = (ambient + diffuse) * objectColor;\n    FragColor = vec4(result, 1.0);\n}"
+        "vertex": "#version 330 core\nlayout(location = 0) in vec3 aPos;\nuniform mat4 model;\nuniform mat4 view;\nuniform mat4 projection;\nvoid main() { gl_Position = projection * view * model * vec4(aPos, 1.0); }",
+        "fragment": "#version 330 core\nout vec4 FragColor;\nuniform vec3 objectColor;\nuniform vec3 lightColor;\nvoid main() { FragColor = vec4(objectColor * lightColor, 1.0); }"
     },
-    "transform": {
-        "position": [0.0, 0.0, 0.0],
-        "rotation": [0.0, 0.0, 0.0],
-        "scale": [1.0, 1.0, 1.0]
-    },
-    "lighting": {
-        "lights": [
-            {
-                "name": "main_light",
-                "position": [1.2, 1.0, 2.0],
-                "color": [1.0, 1.0, 1.0]
-            }
-        ],
-        "objectColor": [1.0, 0.5, 0.31]
-    },
-    "cameras": [
-        {
-            "name": "main_camera",
-            "position": [0.0, 5.0, 1.0],
-            "rotation": [0.0, 0.0, 0.0],
-            "scale": [1.0, 1.0, 1.0]
-        }
-    ]
+    "objectColor": [1.0, 0.5, 0.31]
 }
