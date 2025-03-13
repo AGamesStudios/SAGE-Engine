@@ -1,26 +1,20 @@
 {
-    "cameras": [
+    "camera": {
+        "position": [0.0, 2.0, 5.0],
+        "rotation": [0.0, 0.0, 0.0],
+        "scale": [1.0, 1.0, 1.0]
+    },
+    "light": {
+        "position": [2.0, 2.0, 2.0],
+        "color": [1.0, 1.0, 1.0]
+    },
+    "objects": [
         {
-            "position": [0.0, 5.0, 10.0],
+            "obj_file": "models/SAGE Bot.obj",
+            "texture_file": "models/cube.png",
+            "position": [0.0, 0.0, 0.0],
             "rotation": [0.0, 0.0, 0.0],
             "scale": [1.0, 1.0, 1.0],
-            "active": true
-        }
-    ],
-    "lights": [
-        {
-            "position": [1.2, 1.0, 2.0],
-            "color": [1.0, 1.0, 1.0]
-        }
-    ],
-    "roles": [
-        {
-            "file": "models/cube.json",
-            "transform": {
-                "position": [0.0, 0.0, 0.0],
-                "rotation": [0.0, 0.0, 0.0],
-                "scale": [1.0, 1.0, 1.0]
-            },
             "script": "scripts/rotate.py"
         }
     ]

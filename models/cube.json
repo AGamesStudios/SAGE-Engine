@@ -1,8 +1,9 @@
 {
-    "obj_file": "models/SAGE Bot.obj",
+    "obj_file": "models/cube.obj",
+    "texture_file": "models/cube_texture.png",
     "shader": {
-        "vertex": "#version 330 core\nlayout(location = 0) in vec3 aPos;\nuniform mat4 model;\nuniform mat4 view;\nuniform mat4 projection;\nvoid main() { gl_Position = projection * view * model * vec4(aPos, 1.0); }",
-        "fragment": "#version 330 core\nout vec4 FragColor;\nuniform vec3 objectColor;\nuniform vec3 lightColor;\nvoid main() { FragColor = vec4(objectColor * lightColor, 1.0); }"
+        "vertex": "#version 330 core\nlayout(location = 0) in vec3 aPos;\nlayout(location = 1) in vec2 aTexCoord;\nuniform mat4 model;\nuniform mat4 view;\nuniform mat4 projection;\nout vec2 TexCoord;\nvoid main() { gl_Position = projection * view * model * vec4(aPos, 1.0); TexCoord = aTexCoord; }",
+        "fragment": "#version 330 core\nout vec4 FragColor;\nin vec2 TexCoord;\nuniform sampler2D textureSampler;\nuniform vec3 objectColor;\nuniform vec3 lightColor;\nvoid main() { FragColor = texture(textureSampler, TexCoord) * vec4(objectColor * lightColor, 1.0); }"
     },
-    "objectColor": [1.0, 0.5, 0.31]
+    "objectColor": [1.0, 1.0, 1.0]
 }
