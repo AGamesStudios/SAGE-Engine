@@ -19,14 +19,14 @@ class EngineConfig:
 
 
 def load_config(path: Path) -> EngineConfig:
-    """Load configuration from a JSON file."""
+    """Load configuration from a JSON file, returning defaults if missing."""
     config = EngineConfig()
     if path and path.is_file():
         data = json.loads(path.read_text())
         for key, value in data.items():
             if hasattr(config, key):
                 if key == "window_size":
-                    value = tuple(value)
+                    value = tuple(int(v) for v in value)
                 setattr(config, key, value)
     return config
 
@@ -36,7 +36,7 @@ class SageEngine:
 
     def __init__(self, config: EngineConfig):
         self.config = config
-        loadPrcFileData('', f'win-size {config.window_size[0]} {config.window_size[1]}')
+        loadPrcFileData('', f'win-size {int(config.window_size[0])} {int(config.window_size[1])}')
         loadPrcFileData('', f'window-title {config.title}')
         loadPrcFileData('', f'fullscreen {int(config.fullscreen)}')
         loadPrcFileData('', f'vsync {int(config.vsync)}')

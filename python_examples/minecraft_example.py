@@ -2,6 +2,7 @@ from ursina import *
 from random import uniform
 from pathlib import Path
 
+from ursina.prefabs.first_person_controller import FirstPersonController
 from sage_engine import SageEngine, EngineConfig, load_config
 
 
