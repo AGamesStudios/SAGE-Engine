@@ -5,10 +5,12 @@ The engine demonstrates baked global illumination using a light map. It now uses
 fixed camera so the scene is easier to view and enables multi-sample anti aliasing
 for smoother edges.
 
-Shadows are rendered with a depth map and filtered using a 5x5 PCF kernel for
-softer edges. The scene is lit by two light sources plus an ambient term so
-objects are easier to see. The shaders combine the baked light map with dynamic
-lighting and shadowing to approximate global illumination.
+ Shadows are rendered with a depth map and filtered using a 5x5 PCF kernel for
+ softer edges. The engine now verifies that the shadow framebuffer is complete
+ and uses a 32‑bit depth texture so shadows appear reliably. The scene is lit by
+ two light sources plus an ambient term so objects are easier to see. The
+ shaders combine the baked light map with dynamic lighting and shadowing to
+ approximate global illumination.
 
 ## Requirements
 
