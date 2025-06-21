@@ -75,8 +75,11 @@ in vec4 FragPosLightSpace;
 out vec4 color;
 
 uniform vec3 lightPos;
+uniform vec3 lightPos2;
 uniform vec3 viewPos;
 uniform vec3 lightColor;
+uniform vec3 lightColor2;
+uniform float ambientStrength;
 uniform vec3 objectColor;
 uniform sampler2D lightMap;
 uniform sampler2D shadowMap;
@@ -89,13 +92,13 @@ float shadow_calculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir) {
     float currentDepth = projCoords.z;
     float shadow = 0.0;
     vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
-    for(int x=-1; x<=1; ++x) {
-        for(int y=-1; y<=1; ++y) {
+    for(int x=-2; x<=2; ++x) {
+        for(int y=-2; y<=2; ++y) {
             float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x,y) * texelSize).r;
             shadow += currentDepth - 0.005 > pcfDepth ? 1.0 : 0.0;
         }
     }
-    shadow /= 9.0;
+    shadow /= 25.0;
     if(projCoords.z > 1.0)
         shadow = 0.0;
     return shadow;
@@ -116,7 +119,15 @@ void main() {
     vec3 specular = 0.6 * spec * lightColor;
 
     float shadow = shadow_calculation(FragPosLightSpace, norm, lightDir);
-    vec3 lighting = (0.3 * baked + (1.0 - shadow) * (diffuse + specular)) * lightColor;
+    vec3 lightDir2 = normalize(lightPos2 - FragPos);
+    float diff2 = max(dot(norm, lightDir2), 0.0);
+    vec3 diffuse2 = diff2 * lightColor2;
+    vec3 reflectDir2 = reflect(-lightDir2, norm);
+    float spec2 = pow(max(dot(viewDir, reflectDir2), 0.0), 64);
+    vec3 specular2 = 0.6 * spec2 * lightColor2;
+
+    vec3 ambient = ambientStrength * baked;
+    vec3 lighting = ambient + (1.0 - shadow) * (diffuse + specular) + diffuse2 + specular2;
     vec3 result = lighting * objectColor * baked;
     result = pow(result, vec3(1.0 / 2.2));
     color = vec4(result, 1.0);
@@ -182,6 +193,9 @@ class Engine:
         self.angle = 0
         self.camera_pos = np.array([4.0, 3.0, 6.0], dtype=np.float32)
         self.light_pos = np.array([5.0, 10.0, 5.0], dtype=np.float32)
+        self.light_pos2 = np.array([-4.0, 5.0, -3.0], dtype=np.float32)
+        self.light_color2 = np.array([0.6, 0.6, 0.8], dtype=np.float32)
+        self.ambient = 0.3
         self.program = None
         self.depth_program = None
         self.lightmap = None
@@ -325,8 +339,11 @@ class Engine:
         glUniformMatrix4fv(loc_proj, 1, GL_TRUE, projection.flatten())
         glUniformMatrix4fv(loc_lightspace, 1, GL_TRUE, light_space.flatten())
         glUniform3f(glGetUniformLocation(self.program, 'lightPos'), *self.light_pos)
+        glUniform3f(glGetUniformLocation(self.program, 'lightPos2'), *self.light_pos2)
         glUniform3f(glGetUniformLocation(self.program, 'viewPos'), eye[0], eye[1], eye[2])
         glUniform3f(glGetUniformLocation(self.program, 'lightColor'), 1.0, 1.0, 1.0)
+        glUniform3f(glGetUniformLocation(self.program, 'lightColor2'), *self.light_color2)
+        glUniform1f(glGetUniformLocation(self.program, 'ambientStrength'), self.ambient)
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, self.lightmap)
         glUniform1i(glGetUniformLocation(self.program, 'lightMap'), 0)
