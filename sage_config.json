@@ -5,5 +5,7 @@
     "asset_path": "python_examples",
     "debug": true,
     "fullscreen": false,
-    "vsync": true
+    "vsync": true,
+    "show_fps": false,
+    "max_fps": 60
 }

@@ -16,7 +16,7 @@ except Exception:  # pragma: no cover - runtime check
     Ursina = None
     window = None
 
-VERSION = "0.0.1a"
+VERSION = "0.0.15a"
 DEFAULT_CONFIG_PATH = Path(__file__).resolve().parent.parent / "sage_config.json"
 
 
@@ -31,12 +31,16 @@ class EngineConfig:
     vsync: bool = True
     fullscreen: bool = False
     debug: bool = False
+    show_fps: bool = False
+    max_fps: Optional[int] = None
 
 
 def validate_config(config: EngineConfig) -> None:
     """Validate configuration values raising ``ValueError`` if invalid."""
     if len(config.window_size) != 2 or not all(isinstance(v, int) and v > 0 for v in config.window_size):
         raise ValueError("window_size must contain two positive integers")
+    if config.max_fps is not None and (not isinstance(config.max_fps, int) or config.max_fps <= 0):
+        raise ValueError("max_fps must be a positive integer if provided")
 
 
 def system_info() -> str:
@@ -58,6 +62,8 @@ def load_config(path: Optional[Path] = None) -> EngineConfig:
             if hasattr(config, key):
                 if key == "window_size":
                     value = tuple(int(v) for v in value)
+                if key == "max_fps" and value is not None:
+                    value = int(value)
                 setattr(config, key, value)
     return config
 
@@ -75,6 +81,11 @@ class SageEngine:
         loadPrcFileData('', f'window-title {self.config.title}')
         loadPrcFileData('', f'fullscreen {int(self.config.fullscreen)}')
         loadPrcFileData('', f'vsync {int(self.config.vsync)}')
+        if self.config.show_fps:
+            loadPrcFileData('', 'show-frame-rate-meter 1')
+        if self.config.max_fps:
+            loadPrcFileData('', 'clock-mode limited')
+            loadPrcFileData('', f'clock-frame-rate {int(self.config.max_fps)}')
 
     def start(self, setup_fn):
         if Ursina is None:
@@ -92,5 +103,7 @@ class SageEngine:
         if self.config.debug:
             logging.info("System info: %s", system_info())
             logging.info("Loaded config: %s", self.config)
+        if self.config.show_fps:
+            window.fps_counter.enabled = True
         setup_fn()
         app.run()
