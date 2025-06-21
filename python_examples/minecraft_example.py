@@ -1,5 +1,15 @@
 from ursina import *
 from random import uniform
+from panda3d.core import loadPrcFileData
+from pathlib import Path
+
+# Ensure window size uses integer values to avoid warnings
+loadPrcFileData('', 'win-size 1536 864')
+
+# Use a local icon if available to avoid missing icon warnings
+ICON_PATH = Path(__file__).resolve().parent.parent / 'SAGE Engine' / 'Assets' / 'TutorialInfo' / 'Icons' / 'URP.png'
+if ICON_PATH.exists():
+    window.icon = ICON_PATH
 
 
 def build_ground(size=16):
@@ -16,7 +26,7 @@ class Voxel(Button):
             model='cube',
             origin_y=0.5,
             texture=texture,
-            color=color.color(0, 0, uniform(0.9, 1)),
+            color=color.hsv(0, 0, uniform(0.9, 1)),
             scale=1,
         )
 
