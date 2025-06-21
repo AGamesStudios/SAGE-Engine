@@ -1,6 +1,8 @@
 from ursina import *
 from random import uniform
 
+from ursina.prefabs.first_person_controller import FirstPersonController
+
 
 def build_ground(size=16):
     for x in range(size):
