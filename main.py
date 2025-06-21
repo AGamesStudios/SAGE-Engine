@@ -132,7 +132,7 @@ class Engine:
         self.vao = None
 
     def init_gl(self):
-        glutInit()
+        glutInit(sys.argv)
         glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH | GLUT_MULTISAMPLE)
         glutInitWindowSize(self.width, self.height)
         glutCreateWindow(b"PyOpenGL Scene")
@@ -238,9 +238,9 @@ class Engine:
         loc_model = glGetUniformLocation(self.program, 'model')
         loc_view = glGetUniformLocation(self.program, 'view')
         loc_proj = glGetUniformLocation(self.program, 'projection')
-        glUniformMatrix4fv(loc_model, 1, GL_FALSE, model.flatten())
-        glUniformMatrix4fv(loc_view, 1, GL_FALSE, view.flatten())
-        glUniformMatrix4fv(loc_proj, 1, GL_FALSE, projection.flatten())
+        glUniformMatrix4fv(loc_model, 1, GL_TRUE, model.flatten())
+        glUniformMatrix4fv(loc_view, 1, GL_TRUE, view.flatten())
+        glUniformMatrix4fv(loc_proj, 1, GL_TRUE, projection.flatten())
         glUniform3f(glGetUniformLocation(self.program, 'lightPos'), 5.0, 5.0, 5.0)
         glUniform3f(glGetUniformLocation(self.program, 'viewPos'), eye[0], eye[1], eye[2])
         glUniform3f(glGetUniformLocation(self.program, 'lightColor'), 1.0, 1.0, 1.0)
@@ -249,6 +249,7 @@ class Engine:
         glUniform1i(glGetUniformLocation(self.program, 'lightMap'), 0)
 
     def draw_geometry(self, vbo, color):
+        glBindVertexArray(self.vao)
         glBindBuffer(GL_ARRAY_BUFFER, vbo)
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 32, ctypes.c_void_p(0))
         glEnableVertexAttribArray(0)
