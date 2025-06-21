@@ -1,4 +1,5 @@
 import sys
+import ctypes
 
 try:
     from OpenGL.GL import *
@@ -227,9 +228,9 @@ class Engine:
         loc_model = glGetUniformLocation(self.program, 'model')
         loc_view = glGetUniformLocation(self.program, 'view')
         loc_proj = glGetUniformLocation(self.program, 'projection')
-        glUniformMatrix4fv(loc_model, 1, GL_FALSE, model)
-        glUniformMatrix4fv(loc_view, 1, GL_FALSE, view)
-        glUniformMatrix4fv(loc_proj, 1, GL_FALSE, projection)
+        glUniformMatrix4fv(loc_model, 1, GL_FALSE, model.flatten())
+        glUniformMatrix4fv(loc_view, 1, GL_FALSE, view.flatten())
+        glUniformMatrix4fv(loc_proj, 1, GL_FALSE, projection.flatten())
         glUniform3f(glGetUniformLocation(self.program, 'lightPos'), 5.0, 5.0, 5.0)
         glUniform3f(glGetUniformLocation(self.program, 'viewPos'), 5.0, 5.0, 5.0)
         glUniform3f(glGetUniformLocation(self.program, 'lightColor'), 1.0, 1.0, 1.0)
