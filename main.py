@@ -39,7 +39,7 @@ def look_at(eye, target, up):
     view[2, 3] = np.dot(f, eye)
     return view
 
-# Enhanced shaders with baked global illumination support
+# Enhanced shaders with baked global illumination and shadow mapping
 VERTEX_SHADER = """
 #version 330 core
 layout(location = 0) in vec3 position;
@@ -49,15 +49,18 @@ layout(location = 2) in vec2 texCoord;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
+uniform mat4 lightSpaceMatrix;
 
 out vec3 FragPos;
 out vec3 Normal;
 out vec2 TexCoord;
+out vec4 FragPosLightSpace;
 
 void main() {
     FragPos = vec3(model * vec4(position, 1.0));
     Normal = mat3(transpose(inverse(model))) * normal;
     TexCoord = texCoord;
+    FragPosLightSpace = lightSpaceMatrix * vec4(FragPos, 1.0);
     gl_Position = projection * view * vec4(FragPos, 1.0);
 }
 """
@@ -67,6 +70,7 @@ FRAGMENT_SHADER = """
 in vec3 FragPos;
 in vec3 Normal;
 in vec2 TexCoord;
+in vec4 FragPosLightSpace;
 
 out vec4 color;
 
@@ -75,29 +79,66 @@ uniform vec3 viewPos;
 uniform vec3 lightColor;
 uniform vec3 objectColor;
 uniform sampler2D lightMap;
+uniform sampler2D shadowMap;
+
+float shadow_calculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir) {
+    // perform perspective divide
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    // transform to [0,1] range
+    projCoords = projCoords * 0.5 + 0.5;
+    float currentDepth = projCoords.z;
+    float shadow = 0.0;
+    vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
+    for(int x=-1; x<=1; ++x) {
+        for(int y=-1; y<=1; ++y) {
+            float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x,y) * texelSize).r;
+            shadow += currentDepth - 0.005 > pcfDepth ? 1.0 : 0.0;
+        }
+    }
+    shadow /= 9.0;
+    if(projCoords.z > 1.0)
+        shadow = 0.0;
+    return shadow;
+}
 
 void main() {
-    // sample baked global illumination
     vec3 baked = texture(lightMap, TexCoord).rgb;
-
-    float ambientStrength = 0.3;
-    vec3 ambient = ambientStrength * lightColor * baked;
 
     vec3 norm = normalize(Normal);
     vec3 lightDir = normalize(lightPos - FragPos);
+
     float diff = max(dot(norm, lightDir), 0.0);
     vec3 diffuse = diff * lightColor;
 
-    float specularStrength = 0.6;
     vec3 viewDir = normalize(viewPos - FragPos);
     vec3 reflectDir = reflect(-lightDir, norm);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 64);
-    vec3 specular = specularStrength * spec * lightColor;
+    vec3 specular = 0.6 * spec * lightColor;
 
-    vec3 result = (ambient + diffuse + specular) * objectColor * baked;
-    result = pow(result, vec3(1.0 / 2.2)); // gamma correction
+    float shadow = shadow_calculation(FragPosLightSpace, norm, lightDir);
+    vec3 lighting = (0.3 * baked + (1.0 - shadow) * (diffuse + specular)) * lightColor;
+    vec3 result = lighting * objectColor * baked;
+    result = pow(result, vec3(1.0 / 2.2));
     color = vec4(result, 1.0);
 }
+"""
+
+# simple shaders for the shadow depth map
+DEPTH_VERTEX_SHADER = """
+#version 330 core
+layout(location = 0) in vec3 position;
+
+uniform mat4 model;
+uniform mat4 lightSpaceMatrix;
+
+void main() {
+    gl_Position = lightSpaceMatrix * model * vec4(position, 1.0);
+}
+"""
+
+DEPTH_FRAGMENT_SHADER = """
+#version 330 core
+void main() {}
 """
 
 def compile_shader(source, shader_type):
@@ -121,14 +162,32 @@ def create_shader_program():
     glDeleteShader(fragment_shader)
     return program
 
+def create_depth_program():
+    vshader = compile_shader(DEPTH_VERTEX_SHADER, GL_VERTEX_SHADER)
+    fshader = compile_shader(DEPTH_FRAGMENT_SHADER, GL_FRAGMENT_SHADER)
+    program = glCreateProgram()
+    glAttachShader(program, vshader)
+    glAttachShader(program, fshader)
+    glLinkProgram(program)
+    if glGetProgramiv(program, GL_LINK_STATUS) != GL_TRUE:
+        raise RuntimeError(glGetProgramInfoLog(program))
+    glDeleteShader(vshader)
+    glDeleteShader(fshader)
+    return program
+
 class Engine:
     def __init__(self, width=800, height=600):
         self.width = width
         self.height = height
         self.angle = 0
         self.camera_pos = np.array([4.0, 3.0, 6.0], dtype=np.float32)
+        self.light_pos = np.array([5.0, 10.0, 5.0], dtype=np.float32)
         self.program = None
+        self.depth_program = None
         self.lightmap = None
+        self.shadow_fbo = None
+        self.shadow_map = None
+        self.shadow_size = 1024
         self.vao = None
 
     def init_gl(self):
@@ -141,10 +200,12 @@ class Engine:
         glClearColor(0.1, 0.1, 0.1, 1.0)
         glViewport(0, 0, self.width, self.height)
         self.program = create_shader_program()
+        self.depth_program = create_depth_program()
         self.vao = glGenVertexArrays(1)
         glBindVertexArray(self.vao)
         self.setup_geometry()
         self.create_lightmap()
+        self.create_shadow_buffer()
         glutDisplayFunc(self.render)
         glutIdleFunc(self.update)
         glutReshapeFunc(self.reshape)
@@ -222,6 +283,23 @@ class Engine:
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
 
+    def create_shadow_buffer(self):
+        self.shadow_fbo = glGenFramebuffers(1)
+        self.shadow_map = glGenTextures(1)
+        glBindTexture(GL_TEXTURE_2D, self.shadow_map)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, self.shadow_size, self.shadow_size, 0, GL_DEPTH_COMPONENT, GL_FLOAT, None)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER)
+        border = (GLfloat * 4)(1.0, 1.0, 1.0, 1.0)
+        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border)
+        glBindFramebuffer(GL_FRAMEBUFFER, self.shadow_fbo)
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, self.shadow_map, 0)
+        glDrawBuffer(GL_NONE)
+        glReadBuffer(GL_NONE)
+        glBindFramebuffer(GL_FRAMEBUFFER, 0)
+
     def set_uniforms(self):
         glUseProgram(self.program)
         angle = np.radians(self.angle)
@@ -235,18 +313,26 @@ class Engine:
         eye = self.camera_pos
         view = look_at(eye, [0, 0, 0], [0, 1, 0])
         projection = perspective(45, self.width / self.height, 0.1, 100.0)
+        light_view = look_at(self.light_pos, [0,0,0], [0,1,0])
+        light_proj = perspective(90, 1.0, 1.0, 25.0)
+        light_space = np.dot(light_proj, light_view)
         loc_model = glGetUniformLocation(self.program, 'model')
         loc_view = glGetUniformLocation(self.program, 'view')
         loc_proj = glGetUniformLocation(self.program, 'projection')
+        loc_lightspace = glGetUniformLocation(self.program, 'lightSpaceMatrix')
         glUniformMatrix4fv(loc_model, 1, GL_TRUE, model.flatten())
         glUniformMatrix4fv(loc_view, 1, GL_TRUE, view.flatten())
         glUniformMatrix4fv(loc_proj, 1, GL_TRUE, projection.flatten())
-        glUniform3f(glGetUniformLocation(self.program, 'lightPos'), 5.0, 5.0, 5.0)
+        glUniformMatrix4fv(loc_lightspace, 1, GL_TRUE, light_space.flatten())
+        glUniform3f(glGetUniformLocation(self.program, 'lightPos'), *self.light_pos)
         glUniform3f(glGetUniformLocation(self.program, 'viewPos'), eye[0], eye[1], eye[2])
         glUniform3f(glGetUniformLocation(self.program, 'lightColor'), 1.0, 1.0, 1.0)
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, self.lightmap)
         glUniform1i(glGetUniformLocation(self.program, 'lightMap'), 0)
+        glActiveTexture(GL_TEXTURE1)
+        glBindTexture(GL_TEXTURE_2D, self.shadow_map)
+        glUniform1i(glGetUniformLocation(self.program, 'shadowMap'), 1)
 
     def draw_geometry(self, vbo, color):
         glBindVertexArray(self.vao)
@@ -260,12 +346,46 @@ class Engine:
         glUniform3f(glGetUniformLocation(self.program, 'objectColor'), *color)
         glDrawArrays(GL_TRIANGLES, 0, 36 if vbo == self.cube_vbo else 6)
 
+    def draw_depth_geometry(self, vbo):
+        glBindVertexArray(self.vao)
+        glBindBuffer(GL_ARRAY_BUFFER, vbo)
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 32, ctypes.c_void_p(0))
+        glEnableVertexAttribArray(0)
+        glDrawArrays(GL_TRIANGLES, 0, 36 if vbo == self.cube_vbo else 6)
+
     def render(self):
+        self.render_depth_pass()
+        glViewport(0, 0, self.width, self.height)
+        glBindFramebuffer(GL_FRAMEBUFFER, 0)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         self.set_uniforms()
         self.draw_geometry(self.plane_vbo, (0.8, 0.8, 0.8))
         self.draw_geometry(self.cube_vbo, (0.4, 0.2, 0.8))
         glutSwapBuffers()
+
+    def render_depth_pass(self):
+        glUseProgram(self.depth_program)
+        angle = np.radians(self.angle)
+        c, s = np.cos(angle), np.sin(angle)
+        model = np.array([
+            [c, 0.0, s, 0.0],
+            [0.0, 1.0, 0.0, 0.0],
+            [-s, 0.0, c, 0.0],
+            [0.0, 0.0, 0.0, 1.0]
+        ], dtype=np.float32)
+        light_view = look_at(self.light_pos, [0,0,0], [0,1,0])
+        light_proj = perspective(90, 1.0, 1.0, 25.0)
+        light_space = np.dot(light_proj, light_view)
+        loc_model = glGetUniformLocation(self.depth_program, 'model')
+        loc_light = glGetUniformLocation(self.depth_program, 'lightSpaceMatrix')
+        glUniformMatrix4fv(loc_model, 1, GL_TRUE, model.flatten())
+        glUniformMatrix4fv(loc_light, 1, GL_TRUE, light_space.flatten())
+        glViewport(0, 0, self.shadow_size, self.shadow_size)
+        glBindFramebuffer(GL_FRAMEBUFFER, self.shadow_fbo)
+        glClear(GL_DEPTH_BUFFER_BIT)
+        self.draw_depth_geometry(self.plane_vbo)
+        self.draw_depth_geometry(self.cube_vbo)
+        glBindFramebuffer(GL_FRAMEBUFFER, 0)
 
     def update(self):
         self.angle += 0.1

@@ -5,6 +5,10 @@ The engine demonstrates baked global illumination using a light map. It now uses
 fixed camera so the scene is easier to view and enables multi-sample anti aliasing
 for smoother edges.
 
+Shadows are rendered with a depth map and filtered using a 3x3 PCF kernel for
+soft edges. The shaders combine the baked light map with dynamic lighting and
+shadowing to approximate global illumination.
+
 ## Requirements
 
 - Python 3
@@ -25,5 +29,5 @@ python main.py
 
 This will open a window with a plane and a rotating cube lit by a single light.
 The camera is fixed in place so the cube and plane remain in view. The shaders
-apply a baked global illumination map and gamma correction. Multi-sample anti
-aliasing is enabled for smoother rendering.
+apply a baked global illumination map, shadow mapping with PCF filtering and
+gamma correction. Multi-sample anti aliasing is enabled for smoother rendering.
