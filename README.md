@@ -11,19 +11,20 @@ Key features include:
 - configurable lighting with ambient color and shadows
 - basic anti-aliasing and texture filtering controls
 
-Edit this JSON file to tweak the engine without modifying Python code. The example uses `ursina.prefabs.first_person_controller` for controls, so ensure Ursina is installed.
+Edit this JSON file to tweak the engine without modifying Python code.
 
-## Minecraft Style Example
+## Usage Example
 
-A basic Minecraft-like sandbox can be launched with:
+Run the demo after installing Ursina:
 
 ```bash
 pip install ursina
-python python_examples/minecraft_example.py
+python python_examples/engine_usage.py
 ```
 
-Use left-click to place a cube and right-click to remove it while hovering over an existing cube.
-Scroll the mouse wheel to cycle between different block textures. A preview block in your hand shows the selected texture.
+The script loads `sage_config.json` and spawns a single rotating cube. Change the
+JSON values to see how the engine reacts to different window sizes and lighting
+options.
 
 ### Configuration
 
