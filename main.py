@@ -53,12 +53,17 @@ uniform mat4 lightSpaceMatrix;
 
 out vec3 FragPos;
 out vec3 Normal;
+out vec3 FragPosView;
+out vec3 NormalView;
 out vec2 TexCoord;
 out vec4 FragPosLightSpace;
 
 void main() {
+    mat4 modelView = view * model;
     FragPos = vec3(model * vec4(position, 1.0));
     Normal = mat3(transpose(inverse(model))) * normal;
+    FragPosView = vec3(modelView * vec4(position, 1.0));
+    NormalView = mat3(transpose(inverse(modelView))) * normal;
     TexCoord = texCoord;
     FragPosLightSpace = lightSpaceMatrix * vec4(FragPos, 1.0);
     gl_Position = projection * view * vec4(FragPos, 1.0);
@@ -139,13 +144,13 @@ void main() {
 
 GBUFFER_FRAGMENT_SHADER = """
 #version 330 core
-in vec3 FragPos;
-in vec3 Normal;
+in vec3 FragPosView;
+in vec3 NormalView;
 layout(location = 0) out vec3 gPosition;
 layout(location = 1) out vec3 gNormal;
 void main() {
-    gPosition = FragPos;
-    gNormal = normalize(Normal);
+    gPosition = FragPosView;
+    gNormal = normalize(NormalView);
 }
 """
 

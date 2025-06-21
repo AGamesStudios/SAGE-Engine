@@ -17,12 +17,14 @@ for smoother edges.
 
 - Python 3
 - PyOpenGL
-- A valid OpenGL context (GLUT)
+- numpy
+- A valid OpenGL context (GLUT). On Linux install `freeglut3-dev` with your
+  package manager.
 
 Install the requirements with:
 
 ```bash
-pip install PyOpenGL PyOpenGL_accelerate
+pip install PyOpenGL PyOpenGL_accelerate numpy
 ```
 
 Then run the example:
@@ -31,10 +33,9 @@ Then run the example:
 python main.py
 ```
 
-This will open a window with a plane and a rotating cube lit by a directional
-light and a point light. The camera is fixed in place so the cube and plane
-remain in view. The
-shaders apply a baked global illumination map, soft shadow mapping with PCF
-filtering (now using a 7x7 kernel), screen-space ambient occlusion and gamma
-correction. Multi-sample anti aliasing is enabled for smoother rendering. A
-slightly stronger ambient term keeps objects visible even in shadowed areas.
+This demo opens a window with a plane and a rotating cube lit by a directional
+light and a point light. The camera is fixed in place so the scene stays in
+view. Shadows come from a depth map filtered with a 7×7 PCF kernel and a
+screen-space ambient occlusion pass darkens creases using a G-buffer built in
+view space. Multi-sample anti aliasing and baked global illumination make the
+final image smoother and brighter.
