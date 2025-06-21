@@ -94,13 +94,14 @@ float shadow_calculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir) {
     float currentDepth = projCoords.z;
     float shadow = 0.0;
     vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
-    for(int x=-2; x<=2; ++x) {
-        for(int y=-2; y<=2; ++y) {
+    // 7x7 PCF kernel for softer shadows
+    for(int x=-3; x<=3; ++x) {
+        for(int y=-3; y<=3; ++y) {
             float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x,y) * texelSize).r;
             shadow += currentDepth - 0.005 > pcfDepth ? 1.0 : 0.0;
         }
     }
-    shadow /= 25.0;
+    shadow /= 49.0;
     if(projCoords.z > 1.0)
         shadow = 0.0;
     return shadow;
@@ -281,7 +282,8 @@ class Engine:
         self.dir_color = np.array([1.0, 1.0, 0.9], dtype=np.float32)
         self.point_light = np.array([4.0, 4.0, 4.0], dtype=np.float32)
         self.point_color = np.array([0.6, 0.6, 0.8], dtype=np.float32)
-        self.ambient = 0.3
+        # stronger ambient light so objects remain visible
+        self.ambient = 0.4
         self.program = None
         self.depth_program = None
         self.gbuffer_program = None
