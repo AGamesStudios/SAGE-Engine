@@ -1,25 +1,18 @@
 from ursina import *
 from random import uniform
-from panda3d.core import loadPrcFileData
 from pathlib import Path
 
-# Ensure window size uses integer values to avoid warnings
-loadPrcFileData('', 'win-size 1536 864')
-
-# Use a local icon if available to avoid missing icon warnings
-ICON_PATH = Path(__file__).resolve().parent.parent / 'SAGE Engine' / 'Assets' / 'TutorialInfo' / 'Icons' / 'URP.png'
-if ICON_PATH.exists():
-    window.icon = ICON_PATH
+from sage_engine import SageEngine, EngineConfig, load_config
 
 
 def build_ground(size=16):
     for x in range(size):
         for z in range(size):
-            Voxel(position=(x,0,z))
+            Voxel(position=(x, 0, z))
 
 
 class Voxel(Button):
-    def __init__(self, position=(0,0,0), texture='white_cube'):
+    def __init__(self, position=(0, 0, 0), texture='white_cube'):
         super().__init__(
             parent=scene,
             position=position,
@@ -38,9 +31,13 @@ class Voxel(Button):
                 destroy(self)
 
 
-if __name__ == '__main__':
-    app = Ursina()
+def setup():
     Sky()
     build_ground()
-    player = FirstPersonController()
-    app.run()
+    FirstPersonController()
+
+
+if __name__ == '__main__':
+    config_path = Path(__file__).resolve().parent.parent / 'sage_config.json'
+    config = load_config(config_path)
+    SageEngine(config).start(setup)
