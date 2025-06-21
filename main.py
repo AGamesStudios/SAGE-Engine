@@ -125,8 +125,11 @@ class Engine:
         self.width = width
         self.height = height
         self.angle = 0
+        self.cam_angle = 0.0
+        self.cam_radius = 7.0
         self.program = None
         self.lightmap = None
+        self.vao = None
 
     def init_gl(self):
         glutInit()
@@ -134,11 +137,16 @@ class Engine:
         glutInitWindowSize(self.width, self.height)
         glutCreateWindow(b"PyOpenGL Scene")
         glEnable(GL_DEPTH_TEST)
+        glClearColor(0.1, 0.1, 0.1, 1.0)
+        glViewport(0, 0, self.width, self.height)
         self.program = create_shader_program()
+        self.vao = glGenVertexArrays(1)
+        glBindVertexArray(self.vao)
         self.setup_geometry()
         self.create_lightmap()
         glutDisplayFunc(self.render)
         glutIdleFunc(self.update)
+        glutReshapeFunc(self.reshape)
 
     def setup_geometry(self):
         # cube vertices with normals and texture coordinates
@@ -223,7 +231,10 @@ class Engine:
             [-s, 0.0, c, 0.0],
             [0.0, 0.0, 0.0, 1.0]
         ], dtype=np.float32)
-        view = look_at([5, 5, 5], [0, 0, 0], [0, 1, 0])
+        cam_x = np.cos(np.radians(self.cam_angle)) * self.cam_radius
+        cam_z = np.sin(np.radians(self.cam_angle)) * self.cam_radius
+        eye = [cam_x, 3.0, cam_z]
+        view = look_at(eye, [0, 0, 0], [0, 1, 0])
         projection = perspective(45, self.width / self.height, 0.1, 100.0)
         loc_model = glGetUniformLocation(self.program, 'model')
         loc_view = glGetUniformLocation(self.program, 'view')
@@ -232,7 +243,7 @@ class Engine:
         glUniformMatrix4fv(loc_view, 1, GL_FALSE, view.flatten())
         glUniformMatrix4fv(loc_proj, 1, GL_FALSE, projection.flatten())
         glUniform3f(glGetUniformLocation(self.program, 'lightPos'), 5.0, 5.0, 5.0)
-        glUniform3f(glGetUniformLocation(self.program, 'viewPos'), 5.0, 5.0, 5.0)
+        glUniform3f(glGetUniformLocation(self.program, 'viewPos'), eye[0], eye[1], eye[2])
         glUniform3f(glGetUniformLocation(self.program, 'lightColor'), 1.0, 1.0, 1.0)
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, self.lightmap)
@@ -258,7 +269,13 @@ class Engine:
 
     def update(self):
         self.angle += 0.1
+        self.cam_angle += 0.05
         glutPostRedisplay()
+
+    def reshape(self, w, h):
+        self.width = max(1, w)
+        self.height = max(1, h)
+        glViewport(0, 0, self.width, self.height)
 
     def run(self):
         self.init_gl()

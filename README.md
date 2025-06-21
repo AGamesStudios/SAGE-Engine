@@ -1,8 +1,8 @@
 # SAGE Engine Example
 
 This repository contains a minimal example of a Python renderer built with OpenGL.
-The latest version demonstrates more advanced shading with a baked global illumination
-light map and a rotating cube.
+The latest version demonstrates baked global illumination using a light map and
+adds a simple orbiting camera.
 
 ## Requirements
 
@@ -22,6 +22,7 @@ Then run the example:
 python main.py
 ```
 
-This will open a window with a simple plane and a rotating cube lit by a single light.
-The shaders include basic specular lighting and a placeholder light map that simulates
-global illumination.
+This will open a window with a plane and a rotating cube lit by a single light.
+The camera slowly circles the scene so you can watch the lighting change from
+different angles. The shaders include basic specular lighting and a placeholder
+light map that simulates indirect lighting.
