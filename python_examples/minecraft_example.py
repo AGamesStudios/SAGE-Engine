@@ -4,8 +4,6 @@ from pathlib import Path
 
 from ursina.prefabs.first_person_controller import FirstPersonController
 
-from sage_engine import SageEngine, EngineConfig, load_config
-
 
 def build_ground(size=16):
     for x in range(size):
