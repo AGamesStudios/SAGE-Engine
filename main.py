@@ -39,7 +39,7 @@ def look_at(eye, target, up):
     view[2, 3] = np.dot(f, eye)
     return view
 
-# Enhanced shaders with baked global illumination and shadow mapping
+# Enhanced shaders with baked global illumination, shadow mapping and SSAO
 VERTEX_SHADER = """
 #version 330 core
 layout(location = 0) in vec3 position;
@@ -74,15 +74,17 @@ in vec4 FragPosLightSpace;
 
 out vec4 color;
 
-uniform vec3 lightPos;
-uniform vec3 lightPos2;
+uniform vec3 dirLightDir;
+uniform vec3 pointLightPos;
 uniform vec3 viewPos;
-uniform vec3 lightColor;
-uniform vec3 lightColor2;
+uniform vec3 dirLightColor;
+uniform vec3 pointLightColor;
 uniform float ambientStrength;
 uniform vec3 objectColor;
 uniform sampler2D lightMap;
 uniform sampler2D shadowMap;
+uniform sampler2D ssaoMap;
+uniform vec2 screenSize;
 
 float shadow_calculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir) {
     // perform perspective divide
@@ -108,29 +110,86 @@ void main() {
     vec3 baked = texture(lightMap, TexCoord).rgb;
 
     vec3 norm = normalize(Normal);
-    vec3 lightDir = normalize(lightPos - FragPos);
-
-    float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = diff * lightColor;
+    vec3 dir = normalize(-dirLightDir);
 
     vec3 viewDir = normalize(viewPos - FragPos);
-    vec3 reflectDir = reflect(-lightDir, norm);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 64);
-    vec3 specular = 0.6 * spec * lightColor;
+    float diff = max(dot(norm, dir), 0.0);
+    vec3 diffuse = diff * dirLightColor;
+    vec3 reflectDir = reflect(-dir, norm);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
+    vec3 specular = 0.5 * spec * dirLightColor;
 
-    float shadow = shadow_calculation(FragPosLightSpace, norm, lightDir);
-    vec3 lightDir2 = normalize(lightPos2 - FragPos);
-    float diff2 = max(dot(norm, lightDir2), 0.0);
-    vec3 diffuse2 = diff2 * lightColor2;
-    vec3 reflectDir2 = reflect(-lightDir2, norm);
-    float spec2 = pow(max(dot(viewDir, reflectDir2), 0.0), 64);
-    vec3 specular2 = 0.6 * spec2 * lightColor2;
+    float shadow = shadow_calculation(FragPosLightSpace, norm, dir);
+    vec3 ptDir = normalize(pointLightPos - FragPos);
+    float diff2 = max(dot(norm, ptDir), 0.0);
+    vec3 diffuse2 = diff2 * pointLightColor;
+    vec3 reflectDir2 = reflect(-ptDir, norm);
+    float spec2 = pow(max(dot(viewDir, reflectDir2), 0.0), 32);
+    vec3 specular2 = 0.5 * spec2 * pointLightColor;
 
-    vec3 ambient = ambientStrength * baked;
+    float ao = texture(ssaoMap, gl_FragCoord.xy / screenSize).r;
+    vec3 ambient = ambientStrength * baked * ao;
     vec3 lighting = ambient + (1.0 - shadow) * (diffuse + specular) + diffuse2 + specular2;
     vec3 result = lighting * objectColor * baked;
     result = pow(result, vec3(1.0 / 2.2));
     color = vec4(result, 1.0);
+}
+"""
+
+GBUFFER_FRAGMENT_SHADER = """
+#version 330 core
+in vec3 FragPos;
+in vec3 Normal;
+layout(location = 0) out vec3 gPosition;
+layout(location = 1) out vec3 gNormal;
+void main() {
+    gPosition = FragPos;
+    gNormal = normalize(Normal);
+}
+"""
+
+QUAD_VERTEX_SHADER = """
+#version 330 core
+layout(location = 0) in vec2 position;
+layout(location = 1) in vec2 texCoord;
+out vec2 TexCoord;
+void main() {
+    TexCoord = texCoord;
+    gl_Position = vec4(position, 0.0, 1.0);
+}
+"""
+
+SSAO_FRAGMENT_SHADER = """
+#version 330 core
+out float FragColor;
+in vec2 TexCoord;
+uniform sampler2D gPosition;
+uniform sampler2D gNormal;
+uniform sampler2D texNoise;
+uniform vec3 samples[16];
+uniform mat4 projection;
+const float radius = 0.5;
+const float bias = 0.025;
+void main() {
+    vec3 fragPos = texture(gPosition, TexCoord).xyz;
+    vec3 normal = normalize(texture(gNormal, TexCoord).xyz);
+    vec3 randomVec = texture(texNoise, TexCoord * 4.0).xyz;
+    vec3 tangent = normalize(randomVec - normal * dot(randomVec, normal));
+    vec3 bitangent = cross(normal, tangent);
+    mat3 TBN = mat3(tangent, bitangent, normal);
+    float occlusion = 0.0;
+    for(int i=0;i<16;++i){
+        vec3 samplePos = TBN * samples[i];
+        samplePos = fragPos + samplePos * radius;
+        vec4 offset = projection * vec4(samplePos,1.0);
+        offset.xyz /= offset.w;
+        offset.xyz = offset.xyz * 0.5 + 0.5;
+        float sampleDepth = texture(gPosition, offset.xy).z;
+        float rangeCheck = smoothstep(0.0,1.0, radius/abs(fragPos.z - sampleDepth));
+        occlusion += (sampleDepth >= samplePos.z + bias ? 1.0 : 0.0) * rangeCheck;
+    }
+    occlusion = 1.0 - occlusion / 16.0;
+    FragColor = occlusion;
 }
 """
 
@@ -186,23 +245,62 @@ def create_depth_program():
     glDeleteShader(fshader)
     return program
 
+def create_gbuffer_program():
+    vshader = compile_shader(VERTEX_SHADER, GL_VERTEX_SHADER)
+    fshader = compile_shader(GBUFFER_FRAGMENT_SHADER, GL_FRAGMENT_SHADER)
+    program = glCreateProgram()
+    glAttachShader(program, vshader)
+    glAttachShader(program, fshader)
+    glLinkProgram(program)
+    if glGetProgramiv(program, GL_LINK_STATUS) != GL_TRUE:
+        raise RuntimeError(glGetProgramInfoLog(program))
+    glDeleteShader(vshader)
+    glDeleteShader(fshader)
+    return program
+
+def create_ssao_program():
+    vshader = compile_shader(QUAD_VERTEX_SHADER, GL_VERTEX_SHADER)
+    fshader = compile_shader(SSAO_FRAGMENT_SHADER, GL_FRAGMENT_SHADER)
+    program = glCreateProgram()
+    glAttachShader(program, vshader)
+    glAttachShader(program, fshader)
+    glLinkProgram(program)
+    if glGetProgramiv(program, GL_LINK_STATUS) != GL_TRUE:
+        raise RuntimeError(glGetProgramInfoLog(program))
+    glDeleteShader(vshader)
+    glDeleteShader(fshader)
+    return program
+
 class Engine:
     def __init__(self, width=800, height=600):
         self.width = width
         self.height = height
         self.angle = 0
         self.camera_pos = np.array([4.0, 3.0, 6.0], dtype=np.float32)
-        self.light_pos = np.array([5.0, 10.0, 5.0], dtype=np.float32)
-        self.light_pos2 = np.array([-4.0, 5.0, -3.0], dtype=np.float32)
-        self.light_color2 = np.array([0.6, 0.6, 0.8], dtype=np.float32)
+        self.dir_light = np.array([-0.2, -1.0, -0.3], dtype=np.float32)
+        self.dir_color = np.array([1.0, 1.0, 0.9], dtype=np.float32)
+        self.point_light = np.array([4.0, 4.0, 4.0], dtype=np.float32)
+        self.point_color = np.array([0.6, 0.6, 0.8], dtype=np.float32)
         self.ambient = 0.3
         self.program = None
         self.depth_program = None
+        self.gbuffer_program = None
+        self.ssao_program = None
         self.lightmap = None
         self.shadow_fbo = None
         self.shadow_map = None
         self.shadow_size = 1024
         self.vao = None
+        self.g_fbo = None
+        self.g_position = None
+        self.g_normal = None
+        self.g_depth = None
+        self.ssao_fbo = None
+        self.ssao_tex = None
+        self.noise_tex = None
+        self.ssao_samples = None
+        self.quad_vao = None
+        self.quad_vbo = None
 
     def init_gl(self):
         glutInit(sys.argv)
@@ -215,11 +313,16 @@ class Engine:
         glViewport(0, 0, self.width, self.height)
         self.program = create_shader_program()
         self.depth_program = create_depth_program()
+        self.gbuffer_program = create_gbuffer_program()
+        self.ssao_program = create_ssao_program()
         self.vao = glGenVertexArrays(1)
         glBindVertexArray(self.vao)
         self.setup_geometry()
         self.create_lightmap()
         self.create_shadow_buffer()
+        self.create_gbuffer()
+        self.create_ssao_resources()
+        self.create_quad()
         glutDisplayFunc(self.render)
         glutIdleFunc(self.update)
         glutReshapeFunc(self.reshape)
@@ -330,6 +433,88 @@ class Engine:
             print("Shadow framebuffer incomplete:", status)
         glBindFramebuffer(GL_FRAMEBUFFER, 0)
 
+    def create_gbuffer(self):
+        self.g_fbo = glGenFramebuffers(1)
+        glBindFramebuffer(GL_FRAMEBUFFER, self.g_fbo)
+
+        self.g_position = glGenTextures(1)
+        glBindTexture(GL_TEXTURE_2D, self.g_position)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, self.width, self.height, 0, GL_RGB, GL_FLOAT, None)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, self.g_position, 0)
+
+        self.g_normal = glGenTextures(1)
+        glBindTexture(GL_TEXTURE_2D, self.g_normal)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, self.width, self.height, 0, GL_RGB, GL_FLOAT, None)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, self.g_normal, 0)
+
+        self.g_depth = glGenRenderbuffers(1)
+        glBindRenderbuffer(GL_RENDERBUFFER, self.g_depth)
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, self.width, self.height)
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, self.g_depth)
+
+        attachments = (GLuint * 2)(GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1)
+        glDrawBuffers(2, attachments)
+        status = glCheckFramebufferStatus(GL_FRAMEBUFFER)
+        if status != GL_FRAMEBUFFER_COMPLETE:
+            print("G-buffer incomplete:", status)
+        glBindFramebuffer(GL_FRAMEBUFFER, 0)
+
+    def create_ssao_resources(self):
+        self.ssao_fbo = glGenFramebuffers(1)
+        glBindFramebuffer(GL_FRAMEBUFFER, self.ssao_fbo)
+
+        self.ssao_tex = glGenTextures(1)
+        glBindTexture(GL_TEXTURE_2D, self.ssao_tex)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, self.width, self.height, 0, GL_RED, GL_FLOAT, None)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, self.ssao_tex, 0)
+        if glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE:
+            print("SSAO framebuffer incomplete")
+        glBindFramebuffer(GL_FRAMEBUFFER, 0)
+
+        noise = np.random.rand(16,3).astype(np.float32) * 2.0 - 1.0
+        self.noise_tex = glGenTextures(1)
+        glBindTexture(GL_TEXTURE_2D, self.noise_tex)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, 4, 4, 0, GL_RGB, GL_FLOAT, noise)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+
+        samples = []
+        for i in range(16):
+            sample = np.random.uniform(-1.0,1.0,3)
+            sample[2] = np.random.uniform(0.0,1.0)
+            sample /= np.linalg.norm(sample)
+            scale = i / 16.0
+            scale = 0.1 + 0.9 * scale * scale
+            samples.append(sample * scale)
+        self.ssao_samples = np.array(samples, dtype=np.float32)
+
+    def create_quad(self):
+        vertices = np.array([
+            -1.0, -1.0, 0.0, 0.0,
+             1.0, -1.0, 1.0, 0.0,
+             1.0,  1.0, 1.0, 1.0,
+             1.0,  1.0, 1.0, 1.0,
+            -1.0,  1.0, 0.0, 1.0,
+            -1.0, -1.0, 0.0, 0.0,
+        ], dtype=np.float32)
+        self.quad_vao = glGenVertexArrays(1)
+        self.quad_vbo = glGenBuffers(1)
+        glBindVertexArray(self.quad_vao)
+        glBindBuffer(GL_ARRAY_BUFFER, self.quad_vbo)
+        glBufferData(GL_ARRAY_BUFFER, vertices.nbytes, vertices, GL_STATIC_DRAW)
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 16, ctypes.c_void_p(0))
+        glEnableVertexAttribArray(0)
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 16, ctypes.c_void_p(8))
+        glEnableVertexAttribArray(1)
+
     def set_uniforms(self):
         glUseProgram(self.program)
         angle = np.radians(self.angle)
@@ -343,7 +528,7 @@ class Engine:
         eye = self.camera_pos
         view = look_at(eye, [0, 0, 0], [0, 1, 0])
         projection = perspective(45, self.width / self.height, 0.1, 100.0)
-        light_view = look_at(self.light_pos, [0,0,0], [0,1,0])
+        light_view = look_at(-self.dir_light * 10.0, [0,0,0], [0,1,0])
         light_proj = perspective(90, 1.0, 1.0, 25.0)
         light_space = np.dot(light_proj, light_view)
         loc_model = glGetUniformLocation(self.program, 'model')
@@ -354,11 +539,11 @@ class Engine:
         glUniformMatrix4fv(loc_view, 1, GL_TRUE, view.flatten())
         glUniformMatrix4fv(loc_proj, 1, GL_TRUE, projection.flatten())
         glUniformMatrix4fv(loc_lightspace, 1, GL_TRUE, light_space.flatten())
-        glUniform3f(glGetUniformLocation(self.program, 'lightPos'), *self.light_pos)
-        glUniform3f(glGetUniformLocation(self.program, 'lightPos2'), *self.light_pos2)
+        glUniform3f(glGetUniformLocation(self.program, 'dirLightDir'), *self.dir_light)
+        glUniform3f(glGetUniformLocation(self.program, 'pointLightPos'), *self.point_light)
         glUniform3f(glGetUniformLocation(self.program, 'viewPos'), eye[0], eye[1], eye[2])
-        glUniform3f(glGetUniformLocation(self.program, 'lightColor'), 1.0, 1.0, 1.0)
-        glUniform3f(glGetUniformLocation(self.program, 'lightColor2'), *self.light_color2)
+        glUniform3f(glGetUniformLocation(self.program, 'dirLightColor'), *self.dir_color)
+        glUniform3f(glGetUniformLocation(self.program, 'pointLightColor'), *self.point_color)
         glUniform1f(glGetUniformLocation(self.program, 'ambientStrength'), self.ambient)
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, self.lightmap)
@@ -366,6 +551,10 @@ class Engine:
         glActiveTexture(GL_TEXTURE1)
         glBindTexture(GL_TEXTURE_2D, self.shadow_map)
         glUniform1i(glGetUniformLocation(self.program, 'shadowMap'), 1)
+        glActiveTexture(GL_TEXTURE2)
+        glBindTexture(GL_TEXTURE_2D, self.ssao_tex)
+        glUniform1i(glGetUniformLocation(self.program, 'ssaoMap'), 2)
+        glUniform2f(glGetUniformLocation(self.program, 'screenSize'), float(self.width), float(self.height))
 
     def draw_geometry(self, vbo, color):
         glBindVertexArray(self.vao)
@@ -386,8 +575,65 @@ class Engine:
         glEnableVertexAttribArray(0)
         glDrawArrays(GL_TRIANGLES, 0, 36 if vbo == self.cube_vbo else 6)
 
+    def draw_gbuffer_geometry(self, vbo):
+        glBindVertexArray(self.vao)
+        glBindBuffer(GL_ARRAY_BUFFER, vbo)
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 32, ctypes.c_void_p(0))
+        glEnableVertexAttribArray(0)
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 32, ctypes.c_void_p(12))
+        glEnableVertexAttribArray(1)
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 32, ctypes.c_void_p(24))
+        glEnableVertexAttribArray(2)
+        glDrawArrays(GL_TRIANGLES, 0, 36 if vbo == self.cube_vbo else 6)
+
+    def render_gbuffer(self):
+        glUseProgram(self.gbuffer_program)
+        angle = np.radians(self.angle)
+        c, s = np.cos(angle), np.sin(angle)
+        model = np.array([
+            [c, 0.0, s, 0.0],
+            [0.0, 1.0, 0.0, 0.0],
+            [-s, 0.0, c, 0.0],
+            [0.0, 0.0, 0.0, 1.0]
+        ], dtype=np.float32)
+        view = look_at(self.camera_pos, [0,0,0], [0,1,0])
+        proj = perspective(45, self.width/self.height, 0.1, 100.0)
+        glUniformMatrix4fv(glGetUniformLocation(self.gbuffer_program,'model'),1,GL_TRUE,model.flatten())
+        glUniformMatrix4fv(glGetUniformLocation(self.gbuffer_program,'view'),1,GL_TRUE,view.flatten())
+        glUniformMatrix4fv(glGetUniformLocation(self.gbuffer_program,'projection'),1,GL_TRUE,proj.flatten())
+        glViewport(0,0,self.width,self.height)
+        glBindFramebuffer(GL_FRAMEBUFFER, self.g_fbo)
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        self.draw_gbuffer_geometry(self.plane_vbo)
+        self.draw_gbuffer_geometry(self.cube_vbo)
+        glBindFramebuffer(GL_FRAMEBUFFER, 0)
+
+    def render_ssao(self):
+        glUseProgram(self.ssao_program)
+        glBindFramebuffer(GL_FRAMEBUFFER, self.ssao_fbo)
+        glClear(GL_COLOR_BUFFER_BIT)
+        glActiveTexture(GL_TEXTURE0)
+        glBindTexture(GL_TEXTURE_2D, self.g_position)
+        glUniform1i(glGetUniformLocation(self.ssao_program,'gPosition'),0)
+        glActiveTexture(GL_TEXTURE1)
+        glBindTexture(GL_TEXTURE_2D, self.g_normal)
+        glUniform1i(glGetUniformLocation(self.ssao_program,'gNormal'),1)
+        glActiveTexture(GL_TEXTURE2)
+        glBindTexture(GL_TEXTURE_2D, self.noise_tex)
+        glUniform1i(glGetUniformLocation(self.ssao_program,'texNoise'),2)
+        proj = perspective(45, self.width/self.height, 0.1, 100.0)
+        glUniformMatrix4fv(glGetUniformLocation(self.ssao_program,'projection'),1,GL_TRUE,proj.flatten())
+        for i in range(16):
+            loc = glGetUniformLocation(self.ssao_program, f'samples[{i}]')
+            glUniform3f(loc, *self.ssao_samples[i])
+        glBindVertexArray(self.quad_vao)
+        glDrawArrays(GL_TRIANGLES, 0, 6)
+        glBindFramebuffer(GL_FRAMEBUFFER, 0)
+
     def render(self):
         self.render_depth_pass()
+        self.render_gbuffer()
+        self.render_ssao()
         glViewport(0, 0, self.width, self.height)
         glBindFramebuffer(GL_FRAMEBUFFER, 0)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -406,7 +652,7 @@ class Engine:
             [-s, 0.0, c, 0.0],
             [0.0, 0.0, 0.0, 1.0]
         ], dtype=np.float32)
-        light_view = look_at(self.light_pos, [0,0,0], [0,1,0])
+        light_view = look_at(-self.dir_light * 10.0, [0,0,0], [0,1,0])
         light_proj = perspective(90, 1.0, 1.0, 25.0)
         light_space = np.dot(light_proj, light_view)
         loc_model = glGetUniformLocation(self.depth_program, 'model')
