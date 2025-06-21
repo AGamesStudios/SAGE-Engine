@@ -1,5 +1,9 @@
 {
     "window_size": [1536, 864],
-    "title": "SAGE Minecraft Example",
-    "icon_path": "SAGE Engine/Assets/TutorialInfo/Icons/URP.png"
+    "title": "SAGE Engine Prototype",
+    "icon_path": "SAGE Engine/Assets/TutorialInfo/Icons/URP.png",
+    "asset_path": "python_examples",
+    "debug": true,
+    "fullscreen": false,
+    "vsync": true
 }

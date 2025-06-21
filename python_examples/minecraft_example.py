@@ -1,11 +1,13 @@
+"""Small Minecraft-like example using SAGE Engine."""
+
 from ursina import *
 from random import uniform
 from pathlib import Path
 
 from ursina.prefabs.first_person_controller import FirstPersonController
+from sage_engine import SageEngine, load_config
 
-
-def build_ground(size=16):
+def build_ground(size: int = 32) -> None:
     for x in range(size):
         for z in range(size):
             Voxel(position=(x, 0, z))
@@ -38,6 +40,5 @@ def setup():
 
 
 if __name__ == '__main__':
-    config_path = Path(__file__).resolve().parent.parent / 'sage_config.json'
-    config = load_config(config_path)
-    SageEngine(config).start(setup)
+    engine = SageEngine(load_config())
+    engine.start(setup)
