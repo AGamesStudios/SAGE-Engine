@@ -1,4 +1,7 @@
-"""Small Minecraft-like example using SAGE Engine."""
+"""Small Minecraft-like example using SAGE Engine.
+
+This demo shows how the engine now creates basic lighting and shadows based on
+configuration values."""
 
 from ursina import *
 from random import uniform

@@ -7,5 +7,10 @@
     "fullscreen": false,
     "vsync": true,
     "show_fps": false,
-    "max_fps": 60
+    "max_fps": 60,
+    "ambient_color": [0.7, 0.7, 0.8],
+    "enable_shadows": true,
+    "shadow_map_size": 2048,
+    "anti_aliasing": true,
+    "texture_filtering": "linear"
 }
