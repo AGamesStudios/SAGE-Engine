@@ -71,6 +71,44 @@ class Timer(Condition):
             return True
         return False
 
+class KeyReleased(Condition):
+    """True once when the key transitions from pressed to released."""
+
+    def __init__(self, key):
+        self.key = key
+        self.prev = False
+
+    def check(self, engine, scene, dt):
+        keys = pygame.key.get_pressed()
+        pressed = keys[self.key]
+        result = self.prev and not pressed
+        self.prev = pressed
+        return result
+
+class MouseButton(Condition):
+    """Check mouse button state ('down' or 'up')."""
+
+    def __init__(self, button, state='down'):
+        self.button = button
+        self.state = state
+        self.prev = False
+
+    def check(self, engine, scene, dt):
+        buttons = pygame.mouse.get_pressed()
+        pressed = buttons[self.button - 1]
+        if self.state == 'down':
+            return pressed
+        else:
+            result = self.prev and not pressed
+            self.prev = pressed
+            return result
+
+class Always(Condition):
+    """Condition that is always true."""
+
+    def check(self, engine, scene, dt):
+        return True
+
 # Built-in actions
 class Move(Action):
     def __init__(self, obj, dx, dy):
@@ -107,8 +145,37 @@ class Print(Action):
     def execute(self, engine, scene, dt):
         print(self.text)
 
+class PlaySound(Action):
+    """Play a sound file using pygame.mixer."""
+
+    def __init__(self, path):
+        self.path = path
+        if pygame.mixer.get_init() is None:
+            pygame.mixer.init()
+        self.sound = pygame.mixer.Sound(path)
+
+    def execute(self, engine, scene, dt):
+        self.sound.play()
+
+class Spawn(Action):
+    """Spawn a new GameObject into the scene."""
+
+    def __init__(self, image, x=0, y=0):
+        self.image = image
+        self.x = x
+        self.y = y
+
+    def execute(self, engine, scene, dt):
+        try:
+            from sage2d import GameObject
+        except Exception:
+            return
+        obj = GameObject(self.image, self.x, self.y)
+        if hasattr(scene, 'add_object'):
+            scene.add_object(obj)
+
 __all__ = [
     'Condition', 'Action', 'Event', 'EventSystem',
-    'KeyPressed', 'Collision', 'Timer',
-    'Move', 'SetPosition', 'Destroy', 'Print'
+    'KeyPressed', 'KeyReleased', 'MouseButton', 'Collision', 'Timer', 'Always',
+    'Move', 'SetPosition', 'Destroy', 'Print', 'PlaySound', 'Spawn'
 ]

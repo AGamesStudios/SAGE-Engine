@@ -3,12 +3,13 @@ import json
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QFileDialog, QAction,
     QGraphicsView, QGraphicsScene, QGraphicsPixmapItem,
-    QTabWidget, QWidget, QVBoxLayout, QLabel,
+    QTabWidget, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QListWidget, QPushButton, QDialog, QFormLayout,
-    QDialogButtonBox, QLineEdit, QSpinBox, QComboBox
+    QDialogButtonBox, QLineEdit, QSpinBox, QComboBox,
+    QTextEdit, QDockWidget
 )
 from PyQt5.QtGui import QPixmap, QPen, QColor
-from PyQt5.QtCore import QRectF
+from PyQt5.QtCore import QRectF, Qt, QProcess
 import tempfile
 import subprocess
 import os
@@ -16,47 +17,157 @@ import pygame
 from sage2d import Scene, GameObject
 
 
-class AddEventDialog(QDialog):
-    """Simple dialog to create a KeyPressed->Move event."""
+class ConditionDialog(QDialog):
+    """Dialog for creating a single condition."""
 
     def __init__(self, objects, parent=None):
         super().__init__(parent)
-        self.setWindowTitle('Add Event')
+        self.setWindowTitle('Add Condition')
         self.objects = objects
         layout = QFormLayout(self)
 
+        self.type_box = QComboBox()
+        self.type_box.addItems(['KeyPressed', 'KeyReleased', 'MouseButton', 'Timer', 'Collision', 'Always'])
+        layout.addRow('Type:', self.type_box)
+
         self.key_edit = QLineEdit('K_RIGHT')
-        layout.addRow('Key constant:', self.key_edit)
+        layout.addRow('Key/Button:', self.key_edit)
 
-        self.target_box = QComboBox()
+        self.duration_spin = QSpinBox()
+        self.duration_spin.setRange(0, 9999)
+        self.duration_spin.setValue(1)
+        layout.addRow('Duration:', self.duration_spin)
+
+        self.state_box = QComboBox()
+        self.state_box.addItems(['down', 'up'])
+        layout.addRow('State:', self.state_box)
+
+        self.a_box = QComboBox()
+        self.b_box = QComboBox()
         for i, obj in enumerate(objects):
-            self.target_box.addItem(f'Object {i}: {os.path.basename(obj.image_path)}', i)
-        layout.addRow('Target object:', self.target_box)
-
-        self.dx_spin = QSpinBox()
-        self.dx_spin.setRange(-1000, 1000)
-        self.dx_spin.setValue(5)
-        layout.addRow('Move dx:', self.dx_spin)
-
-        self.dy_spin = QSpinBox()
-        self.dy_spin.setRange(-1000, 1000)
-        layout.addRow('Move dy:', self.dy_spin)
+            label = f'Object {i}: {os.path.basename(obj.image_path)}'
+            self.a_box.addItem(label, i)
+            self.b_box.addItem(label, i)
+        layout.addRow('Object A:', self.a_box)
+        layout.addRow('Object B:', self.b_box)
 
         buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
         layout.addRow(buttons)
 
+    def get_condition(self):
+        typ = self.type_box.currentText()
+        if typ in ('KeyPressed', 'KeyReleased'):
+            key_name = self.key_edit.text().strip()
+            key = getattr(pygame, key_name, pygame.K_RIGHT)
+            return {'type': typ, 'key': key}
+        if typ == 'MouseButton':
+            button = int(self.key_edit.text() or '1')
+            state = self.state_box.currentText()
+            return {'type': 'MouseButton', 'button': button, 'state': state}
+        if typ == 'Timer':
+            return {'type': 'Timer', 'duration': self.duration_spin.value()}
+        if typ == 'Collision':
+            return {'type': 'Collision', 'a': self.a_box.currentData(), 'b': self.b_box.currentData()}
+        return {'type': 'Always'}
+
+
+class ActionDialog(QDialog):
+    """Dialog for creating a single action."""
+
+    def __init__(self, objects, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle('Add Action')
+        self.objects = objects
+        layout = QFormLayout(self)
+
+        self.type_box = QComboBox()
+        self.type_box.addItems(['Move', 'SetPosition', 'Destroy', 'Print', 'PlaySound', 'Spawn'])
+        layout.addRow('Type:', self.type_box)
+
+        self.target_box = QComboBox()
+        for i, obj in enumerate(objects):
+            self.target_box.addItem(f'Object {i}: {os.path.basename(obj.image_path)}', i)
+        layout.addRow('Target:', self.target_box)
+
+        self.dx_spin = QSpinBox(); self.dx_spin.setRange(-1000, 1000); self.dx_spin.setValue(5)
+        self.dy_spin = QSpinBox(); self.dy_spin.setRange(-1000, 1000)
+        layout.addRow('dx:', self.dx_spin)
+        layout.addRow('dy:', self.dy_spin)
+
+        self.x_spin = QSpinBox(); self.x_spin.setRange(-10000, 10000)
+        self.y_spin = QSpinBox(); self.y_spin.setRange(-10000, 10000)
+        layout.addRow('x:', self.x_spin)
+        layout.addRow('y:', self.y_spin)
+
+        self.text_edit = QLineEdit()
+        layout.addRow('Text/Path:', self.text_edit)
+
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        layout.addRow(buttons)
+
+    def get_action(self):
+        typ = self.type_box.currentText()
+        if typ == 'Move':
+            return {'type': 'Move', 'target': self.target_box.currentData(), 'dx': self.dx_spin.value(), 'dy': self.dy_spin.value()}
+        if typ == 'SetPosition':
+            return {'type': 'SetPosition', 'target': self.target_box.currentData(), 'x': self.x_spin.value(), 'y': self.y_spin.value()}
+        if typ == 'Destroy':
+            return {'type': 'Destroy', 'target': self.target_box.currentData()}
+        if typ == 'Print':
+            return {'type': 'Print', 'text': self.text_edit.text()}
+        if typ == 'PlaySound':
+            return {'type': 'PlaySound', 'path': self.text_edit.text()}
+        if typ == 'Spawn':
+            return {'type': 'Spawn', 'image': self.text_edit.text(), 'x': self.x_spin.value(), 'y': self.y_spin.value()}
+
+
+class AddEventDialog(QDialog):
+    """Dialog to create an event from arbitrary conditions and actions."""
+
+    def __init__(self, objects, parent=None):
+        super().__init__(parent)
+        self.objects = objects
+        self.setWindowTitle('Add Event')
+        self.conditions = []
+        self.actions = []
+        layout = QHBoxLayout(self)
+
+        left = QVBoxLayout()
+        right = QVBoxLayout()
+        self.cond_list = QListWidget(); left.addWidget(self.cond_list)
+        self.act_list = QListWidget(); right.addWidget(self.act_list)
+        add_cond = QPushButton('Add Condition'); left.addWidget(add_cond)
+        add_act = QPushButton('Add Action'); right.addWidget(add_act)
+        add_cond.clicked.connect(self.add_condition)
+        add_act.clicked.connect(self.add_action)
+        layout.addLayout(left)
+        layout.addLayout(right)
+
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        layout.addWidget(buttons)
+
+    def add_condition(self):
+        dlg = ConditionDialog(self.objects, self)
+        if dlg.exec_() == QDialog.Accepted:
+            cond = dlg.get_condition()
+            self.conditions.append(cond)
+            self.cond_list.addItem(cond['type'])
+
+    def add_action(self):
+        dlg = ActionDialog(self.objects, self)
+        if dlg.exec_() == QDialog.Accepted:
+            act = dlg.get_action()
+            self.actions.append(act)
+            self.act_list.addItem(act['type'])
+
     def get_event(self):
-        key_name = self.key_edit.text().strip()
-        key = getattr(pygame, key_name, pygame.K_RIGHT)
-        target = self.target_box.currentData()
-        dx = self.dx_spin.value()
-        dy = self.dy_spin.value()
-        return {
-            'conditions': [{'type': 'KeyPressed', 'key': key}],
-            'actions': [{'type': 'Move', 'target': target, 'dx': dx, 'dy': dy}],
-        }
+        return {'conditions': self.conditions, 'actions': self.actions}
 
 
 class Editor(QMainWindow):
@@ -86,6 +197,15 @@ class Editor(QMainWindow):
         self.add_event_btn.clicked.connect(self.add_event)
         self.logic_widget.layout().addWidget(self.add_event_btn)
         self.tabs.addTab(self.logic_widget, 'Logic')
+
+        # console dock
+        self.console = QTextEdit()
+        self.console.setReadOnly(True)
+        dock = QDockWidget('Console', self)
+        dock.setWidget(self.console)
+        self.addDockWidget(Qt.BottomDockWidgetArea, dock)
+        self.console.append(f'Engine path: {os.getcwd()}')
+        self.process = None
 
         # canvas rectangle representing the game window
         self.canvas = self.g_scene.addRect(QRectF(0, 0, 640, 480), QPen(QColor('red')))
@@ -138,7 +258,24 @@ class Editor(QMainWindow):
             obj.x = pos.x()
             obj.y = pos.y()
         self.scene.save(path)
-        subprocess.Popen([sys.executable, '-m', 'sage2d', path])
+        if self.process and self.process.state() != QProcess.NotRunning:
+            self.process.kill()
+        self.process = QProcess(self)
+        self.process.setProgram(sys.executable)
+        self.process.setArguments(['-m', 'sage2d', path])
+        self.process.readyReadStandardOutput.connect(self._read_output)
+        self.process.readyReadStandardError.connect(self._read_output)
+        self.process.start()
+
+    def _read_output(self):
+        if self.process is None:
+            return
+        out = bytes(self.process.readAllStandardOutput()).decode('utf-8')
+        if out:
+            self.console.append(out.rstrip())
+        err = bytes(self.process.readAllStandardError()).decode('utf-8')
+        if err:
+            self.console.append(err.rstrip())
 
     def add_sprite(self):
         path, _ = QFileDialog.getOpenFileName(self, 'Add Sprite', '', 'Images (*.png *.jpg *.bmp)')
@@ -192,6 +329,22 @@ def main(argv=None):
         argv = sys.argv
     app = QApplication(argv)
     editor = Editor()
+
+    class _Stream:
+        def __init__(self, edit):
+            self.edit = edit
+
+        def write(self, text):
+            if text.strip():
+                self.edit.append(text.rstrip())
+
+        def flush(self):
+            pass
+
+    sys.stdout = _Stream(editor.console)
+    sys.stderr = _Stream(editor.console)
+    print('SAGE Editor started')
+
     return app.exec_()
 
 

@@ -158,3 +158,9 @@ events.add_event(Event([Timer(5.0)], [Move(player, -5, 0)]))
 
 Engine(scene=scene, events=events).run()
 ```
+
+The editor now includes a **Console** dock at the bottom. All output from the
+game process and the editor itself appears here so you can easily debug your
+scripts. Events can combine many more conditions and actions such as
+`KeyReleased`, `MouseButton`, `PlaySound` and `Spawn`. Use the *Add Event*
+dialog's separate lists for conditions and actions to build complex behavior.

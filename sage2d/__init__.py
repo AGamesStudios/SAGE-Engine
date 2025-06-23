@@ -6,18 +6,24 @@ from sage_logic import (
     EventSystem,
     Event,
     KeyPressed,
+    KeyReleased,
+    MouseButton,
     Collision,
     Timer,
+    Always,
     Move,
     SetPosition,
     Destroy,
     Print,
+    PlaySound,
+    Spawn,
 )
 
 __all__ = [
     'GameObject', 'Scene', 'Engine', 'EventSystem',
-    'Event', 'KeyPressed', 'Collision', 'Timer',
-    'Move', 'SetPosition', 'Destroy', 'Print', 'main'
+    'Event', 'KeyPressed', 'KeyReleased', 'MouseButton', 'Collision', 'Timer',
+    'Always',
+    'Move', 'SetPosition', 'Destroy', 'Print', 'PlaySound', 'Spawn', 'main'
 ]
 
 
@@ -96,12 +102,18 @@ class Scene:
                 typ = cond.get('type')
                 if typ == 'KeyPressed':
                     conditions.append(KeyPressed(cond['key']))
+                elif typ == 'KeyReleased':
+                    conditions.append(KeyReleased(cond['key']))
+                elif typ == 'MouseButton':
+                    conditions.append(MouseButton(cond['button'], cond.get('state', 'down')))
                 elif typ == 'Timer':
                     conditions.append(Timer(cond['duration']))
                 elif typ == 'Collision':
                     a = self.objects[cond['a']]
                     b = self.objects[cond['b']]
                     conditions.append(Collision(a, b))
+                elif typ == 'Always':
+                    conditions.append(Always())
             actions = []
             for act in evt.get('actions', []):
                 typ = act.get('type')
@@ -116,6 +128,10 @@ class Scene:
                     actions.append(Destroy(obj))
                 elif typ == 'Print':
                     actions.append(Print(act['text']))
+                elif typ == 'PlaySound':
+                    actions.append(PlaySound(act['path']))
+                elif typ == 'Spawn':
+                    actions.append(Spawn(act['image'], act.get('x',0), act.get('y',0)))
             es.add_event(Event(conditions, actions, evt.get('once', False)))
         return es
 
