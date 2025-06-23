@@ -1,4 +1,0 @@
-from sage_engine.sage2d import main
-
-if __name__ == '__main__':
-    main()

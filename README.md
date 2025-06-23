@@ -6,14 +6,11 @@ Editor** lets you place objects visually and save projects.  The editor remains
 small so it runs well even on older computers.
 
 ## Architecture
-The core engine code resides under `sage_engine/core` which defines the generic
-`GameObject`, `Scene`, `Engine` and `Project` classes. 2D helpers now live in
-`sage_engine/sage2d` inside the engine package rather than as a standalone
-module.  A small top-level `sage2d` package merely re-exports these helpers for
-compatibility.  Likewise the event system is kept in `sage_engine/logic` with a
-compatibility wrapper named `sage_logic`.  `sage_editor` builds on these pieces
-but remains optional so games can depend on the engine without pulling in the
-editor.
+The core engine code resides under `sage_engine/core` which defines the
+generic `GameObject`, `Scene`, `Engine` and `Project` classes. 2D helpers are
+provided in the same package, and the event system lives in
+`sage_engine/logic`. `sage_editor` builds on these pieces but remains optional
+so games can depend on the engine without pulling in the editor.
 The editor launches maximized in a dark Fusion
 theme and provides two
 tabs: **Viewport** and **Logic**. The viewport uses a virtually infinite
