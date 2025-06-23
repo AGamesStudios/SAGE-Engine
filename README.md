@@ -32,7 +32,8 @@ variables, ensuring booleans and strings remain unchanged. When setting a variab
 chosen from a drop-down list and booleans use a check box. Events attach to specific objects and can trigger on
 game start or every frame. Fonts are slightly larger for readability. Use the
 *Run* button in the toolbar to launch the current scene directly from the
-editor.
+editor. Temporary files are cleaned up each time so you can run repeatedly
+without crashes.
 When defining variables, boolean values are edited with a convenient check box
 instead of typing "true" or "false".
 When comparing variables, the name is selected from a drop-down list so typos

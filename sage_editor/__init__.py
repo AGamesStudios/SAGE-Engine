@@ -711,6 +711,8 @@ class Editor(QMainWindow):
         self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, dock)
         self.console.append(f'Engine path: {os.getcwd()}')
         self.process = None
+        self._tmp_scene = None
+        self._tmp_project = None
         self.console_dock = dock
 
         # canvas rectangle representing the game window
@@ -907,6 +909,7 @@ class Editor(QMainWindow):
     def run_game(self):
         if not self._check_project():
             return
+        self._cleanup_process()
         fd, scene_path = tempfile.mkstemp(suffix='.json')
         os.close(fd)
         proj_fd, proj_path = tempfile.mkstemp(suffix='.sageproject')
@@ -917,13 +920,14 @@ class Editor(QMainWindow):
             obj.y = pos.y()
         self.scene.save(scene_path)
         Project(scene_path).save(proj_path)
-        if self.process and self.process.state() != QProcess.NotRunning:
-            self.process.kill()
+        self._tmp_scene = scene_path
+        self._tmp_project = proj_path
         self.process = QProcess(self)
         self.process.setProgram(sys.executable)
         self.process.setArguments(['-m', 'sage_engine', proj_path])
         self.process.readyReadStandardOutput.connect(self._read_output)
         self.process.readyReadStandardError.connect(self._read_output)
+        self.process.finished.connect(self._cleanup_process)
         self.process.start()
 
     def _read_output(self):
@@ -935,6 +939,22 @@ class Editor(QMainWindow):
         err = bytes(self.process.readAllStandardError()).decode('utf-8')
         if err:
             self.console.append(err.rstrip())
+
+    def _cleanup_process(self):
+        """Terminate the running game process and delete temp files."""
+        if self.process:
+            if self.process.state() != QProcess.NotRunning:
+                self.process.kill()
+                self.process.waitForFinished()
+            self.process = None
+        for attr in ('_tmp_scene', '_tmp_project'):
+            path = getattr(self, attr)
+            if path:
+                try:
+                    os.remove(path)
+                except Exception:
+                    pass
+                setattr(self, attr, None)
 
     def add_sprite(self):
         if not self._check_project():
@@ -1146,6 +1166,7 @@ class Editor(QMainWindow):
             pos = item.pos()
             obj.x = pos.x()
             obj.y = pos.y()
+        self._cleanup_process()
         event.accept()
 
 
