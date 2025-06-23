@@ -149,25 +149,30 @@ uniform sampler2D shadowMap;
 uniform sampler2D ssaoMap;
 uniform vec2 screenSize;
 uniform int shadowSamples;
+uniform float evsmExponent;
 
 float rand(vec2 co){
     return fract(sin(dot(co, vec2(12.9898,78.233))) * 43758.5453);
 }
 
-float chebyshev(vec2 moments, float t){
-    if(t <= moments.x)
-        return 0.0;
-    float variance = max(moments.y - moments.x * moments.x, 0.00002);
-    float d = t - moments.x;
+float chebyshev_upper(float mean, float m2, float t){
+    float variance = max(m2 - mean * mean, 0.00002);
+    float d = t - mean;
     return clamp(variance / (variance + d * d), 0.0, 1.0);
 }
 
-float shadow_calculation(vec4 fragPosLightSpace) {
+float evsm_eval(vec4 moments, float depth){
+    float pos = chebyshev_upper(moments.x, moments.z, exp(evsmExponent * depth));
+    float neg = chebyshev_upper(moments.y, moments.w, exp(-evsmExponent * depth));
+    return min(pos, neg);
+}
+
+float shadow_calculation(vec4 fragPosLightSpace, float bias) {
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     projCoords = projCoords * 0.5 + 0.5;
     if(projCoords.z > 1.0)
         return 0.0;
-    float currentDepth = projCoords.z;
+    float currentDepth = projCoords.z - bias;
     float angle = rand(projCoords.xy) * 6.2831853;
     mat2 rot = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
     float shadow = 0.0;
@@ -184,8 +189,8 @@ float shadow_calculation(vec4 fragPosLightSpace) {
     );
     for(int i=0;i<shadowSamples;i++){
         vec2 offset = rot * poissonDisk[i] * texelSize * 2.0;
-        vec2 moments = texture(shadowMap, projCoords.xy + offset).rg;
-        shadow += chebyshev(moments, currentDepth);
+        vec4 moments = texture(shadowMap, projCoords.xy + offset);
+        shadow += evsm_eval(moments, currentDepth);
     }
     shadow /= float(shadowSamples);
     return 1.0 - shadow;
@@ -204,7 +209,8 @@ void main() {
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);
     vec3 specular = 0.5 * spec * dirLightColor;
 
-    float shadow = shadow_calculation(FragPosLightSpace);
+    float bias = max(0.001 * (1.0 - dot(norm, dir)), 0.0005);
+    float shadow = shadow_calculation(FragPosLightSpace, bias);
     vec3 ptDir = normalize(pointLightPos - FragPos);
     float diff2 = max(dot(norm, ptDir), 0.0);
     vec3 diffuse2 = diff2 * pointLightColor;
@@ -310,14 +316,17 @@ void main() {
 
 DEPTH_FRAGMENT_SHADER = """
 #version 330 core
-layout(location = 0) out vec2 Moments;
+layout(location = 0) out vec4 Moments;
 uniform float near_plane;
 uniform float far_plane;
+uniform float evsmExponent;
 void main() {
     float z = gl_FragCoord.z * 2.0 - 1.0;
     float linear = (2.0 * near_plane * far_plane) /
                    (far_plane + near_plane - z * (far_plane - near_plane));
-    Moments = vec2(linear, linear * linear);
+    float pos = exp(evsmExponent * linear);
+    float neg = exp(-evsmExponent * linear);
+    Moments = vec4(pos, neg, pos * pos, neg * neg);
 }
 """
 
@@ -432,6 +441,7 @@ class Engine:
         self.quad_vao = None
         self.quad_vbo = None
         self.enable_ssao = not self.low_quality
+        self.evsm_exponent = 80.0
 
     def init_gl(self):
         try:
@@ -558,11 +568,11 @@ class Engine:
         glTexImage2D(
             GL_TEXTURE_2D,
             0,
-            GL_RG32F,
+            GL_RGBA32F,
             self.shadow_size,
             self.shadow_size,
             0,
-            GL_RG,
+            GL_RGBA,
             GL_FLOAT,
             None,
         )
@@ -712,6 +722,7 @@ class Engine:
         glUniform1i(glGetUniformLocation(self.program, 'ssaoMap'), 2)
         glUniform2f(glGetUniformLocation(self.program, 'screenSize'), float(self.width), float(self.height))
         glUniform1i(glGetUniformLocation(self.program, 'shadowSamples'), 8 if self.low_quality else 16)
+        glUniform1f(glGetUniformLocation(self.program, 'evsmExponent'), self.evsm_exponent)
 
     def draw_geometry(self, vbo, color, model):
         glBindVertexArray(self.vao)
@@ -827,6 +838,7 @@ class Engine:
         glUniformMatrix4fv(loc_light, 1, GL_TRUE, light_space.flatten())
         glUniform1f(glGetUniformLocation(self.depth_program,'near_plane'), 1.0)
         glUniform1f(glGetUniformLocation(self.depth_program,'far_plane'), 25.0)
+        glUniform1f(glGetUniformLocation(self.depth_program,'evsmExponent'), self.evsm_exponent)
         glViewport(0, 0, self.shadow_size, self.shadow_size)
         glBindFramebuffer(GL_FRAMEBUFFER, self.shadow_fbo)
         glEnable(GL_POLYGON_OFFSET_FILL)
