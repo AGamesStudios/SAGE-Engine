@@ -1,4 +1,4 @@
-# SAGE Engine Example
+# SAGE Render
 
 This repository contains a minimal example of a Python renderer built with OpenGL.
 The engine demonstrates baked global illumination using a light map. The camera
@@ -19,6 +19,15 @@ and the shadows line up correctly. Lighting combines a directional light with a
 point light and stronger ambient illumination. A screen‑space ambient occlusion
 (SSAO) pass further darkens corners for more realism. The shaders combine the
 baked light map with dynamic lighting and shadowing to approximate global
+
+## SAGE Render Technology
+
+SAGE Render groups the rendering code into a reusable Python module. It
+implements advanced PCSS shadow filtering, a blur-enhanced SSAO pass and an
+orbiting camera. The engine exposes an `Engine` class and a `main()` helper so
+the demo can be started with `python -m sage_render` or by importing the module
+in your own projects.
+
 illumination.
 
 ## Requirements
@@ -40,6 +49,8 @@ pip install PyOpenGL PyOpenGL_accelerate numpy numba scipy
 Then run the example:
 
 ```bash
+python -m sage_render
+# or just
 python main.py
 ```
 
@@ -64,12 +75,13 @@ and ambient occlusion remain crisp regardless of resolution.
 ## Quality Modes
 
 The renderer now supports a simplified *low* quality mode to help it run on
-weaker PCs. Run `python main.py low` and the engine will:
+weaker PCs. Run `python -m sage_render low` (or `python main.py low`) and the
+engine will:
 
 - Use a smaller shadow map
 - Disable SSAO
 - Render with fewer depth samples
 - Use half as many shadow samples for filtering
 
-Running `python main.py` without arguments keeps the original high quality
-settings.
+Running `python -m sage_render` without arguments keeps the original high
+quality settings.
