@@ -1577,23 +1577,32 @@ def main(argv=None):
         return 0
     editor.showMaximized()
 
+    orig_out = sys.stdout
+    orig_err = sys.stderr
+
     class _Stream:
-        def __init__(self, edit):
+        def __init__(self, edit, orig):
             self.edit = edit
+            self.orig = orig
 
         def write(self, text):
             if text.strip():
                 self.edit.append(text.rstrip())
+            self.orig.write(text)
 
         def flush(self):
-            pass
+            self.orig.flush()
 
-    sys.stdout = _Stream(editor.console)
-    sys.stderr = _Stream(editor.console)
+    sys.stdout = _Stream(editor.console, orig_out)
+    sys.stderr = _Stream(editor.console, orig_err)
+
     def handle_exception(exc_type, exc, tb):
         text = ''.join(traceback.format_exception(exc_type, exc, tb))
         editor.console.append(text)
+        orig_err.write(text)
+        orig_err.flush()
         QMessageBox.critical(editor, editor.t('error'), text)
+
     sys.excepthook = handle_exception
     print('SAGE Editor started')
 
