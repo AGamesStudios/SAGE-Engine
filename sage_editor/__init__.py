@@ -2,9 +2,11 @@ import sys
 import json
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QFileDialog, QAction,
-    QGraphicsView, QGraphicsScene, QGraphicsPixmapItem
+    QGraphicsView, QGraphicsScene, QGraphicsPixmapItem,
+    QTabWidget, QWidget, QVBoxLayout, QLabel
 )
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap, QPen, QColor
+from PyQt5.QtCore import QRectF
 from sage2d import Scene, GameObject
 
 
@@ -12,14 +14,32 @@ class Editor(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle('SAGE Editor')
+        # set up tabs
+        self.tabs = QTabWidget()
+        self.setCentralWidget(self.tabs)
+
+        # viewport tab
         self.view = QGraphicsView()
         self.g_scene = QGraphicsScene()
+        # large scene rectangle to simulate an "infinite" workspace
+        self.g_scene.setSceneRect(QRectF(-10000, -10000, 20000, 20000))
         self.view.setScene(self.g_scene)
-        self.setCentralWidget(self.view)
+        self.view.setDragMode(QGraphicsView.ScrollHandDrag)
+        self.view.centerOn(0, 0)
+        self.tabs.addTab(self.view, 'Viewport')
+
+        # logic tab placeholder
+        self.logic_widget = QWidget()
+        self.logic_widget.setLayout(QVBoxLayout())
+        self.logic_widget.layout().addWidget(QLabel('Logic editor coming soon'))
+        self.tabs.addTab(self.logic_widget, 'Logic')
+
+        # canvas rectangle representing the game window
+        self.canvas = self.g_scene.addRect(QRectF(0, 0, 640, 480), QPen(QColor('red')))
         self.scene = Scene()
         self.items = []
         self._init_actions()
-        self.show()
+        self.showMaximized()
 
     def _init_actions(self):
         menubar = self.menuBar()
@@ -63,6 +83,8 @@ class Editor(QMainWindow):
     def load_scene(self, path):
         self.scene = Scene.load(path)
         self.g_scene.clear()
+        # redraw canvas after clearing the scene
+        self.canvas = self.g_scene.addRect(QRectF(0, 0, 640, 480), QPen(QColor('red')))
         self.items.clear()
         for obj in self.scene.objects:
             item = QGraphicsPixmapItem(QPixmap(obj.image_path))

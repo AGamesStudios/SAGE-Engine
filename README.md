@@ -104,8 +104,11 @@ You can also switch quality at runtime by calling `set_quality('low')` or
 
 The repository also includes a lightweight 2D framework built on top of
 `pygame`. Scenes consist of movable sprite objects and can be edited with the
-`SAGE Editor` GUI powered by PyQt5. The editor lets you add sprites, drag them
-around and save/load scenes as JSON files.
+`SAGE Editor` GUI powered by PyQt5. The editor runs maximized and provides two
+tabs: **Viewport** and **Logic**. The viewport uses a virtually infinite
+`QGraphicsScene` so you can pan freely. A red rectangle shows the canvas (the
+game window) for reference. You can add sprites, drag them around and
+save/load scenes as JSON files.
 
 Sprites are loaded lazily at runtime so the editor no longer relies on
 `pygame`'s display module. This prevents crashes when adding images on systems
