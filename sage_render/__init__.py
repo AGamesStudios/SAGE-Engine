@@ -154,45 +154,23 @@ float rand(vec2 co){
     return fract(sin(dot(co, vec2(12.9898,78.233))) * 43758.5453);
 }
 
-float search_blocker(vec3 projCoords, float currentDepth, float bias, mat2 rot){
-    vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
-    float blocker = 0.0;
-    int count = 0;
-    vec2 poissonDisk[16] = vec2[](
-        vec2(-0.94201624, -0.39906216), vec2(0.94558609, -0.76890725),
-        vec2(-0.094184101, -0.92938870), vec2(0.34495938, 0.29387760),
-        vec2(-0.91588581, 0.45771432), vec2(-0.81544232, -0.87912464),
-        vec2(-0.38277543, 0.27676845), vec2(0.97484398, 0.75648379),
-        vec2(0.44323325, -0.97511554), vec2(0.53742981, -0.47373420),
-        vec2(-0.26496911, -0.41893023), vec2(0.79197514, 0.19090188),
-        vec2(-0.24188840, 0.99706507), vec2(-0.81409955, 0.91437590),
-        vec2(0.19984126, 0.78641367), vec2(0.14383161, -0.14100790)
-    );
-    for(int i=0;i<shadowSamples;++i){
-        vec2 offset = rot * poissonDisk[i] * texelSize * 2.0;
-        float depth = texture(shadowMap, projCoords.xy + offset).r;
-        if(depth < currentDepth - bias){
-            blocker += depth;
-            count++;
-        }
-    }
-    if(count == 0) return -1.0;
-    return blocker / float(count);
+float chebyshev(vec2 moments, float t){
+    if(t <= moments.x)
+        return 0.0;
+    float variance = max(moments.y - moments.x * moments.x, 0.00002);
+    float d = t - moments.x;
+    return clamp(variance / (variance + d * d), 0.0, 1.0);
 }
 
-float shadow_calculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir) {
+float shadow_calculation(vec4 fragPosLightSpace) {
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     projCoords = projCoords * 0.5 + 0.5;
     if(projCoords.z > 1.0)
         return 0.0;
     float currentDepth = projCoords.z;
-    float bias = max(0.005 * (1.0 - dot(normal, lightDir)), 0.001);
     float angle = rand(projCoords.xy) * 6.2831853;
     mat2 rot = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
-    float blocker = search_blocker(projCoords, currentDepth, bias, rot);
-    float filterRadius = 1.0;
-    if(blocker > 0.0)
-        filterRadius = clamp((currentDepth - blocker) * 40.0, 1.0, 7.5);
+    float shadow = 0.0;
     vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
     vec2 poissonDisk[16] = vec2[](
         vec2(-0.94201624, -0.39906216), vec2(0.94558609, -0.76890725),
@@ -204,14 +182,13 @@ float shadow_calculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir) {
         vec2(-0.24188840, 0.99706507), vec2(-0.81409955, 0.91437590),
         vec2(0.19984126, 0.78641367), vec2(0.14383161, -0.14100790)
     );
-    float shadow = 0.0;
-    for(int i=0;i<shadowSamples*2;i++){
-        vec2 offset = rot * poissonDisk[i % shadowSamples] * texelSize * filterRadius;
-        float pcfDepth = texture(shadowMap, projCoords.xy + offset).r;
-        shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
+    for(int i=0;i<shadowSamples;i++){
+        vec2 offset = rot * poissonDisk[i] * texelSize * 2.0;
+        vec2 moments = texture(shadowMap, projCoords.xy + offset).rg;
+        shadow += chebyshev(moments, currentDepth);
     }
-    shadow /= float(shadowSamples*2);
-    return shadow;
+    shadow /= float(shadowSamples);
+    return 1.0 - shadow;
 }
 
 void main() {
@@ -227,7 +204,7 @@ void main() {
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);
     vec3 specular = 0.5 * spec * dirLightColor;
 
-    float shadow = shadow_calculation(FragPosLightSpace, norm, dir);
+    float shadow = shadow_calculation(FragPosLightSpace);
     vec3 ptDir = normalize(pointLightPos - FragPos);
     float diff2 = max(dot(norm, ptDir), 0.0);
     vec3 diffuse2 = diff2 * pointLightColor;
@@ -333,7 +310,15 @@ void main() {
 
 DEPTH_FRAGMENT_SHADER = """
 #version 330 core
-void main() {}
+layout(location = 0) out vec2 Moments;
+uniform float near_plane;
+uniform float far_plane;
+void main() {
+    float z = gl_FragCoord.z * 2.0 - 1.0;
+    float linear = (2.0 * near_plane * far_plane) /
+                   (far_plane + near_plane - z * (far_plane - near_plane));
+    Moments = vec2(linear, linear * linear);
+}
 """
 
 def compile_shader(source, shader_type):
@@ -431,6 +416,7 @@ class Engine:
         self.lightmap = None
         self.shadow_fbo = None
         self.shadow_map = None
+        self.shadow_depth = None
         self.shadow_size = 1024 if not self.low_quality else 512
         self.vao = None
         self.g_fbo = None
@@ -572,11 +558,11 @@ class Engine:
         glTexImage2D(
             GL_TEXTURE_2D,
             0,
-            GL_DEPTH_COMPONENT32F,
+            GL_RG32F,
             self.shadow_size,
             self.shadow_size,
             0,
-            GL_DEPTH_COMPONENT,
+            GL_RG,
             GL_FLOAT,
             None,
         )
@@ -587,10 +573,16 @@ class Engine:
         border = (GLfloat * 4)(1.0, 1.0, 1.0, 1.0)
         glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border)
         glFramebufferTexture2D(
-            GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, self.shadow_map, 0
+            GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, self.shadow_map, 0
         )
-        glDrawBuffer(GL_NONE)
-        glReadBuffer(GL_NONE)
+
+        self.shadow_depth = glGenRenderbuffers(1)
+        glBindRenderbuffer(GL_RENDERBUFFER, self.shadow_depth)
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, self.shadow_size, self.shadow_size)
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, self.shadow_depth)
+
+        glDrawBuffer(GL_COLOR_ATTACHMENT0)
+        glReadBuffer(GL_COLOR_ATTACHMENT0)
         status = glCheckFramebufferStatus(GL_FRAMEBUFFER)
         if status != GL_FRAMEBUFFER_COMPLETE:
             print("Shadow framebuffer incomplete:", status)
@@ -833,11 +825,13 @@ class Engine:
         loc_model = glGetUniformLocation(self.depth_program, 'model')
         loc_light = glGetUniformLocation(self.depth_program, 'lightSpaceMatrix')
         glUniformMatrix4fv(loc_light, 1, GL_TRUE, light_space.flatten())
+        glUniform1f(glGetUniformLocation(self.depth_program,'near_plane'), 1.0)
+        glUniform1f(glGetUniformLocation(self.depth_program,'far_plane'), 25.0)
         glViewport(0, 0, self.shadow_size, self.shadow_size)
         glBindFramebuffer(GL_FRAMEBUFFER, self.shadow_fbo)
         glEnable(GL_POLYGON_OFFSET_FILL)
         glPolygonOffset(2.0, 4.0)
-        glClear(GL_DEPTH_BUFFER_BIT)
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glUniformMatrix4fv(loc_model, 1, GL_TRUE, plane_model.flatten())
         self.draw_depth_geometry(self.plane_vbo)
         glUniformMatrix4fv(loc_model, 1, GL_TRUE, cube_model.flatten())

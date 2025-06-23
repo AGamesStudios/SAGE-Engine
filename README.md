@@ -5,16 +5,14 @@ The engine demonstrates baked global illumination using a light map. The camera
 now orbits around the scene so the objects remain visible from all sides while
 multi-sample anti aliasing smooths the image.
 
-Shadows are rendered with a depth map and filtered using a Poisson‑disk based PCSS
-(percentage‑closer soft shadows) algorithm. A blocker search first estimates the
-average occluder depth and then uses that to widen the filtering radius so edges
-grow softer with distance. Random rotation of the Poisson kernel reduces banding
-while keeping the filter lightweight. Shadows now use an orthographic projection
-so the entire scene fits inside the shadow map. The depth texture is filtered
-with `GL_LINEAR` and the engine verifies that the shadow framebuffer is complete
-and uses a 32‑bit depth texture so shadows appear reliably. A small polygon
-offset is applied when rendering the depth map to avoid acne artifacts. Each
-object now has its own model matrix so the plane no longer rotates with the cube
+Shadows are rendered with a variance shadow map and filtered using a Poisson disk
+kernel. Two depth moments are stored so the fragment shader can estimate the
+probability of occlusion with a Chebyshev upper bound. Random rotation of the
+disk reduces banding while keeping the filter lightweight. Shadows still use an
+orthographic projection so the entire scene fits inside the map. The texture is
+linearly filtered and the framebuffer is verified for completeness. A small
+polygon offset avoids acne artifacts. Each object now has its own model matrix so
+the plane no longer rotates with the cube
 and the shadows line up correctly. Lighting combines a directional light with a
 point light and stronger ambient illumination. A screen‑space ambient occlusion
 (SSAO) pass further darkens corners for more realism. The shaders combine the
@@ -23,7 +21,7 @@ baked light map with dynamic lighting and shadowing to approximate global
 ## SAGE Render Technology
 
 SAGE Render groups the rendering code into a reusable Python module. It
-implements advanced PCSS shadow filtering, a blur-enhanced SSAO pass and an
+implements variance shadow maps with Poisson filtering, a blur-enhanced SSAO pass and an
 orbiting camera. The engine exposes an `Engine` class and a `main()` helper so
 the demo can be started with `python -m sage_render` or by importing the module
 in your own projects.
@@ -56,7 +54,7 @@ python main.py
 
 This demo opens a window with a plane and a cube lit by a directional light and
 a point light. The objects are static while the camera slowly circles them. Shadows
-come from a depth map filtered with a Poisson‑disk based PCSS filter and a
+come from a variance shadow map filtered with a Poisson disk kernel and a
 screen-space ambient occlusion pass darkens creases using a G-buffer built in
 view space. The G-buffer textures clamp to the screen edges so the SSAO result
 is free of border artifacts. The SSAO pass now includes a blur stage to reduce
