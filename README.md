@@ -8,9 +8,11 @@ multi-sample anti aliasing smooths the image.
 Shadows are rendered with a depth map and filtered using a rotated Poisson disk PCF kernel. The
 sample count changes with the selected quality mode so high quality uses more taps while low
 quality uses fewer. Random rotation of the kernel helps hide banding while keeping the filter
-lightweight. The engine verifies that the shadow framebuffer is complete and uses a 32‑bit depth
-texture so shadows appear reliably. A small polygon
-offset is applied when rendering the depth map to avoid acne artifacts. Each
+lightweight. Shadows now use an orthographic projection so the entire scene fits inside the shadow
+map. The depth texture is filtered with `GL_LINEAR` and the rotated Poisson taps sample a slightly
+wider radius for smoother results. The engine verifies that the shadow framebuffer is complete and
+uses a 32‑bit depth texture so shadows appear reliably. A small polygon offset is applied when
+rendering the depth map to avoid acne artifacts. Each
 object now has its own model matrix so the plane no longer rotates with the cube
 and the shadows line up correctly. Lighting combines a directional light with a
 point light and stronger ambient illumination. A screen‑space ambient occlusion

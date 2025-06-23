@@ -34,6 +34,18 @@ def perspective(fov, aspect, near, far):
     return proj
 
 @njit(cache=True, fastmath=True)
+def ortho(left, right, bottom, top, near, far):
+    mat = np.zeros((4,4), dtype=np.float32)
+    mat[0,0] = 2.0/(right-left)
+    mat[1,1] = 2.0/(top-bottom)
+    mat[2,2] = -2.0/(far-near)
+    mat[3,3] = 1.0
+    mat[0,3] = -(right+left)/(right-left)
+    mat[1,3] = -(top+bottom)/(top-bottom)
+    mat[2,3] = -(far+near)/(far-near)
+    return mat
+
+@njit(cache=True, fastmath=True)
 def _look_at(eye, target, up):
     f = target - eye
     norm = np.sqrt(np.sum(f * f))
@@ -162,7 +174,7 @@ float shadow_calculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir) {
     mat2 rot = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
     float shadow = 0.0;
     for(int i=0;i<shadowSamples;++i){
-        vec2 offset = rot * poissonDisk[i] * texelSize * 2.5;
+        vec2 offset = rot * poissonDisk[i] * texelSize * 3.0;
         float pcfDepth = texture(shadowMap, projCoords.xy + offset).r;
         shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
     }
@@ -538,8 +550,8 @@ class Engine:
             GL_FLOAT,
             None,
         )
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER)
         border = (GLfloat * 4)(1.0, 1.0, 1.0, 1.0)
@@ -653,7 +665,7 @@ class Engine:
         view = look_at(eye, [0, 0, 0], [0, 1, 0])
         projection = perspective(45, self.width / self.height, 0.1, 100.0)
         light_view = look_at(-self.dir_light * 10.0, [0,0,0], [0,1,0])
-        light_proj = perspective(90, 1.0, 1.0, 25.0)
+        light_proj = ortho(-10.0, 10.0, -10.0, 10.0, 1.0, 25.0)
         light_space = np.dot(light_proj, light_view)
         loc_view = glGetUniformLocation(self.program, 'view')
         loc_proj = glGetUniformLocation(self.program, 'projection')
@@ -786,7 +798,7 @@ class Engine:
         cube_model = np.identity(4, dtype=np.float32)
         plane_model = np.identity(4, dtype=np.float32)
         light_view = look_at(-self.dir_light * 10.0, [0,0,0], [0,1,0])
-        light_proj = perspective(90, 1.0, 1.0, 25.0)
+        light_proj = ortho(-10.0, 10.0, -10.0, 10.0, 1.0, 25.0)
         light_space = np.dot(light_proj, light_view)
         loc_model = glGetUniformLocation(self.depth_program, 'model')
         loc_light = glGetUniformLocation(self.depth_program, 'lightSpaceMatrix')
