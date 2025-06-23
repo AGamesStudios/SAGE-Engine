@@ -28,16 +28,22 @@ class GameObject:
         self.image_path = image
         self.x = x
         self.y = y
-        self.sprite = pygame.image.load(image).convert_alpha()
+        self.sprite = None  # lazily loaded when running the game
 
     def update(self, dt):
         pass
 
     def draw(self, surface):
+        self._ensure_sprite()
         surface.blit(self.sprite, (self.x, self.y))
 
     def rect(self):
+        self._ensure_sprite()
         return self.sprite.get_rect(topleft=(self.x, self.y))
+
+    def _ensure_sprite(self):
+        if self.sprite is None:
+            self.sprite = pygame.image.load(self.image_path).convert_alpha()
 
 
 class Scene:

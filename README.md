@@ -107,6 +107,10 @@ The repository also includes a lightweight 2D framework built on top of
 `SAGE Editor` GUI powered by PyQt5. The editor lets you add sprites, drag them
 around and save/load scenes as JSON files.
 
+Sprites are loaded lazily at runtime so the editor no longer relies on
+`pygame`'s display module. This prevents crashes when adding images on systems
+without an SDL window.
+
 Run a saved scene with:
 
 ```bash
