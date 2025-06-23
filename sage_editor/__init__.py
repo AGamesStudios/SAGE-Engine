@@ -721,6 +721,7 @@ class Editor(QMainWindow):
         self._init_actions()
         self.showMaximized()
         self._apply_language()
+        self._update_project_state()
 
     def t(self, key: str) -> str:
         """Translate a key for the current language."""
@@ -750,6 +751,21 @@ class Editor(QMainWindow):
         self.add_var_btn.setText(self.t('add_variable'))
         self.console_dock.setWindowTitle(self.t('console'))
         self.run_btn.setText(self.t('run'))
+
+    def _update_project_state(self):
+        """Enable or disable project-dependent actions."""
+        enabled = self.project_path is not None
+        self.add_sprite_act.setEnabled(enabled)
+        self.add_var_btn.setEnabled(enabled)
+        self.run_act.setEnabled(enabled)
+        self.run_btn.setEnabled(enabled)
+
+    def _check_project(self) -> bool:
+        """Return True if a project is open; otherwise warn the user."""
+        if self.project_path:
+            return True
+        QMessageBox.warning(self, self.t('error'), self.t('no_project'))
+        return False
 
     def _init_actions(self):
         menubar = self.menuBar()
@@ -842,6 +858,7 @@ class Editor(QMainWindow):
             return
         self.project_path = proj_path
         self.load_scene(scene_path)
+        self._update_project_state()
 
     def open_project(self):
         path, _ = QFileDialog.getOpenFileName(
@@ -853,6 +870,7 @@ class Editor(QMainWindow):
             proj = Project.load(path)
             self.project_path = path
             self.load_scene(proj.scene)
+            self._update_project_state()
         except Exception as exc:
             QMessageBox.warning(self, 'Error', f'Failed to open project: {exc}')
 
@@ -863,6 +881,7 @@ class Editor(QMainWindow):
         if not path:
             return
         self.project_path = path
+        self._update_project_state()
         scene_path = os.path.splitext(path)[0] + '.json'
         for item, obj in self.items:
             pos = item.pos()
@@ -886,6 +905,8 @@ class Editor(QMainWindow):
             self.scene.save(path)
 
     def run_game(self):
+        if not self._check_project():
+            return
         fd, scene_path = tempfile.mkstemp(suffix='.json')
         os.close(fd)
         proj_fd, proj_path = tempfile.mkstemp(suffix='.sageproject')
@@ -916,6 +937,8 @@ class Editor(QMainWindow):
             self.console.append(err.rstrip())
 
     def add_sprite(self):
+        if not self._check_project():
+            return
         path, _ = QFileDialog.getOpenFileName(
             self, self.t('add_sprite'), '', self.t('image_files')
         )
@@ -946,6 +969,8 @@ class Editor(QMainWindow):
         self.refresh_events()
 
     def add_variable(self):
+        if not self._check_project():
+            return
         class VariableDialog(QDialog):
             def __init__(self, parent=None):
                 super().__init__(parent)
@@ -1015,6 +1040,8 @@ class Editor(QMainWindow):
             self.var_table.setItem(row, 1, QTableWidgetItem(str(value)))
 
     def add_condition(self, row):
+        if not self._check_project():
+            return
         try:
             idx = self.object_combo.currentData()
             if idx is None or idx < 0 or idx >= len(self.items):
@@ -1033,6 +1060,8 @@ class Editor(QMainWindow):
             self.console.append(f'Failed to add condition: {exc}')
 
     def add_action(self, row):
+        if not self._check_project():
+            return
         try:
             idx = self.object_combo.currentData()
             if idx is None or idx < 0 or idx >= len(self.items):

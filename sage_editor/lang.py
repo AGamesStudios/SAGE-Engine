@@ -28,7 +28,9 @@ LANGUAGES = {
         'image_files': 'Images (*.png *.jpg *.bmp)',
         'json_files': 'JSON Files (*.json)',
         'project_name': 'Project Name:',
-        'project_path': 'Location:'
+        'project_path': 'Location:',
+        'error': 'Error',
+        'no_project': 'Create or open a project first.'
     },
     'Русский': {
         'file': 'Файл',
@@ -59,7 +61,9 @@ LANGUAGES = {
         'image_files': 'Изображения (*.png *.jpg *.bmp)',
         'json_files': 'Файлы JSON (*.json)',
         'project_name': 'Имя проекта:',
-        'project_path': 'Папка:'
+        'project_path': 'Папка:',
+        'error': 'Ошибка',
+        'no_project': 'Сначала создайте или откройте проект.'
     }
 }
 DEFAULT_LANGUAGE = 'English'

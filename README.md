@@ -17,7 +17,9 @@ save/load projects ending in `.sageproject`. Each file references a JSON scene
 on disk. Use **File → New Project** to generate a folder for your game. The
 dialog asks for a project name and a location and then creates the folder with
 an empty scene and `.sageproject` file. Each sprite receives a unique name like
-`enemy (1)` if necessary so conditions always target the correct object.
+`enemy (1)` if necessary so conditions always target the correct object. The
+editor disables sprite, variable and logic actions until a project is opened,
+ensuring all changes are saved to a `.sageproject` file.
 The **Logic** tab lists object events with
 conditions on the left and actions on the right. The event dialog now provides
 drop-down lists for keys and shows only parameters relevant to the chosen
