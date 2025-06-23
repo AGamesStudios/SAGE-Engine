@@ -1,5 +1,9 @@
 import sys
 import ctypes
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 try:
     from OpenGL.GL import *
@@ -341,8 +345,24 @@ def compile_shader(source, shader_type):
     glShaderSource(shader, source)
     glCompileShader(shader)
     if glGetShaderiv(shader, GL_COMPILE_STATUS) != GL_TRUE:
-        raise RuntimeError(glGetShaderInfoLog(shader))
+        msg = glGetShaderInfoLog(shader)
+        logger.error("Shader compilation failed:\n%s", msg.decode())
+        raise RuntimeError(msg)
     return shader
+
+# OpenGL debug output support for easier troubleshooting
+DEBUGPROC = ctypes.CFUNCTYPE(None, GLuint, GLuint, GLuint, GLuint, GLsizei,
+                             ctypes.c_char_p, ctypes.c_void_p)
+
+def _gl_debug_callback(source, type_, id_, severity, length, message, userParam):
+    msg = ctypes.string_at(message, length).decode('utf-8', 'ignore')
+    logger.debug("GL DEBUG: %s", msg)
+
+def enable_debug_output():
+    if 'glDebugMessageCallback' in globals():
+        glEnable(GL_DEBUG_OUTPUT)
+        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS)
+        glDebugMessageCallback(DEBUGPROC(_gl_debug_callback), None)
 
 def create_shader_program():
     vertex_shader = compile_shader(VERTEX_SHADER, GL_VERTEX_SHADER)
@@ -410,10 +430,11 @@ def create_ssao_blur_program():
     return program
 
 class Engine:
-    def __init__(self, width=800, height=600, quality='high'):
+    def __init__(self, width=800, height=600, quality='high', enable_debug=False):
         self.width = width
         self.height = height
         self.low_quality = quality == 'low'
+        self.enable_debug = enable_debug
         self.camera_angle = 0.0
         self.camera_radius = 6.0
         self.camera_height = 3.0
@@ -460,6 +481,8 @@ class Engine:
         glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH | GLUT_MULTISAMPLE)
         glutInitWindowSize(self.width, self.height)
         glutCreateWindow(b"PyOpenGL Scene")
+        if self.enable_debug:
+            enable_debug_output()
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_MULTISAMPLE)
         glClearColor(0.1, 0.1, 0.1, 1.0)
@@ -881,6 +904,19 @@ class Engine:
             self.create_gbuffer()
             self.create_ssao_resources()
 
+    def set_quality(self, quality):
+        """Switch between 'low' and 'high' quality at runtime."""
+        if quality not in ('low', 'high'):
+            raise ValueError("quality must be 'low' or 'high'")
+        self.low_quality = quality == 'low'
+        self.shadow_size = 512 if self.low_quality else 1024
+        self.enable_ssao = not self.low_quality
+        glDeleteFramebuffers(1, [self.shadow_fbo])
+        glDeleteTextures(1, [self.shadow_map])
+        glDeleteRenderbuffers(1, [self.shadow_depth])
+        self.create_shadow_buffer()
+        self.reshape(self.width, self.height)
+
     def run(self):
         self.init_gl()
         glutMainLoop()
@@ -888,8 +924,9 @@ class Engine:
 def main(argv=None):
     if argv is None:
         argv = sys.argv
-    quality = 'low' if len(argv) > 1 and argv[1] == 'low' else 'high'
-    engine = Engine(quality=quality)
+    quality = 'low' if 'low' in argv[1:] else 'high'
+    enable_debug = 'debug' in argv[1:]
+    engine = Engine(quality=quality, enable_debug=enable_debug)
     engine.run()
 
 if __name__ == '__main__':

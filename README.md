@@ -84,3 +84,14 @@ engine will:
 
 Running `python -m sage_render` without arguments keeps the original high
 quality settings.
+
+### Debug Output
+
+Add the `debug` argument to enable OpenGL debug messages:
+
+```bash
+python -m sage_render debug
+```
+
+You can also switch quality at runtime by calling `set_quality('low')` or
+`set_quality('high')` on the `Engine` instance.
