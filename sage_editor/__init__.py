@@ -47,52 +47,52 @@ KEY_OPTIONS = [
 ]
 
 
-def describe_condition(cond, objects):
+def describe_condition(cond, objects, t=lambda x: x):
     typ = cond.get('type', '')
     if typ in ('KeyPressed', 'KeyReleased'):
         key = pygame.key.name(cond.get('key', 0))
-        return f"{typ} {key}"
+        return f"{t(typ)} {key}"
     if typ == 'MouseButton':
         btn = cond.get('button', 0)
         state = cond.get('state', 'down')
-        return f"Mouse{btn} {state}"
+        return f"{t('MouseButton')} {btn} {state}"
     if typ == 'Timer':
-        return f"Timer {cond.get('duration')}s"
+        return f"{t('Timer')} {cond.get('duration')}s"
     if typ == 'Collision':
         a = cond.get('a'); b = cond.get('b')
         a_name = objects[a].name if a is not None and 0 <= a < len(objects) else 'N/A'
         b_name = objects[b].name if b is not None and 0 <= b < len(objects) else 'N/A'
-        return f"Collision {a_name} with {b_name}"
+        return f"{t('Collision')} {a_name} with {b_name}"
     if typ == 'VariableCompare':
-        return f"Var {cond.get('name')} {cond.get('op')} {cond.get('value')}"
-    return typ
+        return f"{t('VariableCompare')} {cond.get('name')} {cond.get('op')} {cond.get('value')}"
+    return t(typ)
 
 
-def describe_action(act, objects):
+def describe_action(act, objects, t=lambda x: x):
     typ = act.get('type', '')
     if typ == 'Move':
         t = act.get('target')
         name = objects[t].name if t is not None and 0 <= t < len(objects) else 'N/A'
-        return f"Move {name} by ({act.get('dx')},{act.get('dy')})"
+        return f"{t('Move')} {name} {t('dx')} {act.get('dx')},{t('dy')} {act.get('dy')}"
     if typ == 'SetPosition':
         t = act.get('target')
         name = objects[t].name if t is not None and 0 <= t < len(objects) else 'N/A'
-        return f"SetPos {name} to ({act.get('x')},{act.get('y')})"
+        return f"{t('SetPosition')} {name} {t('x')} {act.get('x')},{t('y')} {act.get('y')}"
     if typ == 'Destroy':
         t = act.get('target')
         name = objects[t].name if t is not None and 0 <= t < len(objects) else 'N/A'
-        return f"Destroy {name}"
+        return f"{t('Destroy')} {name}"
     if typ == 'Print':
-        return f"Print '{act.get('text')}'"
+        return f"{t('Print')} '{act.get('text')}'"
     if typ == 'PlaySound':
-        return f"PlaySound {os.path.basename(act.get('path',''))}"
+        return f"{t('PlaySound')} {os.path.basename(act.get('path',''))}"
     if typ == 'Spawn':
-        return f"Spawn {os.path.basename(act.get('image',''))}"
+        return f"{t('Spawn')} {os.path.basename(act.get('image',''))}"
     if typ == 'SetVariable':
-        return f"Set {act.get('name')}={act.get('value')}"
+        return f"{t('SetVariable')} {act.get('name')}={act.get('value')}"
     if typ == 'ModifyVariable':
-        return f"{act.get('name')} {act.get('op')}= {act.get('value')}"
-    return typ
+        return f"{t('ModifyVariable')} {act.get('name')} {act.get('op')}= {act.get('value')}"
+    return t(typ)
 
 
 class ConditionDialog(QDialog):
@@ -106,32 +106,33 @@ class ConditionDialog(QDialog):
         layout = QFormLayout(self)
 
         self.type_box = QComboBox()
-        self.type_box.addItems([
+        for name in [
             'KeyPressed', 'KeyReleased', 'MouseButton', 'Timer', 'Collision', 'Always',
             'OnStart', 'EveryFrame', 'VariableCompare'
-        ])
-        layout.addRow('Type:', self.type_box)
+        ]:
+            self.type_box.addItem(parent.t(name) if parent else name, name)
+        layout.addRow(parent.t('type') if parent else 'Type:', self.type_box)
 
-        self.key_label = QLabel('Key/Button:')
+        self.key_label = QLabel(parent.t('key_button') if parent else 'Key/Button:')
         self.key_combo = QComboBox()
         for name, val in KEY_OPTIONS:
             self.key_combo.addItem(name, val)
         layout.addRow(self.key_label, self.key_combo)
 
-        self.duration_label = QLabel('Duration:')
+        self.duration_label = QLabel(parent.t('duration') if parent else 'Duration:')
         self.duration_spin = QSpinBox()
         self.duration_spin.setRange(0, 9999)
         self.duration_spin.setValue(1)
         layout.addRow(self.duration_label, self.duration_spin)
 
-        self.state_label = QLabel('State:')
+        self.state_label = QLabel(parent.t('state') if parent else 'State:')
         self.state_box = QComboBox()
         self.state_box.addItems(['down', 'up'])
         layout.addRow(self.state_label, self.state_box)
 
-        self.a_label = QLabel('Object A:')
+        self.a_label = QLabel(parent.t('object_a') if parent else 'Object A:')
         self.a_box = QComboBox()
-        self.b_label = QLabel('Object B:')
+        self.b_label = QLabel(parent.t('object_b') if parent else 'Object B:')
         self.b_box = QComboBox()
         for i, obj in enumerate(objects):
             label = f'{i}: {obj.name}'
@@ -140,7 +141,7 @@ class ConditionDialog(QDialog):
         layout.addRow(self.a_label, self.a_box)
         layout.addRow(self.b_label, self.b_box)
 
-        self.var_name_label = QLabel('Variable:')
+        self.var_name_label = QLabel(parent.t('variable') if parent else 'Variable:')
         self.var_name_box = QComboBox()
         self.var_names = list(variables.keys())
         self.var_name_box.addItems(self.var_names)
@@ -157,7 +158,7 @@ class ConditionDialog(QDialog):
         icon = self.style().standardIcon(QStyle.StandardPixmap.SP_MessageBoxWarning)
         self.var_warn_icon = QLabel()
         self.var_warn_icon.setPixmap(icon.pixmap(16, 16))
-        self.var_warn_text = QLabel('Operations require a numeric variable')
+        self.var_warn_text = QLabel(parent.t('numeric_required') if parent else 'Operations require a numeric variable')
         warn_row = QHBoxLayout()
         warn_row.addWidget(self.var_warn_icon)
         warn_row.addWidget(self.var_warn_text)
@@ -259,7 +260,7 @@ class ConditionDialog(QDialog):
     def set_condition(self, data: dict):
         """Populate the dialog from an existing condition dict."""
         typ = data.get('type', '')
-        idx = self.type_box.findText(typ)
+        idx = self.type_box.findData(typ)
         if idx >= 0:
             self.type_box.setCurrentIndex(idx)
         if typ in ('KeyPressed', 'KeyReleased'):
@@ -302,34 +303,35 @@ class ActionDialog(QDialog):
         layout = QFormLayout(self)
 
         self.type_box = QComboBox()
-        self.type_box.addItems(['Move', 'SetPosition', 'Destroy', 'Print', 'PlaySound', 'Spawn', 'SetVariable', 'ModifyVariable'])
-        layout.addRow('Type:', self.type_box)
+        for name in ['Move', 'SetPosition', 'Destroy', 'Print', 'PlaySound', 'Spawn', 'SetVariable', 'ModifyVariable']:
+            self.type_box.addItem(parent.t(name) if parent else name, name)
+        layout.addRow(parent.t('type') if parent else 'Type:', self.type_box)
 
-        self.target_label = QLabel('Target:')
+        self.target_label = QLabel(parent.t('target') if parent else 'Target:')
         self.target_box = QComboBox()
         for i, obj in enumerate(objects):
             self.target_box.addItem(f'{i}: {obj.name}', i)
         layout.addRow(self.target_label, self.target_box)
 
-        self.dx_label = QLabel('dx:')
+        self.dx_label = QLabel(parent.t('dx') if parent else 'dx:')
         self.dx_spin = QSpinBox(); self.dx_spin.setRange(-1000, 1000); self.dx_spin.setValue(5)
-        self.dy_label = QLabel('dy:')
+        self.dy_label = QLabel(parent.t('dy') if parent else 'dy:')
         self.dy_spin = QSpinBox(); self.dy_spin.setRange(-1000, 1000)
         layout.addRow(self.dx_label, self.dx_spin)
         layout.addRow(self.dy_label, self.dy_spin)
 
-        self.x_label = QLabel('x:')
+        self.x_label = QLabel(parent.t('x') if parent else 'x:')
         self.x_spin = QSpinBox(); self.x_spin.setRange(-10000, 10000)
-        self.y_label = QLabel('y:')
+        self.y_label = QLabel(parent.t('y') if parent else 'y:')
         self.y_spin = QSpinBox(); self.y_spin.setRange(-10000, 10000)
         layout.addRow(self.x_label, self.x_spin)
         layout.addRow(self.y_label, self.y_spin)
 
-        self.text_label = QLabel('Text:')
+        self.text_label = QLabel(parent.t('text_label') if parent else 'Text:')
         self.text_edit = QLineEdit()
         layout.addRow(self.text_label, self.text_edit)
 
-        self.path_label = QLabel('Path:')
+        self.path_label = QLabel(parent.t('path_label') if parent else 'Path:')
         self.path_edit = QLineEdit()
         path_row = QHBoxLayout()
         path_row.addWidget(self.path_edit)
@@ -338,7 +340,7 @@ class ActionDialog(QDialog):
         path_row.addWidget(self.browse_btn)
         layout.addRow(self.path_label, path_row)
 
-        self.var_name_label = QLabel('Variable:')
+        self.var_name_label = QLabel(parent.t('variable') if parent else 'Variable:')
         self.var_name_box = QComboBox()
         self.var_name_box.addItems(list(self.variables.keys()))
         self.mod_op_box = QComboBox()
@@ -354,7 +356,7 @@ class ActionDialog(QDialog):
         icon = self.style().standardIcon(QStyle.StandardPixmap.SP_MessageBoxWarning)
         self.mod_warn_icon = QLabel()
         self.mod_warn_icon.setPixmap(icon.pixmap(16, 16))
-        self.mod_warn_text = QLabel('Variable must be numeric')
+        self.mod_warn_text = QLabel(parent.t('numeric_required') if parent else 'Variable must be numeric')
         warn_row = QHBoxLayout()
         warn_row.addWidget(self.mod_warn_icon)
         warn_row.addWidget(self.mod_warn_text)
@@ -377,7 +379,9 @@ class ActionDialog(QDialog):
             self.set_action(data)
 
     def _browse_path(self):
-        path, _ = QFileDialog.getOpenFileName(self, 'Select File', '', 'All Files (*)')
+        path, _ = QFileDialog.getOpenFileName(
+            self, self.parent().t('select_file') if self.parent() else 'Select File', '', 'All Files (*)'
+        )
         if path:
             self.path_edit.setText(path)
 
@@ -511,7 +515,7 @@ class ActionDialog(QDialog):
     def set_action(self, data: dict):
         """Populate fields from an existing action dict."""
         typ = data.get('type', '')
-        idx = self.type_box.findText(typ)
+        idx = self.type_box.findData(typ)
         if idx >= 0:
             self.type_box.setCurrentIndex(idx)
         if typ in ('Move', 'SetPosition', 'Destroy'):
@@ -597,14 +601,14 @@ class AddEventDialog(QDialog):
         if dlg.exec() == QDialog.DialogCode.Accepted:
             cond = dlg.get_condition()
             self.conditions.append(cond)
-            self.cond_list.addItem(cond['type'])
+            self.cond_list.addItem(self.t(cond['type']))
 
     def add_action(self):
         dlg = ActionDialog(self.objects, self.variables, self)
         if dlg.exec() == QDialog.DialogCode.Accepted:
             act = dlg.get_action()
             self.actions.append(act)
-            self.act_list.addItem(act['type'])
+            self.act_list.addItem(self.t(act['type']))
 
     def get_event(self):
         return {'conditions': self.conditions, 'actions': self.actions}
@@ -613,16 +617,16 @@ class AddEventDialog(QDialog):
         menu = QMenu(self)
         item = self.cond_list.itemAt(pos)
         if item:
-            edit_act = menu.addAction('Edit')
-            copy_act = menu.addAction('Copy')
-            delete_act = menu.addAction('Delete')
+            edit_act = menu.addAction(self.parent().t('edit') if self.parent() else 'Edit')
+            copy_act = menu.addAction(self.parent().t('copy') if self.parent() else 'Copy')
+            delete_act = menu.addAction(self.parent().t('delete') if self.parent() else 'Delete')
             action = menu.exec(self.cond_list.mapToGlobal(pos))
             row = self.cond_list.row(item)
             if action == edit_act:
                 dlg = ConditionDialog(self.objects, self.variables, self, self.conditions[row])
                 if dlg.exec() == QDialog.DialogCode.Accepted:
                     self.conditions[row] = dlg.get_condition()
-                    item.setText(self.conditions[row]['type'])
+                    item.setText(self.parent().t(self.conditions[row]['type']) if self.parent() else self.conditions[row]['type'])
             elif action == copy_act:
                 self._clip_cond = dict(self.conditions[row])
             elif action == delete_act:
@@ -630,28 +634,28 @@ class AddEventDialog(QDialog):
                 self.cond_list.takeItem(row)
         else:
             add = menu.addAction(self.parent().t('add_condition') if self.parent() else 'Add Condition')
-            paste = menu.addAction('Paste')
+            paste = menu.addAction(self.parent().t('paste') if self.parent() else 'Paste')
             action = menu.exec(self.cond_list.mapToGlobal(pos))
             if action == add:
                 self.add_condition()
             elif action == paste and self._clip_cond:
                 self.conditions.append(dict(self._clip_cond))
-                self.cond_list.addItem(self._clip_cond['type'])
+                self.cond_list.addItem(self.parent().t(self._clip_cond['type']) if self.parent() else self._clip_cond['type'])
 
     def _act_menu(self, pos):
         menu = QMenu(self)
         item = self.act_list.itemAt(pos)
         if item:
-            edit_act = menu.addAction('Edit')
-            copy_act = menu.addAction('Copy')
-            delete_act = menu.addAction('Delete')
+            edit_act = menu.addAction(self.parent().t('edit') if self.parent() else 'Edit')
+            copy_act = menu.addAction(self.parent().t('copy') if self.parent() else 'Copy')
+            delete_act = menu.addAction(self.parent().t('delete') if self.parent() else 'Delete')
             action = menu.exec(self.act_list.mapToGlobal(pos))
             row = self.act_list.row(item)
             if action == edit_act:
                 dlg = ActionDialog(self.objects, self.variables, self, self.actions[row])
                 if dlg.exec() == QDialog.DialogCode.Accepted:
                     self.actions[row] = dlg.get_action()
-                    item.setText(self.actions[row]['type'])
+                    item.setText(self.parent().t(self.actions[row]['type']) if self.parent() else self.actions[row]['type'])
             elif action == copy_act:
                 self._clip_act = dict(self.actions[row])
             elif action == delete_act:
@@ -659,13 +663,13 @@ class AddEventDialog(QDialog):
                 self.act_list.takeItem(row)
         else:
             add = menu.addAction(self.parent().t('add_action') if self.parent() else 'Add Action')
-            paste = menu.addAction('Paste')
+            paste = menu.addAction(self.parent().t('paste') if self.parent() else 'Paste')
             action = menu.exec(self.act_list.mapToGlobal(pos))
             if action == add:
                 self.add_action()
             elif action == paste and self._clip_act:
                 self.actions.append(dict(self._clip_act))
-                self.act_list.addItem(self._clip_act['type'])
+                self.act_list.addItem(self.parent().t(self._clip_act['type']) if self.parent() else self._clip_act['type'])
 
 
 class Editor(QMainWindow):
@@ -686,7 +690,7 @@ class Editor(QMainWindow):
         # use new PyQt6 enum syntax
         self.view.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
         self.view.centerOn(0, 0)
-        self.tabs.addTab(self.view, 'Viewport')
+        self.tabs.addTab(self.view, self.t('viewport'))
         # gizmo rectangle showing selected object
         self.gizmo = self.g_scene.addRect(QRectF(), QPen(QColor('yellow')))
         self.gizmo.setZValue(10000)
@@ -761,6 +765,7 @@ class Editor(QMainWindow):
         self.lang = lang
         self.lang_box.setCurrentText(lang)
         self._apply_language()
+        self.refresh_events()
 
     def _apply_language(self):
         self.file_menu.setTitle(self.t('file'))
@@ -893,7 +898,7 @@ class Editor(QMainWindow):
         name = dlg.name_edit.text().strip()
         folder = dlg.path_edit.text().strip()
         if not name or not folder:
-            QMessageBox.warning(self, 'Error', 'Name and path required')
+            QMessageBox.warning(self, self.t('error'), self.t('name_path_required'))
             return
         proj_dir = os.path.join(folder, name)
         os.makedirs(proj_dir, exist_ok=True)
@@ -1047,13 +1052,13 @@ class Editor(QMainWindow):
                 self.name_edit = QLineEdit()
                 self.type_box = QComboBox()
                 self.type_box.addItems(['int', 'float', 'string', 'bool'])
-                self.value_label = QLabel('Value:')
+                self.value_label = QLabel(parent.t('value_label') if parent else 'Value:')
                 self.value_edit = QLineEdit()
                 self.bool_check = QCheckBox()
-                self.bool_label = QLabel('Value:')
+                self.bool_label = QLabel(parent.t('value_label') if parent else 'Value:')
                 form = QFormLayout(self)
-                form.addRow('Name:', self.name_edit)
-                form.addRow('Type:', self.type_box)
+                form.addRow(parent.t('name_label') if parent else 'Name:', self.name_edit)
+                form.addRow(parent.t('type_label') if parent else 'Type:', self.type_box)
                 form.addRow(self.value_label, self.value_edit)
                 form.addRow(self.bool_label, self.bool_check)
                 buttons = QDialogButtonBox(
@@ -1178,13 +1183,13 @@ class Editor(QMainWindow):
                 self.event_list.setCellWidget(row, 0, btn_cond)
             else:
                 try:
-                    desc = ', '.join(describe_condition(c, [o for _, o in self.items]) for c in evt.get('conditions', []))
+                    desc = ', '.join(describe_condition(c, [o for _, o in self.items], self.t) for c in evt.get('conditions', []))
                     self.event_list.setItem(row, 0, QTableWidgetItem(desc))
                 except Exception:
                     self.event_list.setItem(row, 0, QTableWidgetItem(''))
                 if evt.get('actions'):
                     try:
-                        desc = ', '.join(describe_action(a, [o for _, o in self.items]) for a in evt.get('actions', []))
+                        desc = ', '.join(describe_action(a, [o for _, o in self.items], self.t) for a in evt.get('actions', []))
                         self.event_list.setItem(row, 1, QTableWidgetItem(desc))
                     except Exception:
                         self.event_list.setItem(row, 1, QTableWidgetItem(''))

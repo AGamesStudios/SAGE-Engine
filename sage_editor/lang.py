@@ -37,7 +37,49 @@ LANGUAGES = {
         'created': 'Created',
         'path': 'Path',
         'current': 'Current',
-        'cancel': 'Cancel'
+        'cancel': 'Cancel',
+        'type': 'Type:',
+        'key_button': 'Key/Button:',
+        'duration': 'Duration:',
+        'state': 'State:',
+        'object_a': 'Object A:',
+        'object_b': 'Object B:',
+        'variable': 'Variable:',
+        'numeric_required': 'Operations require a numeric variable',
+        'target': 'Target:',
+        'dx': 'dx:',
+        'dy': 'dy:',
+        'x': 'x:',
+        'y': 'y:',
+        'text_label': 'Text:',
+        'path_label': 'Path:',
+        'operation': 'Operation',
+        'name_label': 'Name:',
+        'type_label': 'Type:',
+        'value_label': 'Value:'
+        , 'select_file': 'Select File'
+        , 'edit': 'Edit'
+        , 'copy': 'Copy'
+        , 'delete': 'Delete'
+        , 'paste': 'Paste'
+        , 'name_path_required': 'Name and path required'
+        , 'KeyPressed': 'Key Pressed'
+        , 'KeyReleased': 'Key Released'
+        , 'MouseButton': 'Mouse Button'
+        , 'Timer': 'Timer'
+        , 'Collision': 'Collision'
+        , 'Always': 'Always'
+        , 'OnStart': 'On Start'
+        , 'EveryFrame': 'Every Frame'
+        , 'VariableCompare': 'Variable Compare'
+        , 'Move': 'Move'
+        , 'SetPosition': 'Set Position'
+        , 'Destroy': 'Destroy'
+        , 'Print': 'Print'
+        , 'PlaySound': 'Play Sound'
+        , 'Spawn': 'Spawn'
+        , 'SetVariable': 'Set Variable'
+        , 'ModifyVariable': 'Modify Variable'
     },
     'Русский': {
         'file': 'Файл',
@@ -77,7 +119,60 @@ LANGUAGES = {
         'created': 'Создан',
         'path': 'Путь',
         'current': 'Текущий',
-        'cancel': 'Отмена'
+        'cancel': 'Отмена',
+        'type': 'Тип:',
+        'key_button': 'Клавиша/кнопка:',
+        'duration': 'Длительность:',
+        'state': 'Состояние:',
+        'object_a': 'Объект A:',
+        'object_b': 'Объект B:',
+        'variable': 'Переменная:',
+        'numeric_required': 'Операции доступны только для чисел',
+        'target': 'Цель:',
+        'dx': 'dx:',
+        'dy': 'dy:',
+        'x': 'x:',
+        'y': 'y:',
+        'text_label': 'Текст:',
+        'path_label': 'Файл:',
+        'operation': 'Операция',
+        'name_label': 'Имя:',
+        'type_label': 'Тип:',
+        'value_label': 'Значение:'
+        , 'select_file': 'Выбрать файл'
+        , 'edit': 'Редактировать'
+        , 'copy': 'Копировать'
+        , 'delete': 'Удалить'
+        , 'paste': 'Вставить'
+        , 'name_path_required': 'Необходимо указать имя и папку'
+        , 'KeyPressed': 'Нажата клавиша'
+        , 'KeyReleased': 'Клавиша отпущена'
+        , 'MouseButton': 'Кнопка мыши'
+        , 'Timer': 'Таймер'
+        , 'Collision': 'Столкновение'
+        , 'Always': 'Всегда'
+        , 'OnStart': 'При старте'
+        , 'EveryFrame': 'Каждый кадр'
+        , 'VariableCompare': 'Сравнение переменной'
+        , 'Move': 'Переместить'
+        , 'SetPosition': 'Установить позицию'
+        , 'Destroy': 'Удалить'
+        , 'Print': 'Вывести текст'
+        , 'PlaySound': 'Проиграть звук'
+        , 'Spawn': 'Создать объект'
+        , 'SetVariable': 'Задать переменную'
+        , 'ModifyVariable': 'Изменить переменную'
     }
 }
-DEFAULT_LANGUAGE = 'English'
+import locale
+
+
+def get_default_language() -> str:
+    """Return the language code matching the system locale."""
+    lang, _ = locale.getdefaultlocale()
+    if lang and lang.lower().startswith('ru'):
+        return 'Русский'
+    return 'English'
+
+
+DEFAULT_LANGUAGE = get_default_language()

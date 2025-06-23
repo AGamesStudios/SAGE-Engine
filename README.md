@@ -52,10 +52,11 @@ printed to the console instead of closing the editor.
 
 ### Localization
 
-The editor supports multiple languages. A toolbar at the top lets you choose
-between **English** and **Русский**. All strings come from simple dictionaries
-in `sage_editor/lang.py`, making it easy to add more languages by updating the
-file. Translations now cover file dialogs and event windows so the interface is fully localized.
+The editor supports multiple languages. On startup it selects the language
+matching your system locale, but you can change it via the toolbar drop-down.
+All strings come from simple dictionaries in `sage_editor/lang.py`, so adding
+more languages only requires editing this file. Translations cover file dialogs,
+logic windows and event lists so the whole interface is localized.
 
 The condition and action lists offer context menus with **Edit**, **Copy**,
 **Paste**, and **Delete** options. Right-click an empty area to add a new block
