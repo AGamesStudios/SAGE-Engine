@@ -514,8 +514,10 @@ class Editor(QMainWindow):
             self.event_list.insertRow(row)
             btn_cond = QPushButton('Add Condition')
             btn_cond.clicked.connect(lambda _, r=i: self.add_condition(r))
-            self.event_list.setCellWidget(row, 0, btn_cond if not evt.get('conditions') else QTableWidgetItem(', '.join(c['type'] for c in evt['conditions'])))
-            if evt.get('conditions'):
+            if not evt.get('conditions'):
+                self.event_list.setCellWidget(row, 0, btn_cond)
+            else:
+                self.event_list.setItem(row, 0, QTableWidgetItem(', '.join(c['type'] for c in evt['conditions'])))
                 if evt.get('actions'):
                     self.event_list.setItem(row, 1, QTableWidgetItem(', '.join(a['type'] for a in evt['actions'])))
                 else:
