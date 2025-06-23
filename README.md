@@ -1,13 +1,18 @@
-# SAGE 2D Engine
+# SAGE Engine
 
-This repository provides a small 2D game engine with a scene editor. It uses
-`pygame` for rendering and PyQt6 for the editor interface. Scenes consist of
-movable sprite objects that you can place visually using the **SAGE Editor**.
-Extra care is taken to keep the editor lightweight so it runs well even on
-older computers.
+This repository contains **SAGE Engine**, a lightweight core framework for
+games, along with **SAGE 2D** which provides sprite rendering on top of the
+core. A PyQt6 based **SAGE Editor** lets you place objects visually and save
+projects. The editor remains small so it runs well even on older computers.
 
 ## Architecture
-The engine core lives in the `sage_engine` package. It provides `GameObject`, `Scene`, and `Engine` classes while the separate `sage_logic` module supplies conditions and actions. The `sage_editor` GUI builds on these pieces but remains optional so games can use the engine without the editor. This separation keeps the code easy to extend and reuse.
+The core engine code resides under `sage_engine/core` which defines the generic
+`GameObject`, `Scene`, `Engine` and `Project` classes. 2D helpers live in the
+`sage_engine/sage2d` package and simply build on the core to provide a default
+sprite-based workflow. The top-level `sage2d` module re-exports these helpers
+for convenience. The standalone `sage_logic` module supplies conditions and
+actions for Clickteam‑style events. `sage_editor` builds on these pieces but is
+optional so games can depend on the engine without pulling in the editor.
 The editor launches maximized in a dark Fusion
 theme and provides two
 tabs: **Viewport** and **Logic**. The viewport uses a virtually infinite

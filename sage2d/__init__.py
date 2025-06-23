@@ -1,4 +1,7 @@
-from sage_engine import GameObject, Scene, Engine, main
+"""2D runtime helpers built on top of SAGE Engine."""
+
+from sage_engine.core import GameObject, Scene, Engine, Project
+from sage_engine.core.engine import main
 from sage_logic import (
     EventSystem, Event, KeyPressed, KeyReleased, MouseButton, Collision, Timer,
     Always, OnStart, EveryFrame, VariableCompare,
@@ -10,5 +13,5 @@ __all__ = [
     'Event', 'KeyPressed', 'KeyReleased', 'MouseButton', 'Collision', 'Timer',
     'Always', 'Move', 'SetPosition', 'Destroy', 'Print', 'PlaySound', 'Spawn',
     'OnStart', 'EveryFrame', 'VariableCompare',
-    'SetVariable', 'ModifyVariable', 'main'
+    'SetVariable', 'ModifyVariable', 'Project', 'main'
 ]

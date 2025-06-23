@@ -1,7 +1,5 @@
-from .game_object import GameObject
-from .scene import Scene
-from .engine import Engine, main
-from .project import Project
+from .core import GameObject, Scene, Engine, Project
+from .core.engine import main
 from sage_logic import (
     EventSystem, Event, KeyPressed, KeyReleased, MouseButton, Collision, Timer,
     Always, OnStart, EveryFrame, VariableCompare,
