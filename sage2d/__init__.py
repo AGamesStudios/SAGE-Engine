@@ -49,6 +49,7 @@ class GameObject:
 class Scene:
     def __init__(self):
         self.objects = []
+        self.events = []
 
     def add_object(self, obj):
         self.objects.append(obj)
@@ -73,16 +74,50 @@ class Scene:
         for entry in data.get('objects', []):
             obj = GameObject(entry['image'], entry.get('x', 0), entry.get('y', 0))
             scene.add_object(obj)
+        for evt in data.get('events', []):
+            scene.events.append(evt)
         return scene
 
     def save(self, path):
         data = {
             'objects': [
                 {'image': o.image_path, 'x': o.x, 'y': o.y} for o in self.objects
-            ]
+            ],
+            'events': self.events,
         }
         with open(path, 'w') as f:
             json.dump(data, f, indent=2)
+
+    def build_event_system(self):
+        es = EventSystem()
+        for evt in self.events:
+            conditions = []
+            for cond in evt.get('conditions', []):
+                typ = cond.get('type')
+                if typ == 'KeyPressed':
+                    conditions.append(KeyPressed(cond['key']))
+                elif typ == 'Timer':
+                    conditions.append(Timer(cond['duration']))
+                elif typ == 'Collision':
+                    a = self.objects[cond['a']]
+                    b = self.objects[cond['b']]
+                    conditions.append(Collision(a, b))
+            actions = []
+            for act in evt.get('actions', []):
+                typ = act.get('type')
+                if typ == 'Move':
+                    obj = self.objects[act['target']]
+                    actions.append(Move(obj, act['dx'], act['dy']))
+                elif typ == 'SetPosition':
+                    obj = self.objects[act['target']]
+                    actions.append(SetPosition(obj, act['x'], act['y']))
+                elif typ == 'Destroy':
+                    obj = self.objects[act['target']]
+                    actions.append(Destroy(obj))
+                elif typ == 'Print':
+                    actions.append(Print(act['text']))
+            es.add_event(Event(conditions, actions, evt.get('once', False)))
+        return es
 
 
 class Engine:
@@ -92,7 +127,12 @@ class Engine:
         pygame.display.set_caption('SAGE 2D')
         self.clock = pygame.time.Clock()
         self.scene = scene or Scene()
-        self.events = events or EventSystem()
+        if events is not None:
+            self.events = events
+        elif self.scene.events:
+            self.events = self.scene.build_event_system()
+        else:
+            self.events = EventSystem()
 
     def run(self):
         running = True
@@ -113,7 +153,7 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv
     scene = Scene.load(argv[1]) if len(argv) > 1 else Scene()
-    Engine(scene=scene).run()
+    Engine(scene=scene, events=scene.build_event_system()).run()
 
 
 if __name__ == '__main__':

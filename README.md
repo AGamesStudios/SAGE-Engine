@@ -108,7 +108,9 @@ The repository also includes a lightweight 2D framework built on top of
 tabs: **Viewport** and **Logic**. The viewport uses a virtually infinite
 `QGraphicsScene` so you can pan freely. A red rectangle shows the canvas (the
 game window) for reference. You can add sprites, drag them around and
-save/load scenes as JSON files.
+save/load scenes as JSON files. The **Logic** tab lists game events and lets you
+create new ones via a dialog. Use the *Run* action to launch the current scene
+directly from the editor.
 
 Sprites are loaded lazily at runtime so the editor no longer relies on
 `pygame`'s display module. This prevents crashes when adding images on systems
@@ -130,6 +132,8 @@ python -m sage_editor
 
 Sprite positions are stored when you save so the runtime engine can render them
 exactly as placed in the editor.
+Event definitions are saved as well, so running the scene will include any logic
+you created in the editor.
 
 ### SAGE Logic Events
 
