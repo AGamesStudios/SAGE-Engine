@@ -1249,10 +1249,18 @@ class Editor(QMainWindow):
     def _create_grid(self):
         """Create grid and axis lines."""
         for line in getattr(self, 'grid_lines', []):
-            self.g_scene.removeItem(line)
+            try:
+                if line.scene() is self.g_scene:
+                    self.g_scene.removeItem(line)
+            except RuntimeError:
+                pass
         self.grid_lines = []
         for line in getattr(self, 'axes', []):
-            self.g_scene.removeItem(line)
+            try:
+                if line.scene() is self.g_scene:
+                    self.g_scene.removeItem(line)
+            except RuntimeError:
+                pass
         self.axes = []
         rect = self.g_scene.sceneRect()
         pen = QPen(self.grid_color)
@@ -1386,14 +1394,18 @@ class Editor(QMainWindow):
             self.scene = scene_or_path
         else:
             self.scene = Scene.load(scene_or_path)
-        self.g_scene.clear()
+        # clear existing graphics safely without triggering stale item access
+        self.g_scene.blockSignals(True)
+        for it in list(self.g_scene.items()):
+            self.g_scene.removeItem(it)
+        self.g_scene.blockSignals(False)
+        self.items.clear()
+        self.object_combo.clear()
         # redraw canvas and grid after clearing the scene
         self.canvas = self.g_scene.addRect(
             QRectF(0, 0, self.window_width, self.window_height), QPen(QColor('red'))
         )
         self._create_grid()
-        self.items.clear()
-        self.object_combo.clear()
         for obj in self.scene.objects:
             try:
                 pix = QPixmap(obj.image_path)
