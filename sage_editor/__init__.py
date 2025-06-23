@@ -767,7 +767,6 @@ class Editor(QMainWindow):
         self.new_proj_act.setText(self.t('new_project'))
         self.open_proj_act.setText(self.t('open_project'))
         self.save_proj_act.setText(self.t('save_project'))
-        self.run_act.setText(self.t('run'))
         self.add_sprite_act.setText(self.t('add_sprite'))
         self.tabs.setTabText(0, self.t('viewport'))
         self.tabs.setTabText(1, self.t('logic'))
@@ -785,7 +784,6 @@ class Editor(QMainWindow):
         enabled = self.project_path is not None
         self.add_sprite_act.setEnabled(enabled)
         self.add_var_btn.setEnabled(enabled)
-        self.run_act.setEnabled(enabled)
         self.run_btn.setEnabled(enabled)
 
     def _check_project(self) -> bool:
