@@ -1,14 +1,15 @@
 import sys
+import argparse
 import pygame
 from .scene import Scene
 from .project import Project
 
 class Engine:
     """Main loop and rendering."""
-    def __init__(self, width=640, height=480, scene=None, events=None, fps=60):
+    def __init__(self, width=640, height=480, scene=None, events=None, fps=60, title='SAGE 2D'):
         pygame.init()
         self.screen = pygame.display.set_mode((width, height))
-        pygame.display.set_caption('SAGE 2D')
+        pygame.display.set_caption(title)
         self.clock = pygame.time.Clock()
         self.fps = fps
         self.scene = scene or Scene()
@@ -31,14 +32,23 @@ class Engine:
 
 def main(argv=None):
     if argv is None:
-        argv = sys.argv
+        argv = sys.argv[1:]
+    parser = argparse.ArgumentParser(description='Run a SAGE project or scene')
+    parser.add_argument('file', nargs='?', help='Scene or project file')
+    parser.add_argument('--width', type=int, default=640, help='Window width')
+    parser.add_argument('--height', type=int, default=480, help='Window height')
+    parser.add_argument('--title', default='SAGE 2D', help='Window title')
+    args = parser.parse_args(argv)
+
     scene = Scene()
-    if len(argv) > 1:
-        path = argv[1]
+    if args.file:
+        path = args.file
         if path.endswith('.sageproject'):
             proj = Project.load(path)
             if proj.scene:
                 scene = Scene.from_dict(proj.scene)
         else:
             scene = Scene.load(path)
-    Engine(scene=scene, events=scene.build_event_system()).run()
+
+    Engine(width=args.width, height=args.height, title=args.title,
+           scene=scene, events=scene.build_event_system()).run()

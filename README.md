@@ -39,6 +39,8 @@ game start or every frame. Fonts are slightly larger for readability. Use the
 *Run* button in the toolbar to launch the current scene directly from the
 editor. Temporary files are cleaned up each time so you can run repeatedly
 without crashes.
+Window dimensions can be changed under **Settings → Window Settings**. The
+game window title matches the editor, e.g. `SAGE Editor: MyGame - Scene1`.
 When defining variables, boolean values are edited with a convenient check box
 instead of typing "true" or "false".
 When comparing variables, the name is selected from a drop-down list so typos

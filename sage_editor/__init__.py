@@ -681,6 +681,8 @@ class Editor(QMainWindow):
     def __init__(self, autoshow: bool = True):
         super().__init__()
         self.lang = DEFAULT_LANGUAGE
+        self.window_width = 640
+        self.window_height = 480
         self.setWindowTitle('SAGE Editor')
         # set up tabs
         self.tabs = QTabWidget()
@@ -747,7 +749,9 @@ class Editor(QMainWindow):
         self.console_dock = dock
 
         # canvas rectangle representing the game window
-        self.canvas = self.g_scene.addRect(QRectF(0, 0, 640, 480), QPen(QColor('red')))
+        self.canvas = self.g_scene.addRect(
+            QRectF(0, 0, self.window_width, self.window_height), QPen(QColor('red'))
+        )
         self.scene = Scene()
         self.project_path: str | None = None
         self.items = []
@@ -788,7 +792,10 @@ class Editor(QMainWindow):
         self.console_dock.setWindowTitle(self.t('console'))
         self.run_btn.setText(self.t('run'))
         self.recent_menu.setTitle(self.t('recent_projects'))
+        self.settings_menu.setTitle(self.t('settings'))
+        self.window_settings_act.setText(self.t('window_settings'))
         self._update_recent_menu()
+        self._update_title()
         
     def _update_project_state(self):
         """Enable or disable project-dependent actions."""
@@ -796,6 +803,14 @@ class Editor(QMainWindow):
         self.add_sprite_act.setEnabled(enabled)
         self.add_var_btn.setEnabled(enabled)
         self.run_btn.setEnabled(enabled)
+        self._update_title()
+
+    def _update_title(self):
+        if self.project_path:
+            name = os.path.splitext(os.path.basename(self.project_path))[0]
+            self.setWindowTitle(f'SAGE Editor: {name} - Scene1')
+        else:
+            self.setWindowTitle('SAGE Editor')
 
     def _check_project(self) -> bool:
         """Return True if a project is open; otherwise warn the user."""
@@ -842,6 +857,11 @@ class Editor(QMainWindow):
         self.file_menu.addAction(self.open_proj_act)
         self.file_menu.addAction(self.save_proj_act)
         self.recent_menu = self.file_menu.addMenu(self.t('recent_projects'))
+
+        self.settings_menu = menubar.addMenu(self.t('settings'))
+        self.window_settings_act = QAction(self.t('window_settings'), self)
+        self.window_settings_act.triggered.connect(self.show_window_settings)
+        self.settings_menu.addAction(self.window_settings_act)
 
         self.edit_menu = menubar.addMenu(self.t('edit'))
         self.add_sprite_act = QAction(self.t('add_sprite'), self)
@@ -918,6 +938,7 @@ class Editor(QMainWindow):
         self.load_scene(self.scene)
         self._update_project_state()
         self._add_recent(proj_path)
+        self._update_title()
 
     def open_project(self, path: str | None = None):
         if path is None:
@@ -932,6 +953,7 @@ class Editor(QMainWindow):
             self.load_scene(Scene.from_dict(proj.scene))
             self._update_project_state()
             self._add_recent(path)
+            self._update_title()
         except Exception as exc:
             QMessageBox.warning(self, 'Error', f'Failed to open project: {exc}')
 
@@ -966,6 +988,25 @@ class Editor(QMainWindow):
                 obj.y = pos.y()
             self.scene.save(path)
 
+    def show_window_settings(self):
+        dlg = QDialog(self)
+        dlg.setWindowTitle(self.t('window_settings'))
+        w_spin = QSpinBox(); w_spin.setRange(100, 4096); w_spin.setValue(self.window_width)
+        h_spin = QSpinBox(); h_spin.setRange(100, 4096); h_spin.setValue(self.window_height)
+        form = QFormLayout(dlg)
+        form.addRow(self.t('width'), w_spin)
+        form.addRow(self.t('height'), h_spin)
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
+        buttons.accepted.connect(dlg.accept)
+        buttons.rejected.connect(dlg.reject)
+        form.addRow(buttons)
+        if dlg.exec() == QDialog.DialogCode.Accepted:
+            self.window_width = w_spin.value()
+            self.window_height = h_spin.value()
+            self.canvas.setRect(0, 0, self.window_width, self.window_height)
+
     def run_game(self):
         if not self._check_project():
             return
@@ -980,7 +1021,17 @@ class Editor(QMainWindow):
         self._tmp_project = proj_path
         self.process = QProcess(self)
         self.process.setProgram(sys.executable)
-        self.process.setArguments(['-m', 'sage_engine', proj_path])
+        title = 'SAGE 2D'
+        if self.project_path:
+            name = os.path.splitext(os.path.basename(self.project_path))[0]
+            title = f'{name} - Scene1'
+        args = [
+            '-m', 'sage_engine', proj_path,
+            '--width', str(self.window_width),
+            '--height', str(self.window_height),
+            '--title', title,
+        ]
+        self.process.setArguments(args)
         self.process.readyReadStandardOutput.connect(self._read_output)
         self.process.readyReadStandardError.connect(self._read_output)
         self.process.finished.connect(self._cleanup_process)
@@ -1216,7 +1267,9 @@ class Editor(QMainWindow):
             self.scene = Scene.load(scene_or_path)
         self.g_scene.clear()
         # redraw canvas after clearing the scene
-        self.canvas = self.g_scene.addRect(QRectF(0, 0, 640, 480), QPen(QColor('red')))
+        self.canvas = self.g_scene.addRect(
+            QRectF(0, 0, self.window_width, self.window_height), QPen(QColor('red'))
+        )
         self.items.clear()
         self.object_combo.clear()
         for obj in self.scene.objects:

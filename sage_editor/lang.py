@@ -58,6 +58,10 @@ LANGUAGES = {
         'name_label': 'Name:',
         'type_label': 'Type:',
         'value_label': 'Value:'
+        , 'settings': 'Settings'
+        , 'window_settings': 'Window Settings'
+        , 'width': 'Width:'
+        , 'height': 'Height:'
         , 'select_file': 'Select File'
         , 'edit': 'Edit'
         , 'copy': 'Copy'
@@ -141,6 +145,10 @@ LANGUAGES = {
         'name_label': 'Имя:',
         'type_label': 'Тип:',
         'value_label': 'Значение:'
+        , 'settings': 'Настройки'
+        , 'window_settings': 'Параметры окна'
+        , 'width': 'Ширина:'
+        , 'height': 'Высота:'
         , 'select_file': 'Выбрать файл'
         , 'edit': 'Редактировать'
         , 'copy': 'Копировать'
