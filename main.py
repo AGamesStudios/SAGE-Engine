@@ -90,6 +90,11 @@ uniform sampler2D lightMap;
 uniform sampler2D shadowMap;
 uniform sampler2D ssaoMap;
 uniform vec2 screenSize;
+uniform int shadowSamples;
+
+float rand(vec2 co){
+    return fract(sin(dot(co, vec2(12.9898,78.233))) * 43758.5453);
+}
 
 float shadow_calculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir) {
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
@@ -115,12 +120,15 @@ float shadow_calculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir) {
         vec2(0.19984126, 0.78641367),
         vec2(0.14383161, -0.14100790)
     );
+    float angle = rand(projCoords.xy) * 6.2831853;
+    mat2 rot = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
     float shadow = 0.0;
-    for(int i=0;i<16;++i){
-        float pcfDepth = texture(shadowMap, projCoords.xy + poissonDisk[i] * texelSize * 2.0).r;
+    for(int i=0;i<shadowSamples;++i){
+        vec2 offset = rot * poissonDisk[i] * texelSize * 2.5;
+        float pcfDepth = texture(shadowMap, projCoords.xy + offset).r;
         shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
     }
-    shadow /= 16.0;
+    shadow /= float(shadowSamples);
     if(projCoords.z > 1.0)
         shadow = 0.0;
     return shadow;
@@ -639,6 +647,7 @@ class Engine:
         glBindTexture(GL_TEXTURE_2D, self.ssao_tex)
         glUniform1i(glGetUniformLocation(self.program, 'ssaoMap'), 2)
         glUniform2f(glGetUniformLocation(self.program, 'screenSize'), float(self.width), float(self.height))
+        glUniform1i(glGetUniformLocation(self.program, 'shadowSamples'), 8 if self.low_quality else 16)
 
     def draw_geometry(self, vbo, color, model):
         glBindVertexArray(self.vao)

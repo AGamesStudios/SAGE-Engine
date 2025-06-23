@@ -5,9 +5,11 @@ The engine demonstrates baked global illumination using a light map. The camera
 now orbits around the scene so the objects remain visible from all sides while
 multi-sample anti aliasing smooths the image.
 
-Shadows are rendered with a depth map and filtered using a Poisson disk PCF pattern for
-softer edges without visible banding. The engine verifies that the shadow framebuffer is complete
-and uses a 32‑bit depth texture so shadows appear reliably. A small polygon
+Shadows are rendered with a depth map and filtered using a rotated Poisson disk PCF kernel. The
+sample count changes with the selected quality mode so high quality uses more taps while low
+quality uses fewer. Random rotation of the kernel helps hide banding while keeping the filter
+lightweight. The engine verifies that the shadow framebuffer is complete and uses a 32‑bit depth
+texture so shadows appear reliably. A small polygon
 offset is applied when rendering the depth map to avoid acne artifacts. Each
 object now has its own model matrix so the plane no longer rotates with the cube
 and the shadows line up correctly. Lighting combines a directional light with a
@@ -39,7 +41,7 @@ python main.py
 
 This demo opens a window with a plane and a cube lit by a directional light and
 a point light. The objects are static while the camera slowly circles them. Shadows
-come from a depth map filtered with a Poisson disk PCF kernel and a
+come from a depth map filtered with a rotated Poisson disk PCF kernel and a
 screen-space ambient occlusion pass darkens creases using a G-buffer built in
 view space. The G-buffer textures clamp to the screen edges so the SSAO result
 is free of border artifacts. The SSAO pass now includes a blur stage to reduce
@@ -57,6 +59,7 @@ weaker PCs. Run `python main.py low` and the engine will:
 - Use a smaller shadow map
 - Disable SSAO
 - Render with fewer depth samples
+- Use half as many PCF taps for shadow filtering
 
 Running `python main.py` without arguments keeps the original high quality
 settings.
