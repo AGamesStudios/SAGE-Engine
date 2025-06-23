@@ -32,7 +32,12 @@ LANGUAGES = {
         'project_name': 'Project Name:',
         'project_path': 'Location:',
         'error': 'Error',
-        'no_project': 'Create or open a project first.'
+        'no_project': 'Create or open a project first.',
+        'project_manager': 'Project Manager',
+        'created': 'Created',
+        'path': 'Path',
+        'current': 'Current',
+        'cancel': 'Cancel'
     },
     'Русский': {
         'file': 'Файл',
@@ -67,7 +72,12 @@ LANGUAGES = {
         'project_name': 'Имя проекта:',
         'project_path': 'Папка:',
         'error': 'Ошибка',
-        'no_project': 'Сначала создайте или откройте проект.'
+        'no_project': 'Сначала создайте или откройте проект.',
+        'project_manager': 'Управление проектами',
+        'created': 'Создан',
+        'path': 'Путь',
+        'current': 'Текущий',
+        'cancel': 'Отмена'
     }
 }
 DEFAULT_LANGUAGE = 'English'

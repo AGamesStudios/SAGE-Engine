@@ -11,7 +11,9 @@ generic `GameObject`, `Scene`, `Engine` and `Project` classes. 2D helpers are
 provided in the same package, and the event system lives in
 `sage_engine/logic`. `sage_editor` builds on these pieces but remains optional
 so games can depend on the engine without pulling in the editor.
-The editor launches maximized in a dark Fusion
+When launching the editor a **Project Manager** window appears. It lets you
+create a new project, open an existing one or pick from your recent projects.
+Once a project is chosen the editor opens maximized in a dark Fusion
 theme and provides two
 tabs: **Viewport** and **Logic**. The viewport uses a virtually infinite
 `QGraphicsScene` so you can pan freely. A red rectangle shows the canvas (the

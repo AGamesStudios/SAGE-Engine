@@ -669,7 +669,7 @@ class AddEventDialog(QDialog):
 
 
 class Editor(QMainWindow):
-    def __init__(self):
+    def __init__(self, autoshow: bool = True):
         super().__init__()
         self.lang = DEFAULT_LANGUAGE
         self.setWindowTitle('SAGE Editor')
@@ -744,7 +744,8 @@ class Editor(QMainWindow):
         self.items = []
         self.recent_projects = load_recent()
         self._init_actions()
-        self.showMaximized()
+        if autoshow:
+            self.showMaximized()
         self._apply_language()
         self._update_project_state()
         self._update_recent_menu()
@@ -1232,6 +1233,78 @@ class Editor(QMainWindow):
         event.accept()
 
 
+class ProjectManager(QDialog):
+    """Startup dialog listing recent projects and actions."""
+
+    def __init__(self, editor: Editor):
+        super().__init__(editor)
+        self.editor = editor
+        self.setWindowTitle(editor.t('project_manager'))
+        layout = QVBoxLayout(self)
+
+        self.table = QTableWidget(0, 4)
+        self.table.setHorizontalHeaderLabels([
+            editor.t('current'), editor.t('name'),
+            editor.t('created'), editor.t('path')
+        ])
+        self.table.horizontalHeader().setStretchLastSection(True)
+        layout.addWidget(self.table)
+
+        btn_row = QHBoxLayout()
+        self.new_btn = QPushButton(editor.t('new_project'))
+        self.open_btn = QPushButton(editor.t('open_project'))
+        self.cancel_btn = QPushButton(editor.t('cancel'))
+        btn_row.addWidget(self.new_btn)
+        btn_row.addWidget(self.open_btn)
+        btn_row.addStretch(1)
+        btn_row.addWidget(self.cancel_btn)
+        layout.addLayout(btn_row)
+
+        self.new_btn.clicked.connect(self.create_project)
+        self.open_btn.clicked.connect(self.browse_project)
+        self.cancel_btn.clicked.connect(self.reject)
+        self.table.itemDoubleClicked.connect(self.open_selected)
+
+        self.populate()
+
+    def populate(self):
+        from datetime import datetime
+        self.table.setRowCount(0)
+        for path in self.editor.recent_projects:
+            row = self.table.rowCount()
+            self.table.insertRow(row)
+            current = '✓' if path == self.editor.project_path else ''
+            name = os.path.splitext(os.path.basename(path))[0]
+            try:
+                ts = os.path.getctime(path)
+                created = datetime.fromtimestamp(ts).strftime('%Y-%m-%d')
+            except Exception:
+                created = ''
+            self.table.setItem(row, 0, QTableWidgetItem(current))
+            self.table.setItem(row, 1, QTableWidgetItem(name))
+            self.table.setItem(row, 2, QTableWidgetItem(created))
+            self.table.setItem(row, 3, QTableWidgetItem(path))
+
+    def open_selected(self):
+        row = self.table.currentRow()
+        if row < 0:
+            return
+        path = self.table.item(row, 3).text()
+        self.editor.open_project(path)
+        if self.editor.project_path:
+            self.accept()
+
+    def browse_project(self):
+        self.editor.open_project()
+        if self.editor.project_path:
+            self.accept()
+
+    def create_project(self):
+        self.editor.new_project()
+        if self.editor.project_path:
+            self.accept()
+
+
 def main(argv=None):
     if argv is None:
         argv = sys.argv
@@ -1253,7 +1326,11 @@ def main(argv=None):
     font = QFont()
     font.setPointSize(font.pointSize() + 2)
     app.setFont(font)
-    editor = Editor()
+    editor = Editor(autoshow=False)
+    pm = ProjectManager(editor)
+    if pm.exec() != QDialog.DialogCode.Accepted:
+        return 0
+    editor.showMaximized()
 
     class _Stream:
         def __init__(self, edit):
