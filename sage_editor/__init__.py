@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (
     QListWidget, QTableWidget, QTableWidgetItem, QPushButton, QDialog, QFormLayout,
     QDialogButtonBox, QLineEdit, QSpinBox, QComboBox,
     QTextEdit, QDockWidget, QGroupBox, QCheckBox, QMessageBox, QMenu,
-    QStyle
+    QStyle, QHeaderView, QAbstractItemView
 )
 from PyQt6.QtGui import QPixmap, QPen, QColor, QPalette, QFont, QAction
 from PyQt6.QtCore import QRectF, Qt, QProcess
@@ -20,11 +20,16 @@ import json
 RECENT_FILE = os.path.join(os.path.expanduser('~'), '.sage_recent.json')
 
 def load_recent():
+    """Return a list of recent project files that still exist."""
     try:
         with open(RECENT_FILE, 'r') as f:
-            return json.load(f)
+            lst = json.load(f)
     except Exception:
         return []
+    lst = [p for p in lst if os.path.exists(p)]
+    if lst:
+        save_recent(lst)
+    return lst
 
 def save_recent(lst):
     try:
@@ -1247,26 +1252,40 @@ class ProjectManager(QDialog):
         self.setWindowTitle(editor.t('project_manager'))
         layout = QVBoxLayout(self)
 
+        info = QLabel(editor.t('select_project_info'))
+        layout.addWidget(info)
+
         self.table = QTableWidget(0, 4)
         self.table.setHorizontalHeaderLabels([
             editor.t('current'), editor.t('name'),
             editor.t('created'), editor.t('path')
         ])
-        self.table.horizontalHeader().setStretchLastSection(True)
+        self.table.verticalHeader().hide()
+        self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        header = self.table.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
+        self.table.setAlternatingRowColors(True)
+        self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         layout.addWidget(self.table)
 
         btn_row = QHBoxLayout()
         self.new_btn = QPushButton(editor.t('new_project'))
         self.open_btn = QPushButton(editor.t('open_project'))
+        self.clear_btn = QPushButton(editor.t('clear_recent'))
         self.cancel_btn = QPushButton(editor.t('cancel'))
         btn_row.addWidget(self.new_btn)
         btn_row.addWidget(self.open_btn)
+        btn_row.addWidget(self.clear_btn)
         btn_row.addStretch(1)
         btn_row.addWidget(self.cancel_btn)
         layout.addLayout(btn_row)
 
         self.new_btn.clicked.connect(self.create_project)
         self.open_btn.clicked.connect(self.browse_project)
+        self.clear_btn.clicked.connect(self.clear_list)
         self.cancel_btn.clicked.connect(self.reject)
         self.table.itemDoubleClicked.connect(self.open_selected)
 
@@ -1275,7 +1294,10 @@ class ProjectManager(QDialog):
     def populate(self):
         from datetime import datetime
         self.table.setRowCount(0)
+        valid = []
         for path in self.editor.recent_projects:
+            if not os.path.exists(path):
+                continue
             row = self.table.rowCount()
             self.table.insertRow(row)
             current = '✓' if path == self.editor.project_path else ''
@@ -1289,6 +1311,10 @@ class ProjectManager(QDialog):
             self.table.setItem(row, 1, QTableWidgetItem(name))
             self.table.setItem(row, 2, QTableWidgetItem(created))
             self.table.setItem(row, 3, QTableWidgetItem(path))
+            valid.append(path)
+        if valid != self.editor.recent_projects:
+            self.editor.recent_projects = valid
+            save_recent(valid)
 
     def open_selected(self):
         row = self.table.currentRow()
@@ -1308,6 +1334,11 @@ class ProjectManager(QDialog):
         self.editor.new_project()
         if self.editor.project_path:
             self.accept()
+
+    def clear_list(self):
+        self.editor.recent_projects = []
+        save_recent([])
+        self.populate()
 
 
 def main(argv=None):
