@@ -5,7 +5,8 @@ from PyQt6.QtWidgets import (
     QTabWidget, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QListWidget, QTableWidget, QTableWidgetItem, QPushButton, QDialog, QFormLayout,
     QDialogButtonBox, QLineEdit, QSpinBox, QComboBox,
-    QTextEdit, QDockWidget, QGroupBox, QCheckBox, QMessageBox, QMenu
+    QTextEdit, QDockWidget, QGroupBox, QCheckBox, QMessageBox, QMenu,
+    QStyle
 )
 from PyQt6.QtGui import QPixmap, QPen, QColor, QPalette, QFont, QAction
 from PyQt6.QtCore import QRectF, Qt, QProcess
@@ -171,7 +172,8 @@ class ConditionDialog(QDialog):
             (self.var_name_label, self.var_name_box),
             (self.var_op_box, self.var_op_box),
             (self.var_value_edit, self.var_value_edit),
-            (self.var_warn, self.var_warn),
+            (self.var_warn_icon, self.var_warn_icon),
+            (self.var_warn_text, self.var_warn_text),
         ]
         for label, w in widgets:
             label.setVisible(False)
