@@ -5,8 +5,8 @@ The engine demonstrates baked global illumination using a light map. The camera
 now orbits around the scene so the objects remain visible from all sides while
 multi-sample anti aliasing smooths the image.
 
-Shadows are rendered with a depth map and filtered using a high quality 7x7 PCF kernel for
-even softer edges. The engine verifies that the shadow framebuffer is complete
+Shadows are rendered with a depth map and filtered using a Poisson disk PCF pattern for
+softer edges without visible banding. The engine verifies that the shadow framebuffer is complete
 and uses a 32‑bit depth texture so shadows appear reliably. A small polygon
 offset is applied when rendering the depth map to avoid acne artifacts. Each
 object now has its own model matrix so the plane no longer rotates with the cube
@@ -39,13 +39,15 @@ python main.py
 
 This demo opens a window with a plane and a cube lit by a directional light and
 a point light. The objects are static while the camera slowly circles them. Shadows
-come from a depth map filtered with a 7×7 PCF kernel and a
+come from a depth map filtered with a Poisson disk PCF kernel and a
 screen-space ambient occlusion pass darkens creases using a G-buffer built in
 view space. The G-buffer textures clamp to the screen edges so the SSAO result
 is free of border artifacts. The SSAO pass now includes a blur stage to reduce
 noise. Multi-sample anti aliasing and baked global illumination make the final
-image smoother and brighter. Lighting uses a Blinn-Phong specular model for
-sharper highlights.
+image smoother and brighter. Lighting uses classic Phong specular highlights.
+
+Framebuffers and textures are recreated when the window is resized so shadows
+and ambient occlusion remain crisp regardless of resolution.
 
 ## Quality Modes
 
