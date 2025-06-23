@@ -42,3 +42,15 @@ screen-space ambient occlusion pass darkens creases using a G-buffer built in
 view space. The G-buffer textures clamp to the screen edges so the SSAO result
 is free of border artifacts. Multi-sample anti aliasing and baked global illumination make the
 final image smoother and brighter.
+
+## Quality Modes
+
+The renderer now supports a simplified *low* quality mode to help it run on
+weaker PCs. Run `python main.py low` and the engine will:
+
+- Use a smaller shadow map
+- Disable SSAO
+- Render with fewer depth samples
+
+Running `python main.py` without arguments keeps the original high quality
+settings.

@@ -278,9 +278,10 @@ def create_ssao_program():
     return program
 
 class Engine:
-    def __init__(self, width=800, height=600):
+    def __init__(self, width=800, height=600, quality='high'):
         self.width = width
         self.height = height
+        self.low_quality = quality == 'low'
         self.angle = 0
         self.camera_pos = np.array([4.0, 3.0, 6.0], dtype=np.float32)
         self.dir_light = np.array([-0.2, -1.0, -0.3], dtype=np.float32)
@@ -296,7 +297,7 @@ class Engine:
         self.lightmap = None
         self.shadow_fbo = None
         self.shadow_map = None
-        self.shadow_size = 1024
+        self.shadow_size = 1024 if not self.low_quality else 512
         self.vao = None
         self.g_fbo = None
         self.g_position = None
@@ -308,6 +309,7 @@ class Engine:
         self.ssao_samples = None
         self.quad_vao = None
         self.quad_vbo = None
+        self.enable_ssao = not self.low_quality
 
     def init_gl(self):
         try:
@@ -331,8 +333,12 @@ class Engine:
         self.setup_geometry()
         self.create_lightmap()
         self.create_shadow_buffer()
-        self.create_gbuffer()
-        self.create_ssao_resources()
+        if self.enable_ssao:
+            self.create_gbuffer()
+            self.create_ssao_resources()
+        else:
+            self.g_fbo = None
+            self.ssao_tex = self.create_white_texture()
         self.create_quad()
         glutDisplayFunc(self.render)
         glutIdleFunc(self.update)
@@ -410,6 +416,15 @@ class Engine:
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_FLOAT, data)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+
+    def create_white_texture(self):
+        tex = glGenTextures(1)
+        glBindTexture(GL_TEXTURE_2D, tex)
+        data = (GLfloat * 3)(1.0, 1.0, 1.0)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_FLOAT, data)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+        return tex
 
     def create_shadow_buffer(self):
         self.shadow_fbo = glGenFramebuffers(1)
@@ -647,8 +662,9 @@ class Engine:
 
     def render(self):
         self.render_depth_pass()
-        self.render_gbuffer()
-        self.render_ssao()
+        if self.enable_ssao:
+            self.render_gbuffer()
+            self.render_ssao()
         glViewport(0, 0, self.width, self.height)
         glBindFramebuffer(GL_FRAMEBUFFER, 0)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -698,5 +714,6 @@ class Engine:
         glutMainLoop()
 
 if __name__ == '__main__':
-    engine = Engine()
+    quality = 'low' if len(sys.argv) > 1 and sys.argv[1] == 'low' else 'high'
+    engine = Engine(quality=quality)
     engine.run()
