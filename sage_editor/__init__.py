@@ -28,6 +28,52 @@ KEY_OPTIONS = [
 ]
 
 
+def describe_condition(cond, objects):
+    typ = cond.get('type', '')
+    if typ in ('KeyPressed', 'KeyReleased'):
+        key = pygame.key.name(cond.get('key', 0))
+        return f"{typ} {key}"
+    if typ == 'MouseButton':
+        btn = cond.get('button', 0)
+        state = cond.get('state', 'down')
+        return f"Mouse{btn} {state}"
+    if typ == 'Timer':
+        return f"Timer {cond.get('duration')}s"
+    if typ == 'Collision':
+        a = cond.get('a'); b = cond.get('b')
+        a_name = objects[a].name if a is not None and 0 <= a < len(objects) else 'N/A'
+        b_name = objects[b].name if b is not None and 0 <= b < len(objects) else 'N/A'
+        return f"Collision {a_name} with {b_name}"
+    if typ == 'VariableEquals':
+        return f"Var {cond.get('name')}=={cond.get('value')}"
+    return typ
+
+
+def describe_action(act, objects):
+    typ = act.get('type', '')
+    if typ == 'Move':
+        t = act.get('target')
+        name = objects[t].name if t is not None and 0 <= t < len(objects) else 'N/A'
+        return f"Move {name} by ({act.get('dx')},{act.get('dy')})"
+    if typ == 'SetPosition':
+        t = act.get('target')
+        name = objects[t].name if t is not None and 0 <= t < len(objects) else 'N/A'
+        return f"SetPos {name} to ({act.get('x')},{act.get('y')})"
+    if typ == 'Destroy':
+        t = act.get('target')
+        name = objects[t].name if t is not None and 0 <= t < len(objects) else 'N/A'
+        return f"Destroy {name}"
+    if typ == 'Print':
+        return f"Print '{act.get('text')}'"
+    if typ == 'PlaySound':
+        return f"PlaySound {os.path.basename(act.get('path',''))}"
+    if typ == 'Spawn':
+        return f"Spawn {os.path.basename(act.get('image',''))}"
+    if typ == 'SetVariable':
+        return f"Set {act.get('name')}={act.get('value')}"
+    return typ
+
+
 class ConditionDialog(QDialog):
     """Dialog for creating a single condition."""
 
@@ -181,9 +227,18 @@ class ActionDialog(QDialog):
         layout.addRow(self.x_label, self.x_spin)
         layout.addRow(self.y_label, self.y_spin)
 
-        self.text_label = QLabel('Text/Path:')
+        self.text_label = QLabel('Text:')
         self.text_edit = QLineEdit()
         layout.addRow(self.text_label, self.text_edit)
+
+        self.path_label = QLabel('Path:')
+        self.path_edit = QLineEdit()
+        path_row = QHBoxLayout()
+        path_row.addWidget(self.path_edit)
+        self.browse_btn = QPushButton('Browse')
+        self.browse_btn.clicked.connect(self._browse_path)
+        path_row.addWidget(self.browse_btn)
+        layout.addRow(self.path_label, path_row)
 
         self.var_name_label = QLabel('Var Name:')
         self.var_name_edit = QLineEdit()
@@ -202,6 +257,11 @@ class ActionDialog(QDialog):
         self.type_box.currentTextChanged.connect(self._update_fields)
         self._update_fields()
 
+    def _browse_path(self):
+        path, _ = QFileDialog.getOpenFileName(self, 'Select File', '', 'All Files (*)')
+        if path:
+            self.path_edit.setText(path)
+
     def get_action(self):
         typ = self.type_box.currentText()
         if typ == 'Move':
@@ -213,9 +273,9 @@ class ActionDialog(QDialog):
         if typ == 'Print':
             return {'type': 'Print', 'text': self.text_edit.text()}
         if typ == 'PlaySound':
-            return {'type': 'PlaySound', 'path': self.text_edit.text()}
+            return {'type': 'PlaySound', 'path': self.path_edit.text()}
         if typ == 'Spawn':
-            return {'type': 'Spawn', 'image': self.text_edit.text(), 'x': self.x_spin.value(), 'y': self.y_spin.value()}
+            return {'type': 'Spawn', 'image': self.path_edit.text(), 'x': self.x_spin.value(), 'y': self.y_spin.value()}
         if typ == 'SetVariable':
             return {
                 'type': 'SetVariable',
@@ -232,6 +292,8 @@ class ActionDialog(QDialog):
             (self.x_label, self.x_spin),
             (self.y_label, self.y_spin),
             (self.text_label, self.text_edit),
+            (self.path_label, self.path_edit),
+            (self.browse_btn, self.browse_btn),
             (self.var_name_label, self.var_name_edit),
             (self.var_value_label, self.var_value_edit),
         ]
@@ -253,12 +315,14 @@ class ActionDialog(QDialog):
             self.text_label.setVisible(True)
             self.text_edit.setVisible(True)
         elif typ == 'PlaySound':
-            self.text_label.setVisible(True)
-            self.text_edit.setVisible(True)
+            self.path_label.setVisible(True)
+            self.path_edit.setVisible(True)
+            self.browse_btn.setVisible(True)
         elif typ == 'Spawn':
-            for pair in [(self.text_label, self.text_edit), (self.x_label, self.x_spin), (self.y_label, self.y_spin)]:
+            for pair in [(self.path_label, self.path_edit), (self.x_label, self.x_spin), (self.y_label, self.y_spin)]:
                 pair[0].setVisible(True)
                 pair[1].setVisible(True)
+            self.browse_btn.setVisible(True)
         elif typ == 'SetVariable':
             for pair in [(self.var_name_label, self.var_name_edit), (self.var_value_label, self.var_value_edit)]:
                 pair[0].setVisible(True)
@@ -335,26 +399,31 @@ class Editor(QMainWindow):
 
         # logic tab with object-specific events and variables
         self.logic_widget = QWidget()
-        self.logic_widget.setLayout(QVBoxLayout())
+        main_layout = QVBoxLayout(self.logic_widget)
         top_bar = QHBoxLayout()
         self.object_combo = QComboBox()
         self.object_combo.currentIndexChanged.connect(self.refresh_events)
         top_bar.addWidget(QLabel('Object:'))
         top_bar.addWidget(self.object_combo)
-        self.logic_widget.layout().addLayout(top_bar)
+        main_layout.addLayout(top_bar)
 
         self.event_list = QTableWidget(0, 2)
         self.event_list.setHorizontalHeaderLabels(['Conditions', 'Actions'])
         self.event_list.horizontalHeader().setStretchLastSection(True)
-        self.logic_widget.layout().addWidget(self.event_list)
 
         self.var_table = QTableWidget(0, 2)
         self.var_table.setHorizontalHeaderLabels(['Name', 'Value'])
         self.var_table.horizontalHeader().setStretchLastSection(True)
-        self.logic_widget.layout().addWidget(self.var_table)
         add_var = QPushButton('Add Variable')
         add_var.clicked.connect(self.add_variable)
-        self.logic_widget.layout().addWidget(add_var)
+
+        mid_layout = QHBoxLayout()
+        mid_layout.addWidget(self.event_list, 2)
+        var_layout = QVBoxLayout()
+        var_layout.addWidget(self.var_table)
+        var_layout.addWidget(add_var)
+        mid_layout.addLayout(var_layout, 1)
+        main_layout.addLayout(mid_layout)
 
         self.tabs.addTab(self.logic_widget, 'Logic')
 
@@ -562,12 +631,14 @@ class Editor(QMainWindow):
                 self.event_list.setCellWidget(row, 0, btn_cond)
             else:
                 try:
-                    self.event_list.setItem(row, 0, QTableWidgetItem(', '.join(c['type'] for c in evt.get('conditions', []))))
+                    desc = ', '.join(describe_condition(c, [o for _, o in self.items]) for c in evt.get('conditions', []))
+                    self.event_list.setItem(row, 0, QTableWidgetItem(desc))
                 except Exception:
                     self.event_list.setItem(row, 0, QTableWidgetItem(''))
                 if evt.get('actions'):
                     try:
-                        self.event_list.setItem(row, 1, QTableWidgetItem(', '.join(a['type'] for a in evt.get('actions', []))))
+                        desc = ', '.join(describe_action(a, [o for _, o in self.items]) for a in evt.get('actions', []))
+                        self.event_list.setItem(row, 1, QTableWidgetItem(desc))
                     except Exception:
                         self.event_list.setItem(row, 1, QTableWidgetItem(''))
                 else:
