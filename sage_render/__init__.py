@@ -148,6 +148,8 @@ uniform vec3 dirLightColor;
 uniform vec3 pointLightColor;
 uniform float ambientStrength;
 uniform vec3 objectColor;
+uniform float metallic;
+uniform float roughness;
 uniform sampler2D lightMap;
 uniform sampler2D shadowMap;
 uniform sampler2D ssaoMap;
@@ -200,32 +202,76 @@ float shadow_calculation(vec4 fragPosLightSpace, float bias) {
     return 1.0 - shadow;
 }
 
+const float PI = 3.14159265359;
+
+vec3 fresnel_schlick(float cosTheta, vec3 F0){
+    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+}
+
+float distribution_ggx(vec3 N, vec3 H, float rough){
+    float a = rough * rough;
+    float a2 = a * a;
+    float NdotH = max(dot(N, H), 0.0);
+    float denom = (NdotH * NdotH) * (a2 - 1.0) + 1.0;
+    return a2 / (PI * denom * denom);
+}
+
+float geometry_schlick_ggx(float NdotV, float rough){
+    float r = rough + 1.0;
+    float k = (r * r) / 8.0;
+    return NdotV / (NdotV * (1.0 - k) + k);
+}
+
+float geometry_smith(vec3 N, vec3 V, vec3 L, float rough){
+    float NdotV = max(dot(N, V), 0.0);
+    float NdotL = max(dot(N, L), 0.0);
+    float ggx1 = geometry_schlick_ggx(NdotV, rough);
+    float ggx2 = geometry_schlick_ggx(NdotL, rough);
+    return ggx1 * ggx2;
+}
+
 void main() {
     vec3 baked = texture(lightMap, TexCoord).rgb;
 
-    vec3 norm = normalize(Normal);
-    vec3 dir = normalize(-dirLightDir);
+    vec3 N = normalize(Normal);
+    vec3 V = normalize(viewPos - FragPos);
 
-    vec3 viewDir = normalize(viewPos - FragPos);
-    float diff = max(dot(norm, dir), 0.0);
-    vec3 diffuse = diff * dirLightColor;
-    vec3 reflectDir = reflect(-dir, norm);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);
-    vec3 specular = 0.5 * spec * dirLightColor;
+    vec3 F0 = mix(vec3(0.04), objectColor, metallic);
 
-    float bias = max(0.001 * (1.0 - dot(norm, dir)), 0.0005);
+    vec3 Lo = vec3(0.0);
+
+    vec3 L = normalize(-dirLightDir);
+    vec3 H = normalize(V + L);
+    float NDF = distribution_ggx(N, H, roughness);
+    float G   = geometry_smith(N, V, L, roughness);
+    vec3 F    = fresnel_schlick(max(dot(H, V), 0.0), F0);
+    vec3 spec = (NDF * G * F) / (4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.001);
+    vec3 kS = F;
+    vec3 kD = (1.0 - kS) * (1.0 - metallic);
+    float NdotL = max(dot(N, L), 0.0);
+    vec3 radiance = dirLightColor;
+    Lo += (kD * objectColor / PI + spec) * radiance * NdotL;
+
+    L = normalize(pointLightPos - FragPos);
+    H = normalize(V + L);
+    float dist = length(pointLightPos - FragPos);
+    float attenuation = 1.0 / (dist * dist);
+    NDF = distribution_ggx(N, H, roughness);
+    G   = geometry_smith(N, V, L, roughness);
+    F   = fresnel_schlick(max(dot(H, V), 0.0), F0);
+    spec = (NDF * G * F) / (4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.001);
+    kS = F;
+    kD = (1.0 - kS) * (1.0 - metallic);
+    NdotL = max(dot(N, L), 0.0);
+    radiance = pointLightColor * attenuation;
+    Lo += (kD * objectColor / PI + spec) * radiance * NdotL;
+
+    float bias = max(0.001 * (1.0 - dot(N, normalize(-dirLightDir))), 0.0005);
     float shadow = shadow_calculation(FragPosLightSpace, bias);
-    vec3 ptDir = normalize(pointLightPos - FragPos);
-    float diff2 = max(dot(norm, ptDir), 0.0);
-    vec3 diffuse2 = diff2 * pointLightColor;
-    vec3 reflectDir2 = reflect(-ptDir, norm);
-    float spec2 = pow(max(dot(viewDir, reflectDir2), 0.0), 32.0);
-    vec3 specular2 = 0.5 * spec2 * pointLightColor;
 
     float ao = texture(ssaoMap, gl_FragCoord.xy / screenSize).r;
-    vec3 ambient = ambientStrength * baked * ao;
-    vec3 lighting = ambient + (1.0 - shadow) * (diffuse + specular) + diffuse2 + specular2;
-    vec3 result = lighting * objectColor * baked;
+    vec3 ambient = ambientStrength * baked * ao * objectColor;
+    vec3 result = (ambient + (1.0 - shadow) * Lo) * baked;
     result = pow(result, vec3(1.0 / 2.2));
     color = vec4(result, 1.0);
 }
@@ -755,7 +801,7 @@ class Engine:
         glUniform1i(glGetUniformLocation(self.program, 'shadowSamples'), 8 if self.low_quality else 16)
         glUniform1f(glGetUniformLocation(self.program, 'evsmExponent'), self.evsm_exponent)
 
-    def draw_geometry(self, vbo, color, model):
+    def draw_geometry(self, vbo, color, model, metallic=0.0, roughness=0.5):
         glBindVertexArray(self.vao)
         glBindBuffer(GL_ARRAY_BUFFER, vbo)
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 32, ctypes.c_void_p(0))
@@ -766,6 +812,8 @@ class Engine:
         glEnableVertexAttribArray(2)
         glUniformMatrix4fv(glGetUniformLocation(self.program, 'model'), 1, GL_TRUE, model.flatten())
         glUniform3f(glGetUniformLocation(self.program, 'objectColor'), *color)
+        glUniform1f(glGetUniformLocation(self.program, 'metallic'), metallic)
+        glUniform1f(glGetUniformLocation(self.program, 'roughness'), roughness)
         glDrawArrays(GL_TRIANGLES, 0, 36 if vbo == self.cube_vbo else 6)
 
     def draw_depth_geometry(self, vbo):
@@ -853,8 +901,8 @@ class Engine:
         self.apply_common_uniforms()
         plane_model = np.identity(4, dtype=np.float32)
         cube_model = np.identity(4, dtype=np.float32)
-        self.draw_geometry(self.plane_vbo, (0.8, 0.8, 0.8), plane_model)
-        self.draw_geometry(self.cube_vbo, (0.4, 0.2, 0.8), cube_model)
+        self.draw_geometry(self.plane_vbo, (0.8, 0.8, 0.8), plane_model, metallic=0.0, roughness=1.0)
+        self.draw_geometry(self.cube_vbo, (0.4, 0.2, 0.8), cube_model, metallic=0.3, roughness=0.2)
         glutSwapBuffers()
 
     def render_depth_pass(self):

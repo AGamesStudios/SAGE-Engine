@@ -18,6 +18,8 @@ Each object now has its own model matrix so the plane no longer rotates with the
 point light and stronger ambient illumination. A screen‑space ambient occlusion
 (SSAO) pass further darkens corners for more realism. The shaders combine the
 baked light map with dynamic lighting and shadowing to approximate global
+illumination. The fragment shader uses a simple microfacet model with
+metallic and roughness parameters for more realistic lighting.
 
 ## SAGE Render Technology
 
@@ -60,7 +62,9 @@ screen-space ambient occlusion pass darkens creases using a G-buffer built in
 view space. The G-buffer textures clamp to the screen edges so the SSAO result
 is free of border artifacts. The SSAO pass now includes a blur stage to reduce
 noise and clamps the output so overly dark pixels are avoided. Multi-sample anti aliasing and baked global illumination make the final
-image smoother and brighter. Lighting uses classic Phong specular highlights.
+image smoother and brighter. Lighting now relies on a simple physically based
+microfacet shader with metallic and roughness controls instead of the old Phong
+highlights.
 
 Internal math like matrix calculation and SSAO sample generation can be JIT
 compiled with [Numba](https://numba.pydata.org/) when both Numba and SciPy are
