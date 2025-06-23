@@ -16,7 +16,13 @@ LANGUAGES = {
         'viewport': 'Viewport',
         'logic': 'Logic',
         'name': 'Name',
-        'value': 'Value'
+        'value': 'Value',
+        'add_event': 'Add Event',
+        'open_scene': 'Open Scene',
+        'save_scene': 'Save Scene',
+        'browse': 'Browse',
+        'image_files': 'Images (*.png *.jpg *.bmp)',
+        'json_files': 'JSON Files (*.json)'
     },
     'Русский': {
         'file': 'Файл',
@@ -35,7 +41,13 @@ LANGUAGES = {
         'viewport': 'Сцена',
         'logic': 'Логика',
         'name': 'Имя',
-        'value': 'Значение'
+        'value': 'Значение',
+        'add_event': 'Добавить событие',
+        'open_scene': 'Открыть сцену',
+        'save_scene': 'Сохранить сцену',
+        'browse': 'Обзор',
+        'image_files': 'Изображения (*.png *.jpg *.bmp)',
+        'json_files': 'Файлы JSON (*.json)'
     }
 }
 DEFAULT_LANGUAGE = 'English'

@@ -14,7 +14,7 @@ from .lang import LANGUAGES, DEFAULT_LANGUAGE
 import tempfile
 import os
 import pygame
-from sage2d import Scene, GameObject
+from sage_engine import Scene, GameObject
 
 KEY_OPTIONS = [
     ('Up', pygame.K_UP),
@@ -83,7 +83,7 @@ class ConditionDialog(QDialog):
 
     def __init__(self, objects, variables, parent=None, data=None):
         super().__init__(parent)
-        self.setWindowTitle('Add Condition')
+        self.setWindowTitle(parent.t('add_condition') if parent else 'Add Condition')
         self.objects = objects
         self.variables = variables
         layout = QFormLayout(self)
@@ -279,7 +279,7 @@ class ActionDialog(QDialog):
 
     def __init__(self, objects, variables, parent=None, data=None):
         super().__init__(parent)
-        self.setWindowTitle('Add Action')
+        self.setWindowTitle(parent.t('add_action') if parent else 'Add Action')
         self.objects = objects
         self.variables = variables
         layout = QFormLayout(self)
@@ -316,7 +316,7 @@ class ActionDialog(QDialog):
         self.path_edit = QLineEdit()
         path_row = QHBoxLayout()
         path_row.addWidget(self.path_edit)
-        self.browse_btn = QPushButton('Browse')
+        self.browse_btn = QPushButton(parent.t('browse') if parent else 'Browse')
         self.browse_btn.clicked.connect(self._browse_path)
         path_row.addWidget(self.browse_btn)
         layout.addRow(self.path_label, path_row)
@@ -543,14 +543,14 @@ class AddEventDialog(QDialog):
         super().__init__(parent)
         self.objects = objects
         self.variables = variables
-        self.setWindowTitle('Add Event')
+        self.setWindowTitle(parent.t('add_event') if parent else 'Add Event')
         self.conditions = []
         self.actions = []
         layout = QHBoxLayout(self)
 
-        left_box = QGroupBox('Conditions')
+        left_box = QGroupBox(parent.t('conditions') if parent else 'Conditions')
         left = QVBoxLayout(left_box)
-        right_box = QGroupBox('Actions')
+        right_box = QGroupBox(parent.t('actions') if parent else 'Actions')
         right = QVBoxLayout(right_box)
         self.cond_list = QListWidget(); left.addWidget(self.cond_list)
         self.act_list = QListWidget(); right.addWidget(self.act_list)
@@ -558,8 +558,8 @@ class AddEventDialog(QDialog):
         self.act_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.cond_list.customContextMenuRequested.connect(self._cond_menu)
         self.act_list.customContextMenuRequested.connect(self._act_menu)
-        add_cond = QPushButton('Add Condition'); left.addWidget(add_cond)
-        add_act = QPushButton('Add Action'); right.addWidget(add_act)
+        add_cond = QPushButton(parent.t('add_condition') if parent else 'Add Condition'); left.addWidget(add_cond)
+        add_act = QPushButton(parent.t('add_action') if parent else 'Add Action'); right.addWidget(add_act)
         add_cond.clicked.connect(self.add_condition)
         add_act.clicked.connect(self.add_action)
         layout.addWidget(left_box)
@@ -612,7 +612,7 @@ class AddEventDialog(QDialog):
                 self.conditions.pop(row)
                 self.cond_list.takeItem(row)
         else:
-            add = menu.addAction('Add Condition')
+            add = menu.addAction(self.parent().t('add_condition') if self.parent() else 'Add Condition')
             paste = menu.addAction('Paste')
             action = menu.exec(self.cond_list.mapToGlobal(pos))
             if action == add:
@@ -641,7 +641,7 @@ class AddEventDialog(QDialog):
                 self.actions.pop(row)
                 self.act_list.takeItem(row)
         else:
-            add = menu.addAction('Add Action')
+            add = menu.addAction(self.parent().t('add_action') if self.parent() else 'Add Action')
             paste = menu.addAction('Paste')
             action = menu.exec(self.act_list.mapToGlobal(pos))
             if action == add:
@@ -736,8 +736,8 @@ class Editor(QMainWindow):
     def _apply_language(self):
         self.file_menu.setTitle(self.t('file'))
         self.edit_menu.setTitle(self.t('edit'))
-        self.open_act.setText(self.t('open'))
-        self.save_act.setText(self.t('save'))
+        self.open_act.setText(self.t('open_scene'))
+        self.save_act.setText(self.t('save_scene'))
         self.run_act.setText(self.t('run'))
         self.add_sprite_act.setText(self.t('add_sprite'))
         self.tabs.setTabText(0, self.t('viewport'))
@@ -752,9 +752,9 @@ class Editor(QMainWindow):
     def _init_actions(self):
         menubar = self.menuBar()
         self.file_menu = menubar.addMenu(self.t('file'))
-        self.open_act = QAction(self.t('open'), self)
+        self.open_act = QAction(self.t('open_scene'), self)
         self.open_act.triggered.connect(self.open_scene)
-        self.save_act = QAction(self.t('save'), self)
+        self.save_act = QAction(self.t('save_scene'), self)
         self.save_act.triggered.connect(self.save_scene)
         self.file_menu.addAction(self.open_act)
         self.file_menu.addAction(self.save_act)
@@ -782,12 +782,16 @@ class Editor(QMainWindow):
         toolbar.addWidget(self.lang_box)
 
     def open_scene(self):
-        path, _ = QFileDialog.getOpenFileName(self, 'Open Scene', '', 'JSON Files (*.json)')
+        path, _ = QFileDialog.getOpenFileName(
+            self, self.t('open_scene'), '', self.t('json_files')
+        )
         if path:
             self.load_scene(path)
 
     def save_scene(self):
-        path, _ = QFileDialog.getSaveFileName(self, 'Save Scene', '', 'JSON Files (*.json)')
+        path, _ = QFileDialog.getSaveFileName(
+            self, self.t('save_scene'), '', self.t('json_files')
+        )
         if path:
             for item, obj in self.items:
                 pos = item.pos()
@@ -807,7 +811,7 @@ class Editor(QMainWindow):
             self.process.kill()
         self.process = QProcess(self)
         self.process.setProgram(sys.executable)
-        self.process.setArguments(['-m', 'sage2d', path])
+        self.process.setArguments(['-m', 'sage_engine', path])
         self.process.readyReadStandardOutput.connect(self._read_output)
         self.process.readyReadStandardError.connect(self._read_output)
         self.process.start()
@@ -824,7 +828,7 @@ class Editor(QMainWindow):
 
     def add_sprite(self):
         path, _ = QFileDialog.getOpenFileName(
-            self, 'Add Sprite', '', 'Images (*.png *.jpg *.bmp)'
+            self, self.t('add_sprite'), '', self.t('image_files')
         )
         if not path:
             return
@@ -856,7 +860,7 @@ class Editor(QMainWindow):
         class VariableDialog(QDialog):
             def __init__(self, parent=None):
                 super().__init__(parent)
-                self.setWindowTitle('Add Variable')
+                self.setWindowTitle(parent.t('add_variable'))
                 self.name_edit = QLineEdit()
                 self.type_box = QComboBox()
                 self.type_box.addItems(['int', 'float', 'string', 'bool'])

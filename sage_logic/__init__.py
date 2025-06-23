@@ -333,7 +333,7 @@ class Spawn(Action):
 
     def execute(self, engine, scene, dt):
         try:
-            from sage2d import GameObject
+            from sage_engine import GameObject
         except Exception:
             return
         obj = GameObject(self.image, self.x, self.y)

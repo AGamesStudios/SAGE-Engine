@@ -7,7 +7,7 @@ Extra care is taken to keep the editor lightweight so it runs well even on
 older computers.
 
 ## Architecture
-The engine is organized into small modules under `sage2d`. `game_object.py` contains the `GameObject` class, `scene.py` manages scenes and event data, and `engine.py` runs the main loop. The standalone `sage_logic` package provides conditions and actions, while `sage_editor` implements the Qt-based editor. This separation keeps the code easy to extend and reuse.
+The engine core lives in the `sage_engine` package. It provides `GameObject`, `Scene`, and `Engine` classes while the separate `sage_logic` module supplies conditions and actions. The `sage_editor` GUI builds on these pieces but remains optional so games can use the engine without the editor. This separation keeps the code easy to extend and reuse.
 The editor launches maximized in a dark Fusion
 theme and provides two
 tabs: **Viewport** and **Logic**. The viewport uses a virtually infinite
@@ -43,7 +43,7 @@ printed to the console instead of closing the editor.
 The editor supports multiple languages. A toolbar at the top lets you choose
 between **English** and **Русский**. All strings come from simple dictionaries
 in `sage_editor/lang.py`, making it easy to add more languages by updating the
-file.
+file. Translations now cover file dialogs and event windows so the interface is fully localized.
 
 The condition and action lists offer context menus with **Edit**, **Copy**,
 **Paste**, and **Delete** options. Right-click an empty area to add a new block
@@ -52,7 +52,7 @@ or paste the previously copied one.
 Run a saved scene with:
 
 ```bash
-python -m sage2d path/to/scene.json
+python -m sage_engine path/to/scene.json
 ```
 
 Launch the editor with:
@@ -78,7 +78,7 @@ pass, the actions run. Built-in blocks include `KeyPressed`, `Collision`,
 
 ```python
 import pygame
-from sage2d import Engine, Scene, GameObject
+from sage_engine import Engine, Scene, GameObject
 from sage_logic import EventSystem, Event, KeyPressed, Timer, Move
 
 player = GameObject('player.png')
