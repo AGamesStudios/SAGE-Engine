@@ -1,5 +1,6 @@
 import sys
 import json
+import os
 import pygame
 
 from sage_logic import (
@@ -35,10 +36,12 @@ __all__ = [
 class GameObject:
     """Simple sprite-based object."""
 
-    def __init__(self, image, x=0, y=0):
+    def __init__(self, image, x=0, y=0, name=None):
         self.image_path = image
         self.x = x
         self.y = y
+        # default name based on the file name if not provided
+        self.name = name or os.path.basename(image)
         self.sprite = None  # lazily loaded when running the game
         self.events = []  # object specific events
 
@@ -64,6 +67,15 @@ class Scene:
         self.variables = {}
 
     def add_object(self, obj):
+        existing = {o.name for o in self.objects}
+        base = obj.name
+        if base in existing:
+            i = 1
+            new_name = f"{base} ({i})"
+            while new_name in existing:
+                i += 1
+                new_name = f"{base} ({i})"
+            obj.name = new_name
         self.objects.append(obj)
 
     def remove_object(self, obj):
@@ -85,7 +97,12 @@ class Scene:
         scene = cls()
         scene.variables = data.get('variables', {})
         for entry in data.get('objects', []):
-            obj = GameObject(entry['image'], entry.get('x', 0), entry.get('y', 0))
+            obj = GameObject(
+                entry['image'],
+                entry.get('x', 0),
+                entry.get('y', 0),
+                entry.get('name'),
+            )
             obj.events = entry.get('events', [])
             scene.add_object(obj)
         return scene
@@ -98,6 +115,7 @@ class Scene:
                     'image': o.image_path,
                     'x': o.x,
                     'y': o.y,
+                    'name': o.name,
                     'events': getattr(o, 'events', []),
                 }
                 for o in self.objects

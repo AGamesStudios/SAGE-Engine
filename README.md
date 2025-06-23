@@ -10,7 +10,9 @@ theme and provides two
 tabs: **Viewport** and **Logic**. The viewport uses a virtually infinite
 `QGraphicsScene` so you can pan freely. A red rectangle shows the canvas (the
 game window) for reference. You can add sprites, drag them around and
-save/load scenes as JSON files. The **Logic** tab lists object events with
+save/load scenes as JSON files. Each sprite receives a unique name like
+`enemy (1)` if necessary so conditions always target the correct object.
+The **Logic** tab lists object events with
 conditions on the left and actions on the right. The event dialog now provides
 drop-down lists for keys and shows only parameters relevant to the chosen
 action. Variables of type int, float, string and bool can be defined and used

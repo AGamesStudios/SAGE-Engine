@@ -68,7 +68,7 @@ class ConditionDialog(QDialog):
         self.b_label = QLabel('Object B:')
         self.b_box = QComboBox()
         for i, obj in enumerate(objects):
-            label = f'Object {i}: {os.path.basename(obj.image_path)}'
+            label = f'{i}: {obj.name}'
             self.a_box.addItem(label, i)
             self.b_box.addItem(label, i)
         layout.addRow(self.a_label, self.a_box)
@@ -164,7 +164,7 @@ class ActionDialog(QDialog):
         self.target_label = QLabel('Target:')
         self.target_box = QComboBox()
         for i, obj in enumerate(objects):
-            self.target_box.addItem(f'Object {i}: {os.path.basename(obj.image_path)}', i)
+            self.target_box.addItem(f'{i}: {obj.name}', i)
         layout.addRow(self.target_label, self.target_box)
 
         self.dx_label = QLabel('dx:')
@@ -454,7 +454,7 @@ class Editor(QMainWindow):
             obj = GameObject(path)
             self.scene.add_object(obj)
             self.items.append((item, obj))
-            self.object_combo.addItem(os.path.basename(path), len(self.items) - 1)
+            self.object_combo.addItem(obj.name, len(self.items) - 1)
             if self.object_combo.currentIndex() == -1:
                 self.object_combo.setCurrentIndex(0)
         except Exception as exc:
@@ -586,7 +586,7 @@ class Editor(QMainWindow):
                 item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, True)
             self.g_scene.addItem(item)
             self.items.append((item, obj))
-            self.object_combo.addItem(os.path.basename(obj.image_path), len(self.items)-1)
+            self.object_combo.addItem(obj.name, len(self.items)-1)
         self.refresh_events()
         self.refresh_variables()
 
