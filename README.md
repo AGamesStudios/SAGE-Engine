@@ -97,9 +97,13 @@ Additional math-friendly blocks make it easy to build counters or timers.
 `<`, or `==`. `ModifyVariable` adjusts a variable with `+`, `-`, `*`, or `/` so
 you can implement score systems without custom scripting. Arithmetic works only
 with numeric variables; boolean and string values cannot be modified with math
-operations. When such a variable is selected the operator field is replaced by a
-yellow notice explaining why. `PlaySound` now caches each sound after the first
-use and reports any errors instead of crashing.
+operations. When such a variable is selected the operator combo box disappears
+and a warning icon explains why. `PlaySound` now caches each sound after the
+first use and reports any errors instead of crashing.
+
+The `Print` action is handy for debugging. The text is formatted with the
+current variables so using `Score: {score}` will display the latest value of a
+variable named `score` when the action runs.
 
 The logic module registers conditions and actions in dictionaries so new types
 can be added without modifying the engine. `condition_from_dict` and

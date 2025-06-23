@@ -123,7 +123,7 @@ class ConditionDialog(QDialog):
 
         self.var_name_label = QLabel('Variable:')
         self.var_name_box = QComboBox()
-        self.var_names = variables
+        self.var_names = list(variables.keys())
         self.var_name_box.addItems(self.var_names)
 
         self.var_op_box = QComboBox()
@@ -135,10 +135,16 @@ class ConditionDialog(QDialog):
         var_row.addWidget(self.var_value_edit)
         layout.addRow(self.var_name_label, var_row)
 
-        self.var_warn = QLabel('Operations require a numeric variable')
-        self.var_warn.setStyleSheet('color: yellow')
-        layout.addRow('', self.var_warn)
-        self.var_warn.hide()
+        icon = self.style().standardIcon(QStyle.StandardPixmap.SP_MessageBoxWarning)
+        self.var_warn_icon = QLabel()
+        self.var_warn_icon.setPixmap(icon.pixmap(16, 16))
+        self.var_warn_text = QLabel('Operations require a numeric variable')
+        warn_row = QHBoxLayout()
+        warn_row.addWidget(self.var_warn_icon)
+        warn_row.addWidget(self.var_warn_text)
+        layout.addRow('', warn_row)
+        self.var_warn_icon.hide()
+        self.var_warn_text.hide()
 
 
         buttons = QDialogButtonBox(
@@ -191,7 +197,9 @@ class ConditionDialog(QDialog):
             self.var_name_box.setVisible(True)
             self.var_op_box.setVisible(True)
             self.var_value_edit.setVisible(True)
-            self.var_warn.setVisible(True)
+            self.var_warn_icon.setVisible(True)
+            self.var_warn_text.setVisible(True)
+            self._update_var_warning()
 
     def _update_var_warning(self):
         """Show or hide the operator combo depending on variable type."""
@@ -199,10 +207,12 @@ class ConditionDialog(QDialog):
         val = self.variables.get(name)
         if isinstance(val, (int, float)):
             self.var_op_box.show()
-            self.var_warn.hide()
+            self.var_warn_icon.hide()
+            self.var_warn_text.hide()
         else:
             self.var_op_box.hide()
-            self.var_warn.show()
+            self.var_warn_icon.show()
+            self.var_warn_text.show()
 
     def get_condition(self):
         typ = self.type_box.currentText()
@@ -310,7 +320,7 @@ class ActionDialog(QDialog):
 
         self.var_name_label = QLabel('Variable:')
         self.var_name_box = QComboBox()
-        self.var_name_box.addItems(self.variables)
+        self.var_name_box.addItems(list(self.variables.keys()))
         self.mod_op_box = QComboBox()
         self.mod_op_box.addItems(['+', '-', '*', '/'])
         self.var_value_edit = QLineEdit()
@@ -321,10 +331,16 @@ class ActionDialog(QDialog):
         var_row.addWidget(self.var_value_edit)
         layout.addRow(self.var_name_label, var_row)
         layout.addRow('', self.bool_check)
-        self.mod_warn = QLabel('Variable must be numeric')
-        self.mod_warn.setStyleSheet('color: yellow')
-        layout.addRow('', self.mod_warn)
-        self.mod_warn.hide()
+        icon = self.style().standardIcon(QStyle.StandardPixmap.SP_MessageBoxWarning)
+        self.mod_warn_icon = QLabel()
+        self.mod_warn_icon.setPixmap(icon.pixmap(16, 16))
+        self.mod_warn_text = QLabel('Variable must be numeric')
+        warn_row = QHBoxLayout()
+        warn_row.addWidget(self.mod_warn_icon)
+        warn_row.addWidget(self.mod_warn_text)
+        layout.addRow('', warn_row)
+        self.mod_warn_icon.hide()
+        self.mod_warn_text.hide()
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
@@ -391,7 +407,8 @@ class ActionDialog(QDialog):
             (self.mod_op_box, self.mod_op_box),
             (self.var_value_edit, self.var_value_edit),
             (self.bool_check, self.bool_check),
-            (self.mod_warn, self.mod_warn),
+            (self.mod_warn_icon, self.mod_warn_icon),
+            (self.mod_warn_text, self.mod_warn_text),
         ]
         for label, w in widgets:
             label.setVisible(False)
@@ -428,7 +445,8 @@ class ActionDialog(QDialog):
                 pair[0].setVisible(True)
                 pair[1].setVisible(True)
             self._update_value_widget()
-            self.mod_warn.hide()
+            self.mod_warn_icon.hide()
+            self.mod_warn_text.hide()
         elif typ == 'ModifyVariable':
             self.var_name_box.clear()
             self.var_name_box.addItems(list(self.variables.keys()))
@@ -436,7 +454,8 @@ class ActionDialog(QDialog):
                 (self.var_name_label, self.var_name_box),
                 (self.mod_op_box, self.mod_op_box),
                 (self.var_value_edit, self.var_value_edit),
-                (self.mod_warn, self.mod_warn),
+                (self.mod_warn_icon, self.mod_warn_icon),
+                (self.mod_warn_text, self.mod_warn_text),
             ]:
                 pair[0].setVisible(True)
                 pair[1].setVisible(True)
@@ -462,10 +481,12 @@ class ActionDialog(QDialog):
         val = self.variables.get(name)
         if isinstance(val, (int, float)):
             self.mod_op_box.show()
-            self.mod_warn.hide()
+            self.mod_warn_icon.hide()
+            self.mod_warn_text.hide()
         else:
             self.mod_op_box.hide()
-            self.mod_warn.show()
+            self.mod_warn_icon.show()
+            self.mod_warn_text.show()
 
     def set_action(self, data: dict):
         """Populate fields from an existing action dict."""
@@ -863,7 +884,7 @@ class Editor(QMainWindow):
             if row >= len(obj.events):
                 obj.events.append({'conditions': [], 'actions': []})
             evt = obj.events[row if row < len(obj.events) else -1]
-            dlg = ConditionDialog([o for _, o in self.items], list(self.scene.variables.keys()), self)
+            dlg = ConditionDialog([o for _, o in self.items], self.scene.variables, self)
             if dlg.exec() == QDialog.DialogCode.Accepted:
                 evt['conditions'].append(dlg.get_condition())
             self.refresh_events()

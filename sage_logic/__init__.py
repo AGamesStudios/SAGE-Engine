@@ -291,7 +291,11 @@ class Print(Action):
         self.text = text
 
     def execute(self, engine, scene, dt):
-        print(self.text)
+        try:
+            msg = self.text.format(**engine.events.variables)
+        except Exception:
+            msg = self.text
+        print(msg)
 
 _SOUND_CACHE = {}
 
