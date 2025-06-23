@@ -210,7 +210,10 @@ class PlaySound(Action):
             except pygame.error as exc:
                 print(f'Failed to load sound {self.path}: {exc}')
                 return
-        self.sound.play()
+        try:
+            self.sound.play()
+        except pygame.error as exc:
+            print(f'Failed to play sound {self.path}: {exc}')
 
 class Spawn(Action):
     """Spawn a new GameObject into the scene."""

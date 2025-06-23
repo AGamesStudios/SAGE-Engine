@@ -135,10 +135,6 @@ class ConditionDialog(QDialog):
         self.var_value_edit = QLineEdit()
         layout.addRow(self.var_value_label, self.var_value_edit)
 
-        self.mod_op_label = QLabel('Operation:')
-        self.mod_op_box = QComboBox()
-        self.mod_op_box.addItems(['+', '-', '*', '/'])
-        layout.addRow(self.mod_op_label, self.mod_op_box)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
@@ -593,11 +589,12 @@ class Editor(QMainWindow):
                 self.type_box.addItems(['int', 'float', 'string', 'bool'])
                 self.value_edit = QLineEdit()
                 self.bool_check = QCheckBox()
+                self.bool_label = QLabel('Value:')
                 form = QFormLayout(self)
                 form.addRow('Name:', self.name_edit)
                 form.addRow('Type:', self.type_box)
                 form.addRow('Value:', self.value_edit)
-                form.addRow('', self.bool_check)
+                form.addRow(self.bool_label, self.bool_check)
                 buttons = QDialogButtonBox(
                     QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
                 )
@@ -611,9 +608,11 @@ class Editor(QMainWindow):
                 if self.type_box.currentText() == 'bool':
                     self.value_edit.hide()
                     self.bool_check.show()
+                    self.bool_label.show()
                 else:
                     self.value_edit.show()
                     self.bool_check.hide()
+                    self.bool_label.hide()
 
         dlg = VariableDialog(self)
         if dlg.exec() != QDialog.DialogCode.Accepted:

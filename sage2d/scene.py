@@ -143,7 +143,9 @@ class Scene:
                     elif typ == "Print":
                         actions.append(Print(act["text"]))
                     elif typ == "PlaySound":
-                        actions.append(PlaySound(act["path"]))
+                        path = act.get("path")
+                        if path:
+                            actions.append(PlaySound(path))
                     elif typ == "Spawn":
                         actions.append(Spawn(act["image"], act.get("x", 0), act.get("y", 0)))
                     elif typ == "SetVariable":
