@@ -4,9 +4,9 @@ from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QFileDialog, QAction,
     QGraphicsView, QGraphicsScene, QGraphicsPixmapItem,
     QTabWidget, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-    QListWidget, QPushButton, QDialog, QFormLayout,
+    QListWidget, QTableWidget, QTableWidgetItem, QPushButton, QDialog, QFormLayout,
     QDialogButtonBox, QLineEdit, QSpinBox, QComboBox,
-    QTextEdit, QDockWidget
+    QTextEdit, QDockWidget, QGroupBox
 )
 from PyQt5.QtGui import QPixmap, QPen, QColor
 from PyQt5.QtCore import QRectF, Qt, QProcess
@@ -15,6 +15,19 @@ import subprocess
 import os
 import pygame
 from sage2d import Scene, GameObject
+
+KEY_OPTIONS = [
+    ('Up', pygame.K_UP),
+    ('Down', pygame.K_DOWN),
+    ('Left', pygame.K_LEFT),
+    ('Right', pygame.K_RIGHT),
+    ('Space', pygame.K_SPACE),
+    ('Return', pygame.K_RETURN),
+    ('A', pygame.K_a),
+    ('S', pygame.K_s),
+    ('D', pygame.K_d),
+    ('W', pygame.K_w),
+]
 
 
 class ConditionDialog(QDialog):
@@ -27,43 +40,83 @@ class ConditionDialog(QDialog):
         layout = QFormLayout(self)
 
         self.type_box = QComboBox()
-        self.type_box.addItems(['KeyPressed', 'KeyReleased', 'MouseButton', 'Timer', 'Collision', 'Always'])
+        self.type_box.addItems([
+            'KeyPressed', 'KeyReleased', 'MouseButton', 'Timer', 'Collision', 'Always'
+        ])
         layout.addRow('Type:', self.type_box)
 
-        self.key_edit = QLineEdit('K_RIGHT')
-        layout.addRow('Key/Button:', self.key_edit)
+        self.key_label = QLabel('Key/Button:')
+        self.key_combo = QComboBox()
+        for name, val in KEY_OPTIONS:
+            self.key_combo.addItem(name, val)
+        layout.addRow(self.key_label, self.key_combo)
 
+        self.duration_label = QLabel('Duration:')
         self.duration_spin = QSpinBox()
         self.duration_spin.setRange(0, 9999)
         self.duration_spin.setValue(1)
-        layout.addRow('Duration:', self.duration_spin)
+        layout.addRow(self.duration_label, self.duration_spin)
 
+        self.state_label = QLabel('State:')
         self.state_box = QComboBox()
         self.state_box.addItems(['down', 'up'])
-        layout.addRow('State:', self.state_box)
+        layout.addRow(self.state_label, self.state_box)
 
+        self.a_label = QLabel('Object A:')
         self.a_box = QComboBox()
+        self.b_label = QLabel('Object B:')
         self.b_box = QComboBox()
         for i, obj in enumerate(objects):
             label = f'Object {i}: {os.path.basename(obj.image_path)}'
             self.a_box.addItem(label, i)
             self.b_box.addItem(label, i)
-        layout.addRow('Object A:', self.a_box)
-        layout.addRow('Object B:', self.b_box)
+        layout.addRow(self.a_label, self.a_box)
+        layout.addRow(self.b_label, self.b_box)
 
         buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
         layout.addRow(buttons)
 
+        self.type_box.currentTextChanged.connect(self._update_fields)
+        self._update_fields()
+
+    def _update_fields(self):
+        typ = self.type_box.currentText()
+        widgets = [
+            (self.key_label, self.key_combo),
+            (self.duration_label, self.duration_spin),
+            (self.state_label, self.state_box),
+            (self.a_label, self.a_box),
+            (self.b_label, self.b_box),
+        ]
+        for label, w in widgets:
+            label.setVisible(False)
+            w.setVisible(False)
+        if typ in ('KeyPressed', 'KeyReleased'):
+            self.key_label.setVisible(True)
+            self.key_combo.setVisible(True)
+        elif typ == 'MouseButton':
+            self.key_label.setVisible(True)
+            self.key_combo.setVisible(True)
+            self.state_label.setVisible(True)
+            self.state_box.setVisible(True)
+        elif typ == 'Timer':
+            self.duration_label.setVisible(True)
+            self.duration_spin.setVisible(True)
+        elif typ == 'Collision':
+            self.a_label.setVisible(True)
+            self.a_box.setVisible(True)
+            self.b_label.setVisible(True)
+            self.b_box.setVisible(True)
+
     def get_condition(self):
         typ = self.type_box.currentText()
         if typ in ('KeyPressed', 'KeyReleased'):
-            key_name = self.key_edit.text().strip()
-            key = getattr(pygame, key_name, pygame.K_RIGHT)
+            key = self.key_combo.currentData()
             return {'type': typ, 'key': key}
         if typ == 'MouseButton':
-            button = int(self.key_edit.text() or '1')
+            button = self.key_combo.currentIndex() + 1
             state = self.state_box.currentText()
             return {'type': 'MouseButton', 'button': button, 'state': state}
         if typ == 'Timer':
@@ -86,28 +139,37 @@ class ActionDialog(QDialog):
         self.type_box.addItems(['Move', 'SetPosition', 'Destroy', 'Print', 'PlaySound', 'Spawn'])
         layout.addRow('Type:', self.type_box)
 
+        self.target_label = QLabel('Target:')
         self.target_box = QComboBox()
         for i, obj in enumerate(objects):
             self.target_box.addItem(f'Object {i}: {os.path.basename(obj.image_path)}', i)
-        layout.addRow('Target:', self.target_box)
+        layout.addRow(self.target_label, self.target_box)
 
+        self.dx_label = QLabel('dx:')
         self.dx_spin = QSpinBox(); self.dx_spin.setRange(-1000, 1000); self.dx_spin.setValue(5)
+        self.dy_label = QLabel('dy:')
         self.dy_spin = QSpinBox(); self.dy_spin.setRange(-1000, 1000)
-        layout.addRow('dx:', self.dx_spin)
-        layout.addRow('dy:', self.dy_spin)
+        layout.addRow(self.dx_label, self.dx_spin)
+        layout.addRow(self.dy_label, self.dy_spin)
 
+        self.x_label = QLabel('x:')
         self.x_spin = QSpinBox(); self.x_spin.setRange(-10000, 10000)
+        self.y_label = QLabel('y:')
         self.y_spin = QSpinBox(); self.y_spin.setRange(-10000, 10000)
-        layout.addRow('x:', self.x_spin)
-        layout.addRow('y:', self.y_spin)
+        layout.addRow(self.x_label, self.x_spin)
+        layout.addRow(self.y_label, self.y_spin)
 
+        self.text_label = QLabel('Text/Path:')
         self.text_edit = QLineEdit()
-        layout.addRow('Text/Path:', self.text_edit)
+        layout.addRow(self.text_label, self.text_edit)
 
         buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
         layout.addRow(buttons)
+
+        self.type_box.currentTextChanged.connect(self._update_fields)
+        self._update_fields()
 
     def get_action(self):
         typ = self.type_box.currentText()
@@ -124,6 +186,41 @@ class ActionDialog(QDialog):
         if typ == 'Spawn':
             return {'type': 'Spawn', 'image': self.text_edit.text(), 'x': self.x_spin.value(), 'y': self.y_spin.value()}
 
+    def _update_fields(self):
+        typ = self.type_box.currentText()
+        widgets = [
+            (self.target_label, self.target_box),
+            (self.dx_label, self.dx_spin),
+            (self.dy_label, self.dy_spin),
+            (self.x_label, self.x_spin),
+            (self.y_label, self.y_spin),
+            (self.text_label, self.text_edit),
+        ]
+        for label, w in widgets:
+            label.setVisible(False)
+            w.setVisible(False)
+        if typ == 'Move':
+            for pair in [(self.target_label, self.target_box), (self.dx_label, self.dx_spin), (self.dy_label, self.dy_spin)]:
+                pair[0].setVisible(True)
+                pair[1].setVisible(True)
+        elif typ == 'SetPosition':
+            for pair in [(self.target_label, self.target_box), (self.x_label, self.x_spin), (self.y_label, self.y_spin)]:
+                pair[0].setVisible(True)
+                pair[1].setVisible(True)
+        elif typ == 'Destroy':
+            self.target_label.setVisible(True)
+            self.target_box.setVisible(True)
+        elif typ == 'Print':
+            self.text_label.setVisible(True)
+            self.text_edit.setVisible(True)
+        elif typ == 'PlaySound':
+            self.text_label.setVisible(True)
+            self.text_edit.setVisible(True)
+        elif typ == 'Spawn':
+            for pair in [(self.text_label, self.text_edit), (self.x_label, self.x_spin), (self.y_label, self.y_spin)]:
+                pair[0].setVisible(True)
+                pair[1].setVisible(True)
+
 
 class AddEventDialog(QDialog):
     """Dialog to create an event from arbitrary conditions and actions."""
@@ -136,16 +233,18 @@ class AddEventDialog(QDialog):
         self.actions = []
         layout = QHBoxLayout(self)
 
-        left = QVBoxLayout()
-        right = QVBoxLayout()
+        left_box = QGroupBox('Conditions')
+        left = QVBoxLayout(left_box)
+        right_box = QGroupBox('Actions')
+        right = QVBoxLayout(right_box)
         self.cond_list = QListWidget(); left.addWidget(self.cond_list)
         self.act_list = QListWidget(); right.addWidget(self.act_list)
         add_cond = QPushButton('Add Condition'); left.addWidget(add_cond)
         add_act = QPushButton('Add Action'); right.addWidget(add_act)
         add_cond.clicked.connect(self.add_condition)
         add_act.clicked.connect(self.add_action)
-        layout.addLayout(left)
-        layout.addLayout(right)
+        layout.addWidget(left_box)
+        layout.addWidget(right_box)
 
         buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         buttons.accepted.connect(self.accept)
@@ -191,7 +290,9 @@ class Editor(QMainWindow):
         # logic tab with simple event list
         self.logic_widget = QWidget()
         self.logic_widget.setLayout(QVBoxLayout())
-        self.event_list = QListWidget()
+        self.event_list = QTableWidget(0, 2)
+        self.event_list.setHorizontalHeaderLabels(['Conditions', 'Actions'])
+        self.event_list.horizontalHeader().setStretchLastSection(True)
         self.logic_widget.layout().addWidget(self.event_list)
         self.add_event_btn = QPushButton('Add Event')
         self.add_event_btn.clicked.connect(self.add_event)
@@ -296,11 +397,14 @@ class Editor(QMainWindow):
             self.refresh_events()
 
     def refresh_events(self):
-        self.event_list.clear()
+        self.event_list.setRowCount(0)
         for evt in self.scene.events:
-            conds = ','.join(c['type'] for c in evt.get('conditions', []))
-            acts = ','.join(a['type'] for a in evt.get('actions', []))
-            self.event_list.addItem(f'{conds} -> {acts}')
+            row = self.event_list.rowCount()
+            self.event_list.insertRow(row)
+            conds = ', '.join(c['type'] for c in evt.get('conditions', []))
+            acts = ', '.join(a['type'] for a in evt.get('actions', []))
+            self.event_list.setItem(row, 0, QTableWidgetItem(conds))
+            self.event_list.setItem(row, 1, QTableWidgetItem(acts))
 
     def load_scene(self, path):
         self.scene = Scene.load(path)

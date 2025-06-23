@@ -108,9 +108,11 @@ The repository also includes a lightweight 2D framework built on top of
 tabs: **Viewport** and **Logic**. The viewport uses a virtually infinite
 `QGraphicsScene` so you can pan freely. A red rectangle shows the canvas (the
 game window) for reference. You can add sprites, drag them around and
-save/load scenes as JSON files. The **Logic** tab lists game events and lets you
-create new ones via a dialog. Use the *Run* action to launch the current scene
-directly from the editor.
+save/load scenes as JSON files. The **Logic** tab lists game events with
+conditions on the left and actions on the right. The event dialog now provides
+drop-down lists for keys and shows only parameters relevant to the chosen
+action. Use the *Run* action to launch the current scene directly from the
+editor.
 
 Sprites are loaded lazily at runtime so the editor no longer relies on
 `pygame`'s display module. This prevents crashes when adding images on systems
@@ -162,5 +164,7 @@ Engine(scene=scene, events=events).run()
 The editor now includes a **Console** dock at the bottom. All output from the
 game process and the editor itself appears here so you can easily debug your
 scripts. Events can combine many more conditions and actions such as
-`KeyReleased`, `MouseButton`, `PlaySound` and `Spawn`. Use the *Add Event*
-dialog's separate lists for conditions and actions to build complex behavior.
+`KeyReleased`, `MouseButton`, `PlaySound` and `Spawn`. The *Logic* tab lists
+each event with its conditions on the left and actions on the right. When adding
+an event you choose keys from a drop‑down list and only the relevant parameters
+for the selected action are shown so it is quick to create complex behavior.
