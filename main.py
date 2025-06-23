@@ -591,27 +591,16 @@ class Engine:
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 16, ctypes.c_void_p(8))
         glEnableVertexAttribArray(1)
 
-    def set_uniforms(self):
-        glUseProgram(self.program)
-        angle = np.radians(self.angle)
-        c, s = np.cos(angle), np.sin(angle)
-        model = np.array([
-            [c, 0.0, s, 0.0],
-            [0.0, 1.0, 0.0, 0.0],
-            [-s, 0.0, c, 0.0],
-            [0.0, 0.0, 0.0, 1.0]
-        ], dtype=np.float32)
+    def apply_common_uniforms(self):
         eye = self.camera_pos
         view = look_at(eye, [0, 0, 0], [0, 1, 0])
         projection = perspective(45, self.width / self.height, 0.1, 100.0)
         light_view = look_at(-self.dir_light * 10.0, [0,0,0], [0,1,0])
         light_proj = perspective(90, 1.0, 1.0, 25.0)
         light_space = np.dot(light_proj, light_view)
-        loc_model = glGetUniformLocation(self.program, 'model')
         loc_view = glGetUniformLocation(self.program, 'view')
         loc_proj = glGetUniformLocation(self.program, 'projection')
         loc_lightspace = glGetUniformLocation(self.program, 'lightSpaceMatrix')
-        glUniformMatrix4fv(loc_model, 1, GL_TRUE, model.flatten())
         glUniformMatrix4fv(loc_view, 1, GL_TRUE, view.flatten())
         glUniformMatrix4fv(loc_proj, 1, GL_TRUE, projection.flatten())
         glUniformMatrix4fv(loc_lightspace, 1, GL_TRUE, light_space.flatten())
@@ -632,7 +621,7 @@ class Engine:
         glUniform1i(glGetUniformLocation(self.program, 'ssaoMap'), 2)
         glUniform2f(glGetUniformLocation(self.program, 'screenSize'), float(self.width), float(self.height))
 
-    def draw_geometry(self, vbo, color):
+    def draw_geometry(self, vbo, color, model):
         glBindVertexArray(self.vao)
         glBindBuffer(GL_ARRAY_BUFFER, vbo)
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 32, ctypes.c_void_p(0))
@@ -641,6 +630,7 @@ class Engine:
         glEnableVertexAttribArray(1)
         glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 32, ctypes.c_void_p(24))
         glEnableVertexAttribArray(2)
+        glUniformMatrix4fv(glGetUniformLocation(self.program, 'model'), 1, GL_TRUE, model.flatten())
         glUniform3f(glGetUniformLocation(self.program, 'objectColor'), *color)
         glDrawArrays(GL_TRIANGLES, 0, 36 if vbo == self.cube_vbo else 6)
 
@@ -665,22 +655,23 @@ class Engine:
     def render_gbuffer(self):
         glUseProgram(self.gbuffer_program)
         angle = np.radians(self.angle)
-        c, s = np.cos(angle), np.sin(angle)
-        model = np.array([
-            [c, 0.0, s, 0.0],
+        cube_model = np.array([
+            [np.cos(angle), 0.0, np.sin(angle), 0.0],
             [0.0, 1.0, 0.0, 0.0],
-            [-s, 0.0, c, 0.0],
+            [-np.sin(angle), 0.0, np.cos(angle), 0.0],
             [0.0, 0.0, 0.0, 1.0]
         ], dtype=np.float32)
+        plane_model = np.identity(4, dtype=np.float32)
         view = look_at(self.camera_pos, [0,0,0], [0,1,0])
         proj = perspective(45, self.width/self.height, 0.1, 100.0)
-        glUniformMatrix4fv(glGetUniformLocation(self.gbuffer_program,'model'),1,GL_TRUE,model.flatten())
         glUniformMatrix4fv(glGetUniformLocation(self.gbuffer_program,'view'),1,GL_TRUE,view.flatten())
         glUniformMatrix4fv(glGetUniformLocation(self.gbuffer_program,'projection'),1,GL_TRUE,proj.flatten())
         glViewport(0,0,self.width,self.height)
         glBindFramebuffer(GL_FRAMEBUFFER, self.g_fbo)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        glUniformMatrix4fv(glGetUniformLocation(self.gbuffer_program,'model'),1,GL_TRUE,plane_model.flatten())
         self.draw_gbuffer_geometry(self.plane_vbo)
+        glUniformMatrix4fv(glGetUniformLocation(self.gbuffer_program,'model'),1,GL_TRUE,cube_model.flatten())
         self.draw_gbuffer_geometry(self.cube_vbo)
         glBindFramebuffer(GL_FRAMEBUFFER, 0)
 
@@ -725,34 +716,43 @@ class Engine:
         glViewport(0, 0, self.width, self.height)
         glBindFramebuffer(GL_FRAMEBUFFER, 0)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        self.set_uniforms()
-        self.draw_geometry(self.plane_vbo, (0.8, 0.8, 0.8))
-        self.draw_geometry(self.cube_vbo, (0.4, 0.2, 0.8))
+        glUseProgram(self.program)
+        self.apply_common_uniforms()
+        plane_model = np.identity(4, dtype=np.float32)
+        cube_model = np.array([
+            [np.cos(np.radians(self.angle)), 0.0, np.sin(np.radians(self.angle)), 0.0],
+            [0.0, 1.0, 0.0, 0.0],
+            [-np.sin(np.radians(self.angle)), 0.0, np.cos(np.radians(self.angle)), 0.0],
+            [0.0, 0.0, 0.0, 1.0]
+        ], dtype=np.float32)
+        self.draw_geometry(self.plane_vbo, (0.8, 0.8, 0.8), plane_model)
+        self.draw_geometry(self.cube_vbo, (0.4, 0.2, 0.8), cube_model)
         glutSwapBuffers()
 
     def render_depth_pass(self):
         glUseProgram(self.depth_program)
         angle = np.radians(self.angle)
-        c, s = np.cos(angle), np.sin(angle)
-        model = np.array([
-            [c, 0.0, s, 0.0],
+        cube_model = np.array([
+            [np.cos(angle), 0.0, np.sin(angle), 0.0],
             [0.0, 1.0, 0.0, 0.0],
-            [-s, 0.0, c, 0.0],
+            [-np.sin(angle), 0.0, np.cos(angle), 0.0],
             [0.0, 0.0, 0.0, 1.0]
         ], dtype=np.float32)
+        plane_model = np.identity(4, dtype=np.float32)
         light_view = look_at(-self.dir_light * 10.0, [0,0,0], [0,1,0])
         light_proj = perspective(90, 1.0, 1.0, 25.0)
         light_space = np.dot(light_proj, light_view)
         loc_model = glGetUniformLocation(self.depth_program, 'model')
         loc_light = glGetUniformLocation(self.depth_program, 'lightSpaceMatrix')
-        glUniformMatrix4fv(loc_model, 1, GL_TRUE, model.flatten())
         glUniformMatrix4fv(loc_light, 1, GL_TRUE, light_space.flatten())
         glViewport(0, 0, self.shadow_size, self.shadow_size)
         glBindFramebuffer(GL_FRAMEBUFFER, self.shadow_fbo)
         glEnable(GL_POLYGON_OFFSET_FILL)
         glPolygonOffset(2.0, 4.0)
         glClear(GL_DEPTH_BUFFER_BIT)
+        glUniformMatrix4fv(loc_model, 1, GL_TRUE, plane_model.flatten())
         self.draw_depth_geometry(self.plane_vbo)
+        glUniformMatrix4fv(loc_model, 1, GL_TRUE, cube_model.flatten())
         self.draw_depth_geometry(self.cube_vbo)
         glDisable(GL_POLYGON_OFFSET_FILL)
         glBindFramebuffer(GL_FRAMEBUFFER, 0)

@@ -8,11 +8,13 @@ for smoother edges.
 Shadows are rendered with a depth map and filtered using a high quality 7x7 PCF kernel for
 even softer edges. The engine verifies that the shadow framebuffer is complete
 and uses a 32‑bit depth texture so shadows appear reliably. A small polygon
-offset is applied when rendering the depth map to avoid acne artifacts. Lighting now
-combines a directional light with a point light and stronger ambient illumination. A
-screen‑space ambient occlusion (SSAO) pass further darkens corners for more
-realism. The shaders combine the baked light map with dynamic lighting and
-shadowing to approximate global illumination.
+offset is applied when rendering the depth map to avoid acne artifacts. Each
+object now has its own model matrix so the plane no longer rotates with the cube
+and the shadows line up correctly. Lighting combines a directional light with a
+point light and stronger ambient illumination. A screen‑space ambient occlusion
+(SSAO) pass further darkens corners for more realism. The shaders combine the
+baked light map with dynamic lighting and shadowing to approximate global
+illumination.
 
 ## Requirements
 
