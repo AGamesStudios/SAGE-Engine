@@ -154,41 +154,63 @@ float rand(vec2 co){
     return fract(sin(dot(co, vec2(12.9898,78.233))) * 43758.5453);
 }
 
+float search_blocker(vec3 projCoords, float currentDepth, float bias, mat2 rot){
+    vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
+    float blocker = 0.0;
+    int count = 0;
+    vec2 poissonDisk[16] = vec2[](
+        vec2(-0.94201624, -0.39906216), vec2(0.94558609, -0.76890725),
+        vec2(-0.094184101, -0.92938870), vec2(0.34495938, 0.29387760),
+        vec2(-0.91588581, 0.45771432), vec2(-0.81544232, -0.87912464),
+        vec2(-0.38277543, 0.27676845), vec2(0.97484398, 0.75648379),
+        vec2(0.44323325, -0.97511554), vec2(0.53742981, -0.47373420),
+        vec2(-0.26496911, -0.41893023), vec2(0.79197514, 0.19090188),
+        vec2(-0.24188840, 0.99706507), vec2(-0.81409955, 0.91437590),
+        vec2(0.19984126, 0.78641367), vec2(0.14383161, -0.14100790)
+    );
+    for(int i=0;i<shadowSamples;++i){
+        vec2 offset = rot * poissonDisk[i] * texelSize * 2.0;
+        float depth = texture(shadowMap, projCoords.xy + offset).r;
+        if(depth < currentDepth - bias){
+            blocker += depth;
+            count++;
+        }
+    }
+    if(count == 0) return -1.0;
+    return blocker / float(count);
+}
+
 float shadow_calculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir) {
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     projCoords = projCoords * 0.5 + 0.5;
+    if(projCoords.z > 1.0)
+        return 0.0;
     float currentDepth = projCoords.z;
     float bias = max(0.005 * (1.0 - dot(normal, lightDir)), 0.001);
-    vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
-    vec2 poissonDisk[16] = vec2[](
-        vec2(-0.94201624, -0.39906216),
-        vec2(0.94558609, -0.76890725),
-        vec2(-0.094184101, -0.92938870),
-        vec2(0.34495938, 0.29387760),
-        vec2(-0.91588581, 0.45771432),
-        vec2(-0.81544232, -0.87912464),
-        vec2(-0.38277543, 0.27676845),
-        vec2(0.97484398, 0.75648379),
-        vec2(0.44323325, -0.97511554),
-        vec2(0.53742981, -0.47373420),
-        vec2(-0.26496911, -0.41893023),
-        vec2(0.79197514, 0.19090188),
-        vec2(-0.24188840, 0.99706507),
-        vec2(-0.81409955, 0.91437590),
-        vec2(0.19984126, 0.78641367),
-        vec2(0.14383161, -0.14100790)
-    );
     float angle = rand(projCoords.xy) * 6.2831853;
     mat2 rot = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
+    float blocker = search_blocker(projCoords, currentDepth, bias, rot);
+    float filterRadius = 1.0;
+    if(blocker > 0.0)
+        filterRadius = clamp((currentDepth - blocker) * 40.0, 1.0, 7.5);
+    vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
+    vec2 poissonDisk[16] = vec2[](
+        vec2(-0.94201624, -0.39906216), vec2(0.94558609, -0.76890725),
+        vec2(-0.094184101, -0.92938870), vec2(0.34495938, 0.29387760),
+        vec2(-0.91588581, 0.45771432), vec2(-0.81544232, -0.87912464),
+        vec2(-0.38277543, 0.27676845), vec2(0.97484398, 0.75648379),
+        vec2(0.44323325, -0.97511554), vec2(0.53742981, -0.47373420),
+        vec2(-0.26496911, -0.41893023), vec2(0.79197514, 0.19090188),
+        vec2(-0.24188840, 0.99706507), vec2(-0.81409955, 0.91437590),
+        vec2(0.19984126, 0.78641367), vec2(0.14383161, -0.14100790)
+    );
     float shadow = 0.0;
-    for(int i=0;i<shadowSamples;++i){
-        vec2 offset = rot * poissonDisk[i] * texelSize * 3.0;
+    for(int i=0;i<shadowSamples*2;i++){
+        vec2 offset = rot * poissonDisk[i % shadowSamples] * texelSize * filterRadius;
         float pcfDepth = texture(shadowMap, projCoords.xy + offset).r;
         shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
     }
-    shadow /= float(shadowSamples);
-    if(projCoords.z > 1.0)
-        shadow = 0.0;
+    shadow /= float(shadowSamples*2);
     return shadow;
 }
 
