@@ -453,6 +453,8 @@ class Engine:
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, self.width, self.height, 0, GL_RGB, GL_FLOAT, None)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, self.g_position, 0)
 
         self.g_normal = glGenTextures(1)
@@ -460,6 +462,8 @@ class Engine:
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, self.width, self.height, 0, GL_RGB, GL_FLOAT, None)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, self.g_normal, 0)
 
         self.g_depth = glGenRenderbuffers(1)
@@ -672,9 +676,12 @@ class Engine:
         glUniformMatrix4fv(loc_light, 1, GL_TRUE, light_space.flatten())
         glViewport(0, 0, self.shadow_size, self.shadow_size)
         glBindFramebuffer(GL_FRAMEBUFFER, self.shadow_fbo)
+        glEnable(GL_POLYGON_OFFSET_FILL)
+        glPolygonOffset(2.0, 4.0)
         glClear(GL_DEPTH_BUFFER_BIT)
         self.draw_depth_geometry(self.plane_vbo)
         self.draw_depth_geometry(self.cube_vbo)
+        glDisable(GL_POLYGON_OFFSET_FILL)
         glBindFramebuffer(GL_FRAMEBUFFER, 0)
 
     def update(self):
