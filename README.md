@@ -116,23 +116,26 @@ python -m sage2d path/to/scene.json
 Launch the editor with:
 
 ```bash
+python main.py
+# or
 python -m sage_editor
 ```
 
 Sprite positions are stored when you save so the runtime engine can render them
 exactly as placed in the editor.
 
-### Event-Based Logic
+### SAGE Logic Events
 
-SAGE 2D now features a simple event system inspired by Clickteam. Events are
-made up of *conditions* and *actions*. When all conditions are satisfied during
-the game loop, the actions are executed. The built-in library includes
-`KeyPressed`, `Collision`, `Move` and `Print` but you can create your own
-conditions and actions by subclassing the provided base classes.
+The engine ships with **SAGE Logic**, a small condition/action system inspired
+by Clickteam. Events consist of *conditions* and *actions*. When all conditions
+pass, the actions run. Built-in blocks include `KeyPressed`, `Collision`,
+`Timer`, `Move`, `SetPosition`, `Destroy` and `Print`. You can subclass
+`Condition` or `Action` to create your own.
 
 ```python
 import pygame
-from sage2d import Engine, Scene, GameObject, Event, KeyPressed, Move, EventSystem
+from sage2d import Engine, Scene, GameObject
+from sage_logic import EventSystem, Event, KeyPressed, Timer, Move
 
 player = GameObject('player.png')
 scene = Scene()
@@ -140,6 +143,7 @@ scene.add_object(player)
 
 events = EventSystem()
 events.add_event(Event([KeyPressed(pygame.K_RIGHT)], [Move(player, 5, 0)]))
+events.add_event(Event([Timer(5.0)], [Move(player, -5, 0)]))
 
 Engine(scene=scene, events=events).run()
 ```

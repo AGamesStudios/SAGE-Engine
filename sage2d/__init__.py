@@ -2,18 +2,22 @@ import sys
 import json
 import pygame
 
-from .events import (
+from sage_logic import (
     EventSystem,
     Event,
     KeyPressed,
     Collision,
+    Timer,
     Move,
+    SetPosition,
+    Destroy,
     Print,
 )
 
 __all__ = [
     'GameObject', 'Scene', 'Engine', 'EventSystem',
-    'Event', 'KeyPressed', 'Collision', 'Move', 'Print', 'main'
+    'Event', 'KeyPressed', 'Collision', 'Timer',
+    'Move', 'SetPosition', 'Destroy', 'Print', 'main'
 ]
 
 
@@ -42,6 +46,10 @@ class Scene:
 
     def add_object(self, obj):
         self.objects.append(obj)
+
+    def remove_object(self, obj):
+        if obj in self.objects:
+            self.objects.remove(obj)
 
     def update(self, dt):
         for obj in self.objects:
