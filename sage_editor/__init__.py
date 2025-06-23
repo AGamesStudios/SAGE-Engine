@@ -359,7 +359,8 @@ class Editor(QMainWindow):
         self.console.setReadOnly(True)
         dock = QDockWidget('Console', self)
         dock.setWidget(self.console)
-        self.addDockWidget(Qt.BottomDockWidgetArea, dock)
+        # use PyQt6 enum syntax for the dock area
+        self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, dock)
         self.console.append(f'Engine path: {os.getcwd()}')
         self.process = None
 
