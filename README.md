@@ -1,9 +1,9 @@
 # SAGE Engine Example
 
 This repository contains a minimal example of a Python renderer built with OpenGL.
-The engine demonstrates baked global illumination using a light map. It now uses a
-fixed camera so the scene is easier to view and enables multi-sample anti aliasing
-for smoother edges.
+The engine demonstrates baked global illumination using a light map. The camera
+now orbits around the scene so the objects remain visible from all sides while
+multi-sample anti aliasing smooths the image.
 
 Shadows are rendered with a depth map and filtered using a high quality 7x7 PCF kernel for
 even softer edges. The engine verifies that the shadow framebuffer is complete
@@ -37,14 +37,15 @@ Then run the example:
 python main.py
 ```
 
-This demo opens a window with a plane and a rotating cube lit by a directional
-light and a point light. The camera is fixed in place so the scene stays in
-view. Shadows come from a depth map filtered with a 7×7 PCF kernel and a
+This demo opens a window with a plane and a cube lit by a directional light and
+a point light. The objects are static while the camera slowly circles them. Shadows
+come from a depth map filtered with a 7×7 PCF kernel and a
 screen-space ambient occlusion pass darkens creases using a G-buffer built in
 view space. The G-buffer textures clamp to the screen edges so the SSAO result
 is free of border artifacts. The SSAO pass now includes a blur stage to reduce
 noise. Multi-sample anti aliasing and baked global illumination make the final
-image smoother and brighter.
+image smoother and brighter. Lighting uses a Blinn-Phong specular model for
+sharper highlights.
 
 ## Quality Modes
 

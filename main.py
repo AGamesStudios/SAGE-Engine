@@ -121,16 +121,16 @@ void main() {
     vec3 viewDir = normalize(viewPos - FragPos);
     float diff = max(dot(norm, dir), 0.0);
     vec3 diffuse = diff * dirLightColor;
-    vec3 reflectDir = reflect(-dir, norm);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
+    vec3 halfwayDir = normalize(viewDir + dir);
+    float spec = pow(max(dot(norm, halfwayDir), 0.0), 64.0);
     vec3 specular = 0.5 * spec * dirLightColor;
 
     float shadow = shadow_calculation(FragPosLightSpace, norm, dir);
     vec3 ptDir = normalize(pointLightPos - FragPos);
     float diff2 = max(dot(norm, ptDir), 0.0);
     vec3 diffuse2 = diff2 * pointLightColor;
-    vec3 reflectDir2 = reflect(-ptDir, norm);
-    float spec2 = pow(max(dot(viewDir, reflectDir2), 0.0), 32);
+    vec3 halfwayDir2 = normalize(viewDir + ptDir);
+    float spec2 = pow(max(dot(norm, halfwayDir2), 0.0), 64.0);
     vec3 specular2 = 0.5 * spec2 * pointLightColor;
 
     float ao = texture(ssaoMap, gl_FragCoord.xy / screenSize).r;
@@ -312,8 +312,9 @@ class Engine:
         self.width = width
         self.height = height
         self.low_quality = quality == 'low'
-        self.angle = 0
-        self.camera_pos = np.array([4.0, 3.0, 6.0], dtype=np.float32)
+        self.camera_angle = 0.0
+        self.camera_radius = 6.0
+        self.camera_height = 3.0
         self.dir_light = np.array([-0.2, -1.0, -0.3], dtype=np.float32)
         self.dir_color = np.array([1.0, 1.0, 0.9], dtype=np.float32)
         self.point_light = np.array([4.0, 4.0, 4.0], dtype=np.float32)
@@ -592,7 +593,11 @@ class Engine:
         glEnableVertexAttribArray(1)
 
     def apply_common_uniforms(self):
-        eye = self.camera_pos
+        eye = np.array([
+            np.cos(np.radians(self.camera_angle)) * self.camera_radius,
+            self.camera_height,
+            np.sin(np.radians(self.camera_angle)) * self.camera_radius
+        ], dtype=np.float32)
         view = look_at(eye, [0, 0, 0], [0, 1, 0])
         projection = perspective(45, self.width / self.height, 0.1, 100.0)
         light_view = look_at(-self.dir_light * 10.0, [0,0,0], [0,1,0])
@@ -654,15 +659,14 @@ class Engine:
 
     def render_gbuffer(self):
         glUseProgram(self.gbuffer_program)
-        angle = np.radians(self.angle)
-        cube_model = np.array([
-            [np.cos(angle), 0.0, np.sin(angle), 0.0],
-            [0.0, 1.0, 0.0, 0.0],
-            [-np.sin(angle), 0.0, np.cos(angle), 0.0],
-            [0.0, 0.0, 0.0, 1.0]
-        ], dtype=np.float32)
+        cube_model = np.identity(4, dtype=np.float32)
         plane_model = np.identity(4, dtype=np.float32)
-        view = look_at(self.camera_pos, [0,0,0], [0,1,0])
+        eye = np.array([
+            np.cos(np.radians(self.camera_angle)) * self.camera_radius,
+            self.camera_height,
+            np.sin(np.radians(self.camera_angle)) * self.camera_radius
+        ], dtype=np.float32)
+        view = look_at(eye, [0,0,0], [0,1,0])
         proj = perspective(45, self.width/self.height, 0.1, 100.0)
         glUniformMatrix4fv(glGetUniformLocation(self.gbuffer_program,'view'),1,GL_TRUE,view.flatten())
         glUniformMatrix4fv(glGetUniformLocation(self.gbuffer_program,'projection'),1,GL_TRUE,proj.flatten())
@@ -719,25 +723,14 @@ class Engine:
         glUseProgram(self.program)
         self.apply_common_uniforms()
         plane_model = np.identity(4, dtype=np.float32)
-        cube_model = np.array([
-            [np.cos(np.radians(self.angle)), 0.0, np.sin(np.radians(self.angle)), 0.0],
-            [0.0, 1.0, 0.0, 0.0],
-            [-np.sin(np.radians(self.angle)), 0.0, np.cos(np.radians(self.angle)), 0.0],
-            [0.0, 0.0, 0.0, 1.0]
-        ], dtype=np.float32)
+        cube_model = np.identity(4, dtype=np.float32)
         self.draw_geometry(self.plane_vbo, (0.8, 0.8, 0.8), plane_model)
         self.draw_geometry(self.cube_vbo, (0.4, 0.2, 0.8), cube_model)
         glutSwapBuffers()
 
     def render_depth_pass(self):
         glUseProgram(self.depth_program)
-        angle = np.radians(self.angle)
-        cube_model = np.array([
-            [np.cos(angle), 0.0, np.sin(angle), 0.0],
-            [0.0, 1.0, 0.0, 0.0],
-            [-np.sin(angle), 0.0, np.cos(angle), 0.0],
-            [0.0, 0.0, 0.0, 1.0]
-        ], dtype=np.float32)
+        cube_model = np.identity(4, dtype=np.float32)
         plane_model = np.identity(4, dtype=np.float32)
         light_view = look_at(-self.dir_light * 10.0, [0,0,0], [0,1,0])
         light_proj = perspective(90, 1.0, 1.0, 25.0)
@@ -758,7 +751,7 @@ class Engine:
         glBindFramebuffer(GL_FRAMEBUFFER, 0)
 
     def update(self):
-        self.angle += 0.1
+        self.camera_angle += 0.1
         glutPostRedisplay()
 
     def reshape(self, w, h):
