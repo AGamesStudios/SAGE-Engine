@@ -14,7 +14,7 @@ from .lang import LANGUAGES, DEFAULT_LANGUAGE
 import tempfile
 import os
 import pygame
-from sage_engine import Scene, GameObject
+from sage_engine import Scene, GameObject, Project
 
 KEY_OPTIONS = [
     ('Up', pygame.K_UP),
@@ -716,6 +716,7 @@ class Editor(QMainWindow):
         # canvas rectangle representing the game window
         self.canvas = self.g_scene.addRect(QRectF(0, 0, 640, 480), QPen(QColor('red')))
         self.scene = Scene()
+        self.project_path: str | None = None
         self.items = []
         self._init_actions()
         self.showMaximized()
@@ -736,8 +737,9 @@ class Editor(QMainWindow):
     def _apply_language(self):
         self.file_menu.setTitle(self.t('file'))
         self.edit_menu.setTitle(self.t('edit'))
-        self.open_act.setText(self.t('open_scene'))
-        self.save_act.setText(self.t('save_scene'))
+        self.new_proj_act.setText(self.t('new_project'))
+        self.open_proj_act.setText(self.t('open_project'))
+        self.save_proj_act.setText(self.t('save_project'))
         self.run_act.setText(self.t('run'))
         self.add_sprite_act.setText(self.t('add_sprite'))
         self.tabs.setTabText(0, self.t('viewport'))
@@ -752,12 +754,15 @@ class Editor(QMainWindow):
     def _init_actions(self):
         menubar = self.menuBar()
         self.file_menu = menubar.addMenu(self.t('file'))
-        self.open_act = QAction(self.t('open_scene'), self)
-        self.open_act.triggered.connect(self.open_scene)
-        self.save_act = QAction(self.t('save_scene'), self)
-        self.save_act.triggered.connect(self.save_scene)
-        self.file_menu.addAction(self.open_act)
-        self.file_menu.addAction(self.save_act)
+        self.new_proj_act = QAction(self.t('new_project'), self)
+        self.new_proj_act.triggered.connect(self.new_project)
+        self.open_proj_act = QAction(self.t('open_project'), self)
+        self.open_proj_act.triggered.connect(self.open_project)
+        self.save_proj_act = QAction(self.t('save_project'), self)
+        self.save_proj_act.triggered.connect(self.save_project)
+        self.file_menu.addAction(self.new_proj_act)
+        self.file_menu.addAction(self.open_proj_act)
+        self.file_menu.addAction(self.save_proj_act)
         self.run_act = QAction(self.t('run'), self)
         self.run_act.triggered.connect(self.run_game)
         self.file_menu.addAction(self.run_act)
@@ -788,6 +793,47 @@ class Editor(QMainWindow):
         if path:
             self.load_scene(path)
 
+    def new_project(self):
+        self.scene = Scene()
+        self.project_path = None
+        self.g_scene.clear()
+        self.canvas = self.g_scene.addRect(QRectF(0, 0, 640, 480), QPen(QColor('red')))
+        self.items.clear()
+        self.object_combo.clear()
+        self.refresh_events()
+        self.refresh_variables()
+
+    def open_project(self):
+        path, _ = QFileDialog.getOpenFileName(
+            self, self.t('open_project'), '', self.t('sage_files')
+        )
+        if not path:
+            return
+        try:
+            proj = Project.load(path)
+            self.project_path = path
+            self.load_scene(proj.scene)
+        except Exception as exc:
+            QMessageBox.warning(self, 'Error', f'Failed to open project: {exc}')
+
+    def save_project(self):
+        path, _ = QFileDialog.getSaveFileName(
+            self, self.t('save_project'), '', self.t('sage_files')
+        )
+        if not path:
+            return
+        self.project_path = path
+        scene_path = os.path.splitext(path)[0] + '.json'
+        for item, obj in self.items:
+            pos = item.pos()
+            obj.x = pos.x()
+            obj.y = pos.y()
+        self.scene.save(scene_path)
+        try:
+            Project(scene_path).save(path)
+        except Exception as exc:
+            QMessageBox.warning(self, 'Error', f'Failed to save project: {exc}')
+
     def save_scene(self):
         path, _ = QFileDialog.getSaveFileName(
             self, self.t('save_scene'), '', self.t('json_files')
@@ -800,18 +846,21 @@ class Editor(QMainWindow):
             self.scene.save(path)
 
     def run_game(self):
-        fd, path = tempfile.mkstemp(suffix='.json')
+        fd, scene_path = tempfile.mkstemp(suffix='.json')
         os.close(fd)
+        proj_fd, proj_path = tempfile.mkstemp(suffix='.sageproject')
+        os.close(proj_fd)
         for item, obj in self.items:
             pos = item.pos()
             obj.x = pos.x()
             obj.y = pos.y()
-        self.scene.save(path)
+        self.scene.save(scene_path)
+        Project(scene_path).save(proj_path)
         if self.process and self.process.state() != QProcess.NotRunning:
             self.process.kill()
         self.process = QProcess(self)
         self.process.setProgram(sys.executable)
-        self.process.setArguments(['-m', 'sage_engine', path])
+        self.process.setArguments(['-m', 'sage_engine', proj_path])
         self.process.readyReadStandardOutput.connect(self._read_output)
         self.process.readyReadStandardError.connect(self._read_output)
         self.process.start()

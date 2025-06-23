@@ -13,7 +13,8 @@ theme and provides two
 tabs: **Viewport** and **Logic**. The viewport uses a virtually infinite
 `QGraphicsScene` so you can pan freely. A red rectangle shows the canvas (the
 game window) for reference. You can add sprites, drag them around and
-save/load scenes as JSON files. Each sprite receives a unique name like
+save/load projects ending in `.sageproject`. Each file references a JSON scene
+on disk. Each sprite receives a unique name like
 `enemy (1)` if necessary so conditions always target the correct object.
 The **Logic** tab lists object events with
 conditions on the left and actions on the right. The event dialog now provides
@@ -49,11 +50,14 @@ The condition and action lists offer context menus with **Edit**, **Copy**,
 **Paste**, and **Delete** options. Right-click an empty area to add a new block
 or paste the previously copied one.
 
-Run a saved scene with:
+Run a saved project with:
 
 ```bash
-python -m sage_engine path/to/scene.json
+python -m sage_engine path/to/project.sageproject
 ```
+
+Project files are small JSON documents that store the path to a scene file. The
+editor can create them via **File → Save Project**.
 
 Launch the editor with:
 

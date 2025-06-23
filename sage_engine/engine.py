@@ -1,6 +1,7 @@
 import sys
 import pygame
 from .scene import Scene
+from .project import Project
 
 class Engine:
     """Main loop and rendering."""
@@ -30,5 +31,13 @@ class Engine:
 def main(argv=None):
     if argv is None:
         argv = sys.argv
-    scene = Scene.load(argv[1]) if len(argv) > 1 else Scene()
+    scene = Scene()
+    if len(argv) > 1:
+        path = argv[1]
+        if path.endswith('.sageproject'):
+            proj = Project.load(path)
+            if proj.scene:
+                scene = Scene.load(proj.scene)
+        else:
+            scene = Scene.load(path)
     Engine(scene=scene, events=scene.build_event_system()).run()

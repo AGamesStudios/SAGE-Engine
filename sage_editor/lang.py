@@ -20,6 +20,10 @@ LANGUAGES = {
         'add_event': 'Add Event',
         'open_scene': 'Open Scene',
         'save_scene': 'Save Scene',
+        'new_project': 'New Project',
+        'open_project': 'Open Project',
+        'save_project': 'Save Project',
+        'sage_files': 'SAGE Project (*.sageproject)',
         'browse': 'Browse',
         'image_files': 'Images (*.png *.jpg *.bmp)',
         'json_files': 'JSON Files (*.json)'
@@ -45,6 +49,10 @@ LANGUAGES = {
         'add_event': 'Добавить событие',
         'open_scene': 'Открыть сцену',
         'save_scene': 'Сохранить сцену',
+        'new_project': 'Новый проект',
+        'open_project': 'Открыть проект',
+        'save_project': 'Сохранить проект',
+        'sage_files': 'Проекты SAGE (*.sageproject)',
         'browse': 'Обзор',
         'image_files': 'Изображения (*.png *.jpg *.bmp)',
         'json_files': 'Файлы JSON (*.json)'
