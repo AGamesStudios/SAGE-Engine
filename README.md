@@ -3,6 +3,8 @@
 This repository provides a small 2D game engine with a scene editor. It uses
 `pygame` for rendering and PyQt6 for the editor interface. Scenes consist of
 movable sprite objects that you can place visually using the **SAGE Editor**.
+Extra care is taken to keep the editor lightweight so it runs well even on
+older computers.
 The editor launches maximized in a dark Fusion
 theme and provides two
 tabs: **Viewport** and **Logic**. The viewport uses a virtually infinite
@@ -18,7 +20,9 @@ game start or every frame. Fonts are slightly larger for readability. Use the
 
 Sprites are loaded lazily at runtime so the editor no longer relies on
 `pygame`'s display module. This prevents crashes when adding images on systems
-without an SDL window.
+without an SDL window. The editor also validates image and variable input and
+selects the first object by default so adding sprites or logic can no longer
+crash on older hardware.
 
 Run a saved scene with:
 

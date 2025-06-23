@@ -432,15 +432,26 @@ class Editor(QMainWindow):
             self.console.append(err.rstrip())
 
     def add_sprite(self):
-        path, _ = QFileDialog.getOpenFileName(self, 'Add Sprite', '', 'Images (*.png *.jpg *.bmp)')
-        if path:
+        path, _ = QFileDialog.getOpenFileName(
+            self, 'Add Sprite', '', 'Images (*.png *.jpg *.bmp)'
+        )
+        if not path:
+            return
+        try:
+            pix = QPixmap(path)
+            if pix.isNull():
+                raise ValueError('failed to load image')
+            item = QGraphicsPixmapItem(pix)
+            item.setFlag(QGraphicsPixmapItem.GraphicsItemFlag.ItemIsMovable, True)
+            self.g_scene.addItem(item)
             obj = GameObject(path)
             self.scene.add_object(obj)
-            item = QGraphicsPixmapItem(QPixmap(path))
-            item.setFlag(QGraphicsPixmapItem.ItemIsMovable, True)
-            self.g_scene.addItem(item)
             self.items.append((item, obj))
-            self.object_combo.addItem(os.path.basename(path), len(self.items)-1)
+            self.object_combo.addItem(os.path.basename(path), len(self.items) - 1)
+            if self.object_combo.currentIndex() == -1:
+                self.object_combo.setCurrentIndex(0)
+        except Exception as exc:
+            self.console.append(f'Failed to add sprite: {exc}')
         self.refresh_events()
 
     def add_variable(self):
@@ -455,19 +466,24 @@ class Editor(QMainWindow):
         buttons.accepted.connect(dlg.accept)
         buttons.rejected.connect(dlg.reject)
         if dlg.exec() == QDialog.DialogCode.Accepted:
-            name = name_edit.text()
-            typ = type_box.currentText()
-            val_text = value_edit.text()
-            if typ == 'int':
-                value = int(val_text or 0)
-            elif typ == 'float':
-                value = float(val_text or 0)
-            elif typ == 'bool':
-                value = val_text.lower() in ('1','true','yes')
-            else:
-                value = val_text
-            self.scene.variables[name] = value
-            self.refresh_variables()
+            try:
+                name = name_edit.text().strip()
+                if not name:
+                    raise ValueError('name required')
+                typ = type_box.currentText()
+                val_text = value_edit.text()
+                if typ == 'int':
+                    value = int(val_text or 0)
+                elif typ == 'float':
+                    value = float(val_text or 0)
+                elif typ == 'bool':
+                    value = val_text.lower() in ('1', 'true', 'yes')
+                else:
+                    value = val_text
+                self.scene.variables[name] = value
+                self.refresh_variables()
+            except Exception as exc:
+                self.console.append(f'Failed to add variable: {exc}')
 
     def refresh_variables(self):
         self.var_table.setRowCount(0)
@@ -479,7 +495,7 @@ class Editor(QMainWindow):
 
     def add_condition(self, row):
         idx = self.object_combo.currentData()
-        if idx is None:
+        if idx is None or idx >= len(self.items):
             return
         obj = self.items[idx][1]
         if row >= len(obj.events):
@@ -492,7 +508,11 @@ class Editor(QMainWindow):
 
     def add_action(self, row):
         idx = self.object_combo.currentData()
-        if idx is None or row >= len(self.items[idx][1].events):
+        if (
+            idx is None
+            or idx >= len(self.items)
+            or row >= len(self.items[idx][1].events)
+        ):
             return
         obj = self.items[idx][1]
         evt = obj.events[row]
@@ -506,7 +526,7 @@ class Editor(QMainWindow):
         idx = self.object_combo.currentData()
         if idx is None and self.items:
             idx = 0
-        if idx is None:
+        if idx is None or idx >= len(self.items):
             return
         obj = self.items[idx][1]
         for i, evt in enumerate(getattr(obj, 'events', [])):
