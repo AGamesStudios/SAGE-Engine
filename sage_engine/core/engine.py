@@ -1,6 +1,7 @@
 import sys
 import argparse
 import pygame
+import traceback
 from .scene import Scene
 from .project import Project
 
@@ -22,11 +23,16 @@ class Engine:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
-            self.events.update(self, self.scene, dt)
-            self.scene.update(dt)
-            self.screen.fill((0, 0, 0))
-            self.scene.draw(self.screen)
-            pygame.display.flip()
+            try:
+                self.events.update(self, self.scene, dt)
+                self.scene.update(dt)
+                self.screen.fill((0, 0, 0))
+                self.scene.draw(self.screen)
+                pygame.display.flip()
+            except Exception as exc:
+                print(f'Runtime error: {exc}')
+                traceback.print_exc()
+                running = False
         pygame.quit()
 
 

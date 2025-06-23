@@ -56,6 +56,8 @@ ensures combo boxes always point to valid objects, preventing crashes when
 adding multiple sprites, variables, or conditions on older hardware.
 Any errors when creating conditions, actions, or variables are caught and
 printed to the console instead of closing the editor.
+If something goes wrong during gameplay, the console shows the full
+Python traceback so you can identify exactly where the problem occurred.
 
 ### Localization
 

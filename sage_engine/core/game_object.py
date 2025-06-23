@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 import os
+import traceback
 import pygame
 
 # cache loaded images so repeated sprites don't reload files
@@ -30,8 +31,13 @@ class GameObject:
         if self.sprite is None:
             sprite = _IMAGE_CACHE.get(self.image_path)
             if sprite is None:
-                sprite = pygame.image.load(self.image_path).convert_alpha()
-                _IMAGE_CACHE[self.image_path] = sprite
+                try:
+                    sprite = pygame.image.load(self.image_path).convert_alpha()
+                    _IMAGE_CACHE[self.image_path] = sprite
+                except Exception as exc:
+                    print(f'Failed to load image {self.image_path}: {exc}')
+                    traceback.print_exc()
+                    sprite = pygame.Surface((10, 10), pygame.SRCALPHA)
             self.sprite = sprite
 
     def draw(self, surface: pygame.Surface):

@@ -10,6 +10,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import QPixmap, QPen, QColor, QPalette, QFont, QAction
 from PyQt6.QtCore import QRectF, Qt, QProcess, QPointF
+import traceback
 from .lang import LANGUAGES, DEFAULT_LANGUAGE
 import tempfile
 import os
@@ -1577,6 +1578,11 @@ def main(argv=None):
 
     sys.stdout = _Stream(editor.console)
     sys.stderr = _Stream(editor.console)
+    def handle_exception(exc_type, exc, tb):
+        text = ''.join(traceback.format_exception(exc_type, exc, tb))
+        editor.console.append(text)
+        QMessageBox.critical(editor, editor.t('error'), text)
+    sys.excepthook = handle_exception
     print('SAGE Editor started')
 
     return app.exec()

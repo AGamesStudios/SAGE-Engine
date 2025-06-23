@@ -2,6 +2,7 @@
 # Provides Clickteam-style logic for both 2D and 3D games
 
 import pygame
+import traceback
 
 # registries used to map names to classes so new logic blocks can be added
 # without modifying the loader code
@@ -40,6 +41,7 @@ class Action:
 
 class Event:
     """Combination of conditions and actions."""
+
     def __init__(self, conditions, actions, once=False):
         self.conditions = conditions
         self.actions = actions
@@ -49,10 +51,18 @@ class Event:
     def update(self, engine, scene, dt):
         if self.once and self.triggered:
             return
-        if all(cond.check(engine, scene, dt) for cond in self.conditions):
-            for action in self.actions:
-                action.execute(engine, scene, dt)
-            self.triggered = True
+        try:
+            if all(cond.check(engine, scene, dt) for cond in self.conditions):
+                for action in self.actions:
+                    try:
+                        action.execute(engine, scene, dt)
+                    except Exception as exc:
+                        print(f'Action error: {exc}')
+                        traceback.print_exc()
+                self.triggered = True
+        except Exception as exc:
+            print(f'Condition error: {exc}')
+            traceback.print_exc()
 
 class EventSystem:
     """Container for events."""
