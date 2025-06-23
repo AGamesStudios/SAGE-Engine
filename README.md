@@ -23,7 +23,8 @@ in conditions or actions. Mathematical actions only apply to int or float
 variables, ensuring booleans and strings remain unchanged. When setting a variable in an action the name is
 chosen from a drop-down list and booleans use a check box. Events attach to specific objects and can trigger on
 game start or every frame. Fonts are slightly larger for readability. Use the
-*Run* action to launch the current scene directly from the editor.
+*Run* button in the toolbar to launch the current scene directly from the
+editor.
 When defining variables, boolean values are edited with a convenient check box
 instead of typing "true" or "false".
 When comparing variables, the name is selected from a drop-down list so typos
@@ -36,6 +37,13 @@ ensures combo boxes always point to valid objects, preventing crashes when
 adding multiple sprites, variables, or conditions on older hardware.
 Any errors when creating conditions, actions, or variables are caught and
 printed to the console instead of closing the editor.
+
+### Localization
+
+The editor supports multiple languages. A toolbar at the top lets you choose
+between **English** and **Русский**. All strings come from simple dictionaries
+in `sage_editor/lang.py`, making it easy to add more languages by updating the
+file.
 
 The condition and action lists offer context menus with **Edit**, **Copy**,
 **Paste**, and **Delete** options. Right-click an empty area to add a new block

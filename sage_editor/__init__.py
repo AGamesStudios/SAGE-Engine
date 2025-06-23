@@ -10,6 +10,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import QPixmap, QPen, QColor, QPalette, QFont, QAction
 from PyQt6.QtCore import QRectF, Qt, QProcess
+from .lang import LANGUAGES, DEFAULT_LANGUAGE
 import tempfile
 import os
 import pygame
@@ -653,6 +654,7 @@ class AddEventDialog(QDialog):
 class Editor(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.lang = DEFAULT_LANGUAGE
         self.setWindowTitle('SAGE Editor')
         # set up tabs
         self.tabs = QTabWidget()
@@ -673,41 +675,43 @@ class Editor(QMainWindow):
         self.logic_widget = QWidget()
         main_layout = QVBoxLayout(self.logic_widget)
         top_bar = QHBoxLayout()
+        self.object_label = QLabel(self.t('object'))
         self.object_combo = QComboBox()
         self.object_combo.currentIndexChanged.connect(self.refresh_events)
-        top_bar.addWidget(QLabel('Object:'))
+        top_bar.addWidget(self.object_label)
         top_bar.addWidget(self.object_combo)
         main_layout.addLayout(top_bar)
 
         self.event_list = QTableWidget(0, 2)
-        self.event_list.setHorizontalHeaderLabels(['Conditions', 'Actions'])
+        self.event_list.setHorizontalHeaderLabels([self.t('conditions'), self.t('actions')])
         self.event_list.horizontalHeader().setStretchLastSection(True)
 
         self.var_table = QTableWidget(0, 2)
-        self.var_table.setHorizontalHeaderLabels(['Name', 'Value'])
+        self.var_table.setHorizontalHeaderLabels([self.t('name'), self.t('value')])
         self.var_table.horizontalHeader().setStretchLastSection(True)
-        add_var = QPushButton('Add Variable')
-        add_var.clicked.connect(self.add_variable)
+        self.add_var_btn = QPushButton(self.t('add_variable'))
+        self.add_var_btn.clicked.connect(self.add_variable)
 
         mid_layout = QHBoxLayout()
         mid_layout.addWidget(self.event_list, 2)
         var_layout = QVBoxLayout()
         var_layout.addWidget(self.var_table)
-        var_layout.addWidget(add_var)
+        var_layout.addWidget(self.add_var_btn)
         mid_layout.addLayout(var_layout, 1)
         main_layout.addLayout(mid_layout)
 
-        self.tabs.addTab(self.logic_widget, 'Logic')
+        self.tabs.addTab(self.logic_widget, self.t('logic'))
 
         # console dock
         self.console = QTextEdit()
         self.console.setReadOnly(True)
-        dock = QDockWidget('Console', self)
+        dock = QDockWidget(self.t('console'), self)
         dock.setWidget(self.console)
         # use PyQt6 enum syntax for the dock area
         self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, dock)
         self.console.append(f'Engine path: {os.getcwd()}')
         self.process = None
+        self.console_dock = dock
 
         # canvas rectangle representing the game window
         self.canvas = self.g_scene.addRect(QRectF(0, 0, 640, 480), QPen(QColor('red')))
@@ -715,25 +719,67 @@ class Editor(QMainWindow):
         self.items = []
         self._init_actions()
         self.showMaximized()
+        self._apply_language()
+
+    def t(self, key: str) -> str:
+        """Translate a key for the current language."""
+        return LANGUAGES.get(self.lang, LANGUAGES[DEFAULT_LANGUAGE]).get(key, key)
+
+    def set_language(self, lang: str):
+        """Switch UI language."""
+        if lang not in LANGUAGES:
+            return
+        self.lang = lang
+        self.lang_box.setCurrentText(lang)
+        self._apply_language()
+
+    def _apply_language(self):
+        self.file_menu.setTitle(self.t('file'))
+        self.edit_menu.setTitle(self.t('edit'))
+        self.open_act.setText(self.t('open'))
+        self.save_act.setText(self.t('save'))
+        self.run_act.setText(self.t('run'))
+        self.add_sprite_act.setText(self.t('add_sprite'))
+        self.tabs.setTabText(0, self.t('viewport'))
+        self.tabs.setTabText(1, self.t('logic'))
+        self.object_label.setText(self.t('object'))
+        self.event_list.setHorizontalHeaderLabels([self.t('conditions'), self.t('actions')])
+        self.var_table.setHorizontalHeaderLabels([self.t('name'), self.t('value')])
+        self.add_var_btn.setText(self.t('add_variable'))
+        self.console_dock.setWindowTitle(self.t('console'))
+        self.run_btn.setText(self.t('run'))
 
     def _init_actions(self):
         menubar = self.menuBar()
-        file_menu = menubar.addMenu('File')
-        open_act = QAction('Open', self)
-        open_act.triggered.connect(self.open_scene)
-        save_act = QAction('Save', self)
-        save_act.triggered.connect(self.save_scene)
-        file_menu.addAction(open_act)
-        file_menu.addAction(save_act)
-        run_act = QAction('Run', self)
-        run_act.triggered.connect(self.run_game)
-        file_menu.addAction(run_act)
+        self.file_menu = menubar.addMenu(self.t('file'))
+        self.open_act = QAction(self.t('open'), self)
+        self.open_act.triggered.connect(self.open_scene)
+        self.save_act = QAction(self.t('save'), self)
+        self.save_act.triggered.connect(self.save_scene)
+        self.file_menu.addAction(self.open_act)
+        self.file_menu.addAction(self.save_act)
+        self.run_act = QAction(self.t('run'), self)
+        self.run_act.triggered.connect(self.run_game)
+        self.file_menu.addAction(self.run_act)
 
-        edit_menu = menubar.addMenu('Edit')
-        add_act = QAction('Add Sprite', self)
-        add_act.triggered.connect(self.add_sprite)
-        edit_menu.addAction(add_act)
-        menubar.addMenu('Logic')
+        self.edit_menu = menubar.addMenu(self.t('edit'))
+        self.add_sprite_act = QAction(self.t('add_sprite'), self)
+        self.add_sprite_act.triggered.connect(self.add_sprite)
+        self.edit_menu.addAction(self.add_sprite_act)
+        menubar.addMenu(self.t('logic'))
+
+        toolbar = self.addToolBar('main')
+        self.run_btn = toolbar.addAction(self.t('run'))
+        self.run_btn.triggered.connect(self.run_game)
+        from PyQt6.QtWidgets import QWidget, QSizePolicy
+        spacer = QWidget()
+        spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        toolbar.addWidget(spacer)
+        self.lang_box = QComboBox()
+        self.lang_box.addItems(list(LANGUAGES.keys()))
+        self.lang_box.setCurrentText(self.lang)
+        self.lang_box.currentTextChanged.connect(self.set_language)
+        toolbar.addWidget(self.lang_box)
 
     def open_scene(self):
         path, _ = QFileDialog.getOpenFileName(self, 'Open Scene', '', 'JSON Files (*.json)')
@@ -925,7 +971,7 @@ class Editor(QMainWindow):
                 continue
             row = self.event_list.rowCount()
             self.event_list.insertRow(row)
-            btn_cond = QPushButton('Add Condition')
+            btn_cond = QPushButton(self.t('add_condition'))
             btn_cond.clicked.connect(lambda _, r=i: self.add_condition(r))
             if not evt.get('conditions'):
                 self.event_list.setCellWidget(row, 0, btn_cond)
@@ -942,13 +988,13 @@ class Editor(QMainWindow):
                     except Exception:
                         self.event_list.setItem(row, 1, QTableWidgetItem(''))
                 else:
-                    btn_act = QPushButton('Add Action')
+                    btn_act = QPushButton(self.t('add_action'))
                     btn_act.clicked.connect(lambda _, r=i: self.add_action(r))
                     self.event_list.setCellWidget(row, 1, btn_act)
         # extra row for new event
         row = self.event_list.rowCount()
         self.event_list.insertRow(row)
-        btn_new = QPushButton('Add Condition')
+        btn_new = QPushButton(self.t('add_condition'))
         btn_new.clicked.connect(lambda _, r=row: self.add_condition(r))
         self.event_list.setCellWidget(row, 0, btn_new)
 
