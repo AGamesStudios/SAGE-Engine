@@ -21,8 +21,8 @@ game start or every frame. Fonts are slightly larger for readability. Use the
 Sprites are loaded lazily at runtime so the editor no longer relies on
 `pygame`'s display module. This prevents crashes when adding images on systems
 without an SDL window. The editor also validates image and variable input and
-selects the first object by default so adding sprites or logic can no longer
-crash on older hardware.
+ensures combo boxes always point to valid objects, preventing crashes when
+adding multiple sprites, variables, or conditions on older hardware.
 
 Run a saved scene with:
 

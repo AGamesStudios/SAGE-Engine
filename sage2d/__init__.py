@@ -109,9 +109,16 @@ class Scene:
     def build_event_system(self):
         es = EventSystem(variables=self.variables)
         for obj in self.objects:
-            for evt in getattr(obj, 'events', []):
+            events = getattr(obj, 'events', [])
+            if not isinstance(events, list):
+                continue
+            for evt in events:
+                if not isinstance(evt, dict):
+                    continue
                 conditions = []
                 for cond in evt.get('conditions', []):
+                    if not isinstance(cond, dict):
+                        continue
                     typ = cond.get('type')
                     if typ == 'KeyPressed':
                         conditions.append(KeyPressed(cond['key']))
@@ -126,25 +133,36 @@ class Scene:
                     elif typ == 'EveryFrame':
                         conditions.append(EveryFrame())
                     elif typ == 'Collision':
-                        a = self.objects[cond['a']]
-                        b = self.objects[cond['b']]
-                        conditions.append(Collision(a, b))
+                        a_idx = cond.get('a', -1)
+                        b_idx = cond.get('b', -1)
+                        if 0 <= a_idx < len(self.objects) and 0 <= b_idx < len(self.objects):
+                            a = self.objects[a_idx]
+                            b = self.objects[b_idx]
+                            conditions.append(Collision(a, b))
                     elif typ == 'Always':
                         conditions.append(Always())
                     elif typ == 'VariableEquals':
                         conditions.append(VariableEquals(cond['name'], cond['value']))
                 actions = []
                 for act in evt.get('actions', []):
+                    if not isinstance(act, dict):
+                        continue
                     typ = act.get('type')
                     if typ == 'Move':
-                        target = self.objects[act['target']]
-                        actions.append(Move(target, act['dx'], act['dy']))
+                        t = act.get('target')
+                        if t is not None and 0 <= t < len(self.objects):
+                            target = self.objects[t]
+                            actions.append(Move(target, act['dx'], act['dy']))
                     elif typ == 'SetPosition':
-                        target = self.objects[act['target']]
-                        actions.append(SetPosition(target, act['x'], act['y']))
+                        t = act.get('target')
+                        if t is not None and 0 <= t < len(self.objects):
+                            target = self.objects[t]
+                            actions.append(SetPosition(target, act['x'], act['y']))
                     elif typ == 'Destroy':
-                        target = self.objects[act['target']]
-                        actions.append(Destroy(target))
+                        t = act.get('target')
+                        if t is not None and 0 <= t < len(self.objects):
+                            target = self.objects[t]
+                            actions.append(Destroy(target))
                     elif typ == 'Print':
                         actions.append(Print(act['text']))
                     elif typ == 'PlaySound':

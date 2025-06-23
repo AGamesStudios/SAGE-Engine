@@ -442,7 +442,14 @@ class Editor(QMainWindow):
             if pix.isNull():
                 raise ValueError('failed to load image')
             item = QGraphicsPixmapItem(pix)
-            item.setFlag(QGraphicsPixmapItem.GraphicsItemFlag.ItemIsMovable, True)
+            # PyQt6 exposes GraphicsItemFlag on QGraphicsItem rather than
+            # QGraphicsPixmapItem in older versions. Use whichever exists to
+            # avoid an AttributeError on some systems.
+            flag_enum = getattr(QGraphicsPixmapItem, 'GraphicsItemFlag', None)
+            if flag_enum is None:
+                from PyQt6.QtWidgets import QGraphicsItem
+                flag_enum = QGraphicsItem.GraphicsItemFlag
+            item.setFlag(flag_enum.ItemIsMovable, True)
             self.g_scene.addItem(item)
             obj = GameObject(path)
             self.scene.add_object(obj)
@@ -495,9 +502,11 @@ class Editor(QMainWindow):
 
     def add_condition(self, row):
         idx = self.object_combo.currentData()
-        if idx is None or idx >= len(self.items):
+        if idx is None or idx < 0 or idx >= len(self.items):
             return
         obj = self.items[idx][1]
+        if row < 0:
+            return
         if row >= len(obj.events):
             obj.events.append({'conditions': [], 'actions': []})
         evt = obj.events[row if row < len(obj.events) else -1]
@@ -508,11 +517,9 @@ class Editor(QMainWindow):
 
     def add_action(self, row):
         idx = self.object_combo.currentData()
-        if (
-            idx is None
-            or idx >= len(self.items)
-            or row >= len(self.items[idx][1].events)
-        ):
+        if idx is None or idx < 0 or idx >= len(self.items):
+            return
+        if row < 0 or row >= len(self.items[idx][1].events):
             return
         obj = self.items[idx][1]
         evt = obj.events[row]
@@ -526,10 +533,15 @@ class Editor(QMainWindow):
         idx = self.object_combo.currentData()
         if idx is None and self.items:
             idx = 0
-        if idx is None or idx >= len(self.items):
+        if idx is None or idx < 0 or idx >= len(self.items):
             return
         obj = self.items[idx][1]
-        for i, evt in enumerate(getattr(obj, 'events', [])):
+        events = getattr(obj, 'events', [])
+        if not isinstance(events, list):
+            events = []
+        for i, evt in enumerate(events):
+            if not isinstance(evt, dict):
+                continue
             row = self.event_list.rowCount()
             self.event_list.insertRow(row)
             btn_cond = QPushButton('Add Condition')
@@ -537,9 +549,15 @@ class Editor(QMainWindow):
             if not evt.get('conditions'):
                 self.event_list.setCellWidget(row, 0, btn_cond)
             else:
-                self.event_list.setItem(row, 0, QTableWidgetItem(', '.join(c['type'] for c in evt['conditions'])))
+                try:
+                    self.event_list.setItem(row, 0, QTableWidgetItem(', '.join(c['type'] for c in evt.get('conditions', []))))
+                except Exception:
+                    self.event_list.setItem(row, 0, QTableWidgetItem(''))
                 if evt.get('actions'):
-                    self.event_list.setItem(row, 1, QTableWidgetItem(', '.join(a['type'] for a in evt['actions'])))
+                    try:
+                        self.event_list.setItem(row, 1, QTableWidgetItem(', '.join(a['type'] for a in evt.get('actions', []))))
+                    except Exception:
+                        self.event_list.setItem(row, 1, QTableWidgetItem(''))
                 else:
                     btn_act = QPushButton('Add Action')
                     btn_act.clicked.connect(lambda _, r=i: self.add_action(r))
@@ -561,7 +579,11 @@ class Editor(QMainWindow):
         for obj in self.scene.objects:
             item = QGraphicsPixmapItem(QPixmap(obj.image_path))
             item.setPos(obj.x, obj.y)
-            item.setFlag(QGraphicsPixmapItem.ItemIsMovable, True)
+            try:
+                item.setFlag(QGraphicsPixmapItem.GraphicsItemFlag.ItemIsMovable, True)
+            except AttributeError:
+                from PyQt6.QtWidgets import QGraphicsItem
+                item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, True)
             self.g_scene.addItem(item)
             self.items.append((item, obj))
             self.object_combo.addItem(os.path.basename(obj.image_path), len(self.items)-1)
