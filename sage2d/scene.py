@@ -5,7 +5,7 @@ from .game_object import GameObject
 from sage_logic import (
     EventSystem, Event,
     KeyPressed, KeyReleased, MouseButton, Collision, Timer,
-    Always, OnStart, EveryFrame, VariableEquals, VariableCompare,
+    Always, OnStart, EveryFrame, VariableCompare,
     Move, SetPosition, Destroy, Print, PlaySound, Spawn,
     SetVariable, ModifyVariable,
 )
@@ -112,8 +112,6 @@ class Scene:
                             conditions.append(Collision(a, b))
                     elif typ == "Always":
                         conditions.append(Always())
-                    elif typ == "VariableEquals":
-                        conditions.append(VariableEquals(cond["name"], cond["value"]))
                     elif typ == "VariableCompare":
                         conditions.append(
                             VariableCompare(

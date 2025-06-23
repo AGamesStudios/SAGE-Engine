@@ -126,14 +126,6 @@ class EveryFrame(Condition):
     def check(self, engine, scene, dt):
         return True
 
-class VariableEquals(Condition):
-    def __init__(self, name, value):
-        self.name = name
-        self.value = value
-
-    def check(self, engine, scene, dt):
-        return engine.events.variables.get(self.name) == self.value
-
 class VariableCompare(Condition):
     """Compare a variable to a value using an operator."""
     OPS = {
@@ -194,24 +186,27 @@ class Print(Action):
     def execute(self, engine, scene, dt):
         print(self.text)
 
+_SOUND_CACHE = {}
+
 class PlaySound(Action):
     """Play a sound file using pygame.mixer."""
 
     def __init__(self, path):
         self.path = path
-        self.sound = None
 
     def execute(self, engine, scene, dt):
-        if self.sound is None:
+        sound = _SOUND_CACHE.get(self.path)
+        if sound is None:
             try:
                 if pygame.mixer.get_init() is None:
                     pygame.mixer.init()
-                self.sound = pygame.mixer.Sound(self.path)
+                sound = pygame.mixer.Sound(self.path)
+                _SOUND_CACHE[self.path] = sound
             except pygame.error as exc:
                 print(f'Failed to load sound {self.path}: {exc}')
                 return
         try:
-            self.sound.play()
+            sound.play()
         except pygame.error as exc:
             print(f'Failed to play sound {self.path}: {exc}')
 
@@ -269,7 +264,7 @@ class ModifyVariable(Action):
 __all__ = [
     'Condition', 'Action', 'Event', 'EventSystem',
     'KeyPressed', 'KeyReleased', 'MouseButton', 'Collision', 'Timer', 'Always',
-    'OnStart', 'EveryFrame', 'VariableEquals', 'VariableCompare',
+    'OnStart', 'EveryFrame', 'VariableCompare',
     'Move', 'SetPosition', 'Destroy', 'Print', 'PlaySound', 'Spawn',
     'SetVariable', 'ModifyVariable'
 ]

@@ -44,8 +44,6 @@ def describe_condition(cond, objects):
         a_name = objects[a].name if a is not None and 0 <= a < len(objects) else 'N/A'
         b_name = objects[b].name if b is not None and 0 <= b < len(objects) else 'N/A'
         return f"Collision {a_name} with {b_name}"
-    if typ == 'VariableEquals':
-        return f"Var {cond.get('name')}=={cond.get('value')}"
     if typ == 'VariableCompare':
         return f"Var {cond.get('name')} {cond.get('op')} {cond.get('value')}"
     return typ
@@ -81,16 +79,17 @@ def describe_action(act, objects):
 class ConditionDialog(QDialog):
     """Dialog for creating a single condition."""
 
-    def __init__(self, objects, parent=None):
+    def __init__(self, objects, variables, parent=None):
         super().__init__(parent)
         self.setWindowTitle('Add Condition')
         self.objects = objects
+        self.variables = variables
         layout = QFormLayout(self)
 
         self.type_box = QComboBox()
         self.type_box.addItems([
             'KeyPressed', 'KeyReleased', 'MouseButton', 'Timer', 'Collision', 'Always',
-            'OnStart', 'EveryFrame', 'VariableEquals', 'VariableCompare'
+            'OnStart', 'EveryFrame', 'VariableCompare'
         ])
         layout.addRow('Type:', self.type_box)
 
@@ -123,8 +122,10 @@ class ConditionDialog(QDialog):
         layout.addRow(self.b_label, self.b_box)
 
         self.var_name_label = QLabel('Var Name:')
-        self.var_name_edit = QLineEdit()
-        layout.addRow(self.var_name_label, self.var_name_edit)
+        self.var_name_box = QComboBox()
+        self.var_names = variables
+        self.var_name_box.addItems(self.var_names)
+        layout.addRow(self.var_name_label, self.var_name_box)
 
         self.var_op_label = QLabel('Operator:')
         self.var_op_box = QComboBox()
@@ -154,7 +155,7 @@ class ConditionDialog(QDialog):
             (self.state_label, self.state_box),
             (self.a_label, self.a_box),
             (self.b_label, self.b_box),
-            (self.var_name_label, self.var_name_edit),
+            (self.var_name_label, self.var_name_box),
             (self.var_op_label, self.var_op_box),
             (self.var_value_label, self.var_value_edit),
         ]
@@ -177,14 +178,9 @@ class ConditionDialog(QDialog):
             self.a_box.setVisible(True)
             self.b_label.setVisible(True)
             self.b_box.setVisible(True)
-        elif typ == 'VariableEquals':
-            self.var_name_label.setVisible(True)
-            self.var_name_edit.setVisible(True)
-            self.var_value_label.setVisible(True)
-            self.var_value_edit.setVisible(True)
         elif typ == 'VariableCompare':
             self.var_name_label.setVisible(True)
-            self.var_name_edit.setVisible(True)
+            self.var_name_box.setVisible(True)
             self.var_op_label.setVisible(True)
             self.var_op_box.setVisible(True)
             self.var_value_label.setVisible(True)
@@ -203,16 +199,10 @@ class ConditionDialog(QDialog):
             return {'type': 'Timer', 'duration': self.duration_spin.value()}
         if typ == 'Collision':
             return {'type': 'Collision', 'a': self.a_box.currentData(), 'b': self.b_box.currentData()}
-        if typ == 'VariableEquals':
-            return {
-                'type': 'VariableEquals',
-                'name': self.var_name_edit.text(),
-                'value': self.var_value_edit.text(),
-            }
         if typ == 'VariableCompare':
             return {
                 'type': 'VariableCompare',
-                'name': self.var_name_edit.text(),
+                'name': self.var_name_box.currentText(),
                 'op': self.var_op_box.currentText(),
                 'value': self.var_value_edit.text(),
             }
@@ -377,9 +367,10 @@ class ActionDialog(QDialog):
 class AddEventDialog(QDialog):
     """Dialog to create an event from arbitrary conditions and actions."""
 
-    def __init__(self, objects, parent=None):
+    def __init__(self, objects, variables, parent=None):
         super().__init__(parent)
         self.objects = objects
+        self.variables = variables
         self.setWindowTitle('Add Event')
         self.conditions = []
         self.actions = []
@@ -406,7 +397,7 @@ class AddEventDialog(QDialog):
         layout.addWidget(buttons)
 
     def add_condition(self):
-        dlg = ConditionDialog(self.objects, self)
+        dlg = ConditionDialog(self.objects, self.variables, self)
         if dlg.exec() == QDialog.DialogCode.Accepted:
             cond = dlg.get_condition()
             self.conditions.append(cond)
@@ -587,13 +578,14 @@ class Editor(QMainWindow):
                 self.name_edit = QLineEdit()
                 self.type_box = QComboBox()
                 self.type_box.addItems(['int', 'float', 'string', 'bool'])
+                self.value_label = QLabel('Value:')
                 self.value_edit = QLineEdit()
                 self.bool_check = QCheckBox()
                 self.bool_label = QLabel('Value:')
                 form = QFormLayout(self)
                 form.addRow('Name:', self.name_edit)
                 form.addRow('Type:', self.type_box)
-                form.addRow('Value:', self.value_edit)
+                form.addRow(self.value_label, self.value_edit)
                 form.addRow(self.bool_label, self.bool_check)
                 buttons = QDialogButtonBox(
                     QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
@@ -606,10 +598,12 @@ class Editor(QMainWindow):
 
             def update_fields(self):
                 if self.type_box.currentText() == 'bool':
+                    self.value_label.hide()
                     self.value_edit.hide()
                     self.bool_check.show()
                     self.bool_label.show()
                 else:
+                    self.value_label.show()
                     self.value_edit.show()
                     self.bool_check.hide()
                     self.bool_label.hide()
@@ -656,7 +650,7 @@ class Editor(QMainWindow):
             if row >= len(obj.events):
                 obj.events.append({'conditions': [], 'actions': []})
             evt = obj.events[row if row < len(obj.events) else -1]
-            dlg = ConditionDialog([o for _, o in self.items], self)
+            dlg = ConditionDialog([o for _, o in self.items], list(self.scene.variables.keys()), self)
             if dlg.exec() == QDialog.DialogCode.Accepted:
                 evt['conditions'].append(dlg.get_condition())
             self.refresh_events()

@@ -24,6 +24,8 @@ game start or every frame. Fonts are slightly larger for readability. Use the
 *Run* action to launch the current scene directly from the editor.
 When defining variables, boolean values are edited with a convenient check box
 instead of typing "true" or "false".
+When comparing variables, the name is selected from a drop-down list so typos
+are avoided.
 
 Sprites are loaded lazily at runtime so the editor no longer relies on
 `pygame`'s display module. This prevents crashes when adding images on systems
@@ -87,5 +89,5 @@ for the selected action are shown so it is quick to create complex behavior.
 Additional math-friendly blocks make it easy to build counters or timers.
 `VariableCompare` tests a variable against a value using operators like `>`,
 `<`, or `==`. `ModifyVariable` adjusts a variable with `+`, `-`, `*`, or `/` so
-you can implement score systems without custom scripting. `PlaySound` now loads
-audio the first time it runs and reports any errors instead of crashing.
+you can implement score systems without custom scripting. `PlaySound` now caches
+each sound after the first use and reports any errors instead of crashing.
