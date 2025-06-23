@@ -4,6 +4,7 @@ from typing import List
 from .game_object import GameObject
 from sage_logic import (
     EventSystem, Event,
+    condition_from_dict, action_from_dict,
     KeyPressed, KeyReleased, MouseButton, Collision, Timer,
     Always, OnStart, EveryFrame, VariableCompare,
     Move, SetPosition, Destroy, Print, PlaySound, Spawn,
@@ -88,69 +89,16 @@ class Scene:
                 for cond in evt.get("conditions", []):
                     if not isinstance(cond, dict):
                         continue
-                    typ = cond.get("type")
-                    if typ == "KeyPressed":
-                        conditions.append(KeyPressed(cond["key"]))
-                    elif typ == "KeyReleased":
-                        conditions.append(KeyReleased(cond["key"]))
-                    elif typ == "MouseButton":
-                        conditions.append(
-                            MouseButton(cond["button"], cond.get("state", "down"))
-                        )
-                    elif typ == "Timer":
-                        conditions.append(Timer(cond["duration"]))
-                    elif typ == "OnStart":
-                        conditions.append(OnStart())
-                    elif typ == "EveryFrame":
-                        conditions.append(EveryFrame())
-                    elif typ == "Collision":
-                        a_idx = cond.get("a", -1)
-                        b_idx = cond.get("b", -1)
-                        if 0 <= a_idx < len(self.objects) and 0 <= b_idx < len(self.objects):
-                            a = self.objects[a_idx]
-                            b = self.objects[b_idx]
-                            conditions.append(Collision(a, b))
-                    elif typ == "Always":
-                        conditions.append(Always())
-                    elif typ == "VariableCompare":
-                        conditions.append(
-                            VariableCompare(
-                                cond["name"], cond.get("op", "=="), cond.get("value")
-                            )
-                        )
+                    cobj = condition_from_dict(cond, self.objects, self.variables)
+                    if cobj is not None:
+                        conditions.append(cobj)
+
                 actions = []
                 for act in evt.get("actions", []):
                     if not isinstance(act, dict):
                         continue
-                    typ = act.get("type")
-                    if typ == "Move":
-                        t = act.get("target")
-                        if t is not None and 0 <= t < len(self.objects):
-                            target = self.objects[t]
-                            actions.append(Move(target, act["dx"], act["dy"]))
-                    elif typ == "SetPosition":
-                        t = act.get("target")
-                        if t is not None and 0 <= t < len(self.objects):
-                            target = self.objects[t]
-                            actions.append(SetPosition(target, act["x"], act["y"]))
-                    elif typ == "Destroy":
-                        t = act.get("target")
-                        if t is not None and 0 <= t < len(self.objects):
-                            target = self.objects[t]
-                            actions.append(Destroy(target))
-                    elif typ == "Print":
-                        actions.append(Print(act["text"]))
-                    elif typ == "PlaySound":
-                        path = act.get("path")
-                        if path:
-                            actions.append(PlaySound(path))
-                    elif typ == "Spawn":
-                        actions.append(Spawn(act["image"], act.get("x", 0), act.get("y", 0)))
-                    elif typ == "SetVariable":
-                        actions.append(SetVariable(act["name"], act["value"]))
-                    elif typ == "ModifyVariable":
-                        actions.append(
-                            ModifyVariable(act["name"], act.get("op", "+"), act.get("value", 0))
-                        )
+                    aobj = action_from_dict(act, self.objects)
+                    if aobj is not None:
+                        actions.append(aobj)
                 es.add_event(Event(conditions, actions, evt.get("once", False)))
         return es

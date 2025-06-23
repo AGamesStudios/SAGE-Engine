@@ -19,7 +19,8 @@ The **Logic** tab lists object events with
 conditions on the left and actions on the right. The event dialog now provides
 drop-down lists for keys and shows only parameters relevant to the chosen
 action. Variables of type int, float, string and bool can be defined and used
-in conditions or actions. Events attach to specific objects and can trigger on
+in conditions or actions. When setting a variable in an action the name is
+chosen from a drop-down list and booleans use a check box. Events attach to specific objects and can trigger on
 game start or every frame. Fonts are slightly larger for readability. Use the
 *Run* action to launch the current scene directly from the editor.
 When defining variables, boolean values are edited with a convenient check box
@@ -34,6 +35,10 @@ ensures combo boxes always point to valid objects, preventing crashes when
 adding multiple sprites, variables, or conditions on older hardware.
 Any errors when creating conditions, actions, or variables are caught and
 printed to the console instead of closing the editor.
+
+The condition and action lists offer context menus with **Edit**, **Copy**,
+**Paste**, and **Delete** options. Right-click an empty area to add a new block
+or paste the previously copied one.
 
 Run a saved scene with:
 
@@ -91,3 +96,8 @@ Additional math-friendly blocks make it easy to build counters or timers.
 `<`, or `==`. `ModifyVariable` adjusts a variable with `+`, `-`, `*`, or `/` so
 you can implement score systems without custom scripting. `PlaySound` now caches
 each sound after the first use and reports any errors instead of crashing.
+
+The logic module registers conditions and actions in dictionaries so new types
+can be added without modifying the engine. `condition_from_dict` and
+`action_from_dict` create objects from saved data, making the system easily
+extensible.

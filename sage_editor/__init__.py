@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import (
     QTabWidget, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QListWidget, QTableWidget, QTableWidgetItem, QPushButton, QDialog, QFormLayout,
     QDialogButtonBox, QLineEdit, QSpinBox, QComboBox,
-    QTextEdit, QDockWidget, QGroupBox, QCheckBox, QMessageBox
+    QTextEdit, QDockWidget, QGroupBox, QCheckBox, QMessageBox, QMenu
 )
 from PyQt6.QtGui import QPixmap, QPen, QColor, QPalette, QFont, QAction
 from PyQt6.QtCore import QRectF, Qt, QProcess
@@ -79,7 +79,7 @@ def describe_action(act, objects):
 class ConditionDialog(QDialog):
     """Dialog for creating a single condition."""
 
-    def __init__(self, objects, variables, parent=None):
+    def __init__(self, objects, variables, parent=None, data=None):
         super().__init__(parent)
         self.setWindowTitle('Add Condition')
         self.objects = objects
@@ -146,6 +146,8 @@ class ConditionDialog(QDialog):
 
         self.type_box.currentTextChanged.connect(self._update_fields)
         self._update_fields()
+        if data:
+            self.set_condition(data)
 
     def _update_fields(self):
         typ = self.type_box.currentText()
@@ -208,14 +210,48 @@ class ConditionDialog(QDialog):
             }
         return {'type': typ}
 
+    def set_condition(self, data: dict):
+        """Populate the dialog from an existing condition dict."""
+        typ = data.get('type', '')
+        idx = self.type_box.findText(typ)
+        if idx >= 0:
+            self.type_box.setCurrentIndex(idx)
+        if typ in ('KeyPressed', 'KeyReleased'):
+            key = data.get('key', pygame.K_SPACE)
+            i = self.key_combo.findData(key)
+            if i >= 0:
+                self.key_combo.setCurrentIndex(i)
+        elif typ == 'MouseButton':
+            self.key_combo.setCurrentIndex(data.get('button', 1) - 1)
+            st = data.get('state', 'down')
+            i = self.state_box.findText(st)
+            if i >= 0:
+                self.state_box.setCurrentIndex(i)
+        elif typ == 'Timer':
+            self.duration_spin.setValue(int(data.get('duration', 1)))
+        elif typ == 'Collision':
+            self.a_box.setCurrentIndex(int(data.get('a', 0)))
+            self.b_box.setCurrentIndex(int(data.get('b', 0)))
+        elif typ == 'VariableCompare':
+            name = data.get('name', '')
+            i = self.var_name_box.findText(name)
+            if i >= 0:
+                self.var_name_box.setCurrentIndex(i)
+            op = data.get('op', '==')
+            i = self.var_op_box.findText(op)
+            if i >= 0:
+                self.var_op_box.setCurrentIndex(i)
+            self.var_value_edit.setText(str(data.get('value', '')))
+
 
 class ActionDialog(QDialog):
     """Dialog for creating a single action."""
 
-    def __init__(self, objects, parent=None):
+    def __init__(self, objects, variables, parent=None, data=None):
         super().__init__(parent)
         self.setWindowTitle('Add Action')
         self.objects = objects
+        self.variables = variables
         layout = QFormLayout(self)
 
         self.type_box = QComboBox()
@@ -256,11 +292,14 @@ class ActionDialog(QDialog):
         layout.addRow(self.path_label, path_row)
 
         self.var_name_label = QLabel('Var Name:')
-        self.var_name_edit = QLineEdit()
-        layout.addRow(self.var_name_label, self.var_name_edit)
+        self.var_name_box = QComboBox()
+        self.var_name_box.addItems(self.variables)
+        layout.addRow(self.var_name_label, self.var_name_box)
         self.var_value_label = QLabel('Value:')
         self.var_value_edit = QLineEdit()
+        self.bool_check = QCheckBox()
         layout.addRow(self.var_value_label, self.var_value_edit)
+        layout.addRow('', self.bool_check)
         self.mod_op_label = QLabel('Operation:')
         self.mod_op_box = QComboBox()
         self.mod_op_box.addItems(['+', '-', '*', '/'])
@@ -274,7 +313,10 @@ class ActionDialog(QDialog):
         layout.addRow(buttons)
 
         self.type_box.currentTextChanged.connect(self._update_fields)
+        self.var_name_box.currentTextChanged.connect(self._update_value_widget)
         self._update_fields()
+        if data:
+            self.set_action(data)
 
     def _browse_path(self):
         path, _ = QFileDialog.getOpenFileName(self, 'Select File', '', 'All Files (*)')
@@ -296,15 +338,18 @@ class ActionDialog(QDialog):
         if typ == 'Spawn':
             return {'type': 'Spawn', 'image': self.path_edit.text(), 'x': self.x_spin.value(), 'y': self.y_spin.value()}
         if typ == 'SetVariable':
+            value = self.var_value_edit.text()
+            if self.bool_check.isVisible():
+                value = self.bool_check.isChecked()
             return {
                 'type': 'SetVariable',
-                'name': self.var_name_edit.text(),
-                'value': self.var_value_edit.text(),
+                'name': self.var_name_box.currentText(),
+                'value': value,
             }
         if typ == 'ModifyVariable':
             return {
                 'type': 'ModifyVariable',
-                'name': self.var_name_edit.text(),
+                'name': self.var_name_box.currentText(),
                 'op': self.mod_op_box.currentText(),
                 'value': self.var_value_edit.text(),
             }
@@ -320,7 +365,7 @@ class ActionDialog(QDialog):
             (self.text_label, self.text_edit),
             (self.path_label, self.path_edit),
             (self.browse_btn, self.browse_btn),
-            (self.var_name_label, self.var_name_edit),
+            (self.var_name_label, self.var_name_box),
             (self.var_value_label, self.var_value_edit),
             (self.mod_op_label, self.mod_op_box),
         ]
@@ -351,17 +396,73 @@ class ActionDialog(QDialog):
                 pair[1].setVisible(True)
             self.browse_btn.setVisible(True)
         elif typ == 'SetVariable':
-            for pair in [(self.var_name_label, self.var_name_edit), (self.var_value_label, self.var_value_edit)]:
+            for pair in [(self.var_name_label, self.var_name_box), (self.var_value_label, self.var_value_edit)]:
                 pair[0].setVisible(True)
                 pair[1].setVisible(True)
+            self._update_value_widget()
         elif typ == 'ModifyVariable':
             for pair in [
-                (self.var_name_label, self.var_name_edit),
+                (self.var_name_label, self.var_name_box),
                 (self.mod_op_label, self.mod_op_box),
                 (self.var_value_label, self.var_value_edit),
             ]:
                 pair[0].setVisible(True)
                 pair[1].setVisible(True)
+        self.bool_check.setVisible(False)
+
+    def _update_value_widget(self):
+        """Show a checkbox when setting a boolean variable."""
+        name = self.var_name_box.currentText()
+        val = self.variables.get(name)
+        if isinstance(val, bool):
+            self.var_value_edit.hide()
+            self.bool_check.show()
+            self.bool_check.setChecked(val)
+        else:
+            self.bool_check.hide()
+            self.var_value_edit.show()
+
+    def set_action(self, data: dict):
+        """Populate fields from an existing action dict."""
+        typ = data.get('type', '')
+        idx = self.type_box.findText(typ)
+        if idx >= 0:
+            self.type_box.setCurrentIndex(idx)
+        if typ in ('Move', 'SetPosition', 'Destroy'):
+            self.target_box.setCurrentIndex(int(data.get('target', 0)))
+            if typ == 'Move':
+                self.dx_spin.setValue(int(data.get('dx', 0)))
+                self.dy_spin.setValue(int(data.get('dy', 0)))
+            elif typ == 'SetPosition':
+                self.x_spin.setValue(int(data.get('x', 0)))
+                self.y_spin.setValue(int(data.get('y', 0)))
+        elif typ == 'Print':
+            self.text_edit.setText(str(data.get('text', '')))
+        elif typ == 'PlaySound':
+            self.path_edit.setText(data.get('path', ''))
+        elif typ == 'Spawn':
+            self.path_edit.setText(data.get('image', ''))
+            self.x_spin.setValue(int(data.get('x', 0)))
+            self.y_spin.setValue(int(data.get('y', 0)))
+        elif typ == 'SetVariable':
+            name = data.get('name', '')
+            i = self.var_name_box.findText(name)
+            if i >= 0:
+                self.var_name_box.setCurrentIndex(i)
+            if isinstance(self.variables.get(name), bool):
+                self.bool_check.setChecked(bool(data.get('value')))
+            else:
+                self.var_value_edit.setText(str(data.get('value', '')))
+        elif typ == 'ModifyVariable':
+            name = data.get('name', '')
+            i = self.var_name_box.findText(name)
+            if i >= 0:
+                self.var_name_box.setCurrentIndex(i)
+            op = data.get('op', '+')
+            j = self.mod_op_box.findText(op)
+            if j >= 0:
+                self.mod_op_box.setCurrentIndex(j)
+            self.var_value_edit.setText(str(data.get('value', 0)))
 
 
 class AddEventDialog(QDialog):
@@ -382,6 +483,10 @@ class AddEventDialog(QDialog):
         right = QVBoxLayout(right_box)
         self.cond_list = QListWidget(); left.addWidget(self.cond_list)
         self.act_list = QListWidget(); right.addWidget(self.act_list)
+        self.cond_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.act_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.cond_list.customContextMenuRequested.connect(self._cond_menu)
+        self.act_list.customContextMenuRequested.connect(self._act_menu)
         add_cond = QPushButton('Add Condition'); left.addWidget(add_cond)
         add_act = QPushButton('Add Action'); right.addWidget(add_act)
         add_cond.clicked.connect(self.add_condition)
@@ -396,6 +501,9 @@ class AddEventDialog(QDialog):
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
 
+        self._clip_cond = None
+        self._clip_act = None
+
     def add_condition(self):
         dlg = ConditionDialog(self.objects, self.variables, self)
         if dlg.exec() == QDialog.DialogCode.Accepted:
@@ -404,7 +512,7 @@ class AddEventDialog(QDialog):
             self.cond_list.addItem(cond['type'])
 
     def add_action(self):
-        dlg = ActionDialog(self.objects, self)
+        dlg = ActionDialog(self.objects, self.variables, self)
         if dlg.exec() == QDialog.DialogCode.Accepted:
             act = dlg.get_action()
             self.actions.append(act)
@@ -412,6 +520,64 @@ class AddEventDialog(QDialog):
 
     def get_event(self):
         return {'conditions': self.conditions, 'actions': self.actions}
+
+    def _cond_menu(self, pos):
+        menu = QMenu(self)
+        item = self.cond_list.itemAt(pos)
+        if item:
+            edit_act = menu.addAction('Edit')
+            copy_act = menu.addAction('Copy')
+            delete_act = menu.addAction('Delete')
+            action = menu.exec(self.cond_list.mapToGlobal(pos))
+            row = self.cond_list.row(item)
+            if action == edit_act:
+                dlg = ConditionDialog(self.objects, self.variables, self, self.conditions[row])
+                if dlg.exec() == QDialog.DialogCode.Accepted:
+                    self.conditions[row] = dlg.get_condition()
+                    item.setText(self.conditions[row]['type'])
+            elif action == copy_act:
+                self._clip_cond = dict(self.conditions[row])
+            elif action == delete_act:
+                self.conditions.pop(row)
+                self.cond_list.takeItem(row)
+        else:
+            add = menu.addAction('Add Condition')
+            paste = menu.addAction('Paste')
+            action = menu.exec(self.cond_list.mapToGlobal(pos))
+            if action == add:
+                self.add_condition()
+            elif action == paste and self._clip_cond:
+                self.conditions.append(dict(self._clip_cond))
+                self.cond_list.addItem(self._clip_cond['type'])
+
+    def _act_menu(self, pos):
+        menu = QMenu(self)
+        item = self.act_list.itemAt(pos)
+        if item:
+            edit_act = menu.addAction('Edit')
+            copy_act = menu.addAction('Copy')
+            delete_act = menu.addAction('Delete')
+            action = menu.exec(self.act_list.mapToGlobal(pos))
+            row = self.act_list.row(item)
+            if action == edit_act:
+                dlg = ActionDialog(self.objects, self.variables, self, self.actions[row])
+                if dlg.exec() == QDialog.DialogCode.Accepted:
+                    self.actions[row] = dlg.get_action()
+                    item.setText(self.actions[row]['type'])
+            elif action == copy_act:
+                self._clip_act = dict(self.actions[row])
+            elif action == delete_act:
+                self.actions.pop(row)
+                self.act_list.takeItem(row)
+        else:
+            add = menu.addAction('Add Action')
+            paste = menu.addAction('Paste')
+            action = menu.exec(self.act_list.mapToGlobal(pos))
+            if action == add:
+                self.add_action()
+            elif action == paste and self._clip_act:
+                self.actions.append(dict(self._clip_act))
+                self.act_list.addItem(self._clip_act['type'])
 
 
 class Editor(QMainWindow):
@@ -666,7 +832,7 @@ class Editor(QMainWindow):
                 return
             obj = self.items[idx][1]
             evt = obj.events[row]
-            dlg = ActionDialog([o for _, o in self.items], self)
+            dlg = ActionDialog([o for _, o in self.items], self.scene.variables, self)
             if dlg.exec() == QDialog.DialogCode.Accepted:
                 evt['actions'].append(dlg.get_action())
             self.refresh_events()
