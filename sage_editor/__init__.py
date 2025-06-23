@@ -83,8 +83,8 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv
     app = QApplication(argv)
-    Editor()
-    app.exec_()
+    editor = Editor()
+    return app.exec_()
 
 
 if __name__ == '__main__':
