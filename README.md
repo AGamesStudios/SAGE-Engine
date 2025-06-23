@@ -22,6 +22,8 @@ action. Variables of type int, float, string and bool can be defined and used
 in conditions or actions. Events attach to specific objects and can trigger on
 game start or every frame. Fonts are slightly larger for readability. Use the
 *Run* action to launch the current scene directly from the editor.
+When defining variables, boolean values are edited with a convenient check box
+instead of typing "true" or "false".
 
 Sprites are loaded lazily at runtime so the editor no longer relies on
 `pygame`'s display module. This prevents crashes when adding images on systems

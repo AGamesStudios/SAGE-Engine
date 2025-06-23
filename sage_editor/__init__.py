@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import (
     QTabWidget, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QListWidget, QTableWidget, QTableWidgetItem, QPushButton, QDialog, QFormLayout,
     QDialogButtonBox, QLineEdit, QSpinBox, QComboBox,
-    QTextEdit, QDockWidget, QGroupBox
+    QTextEdit, QDockWidget, QGroupBox, QCheckBox, QMessageBox
 )
 from PyQt6.QtGui import QPixmap, QPen, QColor, QPalette, QFont, QAction
 from PyQt6.QtCore import QRectF, Qt, QProcess
@@ -275,6 +275,10 @@ class ActionDialog(QDialog):
         self.var_value_label = QLabel('Value:')
         self.var_value_edit = QLineEdit()
         layout.addRow(self.var_value_label, self.var_value_edit)
+        self.mod_op_label = QLabel('Operation:')
+        self.mod_op_box = QComboBox()
+        self.mod_op_box.addItems(['+', '-', '*', '/'])
+        layout.addRow(self.mod_op_label, self.mod_op_box)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
@@ -580,37 +584,59 @@ class Editor(QMainWindow):
         self.refresh_events()
 
     def add_variable(self):
-        try:
-            dlg = QDialog(self)
-            dlg.setWindowTitle('Add Variable')
-            form = QFormLayout(dlg)
-            name_edit = QLineEdit(); form.addRow('Name:', name_edit)
-            type_box = QComboBox(); type_box.addItems(['int','float','string','bool']); form.addRow('Type:', type_box)
-            value_edit = QLineEdit(); form.addRow('Value:', value_edit)
-            buttons = QDialogButtonBox(
-                QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
-            )
-            form.addRow(buttons)
-            buttons.accepted.connect(dlg.accept)
-            buttons.rejected.connect(dlg.reject)
-            if dlg.exec() == QDialog.DialogCode.Accepted:
-                name = name_edit.text().strip()
-                if not name:
-                    raise ValueError('name required')
-                typ = type_box.currentText()
-                val_text = value_edit.text()
-                if typ == 'int':
-                    value = int(val_text or 0)
-                elif typ == 'float':
-                    value = float(val_text or 0)
-                elif typ == 'bool':
-                    value = val_text.lower() in ('1', 'true', 'yes')
+        class VariableDialog(QDialog):
+            def __init__(self, parent=None):
+                super().__init__(parent)
+                self.setWindowTitle('Add Variable')
+                self.name_edit = QLineEdit()
+                self.type_box = QComboBox()
+                self.type_box.addItems(['int', 'float', 'string', 'bool'])
+                self.value_edit = QLineEdit()
+                self.bool_check = QCheckBox()
+                form = QFormLayout(self)
+                form.addRow('Name:', self.name_edit)
+                form.addRow('Type:', self.type_box)
+                form.addRow('Value:', self.value_edit)
+                form.addRow('', self.bool_check)
+                buttons = QDialogButtonBox(
+                    QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+                )
+                buttons.accepted.connect(self.accept)
+                buttons.rejected.connect(self.reject)
+                form.addRow(buttons)
+                self.type_box.currentTextChanged.connect(self.update_fields)
+                self.update_fields()
+
+            def update_fields(self):
+                if self.type_box.currentText() == 'bool':
+                    self.value_edit.hide()
+                    self.bool_check.show()
                 else:
-                    value = val_text
-                self.scene.variables[name] = value
-                self.refresh_variables()
+                    self.value_edit.show()
+                    self.bool_check.hide()
+
+        dlg = VariableDialog(self)
+        if dlg.exec() != QDialog.DialogCode.Accepted:
+            return
+        try:
+            name = dlg.name_edit.text().strip()
+            if not name:
+                raise ValueError('name required')
+            typ = dlg.type_box.currentText()
+            if typ == 'bool':
+                value = dlg.bool_check.isChecked()
+            else:
+                text = dlg.value_edit.text()
+                if typ == 'int':
+                    value = int(text)
+                elif typ == 'float':
+                    value = float(text)
+                else:
+                    value = text
+            self.scene.variables[name] = value
+            self.refresh_variables()
         except Exception as exc:
-            self.console.append(f'Failed to add variable: {exc}')
+            QMessageBox.warning(self, 'Error', f'Failed to add variable: {exc}')
 
     def refresh_variables(self):
         self.var_table.setRowCount(0)
