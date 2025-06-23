@@ -137,6 +137,10 @@ The `Print` action is handy for debugging. The text is formatted with the
 current variables so using `Score: {score}` will display the latest value of a
 variable named `score` when the action runs.
 
+Projects are checked as they load. If an image is missing or a file is
+corrupted, the editor reports the problem in the console instead of
+terminating.
+
 The logic module registers conditions and actions in dictionaries so new types
 can be added without modifying the engine. `condition_from_dict` and
 `action_from_dict` create objects from saved data, making the system easily

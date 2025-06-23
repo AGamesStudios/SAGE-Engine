@@ -1001,7 +1001,12 @@ class Editor(QMainWindow):
             QMessageBox.warning(self, 'Error', f'Failed to create project: {exc}')
             return
         self.project_path = proj_path
-        self.load_scene(self.scene)
+        try:
+            self.load_scene(self.scene)
+        except Exception as exc:
+            QMessageBox.warning(self, 'Error', f'Failed to load scene: {exc}')
+            self.project_path = None
+            return
         self._update_project_state()
         self._add_recent(proj_path)
         self._update_title()
@@ -1017,11 +1022,13 @@ class Editor(QMainWindow):
             proj = Project.load(path)
             self.project_path = path
             self.load_scene(Scene.from_dict(proj.scene))
-            self._update_project_state()
-            self._add_recent(path)
-            self._update_title()
         except Exception as exc:
             QMessageBox.warning(self, 'Error', f'Failed to open project: {exc}')
+            self.project_path = None
+            return
+        self._update_project_state()
+        self._add_recent(path)
+        self._update_title()
 
     def save_project(self):
         path = self.project_path
@@ -1387,11 +1394,17 @@ class Editor(QMainWindow):
         self.items.clear()
         self.object_combo.clear()
         for obj in self.scene.objects:
-            item = SpriteItem(QPixmap(obj.image_path), self, obj)
-            item.setPos(obj.x, obj.y)
-            self.g_scene.addItem(item)
-            self.items.append((item, obj))
-            self.object_combo.addItem(obj.name, len(self.items)-1)
+            try:
+                pix = QPixmap(obj.image_path)
+                if pix.isNull():
+                    raise ValueError(f'Invalid image {obj.image_path}')
+                item = SpriteItem(pix, self, obj)
+                item.setPos(obj.x, obj.y)
+                self.g_scene.addItem(item)
+                self.items.append((item, obj))
+                self.object_combo.addItem(obj.name, len(self.items)-1)
+            except Exception as exc:
+                self.console.append(f'Failed to load sprite {obj.image_path}: {exc}')
         self.refresh_events()
         self.refresh_variables()
         self._update_gizmo()
