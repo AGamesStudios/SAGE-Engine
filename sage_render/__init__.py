@@ -301,7 +301,7 @@ void main() {
 }
 """
 
-# simple shaders for the shadow depth map
+# advanced shaders for the shadow depth map
 DEPTH_VERTEX_SHADER = """
 #version 330 core
 layout(location = 0) in vec3 position;
@@ -320,10 +320,15 @@ layout(location = 0) out vec4 Moments;
 uniform float near_plane;
 uniform float far_plane;
 uniform float evsmExponent;
+
+float linearizeDepth(float depth){
+    float z = depth * 2.0 - 1.0;
+    return (2.0 * near_plane * far_plane) /
+           (far_plane + near_plane - z * (far_plane - near_plane));
+}
+
 void main() {
-    float z = gl_FragCoord.z * 2.0 - 1.0;
-    float linear = (2.0 * near_plane * far_plane) /
-                   (far_plane + near_plane - z * (far_plane - near_plane));
+    float linear = linearizeDepth(gl_FragCoord.z);
     float pos = exp(evsmExponent * linear);
     float neg = exp(-evsmExponent * linear);
     Moments = vec4(pos, neg, pos * pos, neg * neg);
