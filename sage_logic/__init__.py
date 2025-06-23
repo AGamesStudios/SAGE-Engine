@@ -134,6 +134,30 @@ class VariableEquals(Condition):
     def check(self, engine, scene, dt):
         return engine.events.variables.get(self.name) == self.value
 
+class VariableCompare(Condition):
+    """Compare a variable to a value using an operator."""
+    OPS = {
+        '==': lambda a, b: a == b,
+        '!=': lambda a, b: a != b,
+        '<': lambda a, b: a < b,
+        '<=': lambda a, b: a <= b,
+        '>': lambda a, b: a > b,
+        '>=': lambda a, b: a >= b,
+    }
+
+    def __init__(self, name, op, value):
+        self.name = name
+        self.op = op
+        self.value = value
+
+    def check(self, engine, scene, dt):
+        val = engine.events.variables.get(self.name)
+        try:
+            cmp = self.OPS.get(self.op, lambda a, b: False)
+            return cmp(float(val), float(self.value))
+        except Exception:
+            return False
+
 # Built-in actions
 class Move(Action):
     def __init__(self, obj, dx, dy):
@@ -175,11 +199,17 @@ class PlaySound(Action):
 
     def __init__(self, path):
         self.path = path
-        if pygame.mixer.get_init() is None:
-            pygame.mixer.init()
-        self.sound = pygame.mixer.Sound(path)
+        self.sound = None
 
     def execute(self, engine, scene, dt):
+        if self.sound is None:
+            try:
+                if pygame.mixer.get_init() is None:
+                    pygame.mixer.init()
+                self.sound = pygame.mixer.Sound(self.path)
+            except pygame.error as exc:
+                print(f'Failed to load sound {self.path}: {exc}')
+                return
         self.sound.play()
 
 class Spawn(Action):
@@ -208,9 +238,35 @@ class SetVariable(Action):
     def execute(self, engine, scene, dt):
         engine.events.variables[self.name] = self.value
 
+class ModifyVariable(Action):
+    """Modify a numeric variable with an operation."""
+
+    OPS = {
+        '+': lambda a, b: a + b,
+        '-': lambda a, b: a - b,
+        '*': lambda a, b: a * b,
+        '/': lambda a, b: a / b if b != 0 else a,
+    }
+
+    def __init__(self, name, op, value):
+        self.name = name
+        self.op = op
+        self.value = value
+
+    def execute(self, engine, scene, dt):
+        cur = engine.events.variables.get(self.name, 0)
+        try:
+            cur = float(cur)
+            val = float(self.value)
+            func = self.OPS.get(self.op, lambda a, b: a)
+            engine.events.variables[self.name] = func(cur, val)
+        except Exception:
+            pass
+
 __all__ = [
     'Condition', 'Action', 'Event', 'EventSystem',
     'KeyPressed', 'KeyReleased', 'MouseButton', 'Collision', 'Timer', 'Always',
-    'OnStart', 'EveryFrame', 'VariableEquals',
-    'Move', 'SetPosition', 'Destroy', 'Print', 'PlaySound', 'Spawn', 'SetVariable'
+    'OnStart', 'EveryFrame', 'VariableEquals', 'VariableCompare',
+    'Move', 'SetPosition', 'Destroy', 'Print', 'PlaySound', 'Spawn',
+    'SetVariable', 'ModifyVariable'
 ]

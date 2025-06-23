@@ -46,6 +46,8 @@ def describe_condition(cond, objects):
         return f"Collision {a_name} with {b_name}"
     if typ == 'VariableEquals':
         return f"Var {cond.get('name')}=={cond.get('value')}"
+    if typ == 'VariableCompare':
+        return f"Var {cond.get('name')} {cond.get('op')} {cond.get('value')}"
     return typ
 
 
@@ -71,6 +73,8 @@ def describe_action(act, objects):
         return f"Spawn {os.path.basename(act.get('image',''))}"
     if typ == 'SetVariable':
         return f"Set {act.get('name')}={act.get('value')}"
+    if typ == 'ModifyVariable':
+        return f"{act.get('name')} {act.get('op')}= {act.get('value')}"
     return typ
 
 
@@ -86,7 +90,7 @@ class ConditionDialog(QDialog):
         self.type_box = QComboBox()
         self.type_box.addItems([
             'KeyPressed', 'KeyReleased', 'MouseButton', 'Timer', 'Collision', 'Always',
-            'OnStart', 'EveryFrame', 'VariableEquals'
+            'OnStart', 'EveryFrame', 'VariableEquals', 'VariableCompare'
         ])
         layout.addRow('Type:', self.type_box)
 
@@ -122,9 +126,19 @@ class ConditionDialog(QDialog):
         self.var_name_edit = QLineEdit()
         layout.addRow(self.var_name_label, self.var_name_edit)
 
+        self.var_op_label = QLabel('Operator:')
+        self.var_op_box = QComboBox()
+        self.var_op_box.addItems(['==', '!=', '<', '<=', '>', '>='])
+        layout.addRow(self.var_op_label, self.var_op_box)
+
         self.var_value_label = QLabel('Value:')
         self.var_value_edit = QLineEdit()
         layout.addRow(self.var_value_label, self.var_value_edit)
+
+        self.mod_op_label = QLabel('Operation:')
+        self.mod_op_box = QComboBox()
+        self.mod_op_box.addItems(['+', '-', '*', '/'])
+        layout.addRow(self.mod_op_label, self.mod_op_box)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
@@ -145,6 +159,7 @@ class ConditionDialog(QDialog):
             (self.a_label, self.a_box),
             (self.b_label, self.b_box),
             (self.var_name_label, self.var_name_edit),
+            (self.var_op_label, self.var_op_box),
             (self.var_value_label, self.var_value_edit),
         ]
         for label, w in widgets:
@@ -171,6 +186,13 @@ class ConditionDialog(QDialog):
             self.var_name_edit.setVisible(True)
             self.var_value_label.setVisible(True)
             self.var_value_edit.setVisible(True)
+        elif typ == 'VariableCompare':
+            self.var_name_label.setVisible(True)
+            self.var_name_edit.setVisible(True)
+            self.var_op_label.setVisible(True)
+            self.var_op_box.setVisible(True)
+            self.var_value_label.setVisible(True)
+            self.var_value_edit.setVisible(True)
 
     def get_condition(self):
         typ = self.type_box.currentText()
@@ -191,6 +213,13 @@ class ConditionDialog(QDialog):
                 'name': self.var_name_edit.text(),
                 'value': self.var_value_edit.text(),
             }
+        if typ == 'VariableCompare':
+            return {
+                'type': 'VariableCompare',
+                'name': self.var_name_edit.text(),
+                'op': self.var_op_box.currentText(),
+                'value': self.var_value_edit.text(),
+            }
         return {'type': typ}
 
 
@@ -204,7 +233,7 @@ class ActionDialog(QDialog):
         layout = QFormLayout(self)
 
         self.type_box = QComboBox()
-        self.type_box.addItems(['Move', 'SetPosition', 'Destroy', 'Print', 'PlaySound', 'Spawn', 'SetVariable'])
+        self.type_box.addItems(['Move', 'SetPosition', 'Destroy', 'Print', 'PlaySound', 'Spawn', 'SetVariable', 'ModifyVariable'])
         layout.addRow('Type:', self.type_box)
 
         self.target_label = QLabel('Target:')
@@ -282,6 +311,13 @@ class ActionDialog(QDialog):
                 'name': self.var_name_edit.text(),
                 'value': self.var_value_edit.text(),
             }
+        if typ == 'ModifyVariable':
+            return {
+                'type': 'ModifyVariable',
+                'name': self.var_name_edit.text(),
+                'op': self.mod_op_box.currentText(),
+                'value': self.var_value_edit.text(),
+            }
 
     def _update_fields(self):
         typ = self.type_box.currentText()
@@ -296,6 +332,7 @@ class ActionDialog(QDialog):
             (self.browse_btn, self.browse_btn),
             (self.var_name_label, self.var_name_edit),
             (self.var_value_label, self.var_value_edit),
+            (self.mod_op_label, self.mod_op_box),
         ]
         for label, w in widgets:
             label.setVisible(False)
@@ -325,6 +362,14 @@ class ActionDialog(QDialog):
             self.browse_btn.setVisible(True)
         elif typ == 'SetVariable':
             for pair in [(self.var_name_label, self.var_name_edit), (self.var_value_label, self.var_value_edit)]:
+                pair[0].setVisible(True)
+                pair[1].setVisible(True)
+        elif typ == 'ModifyVariable':
+            for pair in [
+                (self.var_name_label, self.var_name_edit),
+                (self.mod_op_label, self.mod_op_box),
+                (self.var_value_label, self.var_value_edit),
+            ]:
                 pair[0].setVisible(True)
                 pair[1].setVisible(True)
 

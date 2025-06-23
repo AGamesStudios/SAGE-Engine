@@ -78,3 +78,9 @@ scripts. Events can combine many more conditions and actions such as
 each event with its conditions on the left and actions on the right. When adding
 an event you choose keys from a drop‑down list and only the relevant parameters
 for the selected action are shown so it is quick to create complex behavior.
+
+Additional math-friendly blocks make it easy to build counters or timers.
+`VariableCompare` tests a variable against a value using operators like `>`,
+`<`, or `==`. `ModifyVariable` adjusts a variable with `+`, `-`, `*`, or `/` so
+you can implement score systems without custom scripting. `PlaySound` now loads
+audio the first time it runs and reports any errors instead of crashing.

@@ -15,6 +15,7 @@ from sage_logic import (
     OnStart,
     EveryFrame,
     VariableEquals,
+    VariableCompare,
     Move,
     SetPosition,
     Destroy,
@@ -22,6 +23,7 @@ from sage_logic import (
     PlaySound,
     Spawn,
     SetVariable,
+    ModifyVariable,
 )
 
 __all__ = [
@@ -29,7 +31,8 @@ __all__ = [
     'Event', 'KeyPressed', 'KeyReleased', 'MouseButton', 'Collision', 'Timer',
     'Always',
     'Move', 'SetPosition', 'Destroy', 'Print', 'PlaySound', 'Spawn',
-    'OnStart', 'EveryFrame', 'VariableEquals', 'SetVariable', 'main'
+    'OnStart', 'EveryFrame', 'VariableEquals', 'VariableCompare',
+    'SetVariable', 'ModifyVariable', 'main'
 ]
 
 
@@ -161,6 +164,8 @@ class Scene:
                         conditions.append(Always())
                     elif typ == 'VariableEquals':
                         conditions.append(VariableEquals(cond['name'], cond['value']))
+                    elif typ == 'VariableCompare':
+                        conditions.append(VariableCompare(cond['name'], cond.get('op', '=='), cond.get('value')))
                 actions = []
                 for act in evt.get('actions', []):
                     if not isinstance(act, dict):
@@ -189,6 +194,8 @@ class Scene:
                         actions.append(Spawn(act['image'], act.get('x',0), act.get('y',0)))
                     elif typ == 'SetVariable':
                         actions.append(SetVariable(act['name'], act['value']))
+                    elif typ == 'ModifyVariable':
+                        actions.append(ModifyVariable(act['name'], act.get('op', '+'), act.get('value', 0)))
                 es.add_event(Event(conditions, actions, evt.get('once', False)))
         return es
 
