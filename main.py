@@ -10,26 +10,44 @@ except ImportError as e:
     sys.exit(1)
 
 import numpy as np
+try:
+    from numba import njit
+    NUMBA_AVAILABLE = True
+except Exception:
+    NUMBA_AVAILABLE = False
+    def njit(*args, **kwargs):
+        def wrapper(func):
+            return func
+        if args and callable(args[0]):
+            return args[0]
+        return wrapper
 
+@njit(cache=True, fastmath=True)
 def perspective(fov, aspect, near, far):
-    f = 1.0 / np.tan(np.radians(fov) / 2)
+    f = 1.0 / np.tan(np.radians(fov) / 2.0)
     proj = np.zeros((4, 4), dtype=np.float32)
     proj[0, 0] = f / aspect
     proj[1, 1] = f
     proj[2, 2] = (far + near) / (near - far)
-    proj[2, 3] = (2 * far * near) / (near - far)
+    proj[2, 3] = (2.0 * far * near) / (near - far)
     proj[3, 2] = -1.0
     return proj
 
-def look_at(eye, target, up):
-    f = np.array(target) - np.array(eye)
-    f = f / np.linalg.norm(f)
-    u = np.array(up)
-    u = u / np.linalg.norm(u)
+@njit(cache=True, fastmath=True)
+def _look_at(eye, target, up):
+    f = target - eye
+    norm = np.sqrt(np.sum(f * f))
+    if norm != 0.0:
+        f /= norm
+    u = up.copy()
+    norm = np.sqrt(np.sum(u * u))
+    if norm != 0.0:
+        u /= norm
     s = np.cross(f, u)
-    s = s / np.linalg.norm(s)
+    norm = np.sqrt(np.sum(s * s))
+    if norm != 0.0:
+        s /= norm
     u = np.cross(s, f)
-
     view = np.identity(4, dtype=np.float32)
     view[0, :3] = s
     view[1, :3] = u
@@ -38,6 +56,26 @@ def look_at(eye, target, up):
     view[1, 3] = -np.dot(u, eye)
     view[2, 3] = np.dot(f, eye)
     return view
+
+def look_at(eye, target, up):
+    eye = np.asarray(eye, dtype=np.float32)
+    target = np.asarray(target, dtype=np.float32)
+    up = np.asarray(up, dtype=np.float32)
+    return _look_at(eye, target, up)
+
+@njit(cache=True)
+def generate_ssao_samples(n):
+    samples = np.empty((n, 3), dtype=np.float32)
+    for i in range(n):
+        sample = np.random.uniform(-1.0, 1.0, 3)
+        sample[2] = np.random.uniform(0.0, 1.0)
+        norm = np.sqrt(np.sum(sample * sample))
+        if norm != 0.0:
+            sample /= norm
+        scale = i / n
+        scale = 0.1 + 0.9 * scale * scale
+        samples[i] = sample * scale
+    return samples
 
 # Enhanced shaders with baked global illumination, shadow mapping and SSAO
 VERTEX_SHADER = """
@@ -398,7 +436,7 @@ class Engine:
             self.ssao_tex = self.create_white_texture()
         self.create_quad()
         glutDisplayFunc(self.render)
-        glutIdleFunc(self.update)
+        glutTimerFunc(int(1000/60), self.update, 0)
         glutReshapeFunc(self.reshape)
 
     def setup_geometry(self):
@@ -585,15 +623,7 @@ class Engine:
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
 
-        samples = []
-        for i in range(16):
-            sample = np.random.uniform(-1.0,1.0,3)
-            sample[2] = np.random.uniform(0.0,1.0)
-            sample /= np.linalg.norm(sample)
-            scale = i / 16.0
-            scale = 0.1 + 0.9 * scale * scale
-            samples.append(sample * scale)
-        self.ssao_samples = np.array(samples, dtype=np.float32)
+        self.ssao_samples = generate_ssao_samples(16)
 
     def create_quad(self):
         vertices = np.array([
@@ -773,9 +803,10 @@ class Engine:
         glDisable(GL_POLYGON_OFFSET_FILL)
         glBindFramebuffer(GL_FRAMEBUFFER, 0)
 
-    def update(self):
+    def update(self, value=0):
         self.camera_angle += 0.1
         glutPostRedisplay()
+        glutTimerFunc(int(1000/60), self.update, 0)
 
     def reshape(self, w, h):
         self.width = max(1, w)

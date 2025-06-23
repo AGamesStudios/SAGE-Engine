@@ -23,6 +23,7 @@ illumination.
 - Python 3
 - PyOpenGL
 - numpy
+- numba (optional for JIT acceleration)
 - A valid OpenGL context (GLUT). On Linux install `freeglut3-dev` with your
   package manager. Running the example also requires access to an X11 display
   so the window can be created.
@@ -30,7 +31,7 @@ illumination.
 Install the requirements with:
 
 ```bash
-pip install PyOpenGL PyOpenGL_accelerate numpy
+pip install PyOpenGL PyOpenGL_accelerate numpy numba
 ```
 
 Then run the example:
@@ -47,6 +48,11 @@ view space. The G-buffer textures clamp to the screen edges so the SSAO result
 is free of border artifacts. The SSAO pass now includes a blur stage to reduce
 noise. Multi-sample anti aliasing and baked global illumination make the final
 image smoother and brighter. Lighting uses classic Phong specular highlights.
+
+Internal math like matrix calculation and SSAO sample generation can be JIT
+compiled with [Numba](https://numba.pydata.org/) when installed. The update
+loop uses a timer so the scene redraws roughly 60 times per second even on
+older PCs.
 
 Framebuffers and textures are recreated when the window is resized so shadows
 and ambient occlusion remain crisp regardless of resolution.
