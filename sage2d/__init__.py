@@ -2,6 +2,20 @@ import sys
 import json
 import pygame
 
+from .events import (
+    EventSystem,
+    Event,
+    KeyPressed,
+    Collision,
+    Move,
+    Print,
+)
+
+__all__ = [
+    'GameObject', 'Scene', 'Engine', 'EventSystem',
+    'Event', 'KeyPressed', 'Collision', 'Move', 'Print', 'main'
+]
+
 
 class GameObject:
     """Simple sprite-based object."""
@@ -17,6 +31,9 @@ class GameObject:
 
     def draw(self, surface):
         surface.blit(self.sprite, (self.x, self.y))
+
+    def rect(self):
+        return self.sprite.get_rect(topleft=(self.x, self.y))
 
 
 class Scene:
@@ -55,12 +72,13 @@ class Scene:
 
 
 class Engine:
-    def __init__(self, width=640, height=480, scene=None):
+    def __init__(self, width=640, height=480, scene=None, events=None):
         pygame.init()
         self.screen = pygame.display.set_mode((width, height))
         pygame.display.set_caption('SAGE 2D')
         self.clock = pygame.time.Clock()
         self.scene = scene or Scene()
+        self.events = events or EventSystem()
 
     def run(self):
         running = True
@@ -69,6 +87,7 @@ class Engine:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
+            self.events.update(self, self.scene, dt)
             self.scene.update(dt)
             self.screen.fill((0, 0, 0))
             self.scene.draw(self.screen)
