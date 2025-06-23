@@ -25,6 +25,8 @@ Sprites are loaded lazily at runtime so the editor no longer relies on
 without an SDL window. The editor also validates image and variable input and
 ensures combo boxes always point to valid objects, preventing crashes when
 adding multiple sprites, variables, or conditions on older hardware.
+Any errors when creating conditions, actions, or variables are caught and
+printed to the console instead of closing the editor.
 
 Run a saved scene with:
 

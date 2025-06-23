@@ -1,5 +1,4 @@
 import sys
-import json
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QFileDialog,
     QGraphicsView, QGraphicsScene, QGraphicsPixmapItem,
@@ -11,7 +10,6 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtGui import QPixmap, QPen, QColor, QPalette, QFont, QAction
 from PyQt6.QtCore import QRectF, Qt, QProcess
 import tempfile
-import subprocess
 import os
 import pygame
 from sage2d import Scene, GameObject
@@ -388,7 +386,7 @@ class Editor(QMainWindow):
         add_act = QAction('Add Sprite', self)
         add_act.triggered.connect(self.add_sprite)
         edit_menu.addAction(add_act)
-        logic_menu = menubar.addMenu('Logic')
+        menubar.addMenu('Logic')
 
     def open_scene(self):
         path, _ = QFileDialog.getOpenFileName(self, 'Open Scene', '', 'JSON Files (*.json)')
@@ -462,18 +460,18 @@ class Editor(QMainWindow):
         self.refresh_events()
 
     def add_variable(self):
-        dlg = QDialog(self)
-        dlg.setWindowTitle('Add Variable')
-        form = QFormLayout(dlg)
-        name_edit = QLineEdit(); form.addRow('Name:', name_edit)
-        type_box = QComboBox(); type_box.addItems(['int','float','string','bool']); form.addRow('Type:', type_box)
-        value_edit = QLineEdit(); form.addRow('Value:', value_edit)
-        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        form.addRow(buttons)
-        buttons.accepted.connect(dlg.accept)
-        buttons.rejected.connect(dlg.reject)
-        if dlg.exec() == QDialog.DialogCode.Accepted:
-            try:
+        try:
+            dlg = QDialog(self)
+            dlg.setWindowTitle('Add Variable')
+            form = QFormLayout(dlg)
+            name_edit = QLineEdit(); form.addRow('Name:', name_edit)
+            type_box = QComboBox(); type_box.addItems(['int','float','string','bool']); form.addRow('Type:', type_box)
+            value_edit = QLineEdit(); form.addRow('Value:', value_edit)
+            buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+            form.addRow(buttons)
+            buttons.accepted.connect(dlg.accept)
+            buttons.rejected.connect(dlg.reject)
+            if dlg.exec() == QDialog.DialogCode.Accepted:
                 name = name_edit.text().strip()
                 if not name:
                     raise ValueError('name required')
@@ -489,8 +487,8 @@ class Editor(QMainWindow):
                     value = val_text
                 self.scene.variables[name] = value
                 self.refresh_variables()
-            except Exception as exc:
-                self.console.append(f'Failed to add variable: {exc}')
+        except Exception as exc:
+            self.console.append(f'Failed to add variable: {exc}')
 
     def refresh_variables(self):
         self.var_table.setRowCount(0)
@@ -501,32 +499,38 @@ class Editor(QMainWindow):
             self.var_table.setItem(row, 1, QTableWidgetItem(str(value)))
 
     def add_condition(self, row):
-        idx = self.object_combo.currentData()
-        if idx is None or idx < 0 or idx >= len(self.items):
-            return
-        obj = self.items[idx][1]
-        if row < 0:
-            return
-        if row >= len(obj.events):
-            obj.events.append({'conditions': [], 'actions': []})
-        evt = obj.events[row if row < len(obj.events) else -1]
-        dlg = ConditionDialog([o for _, o in self.items], self)
-        if dlg.exec() == QDialog.DialogCode.Accepted:
-            evt['conditions'].append(dlg.get_condition())
-        self.refresh_events()
+        try:
+            idx = self.object_combo.currentData()
+            if idx is None or idx < 0 or idx >= len(self.items):
+                return
+            obj = self.items[idx][1]
+            if row < 0:
+                return
+            if row >= len(obj.events):
+                obj.events.append({'conditions': [], 'actions': []})
+            evt = obj.events[row if row < len(obj.events) else -1]
+            dlg = ConditionDialog([o for _, o in self.items], self)
+            if dlg.exec() == QDialog.DialogCode.Accepted:
+                evt['conditions'].append(dlg.get_condition())
+            self.refresh_events()
+        except Exception as exc:
+            self.console.append(f'Failed to add condition: {exc}')
 
     def add_action(self, row):
-        idx = self.object_combo.currentData()
-        if idx is None or idx < 0 or idx >= len(self.items):
-            return
-        if row < 0 or row >= len(self.items[idx][1].events):
-            return
-        obj = self.items[idx][1]
-        evt = obj.events[row]
-        dlg = ActionDialog([o for _, o in self.items], self)
-        if dlg.exec() == QDialog.DialogCode.Accepted:
-            evt['actions'].append(dlg.get_action())
-        self.refresh_events()
+        try:
+            idx = self.object_combo.currentData()
+            if idx is None or idx < 0 or idx >= len(self.items):
+                return
+            if row < 0 or row >= len(self.items[idx][1].events):
+                return
+            obj = self.items[idx][1]
+            evt = obj.events[row]
+            dlg = ActionDialog([o for _, o in self.items], self)
+            if dlg.exec() == QDialog.DialogCode.Accepted:
+                evt['actions'].append(dlg.get_action())
+            self.refresh_events()
+        except Exception as exc:
+            self.console.append(f'Failed to add action: {exc}')
 
     def refresh_events(self):
         self.event_list.setRowCount(0)
