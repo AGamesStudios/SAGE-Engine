@@ -310,7 +310,11 @@ class Engine:
         self.quad_vbo = None
 
     def init_gl(self):
-        glutInit(sys.argv)
+        try:
+            glutInit(sys.argv)
+        except Exception as e:
+            print("Failed to initialize GLUT. Ensure an OpenGL context is available:", e)
+            raise
         glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH | GLUT_MULTISAMPLE)
         glutInitWindowSize(self.width, self.height)
         glutCreateWindow(b"PyOpenGL Scene")

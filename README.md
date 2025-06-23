@@ -19,7 +19,8 @@ for smoother edges.
 - PyOpenGL
 - numpy
 - A valid OpenGL context (GLUT). On Linux install `freeglut3-dev` with your
-  package manager.
+  package manager. Running the example also requires access to an X11 display
+  so the window can be created.
 
 Install the requirements with:
 
