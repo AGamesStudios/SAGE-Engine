@@ -15,12 +15,13 @@ The editor launches maximized in a dark Fusion
 theme and provides two
 tabs: **Viewport** and **Logic**. The viewport uses a virtually infinite
 `QGraphicsScene` so you can pan freely. A red rectangle shows the canvas (the
-game window) for reference. You can add sprites, drag them around and
-save/load projects ending in `.sageproject`. Each file references a JSON scene
-on disk. Use **File → New Project** to generate a folder for your game. The
-dialog asks for a project name and a location and then creates the folder with
-an empty scene and `.sageproject` file. Each sprite receives a unique name like
-`enemy (1)` if necessary so conditions always target the correct object. The
+game window) for reference. Objects show a yellow gizmo outline when selected so
+they are easy to manipulate. Projects are saved in a single `.sageproject` file
+that stores the entire scene including object positions, events and variables.
+Use **File → New Project** to generate a folder for your game. The dialog asks
+for a project name and a location and then creates the folder with a
+`.sageproject` file. Each sprite receives a unique name like `enemy (1)` if
+necessary so conditions always target the correct object. The
 editor disables sprite, variable and logic actions until a project is opened,
 ensuring all changes are saved to a `.sageproject` file.
 The **Logic** tab lists object events with
@@ -64,8 +65,9 @@ Run a saved project with:
 python -m sage_engine path/to/project.sageproject
 ```
 
-Project files are small JSON documents that store the path to a scene file. The
-editor can create them via **File → Save Project**.
+Project files store the entire scene data so you can share a single file. Use
+**File → Save Project** to write the current project. The **Recent Projects**
+submenu lists the last few files you opened for quick access.
 
 Launch the editor with:
 

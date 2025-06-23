@@ -15,6 +15,23 @@ import tempfile
 import os
 import pygame
 from sage_engine import Scene, GameObject, Project
+import json
+
+RECENT_FILE = os.path.join(os.path.expanduser('~'), '.sage_recent.json')
+
+def load_recent():
+    try:
+        with open(RECENT_FILE, 'r') as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+def save_recent(lst):
+    try:
+        with open(RECENT_FILE, 'w') as f:
+            json.dump(lst, f)
+    except Exception:
+        pass
 
 KEY_OPTIONS = [
     ('Up', pygame.K_UP),
@@ -670,6 +687,11 @@ class Editor(QMainWindow):
         self.view.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
         self.view.centerOn(0, 0)
         self.tabs.addTab(self.view, 'Viewport')
+        # gizmo rectangle showing selected object
+        self.gizmo = self.g_scene.addRect(QRectF(), QPen(QColor('yellow')))
+        self.gizmo.setZValue(10000)
+        self.gizmo.hide()
+        self.g_scene.changed.connect(self._update_gizmo)
 
         # logic tab with object-specific events and variables
         self.logic_widget = QWidget()
@@ -678,6 +700,7 @@ class Editor(QMainWindow):
         self.object_label = QLabel(self.t('object'))
         self.object_combo = QComboBox()
         self.object_combo.currentIndexChanged.connect(self.refresh_events)
+        self.object_combo.currentIndexChanged.connect(self._update_gizmo)
         top_bar.addWidget(self.object_label)
         top_bar.addWidget(self.object_combo)
         main_layout.addLayout(top_bar)
@@ -711,7 +734,6 @@ class Editor(QMainWindow):
         self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, dock)
         self.console.append(f'Engine path: {os.getcwd()}')
         self.process = None
-        self._tmp_scene = None
         self._tmp_project = None
         self.console_dock = dock
 
@@ -720,10 +742,12 @@ class Editor(QMainWindow):
         self.scene = Scene()
         self.project_path: str | None = None
         self.items = []
+        self.recent_projects = load_recent()
         self._init_actions()
         self.showMaximized()
         self._apply_language()
         self._update_project_state()
+        self._update_recent_menu()
 
     def t(self, key: str) -> str:
         """Translate a key for the current language."""
@@ -753,7 +777,9 @@ class Editor(QMainWindow):
         self.add_var_btn.setText(self.t('add_variable'))
         self.console_dock.setWindowTitle(self.t('console'))
         self.run_btn.setText(self.t('run'))
-
+        self.recent_menu.setTitle(self.t('recent_projects'))
+        self._update_recent_menu()
+        
     def _update_project_state(self):
         """Enable or disable project-dependent actions."""
         enabled = self.project_path is not None
@@ -768,6 +794,31 @@ class Editor(QMainWindow):
             return True
         QMessageBox.warning(self, self.t('error'), self.t('no_project'))
         return False
+
+    def _add_recent(self, path: str):
+        if not path:
+            return
+        if path in self.recent_projects:
+            self.recent_projects.remove(path)
+        self.recent_projects.insert(0, path)
+        self.recent_projects = self.recent_projects[:5]
+        save_recent(self.recent_projects)
+        self._update_recent_menu()
+
+    def _update_recent_menu(self):
+        self.recent_menu.clear()
+        for p in self.recent_projects:
+            act = self.recent_menu.addAction(p)
+            act.triggered.connect(lambda _, path=p: self.open_project(path))
+        if self.recent_projects:
+            self.recent_menu.addSeparator()
+            clear_act = self.recent_menu.addAction(self.t('clear_recent'))
+            clear_act.triggered.connect(self.clear_recent)
+
+    def clear_recent(self):
+        self.recent_projects = []
+        save_recent(self.recent_projects)
+        self._update_recent_menu()
 
     def _init_actions(self):
         menubar = self.menuBar()
@@ -784,6 +835,7 @@ class Editor(QMainWindow):
         self.run_act = QAction(self.t('run'), self)
         self.run_act.triggered.connect(self.run_game)
         self.file_menu.addAction(self.run_act)
+        self.recent_menu = self.file_menu.addMenu(self.t('recent_projects'))
 
         self.edit_menu = menubar.addMenu(self.t('edit'))
         self.add_sprite_act = QAction(self.t('add_sprite'), self)
@@ -849,49 +901,51 @@ class Editor(QMainWindow):
             return
         proj_dir = os.path.join(folder, name)
         os.makedirs(proj_dir, exist_ok=True)
-        scene_path = os.path.join(proj_dir, f'{name}.json')
         proj_path = os.path.join(proj_dir, f'{name}.sageproject')
         self.scene = Scene()
-        self.scene.save(scene_path)
         try:
-            Project(scene_path).save(proj_path)
+            Project(self.scene.to_dict()).save(proj_path)
         except Exception as exc:
             QMessageBox.warning(self, 'Error', f'Failed to create project: {exc}')
             return
         self.project_path = proj_path
-        self.load_scene(scene_path)
+        self.load_scene(self.scene)
         self._update_project_state()
+        self._add_recent(proj_path)
 
-    def open_project(self):
-        path, _ = QFileDialog.getOpenFileName(
-            self, self.t('open_project'), '', self.t('sage_files')
-        )
+    def open_project(self, path: str | None = None):
+        if path is None:
+            path, _ = QFileDialog.getOpenFileName(
+                self, self.t('open_project'), '', self.t('sage_files')
+            )
         if not path:
             return
         try:
             proj = Project.load(path)
             self.project_path = path
-            self.load_scene(proj.scene)
+            self.load_scene(Scene.from_dict(proj.scene))
             self._update_project_state()
+            self._add_recent(path)
         except Exception as exc:
             QMessageBox.warning(self, 'Error', f'Failed to open project: {exc}')
 
     def save_project(self):
-        path, _ = QFileDialog.getSaveFileName(
-            self, self.t('save_project'), '', self.t('sage_files')
-        )
+        path = self.project_path
         if not path:
-            return
-        self.project_path = path
+            path, _ = QFileDialog.getSaveFileName(
+                self, self.t('save_project'), '', self.t('sage_files')
+            )
+            if not path:
+                return
+            self.project_path = path
         self._update_project_state()
-        scene_path = os.path.splitext(path)[0] + '.json'
         for item, obj in self.items:
             pos = item.pos()
             obj.x = pos.x()
             obj.y = pos.y()
-        self.scene.save(scene_path)
         try:
-            Project(scene_path).save(path)
+            Project(self.scene.to_dict()).save(self.project_path)
+            self._add_recent(self.project_path)
         except Exception as exc:
             QMessageBox.warning(self, 'Error', f'Failed to save project: {exc}')
 
@@ -910,17 +964,13 @@ class Editor(QMainWindow):
         if not self._check_project():
             return
         self._cleanup_process()
-        fd, scene_path = tempfile.mkstemp(suffix='.json')
-        os.close(fd)
         proj_fd, proj_path = tempfile.mkstemp(suffix='.sageproject')
         os.close(proj_fd)
         for item, obj in self.items:
             pos = item.pos()
             obj.x = pos.x()
             obj.y = pos.y()
-        self.scene.save(scene_path)
-        Project(scene_path).save(proj_path)
-        self._tmp_scene = scene_path
+        Project(self.scene.to_dict()).save(proj_path)
         self._tmp_project = proj_path
         self.process = QProcess(self)
         self.process.setProgram(sys.executable)
@@ -947,7 +997,7 @@ class Editor(QMainWindow):
                 self.process.kill()
                 self.process.waitForFinished()
             self.process = None
-        for attr in ('_tmp_scene', '_tmp_project'):
+        for attr in ('_tmp_project',):
             path = getattr(self, attr)
             if path:
                 try:
@@ -984,6 +1034,7 @@ class Editor(QMainWindow):
             self.object_combo.addItem(obj.name, len(self.items) - 1)
             if self.object_combo.currentIndex() == -1:
                 self.object_combo.setCurrentIndex(0)
+            self._update_gizmo()
         except Exception as exc:
             self.console.append(f'Failed to add sprite: {exc}')
         self.refresh_events()
@@ -1058,6 +1109,16 @@ class Editor(QMainWindow):
             self.var_table.insertRow(row)
             self.var_table.setItem(row, 0, QTableWidgetItem(name))
             self.var_table.setItem(row, 1, QTableWidgetItem(str(value)))
+
+    def _update_gizmo(self):
+        idx = self.object_combo.currentData()
+        if idx is None or idx < 0 or idx >= len(self.items):
+            self.gizmo.hide()
+            return
+        item = self.items[idx][0]
+        rect = item.mapRectToScene(item.boundingRect())
+        self.gizmo.setRect(rect)
+        self.gizmo.show()
 
     def add_condition(self, row):
         if not self._check_project():
@@ -1140,8 +1201,11 @@ class Editor(QMainWindow):
         btn_new.clicked.connect(lambda _, r=row: self.add_condition(r))
         self.event_list.setCellWidget(row, 0, btn_new)
 
-    def load_scene(self, path):
-        self.scene = Scene.load(path)
+    def load_scene(self, scene_or_path):
+        if isinstance(scene_or_path, Scene):
+            self.scene = scene_or_path
+        else:
+            self.scene = Scene.load(scene_or_path)
         self.g_scene.clear()
         # redraw canvas after clearing the scene
         self.canvas = self.g_scene.addRect(QRectF(0, 0, 640, 480), QPen(QColor('red')))
@@ -1160,6 +1224,7 @@ class Editor(QMainWindow):
             self.object_combo.addItem(obj.name, len(self.items)-1)
         self.refresh_events()
         self.refresh_variables()
+        self._update_gizmo()
 
     def closeEvent(self, event):
         for item, obj in self.items:

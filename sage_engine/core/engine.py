@@ -37,7 +37,7 @@ def main(argv=None):
         if path.endswith('.sageproject'):
             proj = Project.load(path)
             if proj.scene:
-                scene = Scene.load(proj.scene)
+                scene = Scene.from_dict(proj.scene)
         else:
             scene = Scene.load(path)
     Engine(scene=scene, events=scene.build_event_system()).run()

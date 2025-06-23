@@ -43,14 +43,13 @@ class Scene:
             obj.draw(surface)
 
     @classmethod
-    def load(cls, path: str) -> "Scene":
-        with open(path, "r") as f:
-            data = json.load(f)
+    def from_dict(cls, data: dict) -> "Scene":
+        """Construct a Scene from a plain dictionary."""
         scene = cls()
         scene.variables = data.get("variables", {})
         for entry in data.get("objects", []):
             obj = GameObject(
-                entry["image"],
+                entry.get("image", ""),
                 entry.get("x", 0),
                 entry.get("y", 0),
                 entry.get("name"),
@@ -59,8 +58,15 @@ class Scene:
             scene.add_object(obj)
         return scene
 
-    def save(self, path: str):
-        data = {
+    @classmethod
+    def load(cls, path: str) -> "Scene":
+        with open(path, "r") as f:
+            data = json.load(f)
+        return cls.from_dict(data)
+
+    def to_dict(self) -> dict:
+        """Return a dictionary representation of the scene."""
+        return {
             "variables": self.variables,
             "objects": [
                 {
@@ -73,8 +79,10 @@ class Scene:
                 for o in self.objects
             ],
         }
+
+    def save(self, path: str):
         with open(path, "w") as f:
-            json.dump(data, f, indent=2)
+            json.dump(self.to_dict(), f, indent=2)
 
     def build_event_system(self) -> EventSystem:
         es = EventSystem(variables=self.variables)
