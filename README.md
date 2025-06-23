@@ -11,10 +11,10 @@ generic `GameObject`, `Scene`, `Engine` and `Project` classes. 2D helpers are
 provided in the same package, and the event system lives in
 `sage_engine/logic`. `sage_editor` builds on these pieces but remains optional
 so games can depend on the engine without pulling in the editor.
-When launching the editor a **Project Manager** window appears. It lets you
-create a new project, open an existing one or pick from your recent projects.
-The dialog lists the projects with their creation date and full path and
-provides buttons to create, open or clear the list for a clean start.
+When launching the editor a **Project Manager** window appears. It lists your
+recent projects with their creation date and full path.  Buttons let you create
+a new project, open an existing file or clear the list for a clean start.
+Right click a project to open it immediately or remove it from the list.
 Once a project is chosen the editor opens maximized in a dark Fusion
 theme and provides two
 tabs: **Viewport** and **Logic**. The viewport uses a virtually infinite

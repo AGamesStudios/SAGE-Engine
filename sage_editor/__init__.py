@@ -1269,6 +1269,9 @@ class ProjectManager(QDialog):
         header.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
         self.table.setAlternatingRowColors(True)
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.table.setShowGrid(False)
+        self.table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.table.customContextMenuRequested.connect(self.show_context_menu)
         layout.addWidget(self.table)
 
         btn_row = QHBoxLayout()
@@ -1290,6 +1293,24 @@ class ProjectManager(QDialog):
         self.table.itemDoubleClicked.connect(self.open_selected)
 
         self.populate()
+
+    def show_context_menu(self, pos):
+        row = self.table.indexAt(pos).row()
+        if row < 0:
+            return
+        menu = QMenu(self)
+        open_act = menu.addAction(self.editor.t('open'))
+        del_act = menu.addAction(self.editor.t('delete'))
+        action = menu.exec(self.table.mapToGlobal(pos))
+        if action == open_act:
+            self.table.selectRow(row)
+            self.open_selected()
+        elif action == del_act:
+            path = self.table.item(row, 3).text()
+            if path in self.editor.recent_projects:
+                self.editor.recent_projects.remove(path)
+                save_recent(self.editor.recent_projects)
+            self.populate()
 
     def populate(self):
         from datetime import datetime
