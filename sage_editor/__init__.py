@@ -324,7 +324,8 @@ class Editor(QMainWindow):
         # large scene rectangle to simulate an "infinite" workspace
         self.g_scene.setSceneRect(QRectF(-10000, -10000, 20000, 20000))
         self.view.setScene(self.g_scene)
-        self.view.setDragMode(QGraphicsView.ScrollHandDrag)
+        # use new PyQt6 enum syntax
+        self.view.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
         self.view.centerOn(0, 0)
         self.tabs.addTab(self.view, 'Viewport')
 
