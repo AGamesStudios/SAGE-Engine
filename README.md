@@ -40,8 +40,9 @@ light and a point light. The camera is fixed in place so the scene stays in
 view. Shadows come from a depth map filtered with a 7×7 PCF kernel and a
 screen-space ambient occlusion pass darkens creases using a G-buffer built in
 view space. The G-buffer textures clamp to the screen edges so the SSAO result
-is free of border artifacts. Multi-sample anti aliasing and baked global illumination make the
-final image smoother and brighter.
+is free of border artifacts. The SSAO pass now includes a blur stage to reduce
+noise. Multi-sample anti aliasing and baked global illumination make the final
+image smoother and brighter.
 
 ## Quality Modes
 

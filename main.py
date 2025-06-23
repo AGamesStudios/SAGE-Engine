@@ -199,6 +199,23 @@ void main() {
 }
 """
 
+SSAO_BLUR_FRAGMENT_SHADER = """
+#version 330 core
+out float FragColor;
+in vec2 TexCoord;
+uniform sampler2D ssaoInput;
+void main() {
+    vec2 texelSize = 1.0 / textureSize(ssaoInput, 0);
+    float result = 0.0;
+    for(int x=-2; x<=2; ++x){
+        for(int y=-2; y<=2; ++y){
+            result += texture(ssaoInput, TexCoord + vec2(x,y) * texelSize).r;
+        }
+    }
+    FragColor = result / 25.0;
+}
+"""
+
 # simple shaders for the shadow depth map
 DEPTH_VERTEX_SHADER = """
 #version 330 core
@@ -277,6 +294,19 @@ def create_ssao_program():
     glDeleteShader(fshader)
     return program
 
+def create_ssao_blur_program():
+    vshader = compile_shader(QUAD_VERTEX_SHADER, GL_VERTEX_SHADER)
+    fshader = compile_shader(SSAO_BLUR_FRAGMENT_SHADER, GL_FRAGMENT_SHADER)
+    program = glCreateProgram()
+    glAttachShader(program, vshader)
+    glAttachShader(program, fshader)
+    glLinkProgram(program)
+    if glGetProgramiv(program, GL_LINK_STATUS) != GL_TRUE:
+        raise RuntimeError(glGetProgramInfoLog(program))
+    glDeleteShader(vshader)
+    glDeleteShader(fshader)
+    return program
+
 class Engine:
     def __init__(self, width=800, height=600, quality='high'):
         self.width = width
@@ -294,6 +324,7 @@ class Engine:
         self.depth_program = None
         self.gbuffer_program = None
         self.ssao_program = None
+        self.ssao_blur_program = None
         self.lightmap = None
         self.shadow_fbo = None
         self.shadow_map = None
@@ -304,6 +335,8 @@ class Engine:
         self.g_normal = None
         self.g_depth = None
         self.ssao_fbo = None
+        self.ssao_fbo_blur = None
+        self.ssao_color = None
         self.ssao_tex = None
         self.noise_tex = None
         self.ssao_samples = None
@@ -328,6 +361,7 @@ class Engine:
         self.depth_program = create_depth_program()
         self.gbuffer_program = create_gbuffer_program()
         self.ssao_program = create_ssao_program()
+        self.ssao_blur_program = create_ssao_blur_program()
         self.vao = glGenVertexArrays(1)
         glBindVertexArray(self.vao)
         self.setup_geometry()
@@ -497,6 +531,18 @@ class Engine:
         self.ssao_fbo = glGenFramebuffers(1)
         glBindFramebuffer(GL_FRAMEBUFFER, self.ssao_fbo)
 
+        self.ssao_color = glGenTextures(1)
+        glBindTexture(GL_TEXTURE_2D, self.ssao_color)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, self.width, self.height, 0, GL_RED, GL_FLOAT, None)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, self.ssao_color, 0)
+        if glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE:
+            print("SSAO framebuffer incomplete")
+        glBindFramebuffer(GL_FRAMEBUFFER, 0)
+
+        self.ssao_fbo_blur = glGenFramebuffers(1)
+        glBindFramebuffer(GL_FRAMEBUFFER, self.ssao_fbo_blur)
         self.ssao_tex = glGenTextures(1)
         glBindTexture(GL_TEXTURE_2D, self.ssao_tex)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, self.width, self.height, 0, GL_RED, GL_FLOAT, None)
@@ -504,7 +550,7 @@ class Engine:
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, self.ssao_tex, 0)
         if glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE:
-            print("SSAO framebuffer incomplete")
+            print("SSAO blur framebuffer incomplete")
         glBindFramebuffer(GL_FRAMEBUFFER, 0)
 
         noise = np.random.rand(16,3).astype(np.float32) * 2.0 - 1.0
@@ -656,6 +702,17 @@ class Engine:
         for i in range(16):
             loc = glGetUniformLocation(self.ssao_program, f'samples[{i}]')
             glUniform3f(loc, *self.ssao_samples[i])
+        glBindVertexArray(self.quad_vao)
+        glDrawArrays(GL_TRIANGLES, 0, 6)
+        glBindFramebuffer(GL_FRAMEBUFFER, 0)
+
+        # blur pass
+        glUseProgram(self.ssao_blur_program)
+        glBindFramebuffer(GL_FRAMEBUFFER, self.ssao_fbo_blur)
+        glClear(GL_COLOR_BUFFER_BIT)
+        glActiveTexture(GL_TEXTURE0)
+        glBindTexture(GL_TEXTURE_2D, self.ssao_color)
+        glUniform1i(glGetUniformLocation(self.ssao_blur_program, 'ssaoInput'), 0)
         glBindVertexArray(self.quad_vao)
         glDrawArrays(GL_TRIANGLES, 0, 6)
         glBindFramebuffer(GL_FRAMEBUFFER, 0)
