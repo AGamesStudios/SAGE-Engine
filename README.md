@@ -14,7 +14,9 @@ tabs: **Viewport** and **Logic**. The viewport uses a virtually infinite
 `QGraphicsScene` so you can pan freely. A red rectangle shows the canvas (the
 game window) for reference. You can add sprites, drag them around and
 save/load projects ending in `.sageproject`. Each file references a JSON scene
-on disk. Each sprite receives a unique name like
+on disk. Use **File → New Project** to generate a folder for your game. The
+dialog asks for a project name and a location and then creates the folder with
+an empty scene and `.sageproject` file. Each sprite receives a unique name like
 `enemy (1)` if necessary so conditions always target the correct object.
 The **Logic** tab lists object events with
 conditions on the left and actions on the right. The event dialog now provides

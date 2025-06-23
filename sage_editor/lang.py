@@ -26,7 +26,9 @@ LANGUAGES = {
         'sage_files': 'SAGE Project (*.sageproject)',
         'browse': 'Browse',
         'image_files': 'Images (*.png *.jpg *.bmp)',
-        'json_files': 'JSON Files (*.json)'
+        'json_files': 'JSON Files (*.json)',
+        'project_name': 'Project Name:',
+        'project_path': 'Location:'
     },
     'Русский': {
         'file': 'Файл',
@@ -55,7 +57,9 @@ LANGUAGES = {
         'sage_files': 'Проекты SAGE (*.sageproject)',
         'browse': 'Обзор',
         'image_files': 'Изображения (*.png *.jpg *.bmp)',
-        'json_files': 'Файлы JSON (*.json)'
+        'json_files': 'Файлы JSON (*.json)',
+        'project_name': 'Имя проекта:',
+        'project_path': 'Папка:'
     }
 }
 DEFAULT_LANGUAGE = 'English'

@@ -794,14 +794,54 @@ class Editor(QMainWindow):
             self.load_scene(path)
 
     def new_project(self):
+        class NewProjectDialog(QDialog):
+            def __init__(self, parent=None):
+                super().__init__(parent)
+                self.parent = parent
+                self.setWindowTitle(parent.t('new_project'))
+                self.name_edit = QLineEdit()
+                self.path_edit = QLineEdit()
+                browse_btn = QPushButton(parent.t('browse'))
+                browse_btn.clicked.connect(self.browse)
+                form = QFormLayout(self)
+                form.addRow(parent.t('project_name'), self.name_edit)
+                path_row = QHBoxLayout()
+                path_row.addWidget(self.path_edit)
+                path_row.addWidget(browse_btn)
+                form.addRow(parent.t('project_path'), path_row)
+                buttons = QDialogButtonBox(
+                    QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+                )
+                buttons.accepted.connect(self.accept)
+                buttons.rejected.connect(self.reject)
+                form.addRow(buttons)
+
+            def browse(self):
+                path = QFileDialog.getExistingDirectory(self, self.parent.t('project_path'), '')
+                if path:
+                    self.path_edit.setText(path)
+
+        dlg = NewProjectDialog(self)
+        if dlg.exec() != QDialog.DialogCode.Accepted:
+            return
+        name = dlg.name_edit.text().strip()
+        folder = dlg.path_edit.text().strip()
+        if not name or not folder:
+            QMessageBox.warning(self, 'Error', 'Name and path required')
+            return
+        proj_dir = os.path.join(folder, name)
+        os.makedirs(proj_dir, exist_ok=True)
+        scene_path = os.path.join(proj_dir, f'{name}.json')
+        proj_path = os.path.join(proj_dir, f'{name}.sageproject')
         self.scene = Scene()
-        self.project_path = None
-        self.g_scene.clear()
-        self.canvas = self.g_scene.addRect(QRectF(0, 0, 640, 480), QPen(QColor('red')))
-        self.items.clear()
-        self.object_combo.clear()
-        self.refresh_events()
-        self.refresh_variables()
+        self.scene.save(scene_path)
+        try:
+            Project(scene_path).save(proj_path)
+        except Exception as exc:
+            QMessageBox.warning(self, 'Error', f'Failed to create project: {exc}')
+            return
+        self.project_path = proj_path
+        self.load_scene(scene_path)
 
     def open_project(self):
         path, _ = QFileDialog.getOpenFileName(
