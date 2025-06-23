@@ -2,6 +2,13 @@ from dataclasses import dataclass, field
 import os
 import pygame
 
+# cache loaded images so repeated sprites don't reload files
+_IMAGE_CACHE: dict[str, pygame.Surface] = {}
+
+def clear_image_cache():
+    """Remove all cached images."""
+    _IMAGE_CACHE.clear()
+
 @dataclass
 class GameObject:
     """Sprite-based object used in scenes."""
@@ -21,7 +28,11 @@ class GameObject:
 
     def _ensure_sprite(self):
         if self.sprite is None:
-            self.sprite = pygame.image.load(self.image_path).convert_alpha()
+            sprite = _IMAGE_CACHE.get(self.image_path)
+            if sprite is None:
+                sprite = pygame.image.load(self.image_path).convert_alpha()
+                _IMAGE_CACHE[self.image_path] = sprite
+            self.sprite = sprite
 
     def draw(self, surface: pygame.Surface):
         self._ensure_sprite()

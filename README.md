@@ -136,3 +136,13 @@ The logic module registers conditions and actions in dictionaries so new types
 can be added without modifying the engine. `condition_from_dict` and
 `action_from_dict` create objects from saved data, making the system easily
 extensible.
+
+### Performance
+
+SAGE Engine aims to run smoothly even on older hardware. Images and sounds
+are cached after the first load so repeated objects or effects do not reload
+files from disk. The `Engine` class accepts an `fps` argument (default 60) to
+control the frame rate and uses `pygame.time.Clock` to limit CPU usage.
+You can clear the image cache with `sage_engine.clear_image_cache()` if memory
+becomes tight. These optimizations keep the runtime light without sacrificing
+visual quality.

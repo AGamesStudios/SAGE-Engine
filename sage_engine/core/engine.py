@@ -5,18 +5,19 @@ from .project import Project
 
 class Engine:
     """Main loop and rendering."""
-    def __init__(self, width=640, height=480, scene=None, events=None):
+    def __init__(self, width=640, height=480, scene=None, events=None, fps=60):
         pygame.init()
         self.screen = pygame.display.set_mode((width, height))
         pygame.display.set_caption('SAGE 2D')
         self.clock = pygame.time.Clock()
+        self.fps = fps
         self.scene = scene or Scene()
         self.events = events if events is not None else self.scene.build_event_system()
 
     def run(self):
         running = True
         while running:
-            dt = self.clock.tick(60) / 1000.0
+            dt = self.clock.tick(self.fps) / 1000.0
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
