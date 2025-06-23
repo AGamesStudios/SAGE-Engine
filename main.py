@@ -12,6 +12,7 @@ except ImportError as e:
 import numpy as np
 try:
     from numba import njit
+    import scipy  # Numba's BLAS support requires SciPy
     NUMBA_AVAILABLE = True
 except Exception:
     NUMBA_AVAILABLE = False
@@ -22,7 +23,14 @@ except Exception:
             return args[0]
         return wrapper
 
-@njit(cache=True, fastmath=True)
+def optional_njit(*args, **kwargs):
+    def decorator(func):
+        return njit(*args, **kwargs)(func) if NUMBA_AVAILABLE else func
+    if args and callable(args[0]):
+        return decorator(args[0])
+    return decorator
+
+@optional_njit(cache=True, fastmath=True)
 def perspective(fov, aspect, near, far):
     f = 1.0 / np.tan(np.radians(fov) / 2.0)
     proj = np.zeros((4, 4), dtype=np.float32)
@@ -33,7 +41,7 @@ def perspective(fov, aspect, near, far):
     proj[3, 2] = -1.0
     return proj
 
-@njit(cache=True, fastmath=True)
+@optional_njit(cache=True, fastmath=True)
 def ortho(left, right, bottom, top, near, far):
     mat = np.zeros((4,4), dtype=np.float32)
     mat[0,0] = 2.0/(right-left)
@@ -45,7 +53,7 @@ def ortho(left, right, bottom, top, near, far):
     mat[2,3] = -(far+near)/(far-near)
     return mat
 
-@njit(cache=True, fastmath=True)
+@optional_njit(cache=True, fastmath=True)
 def _look_at(eye, target, up):
     f = target - eye
     norm = np.sqrt(np.sum(f * f))
@@ -64,9 +72,9 @@ def _look_at(eye, target, up):
     view[0, :3] = s
     view[1, :3] = u
     view[2, :3] = -f
-    view[0, 3] = -np.dot(s, eye)
-    view[1, 3] = -np.dot(u, eye)
-    view[2, 3] = np.dot(f, eye)
+    view[0, 3] = -(s[0]*eye[0] + s[1]*eye[1] + s[2]*eye[2])
+    view[1, 3] = -(u[0]*eye[0] + u[1]*eye[1] + u[2]*eye[2])
+    view[2, 3] = f[0]*eye[0] + f[1]*eye[1] + f[2]*eye[2]
     return view
 
 def look_at(eye, target, up):
@@ -75,7 +83,7 @@ def look_at(eye, target, up):
     up = np.asarray(up, dtype=np.float32)
     return _look_at(eye, target, up)
 
-@njit(cache=True)
+@optional_njit(cache=True)
 def generate_ssao_samples(n):
     samples = np.empty((n, 3), dtype=np.float32)
     for i in range(n):
