@@ -5,6 +5,9 @@ This repository provides a small 2D game engine with a scene editor. It uses
 movable sprite objects that you can place visually using the **SAGE Editor**.
 Extra care is taken to keep the editor lightweight so it runs well even on
 older computers.
+
+## Architecture
+The engine is organized into small modules under `sage2d`. `game_object.py` contains the `GameObject` class, `scene.py` manages scenes and event data, and `engine.py` runs the main loop. The standalone `sage_logic` package provides conditions and actions, while `sage_editor` implements the Qt-based editor. This separation keeps the code easy to extend and reuse.
 The editor launches maximized in a dark Fusion
 theme and provides two
 tabs: **Viewport** and **Logic**. The viewport uses a virtually infinite
