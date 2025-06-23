@@ -12,6 +12,8 @@ Storing four moments greatly reduces light bleeding compared to the old two
 moment approach. Shadows still use an orthographic projection so the entire
 scene fits inside the map. The texture is linearly filtered and the framebuffer
 is verified for completeness. A small polygon offset avoids acne artifacts.
+The EVSM exponent was lowered so the depth moments stay within floating point
+range, preventing shadows from turning completely dark.
 Each object now has its own model matrix so the plane no longer rotates with the cube and the shadows line up correctly. Lighting combines a directional light with a
 point light and stronger ambient illumination. A screen‑space ambient occlusion
 (SSAO) pass further darkens corners for more realism. The shaders combine the
@@ -57,7 +59,7 @@ come from an exponential variance shadow map filtered with a Poisson disk kernel
 screen-space ambient occlusion pass darkens creases using a G-buffer built in
 view space. The G-buffer textures clamp to the screen edges so the SSAO result
 is free of border artifacts. The SSAO pass now includes a blur stage to reduce
-noise. Multi-sample anti aliasing and baked global illumination make the final
+noise and clamps the output so overly dark pixels are avoided. Multi-sample anti aliasing and baked global illumination make the final
 image smoother and brighter. Lighting uses classic Phong specular highlights.
 
 Internal math like matrix calculation and SSAO sample generation can be JIT

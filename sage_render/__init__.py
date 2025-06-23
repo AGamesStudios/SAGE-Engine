@@ -280,6 +280,7 @@ void main() {
         occlusion += (sampleDepth >= samplePos.z + bias ? 1.0 : 0.0) * rangeCheck;
     }
     occlusion = 1.0 - occlusion / 16.0;
+    occlusion = clamp(occlusion, 0.0, 1.0);
     FragColor = occlusion;
 }
 """
@@ -446,7 +447,9 @@ class Engine:
         self.quad_vao = None
         self.quad_vbo = None
         self.enable_ssao = not self.low_quality
-        self.evsm_exponent = 80.0
+        # exponent for the exponential variance shadow map. 80 caused overflow
+        # with the scene's far plane so use a smaller value for stable shadows
+        self.evsm_exponent = 3.0
 
     def init_gl(self):
         try:
