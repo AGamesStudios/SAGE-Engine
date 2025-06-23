@@ -31,8 +31,9 @@ class Event:
 
 class EventSystem:
     """Container for events."""
-    def __init__(self):
+    def __init__(self, variables=None):
         self.events = []
+        self.variables = variables if variables is not None else {}
 
     def add_event(self, event):
         self.events.append(event)
@@ -109,6 +110,30 @@ class Always(Condition):
     def check(self, engine, scene, dt):
         return True
 
+class OnStart(Condition):
+    """True only on the first frame."""
+    def __init__(self):
+        self.triggered = False
+
+    def check(self, engine, scene, dt):
+        if not self.triggered:
+            self.triggered = True
+            return True
+        return False
+
+class EveryFrame(Condition):
+    """Alias for Always to clarify intent."""
+    def check(self, engine, scene, dt):
+        return True
+
+class VariableEquals(Condition):
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
+
+    def check(self, engine, scene, dt):
+        return engine.events.variables.get(self.name) == self.value
+
 # Built-in actions
 class Move(Action):
     def __init__(self, obj, dx, dy):
@@ -174,8 +199,18 @@ class Spawn(Action):
         if hasattr(scene, 'add_object'):
             scene.add_object(obj)
 
+class SetVariable(Action):
+    """Set a variable in the event system."""
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
+
+    def execute(self, engine, scene, dt):
+        engine.events.variables[self.name] = self.value
+
 __all__ = [
     'Condition', 'Action', 'Event', 'EventSystem',
     'KeyPressed', 'KeyReleased', 'MouseButton', 'Collision', 'Timer', 'Always',
-    'Move', 'SetPosition', 'Destroy', 'Print', 'PlaySound', 'Spawn'
+    'OnStart', 'EveryFrame', 'VariableEquals',
+    'Move', 'SetPosition', 'Destroy', 'Print', 'PlaySound', 'Spawn', 'SetVariable'
 ]

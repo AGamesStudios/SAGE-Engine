@@ -104,15 +104,18 @@ You can also switch quality at runtime by calling `set_quality('low')` or
 
 The repository also includes a lightweight 2D framework built on top of
 `pygame`. Scenes consist of movable sprite objects and can be edited with the
-`SAGE Editor` GUI powered by PyQt5. The editor runs maximized and provides two
+`SAGE Editor` GUI powered by PyQt6. The editor runs maximized in a dark Fusion
+theme and provides two
 tabs: **Viewport** and **Logic**. The viewport uses a virtually infinite
 `QGraphicsScene` so you can pan freely. A red rectangle shows the canvas (the
 game window) for reference. You can add sprites, drag them around and
-save/load scenes as JSON files. The **Logic** tab lists game events with
+save/load scenes as JSON files. The **Logic** tab lists object events with
 conditions on the left and actions on the right. The event dialog now provides
 drop-down lists for keys and shows only parameters relevant to the chosen
-action. Use the *Run* action to launch the current scene directly from the
-editor.
+action. Variables of type int, float, string and bool can be defined and used
+in conditions or actions. Events attach to specific objects and can trigger on
+game start or every frame. Fonts are slightly larger for readability. Use the
+*Run* action to launch the current scene directly from the editor.
 
 Sprites are loaded lazily at runtime so the editor no longer relies on
 `pygame`'s display module. This prevents crashes when adding images on systems

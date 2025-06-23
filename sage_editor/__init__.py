@@ -1,6 +1,6 @@
 import sys
 import json
-from PyQt5.QtWidgets import (
+from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QFileDialog, QAction,
     QGraphicsView, QGraphicsScene, QGraphicsPixmapItem,
     QTabWidget, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
@@ -8,8 +8,8 @@ from PyQt5.QtWidgets import (
     QDialogButtonBox, QLineEdit, QSpinBox, QComboBox,
     QTextEdit, QDockWidget, QGroupBox
 )
-from PyQt5.QtGui import QPixmap, QPen, QColor
-from PyQt5.QtCore import QRectF, Qt, QProcess
+from PyQt6.QtGui import QPixmap, QPen, QColor, QPalette, QFont
+from PyQt6.QtCore import QRectF, Qt, QProcess
 import tempfile
 import subprocess
 import os
@@ -41,7 +41,8 @@ class ConditionDialog(QDialog):
 
         self.type_box = QComboBox()
         self.type_box.addItems([
-            'KeyPressed', 'KeyReleased', 'MouseButton', 'Timer', 'Collision', 'Always'
+            'KeyPressed', 'KeyReleased', 'MouseButton', 'Timer', 'Collision', 'Always',
+            'OnStart', 'EveryFrame', 'VariableEquals'
         ])
         layout.addRow('Type:', self.type_box)
 
@@ -73,6 +74,14 @@ class ConditionDialog(QDialog):
         layout.addRow(self.a_label, self.a_box)
         layout.addRow(self.b_label, self.b_box)
 
+        self.var_name_label = QLabel('Var Name:')
+        self.var_name_edit = QLineEdit()
+        layout.addRow(self.var_name_label, self.var_name_edit)
+
+        self.var_value_label = QLabel('Value:')
+        self.var_value_edit = QLineEdit()
+        layout.addRow(self.var_value_label, self.var_value_edit)
+
         buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
@@ -89,6 +98,8 @@ class ConditionDialog(QDialog):
             (self.state_label, self.state_box),
             (self.a_label, self.a_box),
             (self.b_label, self.b_box),
+            (self.var_name_label, self.var_name_edit),
+            (self.var_value_label, self.var_value_edit),
         ]
         for label, w in widgets:
             label.setVisible(False)
@@ -109,6 +120,11 @@ class ConditionDialog(QDialog):
             self.a_box.setVisible(True)
             self.b_label.setVisible(True)
             self.b_box.setVisible(True)
+        elif typ == 'VariableEquals':
+            self.var_name_label.setVisible(True)
+            self.var_name_edit.setVisible(True)
+            self.var_value_label.setVisible(True)
+            self.var_value_edit.setVisible(True)
 
     def get_condition(self):
         typ = self.type_box.currentText()
@@ -123,7 +139,13 @@ class ConditionDialog(QDialog):
             return {'type': 'Timer', 'duration': self.duration_spin.value()}
         if typ == 'Collision':
             return {'type': 'Collision', 'a': self.a_box.currentData(), 'b': self.b_box.currentData()}
-        return {'type': 'Always'}
+        if typ == 'VariableEquals':
+            return {
+                'type': 'VariableEquals',
+                'name': self.var_name_edit.text(),
+                'value': self.var_value_edit.text(),
+            }
+        return {'type': typ}
 
 
 class ActionDialog(QDialog):
@@ -136,7 +158,7 @@ class ActionDialog(QDialog):
         layout = QFormLayout(self)
 
         self.type_box = QComboBox()
-        self.type_box.addItems(['Move', 'SetPosition', 'Destroy', 'Print', 'PlaySound', 'Spawn'])
+        self.type_box.addItems(['Move', 'SetPosition', 'Destroy', 'Print', 'PlaySound', 'Spawn', 'SetVariable'])
         layout.addRow('Type:', self.type_box)
 
         self.target_label = QLabel('Target:')
@@ -163,6 +185,13 @@ class ActionDialog(QDialog):
         self.text_edit = QLineEdit()
         layout.addRow(self.text_label, self.text_edit)
 
+        self.var_name_label = QLabel('Var Name:')
+        self.var_name_edit = QLineEdit()
+        layout.addRow(self.var_name_label, self.var_name_edit)
+        self.var_value_label = QLabel('Value:')
+        self.var_value_edit = QLineEdit()
+        layout.addRow(self.var_value_label, self.var_value_edit)
+
         buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
@@ -185,6 +214,12 @@ class ActionDialog(QDialog):
             return {'type': 'PlaySound', 'path': self.text_edit.text()}
         if typ == 'Spawn':
             return {'type': 'Spawn', 'image': self.text_edit.text(), 'x': self.x_spin.value(), 'y': self.y_spin.value()}
+        if typ == 'SetVariable':
+            return {
+                'type': 'SetVariable',
+                'name': self.var_name_edit.text(),
+                'value': self.var_value_edit.text(),
+            }
 
     def _update_fields(self):
         typ = self.type_box.currentText()
@@ -195,6 +230,8 @@ class ActionDialog(QDialog):
             (self.x_label, self.x_spin),
             (self.y_label, self.y_spin),
             (self.text_label, self.text_edit),
+            (self.var_name_label, self.var_name_edit),
+            (self.var_value_label, self.var_value_edit),
         ]
         for label, w in widgets:
             label.setVisible(False)
@@ -218,6 +255,10 @@ class ActionDialog(QDialog):
             self.text_edit.setVisible(True)
         elif typ == 'Spawn':
             for pair in [(self.text_label, self.text_edit), (self.x_label, self.x_spin), (self.y_label, self.y_spin)]:
+                pair[0].setVisible(True)
+                pair[1].setVisible(True)
+        elif typ == 'SetVariable':
+            for pair in [(self.var_name_label, self.var_name_edit), (self.var_value_label, self.var_value_edit)]:
                 pair[0].setVisible(True)
                 pair[1].setVisible(True)
 
@@ -253,14 +294,14 @@ class AddEventDialog(QDialog):
 
     def add_condition(self):
         dlg = ConditionDialog(self.objects, self)
-        if dlg.exec_() == QDialog.Accepted:
+        if dlg.exec() == QDialog.DialogCode.Accepted:
             cond = dlg.get_condition()
             self.conditions.append(cond)
             self.cond_list.addItem(cond['type'])
 
     def add_action(self):
         dlg = ActionDialog(self.objects, self)
-        if dlg.exec_() == QDialog.Accepted:
+        if dlg.exec() == QDialog.DialogCode.Accepted:
             act = dlg.get_action()
             self.actions.append(act)
             self.act_list.addItem(act['type'])
@@ -287,16 +328,29 @@ class Editor(QMainWindow):
         self.view.centerOn(0, 0)
         self.tabs.addTab(self.view, 'Viewport')
 
-        # logic tab with simple event list
+        # logic tab with object-specific events and variables
         self.logic_widget = QWidget()
         self.logic_widget.setLayout(QVBoxLayout())
+        top_bar = QHBoxLayout()
+        self.object_combo = QComboBox()
+        self.object_combo.currentIndexChanged.connect(self.refresh_events)
+        top_bar.addWidget(QLabel('Object:'))
+        top_bar.addWidget(self.object_combo)
+        self.logic_widget.layout().addLayout(top_bar)
+
         self.event_list = QTableWidget(0, 2)
         self.event_list.setHorizontalHeaderLabels(['Conditions', 'Actions'])
         self.event_list.horizontalHeader().setStretchLastSection(True)
         self.logic_widget.layout().addWidget(self.event_list)
-        self.add_event_btn = QPushButton('Add Event')
-        self.add_event_btn.clicked.connect(self.add_event)
-        self.logic_widget.layout().addWidget(self.add_event_btn)
+
+        self.var_table = QTableWidget(0, 2)
+        self.var_table.setHorizontalHeaderLabels(['Name', 'Value'])
+        self.var_table.horizontalHeader().setStretchLastSection(True)
+        self.logic_widget.layout().addWidget(self.var_table)
+        add_var = QPushButton('Add Variable')
+        add_var.clicked.connect(self.add_variable)
+        self.logic_widget.layout().addWidget(add_var)
+
         self.tabs.addTab(self.logic_widget, 'Logic')
 
         # console dock
@@ -333,9 +387,6 @@ class Editor(QMainWindow):
         add_act.triggered.connect(self.add_sprite)
         edit_menu.addAction(add_act)
         logic_menu = menubar.addMenu('Logic')
-        add_evt = QAction('Add Event', self)
-        add_evt.triggered.connect(self.add_event)
-        logic_menu.addAction(add_evt)
 
     def open_scene(self):
         path, _ = QFileDialog.getOpenFileName(self, 'Open Scene', '', 'JSON Files (*.json)')
@@ -387,24 +438,94 @@ class Editor(QMainWindow):
             item.setFlag(QGraphicsPixmapItem.ItemIsMovable, True)
             self.g_scene.addItem(item)
             self.items.append((item, obj))
+            self.object_combo.addItem(os.path.basename(path), len(self.items)-1)
         self.refresh_events()
 
-    def add_event(self):
-        dlg = AddEventDialog([o for _, o in self.items], self)
-        if dlg.exec_() == QDialog.Accepted:
-            evt = dlg.get_event()
-            self.scene.events.append(evt)
-            self.refresh_events()
+    def add_variable(self):
+        dlg = QDialog(self)
+        dlg.setWindowTitle('Add Variable')
+        form = QFormLayout(dlg)
+        name_edit = QLineEdit(); form.addRow('Name:', name_edit)
+        type_box = QComboBox(); type_box.addItems(['int','float','string','bool']); form.addRow('Type:', type_box)
+        value_edit = QLineEdit(); form.addRow('Value:', value_edit)
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        form.addRow(buttons)
+        buttons.accepted.connect(dlg.accept)
+        buttons.rejected.connect(dlg.reject)
+        if dlg.exec() == QDialog.DialogCode.Accepted:
+            name = name_edit.text()
+            typ = type_box.currentText()
+            val_text = value_edit.text()
+            if typ == 'int':
+                value = int(val_text or 0)
+            elif typ == 'float':
+                value = float(val_text or 0)
+            elif typ == 'bool':
+                value = val_text.lower() in ('1','true','yes')
+            else:
+                value = val_text
+            self.scene.variables[name] = value
+            self.refresh_variables()
+
+    def refresh_variables(self):
+        self.var_table.setRowCount(0)
+        for name, value in self.scene.variables.items():
+            row = self.var_table.rowCount()
+            self.var_table.insertRow(row)
+            self.var_table.setItem(row, 0, QTableWidgetItem(name))
+            self.var_table.setItem(row, 1, QTableWidgetItem(str(value)))
+
+    def add_condition(self, row):
+        idx = self.object_combo.currentData()
+        if idx is None:
+            return
+        obj = self.items[idx][1]
+        if row >= len(obj.events):
+            obj.events.append({'conditions': [], 'actions': []})
+        evt = obj.events[row if row < len(obj.events) else -1]
+        dlg = ConditionDialog([o for _, o in self.items], self)
+        if dlg.exec() == QDialog.DialogCode.Accepted:
+            evt['conditions'].append(dlg.get_condition())
+        self.refresh_events()
+
+    def add_action(self, row):
+        idx = self.object_combo.currentData()
+        if idx is None or row >= len(self.items[idx][1].events):
+            return
+        obj = self.items[idx][1]
+        evt = obj.events[row]
+        dlg = ActionDialog([o for _, o in self.items], self)
+        if dlg.exec() == QDialog.DialogCode.Accepted:
+            evt['actions'].append(dlg.get_action())
+        self.refresh_events()
 
     def refresh_events(self):
         self.event_list.setRowCount(0)
-        for evt in self.scene.events:
+        idx = self.object_combo.currentData()
+        if idx is None and self.items:
+            idx = 0
+        if idx is None:
+            return
+        obj = self.items[idx][1]
+        for i, evt in enumerate(getattr(obj, 'events', [])):
             row = self.event_list.rowCount()
             self.event_list.insertRow(row)
-            conds = ', '.join(c['type'] for c in evt.get('conditions', []))
-            acts = ', '.join(a['type'] for a in evt.get('actions', []))
-            self.event_list.setItem(row, 0, QTableWidgetItem(conds))
-            self.event_list.setItem(row, 1, QTableWidgetItem(acts))
+            btn_cond = QPushButton('Add Condition')
+            btn_cond.clicked.connect(lambda _, r=i: self.add_condition(r))
+            self.event_list.setCellWidget(row, 0, btn_cond if not evt.get('conditions') else QTableWidgetItem(', '.join(c['type'] for c in evt['conditions'])))
+            if evt.get('conditions'):
+                if evt.get('actions'):
+                    self.event_list.setItem(row, 1, QTableWidgetItem(', '.join(a['type'] for a in evt['actions'])))
+                else:
+                    btn_act = QPushButton('Add Action')
+                    btn_act.clicked.connect(lambda _, r=i: self.add_action(r))
+                    self.event_list.setCellWidget(row, 1, btn_act)
+        # extra row for new event
+        row = self.event_list.rowCount()
+        self.event_list.insertRow(row)
+        btn_new = QPushButton('Add Condition')
+        btn_new.clicked.connect(lambda _, r=row: self.add_condition(r))
+        self.event_list.setCellWidget(row, 0, btn_new)
 
     def load_scene(self, path):
         self.scene = Scene.load(path)
@@ -412,13 +533,16 @@ class Editor(QMainWindow):
         # redraw canvas after clearing the scene
         self.canvas = self.g_scene.addRect(QRectF(0, 0, 640, 480), QPen(QColor('red')))
         self.items.clear()
+        self.object_combo.clear()
         for obj in self.scene.objects:
             item = QGraphicsPixmapItem(QPixmap(obj.image_path))
             item.setPos(obj.x, obj.y)
             item.setFlag(QGraphicsPixmapItem.ItemIsMovable, True)
             self.g_scene.addItem(item)
             self.items.append((item, obj))
+            self.object_combo.addItem(os.path.basename(obj.image_path), len(self.items)-1)
         self.refresh_events()
+        self.refresh_variables()
 
     def closeEvent(self, event):
         for item, obj in self.items:
@@ -432,6 +556,23 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv
     app = QApplication(argv)
+    app.setStyle('Fusion')
+    palette = QPalette()
+    palette.setColor(QPalette.ColorRole.Window, QColor(53, 53, 53))
+    palette.setColor(QPalette.ColorRole.WindowText, QColor(220, 220, 220))
+    palette.setColor(QPalette.ColorRole.Base, QColor(35, 35, 35))
+    palette.setColor(QPalette.ColorRole.AlternateBase, QColor(53, 53, 53))
+    palette.setColor(QPalette.ColorRole.ToolTipBase, QColor(255, 255, 255))
+    palette.setColor(QPalette.ColorRole.ToolTipText, QColor(220, 220, 220))
+    palette.setColor(QPalette.ColorRole.Text, QColor(220, 220, 220))
+    palette.setColor(QPalette.ColorRole.Button, QColor(53, 53, 53))
+    palette.setColor(QPalette.ColorRole.ButtonText, QColor(220, 220, 220))
+    palette.setColor(QPalette.ColorRole.Highlight, QColor(42, 130, 218))
+    palette.setColor(QPalette.ColorRole.HighlightedText, QColor(0, 0, 0))
+    app.setPalette(palette)
+    font = QFont()
+    font.setPointSize(font.pointSize() + 2)
+    app.setFont(font)
     editor = Editor()
 
     class _Stream:
@@ -449,7 +590,7 @@ def main(argv=None):
     sys.stderr = _Stream(editor.console)
     print('SAGE Editor started')
 
-    return app.exec_()
+    return app.exec()
 
 
 if __name__ == '__main__':

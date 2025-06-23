@@ -11,19 +11,24 @@ from sage_logic import (
     Collision,
     Timer,
     Always,
+    OnStart,
+    EveryFrame,
+    VariableEquals,
     Move,
     SetPosition,
     Destroy,
     Print,
     PlaySound,
     Spawn,
+    SetVariable,
 )
 
 __all__ = [
     'GameObject', 'Scene', 'Engine', 'EventSystem',
     'Event', 'KeyPressed', 'KeyReleased', 'MouseButton', 'Collision', 'Timer',
     'Always',
-    'Move', 'SetPosition', 'Destroy', 'Print', 'PlaySound', 'Spawn', 'main'
+    'Move', 'SetPosition', 'Destroy', 'Print', 'PlaySound', 'Spawn',
+    'OnStart', 'EveryFrame', 'VariableEquals', 'SetVariable', 'main'
 ]
 
 
@@ -35,6 +40,7 @@ class GameObject:
         self.x = x
         self.y = y
         self.sprite = None  # lazily loaded when running the game
+        self.events = []  # object specific events
 
     def update(self, dt):
         pass
@@ -55,7 +61,7 @@ class GameObject:
 class Scene:
     def __init__(self):
         self.objects = []
-        self.events = []
+        self.variables = {}
 
     def add_object(self, obj):
         self.objects.append(obj)
@@ -77,62 +83,77 @@ class Scene:
         with open(path, 'r') as f:
             data = json.load(f)
         scene = cls()
+        scene.variables = data.get('variables', {})
         for entry in data.get('objects', []):
             obj = GameObject(entry['image'], entry.get('x', 0), entry.get('y', 0))
+            obj.events = entry.get('events', [])
             scene.add_object(obj)
-        for evt in data.get('events', []):
-            scene.events.append(evt)
         return scene
 
     def save(self, path):
         data = {
+            'variables': self.variables,
             'objects': [
-                {'image': o.image_path, 'x': o.x, 'y': o.y} for o in self.objects
+                {
+                    'image': o.image_path,
+                    'x': o.x,
+                    'y': o.y,
+                    'events': getattr(o, 'events', []),
+                }
+                for o in self.objects
             ],
-            'events': self.events,
         }
         with open(path, 'w') as f:
             json.dump(data, f, indent=2)
 
     def build_event_system(self):
-        es = EventSystem()
-        for evt in self.events:
-            conditions = []
-            for cond in evt.get('conditions', []):
-                typ = cond.get('type')
-                if typ == 'KeyPressed':
-                    conditions.append(KeyPressed(cond['key']))
-                elif typ == 'KeyReleased':
-                    conditions.append(KeyReleased(cond['key']))
-                elif typ == 'MouseButton':
-                    conditions.append(MouseButton(cond['button'], cond.get('state', 'down')))
-                elif typ == 'Timer':
-                    conditions.append(Timer(cond['duration']))
-                elif typ == 'Collision':
-                    a = self.objects[cond['a']]
-                    b = self.objects[cond['b']]
-                    conditions.append(Collision(a, b))
-                elif typ == 'Always':
-                    conditions.append(Always())
-            actions = []
-            for act in evt.get('actions', []):
-                typ = act.get('type')
-                if typ == 'Move':
-                    obj = self.objects[act['target']]
-                    actions.append(Move(obj, act['dx'], act['dy']))
-                elif typ == 'SetPosition':
-                    obj = self.objects[act['target']]
-                    actions.append(SetPosition(obj, act['x'], act['y']))
-                elif typ == 'Destroy':
-                    obj = self.objects[act['target']]
-                    actions.append(Destroy(obj))
-                elif typ == 'Print':
-                    actions.append(Print(act['text']))
-                elif typ == 'PlaySound':
-                    actions.append(PlaySound(act['path']))
-                elif typ == 'Spawn':
-                    actions.append(Spawn(act['image'], act.get('x',0), act.get('y',0)))
-            es.add_event(Event(conditions, actions, evt.get('once', False)))
+        es = EventSystem(variables=self.variables)
+        for obj in self.objects:
+            for evt in getattr(obj, 'events', []):
+                conditions = []
+                for cond in evt.get('conditions', []):
+                    typ = cond.get('type')
+                    if typ == 'KeyPressed':
+                        conditions.append(KeyPressed(cond['key']))
+                    elif typ == 'KeyReleased':
+                        conditions.append(KeyReleased(cond['key']))
+                    elif typ == 'MouseButton':
+                        conditions.append(MouseButton(cond['button'], cond.get('state', 'down')))
+                    elif typ == 'Timer':
+                        conditions.append(Timer(cond['duration']))
+                    elif typ == 'OnStart':
+                        conditions.append(OnStart())
+                    elif typ == 'EveryFrame':
+                        conditions.append(EveryFrame())
+                    elif typ == 'Collision':
+                        a = self.objects[cond['a']]
+                        b = self.objects[cond['b']]
+                        conditions.append(Collision(a, b))
+                    elif typ == 'Always':
+                        conditions.append(Always())
+                    elif typ == 'VariableEquals':
+                        conditions.append(VariableEquals(cond['name'], cond['value']))
+                actions = []
+                for act in evt.get('actions', []):
+                    typ = act.get('type')
+                    if typ == 'Move':
+                        target = self.objects[act['target']]
+                        actions.append(Move(target, act['dx'], act['dy']))
+                    elif typ == 'SetPosition':
+                        target = self.objects[act['target']]
+                        actions.append(SetPosition(target, act['x'], act['y']))
+                    elif typ == 'Destroy':
+                        target = self.objects[act['target']]
+                        actions.append(Destroy(target))
+                    elif typ == 'Print':
+                        actions.append(Print(act['text']))
+                    elif typ == 'PlaySound':
+                        actions.append(PlaySound(act['path']))
+                    elif typ == 'Spawn':
+                        actions.append(Spawn(act['image'], act.get('x',0), act.get('y',0)))
+                    elif typ == 'SetVariable':
+                        actions.append(SetVariable(act['name'], act['value']))
+                es.add_event(Event(conditions, actions, evt.get('once', False)))
         return es
 
 
@@ -145,10 +166,8 @@ class Engine:
         self.scene = scene or Scene()
         if events is not None:
             self.events = events
-        elif self.scene.events:
-            self.events = self.scene.build_event_system()
         else:
-            self.events = EventSystem()
+            self.events = self.scene.build_event_system()
 
     def run(self):
         running = True
