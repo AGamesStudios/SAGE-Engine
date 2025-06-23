@@ -85,6 +85,10 @@ LANGUAGES = {
         , 'Spawn': 'Spawn'
         , 'SetVariable': 'Set Variable'
         , 'ModifyVariable': 'Modify Variable'
+        , 'show_grid': 'Show Grid'
+        , 'snap_to_grid': 'Snap to Grid'
+        , 'grid_size': 'Grid Size:'
+        , 'grid_color': 'Grid Color'
     },
     'Русский': {
         'file': 'Файл',
@@ -172,6 +176,10 @@ LANGUAGES = {
         , 'Spawn': 'Создать объект'
         , 'SetVariable': 'Задать переменную'
         , 'ModifyVariable': 'Изменить переменную'
+        , 'show_grid': 'Показать сетку'
+        , 'snap_to_grid': 'Привязка к сетке'
+        , 'grid_size': 'Шаг сетки:'
+        , 'grid_color': 'Цвет сетки'
     }
 }
 import locale

@@ -1,15 +1,15 @@
 import sys
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QFileDialog,
-    QGraphicsView, QGraphicsScene, QGraphicsPixmapItem,
+    QGraphicsView, QGraphicsScene, QGraphicsPixmapItem, QGraphicsLineItem,
     QTabWidget, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QListWidget, QTableWidget, QTableWidgetItem, QPushButton, QDialog, QFormLayout,
     QDialogButtonBox, QLineEdit, QSpinBox, QComboBox,
-    QTextEdit, QDockWidget, QGroupBox, QCheckBox, QMessageBox, QMenu,
+    QTextEdit, QDockWidget, QGroupBox, QCheckBox, QMessageBox, QMenu, QColorDialog,
     QStyle, QHeaderView, QAbstractItemView
 )
 from PyQt6.QtGui import QPixmap, QPen, QColor, QPalette, QFont, QAction
-from PyQt6.QtCore import QRectF, Qt, QProcess
+from PyQt6.QtCore import QRectF, Qt, QProcess, QPointF
 from .lang import LANGUAGES, DEFAULT_LANGUAGE
 import tempfile
 import os
@@ -50,6 +50,46 @@ KEY_OPTIONS = [
     ('D', pygame.K_d),
     ('W', pygame.K_w),
 ]
+
+
+class GraphicsView(QGraphicsView):
+    """View with Ctrl+wheel zoom."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._zoom = 1.0
+
+    def wheelEvent(self, event):
+        if QApplication.keyboardModifiers() == Qt.KeyboardModifier.ControlModifier:
+            angle = event.angleDelta().y()
+            factor = 1.001 ** angle
+            self._zoom *= factor
+            self.scale(factor, factor)
+        else:
+            super().wheelEvent(event)
+
+
+class SpriteItem(QGraphicsPixmapItem):
+    """Movable pixmap item with optional grid snapping."""
+
+    def __init__(self, pixmap, editor, obj):
+        super().__init__(pixmap)
+        self.editor = editor
+        self.obj = obj
+        flag_enum = getattr(QGraphicsPixmapItem, 'GraphicsItemFlag', None)
+        if flag_enum is None:
+            from PyQt6.QtWidgets import QGraphicsItem
+            flag_enum = QGraphicsItem.GraphicsItemFlag
+        self.setFlag(flag_enum.ItemIsMovable, True)
+        self.setFlag(flag_enum.ItemSendsGeometryChanges, True)
+
+    def itemChange(self, change, value):
+        from PyQt6.QtWidgets import QGraphicsItem
+        if change == QGraphicsItem.GraphicsItemChange.ItemPositionChange and self.editor.snap_to_grid:
+            x = round(value.x() / self.editor.grid_size) * self.editor.grid_size
+            y = round(value.y() / self.editor.grid_size) * self.editor.grid_size
+            return QPointF(x, y)
+        return super().itemChange(change, value)
 
 
 def describe_condition(cond, objects, t=lambda x: x):
@@ -689,7 +729,7 @@ class Editor(QMainWindow):
         self.setCentralWidget(self.tabs)
 
         # viewport tab
-        self.view = QGraphicsView()
+        self.view = GraphicsView()
         self.g_scene = QGraphicsScene()
         # large scene rectangle to simulate an "infinite" workspace
         self.g_scene.setSceneRect(QRectF(-10000, -10000, 20000, 20000))
@@ -698,6 +738,12 @@ class Editor(QMainWindow):
         self.view.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
         self.view.centerOn(0, 0)
         self.tabs.addTab(self.view, self.t('viewport'))
+        self.grid_size = 32
+        self.grid_color = QColor(80, 80, 80)
+        self.grid_lines = []
+        self.axes = []
+        self.snap_to_grid = False
+        self._create_grid()
         # gizmo rectangle showing selected object
         self.gizmo = self.g_scene.addRect(QRectF(), QPen(QColor('yellow')))
         self.gizmo.setZValue(10000)
@@ -791,6 +837,11 @@ class Editor(QMainWindow):
         self.add_var_btn.setText(self.t('add_variable'))
         self.console_dock.setWindowTitle(self.t('console'))
         self.run_btn.setText(self.t('run'))
+        self.grid_act.setText(self.t('show_grid'))
+        self.snap_act.setText(self.t('snap_to_grid'))
+        self.grid_spin.setPrefix('')
+        self.grid_spin.setSuffix('')
+        self.grid_spin.setToolTip(self.t('grid_size'))
         self.recent_menu.setTitle(self.t('recent_projects'))
         self.settings_menu.setTitle(self.t('settings'))
         self.window_settings_act.setText(self.t('window_settings'))
@@ -872,6 +923,21 @@ class Editor(QMainWindow):
         toolbar = self.addToolBar('main')
         self.run_btn = toolbar.addAction(self.t('run'))
         self.run_btn.triggered.connect(self.run_game)
+        self.grid_act = toolbar.addAction(self.t('show_grid'))
+        self.grid_act.setCheckable(True)
+        self.grid_act.setChecked(True)
+        self.grid_act.toggled.connect(self.toggle_grid)
+        self.snap_act = toolbar.addAction(self.t('snap_to_grid'))
+        self.snap_act.setCheckable(True)
+        self.snap_act.toggled.connect(self.toggle_snap)
+        toolbar.addWidget(QLabel(self.t('grid_size')))
+        self.grid_spin = QSpinBox()
+        self.grid_spin.setRange(8, 512)
+        self.grid_spin.setValue(self.grid_size)
+        self.grid_spin.valueChanged.connect(self.set_grid_size)
+        toolbar.addWidget(self.grid_spin)
+        color_act = toolbar.addAction(self.t('grid_color'))
+        color_act.triggered.connect(self.choose_grid_color)
         from PyQt6.QtWidgets import QWidget, QSizePolicy
         spacer = QWidget()
         spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
@@ -1077,18 +1143,11 @@ class Editor(QMainWindow):
             pix = QPixmap(path)
             if pix.isNull():
                 raise ValueError('failed to load image')
-            item = QGraphicsPixmapItem(pix)
-            # PyQt6 exposes GraphicsItemFlag on QGraphicsItem rather than
-            # QGraphicsPixmapItem in older versions. Use whichever exists to
-            # avoid an AttributeError on some systems.
-            flag_enum = getattr(QGraphicsPixmapItem, 'GraphicsItemFlag', None)
-            if flag_enum is None:
-                from PyQt6.QtWidgets import QGraphicsItem
-                flag_enum = QGraphicsItem.GraphicsItemFlag
-            item.setFlag(flag_enum.ItemIsMovable, True)
+            item = SpriteItem(pix, self, None)
             self.g_scene.addItem(item)
             obj = GameObject(path)
             self.scene.add_object(obj)
+            item.obj = obj
             self.items.append((item, obj))
             self.object_combo.addItem(obj.name, len(self.items) - 1)
             if self.object_combo.currentIndex() == -1:
@@ -1179,6 +1238,60 @@ class Editor(QMainWindow):
         self.gizmo.setRect(rect)
         self.gizmo.show()
 
+    def _create_grid(self):
+        """Create grid and axis lines."""
+        for line in getattr(self, 'grid_lines', []):
+            self.g_scene.removeItem(line)
+        self.grid_lines = []
+        for line in getattr(self, 'axes', []):
+            self.g_scene.removeItem(line)
+        self.axes = []
+        rect = self.g_scene.sceneRect()
+        pen = QPen(self.grid_color)
+        pen.setCosmetic(True)
+        step = self.grid_size
+        if step <= 0:
+            step = 32
+        x = int(rect.left()) - (int(rect.left()) % step)
+        while x < rect.right():
+            line = self.g_scene.addLine(x, rect.top(), x, rect.bottom(), pen)
+            line.setZValue(-1)
+            self.grid_lines.append(line)
+            x += step
+        y = int(rect.top()) - (int(rect.top()) % step)
+        while y < rect.bottom():
+            line = self.g_scene.addLine(rect.left(), y, rect.right(), y, pen)
+            line.setZValue(-1)
+            self.grid_lines.append(line)
+            y += step
+        pen_axis_x = QPen(QColor('blue'))
+        pen_axis_x.setCosmetic(True)
+        pen_axis_y = QPen(QColor('green'))
+        pen_axis_y.setCosmetic(True)
+        self.axes.append(self.g_scene.addLine(rect.left(), 0, rect.right(), 0, pen_axis_x))
+        self.axes.append(self.g_scene.addLine(0, rect.top(), 0, rect.bottom(), pen_axis_y))
+        for line in self.axes:
+            line.setZValue(-0.5)
+        for line in self.grid_lines:
+            line.setVisible(getattr(self, 'grid_act', None) is None or self.grid_act.isChecked())
+
+    def toggle_grid(self, checked: bool):
+        for line in self.grid_lines:
+            line.setVisible(checked)
+
+    def toggle_snap(self, checked: bool):
+        self.snap_to_grid = checked
+
+    def set_grid_size(self, size: int):
+        self.grid_size = size
+        self._create_grid()
+
+    def choose_grid_color(self):
+        color = QColorDialog.getColor(self.grid_color, self, self.t('grid_color'))
+        if color.isValid():
+            self.grid_color = color
+            self._create_grid()
+
     def add_condition(self, row):
         if not self._check_project():
             return
@@ -1266,20 +1379,16 @@ class Editor(QMainWindow):
         else:
             self.scene = Scene.load(scene_or_path)
         self.g_scene.clear()
-        # redraw canvas after clearing the scene
+        # redraw canvas and grid after clearing the scene
         self.canvas = self.g_scene.addRect(
             QRectF(0, 0, self.window_width, self.window_height), QPen(QColor('red'))
         )
+        self._create_grid()
         self.items.clear()
         self.object_combo.clear()
         for obj in self.scene.objects:
-            item = QGraphicsPixmapItem(QPixmap(obj.image_path))
+            item = SpriteItem(QPixmap(obj.image_path), self, obj)
             item.setPos(obj.x, obj.y)
-            try:
-                item.setFlag(QGraphicsPixmapItem.GraphicsItemFlag.ItemIsMovable, True)
-            except AttributeError:
-                from PyQt6.QtWidgets import QGraphicsItem
-                item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, True)
             self.g_scene.addItem(item)
             self.items.append((item, obj))
             self.object_combo.addItem(obj.name, len(self.items)-1)

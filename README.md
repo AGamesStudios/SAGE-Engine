@@ -18,9 +18,12 @@ Right click a project to open it immediately or remove it from the list.
 Once a project is chosen the editor opens maximized in a dark Fusion
 theme and provides two
 tabs: **Viewport** and **Logic**. The viewport uses a virtually infinite
-`QGraphicsScene` so you can pan freely. A red rectangle shows the canvas (the
-game window) for reference. Objects show a yellow gizmo outline when selected so
-they are easy to manipulate. Projects are saved in a single `.sageproject` file
+`QGraphicsScene` so you can pan freely. Hold **Ctrl** and scroll to zoom the
+view. A configurable grid and axis lines can be toggled from the toolbar. Grid
+size and color are adjustable and snapping ensures objects align cleanly when
+enabled. A red rectangle shows the canvas (the game window) for reference.
+Objects show a yellow gizmo outline when selected so they are easy to
+manipulate. Projects are saved in a single `.sageproject` file
 that stores the entire scene including object positions, events and variables.
 Use **File → New Project** to generate a folder for your game. The dialog asks
 for a project name and a location and then creates the folder with a
