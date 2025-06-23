@@ -832,9 +832,6 @@ class Editor(QMainWindow):
         self.file_menu.addAction(self.new_proj_act)
         self.file_menu.addAction(self.open_proj_act)
         self.file_menu.addAction(self.save_proj_act)
-        self.run_act = QAction(self.t('run'), self)
-        self.run_act.triggered.connect(self.run_game)
-        self.file_menu.addAction(self.run_act)
         self.recent_menu = self.file_menu.addMenu(self.t('recent_projects'))
 
         self.edit_menu = menubar.addMenu(self.t('edit'))
@@ -994,8 +991,10 @@ class Editor(QMainWindow):
         """Terminate the running game process and delete temp files."""
         if self.process:
             if self.process.state() != QProcess.NotRunning:
-                self.process.kill()
-                self.process.waitForFinished()
+                self.process.terminate()
+                if not self.process.waitForFinished(3000):
+                    self.process.kill()
+                    self.process.waitForFinished()
             self.process = None
         for attr in ('_tmp_project',):
             path = getattr(self, attr)
