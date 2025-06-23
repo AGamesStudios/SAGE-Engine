@@ -2,7 +2,7 @@ import json
 from typing import List
 
 from .game_object import GameObject
-from sage_logic import (
+from ..logic import (
     EventSystem, Event,
     condition_from_dict, action_from_dict,
     KeyPressed, KeyReleased, MouseButton, Collision, Timer,

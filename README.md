@@ -1,18 +1,19 @@
 # SAGE Engine
 
 This repository contains **SAGE Engine**, a lightweight core framework for
-games, along with **SAGE 2D** which provides sprite rendering on top of the
-core. A PyQt6 based **SAGE Editor** lets you place objects visually and save
-projects. The editor remains small so it runs well even on older computers.
+games.  **SAGE 2D** extends the engine with sprite rendering while **SAGE
+Editor** lets you place objects visually and save projects.  The editor remains
+small so it runs well even on older computers.
 
 ## Architecture
 The core engine code resides under `sage_engine/core` which defines the generic
-`GameObject`, `Scene`, `Engine` and `Project` classes. 2D helpers live in the
-`sage_engine/sage2d` package and simply build on the core to provide a default
-sprite-based workflow. The top-level `sage2d` module re-exports these helpers
-for convenience. The standalone `sage_logic` module supplies conditions and
-actions for Clickteam‑style events. `sage_editor` builds on these pieces but is
-optional so games can depend on the engine without pulling in the editor.
+`GameObject`, `Scene`, `Engine` and `Project` classes. 2D helpers now live in
+`sage_engine/sage2d` inside the engine package rather than as a standalone
+module.  A small top-level `sage2d` package merely re-exports these helpers for
+compatibility.  Likewise the event system is kept in `sage_engine/logic` with a
+compatibility wrapper named `sage_logic`.  `sage_editor` builds on these pieces
+but remains optional so games can depend on the engine without pulling in the
+editor.
 The editor launches maximized in a dark Fusion
 theme and provides two
 tabs: **Viewport** and **Logic**. The viewport uses a virtually infinite
@@ -92,7 +93,7 @@ pass, the actions run. Built-in blocks include `KeyPressed`, `Collision`,
 ```python
 import pygame
 from sage_engine import Engine, Scene, GameObject
-from sage_logic import EventSystem, Event, KeyPressed, Timer, Move
+from sage_engine.logic import EventSystem, Event, KeyPressed, Timer, Move
 
 player = GameObject('player.png')
 scene = Scene()

@@ -1,4 +1,1 @@
-"""Wrapper for the core GameObject for compatibility."""
-from sage_engine.core.game_object import GameObject
-
-__all__ = ['GameObject']
+from sage_engine.sage2d.game_object import *  # noqa: F401,F403

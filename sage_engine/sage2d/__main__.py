@@ -1,4 +1,4 @@
-from sage_engine.sage2d import main
+from . import main
 
 if __name__ == '__main__':
     main()
