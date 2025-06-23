@@ -80,7 +80,9 @@ class ConditionDialog(QDialog):
         self.var_value_edit = QLineEdit()
         layout.addRow(self.var_value_label, self.var_value_edit)
 
-        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
         layout.addRow(buttons)
@@ -190,7 +192,9 @@ class ActionDialog(QDialog):
         self.var_value_edit = QLineEdit()
         layout.addRow(self.var_value_label, self.var_value_edit)
 
-        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
         layout.addRow(buttons)
@@ -285,7 +289,9 @@ class AddEventDialog(QDialog):
         layout.addWidget(left_box)
         layout.addWidget(right_box)
 
-        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
@@ -467,7 +473,9 @@ class Editor(QMainWindow):
             name_edit = QLineEdit(); form.addRow('Name:', name_edit)
             type_box = QComboBox(); type_box.addItems(['int','float','string','bool']); form.addRow('Type:', type_box)
             value_edit = QLineEdit(); form.addRow('Value:', value_edit)
-            buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+            buttons = QDialogButtonBox(
+                QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+            )
             form.addRow(buttons)
             buttons.accepted.connect(dlg.accept)
             buttons.rejected.connect(dlg.reject)
