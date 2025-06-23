@@ -401,6 +401,9 @@ class ActionDialog(QDialog):
                 pair[1].setVisible(True)
             self._update_value_widget()
         elif typ == 'ModifyVariable':
+            names = [n for n, v in self.variables.items() if isinstance(v, (int, float))]
+            self.var_name_box.clear()
+            self.var_name_box.addItems(names)
             for pair in [
                 (self.var_name_label, self.var_name_box),
                 (self.mod_op_label, self.mod_op_box),

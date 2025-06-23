@@ -19,7 +19,8 @@ The **Logic** tab lists object events with
 conditions on the left and actions on the right. The event dialog now provides
 drop-down lists for keys and shows only parameters relevant to the chosen
 action. Variables of type int, float, string and bool can be defined and used
-in conditions or actions. When setting a variable in an action the name is
+in conditions or actions. Mathematical actions only apply to int or float
+variables, ensuring booleans and strings remain unchanged. When setting a variable in an action the name is
 chosen from a drop-down list and booleans use a check box. Events attach to specific objects and can trigger on
 game start or every frame. Fonts are slightly larger for readability. Use the
 *Run* action to launch the current scene directly from the editor.
@@ -94,8 +95,10 @@ for the selected action are shown so it is quick to create complex behavior.
 Additional math-friendly blocks make it easy to build counters or timers.
 `VariableCompare` tests a variable against a value using operators like `>`,
 `<`, or `==`. `ModifyVariable` adjusts a variable with `+`, `-`, `*`, or `/` so
-you can implement score systems without custom scripting. `PlaySound` now caches
-each sound after the first use and reports any errors instead of crashing.
+you can implement score systems without custom scripting. Arithmetic works only
+with numeric variables; boolean and string values cannot be modified with math
+operations. `PlaySound` now caches each sound after the first use and reports
+any errors instead of crashing.
 
 The logic module registers conditions and actions in dictionaries so new types
 can be added without modifying the engine. `condition_from_dict` and

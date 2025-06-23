@@ -235,11 +235,23 @@ class VariableCompare(Condition):
 
     def check(self, engine, scene, dt):
         val = engine.events.variables.get(self.name)
+        cmp = self.OPS.get(self.op, lambda a, b: False)
         try:
-            cmp = self.OPS.get(self.op, lambda a, b: False)
-            return cmp(float(val), float(self.value))
+            if isinstance(val, (int, float)):
+                return cmp(float(val), float(self.value))
+            if isinstance(val, bool):
+                if self.op not in ('==', '!='):
+                    return False
+                ref = self.value
+                if isinstance(ref, str):
+                    ref = ref.lower() in ('true', '1', 'yes')
+                return cmp(val, bool(ref))
+            # strings or other types use string comparison for == and !=
+            if self.op in ('==', '!='):
+                return cmp(str(val), str(self.value))
         except Exception:
-            return False
+            pass
+        return False
 
 # Built-in actions
 @register_action('Move')
@@ -351,14 +363,17 @@ class ModifyVariable(Action):
         self.value = value
 
     def execute(self, engine, scene, dt):
-        cur = engine.events.variables.get(self.name, 0)
+        cur = engine.events.variables.get(self.name)
+        if not isinstance(cur, (int, float)):
+            print(f'Variable {self.name} is not numeric; ModifyVariable skipped')
+            return
         try:
             cur = float(cur)
             val = float(self.value)
             func = self.OPS.get(self.op, lambda a, b: a)
             engine.events.variables[self.name] = func(cur, val)
         except Exception:
-            pass
+            print(f'Failed to modify variable {self.name}')
 
 __all__ = [
     'Condition', 'Action', 'Event', 'EventSystem',
