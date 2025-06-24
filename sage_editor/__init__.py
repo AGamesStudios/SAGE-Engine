@@ -1043,6 +1043,7 @@ class Editor(QMainWindow):
         self.g_scene.addItem(self.rotate_handle)
         self.rotate_handle.hide()
         self.g_scene.changed.connect(self._update_gizmo)
+        self._gizmo_connected = True
         # update gizmo when the selection changes
         self.g_scene.selectionChanged.connect(self._on_selection_changed)
 
@@ -1873,7 +1874,7 @@ class Editor(QMainWindow):
             self.var_table.setItem(row, 1, QTableWidgetItem(str(value)))
 
     def _update_gizmo(self):
-        if hasattr(self, 'gizmo_act') and not self.gizmo_act.isChecked():
+        if hasattr(self, 'gizmo_act') and (not self.gizmo_act.isChecked() or not getattr(self, '_gizmo_connected', False)):
             self.gizmo.hide()
             self.scale_handle.hide()
             self.rotate_handle.hide()
@@ -2009,8 +2010,20 @@ class Editor(QMainWindow):
 
     def toggle_gizmo(self, checked: bool):
         if checked:
+            if not getattr(self, '_gizmo_connected', False):
+                try:
+                    self.g_scene.changed.connect(self._update_gizmo)
+                except Exception:
+                    pass
+                self._gizmo_connected = True
             self._update_gizmo()
         else:
+            if getattr(self, '_gizmo_connected', False):
+                try:
+                    self.g_scene.changed.disconnect(self._update_gizmo)
+                except Exception:
+                    pass
+                self._gizmo_connected = False
             self.gizmo.hide()
             self.scale_handle.hide()
             self.rotate_handle.hide()

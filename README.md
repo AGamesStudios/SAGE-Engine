@@ -13,8 +13,10 @@ without losing progress.
 The core engine code resides under `engine/core` which defines the
 generic `GameObject`, `Scene`, `Engine` and `Project` classes. 2D helpers are
 provided in the same package, and the event system lives in
-`engine/logic`. `sage_editor` builds on these pieces but remains optional
-so games can depend on the engine without pulling in the editor.
+`engine/logic`.  High level helpers live in `engine/api` so scripts can load,
+save and run projects in just a few lines. `sage_editor` builds on these pieces
+but remains optional so games can depend on the engine without pulling in the
+editor.
 
 ### Renderer
 
@@ -243,16 +245,22 @@ visual quality.
 ### SAGE API
 
 For small scripts or rapid prototyping the `engine.api` module exposes
-helpers to load and run projects or scenes with minimal boilerplate:
+helpers to load, save and run projects or scenes with minimal boilerplate:
 
 ```python
-from engine import load_project, run_project, load_scene, run_scene
+from engine import (
+    load_project, save_project, run_project,
+    load_scene, save_scene, run_scene,
+)
 
 project = load_project('game.sageproject')
+save_project(project, 'copy.sageproject')
 run_project('game.sageproject')  # one line to launch
 scene = load_scene('level1.json')
+save_scene(scene, 'copy.json')
 run_scene('level1.json')  # run a single scene file
 ```
 
 The function `create_engine()` builds an `Engine` from a `Project` while
-`load_scene` and `run_scene` offer the same convenience for raw scene files.
+`load_scene`/`save_scene` and `run_scene` offer the same convenience for raw
+scene files.

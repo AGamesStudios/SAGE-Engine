@@ -8,9 +8,11 @@ from .core.camera import Camera
 
 __all__ = [
     "load_project",
+    "save_project",
     "run_project",
     "create_engine",
     "load_scene",
+    "save_scene",
     "run_scene",
 ]
 
@@ -18,6 +20,11 @@ __all__ = [
 def load_project(path: str) -> Project:
     """Load a :class:`Project` from disk."""
     return Project.load(path)
+
+
+def save_project(project: Project, path: str) -> None:
+    """Save a :class:`Project` to disk."""
+    project.save(path)
 
 
 def create_engine(project: Project, fps: int = 60) -> Engine:
@@ -47,6 +54,11 @@ def run_project(path: str, fps: int = 60):
 def load_scene(path: str) -> Scene:
     """Load a :class:`Scene` from disk."""
     return Scene.load(path)
+
+
+def save_scene(scene: Scene, path: str) -> None:
+    """Save a :class:`Scene` to disk."""
+    scene.save(path)
 
 
 def run_scene(path: str, width: int = 640, height: int = 480,
