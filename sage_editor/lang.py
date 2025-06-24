@@ -45,6 +45,7 @@ LANGUAGES = {
         'select_project_info': 'Select a project or create a new one:',
         'type': 'Type:',
         'key_button': 'Key/Button:',
+        'device': 'Device:',
         'duration': 'Duration:',
         'time': 'Time:',
         'state': 'State:',
@@ -80,6 +81,7 @@ LANGUAGES = {
         , 'KeyPressed': 'Key Pressed'
         , 'KeyReleased': 'Key Released'
         , 'MouseButton': 'Mouse Button'
+        , 'InputState': 'Input State'
         , 'AfterTime': 'After Time'
         , 'Collision': 'Collision'
         , 'OnStart': 'On Start'
@@ -163,6 +165,7 @@ LANGUAGES = {
         'select_project_info': 'Выберите проект или создайте новый:',
         'type': 'Тип:',
         'key_button': 'Клавиша/кнопка:',
+        'device': 'Устройство:',
         'duration': 'Длительность:',
         'time': 'Время:',
         'state': 'Состояние:',
@@ -198,6 +201,7 @@ LANGUAGES = {
         , 'KeyPressed': 'Нажата клавиша'
         , 'KeyReleased': 'Клавиша отпущена'
         , 'MouseButton': 'Кнопка мыши'
+        , 'InputState': 'Состояние ввода'
         , 'AfterTime': 'Через время'
         , 'Collision': 'Столкновение'
         , 'OnStart': 'При старте'

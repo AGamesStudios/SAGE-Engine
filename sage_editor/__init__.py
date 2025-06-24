@@ -284,11 +284,16 @@ class ConditionDialog(QDialog):
 
         self.type_box = QComboBox()
         for name in [
-            'KeyPressed', 'KeyReleased', 'MouseButton', 'AfterTime', 'Collision',
-            'OnStart', 'EveryFrame', 'VariableCompare'
+            'KeyPressed', 'KeyReleased', 'MouseButton', 'InputState', 'AfterTime',
+            'Collision', 'OnStart', 'EveryFrame', 'VariableCompare'
         ]:
             self.type_box.addItem(parent.t(name) if parent else name, name)
         layout.addRow(parent.t('type') if parent else 'Type:', self.type_box)
+
+        self.device_label = QLabel(parent.t('device') if parent else 'Device:')
+        self.device_box = QComboBox()
+        self.device_box.addItems(['keyboard', 'mouse'])
+        layout.addRow(self.device_label, self.device_box)
 
         self.key_label = QLabel(parent.t('key_button') if parent else 'Key/Button:')
         self.key_combo = QComboBox()
@@ -308,7 +313,7 @@ class ConditionDialog(QDialog):
 
         self.state_label = QLabel(parent.t('state') if parent else 'State:')
         self.state_box = QComboBox()
-        self.state_box.addItems(['down', 'up'])
+        self.state_box.addItems(['down', 'up', 'pressed', 'released'])
         layout.addRow(self.state_label, self.state_box)
 
         self.a_label = QLabel(parent.t('object_a') if parent else 'Object A:')
@@ -364,6 +369,7 @@ class ConditionDialog(QDialog):
     def _update_fields(self):
         typ = self.type_box.currentText()
         widgets = [
+            (self.device_label, self.device_box),
             (self.key_label, self.key_combo),
             (self.duration_label, self.hour_spin),
             (self.duration_label, self.min_spin),
@@ -384,6 +390,13 @@ class ConditionDialog(QDialog):
             self.key_label.setVisible(True)
             self.key_combo.setVisible(True)
         elif typ == 'MouseButton':
+            self.key_label.setVisible(True)
+            self.key_combo.setVisible(True)
+            self.state_label.setVisible(True)
+            self.state_box.setVisible(True)
+        elif typ == 'InputState':
+            self.device_label.setVisible(True)
+            self.device_box.setVisible(True)
             self.key_label.setVisible(True)
             self.key_combo.setVisible(True)
             self.state_label.setVisible(True)
@@ -429,6 +442,13 @@ class ConditionDialog(QDialog):
             button = self.key_combo.currentIndex() + 1
             state = self.state_box.currentText()
             return {'type': 'MouseButton', 'button': button, 'state': state}
+        if typ == 'InputState':
+            return {
+                'type': 'InputState',
+                'device': self.device_box.currentText(),
+                'code': self.key_combo.currentData(),
+                'state': self.state_box.currentText(),
+            }
         if typ == 'AfterTime':
             return {
                 'type': 'AfterTime',
@@ -460,6 +480,19 @@ class ConditionDialog(QDialog):
                 self.key_combo.setCurrentIndex(i)
         elif typ == 'MouseButton':
             self.key_combo.setCurrentIndex(data.get('button', 1) - 1)
+            st = data.get('state', 'down')
+            i = self.state_box.findText(st)
+            if i >= 0:
+                self.state_box.setCurrentIndex(i)
+        elif typ == 'InputState':
+            dev = data.get('device', 'keyboard')
+            i = self.device_box.findText(dev)
+            if i >= 0:
+                self.device_box.setCurrentIndex(i)
+            key = data.get('code', pygame.K_SPACE)
+            i = self.key_combo.findData(key)
+            if i >= 0:
+                self.key_combo.setCurrentIndex(i)
             st = data.get('state', 'down')
             i = self.state_box.findText(st)
             if i >= 0:
