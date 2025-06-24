@@ -14,10 +14,11 @@ so games can depend on the engine without pulling in the editor.
 
 ### Renderer
 
-Rendering is handled by a small module under `sage_engine/renderers`.  The
-default `PygameRenderer` draws scenes using pygame but the engine accepts any
-renderer with the same interface.  This keeps the core logic independent of the
-rendering backend so it can be swapped for another implementation later.
+Rendering is handled by modules under `sage_engine/renderers`.  The
+default `PygameRenderer` draws scenes using pygame, but you can also
+use `OpenGLRenderer` for hardware accelerated 2D via PyOpenGL.
+Any renderer with the same interface can be plugged in so the core logic
+remains independent of the drawing backend.
 When launching the editor a **Project Manager** window appears. It lists your
 recent projects with their creation date and full path.  Buttons let you create
 a new project, open an existing file or clear the list for a clean start.
@@ -95,6 +96,7 @@ Run a saved project with:
 
 ```bash
 python -m sage_engine path/to/project.sageproject
+# pass `--renderer opengl` to test the OpenGL backend
 ```
 
 Project files store the entire scene data so you can share a single file. Use

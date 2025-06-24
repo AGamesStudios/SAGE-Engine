@@ -1,29 +1,33 @@
 import sys
 import argparse
-import pygame
 import traceback
 from .scene import Scene
 from .project import Project
-from ..renderers import PygameRenderer
+from ..renderers import PygameRenderer, OpenGLRenderer
 
 class Engine:
     """Main loop that delegates drawing to a renderer."""
 
     def __init__(self, width=640, height=480, scene=None, events=None, fps=60,
                  title='SAGE 2D', renderer=None):
+        import pygame
+        self._pg = pygame
         pygame.init()
         self.clock = pygame.time.Clock()
         self.fps = fps
         self.scene = scene or Scene()
         self.events = events if events is not None else self.scene.build_event_system()
-        self.renderer = renderer or PygameRenderer(width, height, title)
+        if renderer is None:
+            self.renderer = PygameRenderer(width, height, title)
+        else:
+            self.renderer = renderer
 
     def run(self):
         running = True
         while running:
             dt = self.clock.tick(self.fps) / 1000.0
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
+            for event in self._pg.event.get():
+                if event.type == self._pg.QUIT:
                     running = False
             try:
                 self.events.update(self, self.scene, dt)
@@ -36,7 +40,7 @@ class Engine:
                 traceback.print_exc()
                 running = False
         self.renderer.close()
-        pygame.quit()
+        self._pg.quit()
 
 
 def main(argv=None):
@@ -47,6 +51,8 @@ def main(argv=None):
     parser.add_argument('--width', type=int, default=640, help='Window width')
     parser.add_argument('--height', type=int, default=480, help='Window height')
     parser.add_argument('--title', default='SAGE 2D', help='Window title')
+    parser.add_argument('--renderer', choices=['pygame', 'opengl'], default='pygame',
+                        help='Rendering backend')
     args = parser.parse_args(argv)
 
     scene = Scene()
@@ -59,5 +65,8 @@ def main(argv=None):
         else:
             scene = Scene.load(path)
 
+    renderer = None
+    if args.renderer == 'opengl':
+        renderer = OpenGLRenderer(args.width, args.height, args.title)
     Engine(width=args.width, height=args.height, title=args.title,
-           scene=scene, events=scene.build_event_system()).run()
+           scene=scene, events=scene.build_event_system(), renderer=renderer).run()
