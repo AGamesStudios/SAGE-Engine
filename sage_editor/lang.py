@@ -143,6 +143,8 @@ LANGUAGES = {
         , 'new_folder': 'New Folder'
         , 'import_files': 'Import Files'
         , 'search': 'Search'
+        , 'py_files': 'Python Files (*.py)'
+        , 'unsaved_short': 'unsaved'
     },
     'Русский': {
         'file': 'Файл',
@@ -285,6 +287,8 @@ LANGUAGES = {
         , 'new_folder': 'Новая папка'
         , 'import_files': 'Импорт файлов'
         , 'search': 'Поиск'
+        , 'py_files': 'Файлы Python (*.py)'
+        , 'unsaved_short': 'несохранено'
     }
 }
 import locale

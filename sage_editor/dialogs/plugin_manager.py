@@ -60,7 +60,12 @@ class PluginManager(QDialog):
             self.table.setItem(row, 1, chk)
 
     def add_plugin(self):
-        path, _ = QFileDialog.getOpenFileName(self, self.editor.t('select_file'), '', 'Python Files (*.py)')
+        path, _ = QFileDialog.getOpenFileName(
+            self,
+            self.editor.t('select_file'),
+            '',
+            self.editor.t('py_files'),
+        )
         if not path:
             return
         os.makedirs(plugins.PLUGIN_DIR, exist_ok=True)

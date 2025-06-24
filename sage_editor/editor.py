@@ -1353,7 +1353,7 @@ class Editor(QMainWindow):
             name = os.path.splitext(os.path.basename(self.project_path))[0]
             title = f'SAGE Editor ({ENGINE_VERSION}): {name} - Scene1'
         if self.dirty:
-            title += ' (unsaved)'
+            title += f" ({self.t('unsaved_short')})"
         self.setWindowTitle(title)
 
     def _mark_dirty(self):
@@ -1398,10 +1398,13 @@ class Editor(QMainWindow):
         menubar = self.menuBar()
         self.file_menu = menubar.addMenu(self.t('file'))
         self.new_proj_act = QAction(self.t('new_project'), self)
+        self.new_proj_act.setShortcut('Ctrl+N')
         self.new_proj_act.triggered.connect(self.new_project)
         self.open_proj_act = QAction(self.t('open_project'), self)
+        self.open_proj_act.setShortcut('Ctrl+O')
         self.open_proj_act.triggered.connect(self.open_project)
         self.save_proj_act = QAction(self.t('save_project'), self)
+        self.save_proj_act.setShortcut('Ctrl+S')
         self.save_proj_act.triggered.connect(self.save_project)
         self.file_menu.addAction(self.new_proj_act)
         self.file_menu.addAction(self.open_proj_act)
@@ -1423,6 +1426,7 @@ class Editor(QMainWindow):
 
         toolbar = self.addToolBar('main')
         self.run_btn = toolbar.addAction(self.t('run'))
+        self.run_btn.setShortcut('F5')
         self.run_btn.triggered.connect(self.run_game)
         self.grid_act = toolbar.addAction(self.t('show_grid'))
         self.grid_act.setCheckable(True)
