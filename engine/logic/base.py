@@ -7,23 +7,38 @@ import traceback
 # without modifying the loader code
 CONDITION_REGISTRY: dict[str, type] = {}
 ACTION_REGISTRY: dict[str, type] = {}
+# store parameter metadata so conditions and actions can be created
+# automatically from dictionaries. Each entry maps a name to a list of
+# ``(param_name, kind)`` tuples where ``kind`` can be ``object`` for
+# GameObject references or ``variable`` for variable names.
+CONDITION_META: dict[str, list[tuple[str, str, str | None]]] = {}
+ACTION_META: dict[str, list[tuple[str, str, str | None]]] = {}
 
 
-def register_condition(name: str):
-    """Decorator to register a Condition subclass."""
+def register_condition(name: str, params: list[tuple[str, str, str | None]] | None = None):
+    """Decorator to register a Condition subclass.
+
+    ``params`` defines a list of tuples describing constructor arguments. Each
+    tuple is ``(arg_name, kind, key)`` where ``arg_name`` is the parameter name
+    of the constructor, ``kind`` is ``'value'`` for plain values, ``'object'`` to
+    look up a scene object by index and ``'variable'`` for variables. ``key`` is
+    the dictionary key when loading; when omitted it defaults to ``arg_name``.
+    """
 
     def decorator(cls):
         CONDITION_REGISTRY[name] = cls
+        CONDITION_META[name] = params or []
         return cls
 
     return decorator
 
 
-def register_action(name: str):
-    """Decorator to register an Action subclass."""
+def register_action(name: str, params: list[tuple[str, str, str | None]] | None = None):
+    """Decorator to register an Action subclass with optional metadata."""
 
     def decorator(cls):
         ACTION_REGISTRY[name] = cls
+        ACTION_META[name] = params or []
         return cls
 
     return decorator
@@ -34,9 +49,19 @@ def get_registered_conditions() -> list[str]:
     return list(CONDITION_REGISTRY.keys())
 
 
+def get_condition_params(name: str) -> list[tuple[str, str, str | None]]:
+    """Return parameter metadata for ``name``."""
+    return CONDITION_META.get(name, [])
+
+
 def get_registered_actions() -> list[str]:
     """Return the list of available action names."""
     return list(ACTION_REGISTRY.keys())
+
+
+def get_action_params(name: str) -> list[tuple[str, str, str | None]]:
+    """Return parameter metadata for ``name``."""
+    return ACTION_META.get(name, [])
 
 class Condition:
     """Base condition interface."""
@@ -93,27 +118,20 @@ def condition_from_dict(data, objects, variables):
     cls = CONDITION_REGISTRY.get(typ)
     if cls is None:
         return None
+    params = {}
+    for arg, kind, key in CONDITION_META.get(typ, []):
+        dict_key = key or arg
+        val = data.get(dict_key)
+        if kind == 'object':
+            if val is None or val < 0 or val >= len(objects):
+                return None
+            params[arg] = objects[val]
+        elif kind == 'variable':
+            params[arg] = variables.get(val)
+        else:
+            params[arg] = val
     try:
-        if typ == 'Collision':
-            a = data.get('a'); b = data.get('b')
-            if 0 <= a < len(objects) and 0 <= b < len(objects):
-                return cls(objects[a], objects[b])
-            return None
-        if typ in ('KeyPressed', 'KeyReleased'):
-            return cls(data['key'])
-        if typ == 'MouseButton':
-            return cls(data['button'], data.get('state', 'down'))
-        if typ == 'InputState':
-            return cls(data.get('device', 'keyboard'), data.get('code'), data.get('state', 'down'))
-        if typ == 'AfterTime':
-            return cls(
-                data.get('seconds', 0.0),
-                data.get('minutes', 0.0),
-                data.get('hours', 0.0),
-            )
-        if typ == 'VariableCompare':
-            return cls(data['name'], data.get('op', '=='), data.get('value'))
-        return cls()
+        return cls(**params)
     except Exception:
         return None
 
@@ -124,28 +142,18 @@ def action_from_dict(data, objects):
     cls = ACTION_REGISTRY.get(typ)
     if cls is None:
         return None
-    try:
-        if typ in ('Move', 'SetPosition', 'Destroy'):
-            t = data.get('target')
-            if t is None or t < 0 or t >= len(objects):
+    params = {}
+    for arg, kind, key in ACTION_META.get(typ, []):
+        dict_key = key or arg
+        val = data.get(dict_key)
+        if kind == 'object':
+            if val is None or val < 0 or val >= len(objects):
                 return None
-            target = objects[t]
-            if typ == 'Move':
-                return cls(target, data.get('dx', 0), data.get('dy', 0))
-            if typ == 'SetPosition':
-                return cls(target, data.get('x', 0), data.get('y', 0))
-            return cls(target)
-        if typ == 'Print':
-            return cls(data.get('text', ''))
-        if typ == 'PlaySound':
-            return cls(data.get('path', ''))
-        if typ == 'Spawn':
-            return cls(data.get('image', ''), data.get('x', 0), data.get('y', 0))
-        if typ == 'SetVariable':
-            return cls(data.get('name'), data.get('value'))
-        if typ == 'ModifyVariable':
-            return cls(data.get('name'), data.get('op', '+'), data.get('value', 0))
-        return cls()
+            params[arg] = objects[val]
+        else:
+            params[arg] = val
+    try:
+        return cls(**params)
     except Exception:
         return None
 

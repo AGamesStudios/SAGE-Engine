@@ -230,9 +230,11 @@ corrupted, the editor reports the problem in the console instead of
 terminating.
 
 The logic module registers conditions and actions in dictionaries so new types
-can be added without modifying the engine. `condition_from_dict` and
-`action_from_dict` create objects from saved data, making the system easily
-extensible.
+can be added without modifying the engine. `register_condition` and
+`register_action` accept a small metadata table describing the constructor
+arguments. This allows `condition_from_dict` and `action_from_dict` to
+instantiate new blocks automatically, making the system easily extensible and
+suitable for editor integration.
 
 ### Versioning
 

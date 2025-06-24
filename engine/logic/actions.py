@@ -1,6 +1,10 @@
 # Built-in actions
 from .base import Action, register_action
-@register_action('Move')
+@register_action('Move', [
+    ('obj', 'object', 'target'),
+    ('dx', 'value', None),
+    ('dy', 'value', None),
+])
 class Move(Action):
     def __init__(self, obj, dx, dy):
         self.obj = obj
@@ -11,7 +15,11 @@ class Move(Action):
         self.obj.x += self.dx
         self.obj.y += self.dy
 
-@register_action('SetPosition')
+@register_action('SetPosition', [
+    ('obj', 'object', 'target'),
+    ('x', 'value', None),
+    ('y', 'value', None),
+])
 class SetPosition(Action):
     def __init__(self, obj, x, y):
         self.obj = obj
@@ -22,7 +30,7 @@ class SetPosition(Action):
         self.obj.x = self.x
         self.obj.y = self.y
 
-@register_action('Destroy')
+@register_action('Destroy', [('obj', 'object', 'target')])
 class Destroy(Action):
     def __init__(self, obj):
         self.obj = obj
@@ -31,7 +39,7 @@ class Destroy(Action):
         if hasattr(scene, 'remove_object'):
             scene.remove_object(self.obj)
 
-@register_action('Print')
+@register_action('Print', [('text', 'value', None)])
 class Print(Action):
     def __init__(self, text):
         self.text = text
@@ -45,7 +53,7 @@ class Print(Action):
 
 _SOUND_CACHE = {}
 
-@register_action('PlaySound')
+@register_action('PlaySound', [('path', 'value', None)])
 class PlaySound(Action):
     """Play a sound file using simpleaudio."""
 
@@ -68,7 +76,11 @@ class PlaySound(Action):
         except Exception as exc:
             print(f'Failed to play sound {self.path}: {exc}')
 
-@register_action('Spawn')
+@register_action('Spawn', [
+    ('image', 'value', None),
+    ('x', 'value', None),
+    ('y', 'value', None),
+])
 class Spawn(Action):
     """Spawn a new GameObject into the scene."""
 
@@ -87,7 +99,10 @@ class Spawn(Action):
         if hasattr(scene, 'add_object'):
             scene.add_object(obj)
 
-@register_action('SetVariable')
+@register_action('SetVariable', [
+    ('name', 'value', None),
+    ('value', 'value', None),
+])
 class SetVariable(Action):
     """Set a variable in the event system."""
     def __init__(self, name, value):
@@ -97,7 +112,11 @@ class SetVariable(Action):
     def execute(self, engine, scene, dt):
         engine.events.variables[self.name] = self.value
 
-@register_action('ModifyVariable')
+@register_action('ModifyVariable', [
+    ('name', 'value', None),
+    ('op', 'value', None),
+    ('value', 'value', None),
+])
 class ModifyVariable(Action):
     """Modify a numeric variable with an operation."""
 

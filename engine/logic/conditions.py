@@ -1,7 +1,11 @@
 # Built-in conditions
 from .base import Condition, register_condition
 
-@register_condition('InputState')
+@register_condition('InputState', [
+    ('device', 'value', None),
+    ('code', 'value', None),
+    ('state', 'value', None),
+])
 class InputState(Condition):
     """Check a key or mouse button with optional device selection."""
 
@@ -24,12 +28,15 @@ class InputState(Condition):
         return pressed if self.state == 'down' else not pressed
 
 
-@register_condition('KeyPressed')
+@register_condition('KeyPressed', [('key', 'value', None)])
 class KeyPressed(InputState):
     def __init__(self, key):
         super().__init__('keyboard', key, 'down')
 
-@register_condition('Collision')
+@register_condition('Collision', [
+    ('obj_a', 'object', 'a'),
+    ('obj_b', 'object', 'b'),
+])
 class Collision(Condition):
     def __init__(self, obj_a, obj_b):
         self.obj_a = obj_a
@@ -43,7 +50,11 @@ class Collision(Condition):
             ay + ah <= by or ay >= by + bh
         )
 
-@register_condition('AfterTime')
+@register_condition('AfterTime', [
+    ('seconds', 'value', None),
+    ('minutes', 'value', None),
+    ('hours', 'value', None),
+])
 class AfterTime(Condition):
     """True once after the specified time has elapsed."""
 
@@ -61,14 +72,17 @@ class AfterTime(Condition):
             return True
         return False
 
-@register_condition('KeyReleased')
+@register_condition('KeyReleased', [('key', 'value', None)])
 class KeyReleased(InputState):
     """True once when the key transitions from pressed to released."""
 
     def __init__(self, key):
         super().__init__('keyboard', key, 'released')
 
-@register_condition('MouseButton')
+@register_condition('MouseButton', [
+    ('button', 'value', None),
+    ('state', 'value', None),
+])
 class MouseButton(InputState):
     """Check mouse button state ('down' or 'up')."""
 
@@ -76,7 +90,7 @@ class MouseButton(InputState):
         super().__init__('mouse', button, state)
 
 
-@register_condition('OnStart')
+@register_condition('OnStart', [])
 class OnStart(Condition):
     """True only on the first frame."""
     def __init__(self):
@@ -88,13 +102,17 @@ class OnStart(Condition):
             return True
         return False
 
-@register_condition('EveryFrame')
+@register_condition('EveryFrame', [])
 class EveryFrame(Condition):
     """True on every engine tick."""
     def check(self, engine, scene, dt):
         return True
 
-@register_condition('VariableCompare')
+@register_condition('VariableCompare', [
+    ('name', 'value', None),
+    ('op', 'value', None),
+    ('value', 'value', None),
+])
 class VariableCompare(Condition):
     """Compare a variable to a value using an operator."""
     OPS = {
