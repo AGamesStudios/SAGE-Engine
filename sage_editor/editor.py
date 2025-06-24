@@ -35,13 +35,13 @@ import os
 import glfw
 from engine import Scene, GameObject, Project, Camera, ENGINE_VERSION, get_resource_path
 from . import plugins
-from .viewport import GraphicsView
+from .widgets.viewport import GraphicsView
 register_plugin = plugins.register_plugin
 import json
-from .console import ConsoleDock
-from .properties import PropertiesDock
-from .resources import ResourceDock
-from .logic_tab import LogicTab
+from .docks.console import ConsoleDock
+from .docks.properties import PropertiesDock
+from .docks.resources import ResourceDock
+from .docks.logic import LogicTab
 
 RECENT_FILE = os.path.join(os.path.expanduser('~'), '.sage_recent.json')
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
@@ -1645,7 +1645,7 @@ class Editor(QMainWindow):
             self._mark_dirty()
 
     def show_plugin_manager(self):
-        from .plugin_manager import PluginManager
+        from .dialogs.plugin_manager import PluginManager
         PluginManager(self).exec()
 
     def run_game(self):

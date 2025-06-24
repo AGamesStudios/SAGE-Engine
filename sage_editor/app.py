@@ -13,7 +13,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPalette, QColor, QFont
 
-from .core import Editor, save_recent, load_recent, _log, logger
+from .editor import Editor, save_recent, load_recent, _log, logger
 
 
 class ProjectManager(QDialog):
