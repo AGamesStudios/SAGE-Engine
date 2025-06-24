@@ -23,6 +23,8 @@ engine ships with an `OpenGLRenderer` implemented using glfw and
 PyOpenGL.  The base `Renderer` interface allows additional backends
 to be implemented later (for example Vulkan) without modifying the
 core engine.
+`OpenGLRenderer` accepts a `GLSettings` object so projects can control
+OpenGL context versions and toggle vsync if needed.
 When launching the editor a **Project Manager** window appears. It lists your
 recent projects with their creation date and full path.  Buttons let you create
 a new project, open an existing file or clear the list for a clean start.
@@ -51,7 +53,8 @@ edited under **Settings → Camera Settings**. Projects are saved in a single
 All objects are listed in a dock on the right. Selecting one shows a **Transform**
 panel with X, Y, Z, separate Scale X/Y and Rotation fields. A *Link XY* checkbox
 lets you keep both scales in sync. Rotation now accounts for non-uniform
-scaling so objects spin correctly even when Scale X and Scale Y differ. The
+scaling so objects spin correctly even when Scale X and Scale Y differ. Scaling
+also stays centered on the sprite regardless of rotation. The
 transform dock also includes a **Coordinate Mode** drop-down for switching
 between *Global* and *Local* coordinates. In local mode the gizmo rotates with
 the object so scaling and rotating follow its orientation. Internally every

@@ -1,4 +1,4 @@
-from .opengl_renderer import OpenGLRenderer
+from .opengl_renderer import OpenGLRenderer, GLSettings
 
 class Renderer:
     """Abstract renderer interface."""
@@ -17,4 +17,4 @@ class Renderer:
     def should_close(self) -> bool:
         return False
 
-__all__ = ['Renderer', 'OpenGLRenderer']
+__all__ = ['Renderer', 'OpenGLRenderer', 'GLSettings']

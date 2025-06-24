@@ -1,7 +1,7 @@
 ENGINE_VERSION = '2D prototype v0.0.01a'
 
 from .core import GameObject, Scene, Engine, Project, Camera
-from .renderers import OpenGLRenderer, Renderer
+from .renderers import OpenGLRenderer, Renderer, GLSettings
 from .core.game_object import clear_image_cache
 from .core.engine import main
 from .logic import (
@@ -16,6 +16,6 @@ __all__ = [
     'Move', 'SetPosition', 'Destroy', 'Print', 'PlaySound', 'Spawn',
     'OnStart', 'EveryFrame', 'VariableCompare',
     'SetVariable', 'ModifyVariable', 'Project', 'Camera',
-    'clear_image_cache', 'Renderer', 'OpenGLRenderer', 'main',
+    'clear_image_cache', 'Renderer', 'OpenGLRenderer', 'GLSettings', 'main',
     'ENGINE_VERSION'
 ]

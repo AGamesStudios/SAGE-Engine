@@ -94,8 +94,10 @@ class GameObject:
         sin_a = math.sin(rad)
         sx = self.scale_x
         sy = self.scale_y
-        tx = self.x + self.width / 2
-        ty = self.y + self.height / 2
+        px = self.width / 2
+        py = self.height / 2
+        tx = self.x + px * sx * cos_a - py * sy * sin_a
+        ty = self.y + px * sx * sin_a + py * sy * cos_a
         return [
             cos_a * sx, -sin_a * sy, 0, 0,
             sin_a * sx, cos_a * sy, 0, 0,

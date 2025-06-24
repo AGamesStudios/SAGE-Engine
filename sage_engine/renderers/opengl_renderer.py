@@ -1,18 +1,32 @@
+from dataclasses import dataclass
 from OpenGL import GL
 import glfw
 from PIL import Image
 
+
+@dataclass
+class GLSettings:
+    """Configuration options for the OpenGL renderer."""
+    major: int = 2
+    minor: int = 1
+    vsync: bool = True
+
 class OpenGLRenderer:
     """Basic 2D renderer using glfw and OpenGL."""
 
-    def __init__(self, width=640, height=480, title="SAGE 2D"):
+    def __init__(self, width=640, height=480, title="SAGE 2D",
+                 settings: GLSettings | None = None):
         if not glfw.init():
             raise RuntimeError("Failed to init glfw")
+        settings = settings or GLSettings()
+        glfw.window_hint(glfw.CONTEXT_VERSION_MAJOR, settings.major)
+        glfw.window_hint(glfw.CONTEXT_VERSION_MINOR, settings.minor)
         self.window = glfw.create_window(width, height, title, None, None)
         if not self.window:
             glfw.terminate()
             raise RuntimeError("Failed to create window")
         glfw.make_context_current(self.window)
+        glfw.swap_interval(1 if settings.vsync else 0)
         self.width = width
         self.height = height
         self._setup_projection(width, height)
