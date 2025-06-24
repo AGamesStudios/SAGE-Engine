@@ -102,6 +102,8 @@ LANGUAGES = {
         , 'add_object': 'Add Object'
         , 'edit_object': 'Edit Object'
         , 'color': 'Color:'
+        , 'unsaved_changes': 'Unsaved Changes'
+        , 'save_before_exit': 'Save changes before exiting?'
     },
     'Русский': {
         'file': 'Файл',
@@ -203,6 +205,8 @@ LANGUAGES = {
         , 'z': 'z:'
         , 'new_object': 'Новый объект'
         , 'cut': 'Вырезать'
+        , 'unsaved_changes': 'Есть несохраненные изменения'
+        , 'save_before_exit': 'Сохранить перед выходом?'
     }
 }
 import locale

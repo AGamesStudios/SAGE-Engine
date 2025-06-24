@@ -52,6 +52,7 @@ editor. Temporary files are cleaned up each time so you can run repeatedly
 without crashes.
 Window dimensions can be changed under **Settings → Window Settings**. The
 game window title matches the editor, e.g. `SAGE Editor: MyGame - Scene1`.
+When you edit the scene the title gains an `(unsaved)` suffix until you save.
 When defining variables, boolean values are edited with a convenient check box
 instead of typing "true" or "false".
 When comparing variables, the name is selected from a drop-down list so typos
@@ -88,6 +89,9 @@ python -m sage_engine path/to/project.sageproject
 Project files store the entire scene data so you can share a single file. Use
 **File → Save Project** to write the current project. The **Recent Projects**
 submenu lists the last few files you opened for quick access.
+If you make changes after saving, the window title shows `(unsaved)` so you
+know there are modifications. Closing the editor with unsaved work displays a
+dialog asking whether to save before exiting.
 
 Launch the editor with:
 

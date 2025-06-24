@@ -96,6 +96,7 @@ class SpriteItem(QGraphicsPixmapItem):
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged and self.obj:
             self.obj.x = value.x()
             self.obj.y = value.y()
+            self.editor._mark_dirty()
             self.editor._update_gizmo()
         if change == QGraphicsItem.GraphicsItemChange.ItemSelectedHasChanged and bool(value):
             if self.index is not None:
@@ -165,6 +166,7 @@ class _HandleItem(QGraphicsEllipseItem):
             angle = math.degrees(math.atan2(pos.y(), pos.x()))
             item.setRotation(angle)
             obj.angle = angle
+        self.editor._mark_dirty()
         self.editor._update_gizmo()
         super().mouseMoveEvent(event)
 
@@ -917,6 +919,7 @@ class Editor(QMainWindow):
         self.scene = Scene()
         self.project_path: str | None = None
         self.items = []
+        self.dirty = False
         self.recent_projects = load_recent()
         self._clip_object = None
         self._init_actions()
@@ -979,11 +982,19 @@ class Editor(QMainWindow):
         self._update_title()
 
     def _update_title(self):
+        title = 'SAGE Editor'
         if self.project_path:
             name = os.path.splitext(os.path.basename(self.project_path))[0]
-            self.setWindowTitle(f'SAGE Editor: {name} - Scene1')
-        else:
-            self.setWindowTitle('SAGE Editor')
+            title = f'SAGE Editor: {name} - Scene1'
+        if self.dirty:
+            title += ' (unsaved)'
+        self.setWindowTitle(title)
+
+    def _mark_dirty(self):
+        """Mark the current project as modified."""
+        if not self.dirty:
+            self.dirty = True
+            self._update_title()
 
     def _check_project(self) -> bool:
         """Return True if a project is open; otherwise warn the user."""
@@ -1129,6 +1140,7 @@ class Editor(QMainWindow):
             return
         self._update_project_state()
         self._add_recent(proj_path)
+        self.dirty = False
         self._update_title()
 
     def open_project(self, path: str | None = None):
@@ -1148,6 +1160,7 @@ class Editor(QMainWindow):
             return
         self._update_project_state()
         self._add_recent(path)
+        self.dirty = False
         self._update_title()
 
     def save_project(self):
@@ -1169,6 +1182,8 @@ class Editor(QMainWindow):
         try:
             Project(self.scene.to_dict()).save(self.project_path)
             self._add_recent(self.project_path)
+            self.dirty = False
+            self._update_title()
         except Exception as exc:
             QMessageBox.warning(self, 'Error', f'Failed to save project: {exc}')
 
@@ -1290,6 +1305,7 @@ class Editor(QMainWindow):
             if self.object_combo.currentIndex() == -1:
                 self.object_combo.setCurrentIndex(0)
             self._update_gizmo()
+            self._mark_dirty()
         except Exception as exc:
             self.console.append(f'Failed to add sprite: {exc}')
         self.refresh_events()
@@ -1318,6 +1334,7 @@ class Editor(QMainWindow):
             if self.object_combo.currentIndex() == -1:
                 self.object_combo.setCurrentIndex(0)
             self._update_gizmo()
+            self._mark_dirty()
         except Exception as exc:
             self.console.append(f'Failed to add object: {exc}')
         self.refresh_events()
@@ -1374,6 +1391,7 @@ class Editor(QMainWindow):
         item.setPixmap(pm)
         self.object_combo.setItemText(idx, obj.name)
         self._update_gizmo()
+        self._mark_dirty()
 
     def add_variable(self):
         if not self._check_project():
@@ -1435,6 +1453,7 @@ class Editor(QMainWindow):
                     value = text
             self.scene.variables[name] = value
             self.refresh_variables()
+            self._mark_dirty()
         except Exception as exc:
             QMessageBox.warning(self, 'Error', f'Failed to add variable: {exc}')
 
@@ -1588,6 +1607,7 @@ class Editor(QMainWindow):
         item.setZValue(obj.z)
         item.setScale(obj.scale)
         item.setRotation(obj.angle)
+        self._mark_dirty()
         self._update_gizmo()
 
     def _object_menu(self, pos):
@@ -1652,6 +1672,7 @@ class Editor(QMainWindow):
             item.index = len(self.items)-1
             self.object_combo.addItem(obj.name, item.index)
             self.object_list.addItem(obj.name)
+            self._mark_dirty()
         except Exception as exc:
             self.console.append(f'Failed to paste object: {exc}')
         self._update_gizmo()
@@ -1674,6 +1695,7 @@ class Editor(QMainWindow):
             self.object_list.setCurrentRow(0)
         self._update_gizmo()
         self.refresh_events()
+        self._mark_dirty()
 
     def add_condition(self, row):
         if not self._check_project():
@@ -1691,6 +1713,7 @@ class Editor(QMainWindow):
             dlg = ConditionDialog([o for _, o in self.items], self.scene.variables, self)
             if dlg.exec() == QDialog.DialogCode.Accepted:
                 evt['conditions'].append(dlg.get_condition())
+                self._mark_dirty()
             self.refresh_events()
         except Exception as exc:
             self.console.append(f'Failed to add condition: {exc}')
@@ -1709,6 +1732,7 @@ class Editor(QMainWindow):
             dlg = ActionDialog([o for _, o in self.items], self.scene.variables, self)
             if dlg.exec() == QDialog.DialogCode.Accepted:
                 evt['actions'].append(dlg.get_action())
+                self._mark_dirty()
             self.refresh_events()
         except Exception as exc:
             self.console.append(f'Failed to add action: {exc}')
@@ -1796,12 +1820,29 @@ class Editor(QMainWindow):
         self.refresh_events()
         self.refresh_variables()
         self._update_gizmo()
+        self.dirty = False
+        self._update_title()
 
     def closeEvent(self, event):
         for item, obj in self.items:
             pos = item.pos()
             obj.x = pos.x()
             obj.y = pos.y()
+        if self.dirty:
+            res = QMessageBox.question(
+                self,
+                self.t('unsaved_changes'),
+                self.t('save_before_exit'),
+                QMessageBox.StandardButton.Save | QMessageBox.StandardButton.Discard | QMessageBox.StandardButton.Cancel
+            )
+            if res == QMessageBox.StandardButton.Save:
+                self.save_project()
+                if self.dirty:
+                    event.ignore()
+                    return
+            elif res == QMessageBox.StandardButton.Cancel:
+                event.ignore()
+                return
         self._cleanup_process()
         event.accept()
 
