@@ -44,8 +44,10 @@ The editor's viewport also uses an OpenGL widget and calls `glViewport` on
 resize so what you see while editing matches the game window exactly.
 When launching the editor a **Project Manager** window appears. It lists your
 recent projects with their creation date and full path.  Buttons let you create
-a new project, open an existing file or clear the list for a clean start.
-Right click a project to open it immediately or remove it from the list.
+a new project, open an existing file or clear the list for a clean start. The
+dialog now groups the table under a "Recent Projects" heading with larger
+fonts and spacing so paths are easy to read. Right click a project to open it
+immediately or remove it from the list.
 Once a project is chosen the editor opens maximized in a dark Fusion
 theme and provides two
 tabs: **Viewport** and **Logic**. The viewport uses a virtually infinite

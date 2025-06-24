@@ -8,7 +8,8 @@ import traceback
 
 from PyQt6.QtWidgets import (
     QApplication, QDialog, QVBoxLayout, QLabel, QTableWidget, QTableWidgetItem,
-    QPushButton, QMenu, QHBoxLayout, QAbstractItemView, QHeaderView, QMessageBox
+    QPushButton, QMenu, QHBoxLayout, QAbstractItemView, QHeaderView, QMessageBox,
+    QGroupBox, QDialogButtonBox
 )
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPalette, QColor, QFont
@@ -23,10 +24,18 @@ class ProjectManager(QDialog):
         super().__init__(editor)
         self.editor = editor
         self.setWindowTitle(editor.t('project_manager'))
+        self.resize(720, 420)
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(10)
 
         info = QLabel(editor.t('select_project_info'))
+        info.setWordWrap(True)
         layout.addWidget(info)
+
+        group = QGroupBox(editor.t('recent_projects'))
+        table_layout = QVBoxLayout(group)
+        table_layout.setContentsMargins(0, 0, 0, 0)
 
         self.table = QTableWidget(0, 4)
         self.table.setHorizontalHeaderLabels([
@@ -36,28 +45,36 @@ class ProjectManager(QDialog):
         self.table.verticalHeader().hide()
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         header = self.table.horizontalHeader()
+        header_font = QFont()
+        header_font.setBold(True)
+        header.setFont(header_font)
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
+        self.table.verticalHeader().setDefaultSectionSize(22)
         self.table.setAlternatingRowColors(True)
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.setShowGrid(False)
         self.table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.table.customContextMenuRequested.connect(self.show_context_menu)
-        layout.addWidget(self.table)
+        table_layout.addWidget(self.table)
+        layout.addWidget(group)
 
-        btn_row = QHBoxLayout()
-        self.new_btn = QPushButton(editor.t('new_project'))
-        self.open_btn = QPushButton(editor.t('open_project'))
-        self.clear_btn = QPushButton(editor.t('clear_recent'))
-        self.cancel_btn = QPushButton(editor.t('cancel'))
-        btn_row.addWidget(self.new_btn)
-        btn_row.addWidget(self.open_btn)
-        btn_row.addWidget(self.clear_btn)
-        btn_row.addStretch(1)
-        btn_row.addWidget(self.cancel_btn)
-        layout.addLayout(btn_row)
+        btn_box = QDialogButtonBox()
+        self.new_btn = btn_box.addButton(
+            editor.t('new_project'), QDialogButtonBox.ButtonRole.ActionRole
+        )
+        self.open_btn = btn_box.addButton(
+            editor.t('open_project'), QDialogButtonBox.ButtonRole.ActionRole
+        )
+        self.clear_btn = btn_box.addButton(
+            editor.t('clear_recent'), QDialogButtonBox.ButtonRole.ActionRole
+        )
+        self.cancel_btn = btn_box.addButton(
+            editor.t('cancel'), QDialogButtonBox.ButtonRole.RejectRole
+        )
+        layout.addWidget(btn_box)
 
         self.new_btn.clicked.connect(self.create_project)
         self.open_btn.clicked.connect(self.browse_project)
