@@ -1929,12 +1929,13 @@ class Editor(QMainWindow):
             obj = self.items[idx][1]
             if row < 0:
                 return
-            if row >= len(obj.events):
-                obj.events.append({'conditions': [], 'actions': []})
-            evt = obj.events[row if row < len(obj.events) else -1]
+            creating_new = row >= len(obj.events)
+            evt = {'conditions': [], 'actions': []} if creating_new else obj.events[row]
             dlg = ConditionDialog([o for _, o in self.items], self.scene.variables, self)
             if dlg.exec() == QDialog.DialogCode.Accepted:
                 evt['conditions'].append(dlg.get_condition())
+                if creating_new:
+                    obj.events.append(evt)
                 self._mark_dirty()
             self.refresh_events()
         except Exception as exc:
