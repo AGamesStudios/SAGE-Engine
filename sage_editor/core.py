@@ -1185,6 +1185,9 @@ class Editor(QMainWindow):
         # resources dock on the left
         res_dock = ResourceDock(self)
         self.resources_dock = res_dock
+        self.import_btn = res_dock.import_btn
+        self.new_folder_btn = res_dock.new_folder_btn
+        self.search_edit = res_dock.search_edit
 
         # logic tab with object-specific events and variables
         self.logic_widget = LogicTab(self)
