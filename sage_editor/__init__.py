@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import (
     QTextEdit, QDockWidget, QGroupBox, QCheckBox, QMessageBox, QMenu, QColorDialog,
     QStyle, QHeaderView, QAbstractItemView
 )
-from PyQt6.QtGui import QPixmap, QPen, QColor, QPalette, QFont, QAction
+from PyQt6.QtGui import QPixmap, QPen, QColor, QPalette, QFont, QAction, QTransform
 from PyQt6.QtCore import QRectF, Qt, QProcess, QPointF
 try:
     from PyQt6.sip import isdeleted  # PyQt6 >= 6.5
@@ -159,12 +159,11 @@ class _HandleItem(QGraphicsEllipseItem):
         idx = self.editor.object_combo.currentData()
         if idx is None or idx < 0 or idx >= len(self.editor.items):
             return
-        item = self.editor.items[idx][0]
+        item, obj = self.editor.items[idx]
         self.start_pos = event.scenePos()
-        t = item.transform()
-        self.start_scale_x = t.m11()
-        self.start_scale_y = t.m22()
-        self.start_angle = item.rotation()
+        self.start_scale_x = obj.scale_x
+        self.start_scale_y = obj.scale_y
+        self.start_angle = obj.angle
         self.editor.view.setCursor(self.cursor())
         super().mousePressEvent(event)
 
@@ -174,7 +173,12 @@ class _HandleItem(QGraphicsEllipseItem):
             return
         item, obj = self.editor.items[idx]
         if self.kind == 'scale':
-            delta = event.scenePos() - self.start_pos
+            scene_delta = event.scenePos() - self.start_pos
+            if self.editor.local_coords:
+                inv = item.sceneTransform().inverted()[0]
+                delta = inv.map(scene_delta)
+            else:
+                delta = scene_delta
             new_scale = max(0.1, (self.start_scale_x + self.start_scale_y)/2 + (delta.x() + delta.y()) / 100)
             if self.editor.link_scale.isChecked():
                 obj.scale_x = obj.scale_y = new_scale
@@ -853,6 +857,7 @@ class Editor(QMainWindow):
         self.grid_lines = []
         self.axes = []
         self.snap_to_grid = False
+        self.local_coords = False
         self._create_grid()
         # gizmo rectangle with scale and rotate handles
         self.gizmo = self.g_scene.addRect(QRectF(), QPen(QColor('yellow')))
@@ -884,6 +889,11 @@ class Editor(QMainWindow):
         self.scale_x_spin = QDoubleSpinBox(); self.scale_x_spin.setRange(0.01, 100)
         self.scale_y_spin = QDoubleSpinBox(); self.scale_y_spin.setRange(0.01, 100)
         self.link_scale = QCheckBox(self.t('link_scale'))
+        self.coord_combo = QComboBox();
+        self.coord_combo.addItem(self.t('global'), False)
+        self.coord_combo.addItem(self.t('local'), True)
+        self.coord_combo.currentIndexChanged.connect(self._on_coord_mode)
+        self.coord_combo.setCurrentIndex(0)
         self.angle_spin = QDoubleSpinBox(); self.angle_spin.setRange(-360, 360)
         for spin in (self.x_spin, self.y_spin, self.z_spin, self.scale_x_spin, self.scale_y_spin, self.angle_spin):
             spin.valueChanged.connect(self._apply_transform)
@@ -893,6 +903,7 @@ class Editor(QMainWindow):
         form.addRow(self.t('scale_x'), self.scale_x_spin)
         form.addRow(self.t('scale_y'), self.scale_y_spin)
         form.addRow("", self.link_scale)
+        form.addRow(self.t('coord_mode'), self.coord_combo)
         form.addRow(self.t('rotation'), self.angle_spin)
         obj_layout.addWidget(self.transform_group)
         obj_dock = QDockWidget(self.t('objects'), self)
@@ -1002,6 +1013,10 @@ class Editor(QMainWindow):
         self.settings_menu.setTitle(self.t('settings'))
         self.window_settings_act.setText(self.t('window_settings'))
         self.renderer_settings_act.setText(self.t('renderer_settings'))
+        self.coord_combo.setItemText(0, self.t('global'))
+        self.coord_combo.setItemText(1, self.t('local'))
+        self.link_scale.setText(self.t('link_scale'))
+        self.coord_combo.setToolTip(self.t('coord_mode'))
         self._update_recent_menu()
         self._update_title()
         
@@ -1536,17 +1551,28 @@ class Editor(QMainWindow):
             self._update_transform_panel()
             return
         item = self.items[idx][0]
-        # use the item's scene bounding box so rotation and scale are accounted for
-        rect = item.sceneBoundingRect()
-        self.gizmo.setRect(rect)
         z = item.zValue()
+        if self.local_coords:
+            rect = item.boundingRect()
+            t = item.sceneTransform()
+            self.gizmo.setTransform(t)
+            self.scale_handle.setTransform(t)
+            self.rotate_handle.setTransform(t)
+            self.gizmo.setRect(rect)
+            self.scale_handle.setPos(rect.bottomRight())
+            self.rotate_handle.setPos(QPointF(rect.left(), rect.top() - 20))
+        else:
+            rect = item.sceneBoundingRect()
+            self.gizmo.setTransform(QTransform())
+            self.scale_handle.setTransform(QTransform())
+            self.rotate_handle.setTransform(QTransform())
+            self.gizmo.setRect(rect)
+            self.scale_handle.setPos(rect.bottomRight())
+            self.rotate_handle.setPos(rect.topLeft() + QPointF(0, -20))
         self.gizmo.setZValue(z + 0.01)
         self.gizmo.show()
-        # place handles at the bottom-right corner and slightly above the top
-        self.scale_handle.setPos(rect.bottomRight())
         self.scale_handle.setZValue(z + 0.02)
         self.scale_handle.show()
-        self.rotate_handle.setPos(rect.topLeft() + QPointF(0, -20))
         self.rotate_handle.setZValue(z + 0.02)
         self.rotate_handle.show()
         self._update_transform_panel()
@@ -1640,6 +1666,10 @@ class Editor(QMainWindow):
     def set_grid_size(self, size: int):
         self.grid_size = size
         self._create_grid()
+
+    def _on_coord_mode(self):
+        self.local_coords = self.coord_combo.currentData()
+        self._update_gizmo()
 
     def choose_grid_color(self):
         color = QColorDialog.getColor(self.grid_color, self, self.t('grid_color'))

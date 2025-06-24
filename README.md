@@ -42,6 +42,9 @@ All objects are listed in a dock on the right. Selecting one shows a **Transform
 panel with X, Y, Z, separate Scale X/Y and Rotation fields. A *Link XY* checkbox
 lets you keep both scales in sync. Rotation now accounts for non-uniform
 scaling so objects spin correctly even when Scale X and Scale Y differ. The
+transform dock also includes a **Coordinate Mode** drop-down for switching
+between *Global* and *Local* coordinates. In local mode the gizmo rotates with
+the object so scaling and rotating follow its orientation. The
 project file stores the entire scene
 including object positions, events and variables.
 Use **File → New Project** to generate a folder for your game. The dialog asks
