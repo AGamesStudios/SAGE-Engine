@@ -458,7 +458,7 @@ class ConditionDialog(QDialog):
             self.key_combo.addItem(name, val)
 
     def _update_fields(self):
-        typ = self.type_box.currentText()
+        typ = self.type_box.currentData()
         widgets = [
             (self.device_label, self.device_box),
             (self.key_label, self.key_combo),
@@ -537,7 +537,7 @@ class ConditionDialog(QDialog):
             self.var_warn_text.show()
 
     def get_condition(self):
-        typ = self.type_box.currentText()
+        typ = self.type_box.currentData()
         if typ in ('KeyPressed', 'KeyReleased'):
             key = self.key_combo.currentData()
             device = self.device_box.currentText()
@@ -545,32 +545,32 @@ class ConditionDialog(QDialog):
         if typ == 'MouseButton':
             button = self.key_combo.currentIndex() + 1
             state = self.state_box.currentText()
-            return {'type': 'MouseButton', 'button': button, 'state': state}
+            return {'type': typ, 'button': button, 'state': state}
         if typ == 'InputState':
             return {
-                'type': 'InputState',
+                'type': typ,
                 'device': self.device_box.currentText(),
                 'code': self.key_combo.currentData(),
                 'state': self.state_box.currentText(),
             }
         if typ == 'AfterTime':
             return {
-                'type': 'AfterTime',
+                'type': typ,
                 'hours': self.hour_spin.value(),
                 'minutes': self.min_spin.value(),
                 'seconds': self.sec_spin.value(),
             }
         if typ == 'Collision':
-            return {'type': 'Collision', 'a': self.a_box.currentData(), 'b': self.b_box.currentData()}
+            return {'type': typ, 'a': self.a_box.currentData(), 'b': self.b_box.currentData()}
         if typ == 'ZoomAbove':
             return {
-                'type': 'ZoomAbove',
+                'type': typ,
                 'camera': self.cam_box.currentData(),
                 'value': self.value_spin.value(),
             }
         if typ == 'VariableCompare':
             return {
-                'type': 'VariableCompare',
+                'type': typ,
                 'name': self.var_name_box.currentText(),
                 'op': self.var_op_box.currentText(),
                 'value': self.var_value_edit.text(),
@@ -739,22 +739,22 @@ class ActionDialog(QDialog):
             self.path_edit.setText(path)
 
     def get_action(self):
-        typ = self.type_box.currentText()
+        typ = self.type_box.currentData()
         if typ == 'Move':
-            return {'type': 'Move', 'target': self.target_box.currentData(), 'dx': self.dx_spin.value(), 'dy': self.dy_spin.value()}
+            return {'type': typ, 'target': self.target_box.currentData(), 'dx': self.dx_spin.value(), 'dy': self.dy_spin.value()}
         if typ == 'SetPosition':
-            return {'type': 'SetPosition', 'target': self.target_box.currentData(), 'x': self.x_spin.value(), 'y': self.y_spin.value()}
+            return {'type': typ, 'target': self.target_box.currentData(), 'x': self.x_spin.value(), 'y': self.y_spin.value()}
         if typ == 'Destroy':
-            return {'type': 'Destroy', 'target': self.target_box.currentData()}
+            return {'type': typ, 'target': self.target_box.currentData()}
         if typ == 'Print':
-            return {'type': 'Print', 'text': self.text_edit.text()}
+            return {'type': typ, 'text': self.text_edit.text()}
         if typ == 'PlaySound':
-            return {'type': 'PlaySound', 'path': self.path_edit.text()}
+            return {'type': typ, 'path': self.path_edit.text()}
         if typ == 'Spawn':
-            return {'type': 'Spawn', 'image': self.path_edit.text(), 'x': self.x_spin.value(), 'y': self.y_spin.value()}
+            return {'type': typ, 'image': self.path_edit.text(), 'x': self.x_spin.value(), 'y': self.y_spin.value()}
         if typ == 'SetZoom':
             return {
-                'type': 'SetZoom',
+                'type': typ,
                 'target': self.target_box.currentData(),
                 'zoom': self.zoom_spin.value(),
             }
@@ -763,20 +763,20 @@ class ActionDialog(QDialog):
             if self.bool_check.isVisible():
                 value = self.bool_check.isChecked()
             return {
-                'type': 'SetVariable',
+                'type': typ,
                 'name': self.var_name_box.currentText(),
                 'value': value,
             }
         if typ == 'ModifyVariable':
             return {
-                'type': 'ModifyVariable',
+                'type': typ,
                 'name': self.var_name_box.currentText(),
                 'op': self.mod_op_box.currentText(),
                 'value': self.var_value_edit.text(),
             }
 
     def _update_fields(self):
-        typ = self.type_box.currentText()
+        typ = self.type_box.currentData()
         self.target_box.clear()
         if typ == 'SetZoom':
             for i in self.camera_indices:

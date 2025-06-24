@@ -34,7 +34,10 @@ def object_from_dict(data: dict) -> Any | None:
     for attr, key in OBJECT_META.get(typ, []):
         k = key or attr
         if k in data:
-            params[attr] = data[k]
+            value = data[k]
+            if attr == "color" and isinstance(value, list):
+                value = tuple(value)
+            params[attr] = value
     try:
         return cls(**params)
     except Exception:
