@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 import os
 import traceback
 import math
+import glm
 from PIL import Image
 
 # cache loaded images so repeated sprites don't reload files
@@ -90,19 +91,12 @@ class GameObject:
         return (self.x, self.y, self.width * self.scale_x, self.height * self.scale_y)
 
     def transform_matrix(self):
-        """Return a 4x4 column-major matrix for OpenGL."""
-        rad = math.radians(self.angle)
-        cos_a = math.cos(rad)
-        sin_a = math.sin(rad)
-        sx = self.scale_x
-        sy = self.scale_y
-        px = self.width / 2
-        py = self.height / 2
-        tx = self.x + px * sx * cos_a - py * sy * sin_a
-        ty = self.y + px * sx * sin_a + py * sy * cos_a
-        return [
-            cos_a * sx, -sin_a * sy, 0, 0,
-            sin_a * sx, cos_a * sy, 0, 0,
-            0, 0, 1, 0,
-            tx, ty, 0, 1,
-        ]
+        """Return a 4x4 column-major matrix for OpenGL using GLM."""
+        angle = math.radians(self.angle)
+        pivot = glm.translate(glm.mat4(1.0), glm.vec3(self.width / 2, self.height / 2, 0))
+        pivot_inv = glm.translate(glm.mat4(1.0), glm.vec3(-self.width / 2, -self.height / 2, 0))
+        scale = glm.scale(glm.mat4(1.0), glm.vec3(self.scale_x, self.scale_y, 1.0))
+        rotate = glm.rotate(glm.mat4(1.0), angle, glm.vec3(0, 0, 1))
+        translate = glm.translate(glm.mat4(1.0), glm.vec3(self.x, self.y, 0))
+        m = translate * pivot * rotate * scale * pivot_inv
+        return [m[c][r] for c in range(4) for r in range(4)]

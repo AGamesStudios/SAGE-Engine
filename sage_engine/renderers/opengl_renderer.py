@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from OpenGL import GL
 import glfw
 from PIL import Image
+import glm
 
 
 @dataclass
@@ -35,9 +36,9 @@ class OpenGLRenderer:
 
     def _setup_projection(self, width, height):
         GL.glViewport(0, 0, width, height)
+        proj = glm.ortho(0.0, float(width), float(height), 0.0, -1.0, 1.0)
         GL.glMatrixMode(GL.GL_PROJECTION)
-        GL.glLoadIdentity()
-        GL.glOrtho(0, width, height, 0, -1, 1)
+        GL.glLoadMatrixf([proj[c][r] for c in range(4) for r in range(4)])
         GL.glMatrixMode(GL.GL_MODELVIEW)
 
     def set_window_size(self, width, height):
