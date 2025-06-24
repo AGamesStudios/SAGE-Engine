@@ -1481,6 +1481,19 @@ class Editor(QMainWindow):
             self.object_combo.setCurrentIndex(item.index)
             self.object_list.setCurrentRow(item.index)
 
+    def _on_object_list_select(self):
+        """Select the corresponding sprite when the user picks an item."""
+        row = self.object_list.currentRow()
+        if row < 0 or row >= len(self.items):
+            return
+        self.object_combo.setCurrentIndex(row)
+        self.g_scene.blockSignals(True)
+        for it, _ in self.items:
+            it.setSelected(False)
+        self.items[row][0].setSelected(True)
+        self.g_scene.blockSignals(False)
+        self._update_gizmo()
+
     def _create_grid(self):
         """Create grid and axis lines."""
         for line in getattr(self, 'grid_lines', []):
