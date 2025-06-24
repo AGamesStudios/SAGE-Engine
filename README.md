@@ -108,8 +108,9 @@ reorganizing files will not break existing scenes.
 If PyQt does not provide ``QFileSystemModel`` the editor falls back to a
 simpler tree widget that still lets you create folders and import files.
 Use **File → New Project** to generate a folder for your game. The dialog asks
-for a project name and location; projects default to the Pygame renderer while
-the OpenGL backend is still in development.
+for a project name and location and lets you choose a rendering backend. Pygame
+is the default option while an experimental OpenGL (alpha) renderer remains
+available for testing.
 It then creates the folder with a `.sageproject` file. Each new object
 receives a generic name like `New Object (1)` so conditions always target the
 correct item. The editor disables sprite, variable and logic actions until a

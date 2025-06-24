@@ -1129,7 +1129,7 @@ class Editor(QMainWindow):
         self.lang = DEFAULT_LANGUAGE
         self.window_width = 640
         self.window_height = 480
-        self.renderer_name = 'opengl'
+        self.renderer_name = 'pygame'
         self.resource_dir: str | None = None
         self.resource_manager = None
         self.scene = Scene()
@@ -1479,7 +1479,8 @@ class Editor(QMainWindow):
                 browse_btn = QPushButton(parent.t('browse'))
                 browse_btn.clicked.connect(self.browse)
                 self.render_combo = QComboBox()
-                self.render_combo.addItem(parent.t('opengl'), 'opengl')
+                self.render_combo.addItem(parent.t('pygame'), 'pygame')
+                self.render_combo.addItem(parent.t('opengl_alpha'), 'opengl')
                 form = QFormLayout(self)
                 form.addRow(parent.t('project_name'), self.name_edit)
                 path_row = QHBoxLayout()
@@ -1490,6 +1491,8 @@ class Editor(QMainWindow):
                 buttons = QDialogButtonBox(
                     QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
                 )
+                buttons.button(QDialogButtonBox.StandardButton.Ok).setText(parent.t('ok'))
+                buttons.button(QDialogButtonBox.StandardButton.Cancel).setText(parent.t('cancel'))
                 buttons.accepted.connect(self.accept)
                 buttons.rejected.connect(self.reject)
                 form.addRow(buttons)
