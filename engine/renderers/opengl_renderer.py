@@ -29,30 +29,39 @@ class OpenGLRenderer:
             raise RuntimeError("Failed to create window")
         glfw.make_context_current(self.window)
         glfw.swap_interval(1 if settings.vsync else 0)
+        # use logical window size for coordinates but actual framebuffer size
+        # for the OpenGL viewport so high-DPI displays render correctly
+        winw, winh = glfw.get_window_size(self.window)
         fbw, fbh = glfw.get_framebuffer_size(self.window)
-        self.width = fbw
-        self.height = fbh
-        self._setup_projection(fbw, fbh)
+        self.width = winw
+        self.height = winh
+        self._setup_projection(winw, winh, fbw, fbh)
         GL.glEnable(GL.GL_TEXTURE_2D)
         self.textures = {}
 
-    def _setup_projection(self, width, height):
-        GL.glViewport(0, 0, width, height)
+    def _setup_projection(self, width, height, fbw=None, fbh=None):
+        """Set the OpenGL viewport and projection."""
+        if fbw is None:
+            fbw = width
+        if fbh is None:
+            fbh = height
+        GL.glViewport(0, 0, fbw, fbh)
         proj = glm.ortho(0.0, float(width), float(height), 0.0, -1.0, 1.0)
         GL.glMatrixMode(GL.GL_PROJECTION)
         GL.glLoadMatrixf([proj[c][r] for c in range(4) for r in range(4)])
         GL.glMatrixMode(GL.GL_MODELVIEW)
 
-    def update_framebuffer_size(self):
-        """Refresh stored size from the actual framebuffer."""
+    def update_size(self):
+        """Refresh stored window and framebuffer sizes."""
+        winw, winh = glfw.get_window_size(self.window)
         fbw, fbh = glfw.get_framebuffer_size(self.window)
-        self.width = fbw
-        self.height = fbh
-        self._setup_projection(fbw, fbh)
+        self.width = winw
+        self.height = winh
+        self._setup_projection(winw, winh, fbw, fbh)
 
     def set_window_size(self, width, height):
         glfw.set_window_size(self.window, width, height)
-        self.update_framebuffer_size()
+        self.update_size()
 
     def should_close(self):
         return glfw.window_should_close(self.window)

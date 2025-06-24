@@ -33,7 +33,7 @@ class Engine:
         self.camera = camera or getattr(self.scene, 'camera', None) or Camera(0, 0, width, height)
         self.events = events if events is not None else self.scene.build_event_system()
         self.renderer = renderer or OpenGLRenderer(width, height, title)
-        # keep camera dimensions in sync with the framebuffer size
+        # keep camera dimensions in sync with the window size
         self.camera.width = self.renderer.width
         self.camera.height = self.renderer.height
         from .input import Input
@@ -47,7 +47,7 @@ class Engine:
 
     def _on_resize(self, window, width, height):
         """Resize callback that keeps the camera and projection in sync."""
-        self.renderer.update_framebuffer_size()
+        self.renderer.update_size()
         if self.camera:
             self.camera.width = self.renderer.width
             self.camera.height = self.renderer.height
