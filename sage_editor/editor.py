@@ -581,8 +581,11 @@ class ConditionDialog(QDialog):
         """Populate the dialog from an existing condition dict."""
         typ = data.get('type', '')
         idx = self.type_box.findData(typ)
+        if idx < 0:
+            idx = self.type_box.findText(typ)
         if idx >= 0:
             self.type_box.setCurrentIndex(idx)
+            typ = self.type_box.itemData(idx)
         if typ in ('KeyPressed', 'KeyReleased'):
             dev = data.get('device', 'keyboard')
             i = self.device_box.findText(dev)
@@ -893,8 +896,11 @@ class ActionDialog(QDialog):
         """Populate fields from an existing action dict."""
         typ = data.get('type', '')
         idx = self.type_box.findData(typ)
+        if idx < 0:
+            idx = self.type_box.findText(typ)
         if idx >= 0:
             self.type_box.setCurrentIndex(idx)
+            typ = self.type_box.itemData(idx)
         if typ in ('Move', 'SetPosition', 'Destroy'):
             self.target_box.setCurrentIndex(int(data.get('target', 0)))
             if typ == 'Move':
