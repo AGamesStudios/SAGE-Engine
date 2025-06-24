@@ -7,6 +7,7 @@ from .project import Project
 from .input import Input
 from .camera import Camera
 from ..renderers import OpenGLRenderer, Renderer
+from .. import ENGINE_VERSION
 
 class Engine:
     """Main loop that delegates drawing to a renderer."""
@@ -24,6 +25,7 @@ class Engine:
         self._last = time.perf_counter()
 
     def run(self):
+        print(f'SAGE Engine {ENGINE_VERSION}')
         running = True
         while running and not self.renderer.should_close():
             now = time.perf_counter()

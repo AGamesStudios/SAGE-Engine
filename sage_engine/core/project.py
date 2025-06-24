@@ -1,6 +1,7 @@
 import json
 from dataclasses import dataclass
 import os
+from .. import ENGINE_VERSION
 
 @dataclass
 class Project:
@@ -11,6 +12,7 @@ class Project:
     width: int = 640
     height: int = 480
     title: str = 'SAGE 2D'
+    version: str = ENGINE_VERSION
 
     @classmethod
     def load(cls, path: str) -> "Project":
@@ -28,7 +30,8 @@ class Project:
         width = data.get('width', 640)
         height = data.get('height', 480)
         title = data.get('title', 'SAGE 2D')
-        return cls(scene or {}, renderer, width, height, title)
+        version = data.get('version', ENGINE_VERSION)
+        return cls(scene or {}, renderer, width, height, title, version)
 
     def save(self, path: str):
         with open(path, 'w') as f:
@@ -38,5 +41,6 @@ class Project:
                 'width': self.width,
                 'height': self.height,
                 'title': self.title,
+                'version': self.version,
             }, f, indent=2)
 

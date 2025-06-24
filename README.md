@@ -5,6 +5,10 @@ games.  **SAGE 2D** extends the engine with sprite rendering while **SAGE
 Editor** lets you place objects visually and save projects.  The editor remains
 small so it runs well even on older computers.
 
+The current release is **SAGE Engine: 2D prototype v0.0.01a**. The engine
+stores its version inside every `.sageproject` file so you can safely upgrade
+without losing progress.
+
 ## Architecture
 The core engine code resides under `sage_engine/core` which defines the
 generic `GameObject`, `Scene`, `Engine` and `Project` classes. 2D helpers are
@@ -193,6 +197,12 @@ The logic module registers conditions and actions in dictionaries so new types
 can be added without modifying the engine. `condition_from_dict` and
 `action_from_dict` create objects from saved data, making the system easily
 extensible.
+
+### Versioning
+
+Each project stores the engine version string so upgrades are painless. Older
+projects load without issue, and the editor shows the version in its window
+title so you always know which release you are using.
 
 ### Performance
 

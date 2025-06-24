@@ -24,7 +24,7 @@ from .lang import LANGUAGES, DEFAULT_LANGUAGE
 import tempfile
 import os
 import glfw
-from sage_engine import Scene, GameObject, Project, Camera
+from sage_engine import Scene, GameObject, Project, Camera, ENGINE_VERSION
 import json
 
 RECENT_FILE = os.path.join(os.path.expanduser('~'), '.sage_recent.json')
@@ -928,7 +928,7 @@ class Editor(QMainWindow):
         self.window_width = 640
         self.window_height = 480
         self.renderer_name = 'opengl'
-        self.setWindowTitle('SAGE Editor')
+        self.setWindowTitle(f'SAGE Editor ({ENGINE_VERSION})')
         # set up tabs
         self.tabs = QTabWidget()
         self.setCentralWidget(self.tabs)
@@ -1124,10 +1124,10 @@ class Editor(QMainWindow):
         self._update_title()
 
     def _update_title(self):
-        title = 'SAGE Editor'
+        title = f'SAGE Editor ({ENGINE_VERSION})'
         if self.project_path:
             name = os.path.splitext(os.path.basename(self.project_path))[0]
-            title = f'SAGE Editor: {name} - Scene1'
+            title = f'SAGE Editor ({ENGINE_VERSION}): {name} - Scene1'
         if self.dirty:
             title += ' (unsaved)'
         self.setWindowTitle(title)
@@ -1290,7 +1290,8 @@ class Editor(QMainWindow):
                 renderer=self.renderer_name,
                 width=self.window_width,
                 height=self.window_height,
-                title=f'SAGE 2D'
+                title=f'SAGE 2D',
+                version=ENGINE_VERSION
             ).save(proj_path)
         except Exception as exc:
             QMessageBox.warning(self, 'Error', f'Failed to create project: {exc}')
@@ -1353,7 +1354,8 @@ class Editor(QMainWindow):
                 renderer=self.renderer_name,
                 width=self.window_width,
                 height=self.window_height,
-                title=f'SAGE 2D'
+                title=f'SAGE 2D',
+                version=ENGINE_VERSION
             ).save(self.project_path)
             self._add_recent(self.project_path)
             self.dirty = False
@@ -1457,7 +1459,8 @@ class Editor(QMainWindow):
             renderer=self.renderer_name,
             width=self.window_width,
             height=self.window_height,
-            title=title
+            title=title,
+            version=ENGINE_VERSION
         ).save(proj_path)
         self._tmp_project = proj_path
         self.process = QProcess(self)
