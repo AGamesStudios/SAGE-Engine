@@ -5,7 +5,7 @@ class Renderer:
     def clear(self, color=(0, 0, 0)):
         raise NotImplementedError
 
-    def draw_scene(self, scene):
+    def draw_scene(self, scene, camera=None):
         raise NotImplementedError
 
     def present(self):

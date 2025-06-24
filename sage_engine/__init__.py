@@ -1,4 +1,4 @@
-from .core import GameObject, Scene, Engine, Project
+from .core import GameObject, Scene, Engine, Project, Camera
 from .renderers import OpenGLRenderer, Renderer
 from .core.game_object import clear_image_cache
 from .core.engine import main
@@ -13,6 +13,6 @@ __all__ = [
     'Event', 'KeyPressed', 'KeyReleased', 'MouseButton', 'Collision', 'Timer',
     'Always', 'Move', 'SetPosition', 'Destroy', 'Print', 'PlaySound', 'Spawn',
     'OnStart', 'EveryFrame', 'VariableCompare',
-    'SetVariable', 'ModifyVariable', 'Project',
+    'SetVariable', 'ModifyVariable', 'Project', 'Camera',
     'clear_image_cache', 'Renderer', 'OpenGLRenderer', 'main'
 ]

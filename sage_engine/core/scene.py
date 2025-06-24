@@ -2,6 +2,7 @@ import json
 from typing import List
 
 from .game_object import GameObject
+from .camera import Camera
 from ..logic import (
     EventSystem, Event,
     condition_from_dict, action_from_dict,
@@ -17,6 +18,7 @@ class Scene:
     def __init__(self):
         self.objects: List[GameObject] = []
         self.variables: dict = {}
+        self.camera: Camera | None = None
 
     def add_object(self, obj: GameObject):
         existing = {o.name for o in self.objects}
@@ -47,6 +49,14 @@ class Scene:
         """Construct a Scene from a plain dictionary."""
         scene = cls()
         scene.variables = data.get("variables", {})
+        cam = data.get("camera")
+        if isinstance(cam, dict):
+            scene.camera = Camera(
+                cam.get("x", 0),
+                cam.get("y", 0),
+                cam.get("width", 640),
+                cam.get("height", 480),
+            )
         for entry in data.get("objects", []):
             scale_x = entry.get("scale_x")
             scale_y = entry.get("scale_y")
@@ -82,7 +92,7 @@ class Scene:
 
     def to_dict(self) -> dict:
         """Return a dictionary representation of the scene."""
-        return {
+        data = {
             "variables": self.variables,
             "objects": [
                 {
@@ -102,6 +112,14 @@ class Scene:
                 for o in self.objects
             ],
         }
+        if self.camera:
+            data["camera"] = {
+                "x": self.camera.x,
+                "y": self.camera.y,
+                "width": self.camera.width,
+                "height": self.camera.height,
+            }
+        return data
 
     def save(self, path: str):
         with open(path, "w") as f:

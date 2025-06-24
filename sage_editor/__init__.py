@@ -24,7 +24,7 @@ from .lang import LANGUAGES, DEFAULT_LANGUAGE
 import tempfile
 import os
 import pygame
-from sage_engine import Scene, GameObject, Project
+from sage_engine import Scene, GameObject, Project, Camera
 import json
 
 RECENT_FILE = os.path.join(os.path.expanduser('~'), '.sage_recent.json')
@@ -966,6 +966,7 @@ class Editor(QMainWindow):
 
         # canvas rectangle representing the game window
         self.canvas = None
+        self.camera_rect = None
         self._update_canvas()
         self.scene = Scene()
         self.project_path: str | None = None
@@ -1014,6 +1015,7 @@ class Editor(QMainWindow):
         self.add_obj_btn.setText(self.t('add_object'))
         self.clear_log_act.setText(self.t('clear_log'))
         self.grid_act.setText(self.t('show_grid'))
+        self.gizmo_act.setText(self.t('show_gizmo'))
         self.snap_act.setText(self.t('snap_to_grid'))
         self.grid_spin.setPrefix('')
         self.grid_spin.setSuffix('')
@@ -1021,6 +1023,7 @@ class Editor(QMainWindow):
         self.recent_menu.setTitle(self.t('recent_projects'))
         self.settings_menu.setTitle(self.t('settings'))
         self.window_settings_act.setText(self.t('window_settings'))
+        self.camera_settings_act.setText(self.t('camera_settings'))
         self.renderer_settings_act.setText(self.t('renderer_settings'))
         self.coord_combo.setItemText(0, self.t('global'))
         self.coord_combo.setItemText(1, self.t('local'))
@@ -1103,6 +1106,9 @@ class Editor(QMainWindow):
         self.window_settings_act = QAction(self.t('window_settings'), self)
         self.window_settings_act.triggered.connect(self.show_window_settings)
         self.settings_menu.addAction(self.window_settings_act)
+        self.camera_settings_act = QAction(self.t('camera_settings'), self)
+        self.camera_settings_act.triggered.connect(self.show_camera_settings)
+        self.settings_menu.addAction(self.camera_settings_act)
         self.renderer_settings_act = QAction(self.t('renderer_settings'), self)
         self.renderer_settings_act.triggered.connect(self.show_renderer_settings)
         self.settings_menu.addAction(self.renderer_settings_act)
@@ -1118,6 +1124,10 @@ class Editor(QMainWindow):
         self.grid_act.setCheckable(True)
         self.grid_act.setChecked(True)
         self.grid_act.toggled.connect(self.toggle_grid)
+        self.gizmo_act = toolbar.addAction(self.t('show_gizmo'))
+        self.gizmo_act.setCheckable(True)
+        self.gizmo_act.setChecked(True)
+        self.gizmo_act.toggled.connect(self.toggle_gizmo)
         self.snap_act = toolbar.addAction(self.t('snap_to_grid'))
         self.snap_act.setCheckable(True)
         self.snap_act.toggled.connect(self.toggle_snap)
@@ -1300,6 +1310,33 @@ class Editor(QMainWindow):
         if dlg.exec() == QDialog.DialogCode.Accepted:
             self.window_width = w_spin.value()
             self.window_height = h_spin.value()
+            self._update_canvas()
+
+    def show_camera_settings(self):
+        cam = getattr(self.scene, 'camera', None)
+        if not cam:
+            cam = Camera(0, 0, self.window_width, self.window_height)
+            self.scene.camera = cam
+        dlg = QDialog(self)
+        dlg.setWindowTitle(self.t('camera_settings'))
+        x_spin = QDoubleSpinBox(); x_spin.setRange(-10000, 10000); x_spin.setValue(cam.x)
+        y_spin = QDoubleSpinBox(); y_spin.setRange(-10000, 10000); y_spin.setValue(cam.y)
+        w_spin = QSpinBox(); w_spin.setRange(100, 4096); w_spin.setValue(cam.width)
+        h_spin = QSpinBox(); h_spin.setRange(100, 4096); h_spin.setValue(cam.height)
+        form = QFormLayout(dlg)
+        form.addRow(self.t('x'), x_spin)
+        form.addRow(self.t('y'), y_spin)
+        form.addRow(self.t('width'), w_spin)
+        form.addRow(self.t('height'), h_spin)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        buttons.accepted.connect(dlg.accept)
+        buttons.rejected.connect(dlg.reject)
+        form.addRow(buttons)
+        if dlg.exec() == QDialog.DialogCode.Accepted:
+            cam.x = x_spin.value()
+            cam.y = y_spin.value()
+            cam.width = w_spin.value()
+            cam.height = h_spin.value()
             self._update_canvas()
 
     def show_renderer_settings(self):
@@ -1573,6 +1610,11 @@ class Editor(QMainWindow):
             self.var_table.setItem(row, 1, QTableWidgetItem(str(value)))
 
     def _update_gizmo(self):
+        if hasattr(self, 'gizmo_act') and not self.gizmo_act.isChecked():
+            self.gizmo.hide()
+            self.scale_handle.hide()
+            self.rotate_handle.hide()
+            return
         idx = self.object_combo.currentData()
         if idx is None or idx < 0 or idx >= len(self.items):
             self.gizmo.hide()
@@ -1685,10 +1727,29 @@ class Editor(QMainWindow):
         else:
             pen = QPen(QColor('red'))
             self.canvas = self.g_scene.addRect(rect, pen)
+        cam = getattr(self.scene, 'camera', None)
+        if cam:
+            cam_rect = QRectF(cam.x, cam.y, cam.width, cam.height)
+            if getattr(self, 'camera_rect', None) and self.camera_rect.scene() is self.g_scene:
+                self.camera_rect.setRect(cam_rect)
+            else:
+                pen = QPen(QColor('cyan'))
+                self.camera_rect = self.g_scene.addRect(cam_rect, pen)
+        elif getattr(self, 'camera_rect', None):
+            self.g_scene.removeItem(self.camera_rect)
+            self.camera_rect = None
 
     def toggle_grid(self, checked: bool):
         for line in self.grid_lines:
             line.setVisible(checked)
+
+    def toggle_gizmo(self, checked: bool):
+        if checked:
+            self._update_gizmo()
+        else:
+            self.gizmo.hide()
+            self.scale_handle.hide()
+            self.rotate_handle.hide()
 
     def toggle_snap(self, checked: bool):
         self.snap_to_grid = checked

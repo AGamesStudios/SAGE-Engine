@@ -58,9 +58,25 @@ class OpenGLRenderer:
         self.textures[obj.image_path] = tex
         return tex
 
-    def draw_scene(self, scene):
+    def draw_scene(self, scene, camera=None):
+        camx = camy = 0
+        camw = self.width
+        camh = self.height
+        if camera is not None:
+            camx = camera.x
+            camy = camera.y
+            camw = camera.width
+            camh = camera.height
+        GL.glPushMatrix()
+        GL.glTranslatef(-camx, -camy, 0)
         for obj in sorted(scene.objects, key=lambda o: getattr(o, 'z', 0)):
+            if camera is not None:
+                x, y, w, h = obj.rect()
+                if (x + w < camx or x > camx + camw or
+                        y + h < camy or y > camy + camh):
+                    continue
             self.draw_object(obj)
+        GL.glPopMatrix()
 
     def draw_object(self, obj):
         tex_id, w, h = self._get_texture(obj)

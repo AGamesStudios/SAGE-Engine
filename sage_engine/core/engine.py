@@ -5,15 +5,18 @@ import time
 from .scene import Scene
 from .project import Project
 from .input import Input
+from .camera import Camera
 from ..renderers import OpenGLRenderer, Renderer
 
 class Engine:
     """Main loop that delegates drawing to a renderer."""
 
     def __init__(self, width=640, height=480, scene=None, events=None, fps=60,
-                 title='SAGE 2D', renderer: Renderer | None = None):
+                 title='SAGE 2D', renderer: Renderer | None = None,
+                 camera: Camera | None = None):
         self.fps = fps
         self.scene = scene or Scene()
+        self.camera = camera or getattr(self.scene, 'camera', None) or Camera(0, 0, width, height)
         self.events = events if events is not None else self.scene.build_event_system()
         self.renderer = renderer or OpenGLRenderer(width, height, title)
         from .input import Input
@@ -31,7 +34,7 @@ class Engine:
                 self.events.update(self, self.scene, dt)
                 self.scene.update(dt)
                 self.renderer.clear()
-                self.renderer.draw_scene(self.scene)
+                self.renderer.draw_scene(self.scene, self.camera)
                 self.renderer.present()
             except Exception as exc:
                 print(f'Runtime error: {exc}')
@@ -76,6 +79,8 @@ def main(argv=None):
             scene = Scene.load(path)
 
     renderer = OpenGLRenderer(width, height, title)
+    camera = scene.camera or Camera(0, 0, width, height)
 
     Engine(width=width, height=height, title=title,
-           scene=scene, events=scene.build_event_system(), renderer=renderer).run()
+           scene=scene, events=scene.build_event_system(), renderer=renderer,
+           camera=camera).run()

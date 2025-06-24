@@ -39,7 +39,11 @@ and the cursor switches between an open
 and closed hand while dragging. A yellow gizmo outline appears with a corner
 handle for scaling and a small crosshair above for rotation so objects are easy
 to manipulate. The gizmo and handles always appear above other sprites so they
-remain visible. Projects are saved in a single `.sageproject` file
+remain visible. Use the **Show Gizmo** toolbar button to hide or show them as
+needed. A cyan rectangle indicates the active camera; if no camera exists the
+red canvas rectangle shows the window bounds instead. Camera parameters can be
+edited under **Settings → Camera Settings**. Projects are saved in a single
+`.sageproject` file
 All objects are listed in a dock on the right. Selecting one shows a **Transform**
 panel with X, Y, Z, separate Scale X/Y and Rotation fields. A *Link XY* checkbox
 lets you keep both scales in sync. Rotation now accounts for non-uniform
