@@ -1135,7 +1135,7 @@ class Editor(QMainWindow):
         self.scene = Scene()
         self.setWindowTitle(f'SAGE Editor ({ENGINE_VERSION})')
         self.engine_completer = QCompleter(_engine_completions(), self)
-        self.engine_completer.setCaseSensitivity(Qt.CaseInsensitive)
+        self.engine_completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         # set up tabs
         self.tabs = QTabWidget()
         self.setCentralWidget(self.tabs)

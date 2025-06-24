@@ -26,7 +26,7 @@ class ResourceDock(QDockWidget):
             self.resource_model.setReadOnly(False)
             self.proxy_model = QSortFilterProxyModel(self)
             self.proxy_model.setSourceModel(self.resource_model)
-            self.proxy_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
+            self.proxy_model.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
             self.proxy_model.setRecursiveFilteringEnabled(True)
             self.resource_view.setModel(self.proxy_model)
             self.resource_view.sortByColumn(0, Qt.SortOrder.AscendingOrder)
