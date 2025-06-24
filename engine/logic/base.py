@@ -46,34 +46,61 @@ for entries in LANGUAGES.values():
 
 import re
 
-class VarRef:
+class EngineRef:
+    """Reference to an engine attribute or helper function."""
+
+    def __init__(self, attr: str, args: list | None = None):
+        self.attr = attr
+        self.args = args or []
+
+    def get(self, engine):
+        target = getattr(engine, self.attr, None)
+        if callable(target):
+            return target(*[resolve_value(a, engine) for a in self.args])
+        return target
+
+
+class VarRef(EngineRef):
     """Reference to a variable that resolves at runtime."""
 
     def __init__(self, name: str):
-        self.name = name
-
-    def get(self, engine):
-        return engine.events.variables.get(self.name)
+        super().__init__('variable', [name])
 
 
-# support multiple variable reference syntaxes: engine.variable("name"),
-# $name or {name}
-_VAR_RE = re.compile(
-    r"engine\.variable\([\'\"](.+?)[\'\"]\)|\$(\w+)|\{(\w+)\}")
+# support engine attribute references like ``engine.method(args)`` and
+# shorthand variable syntax ``$name`` or ``{name}``
+_ENGINE_REF_RE = re.compile(r"engine\.(\w+)\((.*)\)")
+_VAR_SHORT_RE = re.compile(r"\$(\w+)|\{(\w+)\}")
 
 def parse_value(val):
-    """Return ``val`` or a :class:`VarRef` if it matches the variable syntax."""
+    """Return ``val`` or an :class:`EngineRef` if it matches the reference syntax."""
     if isinstance(val, str):
-        m = _VAR_RE.fullmatch(val.strip())
+        text = val.strip()
+        m = _ENGINE_REF_RE.fullmatch(text)
         if m:
-            name = m.group(1) or m.group(2) or m.group(3)
+            attr = m.group(1)
+            args_text = m.group(2).strip()
+            args = []
+            if args_text:
+                import ast
+                try:
+                    parsed = ast.literal_eval(f'({args_text},)')
+                    args = list(parsed)
+                except Exception:
+                    args = [args_text.strip("'\"")]
+            if attr == 'variable' and args:
+                return VarRef(str(args[0]))
+            return EngineRef(attr, args)
+        m = _VAR_SHORT_RE.fullmatch(text)
+        if m:
+            name = m.group(1) or m.group(2)
             return VarRef(name)
     return val
 
 
 def resolve_value(val, engine):
     """Return the runtime value for ``val``."""
-    if isinstance(val, VarRef):
+    if isinstance(val, EngineRef):
         return val.get(engine)
     return val
 

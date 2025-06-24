@@ -251,10 +251,11 @@ The `Print` action is handy for debugging. The text is formatted with the
 current variables so using `Score: {score}` will display the latest value of a
 variable named `score` when the action runs.
 
-Numeric fields in conditions and actions may reference variables at runtime
-using the syntax ``engine.variable("name")``. Short forms ``$name`` and ``{name}``
-are also accepted. For example ``Move`` can use ``$speed`` as the ``dx`` value to
-read the current speed variable each frame.
+Numeric fields in conditions and actions may reference engine data at runtime.
+Values like ``engine.variable("speed")`` call that method when the event runs so
+the latest value is used. Short forms ``$name`` and ``{name}`` are also
+recognized for variables. For example ``Move`` can use ``$speed`` as the ``dx``
+value to read the current speed variable each frame.
 
 Projects are checked as they load. If an image is missing or a file is
 corrupted, the editor reports the problem in the console instead of
