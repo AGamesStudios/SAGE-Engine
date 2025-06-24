@@ -1393,7 +1393,7 @@ class Editor(QMainWindow):
         self.gizmo_act.setChecked(True)
         self.gizmo_act.toggled.connect(self.toggle_gizmo)
         self.snap_act = toolbar.addAction(
-            self.style().standardIcon(QStyle.StandardPixmap.SP_LinkIcon),
+            self.style().standardIcon(QStyle.StandardPixmap.SP_DirLinkIcon),
             self.t('snap_to_grid')
         )
         self.snap_act.setCheckable(True)
