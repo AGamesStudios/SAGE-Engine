@@ -75,6 +75,8 @@ class Scene:
                 scale_y,
                 entry.get("angle", 0.0),
                 tuple(entry.get("color", [255, 255, 255, 255])) if entry.get("color") is not None else None,
+                entry.get("pivot_x", 0.5),
+                entry.get("pivot_y", 0.5),
             )
             if "quaternion" in entry:
                 q = entry["quaternion"]
@@ -108,6 +110,8 @@ class Scene:
                     "angle": o.angle,
                     "quaternion": list(o.rotation),
                     "color": list(o.color) if o.color is not None else None,
+                    "pivot_x": o.pivot_x,
+                    "pivot_y": o.pivot_y,
                     "events": getattr(o, "events", []),
                     "settings": getattr(o, "settings", {}),
                 }

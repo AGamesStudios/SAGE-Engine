@@ -112,6 +112,15 @@ class GraphicsView(QGraphicsView):
         self.setViewport(QOpenGLWidget())
         self._zoom = 1.0
 
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        try:
+            from OpenGL import GL
+            vp = self.viewport()
+            GL.glViewport(0, 0, vp.width(), vp.height())
+        except Exception:
+            pass
+
     def wheelEvent(self, event):
         if QApplication.keyboardModifiers() == Qt.KeyboardModifier.ControlModifier:
             angle = event.angleDelta().y()
@@ -139,13 +148,22 @@ class SpriteItem(QGraphicsPixmapItem):
         self.setCursor(Qt.CursorShape.OpenHandCursor)
         self.index = None
         if obj:
-            self.setPos(obj.x, obj.y)
-            self.setRotation(obj.angle)
-            self.setTransformOriginPoint(self.boundingRect().center())
-            self.setScale(1.0)
-            t = self.transform()
-            t.scale(obj.scale_x, obj.scale_y)
-            self.setTransform(t)
+            self.apply_object_transform()
+
+    def apply_object_transform(self):
+        """Sync this item's transform from its object."""
+        if not self.obj:
+            return
+        obj = self.obj
+        t = QTransform()
+        px = obj.pivot_x * obj.width
+        py = obj.pivot_y * obj.height
+        t.translate(px, py)
+        t.scale(obj.scale_x, obj.scale_y)
+        t.rotate(obj.angle)
+        t.translate(-px, -py)
+        self.setTransform(t)
+        self.setPos(obj.x, obj.y)
 
     def itemChange(self, change, value):
         from PyQt6.QtWidgets import QGraphicsItem
@@ -229,17 +247,14 @@ class _HandleItem(QGraphicsEllipseItem):
             else:
                 obj.scale_x = max(0.1, self.start_scale_x + delta.x() / 100)
                 obj.scale_y = max(0.1, self.start_scale_y + delta.y() / 100)
-            t = item.transform()
-            t.reset()
-            t.scale(obj.scale_x, obj.scale_y)
-            item.setTransform(t)
+            item.apply_object_transform()
         elif self.kind == 'rotate':
             center = item.mapToScene(item.boundingRect().center())
             pos = event.scenePos() - center
             import math
             angle = math.degrees(math.atan2(pos.y(), pos.x()))
-            item.setRotation(angle)
             obj.angle = angle
+            item.apply_object_transform()
         self.editor._mark_dirty()
         self.editor._update_gizmo()
         super().mouseMoveEvent(event)
@@ -1648,7 +1663,7 @@ class Editor(QMainWindow):
             obj.settings = {}
             self.scene.add_object(obj)
             item.obj = obj
-            t = item.transform(); t.reset(); t.scale(obj.scale_x, obj.scale_y); item.setTransform(t); item.setRotation(obj.angle)
+            item.apply_object_transform()
             self.items.append((item, obj))
             item.index = len(self.items) - 1
             self.object_combo.addItem(obj.name, item.index)
@@ -1676,8 +1691,7 @@ class Editor(QMainWindow):
             obj.settings = {}
             self.scene.add_object(obj)
             item.obj = obj
-            item.setPos(0, 0)
-            t = item.transform(); t.reset(); t.scale(obj.scale_x, obj.scale_y); item.setTransform(t); item.setRotation(obj.angle)
+            item.apply_object_transform()
             self.items.append((item, obj))
             item.index = len(self.items) - 1
             self.object_combo.addItem(obj.name, item.index)
@@ -2005,13 +2019,8 @@ class Editor(QMainWindow):
         else:
             obj.scale_y = self.scale_y_spin.value()
         obj.angle = self.angle_spin.value()
-        item.setPos(obj.x, obj.y)
         item.setZValue(obj.z)
-        t = item.transform()
-        t.reset()
-        t.scale(obj.scale_x, obj.scale_y)
-        item.setTransform(t)
-        item.setRotation(obj.angle)
+        item.apply_object_transform()
         self._mark_dirty()
         self._update_gizmo()
 
@@ -2138,7 +2147,6 @@ class Editor(QMainWindow):
                 pix = QPixmap(32,32); pix.fill(QColor(*(data['color'] or (255,255,255,255))))
             item = SpriteItem(pix, self, None)
             item.setZValue(data.get('z',0))
-            item.setPos(data.get('x',0), data.get('y',0))
             self.g_scene.addItem(item)
             obj = GameObject(
                 img_path or '', data.get('x',0), data.get('y',0), data.get('z',0), data.get('name'),
@@ -2148,7 +2156,7 @@ class Editor(QMainWindow):
             obj.settings = dict(data.get('settings', {}))
             self.scene.add_object(obj)
             item.obj = obj
-            t = item.transform(); t.reset(); t.scale(obj.scale_x, obj.scale_y); item.setTransform(t); item.setRotation(obj.angle)
+            item.apply_object_transform()
             self.items.append((item,obj))
             item.index = len(self.items)-1
             self.object_combo.addItem(obj.name, item.index)
@@ -2288,9 +2296,8 @@ class Editor(QMainWindow):
                     pix = QPixmap(32, 32)
                     pix.fill(QColor(*obj.color))
                 item = SpriteItem(pix, self, obj)
-                item.setPos(obj.x, obj.y)
                 item.setZValue(obj.z)
-                t = item.transform(); t.reset(); t.scale(obj.scale_x, obj.scale_y); item.setTransform(t); item.setRotation(obj.angle)
+                item.apply_object_transform()
                 self.g_scene.addItem(item)
                 self.items.append((item, obj))
                 item.index = len(self.items)-1

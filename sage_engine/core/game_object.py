@@ -35,6 +35,8 @@ class GameObject:
     scale_x: float = 1.0
     scale_y: float = 1.0
     angle: float = 0.0
+    pivot_x: float = 0.5
+    pivot_y: float = 0.5
     color: tuple[int, int, int, int] | None = None
     events: list = field(default_factory=list)
     settings: dict = field(default_factory=dict)
@@ -93,10 +95,12 @@ class GameObject:
     def transform_matrix(self):
         """Return a 4x4 column-major matrix for OpenGL using GLM."""
         angle = math.radians(self.angle)
-        pivot = glm.translate(glm.mat4(1.0), glm.vec3(self.width / 2, self.height / 2, 0))
-        pivot_inv = glm.translate(glm.mat4(1.0), glm.vec3(-self.width / 2, -self.height / 2, 0))
+        px = self.width * self.pivot_x
+        py = self.height * self.pivot_y
+        pivot = glm.translate(glm.mat4(1.0), glm.vec3(px, py, 0))
+        pivot_inv = glm.translate(glm.mat4(1.0), glm.vec3(-px, -py, 0))
         scale = glm.scale(glm.mat4(1.0), glm.vec3(self.scale_x, self.scale_y, 1.0))
         rotate = glm.rotate(glm.mat4(1.0), angle, glm.vec3(0, 0, 1))
         translate = glm.translate(glm.mat4(1.0), glm.vec3(self.x, self.y, 0))
-        m = translate * pivot * rotate * scale * pivot_inv
+        m = translate * pivot * scale * rotate * pivot_inv
         return [m[c][r] for c in range(4) for r in range(4)]

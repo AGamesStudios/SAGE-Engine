@@ -30,6 +30,8 @@ organized and portable.
 OpenGL context versions and toggle vsync if needed. The renderer relies on
 **GLM** for its projection matrix so custom backends can produce compatible
 matrices easily.
+The editor's viewport also uses an OpenGL widget and calls `glViewport` on
+resize so what you see while editing matches the game window exactly.
 When launching the editor a **Project Manager** window appears. It lists your
 recent projects with their creation date and full path.  Buttons let you create
 a new project, open an existing file or clear the list for a clean start.
@@ -61,7 +63,8 @@ lets you keep both scales in sync. Rotation now accounts for non-uniform
 scaling so objects spin correctly even when Scale X and Scale Y differ. Scaling
 also stays centered on the sprite regardless of rotation. Transform calculations
 now use **GLM** so scaling occurs before rotation and objects rotate around
-their center without skewing. The transform dock also includes a **Coordinate Mode** drop-down for switching
+their center without skewing. Each object also defines a **pivot** so the
+viewport matches the runtime and rotations occur around the desired point. The transform dock also includes a **Coordinate Mode** drop-down for switching
 between *Global* and *Local* coordinates. In local mode the gizmo rotates with
 the object so scaling and rotating follow its orientation. Internally every
 object stores its rotation as a quaternion so angles remain stable even after
