@@ -6,6 +6,9 @@ LANGUAGES = {
         'save': 'Save',
         'run': 'Run',
         'add_sprite': 'Add Sprite',
+        'add_object': 'Add Object',
+        'edit_object': 'Edit Object',
+        'color': 'Color:',
         'object': 'Object:',
         'add_variable': 'Add Variable',
         'conditions': 'Conditions',
@@ -89,6 +92,9 @@ LANGUAGES = {
         , 'snap_to_grid': 'Snap to Grid'
         , 'grid_size': 'Grid Size:'
         , 'grid_color': 'Grid Color'
+        , 'add_object': 'Add Object'
+        , 'edit_object': 'Edit Object'
+        , 'color': 'Color:'
     },
     'Русский': {
         'file': 'Файл',
@@ -97,6 +103,9 @@ LANGUAGES = {
         'save': 'Сохранить',
         'run': 'Запуск',
         'add_sprite': 'Добавить спрайт',
+        'add_object': 'Добавить объект',
+        'edit_object': 'Редактировать объект',
+        'color': 'Цвет:',
         'object': 'Объект:',
         'add_variable': 'Добавить переменную',
         'conditions': 'Условия',

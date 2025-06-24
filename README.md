@@ -22,7 +22,10 @@ tabs: **Viewport** and **Logic**. The viewport uses a virtually infinite
 view. A configurable grid and axis lines can be toggled from the toolbar. Grid
 size and color are adjustable and snapping ensures objects align cleanly when
 enabled. A red rectangle shows the canvas (the game window) for reference.
-Objects show a yellow gizmo outline when selected so they are easy to
+The toolbar also includes an **Add Object** button which places a white square
+sprite. Double-click an object to open a small editor for changing its image or
+RGBA color. Objects show a yellow gizmo outline when selected with handles in the
+corner for scaling and a handle above for rotation so they are easy to
 manipulate. Projects are saved in a single `.sageproject` file
 that stores the entire scene including object positions, events and variables.
 Use **File → New Project** to generate a folder for your game. The dialog asks

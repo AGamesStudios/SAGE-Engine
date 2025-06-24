@@ -53,6 +53,9 @@ class Scene:
                 entry.get("x", 0),
                 entry.get("y", 0),
                 entry.get("name"),
+                entry.get("scale", 1.0),
+                entry.get("angle", 0.0),
+                tuple(entry.get("color", [255, 255, 255, 255])) if entry.get("color") is not None else None,
             )
             obj.events = entry.get("events", [])
             scene.add_object(obj)
@@ -74,6 +77,9 @@ class Scene:
                     "x": o.x,
                     "y": o.y,
                     "name": o.name,
+                    "scale": o.scale,
+                    "angle": o.angle,
+                    "color": list(o.color) if o.color is not None else None,
                     "events": getattr(o, "events", []),
                 }
                 for o in self.objects
