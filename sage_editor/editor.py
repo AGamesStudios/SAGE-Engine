@@ -15,7 +15,7 @@ except Exception:  # pragma: no cover - handle older PyQt versions
     QFileSystemModel = None
 from PyQt6.QtGui import QPixmap, QPen, QColor, QPalette, QFont, QAction, QTransform
 from PyQt6.QtCore import (
-    QRectF, Qt, QProcess, QPointF, QSortFilterProxyModel
+    QRectF, Qt, QProcess, QPointF, QSortFilterProxyModel, QSize
 )
 try:
     from PyQt6.sip import isdeleted  # PyQt6 >= 6.5
