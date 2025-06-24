@@ -121,6 +121,7 @@ LANGUAGES = {
         , 'resources': 'Resources'
         , 'new_folder': 'New Folder'
         , 'import_files': 'Import Files'
+        , 'search': 'Search'
     },
     'Русский': {
         'file': 'Файл',
@@ -241,6 +242,7 @@ LANGUAGES = {
         , 'resources': 'Ресурсы'
         , 'new_folder': 'Новая папка'
         , 'import_files': 'Импорт файлов'
+        , 'search': 'Поиск'
     }
 }
 import locale

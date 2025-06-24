@@ -14,7 +14,9 @@ try:
 except Exception:  # pragma: no cover - handle older PyQt versions
     QFileSystemModel = None
 from PyQt6.QtGui import QPixmap, QPen, QColor, QPalette, QFont, QAction, QTransform
-from PyQt6.QtCore import QRectF, Qt, QProcess, QPointF
+from PyQt6.QtCore import (
+    QRectF, Qt, QProcess, QPointF, QSortFilterProxyModel
+)
 try:
     from PyQt6.sip import isdeleted  # PyQt6 >= 6.5
 except Exception:  # pragma: no cover - optional dependency
@@ -1042,18 +1044,45 @@ class Editor(QMainWindow):
         self.resource_view = QTreeView()
         if QFileSystemModel is None:
             self.resource_model = None
+            self.proxy_model = None
         else:
             self.resource_model = QFileSystemModel()
             self.resource_model.setReadOnly(False)
-            self.resource_view.setModel(self.resource_model)
+            self.proxy_model = QSortFilterProxyModel(self)
+            self.proxy_model.setSourceModel(self.resource_model)
+            self.proxy_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
+            self.proxy_model.setRecursiveFilteringEnabled(True)
+            self.resource_view.setModel(self.proxy_model)
+            self.resource_view.sortByColumn(0, Qt.SortOrder.AscendingOrder)
+            self.resource_view.setSortingEnabled(True)
         if self.resource_model is None:
             self.resource_view.setEnabled(False)
         self.resource_view.setHeaderHidden(True)
         self.resource_view.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
         self.resource_view.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.resource_view.customContextMenuRequested.connect(self._resource_menu)
+
+        self.import_btn = QPushButton(self.t('import_files'))
+        self.import_btn.clicked.connect(self._import_resources)
+        self.new_folder_btn = QPushButton(self.t('new_folder'))
+        self.new_folder_btn.clicked.connect(self._new_folder)
+        self.search_edit = QLineEdit()
+        self.search_edit.setPlaceholderText(self.t('search'))
+        self.search_edit.textChanged.connect(self._filter_resources)
+
+        ctrl_layout = QHBoxLayout()
+        ctrl_layout.addWidget(self.new_folder_btn)
+        ctrl_layout.addWidget(self.import_btn)
+        ctrl_layout.addWidget(self.search_edit)
+
+        res_widget = QWidget()
+        res_layout = QVBoxLayout(res_widget)
+        res_layout.setContentsMargins(0, 0, 0, 0)
+        res_layout.addLayout(ctrl_layout)
+        res_layout.addWidget(self.resource_view)
+
         res_dock = QDockWidget(self.t('resources'), self)
-        res_dock.setWidget(self.resource_view)
+        res_dock.setWidget(res_widget)
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, res_dock)
         self.resources_dock = res_dock
 
@@ -1145,6 +1174,9 @@ class Editor(QMainWindow):
         self.console_dock.setWindowTitle(self.t('console'))
         self.objects_dock.setWindowTitle(self.t('objects'))
         self.resources_dock.setWindowTitle(self.t('resources'))
+        self.import_btn.setText(self.t('import_files'))
+        self.new_folder_btn.setText(self.t('new_folder'))
+        self.search_edit.setPlaceholderText(self.t('search'))
         self.transform_group.setTitle(self.t('transform'))
         self.x_spin.setPrefix(''); self.y_spin.setPrefix(''); self.z_spin.setPrefix('')
         self.scale_x_spin.setPrefix(''); self.scale_y_spin.setPrefix(''); self.angle_spin.setPrefix('')
@@ -1359,7 +1391,11 @@ class Editor(QMainWindow):
         self.resource_dir = resources_dir
         if self.resource_model is not None:
             self.resource_model.setRootPath(self.resource_dir)
-            self.resource_view.setRootIndex(self.resource_model.index(self.resource_dir))
+            if self.proxy_model is not None:
+                src_index = self.resource_model.index(self.resource_dir)
+                self.resource_view.setRootIndex(self.proxy_model.mapFromSource(src_index))
+            else:
+                self.resource_view.setRootIndex(self.resource_model.index(self.resource_dir))
         try:
             self.load_scene(self.scene)
         except Exception as exc:
@@ -1391,7 +1427,11 @@ class Editor(QMainWindow):
             set_resource_root(self.resource_dir)
             if self.resource_model is not None:
                 self.resource_model.setRootPath(self.resource_dir)
-                self.resource_view.setRootIndex(self.resource_model.index(self.resource_dir))
+                if self.proxy_model is not None:
+                    src_index = self.resource_model.index(self.resource_dir)
+                    self.resource_view.setRootIndex(self.proxy_model.mapFromSource(src_index))
+                else:
+                    self.resource_view.setRootIndex(self.resource_model.index(self.resource_dir))
         except Exception as exc:
             QMessageBox.warning(self, 'Error', f'Failed to open project: {exc}')
             self.project_path = None
@@ -2001,17 +2041,39 @@ class Editor(QMainWindow):
         import_act = menu.addAction(self.t('import_files'))
         act = menu.exec(self.resource_view.viewport().mapToGlobal(pos))
         if act == new_folder_act:
-            name, ok = QInputDialog.getText(self, self.t('new_folder'), self.t('name'))
-            if ok and name:
-                os.makedirs(os.path.join(base, name), exist_ok=True)
+            self._new_folder(base)
         elif act == import_act:
-            files, _ = QFileDialog.getOpenFileNames(self, self.t('import_files'), '', self.t('image_files'))
-            for f in files:
-                try:
-                    import shutil
-                    shutil.copy(f, base)
-                except Exception as exc:
-                    QMessageBox.warning(self, self.t('error'), str(exc))
+            self._import_resources(base)
+
+    def _new_folder(self, base: str | None = None) -> None:
+        """Create a subfolder inside the resources directory."""
+        if base is None:
+            base = self.resource_dir
+        if not base:
+            return
+        name, ok = QInputDialog.getText(self, self.t('new_folder'), self.t('name'))
+        if ok and name:
+            os.makedirs(os.path.join(base, name), exist_ok=True)
+
+    def _import_resources(self, base: str | None = None) -> None:
+        """Copy selected files into the resources directory."""
+        if base is None:
+            base = self.resource_dir
+        if not base:
+            return
+        files, _ = QFileDialog.getOpenFileNames(
+            self, self.t('import_files'), '', self.t('image_files')
+        )
+        for f in files:
+            try:
+                import shutil
+                shutil.copy(f, base)
+            except Exception as exc:
+                QMessageBox.warning(self, self.t('error'), str(exc))
+
+    def _filter_resources(self, text: str) -> None:
+        if self.proxy_model is not None:
+            self.proxy_model.setFilterWildcard(f"*{text}*")
 
     def _serialize_object(self, index):
         item, obj = self.items[index]
