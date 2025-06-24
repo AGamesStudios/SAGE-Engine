@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 from typing import Any, Callable, Type
+from ..log import logger
 
 OBJECT_REGISTRY: dict[str, Type[Any]] = {}
 OBJECT_META: dict[str, list[tuple[str, str | None]]] = {}
@@ -27,6 +28,7 @@ def object_from_dict(data: dict) -> Any | None:
     typ = data.get("type")
     cls = OBJECT_REGISTRY.get(typ)
     if cls is None:
+        logger.warning('Unknown object type %s', typ)
         return None
     params = {}
     for attr, key in OBJECT_META.get(typ, []):
@@ -36,6 +38,7 @@ def object_from_dict(data: dict) -> Any | None:
     try:
         return cls(**params)
     except Exception:
+        logger.exception('Failed to construct object %s', typ)
         return None
 
 
@@ -51,4 +54,5 @@ def object_to_dict(obj: Any) -> dict | None:
                     continue
                 data[key or attr] = val
             return data
+    logger.warning('Attempted to serialize unregistered object %s', type(obj).__name__)
     return None

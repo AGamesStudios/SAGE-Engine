@@ -4,6 +4,7 @@ from typing import List
 from .game_object import GameObject
 from .camera import Camera
 from .objects import object_from_dict, object_to_dict
+from ..log import logger
 from ..logic import (
     EventSystem, Event,
     condition_from_dict, action_from_dict,
@@ -65,8 +66,14 @@ class Scene:
             obj = object_from_dict(entry)
             if obj is None:
                 continue
-            obj.events = entry.get("events", [])
-            obj.settings = entry.get("settings", {})
+            if hasattr(obj, 'events'):
+                obj.events = entry.get('events', [])
+            elif 'events' in entry:
+                logger.debug('Object %s does not support events', type(obj).__name__)
+            if hasattr(obj, 'settings'):
+                obj.settings = entry.get('settings', {})
+            elif 'settings' in entry:
+                logger.debug('Object %s does not support settings', type(obj).__name__)
             scene.add_object(obj)
             if isinstance(obj, Camera):
                 scene.camera = obj
@@ -122,6 +129,8 @@ class Scene:
                     cobj = condition_from_dict(cond, self.objects, self.variables)
                     if cobj is not None:
                         conditions.append(cobj)
+                    else:
+                        logger.warning('Skipped invalid condition %s', cond)
 
                 actions = []
                 for act in evt.get("actions", []):
@@ -130,5 +139,7 @@ class Scene:
                     aobj = action_from_dict(act, self.objects)
                     if aobj is not None:
                         actions.append(aobj)
+                    else:
+                        logger.warning('Skipped invalid action %s', act)
                 es.add_event(Event(conditions, actions, evt.get("once", False)))
         return es

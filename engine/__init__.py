@@ -15,6 +15,7 @@ from .api import (
 from .core.resources import ResourceManager, set_resource_root, get_resource_path
 from .core.engine import main
 from .log import logger
+from .diagnostics import warn, error, exception
 from .logic import (
     EventSystem, Event, KeyPressed, KeyReleased, MouseButton, InputState, Collision, AfterTime,
     OnStart, EveryFrame, VariableCompare,
@@ -30,5 +31,6 @@ __all__ = [
     'clear_image_cache', 'Renderer', 'OpenGLRenderer', 'GLSettings', 'main',
     'ENGINE_VERSION', 'logger', 'ResourceManager', 'set_resource_root', 'get_resource_path',
     'load_project', 'save_project', 'run_project', 'create_engine',
-    'load_scene', 'save_scene', 'run_scene'
+    'load_scene', 'save_scene', 'run_scene',
+    'warn', 'error', 'exception'
 ]

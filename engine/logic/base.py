@@ -1,7 +1,7 @@
 # SAGE Logic - a simple condition/action event system
 # Provides Clickteam-style logic for both 2D and 3D games
 
-import traceback
+from ..log import logger
 
 # registries used to map names to classes so new logic blocks can be added
 # without modifying the loader code
@@ -90,13 +90,11 @@ class Event:
                 for action in self.actions:
                     try:
                         action.execute(engine, scene, dt)
-                    except Exception as exc:
-                        print(f'Action error: {exc}')
-                        traceback.print_exc()
+                    except Exception:
+                        logger.exception('Action error')
                 self.triggered = True
-        except Exception as exc:
-            print(f'Condition error: {exc}')
-            traceback.print_exc()
+        except Exception:
+            logger.exception('Condition error')
 
 class EventSystem:
     """Container for events."""
@@ -117,6 +115,7 @@ def condition_from_dict(data, objects, variables):
     typ = data.get('type')
     cls = CONDITION_REGISTRY.get(typ)
     if cls is None:
+        logger.warning('Unknown condition type %s', typ)
         return None
     params = {}
     for arg, kind, key in CONDITION_META.get(typ, []):
@@ -133,6 +132,7 @@ def condition_from_dict(data, objects, variables):
     try:
         return cls(**params)
     except Exception:
+        logger.exception('Failed to construct condition %s', typ)
         return None
 
 
@@ -141,6 +141,7 @@ def action_from_dict(data, objects):
     typ = data.get('type')
     cls = ACTION_REGISTRY.get(typ)
     if cls is None:
+        logger.warning('Unknown action type %s', typ)
         return None
     params = {}
     for arg, kind, key in ACTION_META.get(typ, []):
@@ -155,5 +156,6 @@ def action_from_dict(data, objects):
     try:
         return cls(**params)
     except Exception:
+        logger.exception('Failed to construct action %s', typ)
         return None
 

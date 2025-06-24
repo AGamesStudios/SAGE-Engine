@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 import os
 import traceback
+from ..log import logger
 import math
 import glm
 from PIL import Image
@@ -101,9 +102,8 @@ class GameObject:
                 try:
                     img = Image.open(path).convert('RGBA')
                     _IMAGE_CACHE[path] = img
-                except Exception as exc:
-                    print(f'Failed to load image {path}: {exc}')
-                    traceback.print_exc()
+                except Exception:
+                    logger.exception('Failed to load image %s', path)
                     img = Image.new('RGBA', (32, 32), self.color or (255, 255, 255, 255))
         self.image = img
         self.width, self.height = img.size

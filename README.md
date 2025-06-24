@@ -202,6 +202,9 @@ The editor now includes a **Console** dock at the bottom. All output from the
 game process and the editor itself appears here so you can easily debug your
 scripts. All messages are also written to `logs/editor.log` while the
 runtime engine logs to `logs/engine.log` so you can review issues later.
+Set the environment variable `SAGE_LOG_LEVEL` to `DEBUG`, `INFO`, `WARNING` or
+`ERROR` to control how much detail is recorded. Unknown objects, conditions and
+actions generate warnings so issues show up in the log instead of failing silently.
 Events can combine many more conditions and actions such as
 `KeyReleased`, `MouseButton`, `InputState`, `PlaySound` and `Spawn`. The *Logic* tab lists
 each event with its conditions on the left and actions on the right. When adding

@@ -1,5 +1,6 @@
 # Built-in actions
 from .base import Action, register_action
+from ..log import logger
 @register_action('Move', [
     ('obj', 'object', 'target'),
     ('dx', 'value', None),
@@ -49,7 +50,7 @@ class Print(Action):
             msg = self.text.format(**engine.events.variables)
         except Exception:
             msg = self.text
-        print(msg)
+        logger.info(msg)
 
 _SOUND_CACHE = {}
 
@@ -69,12 +70,12 @@ class PlaySound(Action):
                 sound = simpleaudio.WaveObject.from_wave_file(self.path)
                 _SOUND_CACHE[self.path] = sound
             except Exception as exc:
-                print(f'Failed to load sound {self.path}: {exc}')
+                logger.warning('Failed to load sound %s: %s', self.path, exc)
                 return
         try:
             sound.play()
         except Exception as exc:
-            print(f'Failed to play sound {self.path}: {exc}')
+            logger.warning('Failed to play sound %s: %s', self.path, exc)
 
 @register_action('Spawn', [
     ('image', 'value', None),
@@ -135,7 +136,7 @@ class ModifyVariable(Action):
     def execute(self, engine, scene, dt):
         cur = engine.events.variables.get(self.name)
         if not isinstance(cur, (int, float)):
-            print(f'Variable {self.name} is not numeric; ModifyVariable skipped')
+            logger.warning('Variable %s is not numeric; ModifyVariable skipped', self.name)
             return
         try:
             cur = float(cur)
@@ -143,6 +144,6 @@ class ModifyVariable(Action):
             func = self.OPS.get(self.op, lambda a, b: a)
             engine.events.variables[self.name] = func(cur, val)
         except Exception:
-            print(f'Failed to modify variable {self.name}')
+            logger.warning('Failed to modify variable %s', self.name)
 
 __all__ = ['Move','SetPosition','Destroy','Print','PlaySound','Spawn','SetVariable','ModifyVariable']
