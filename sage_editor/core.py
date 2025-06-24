@@ -38,6 +38,10 @@ from . import plugins
 from .viewport import GraphicsView
 register_plugin = plugins.register_plugin
 import json
+from .console import ConsoleDock
+from .properties import PropertiesDock
+from .resources import ResourceDock
+from .logic_tab import LogicTab
 
 RECENT_FILE = os.path.join(os.path.expanduser('~'), '.sage_recent.json')
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
@@ -1161,120 +1165,42 @@ class Editor(QMainWindow):
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, obj_dock)
         self.objects_dock = obj_dock
 
-        prop_widget = QWidget()
-        prop_layout = QVBoxLayout(prop_widget)
-        prop_layout.addWidget(self.transform_group)
-        self.camera_group = QGroupBox(self.t('camera'))
-        cam_form = QFormLayout(self.camera_group)
-        self.cam_w_spin = QSpinBox(); self.cam_w_spin.setRange(100, 4096)
-        self.cam_h_spin = QSpinBox(); self.cam_h_spin.setRange(100, 4096)
-        self.cam_zoom_spin = QDoubleSpinBox(); self.cam_zoom_spin.setRange(0.1, 100)
-        for spin in (self.cam_w_spin, self.cam_h_spin, self.cam_zoom_spin):
-            spin.valueChanged.connect(self._apply_transform)
-        cam_form.addRow(self.t('width'), self.cam_w_spin)
-        cam_form.addRow(self.t('height'), self.cam_h_spin)
-        cam_form.addRow(self.t('zoom'), self.cam_zoom_spin)
-        prop_layout.addWidget(self.camera_group)
-        self.camera_group.setVisible(False)
-        prop_layout.addStretch(1)
-        prop_dock = QDockWidget(self.t('properties'), self)
-        prop_dock.setWidget(prop_widget)
-        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, prop_dock)
+        # properties dock
+        prop_dock = PropertiesDock(self)
         self.properties_dock = prop_dock
+        self.transform_group = prop_dock.transform_group
+        self.camera_group = prop_dock.camera_group
+        self.x_spin = prop_dock.x_spin
+        self.y_spin = prop_dock.y_spin
+        self.z_spin = prop_dock.z_spin
+        self.scale_x_spin = prop_dock.scale_x_spin
+        self.scale_y_spin = prop_dock.scale_y_spin
+        self.link_scale = prop_dock.link_scale
+        self.coord_combo = prop_dock.coord_combo
+        self.angle_spin = prop_dock.angle_spin
+        self.cam_w_spin = prop_dock.cam_w_spin
+        self.cam_h_spin = prop_dock.cam_h_spin
+        self.cam_zoom_spin = prop_dock.cam_zoom_spin
 
         # resources dock on the left
-        if QFileSystemModel is None:
-            self.resource_view = ResourceTreeWidget(self)
-            self.resource_view.setHeaderHidden(True)
-            self.resource_model = None
-            self.proxy_model = None
-        else:
-            self.resource_view = QTreeView()
-            self.resource_model = QFileSystemModel()
-            self.resource_model.setReadOnly(False)
-            self.proxy_model = QSortFilterProxyModel(self)
-            self.proxy_model.setSourceModel(self.resource_model)
-            self.proxy_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
-            self.proxy_model.setRecursiveFilteringEnabled(True)
-            self.resource_view.setModel(self.proxy_model)
-            self.resource_view.sortByColumn(0, Qt.SortOrder.AscendingOrder)
-            self.resource_view.setSortingEnabled(True)
-        if self.resource_model is None:
-            # When QFileSystemModel is missing we still want the fallback tree
-            # to be interactive so users can manage resources normally.
-            self.resource_view.setEnabled(True)
-        self.resource_view.setHeaderHidden(True)
-        self.resource_view.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
-        self.resource_view.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.resource_view.customContextMenuRequested.connect(self._resource_menu)
-
-        self.import_btn = QPushButton(self.t('import_files'))
-        self.import_btn.clicked.connect(self._import_resources)
-        self.new_folder_btn = QPushButton(self.t('new_folder'))
-        self.new_folder_btn.clicked.connect(self._new_folder)
-        self.search_edit = QLineEdit()
-        self.search_edit.setPlaceholderText(self.t('search'))
-        self.search_edit.textChanged.connect(self._filter_resources)
-
-        ctrl_layout = QHBoxLayout()
-        ctrl_layout.addWidget(self.new_folder_btn)
-        ctrl_layout.addWidget(self.import_btn)
-        ctrl_layout.addWidget(self.search_edit)
-
-        res_widget = QWidget()
-        res_layout = QVBoxLayout(res_widget)
-        res_layout.setContentsMargins(0, 0, 0, 0)
-        res_layout.addLayout(ctrl_layout)
-        res_layout.addWidget(self.resource_view)
-
-        res_dock = QDockWidget(self.t('resources'), self)
-        res_dock.setWidget(res_widget)
-        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, res_dock)
+        res_dock = ResourceDock(self)
         self.resources_dock = res_dock
 
         # logic tab with object-specific events and variables
-        self.logic_widget = QWidget()
-        main_layout = QVBoxLayout(self.logic_widget)
-        top_bar = QHBoxLayout()
-        self.object_label = QLabel(self.t('object'))
-        self.object_combo = QComboBox()
-        self.object_combo.currentIndexChanged.connect(self.refresh_events)
-        self.object_combo.currentIndexChanged.connect(self._update_gizmo)
-        top_bar.addWidget(self.object_label)
-        top_bar.addWidget(self.object_combo)
-        main_layout.addLayout(top_bar)
-
-        self.event_list = QTableWidget(0, 2)
-        self.event_list.setHorizontalHeaderLabels([self.t('conditions'), self.t('actions')])
-        self.event_list.horizontalHeader().setStretchLastSection(True)
-
-        self.var_table = QTableWidget(0, 2)
-        self.var_table.setHorizontalHeaderLabels([self.t('name'), self.t('value')])
-        self.var_table.horizontalHeader().setStretchLastSection(True)
-        self.add_var_btn = QPushButton(self.t('add_variable'))
-        self.add_var_btn.clicked.connect(self.add_variable)
-
-        mid_layout = QHBoxLayout()
-        mid_layout.addWidget(self.event_list, 2)
-        var_layout = QVBoxLayout()
-        var_layout.addWidget(self.var_table)
-        var_layout.addWidget(self.add_var_btn)
-        mid_layout.addLayout(var_layout, 1)
-        main_layout.addLayout(mid_layout)
-
+        self.logic_widget = LogicTab(self)
+        self.event_list = self.logic_widget.event_list
+        self.var_table = self.logic_widget.var_table
+        self.object_combo = self.logic_widget.object_combo
+        self.object_label = self.logic_widget.object_label
+        self.add_var_btn = self.logic_widget.add_var_btn
         self.tabs.addTab(self.logic_widget, self.t('logic'))
 
         # console dock
-        self.console = QTextEdit()
-        self.console.setReadOnly(True)
-        dock = QDockWidget(self.t('console'), self)
-        dock.setWidget(self.console)
-        # use PyQt6 enum syntax for the dock area
-        self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, dock)
-        self.console.append(f'Engine path: {os.getcwd()}')
+        cons = ConsoleDock(self)
+        self.console_dock = cons
+        self.console = cons.text
         self.process = None
         self._tmp_project = None
-        self.console_dock = dock
 
         # camera rectangle showing the visible area
         self.camera_rect = None
