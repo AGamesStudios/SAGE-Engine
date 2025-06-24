@@ -7,6 +7,10 @@ LANGUAGES = {
         'run': 'Run',
         'add_sprite': 'Add Sprite',
         'add_object': 'Add Object',
+        'add_camera': 'Add Camera',
+        'properties': 'Properties',
+        'camera': 'Camera',
+        'zoom': 'Zoom:',
         'edit_object': 'Edit Object',
         'color': 'Color:',
         'new_object': 'New Object',
@@ -113,6 +117,10 @@ LANGUAGES = {
         , 'z': 'z:'
         , 'cut': 'Cut'
         , 'add_object': 'Add Object'
+        , 'add_camera': 'Add Camera'
+        , 'properties': 'Properties'
+        , 'camera': 'Camera'
+        , 'zoom': 'Zoom:'
         , 'edit_object': 'Edit Object'
         , 'color': 'Color:'
         , 'unsaved_changes': 'Unsaved Changes'
@@ -131,6 +139,10 @@ LANGUAGES = {
         'run': 'Запуск',
         'add_sprite': 'Добавить спрайт',
         'add_object': 'Добавить объект',
+        'add_camera': 'Добавить камеру',
+        'properties': 'Свойства',
+        'camera': 'Камера',
+        'zoom': 'Зум:',
         'edit_object': 'Редактировать объект',
         'color': 'Цвет:',
         'object': 'Объект:',
@@ -236,6 +248,10 @@ LANGUAGES = {
         , 'z': 'z:'
         , 'new_object': 'Новый объект'
         , 'cut': 'Вырезать'
+        , 'add_camera': 'Добавить камеру'
+        , 'properties': 'Свойства'
+        , 'camera': 'Камера'
+        , 'zoom': 'Зум:'
         , 'unsaved_changes': 'Есть несохраненные изменения'
         , 'save_before_exit': 'Сохранить перед выходом?'
         , 'clear_log': 'Очистить лог'

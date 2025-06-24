@@ -3,6 +3,7 @@ from OpenGL import GL
 import glfw
 from PIL import Image
 import glm
+from engine.core.camera import Camera
 
 
 @dataclass
@@ -88,6 +89,8 @@ class OpenGLRenderer:
         GL.glTranslatef(-camx, -camy, 0)
         GL.glScalef(zoom, zoom, 1)
         for obj in sorted(scene.objects, key=lambda o: getattr(o, 'z', 0)):
+            if isinstance(obj, Camera):
+                continue
             if camera is not None:
                 x, y, w, h = obj.rect()
                 if (x + w < camx or x > camx + camw or

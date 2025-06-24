@@ -16,11 +16,11 @@ from ..logic import (
 class Scene:
     """Collection of objects and events."""
     def __init__(self):
-        self.objects: List[GameObject] = []
+        self.objects: List[GameObject | Camera] = []
         self.variables: dict = {}
         self.camera: Camera | None = None
 
-    def add_object(self, obj: GameObject):
+    def add_object(self, obj: GameObject | Camera):
         existing = {o.name for o in self.objects}
         base = obj.name
         if base in existing:
@@ -31,6 +31,8 @@ class Scene:
                 new_name = f"{base} ({i})"
             obj.name = new_name
         self.objects.append(obj)
+        if isinstance(obj, Camera):
+            self.camera = obj
 
     def remove_object(self, obj: GameObject):
         if obj in self.objects:
@@ -57,8 +59,21 @@ class Scene:
                 cam.get("width", 640),
                 cam.get("height", 480),
                 cam.get("zoom", 1.0),
+                cam.get("name", "Camera"),
             )
+            scene.add_object(scene.camera)
         for entry in data.get("objects", []):
+            if entry.get("type") == "camera":
+                cam = Camera(
+                    entry.get("x", 0),
+                    entry.get("y", 0),
+                    entry.get("width", 640),
+                    entry.get("height", 480),
+                    entry.get("zoom", 1.0),
+                    entry.get("name", "Camera"),
+                )
+                scene.add_object(cam)
+                continue
             scale_x = entry.get("scale_x")
             scale_y = entry.get("scale_y")
             scale = entry.get("scale", 1.0)
@@ -116,28 +131,40 @@ class Scene:
 
     def to_dict(self) -> dict:
         """Return a dictionary representation of the scene."""
-        data = {
-            "variables": self.variables,
-            "objects": [
-                {
-                    "image": o.image_path,
+        obj_list = []
+        for o in self.objects:
+            if isinstance(o, Camera):
+                obj_list.append({
+                    "type": "camera",
                     "x": o.x,
                     "y": o.y,
-                    "z": getattr(o, "z", 0),
+                    "width": o.width,
+                    "height": o.height,
+                    "zoom": o.zoom,
                     "name": o.name,
-                    "scale_x": o.scale_x,
-                    "scale_y": o.scale_y,
-                    "scale": o.scale,
-                    "angle": o.angle,
-                    "quaternion": list(o.rotation),
-                    "color": list(o.color) if o.color is not None else None,
-                    "pivot_x": o.pivot_x,
-                    "pivot_y": o.pivot_y,
-                    "events": getattr(o, "events", []),
-                    "settings": getattr(o, "settings", {}),
-                }
-                for o in self.objects
-            ],
+                })
+                continue
+            obj_list.append({
+                "type": "sprite",
+                "image": o.image_path,
+                "x": o.x,
+                "y": o.y,
+                "z": getattr(o, "z", 0),
+                "name": o.name,
+                "scale_x": o.scale_x,
+                "scale_y": o.scale_y,
+                "scale": o.scale,
+                "angle": o.angle,
+                "quaternion": list(o.rotation),
+                "color": list(o.color) if o.color is not None else None,
+                "pivot_x": o.pivot_x,
+                "pivot_y": o.pivot_y,
+                "events": getattr(o, "events", []),
+                "settings": getattr(o, "settings", {}),
+            })
+        data = {
+            "variables": self.variables,
+            "objects": obj_list,
         }
         if self.camera:
             data["camera"] = {
@@ -146,6 +173,7 @@ class Scene:
                 "width": self.camera.width,
                 "height": self.camera.height,
                 "zoom": self.camera.zoom,
+                "name": self.camera.name,
             }
         return data
 

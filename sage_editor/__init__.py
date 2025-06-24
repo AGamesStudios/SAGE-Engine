@@ -1120,6 +1120,9 @@ class Editor(QMainWindow):
         self.add_obj_btn = QPushButton(self.t('add_object'))
         self.add_obj_btn.clicked.connect(self.add_object)
         obj_layout.addWidget(self.add_obj_btn)
+        self.add_cam_btn = QPushButton(self.t('add_camera'))
+        self.add_cam_btn.clicked.connect(self.add_camera)
+        obj_layout.addWidget(self.add_cam_btn)
 
         self.transform_group = QGroupBox(self.t('transform'))
         form = QFormLayout(self.transform_group)
@@ -1145,11 +1148,31 @@ class Editor(QMainWindow):
         form.addRow("", self.link_scale)
         form.addRow(self.t('coord_mode'), self.coord_combo)
         form.addRow(self.t('rotation'), self.angle_spin)
-        obj_layout.addWidget(self.transform_group)
         obj_dock = QDockWidget(self.t('objects'), self)
         obj_dock.setWidget(obj_widget)
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, obj_dock)
         self.objects_dock = obj_dock
+
+        prop_widget = QWidget()
+        prop_layout = QVBoxLayout(prop_widget)
+        prop_layout.addWidget(self.transform_group)
+        self.camera_group = QGroupBox(self.t('camera'))
+        cam_form = QFormLayout(self.camera_group)
+        self.cam_w_spin = QSpinBox(); self.cam_w_spin.setRange(100, 4096)
+        self.cam_h_spin = QSpinBox(); self.cam_h_spin.setRange(100, 4096)
+        self.cam_zoom_spin = QDoubleSpinBox(); self.cam_zoom_spin.setRange(0.1, 100)
+        for spin in (self.cam_w_spin, self.cam_h_spin, self.cam_zoom_spin):
+            spin.valueChanged.connect(self._apply_transform)
+        cam_form.addRow(self.t('width'), self.cam_w_spin)
+        cam_form.addRow(self.t('height'), self.cam_h_spin)
+        cam_form.addRow(self.t('zoom'), self.cam_zoom_spin)
+        prop_layout.addWidget(self.camera_group)
+        self.camera_group.setVisible(False)
+        prop_layout.addStretch(1)
+        prop_dock = QDockWidget(self.t('properties'), self)
+        prop_dock.setWidget(prop_widget)
+        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, prop_dock)
+        self.properties_dock = prop_dock
 
         # resources dock on the left
         if QFileSystemModel is None:
@@ -1292,10 +1315,13 @@ class Editor(QMainWindow):
         self.new_folder_btn.setText(self.t('new_folder'))
         self.search_edit.setPlaceholderText(self.t('search'))
         self.transform_group.setTitle(self.t('transform'))
+        self.camera_group.setTitle(self.t('camera'))
+        self.properties_dock.setWindowTitle(self.t('properties'))
         self.x_spin.setPrefix(''); self.y_spin.setPrefix(''); self.z_spin.setPrefix('')
         self.scale_x_spin.setPrefix(''); self.scale_y_spin.setPrefix(''); self.angle_spin.setPrefix('')
         self.run_btn.setText(self.t('run'))
         self.add_obj_btn.setText(self.t('add_object'))
+        self.add_cam_btn.setText(self.t('add_camera'))
         self.clear_log_act.setText(self.t('clear_log'))
         self.grid_act.setText(self.t('show_grid'))
         self.gizmo_act.setText(self.t('show_gizmo'))
@@ -1318,6 +1344,7 @@ class Editor(QMainWindow):
         """Enable or disable project-dependent actions."""
         enabled = self.project_path is not None
         self.add_obj_btn.setEnabled(enabled)
+        self.add_cam_btn.setEnabled(enabled)
         self.add_var_btn.setEnabled(enabled)
         self.run_btn.setEnabled(enabled)
         self.objects_dock.setEnabled(enabled)
@@ -1571,6 +1598,8 @@ class Editor(QMainWindow):
             self.project_path = path
         self._update_project_state()
         for item, obj in self.items:
+            if item is None:
+                continue
             pos = item.pos()
             obj.x = pos.x()
             obj.y = pos.y()
@@ -1683,6 +1712,8 @@ class Editor(QMainWindow):
             name = os.path.splitext(os.path.basename(self.project_path))[0]
             title = f'{name} - Scene1'
         for item, obj in self.items:
+            if item is None:
+                continue
             pos = item.pos()
             obj.x = pos.x()
             obj.y = pos.y()
@@ -1812,6 +1843,22 @@ class Editor(QMainWindow):
         except Exception as exc:
             self.console.append(f'Failed to add object: {exc}')
         self.refresh_events()
+
+    def add_camera(self):
+        """Add a new camera object."""
+        if not self._check_project():
+            return
+        cam = Camera(0, 0, self.window_width, self.window_height)
+        cam.name = self.t('camera')
+        self.scene.add_object(cam)
+        self.items.append((None, cam))
+        index = len(self.items) - 1
+        self.object_combo.addItem(cam.name, index)
+        self.object_list.addItem(cam.name)
+        if self.object_combo.currentIndex() == -1:
+            self.object_combo.setCurrentIndex(0)
+        self._mark_dirty()
+        self._update_camera_rect()
 
     def edit_object(self, item: SpriteItem):
         idx = item.index if item and item.obj else -1
@@ -1960,7 +2007,16 @@ class Editor(QMainWindow):
                 self.view.viewport().update()
             self._update_transform_panel()
             return
-        item = self.items[idx][0]
+        item, obj = self.items[idx]
+        if item is None:
+            self.gizmo.hide()
+            self.scale_handle.hide()
+            self.rotate_handle.hide()
+            if hasattr(self.view, 'gizmo_lines'):
+                self.view.gizmo_lines = []
+                self.view.viewport().update()
+            self._update_transform_panel()
+            return
         z = item.zValue()
         if self.local_coords:
             rect = item.boundingRect()
@@ -2012,6 +2068,10 @@ class Editor(QMainWindow):
         if item.index is not None:
             self.object_combo.setCurrentIndex(item.index)
             self.object_list.setCurrentRow(item.index)
+            _, obj = self.items[item.index]
+            if isinstance(obj, Camera):
+                self.scene.camera = obj
+                self._update_camera_rect()
 
     def _on_object_list_select(self):
         """Select the corresponding sprite when the user picks an item."""
@@ -2019,10 +2079,16 @@ class Editor(QMainWindow):
         if row < 0 or row >= len(self.items):
             return
         self.object_combo.setCurrentIndex(row)
+        item, obj = self.items[row]
         self.g_scene.blockSignals(True)
         for it, _ in self.items:
-            it.setSelected(False)
-        self.items[row][0].setSelected(True)
+            if it is not None:
+                it.setSelected(False)
+        if item is not None:
+            item.setSelected(True)
+        if isinstance(obj, Camera):
+            self.scene.camera = obj
+            self._update_camera_rect()
         self.g_scene.blockSignals(False)
         self._update_gizmo()
 
@@ -2138,16 +2204,33 @@ class Editor(QMainWindow):
         idx = self.object_combo.currentIndex()
         if idx < 0 or idx >= len(self.items):
             self.transform_group.setEnabled(False)
+            if hasattr(self, 'camera_group'):
+                self.camera_group.setVisible(False)
             return
         item, obj = self.items[idx]
         self.transform_group.setEnabled(True)
         self.x_spin.blockSignals(True); self.x_spin.setValue(obj.x); self.x_spin.blockSignals(False)
         self.y_spin.blockSignals(True); self.y_spin.setValue(obj.y); self.y_spin.blockSignals(False)
         self.z_spin.blockSignals(True); self.z_spin.setValue(getattr(obj, 'z', 0)); self.z_spin.blockSignals(False)
-        self.scale_x_spin.blockSignals(True); self.scale_x_spin.setValue(obj.scale_x); self.scale_x_spin.blockSignals(False)
-        self.scale_y_spin.blockSignals(True); self.scale_y_spin.setValue(obj.scale_y); self.scale_y_spin.blockSignals(False)
-        self.link_scale.blockSignals(True); self.link_scale.setChecked(obj.scale_x == obj.scale_y); self.link_scale.blockSignals(False)
-        self.angle_spin.blockSignals(True); self.angle_spin.setValue(obj.angle); self.angle_spin.blockSignals(False)
+        if isinstance(obj, Camera):
+            self.camera_group.setVisible(True)
+            self.scale_x_spin.setEnabled(False)
+            self.scale_y_spin.setEnabled(False)
+            self.link_scale.setEnabled(False)
+            self.angle_spin.setEnabled(False)
+            self.cam_w_spin.blockSignals(True); self.cam_w_spin.setValue(obj.width); self.cam_w_spin.blockSignals(False)
+            self.cam_h_spin.blockSignals(True); self.cam_h_spin.setValue(obj.height); self.cam_h_spin.blockSignals(False)
+            self.cam_zoom_spin.blockSignals(True); self.cam_zoom_spin.setValue(obj.zoom); self.cam_zoom_spin.blockSignals(False)
+        else:
+            self.camera_group.setVisible(False)
+            self.scale_x_spin.setEnabled(True)
+            self.scale_y_spin.setEnabled(True)
+            self.link_scale.setEnabled(True)
+            self.angle_spin.setEnabled(True)
+            self.scale_x_spin.blockSignals(True); self.scale_x_spin.setValue(obj.scale_x); self.scale_x_spin.blockSignals(False)
+            self.scale_y_spin.blockSignals(True); self.scale_y_spin.setValue(obj.scale_y); self.scale_y_spin.blockSignals(False)
+            self.link_scale.blockSignals(True); self.link_scale.setChecked(obj.scale_x == obj.scale_y); self.link_scale.blockSignals(False)
+            self.angle_spin.blockSignals(True); self.angle_spin.setValue(obj.angle); self.angle_spin.blockSignals(False)
 
     def _apply_transform(self):
         idx = self.object_combo.currentIndex()
@@ -2155,15 +2238,22 @@ class Editor(QMainWindow):
             return
         item, obj = self.items[idx]
         obj.x = self.x_spin.value(); obj.y = self.y_spin.value(); obj.z = self.z_spin.value()
-        obj.scale_x = self.scale_x_spin.value();
-        if self.link_scale.isChecked():
-            obj.scale_y = obj.scale_x
-            self.scale_y_spin.blockSignals(True); self.scale_y_spin.setValue(obj.scale_y); self.scale_y_spin.blockSignals(False)
+        if isinstance(obj, Camera):
+            obj.width = self.cam_w_spin.value()
+            obj.height = self.cam_h_spin.value()
+            obj.zoom = self.cam_zoom_spin.value()
+            self._update_camera_rect()
         else:
-            obj.scale_y = self.scale_y_spin.value()
-        obj.angle = self.angle_spin.value()
-        item.setZValue(obj.z)
-        item.apply_object_transform()
+            obj.scale_x = self.scale_x_spin.value()
+            if self.link_scale.isChecked():
+                obj.scale_y = obj.scale_x
+                self.scale_y_spin.blockSignals(True); self.scale_y_spin.setValue(obj.scale_y); self.scale_y_spin.blockSignals(False)
+            else:
+                obj.scale_y = self.scale_y_spin.value()
+            obj.angle = self.angle_spin.value()
+            if item is not None:
+                item.setZValue(obj.z)
+                item.apply_object_transform()
         self._mark_dirty()
         self._update_gizmo()
 
@@ -2344,7 +2434,18 @@ class Editor(QMainWindow):
 
     def _serialize_object(self, index):
         item, obj = self.items[index]
+        if isinstance(obj, Camera):
+            return {
+                'type': 'camera',
+                'x': obj.x,
+                'y': obj.y,
+                'width': obj.width,
+                'height': obj.height,
+                'zoom': obj.zoom,
+                'name': obj.name,
+            }
         return {
+            'type': 'sprite',
             'image': obj.image_path,
             'x': obj.x,
             'y': obj.y,
@@ -2364,43 +2465,60 @@ class Editor(QMainWindow):
         if not data:
             return
         try:
-            img_path = data['image']
-            if img_path:
-                abs_path, rel_path = self._copy_to_resources(img_path)
-                pix = QPixmap(abs_path)
-                img_path = rel_path
-                if pix.isNull():
-                    raise ValueError('invalid image')
+            if data.get('type') == 'camera':
+                obj = Camera(
+                    data.get('x', 0),
+                    data.get('y', 0),
+                    data.get('width', 640),
+                    data.get('height', 480),
+                    data.get('zoom', 1.0),
+                    data.get('name', 'Camera'),
+                )
+                self.scene.add_object(obj)
+                self.items.append((None, obj))
+                index = len(self.items) - 1
+                self.object_combo.addItem(obj.name, index)
+                self.object_list.addItem(obj.name)
+                self._mark_dirty()
+                self._update_camera_rect()
             else:
-                pix = QPixmap(32, 32)
-                col = QColor(*((data['color'] or (255, 255, 255, 255))))
-                pix.fill(col)
-            item = SpriteItem(pix, self, None)
-            item.setZValue(data.get('z',0))
-            self.g_scene.addItem(item)
-            obj = GameObject(
-                img_path or '',
-                data.get('x', 0),
-                data.get('y', 0),
-                data.get('z', 0),
-                data.get('name'),
-                data.get('scale_x', data.get('scale', 1.0)),
-                data.get('scale_y', data.get('scale', 1.0)),
-                data.get('angle', 0.0),
-                0.5,
-                0.5,
-                color=tuple(data['color']) if data['color'] else None,
-            )
-            obj.events = list(data.get('events', []))
-            obj.settings = dict(data.get('settings', {}))
-            self.scene.add_object(obj)
-            item.obj = obj
-            item.apply_object_transform()
-            self.items.append((item,obj))
-            item.index = len(self.items)-1
-            self.object_combo.addItem(obj.name, item.index)
-            self.object_list.addItem(obj.name)
-            self._mark_dirty()
+                img_path = data.get('image', '')
+                if img_path:
+                    abs_path, rel_path = self._copy_to_resources(img_path)
+                    pix = QPixmap(abs_path)
+                    img_path = rel_path
+                    if pix.isNull():
+                        raise ValueError('invalid image')
+                else:
+                    pix = QPixmap(32, 32)
+                    col = QColor(*((data.get('color') or (255, 255, 255, 255))))
+                    pix.fill(col)
+                item = SpriteItem(pix, self, None)
+                item.setZValue(data.get('z',0))
+                self.g_scene.addItem(item)
+                obj = GameObject(
+                    img_path or '',
+                    data.get('x', 0),
+                    data.get('y', 0),
+                    data.get('z', 0),
+                    data.get('name'),
+                    data.get('scale_x', data.get('scale', 1.0)),
+                    data.get('scale_y', data.get('scale', 1.0)),
+                    data.get('angle', 0.0),
+                    0.5,
+                    0.5,
+                    color=tuple(data['color']) if data.get('color') else None,
+                )
+                obj.events = list(data.get('events', []))
+                obj.settings = dict(data.get('settings', {}))
+                self.scene.add_object(obj)
+                item.obj = obj
+                item.apply_object_transform()
+                self.items.append((item,obj))
+                item.index = len(self.items)-1
+                self.object_combo.addItem(obj.name, item.index)
+                self.object_list.addItem(obj.name)
+                self._mark_dirty()
         except Exception as exc:
             self.console.append(f'Failed to paste object: {exc}')
         self._update_gizmo()
@@ -2410,7 +2528,8 @@ class Editor(QMainWindow):
         if index < 0 or index >= len(self.items):
             return
         item, obj = self.items.pop(index)
-        self.g_scene.removeItem(item)
+        if item is not None:
+            self.g_scene.removeItem(item)
         self.scene.remove_object(obj)
         self.object_combo.removeItem(index)
         self.object_list.takeItem(index)
@@ -2527,6 +2646,13 @@ class Editor(QMainWindow):
         self._create_grid()
         for obj in self.scene.objects:
             try:
+                if isinstance(obj, Camera):
+                    self.items.append((None, obj))
+                    index = len(self.items) - 1
+                    self.object_combo.addItem(obj.name, index)
+                    self.object_list.addItem(obj.name)
+                    self.scene.camera = obj
+                    continue
                 if obj.image_path:
                     pix = QPixmap(obj.image_path)
                     if pix.isNull():
@@ -2553,6 +2679,8 @@ class Editor(QMainWindow):
 
     def closeEvent(self, event):
         for item, obj in self.items:
+            if item is None:
+                continue
             pos = item.pos()
             obj.x = pos.x()
             obj.y = pos.y()
