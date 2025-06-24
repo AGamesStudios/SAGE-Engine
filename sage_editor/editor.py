@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import (
     QGraphicsView, QGraphicsScene, QGraphicsPixmapItem, QGraphicsLineItem, QGraphicsEllipseItem,
     QTabWidget, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QListWidget, QTableWidget, QTableWidgetItem, QPushButton, QDialog, QFormLayout,
-    QDialogButtonBox, QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox,
+    QDialogButtonBox, QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox, QCompleter,
     QTextEdit, QDockWidget, QGroupBox, QCheckBox, QMessageBox, QMenu, QColorDialog,
     QTreeView, QInputDialog, QTreeWidget, QTreeWidgetItem,
     QStyle, QHeaderView, QAbstractItemView
@@ -29,6 +29,7 @@ except Exception:  # pragma: no cover - optional dependency
 import logging
 import atexit
 import traceback
+import inspect
 from .lang import LANGUAGES, DEFAULT_LANGUAGE
 import tempfile
 import os
@@ -69,6 +70,20 @@ atexit.register(logging.shutdown)
 def _log(text: str) -> None:
     """Write a line to the log file and console."""
     logger.info(text)
+
+
+def _engine_completions() -> list[str]:
+    """Return dotted names for public Engine attributes."""
+    from engine.core.engine import Engine
+    names: list[str] = []
+    for name, obj in inspect.getmembers(Engine):
+        if name.startswith('_'):
+            continue
+        if callable(obj):
+            names.append(f'engine.{name}(')
+        else:
+            names.append(f'engine.{name}')
+    return sorted(names)
 
 def load_recent():
     """Return a list of recent project files that still exist."""
@@ -425,6 +440,8 @@ class ConditionDialog(QDialog):
         self.var_op_box = QComboBox()
         self.var_op_box.addItems(['==', '!=', '<', '<=', '>', '>='])
         self.var_value_edit = QLineEdit()
+        if parent:
+            parent.apply_engine_completer(self.var_value_edit)
         var_row = QHBoxLayout()
         var_row.addWidget(self.var_name_box)
         var_row.addWidget(self.var_op_box)
@@ -702,10 +719,14 @@ class ActionDialog(QDialog):
 
         self.text_label = QLabel(parent.t('text_label') if parent else 'Text:')
         self.text_edit = QLineEdit()
+        if parent:
+            parent.apply_engine_completer(self.text_edit)
         layout.addRow(self.text_label, self.text_edit)
 
         self.path_label = QLabel(parent.t('path_label') if parent else 'Path:')
         self.path_edit = QLineEdit()
+        if parent:
+            parent.apply_engine_completer(self.path_edit)
         path_row = QHBoxLayout()
         path_row.addWidget(self.path_edit)
         self.browse_btn = QPushButton(parent.t('browse') if parent else 'Browse')
@@ -719,6 +740,8 @@ class ActionDialog(QDialog):
         self.mod_op_box = QComboBox()
         self.mod_op_box.addItems(['+', '-', '*', '/'])
         self.var_value_edit = QLineEdit()
+        if parent:
+            parent.apply_engine_completer(self.var_value_edit)
         self.bool_check = QCheckBox()
         var_row = QHBoxLayout()
         var_row.addWidget(self.var_name_box)
@@ -1111,6 +1134,8 @@ class Editor(QMainWindow):
         self.resource_manager = None
         self.scene = Scene()
         self.setWindowTitle(f'SAGE Editor ({ENGINE_VERSION})')
+        self.engine_completer = QCompleter(_engine_completions(), self)
+        self.engine_completer.setCaseSensitivity(Qt.CaseInsensitive)
         # set up tabs
         self.tabs = QTabWidget()
         self.setCentralWidget(self.tabs)
@@ -1306,8 +1331,10 @@ class Editor(QMainWindow):
         self.coord_combo.setItemText(1, self.t('local'))
         self.link_scale.setText(self.t('link_scale'))
         self.coord_combo.setToolTip(self.t('coord_mode'))
-        self._update_recent_menu()
-        self._update_title()
+
+    def apply_engine_completer(self, widget: QLineEdit):
+        """Attach the engine method completer to a line edit."""
+        widget.setCompleter(self.engine_completer)
         
     def _update_project_state(self):
         """Enable or disable project-dependent actions."""
@@ -1462,6 +1489,8 @@ class Editor(QMainWindow):
                 self.setWindowTitle(parent.t('new_project'))
                 self.name_edit = QLineEdit()
                 self.path_edit = QLineEdit()
+                if parent:
+                    parent.apply_engine_completer(self.path_edit)
                 browse_btn = QPushButton(parent.t('browse'))
                 browse_btn.clicked.connect(self.browse)
                 self.render_combo = QComboBox()
@@ -1865,6 +1894,8 @@ class Editor(QMainWindow):
                 super().__init__(parent)
                 self.setWindowTitle(parent.t('edit_object'))
                 self.path_edit = QLineEdit(obj.image_path)
+                if parent:
+                    parent.apply_engine_completer(self.path_edit)
                 browse = QPushButton(parent.t('browse'))
                 browse.clicked.connect(self.browse)
                 self.color_btn = QPushButton()
@@ -1923,6 +1954,8 @@ class Editor(QMainWindow):
                 self.type_box.addItems(['int', 'float', 'string', 'bool'])
                 self.value_label = QLabel(parent.t('value_label') if parent else 'Value:')
                 self.value_edit = QLineEdit()
+                if parent:
+                    parent.apply_engine_completer(self.value_edit)
                 self.bool_check = QCheckBox()
                 self.bool_label = QLabel(parent.t('value_label') if parent else 'Value:')
                 form = QFormLayout(self)

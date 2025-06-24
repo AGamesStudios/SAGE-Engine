@@ -49,14 +49,21 @@ import re
 class EngineRef:
     """Reference to an engine attribute or helper function."""
 
-    def __init__(self, attr: str, args: list | None = None):
-        self.attr = attr
+    def __init__(self, path: list[str], args: list | None = None, call: bool = False):
+        self.path = path
         self.args = args or []
+        self.call = call
 
     def get(self, engine):
-        target = getattr(engine, self.attr, None)
-        if callable(target):
-            return target(*[resolve_value(a, engine) for a in self.args])
+        target = engine
+        for attr in self.path:
+            target = getattr(target, attr, None)
+            if target is None:
+                return None
+        if self.call:
+            if callable(target):
+                return target(*[resolve_value(a, engine) for a in self.args])
+            return None
         return target
 
 
@@ -64,12 +71,12 @@ class VarRef(EngineRef):
     """Reference to a variable that resolves at runtime."""
 
     def __init__(self, name: str):
-        super().__init__('variable', [name])
+        super().__init__(['variable'], [name], call=True)
 
 
-# support engine attribute references like ``engine.method(args)`` and
-# shorthand variable syntax ``$name`` or ``{name}``
-_ENGINE_REF_RE = re.compile(r"engine\.(\w+)\((.*)\)")
+# support engine attribute references like ``engine.attr`` or ``engine.method(args)``
+# and shorthand variable syntax ``$name`` or ``{name}``
+_ENGINE_REF_RE = re.compile(r"engine((?:\.\w+)+)(?:\((.*)\))?")
 _VAR_SHORT_RE = re.compile(r"\$(\w+)|\{(\w+)\}")
 
 def parse_value(val):
@@ -78,8 +85,10 @@ def parse_value(val):
         text = val.strip()
         m = _ENGINE_REF_RE.fullmatch(text)
         if m:
-            attr = m.group(1)
-            args_text = m.group(2).strip()
+            path_text = m.group(1).lstrip('.')
+            path = path_text.split('.') if path_text else []
+            call = m.group(2) is not None
+            args_text = (m.group(2) or '').strip()
             args = []
             if args_text:
                 import ast
@@ -88,9 +97,9 @@ def parse_value(val):
                     args = list(parsed)
                 except Exception:
                     args = [args_text.strip("'\"")]
-            if attr == 'variable' and args:
+            if path == ['variable'] and args:
                 return VarRef(str(args[0]))
-            return EngineRef(attr, args)
+            return EngineRef(path, args, call)
         m = _VAR_SHORT_RE.fullmatch(text)
         if m:
             name = m.group(1) or m.group(2)
