@@ -235,15 +235,16 @@ visual quality.
 ### SAGE API
 
 For small scripts or rapid prototyping the `sage_engine.api` module exposes
-helpers to load and run projects with minimal boilerplate:
+helpers to load and run projects or scenes with minimal boilerplate:
 
 ```python
-from sage_engine import load_project, run_project
+from sage_engine import load_project, run_project, load_scene, run_scene
 
 project = load_project('game.sageproject')
 run_project('game.sageproject')  # one line to launch
+scene = load_scene('level1.json')
+run_scene('level1.json')  # run a single scene file
 ```
 
-The function `create_engine()` builds an `Engine` object from a `Project`
-instance so advanced users can customise the loop while still reusing the core
-setup.
+The function `create_engine()` builds an `Engine` from a `Project` while
+`load_scene` and `run_scene` offer the same convenience for raw scene files.

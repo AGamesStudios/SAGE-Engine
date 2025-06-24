@@ -933,6 +933,7 @@ class Editor(QMainWindow):
         self.window_height = 480
         self.renderer_name = 'opengl'
         self.resource_dir: str | None = None
+        self.scene = Scene()
         self.setWindowTitle(f'SAGE Editor ({ENGINE_VERSION})')
         # set up tabs
         self.tabs = QTabWidget()
@@ -1076,7 +1077,6 @@ class Editor(QMainWindow):
         # canvas rectangle representing the game window
         self.canvas = None
         self.camera_rect = None
-        self.scene = Scene()
         self._update_canvas()
         self.project_path: str | None = None
         self.items = []
@@ -1853,7 +1853,8 @@ class Editor(QMainWindow):
         else:
             pen = QPen(QColor('red'))
             self.canvas = self.g_scene.addRect(rect, pen)
-        cam = getattr(self.scene, 'camera', None)
+        scene = getattr(self, 'scene', None)
+        cam = getattr(scene, 'camera', None) if scene else None
         if cam:
             cam_rect = QRectF(cam.x, cam.y, cam.width, cam.height)
             if getattr(self, 'camera_rect', None) and self.camera_rect.scene() is self.g_scene:

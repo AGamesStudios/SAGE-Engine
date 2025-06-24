@@ -10,6 +10,8 @@ __all__ = [
     "load_project",
     "run_project",
     "create_engine",
+    "load_scene",
+    "run_scene",
 ]
 
 
@@ -40,3 +42,27 @@ def run_project(path: str, fps: int = 60):
     """Load a project file and run it directly."""
     engine = create_engine(load_project(path), fps=fps)
     engine.run()
+
+
+def load_scene(path: str) -> Scene:
+    """Load a :class:`Scene` from disk."""
+    return Scene.load(path)
+
+
+def run_scene(path: str, width: int = 640, height: int = 480,
+              title: str | None = None, fps: int = 60) -> None:
+    """Run a single scene file directly."""
+    scene = load_scene(path)
+    camera = scene.camera or Camera(0, 0, width, height)
+    renderer = OpenGLRenderer(width, height, title or "SAGE 2D")
+    events = scene.build_event_system()
+    Engine(
+        width=width,
+        height=height,
+        scene=scene,
+        events=events,
+        title=title or "SAGE 2D",
+        renderer=renderer,
+        camera=camera,
+        fps=fps,
+    ).run()
