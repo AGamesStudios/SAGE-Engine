@@ -140,7 +140,9 @@ The engine ships with **SAGE Logic**, a small condition/action system inspired
 by Clickteam. Events consist of *conditions* and *actions*. When all conditions
 pass, the actions run. Built-in blocks include `KeyPressed`, `Collision`,
 `Timer`, `Move`, `SetPosition`, `Destroy` and `Print`. You can subclass
-`Condition` or `Action` to create your own.
+`Condition` or `Action` to create your own.  Conditions and actions live in
+separate modules and register themselves automatically so new types can be
+added without touching the core loader.
 
 ```python
 import glfw
@@ -161,7 +163,7 @@ Engine(scene=scene, events=events).run()
 The editor now includes a **Console** dock at the bottom. All output from the
 game process and the editor itself appears here so you can easily debug your
 scripts. Events can combine many more conditions and actions such as
-`KeyReleased`, `MouseButton`, `PlaySound` and `Spawn`. The *Logic* tab lists
+`KeyReleased`, `MouseButton`, `InputState`, `PlaySound` and `Spawn`. The *Logic* tab lists
 each event with its conditions on the left and actions on the right. When adding
 an event you choose keys from a drop‑down list and only the relevant parameters
 for the selected action are shown so it is quick to create complex behavior.
