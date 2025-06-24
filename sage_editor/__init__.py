@@ -24,6 +24,7 @@ except Exception:  # pragma: no cover - optional dependency
         def isdeleted(obj):
             """Fallback when sip is unavailable."""
             return False
+import logging
 import traceback
 from .lang import LANGUAGES, DEFAULT_LANGUAGE
 import tempfile
@@ -35,13 +36,20 @@ import json
 RECENT_FILE = os.path.join(os.path.expanduser('~'), '.sage_recent.json')
 LOG_FILE = os.path.join(os.path.expanduser('~'), '.sage_editor.log')
 
+logger = logging.getLogger('sage_editor')
+if not logger.handlers:
+    logger.setLevel(logging.INFO)
+    fmt = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
+    fh = logging.FileHandler(LOG_FILE, encoding='utf-8')
+    fh.setFormatter(fmt)
+    logger.addHandler(fh)
+    ch = logging.StreamHandler()
+    ch.setFormatter(fmt)
+    logger.addHandler(ch)
+
 def _log(text: str) -> None:
-    """Append a message to the debug log."""
-    try:
-        with open(LOG_FILE, 'a', encoding='utf-8') as f:
-            f.write(text.rstrip() + '\n')
-    except Exception:
-        pass
+    """Write a line to the log file and console."""
+    logger.info(text)
 
 def load_recent():
     """Return a list of recent project files that still exist."""
@@ -2387,10 +2395,12 @@ def main(argv=None):
         editor.console.append(text)
         orig_err.write(text)
         orig_err.flush()
+        logger.error(text)
         QMessageBox.critical(editor, editor.t('error'), text)
 
     sys.excepthook = handle_exception
     print('SAGE Editor started')
+    _log('SAGE Editor started')
 
     return app.exec()
 

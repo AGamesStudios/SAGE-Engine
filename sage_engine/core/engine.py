@@ -24,6 +24,7 @@ if not logger.handlers:
     ch = logging.StreamHandler()
     ch.setFormatter(fmt)
     logger.addHandler(ch)
+    logger.info('Logger initialized')
 
 def _log(text: str) -> None:
     """Write a line to the log file and console."""
