@@ -5,6 +5,7 @@ from .core.scene import Scene
 from .core.project import Project
 from .renderers import OpenGLRenderer
 from .core.camera import Camera
+from .core.objects import register_object, object_from_dict, object_to_dict
 
 __all__ = [
     "load_project",
@@ -14,6 +15,9 @@ __all__ = [
     "load_scene",
     "save_scene",
     "run_scene",
+    "register_object",
+    "object_from_dict",
+    "object_to_dict",
 ]
 
 

@@ -3,6 +3,7 @@ from typing import List
 
 from .game_object import GameObject
 from .camera import Camera
+from .objects import object_from_dict, object_to_dict
 from ..logic import (
     EventSystem, Event,
     condition_from_dict, action_from_dict,
@@ -53,76 +54,20 @@ class Scene:
         scene.variables = data.get("variables", {})
         cam = data.get("camera")
         if isinstance(cam, dict):
-            scene.camera = Camera(
-                cam.get("x", 0),
-                cam.get("y", 0),
-                cam.get("z", 0),
-                cam.get("width", 640),
-                cam.get("height", 480),
-                cam.get("zoom", 1.0),
-                cam.get("name", "Camera"),
-            )
-            scene.add_object(scene.camera)
+            # legacy single camera field
+            obj = object_from_dict({"type": "camera", **cam})
+            if obj is not None:
+                scene.add_object(obj)
+                scene.camera = obj
         for entry in data.get("objects", []):
-            if entry.get("type") == "camera":
-                cam = Camera(
-                    entry.get("x", 0),
-                    entry.get("y", 0),
-                    entry.get("z", 0),
-                    entry.get("width", 640),
-                    entry.get("height", 480),
-                    entry.get("zoom", 1.0),
-                    entry.get("name", "Camera"),
-                )
-                scene.add_object(cam)
+            obj = object_from_dict(entry)
+            if obj is None:
                 continue
-            scale_x = entry.get("scale_x")
-            scale_y = entry.get("scale_y")
-            scale = entry.get("scale", 1.0)
-            if scale_x is None:
-                scale_x = scale
-            if scale_y is None:
-                scale_y = scale
-            px = entry.get("pivot_x", 0.5)
-            py = entry.get("pivot_y", 0.5)
-            try:
-                if isinstance(px, (list, tuple)):
-                    px = float(px[0]) if px else 0.5
-                else:
-                    px = float(px)
-            except Exception:
-                px = 0.5
-            try:
-                if isinstance(py, (list, tuple)):
-                    py = float(py[0]) if py else 0.5
-                else:
-                    py = float(py)
-            except Exception:
-                py = 0.5
-            obj = GameObject(
-                entry.get("image", ""),
-                entry.get("x", 0),
-                entry.get("y", 0),
-                entry.get("z", 0),
-                entry.get("name"),
-                scale_x,
-                scale_y,
-                entry.get("angle", 0.0),
-                px,
-                py,
-                color=(
-                    tuple(entry.get("color", [255, 255, 255, 255]))
-                    if entry.get("color") is not None
-                    else None
-                ),
-            )
-            if "quaternion" in entry:
-                q = entry["quaternion"]
-                if isinstance(q, list) and len(q) == 4:
-                    obj.rotation = tuple(float(v) for v in q)
             obj.events = entry.get("events", [])
             obj.settings = entry.get("settings", {})
             scene.add_object(obj)
+            if isinstance(obj, Camera):
+                scene.camera = obj
         return scene
 
     @classmethod
@@ -135,50 +80,22 @@ class Scene:
         """Return a dictionary representation of the scene."""
         obj_list = []
         for o in self.objects:
-            if isinstance(o, Camera):
-                obj_list.append({
-                    "type": "camera",
-                    "x": o.x,
-                    "y": o.y,
-                    "z": o.z,
-                    "width": o.width,
-                    "height": o.height,
-                    "zoom": o.zoom,
-                    "name": o.name,
-                })
+            data = object_to_dict(o)
+            if data is None:
                 continue
-            obj_list.append({
-                "type": "sprite",
-                "image": o.image_path,
-                "x": o.x,
-                "y": o.y,
-                "z": getattr(o, "z", 0),
-                "name": o.name,
-                "scale_x": o.scale_x,
-                "scale_y": o.scale_y,
-                "scale": o.scale,
-                "angle": o.angle,
-                "quaternion": list(o.rotation),
-                "color": list(o.color) if o.color is not None else None,
-                "pivot_x": o.pivot_x,
-                "pivot_y": o.pivot_y,
-                "events": getattr(o, "events", []),
-                "settings": getattr(o, "settings", {}),
-            })
+            if hasattr(o, "events"):
+                data["events"] = getattr(o, "events", [])
+            if hasattr(o, "settings"):
+                data["settings"] = getattr(o, "settings", {})
+            if hasattr(o, "rotation"):
+                data["quaternion"] = list(o.rotation)
+            obj_list.append(data)
         data = {
             "variables": self.variables,
             "objects": obj_list,
         }
         if self.camera:
-            data["camera"] = {
-                "x": self.camera.x,
-                "y": self.camera.y,
-                "z": self.camera.z,
-                "width": self.camera.width,
-                "height": self.camera.height,
-                "zoom": self.camera.zoom,
-                "name": self.camera.name,
-            }
+            data["camera"] = object_to_dict(self.camera)
         return data
 
     def save(self, path: str):

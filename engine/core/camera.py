@@ -1,5 +1,18 @@
 from dataclasses import dataclass
+from .objects import register_object
 
+@register_object(
+    'camera',
+    [
+        ('x', None),
+        ('y', None),
+        ('z', None),
+        ('width', None),
+        ('height', None),
+        ('zoom', None),
+        ('name', None),
+    ],
+)
 @dataclass(slots=True)
 class Camera:
     """2D camera object that can be placed in a scene."""

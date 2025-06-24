@@ -4,6 +4,7 @@ import traceback
 import math
 import glm
 from PIL import Image
+from .objects import register_object
 
 # cache loaded images so repeated sprites don't reload files
 _IMAGE_CACHE: dict[str, Image.Image] = {}
@@ -24,6 +25,22 @@ def _quat_to_angle(quat: tuple[float, float, float, float]) -> float:
     z, w = quat[2], quat[3]
     return math.degrees(2.0 * math.atan2(z, w))
 
+@register_object(
+    'sprite',
+    [
+        ('image_path', 'image'),
+        ('x', None),
+        ('y', None),
+        ('z', None),
+        ('name', None),
+        ('scale_x', None),
+        ('scale_y', None),
+        ('angle', None),
+        ('pivot_x', None),
+        ('pivot_y', None),
+        ('color', None),
+    ],
+)
 @dataclass(slots=True)
 class GameObject:
     """Sprite-based object used in scenes."""

@@ -236,6 +236,11 @@ arguments. This allows `condition_from_dict` and `action_from_dict` to
 instantiate new blocks automatically, making the system easily extensible and
 suitable for editor integration.
 
+Scene objects use a similar registry. The ``register_object`` decorator
+associates each object type with a list of constructor parameters. Functions
+``object_from_dict`` and ``object_to_dict`` rely on this metadata so scenes can
+load and save new object classes without modifying the loader.
+
 ### Versioning
 
 Each project stores the engine version string so upgrades are painless. Older
