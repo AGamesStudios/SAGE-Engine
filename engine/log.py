@@ -9,7 +9,7 @@ LOG_FILE = os.path.join(LOG_DIR, 'engine.log')
 def _setup_logger() -> logging.Logger:
     """Configure and return the engine logger."""
     os.makedirs(LOG_DIR, exist_ok=True)
-    logger = logging.getLogger('sage_engine')
+    logger = logging.getLogger('engine')
     if not logger.handlers:
         level = os.environ.get('SAGE_LOG_LEVEL', 'INFO').upper()
         logger.setLevel(getattr(logging, level, logging.INFO))

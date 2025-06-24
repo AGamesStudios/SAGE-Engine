@@ -33,7 +33,7 @@ from .lang import LANGUAGES, DEFAULT_LANGUAGE
 import tempfile
 import os
 import glfw
-from sage_engine import Scene, GameObject, Project, Camera, ENGINE_VERSION, get_resource_path
+from engine import Scene, GameObject, Project, Camera, ENGINE_VERSION, get_resource_path
 import json
 
 RECENT_FILE = os.path.join(os.path.expanduser('~'), '.sage_recent.json')
@@ -350,7 +350,7 @@ class ConditionDialog(QDialog):
         self.variables = variables
         layout = QFormLayout(self)
 
-        from sage_engine.logic.base import get_registered_conditions
+        from engine.logic.base import get_registered_conditions
         self.type_box = QComboBox()
         for name in get_registered_conditions():
             self.type_box.addItem(parent.t(name) if parent else name, name)
@@ -608,7 +608,7 @@ class ActionDialog(QDialog):
         self.variables = variables
         layout = QFormLayout(self)
 
-        from sage_engine.logic.base import get_registered_actions
+        from engine.logic.base import get_registered_actions
         self.type_box = QComboBox()
         for name in get_registered_actions():
             self.type_box.addItem(parent.t(name) if parent else name, name)
@@ -1434,10 +1434,10 @@ class Editor(QMainWindow):
             QMessageBox.warning(self, 'Error', f'Failed to create project: {exc}')
             return
         self.project_path = proj_path
-        from sage_engine import set_resource_root
+        from engine import set_resource_root
         set_resource_root(resources_dir)
         self.resource_dir = resources_dir
-        from sage_engine import ResourceManager
+        from engine import ResourceManager
         self.resource_manager = ResourceManager(self.resource_dir)
         _log(f'Resource manager ready at {self.resource_dir}')
         if self.resource_model is not None:
@@ -1474,7 +1474,7 @@ class Editor(QMainWindow):
             self.load_scene(Scene.from_dict(proj.scene))
             self._update_canvas()
             self.resource_dir = os.path.join(os.path.dirname(path), proj.resources)
-            from sage_engine import set_resource_root, ResourceManager
+            from engine import set_resource_root, ResourceManager
             set_resource_root(self.resource_dir)
             self.resource_manager = ResourceManager(self.resource_dir)
             _log(f'Resource manager ready at {self.resource_dir}')
@@ -1629,7 +1629,7 @@ class Editor(QMainWindow):
         self.process = QProcess(self)
         self.process.setProgram(sys.executable)
         args = [
-            '-m', 'sage_engine', proj_path,
+            '-m', 'engine', proj_path,
             '--width', str(self.window_width),
             '--height', str(self.window_height),
             '--title', title,

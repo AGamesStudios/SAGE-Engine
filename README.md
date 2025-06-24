@@ -10,15 +10,15 @@ stores its version inside every `.sageproject` file so you can safely upgrade
 without losing progress.
 
 ## Architecture
-The core engine code resides under `sage_engine/core` which defines the
+The core engine code resides under `engine/core` which defines the
 generic `GameObject`, `Scene`, `Engine` and `Project` classes. 2D helpers are
 provided in the same package, and the event system lives in
-`sage_engine/logic`. `sage_editor` builds on these pieces but remains optional
+`engine/logic`. `sage_editor` builds on these pieces but remains optional
 so games can depend on the engine without pulling in the editor.
 
 ### Renderer
 
-Rendering is handled by modules under `sage_engine/renderers`.  The
+Rendering is handled by modules under `engine/renderers`.  The
 engine ships with an `OpenGLRenderer` implemented using glfw and
 PyOpenGL.  The base `Renderer` interface allows additional backends
 to be implemented later (for example Vulkan) without modifying the
@@ -134,7 +134,7 @@ or paste the previously copied one.
 Run a saved project with:
 
 ```bash
-python -m sage_engine path/to/project.sageproject
+python -m engine path/to/project.sageproject
 # the engine uses the renderer stored in the project file
 # pass `--renderer opengl` to override the project setting
 ```
@@ -174,8 +174,8 @@ conditions or actions becomes available immediately.  Use
 
 ```python
 import glfw
-from sage_engine import Engine, Scene, GameObject
-from sage_engine.logic import EventSystem, Event, KeyPressed, AfterTime, Move
+from engine import Engine, Scene, GameObject
+from engine.logic import EventSystem, Event, KeyPressed, AfterTime, Move
 
 player = GameObject('player.png')
 scene = Scene()
@@ -236,17 +236,17 @@ SAGE Engine aims to run smoothly even on older hardware. Images and sounds
 are cached after the first load so repeated objects or effects do not reload
 files from disk. The `Engine` class accepts an `fps` argument (default 60) to
 control the frame rate using `time.sleep` for consistent timing.
-You can clear the image cache with `sage_engine.clear_image_cache()` if memory
+You can clear the image cache with `engine.clear_image_cache()` if memory
 becomes tight. These optimizations keep the runtime light without sacrificing
 visual quality.
 
 ### SAGE API
 
-For small scripts or rapid prototyping the `sage_engine.api` module exposes
+For small scripts or rapid prototyping the `engine.api` module exposes
 helpers to load and run projects or scenes with minimal boilerplate:
 
 ```python
-from sage_engine import load_project, run_project, load_scene, run_scene
+from engine import load_project, run_project, load_scene, run_scene
 
 project = load_project('game.sageproject')
 run_project('game.sageproject')  # one line to launch

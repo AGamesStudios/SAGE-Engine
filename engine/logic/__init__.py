@@ -16,7 +16,7 @@ for mod in pkgutil.iter_modules(__path__):
         importlib.import_module(f"{__name__}.{mod.name}")
 
 # expose registered classes at the package level so users can simply import
-# them from ``sage_engine.logic``
+# them from ``engine.logic``
 globals().update(CONDITION_REGISTRY)
 globals().update(ACTION_REGISTRY)
 

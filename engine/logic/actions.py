@@ -79,7 +79,7 @@ class Spawn(Action):
 
     def execute(self, engine, scene, dt):
         try:
-            from sage_engine import GameObject
+            from engine import GameObject
         except Exception:
             return
         obj = GameObject(self.image, self.x, self.y)
