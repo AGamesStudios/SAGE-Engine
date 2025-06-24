@@ -2145,13 +2145,13 @@ class Editor(QMainWindow):
         if cam:
             w = cam.width / cam.zoom
             h = cam.height / cam.zoom
-            x = cam.x - w / 2
-            y = cam.y - h / 2
+            x = cam.x
+            y = cam.y
         else:
             w = getattr(self, 'window_width', 640)
             h = getattr(self, 'window_height', 480)
-            x = -w / 2
-            y = -h / 2
+            x = 0
+            y = 0
         cam_rect = QRectF(x, y, w, h)
         if getattr(self, 'camera_rect', None) and self.camera_rect.scene() is self.g_scene:
             self.camera_rect.setRect(cam_rect)
