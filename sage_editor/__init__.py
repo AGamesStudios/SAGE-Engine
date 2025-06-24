@@ -175,8 +175,9 @@ class _HandleItem(QGraphicsEllipseItem):
         if self.kind == 'scale':
             scene_delta = event.scenePos() - self.start_pos
             if self.editor.local_coords:
-                inv = item.sceneTransform().inverted()[0]
-                delta = inv.map(scene_delta)
+                rot = QTransform()
+                rot.rotate(item.rotation())
+                delta = rot.inverted()[0].map(scene_delta)
             else:
                 delta = scene_delta
             new_scale = max(0.1, (self.start_scale_x + self.start_scale_y)/2 + (delta.x() + delta.y()) / 100)
@@ -2100,6 +2101,7 @@ def main(argv=None):
     editor = Editor(autoshow=False)
     pm = ProjectManager(editor)
     if pm.exec() != QDialog.DialogCode.Accepted:
+        app.quit()
         return 0
     editor.showMaximized()
 
