@@ -1,5 +1,6 @@
 # Simple resource management for SAGE Engine
 import os
+from ..log import logger
 
 _RESOURCE_ROOT = ""
 
@@ -30,10 +31,12 @@ class ResourceManager:
     def add_folder(self, name: str) -> str:
         p = self.path(name)
         os.makedirs(p, exist_ok=True)
+        logger.info("Created resource folder %s", p)
         return p
 
     def move(self, src: str, dst: str) -> None:
         os.rename(self.path(src), self.path(dst))
+        logger.info("Moved resource %s -> %s", src, dst)
 
     def list(self, rel: str = "") -> list[str]:
         base = self.path(rel)
@@ -59,6 +62,7 @@ class ResourceManager:
             target = os.path.join(dest, f"{name}_{counter}{ext}")
             counter += 1
         shutil.copy(src, target)
+        logger.info("Imported resource %s -> %s", src, target)
         if target.startswith(self.root):
             return os.path.relpath(target, self.root)
         return target

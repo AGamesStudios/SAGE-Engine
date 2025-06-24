@@ -74,9 +74,13 @@ class Scene:
                 scale_x,
                 scale_y,
                 entry.get("angle", 0.0),
-                tuple(entry.get("color", [255, 255, 255, 255])) if entry.get("color") is not None else None,
                 entry.get("pivot_x", 0.5),
                 entry.get("pivot_y", 0.5),
+                color=(
+                    tuple(entry.get("color", [255, 255, 255, 255]))
+                    if entry.get("color") is not None
+                    else None
+                ),
             )
             if "quaternion" in entry:
                 q = entry["quaternion"]

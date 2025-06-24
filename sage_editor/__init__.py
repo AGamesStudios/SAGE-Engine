@@ -1690,7 +1690,10 @@ class Editor(QMainWindow):
             item = SpriteItem(pix, self, None)
             item.setZValue(0)
             self.g_scene.addItem(item)
-            obj = GameObject(rel_path, 0, 0, 0, None, 1.0, 1.0, 0.0, None)
+            obj = GameObject(
+                rel_path, 0, 0, 0, None, 1.0, 1.0, 0.0,
+                0.5, 0.5, color=None
+            )
             obj.name = self.t('new_object')
             obj.settings = {}
             self.scene.add_object(obj)
@@ -1718,7 +1721,10 @@ class Editor(QMainWindow):
             item = SpriteItem(pix, self, None)
             item.setZValue(0)
             self.g_scene.addItem(item)
-            obj = GameObject('', 0, 0, 0, None, 1.0, 1.0, 0.0, (255, 255, 255, 255))
+            obj = GameObject(
+                '', 0, 0, 0, None, 1.0, 1.0, 0.0,
+                0.5, 0.5, color=(255, 255, 255, 255)
+            )
             obj.name = self.t('new_object')
             obj.settings = {}
             self.scene.add_object(obj)
@@ -2096,14 +2102,18 @@ class Editor(QMainWindow):
 
     def _new_folder(self, base: str | None = None) -> None:
         """Create a subfolder inside the resources directory."""
+        if not self._check_project():
+            return
         if base is None:
             base = self.resource_dir
         if not base:
             return
         name, ok = QInputDialog.getText(self, self.t('new_folder'), self.t('name'))
         if ok and name:
-            os.makedirs(os.path.join(base, name), exist_ok=True)
-            _log(f'Created folder {os.path.join(base, name)}')
+            folder = self.resource_manager.add_folder(name) if self.resource_manager else os.path.join(base, name)
+            if not self.resource_manager:
+                os.makedirs(folder, exist_ok=True)
+            _log(f'Created folder {folder}')
 
     def _copy_to_resources(self, path: str, base: str | None = None) -> tuple[str, str]:
         """Copy ``path`` into resources if needed and return (abs, rel)."""
@@ -2115,6 +2125,10 @@ class Editor(QMainWindow):
             rel = os.path.relpath(abs_path, res_root)
             return abs_path, rel
         dest_dir = base if base else self.resource_dir
+        if self.resource_manager:
+            rel = self.resource_manager.import_file(abs_path, os.path.relpath(dest_dir, self.resource_dir))
+            abs_copy = os.path.join(self.resource_dir, rel)
+            return abs_copy, rel
         base_name = os.path.basename(path)
         name, ext = os.path.splitext(base_name)
         target = os.path.join(dest_dir, base_name)
@@ -2132,6 +2146,8 @@ class Editor(QMainWindow):
 
     def _import_resources(self, base: str | None = None) -> None:
         """Copy selected files into the resources directory."""
+        if not self._check_project():
+            return
         if base is None:
             base = self.resource_dir
         if not base:
@@ -2141,6 +2157,7 @@ class Editor(QMainWindow):
         )
         for f in files:
             self._copy_to_resources(f, base)
+            _log(f'Imported {f} to {base}')
 
     def _filter_resources(self, text: str) -> None:
         if self.proxy_model is not None:
@@ -2181,8 +2198,17 @@ class Editor(QMainWindow):
             item.setZValue(data.get('z',0))
             self.g_scene.addItem(item)
             obj = GameObject(
-                img_path or '', data.get('x',0), data.get('y',0), data.get('z',0), data.get('name'),
-                data.get('scale_x', data.get('scale',1.0)), data.get('scale_y', data.get('scale',1.0)), data.get('angle',0.0), tuple(data['color']) if data['color'] else None
+                img_path or '',
+                data.get('x', 0),
+                data.get('y', 0),
+                data.get('z', 0),
+                data.get('name'),
+                data.get('scale_x', data.get('scale', 1.0)),
+                data.get('scale_y', data.get('scale', 1.0)),
+                data.get('angle', 0.0),
+                0.5,
+                0.5,
+                color=tuple(data['color']) if data['color'] else None,
             )
             obj.events = list(data.get('events', []))
             obj.settings = dict(data.get('settings', {}))
