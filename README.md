@@ -208,13 +208,14 @@ actions generate warnings so issues show up in the log instead of failing silent
 Events can combine many more conditions and actions such as
 `KeyReleased`, `MouseButton`, `InputState`, `PlaySound`, `Spawn`,
 `ZoomAbove` and `SetZoom`. The *Logic* tab lists
-each event with its conditions on the left and actions on the right. When adding
-an event you choose keys from a drop‑down list and only the relevant parameters
-for the selected action are shown so it is quick to create complex behavior.
+each event with its conditions on the left and actions on the right. The add
+event dialog now uses a cleaner grid layout, aligning the condition and action
+lists side by side with the Ok/Cancel buttons underneath.
 
-The new `InputState` condition checks a key or mouse button on a specific
-device. Pick `keyboard` or `mouse` and then select the exact key or button so
-you are always in control of which input triggers the event.
+`KeyPressed` and `KeyReleased` also accept a `device` field so the same block
+works for keyboard keys or mouse buttons. The improved condition editor lets you
+pick the device and specific key from drop‑down lists so you are always in
+control of which input triggers the event.
 
 Additional math-friendly blocks make it easy to build counters or timers.
 `VariableCompare` tests a variable against a value using operators like `>`,

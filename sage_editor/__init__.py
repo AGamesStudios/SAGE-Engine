@@ -335,9 +335,13 @@ class ResourceTreeWidget(QTreeWidget):
 def describe_condition(cond, objects, t=lambda x: x):
     typ = cond.get('type', '')
     if typ in ('KeyPressed', 'KeyReleased'):
+        dev = cond.get('device', 'keyboard')
         code = cond.get('key', 0)
-        key = KEY_NAME_LOOKUP.get(code, str(code))
-        return f"{t(typ)} {key}"
+        if dev == 'mouse':
+            name = MOUSE_NAME_LOOKUP.get(code, str(code))
+        else:
+            name = KEY_NAME_LOOKUP.get(code, str(code))
+        return f"{t(typ)} {dev} {name}"
     if typ == 'MouseButton':
         btn = cond.get('button', 0)
         state = cond.get('state', 'down')
@@ -523,9 +527,11 @@ class ConditionDialog(QDialog):
             label.setVisible(False)
             w.setVisible(False)
         if typ in ('KeyPressed', 'KeyReleased'):
+            self.device_label.setVisible(True)
+            self.device_box.setVisible(True)
             self.key_label.setVisible(True)
             self.key_combo.setVisible(True)
-            self._update_key_list('keyboard')
+            self._update_key_list()
         elif typ == 'MouseButton':
             self.key_label.setVisible(True)
             self.key_combo.setVisible(True)
@@ -576,7 +582,8 @@ class ConditionDialog(QDialog):
         typ = self.type_box.currentText()
         if typ in ('KeyPressed', 'KeyReleased'):
             key = self.key_combo.currentData()
-            return {'type': typ, 'key': key}
+            device = self.device_box.currentText()
+            return {'type': typ, 'key': key, 'device': device}
         if typ == 'MouseButton':
             button = self.key_combo.currentIndex() + 1
             state = self.state_box.currentText()
@@ -613,8 +620,12 @@ class ConditionDialog(QDialog):
         if idx >= 0:
             self.type_box.setCurrentIndex(idx)
         if typ in ('KeyPressed', 'KeyReleased'):
+            dev = data.get('device', 'keyboard')
+            i = self.device_box.findText(dev)
+            if i >= 0:
+                self.device_box.setCurrentIndex(i)
+            self._update_key_list()
             key = data.get('key', glfw.KEY_SPACE)
-            self._update_key_list('keyboard')
             i = self.key_combo.findData(key)
             if i >= 0:
                 self.key_combo.setCurrentIndex(i)
@@ -935,7 +946,7 @@ class AddEventDialog(QDialog):
         self.setWindowTitle(parent.t('add_event') if parent else 'Add Event')
         self.conditions = []
         self.actions = []
-        layout = QHBoxLayout(self)
+        layout = QGridLayout(self)
 
         left_box = QGroupBox(parent.t('conditions') if parent else 'Conditions')
         left = QVBoxLayout(left_box)
@@ -951,15 +962,15 @@ class AddEventDialog(QDialog):
         add_act = QPushButton(parent.t('add_action') if parent else 'Add Action'); right.addWidget(add_act)
         add_cond.clicked.connect(self.add_condition)
         add_act.clicked.connect(self.add_action)
-        layout.addWidget(left_box)
-        layout.addWidget(right_box)
+        layout.addWidget(left_box, 0, 0)
+        layout.addWidget(right_box, 0, 1)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
-        layout.addWidget(buttons)
+        layout.addWidget(buttons, 1, 0, 1, 2, Qt.AlignmentFlag.AlignRight)
 
         self._clip_cond = None
         self._clip_act = None

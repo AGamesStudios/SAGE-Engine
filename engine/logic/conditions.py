@@ -28,10 +28,15 @@ class InputState(Condition):
         return pressed if self.state == 'down' else not pressed
 
 
-@register_condition('KeyPressed', [('key', 'value', None)])
+@register_condition('KeyPressed', [
+    ('key', 'value', None),
+    ('device', 'value', None),
+])
 class KeyPressed(InputState):
-    def __init__(self, key):
-        super().__init__('keyboard', key, 'down')
+    """True while the selected key or button is held down."""
+
+    def __init__(self, key, device='keyboard'):
+        super().__init__(device, key, 'down')
 
 @register_condition('Collision', [
     ('obj_a', 'object', 'a'),
@@ -72,12 +77,15 @@ class AfterTime(Condition):
             return True
         return False
 
-@register_condition('KeyReleased', [('key', 'value', None)])
+@register_condition('KeyReleased', [
+    ('key', 'value', None),
+    ('device', 'value', None),
+])
 class KeyReleased(InputState):
     """True once when the key transitions from pressed to released."""
 
-    def __init__(self, key):
-        super().__init__('keyboard', key, 'released')
+    def __init__(self, key, device='keyboard'):
+        super().__init__(device, key, 'released')
 
 @register_condition('MouseButton', [
     ('button', 'value', None),
