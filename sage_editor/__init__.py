@@ -1219,7 +1219,7 @@ class Editor(QMainWindow):
     def _cleanup_process(self):
         """Terminate the running game process and delete temp files."""
         if self.process:
-            if self.process.state() != QProcess.NotRunning:
+            if self.process.state() != QProcess.ProcessState.NotRunning:
                 self.process.terminate()
                 if not self.process.waitForFinished(3000):
                     self.process.kill()
