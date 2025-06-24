@@ -24,7 +24,7 @@ def _quat_to_angle(quat: tuple[float, float, float, float]) -> float:
     z, w = quat[2], quat[3]
     return math.degrees(2.0 * math.atan2(z, w))
 
-@dataclass
+@dataclass(slots=True)
 class GameObject:
     """Sprite-based object used in scenes."""
     image_path: str = ""

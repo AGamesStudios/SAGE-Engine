@@ -231,3 +231,19 @@ control the frame rate using `time.sleep` for consistent timing.
 You can clear the image cache with `sage_engine.clear_image_cache()` if memory
 becomes tight. These optimizations keep the runtime light without sacrificing
 visual quality.
+
+### SAGE API
+
+For small scripts or rapid prototyping the `sage_engine.api` module exposes
+helpers to load and run projects with minimal boilerplate:
+
+```python
+from sage_engine import load_project, run_project
+
+project = load_project('game.sageproject')
+run_project('game.sageproject')  # one line to launch
+```
+
+The function `create_engine()` builds an `Engine` object from a `Project`
+instance so advanced users can customise the loop while still reusing the core
+setup.

@@ -1,4 +1,5 @@
 class Input:
+    __slots__ = ('_glfw', 'window', '_keys', '_buttons')
     """Keyboard and mouse input using glfw."""
     def __init__(self, window):
         import glfw

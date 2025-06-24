@@ -1,0 +1,42 @@
+"""High level helpers for using SAGE Engine."""
+
+from .core.engine import Engine
+from .core.scene import Scene
+from .core.project import Project
+from .renderers import OpenGLRenderer
+from .core.camera import Camera
+
+__all__ = [
+    "load_project",
+    "run_project",
+    "create_engine",
+]
+
+
+def load_project(path: str) -> Project:
+    """Load a :class:`Project` from disk."""
+    return Project.load(path)
+
+
+def create_engine(project: Project, fps: int = 60) -> Engine:
+    """Create an :class:`Engine` for the given project."""
+    scene = Scene.from_dict(project.scene)
+    camera = scene.camera or Camera(0, 0, project.width, project.height)
+    renderer = OpenGLRenderer(project.width, project.height, project.title)
+    events = scene.build_event_system()
+    return Engine(
+        width=project.width,
+        height=project.height,
+        scene=scene,
+        events=events,
+        fps=fps,
+        title=project.title,
+        renderer=renderer,
+        camera=camera,
+    )
+
+
+def run_project(path: str, fps: int = 60):
+    """Load a project file and run it directly."""
+    engine = create_engine(load_project(path), fps=fps)
+    engine.run()

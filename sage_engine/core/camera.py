@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-@dataclass
+@dataclass(slots=True)
 class Camera:
     """Simple orthographic camera."""
     x: float = 0.0

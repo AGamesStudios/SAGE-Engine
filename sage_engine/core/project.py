@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import os
 from .. import ENGINE_VERSION
 
-@dataclass
+@dataclass(slots=True)
 class Project:
     """Simple container for a SAGE project including scene data."""
 
