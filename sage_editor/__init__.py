@@ -1439,6 +1439,7 @@ class Editor(QMainWindow):
         self.resource_dir = resources_dir
         from sage_engine import ResourceManager
         self.resource_manager = ResourceManager(self.resource_dir)
+        _log(f'Resource manager ready at {self.resource_dir}')
         if self.resource_model is not None:
             self.resource_model.setRootPath(self.resource_dir)
             if self.proxy_model is not None:
@@ -1476,6 +1477,7 @@ class Editor(QMainWindow):
             from sage_engine import set_resource_root, ResourceManager
             set_resource_root(self.resource_dir)
             self.resource_manager = ResourceManager(self.resource_dir)
+            _log(f'Resource manager ready at {self.resource_dir}')
             if self.resource_model is not None:
                 self.resource_model.setRootPath(self.resource_dir)
                 if self.proxy_model is not None:
@@ -1791,7 +1793,8 @@ class Editor(QMainWindow):
             pm = QPixmap(get_resource_path(obj.image_path))
         else:
             pm = QPixmap(32, 32)
-            pm.fill(QColor(*obj.color))
+            col = QColor(*(obj.color or (255, 255, 255, 255)))
+            pm.fill(col)
         item.setPixmap(pm)
         self.object_combo.setItemText(idx, obj.name)
         self._update_gizmo()
@@ -2126,8 +2129,12 @@ class Editor(QMainWindow):
             return abs_path, rel
         dest_dir = base if base else self.resource_dir
         if self.resource_manager:
-            rel = self.resource_manager.import_file(abs_path, os.path.relpath(dest_dir, self.resource_dir))
+            rel = self.resource_manager.import_file(
+                abs_path,
+                os.path.relpath(dest_dir, self.resource_dir),
+            )
             abs_copy = os.path.join(self.resource_dir, rel)
+            _log(f'Imported resource {abs_path} -> {abs_copy}')
             return abs_copy, rel
         base_name = os.path.basename(path)
         name, ext = os.path.splitext(base_name)
@@ -2193,7 +2200,9 @@ class Editor(QMainWindow):
                 if pix.isNull():
                     raise ValueError('invalid image')
             else:
-                pix = QPixmap(32,32); pix.fill(QColor(*(data['color'] or (255,255,255,255))))
+                pix = QPixmap(32, 32)
+                col = QColor(*((data['color'] or (255, 255, 255, 255))))
+                pix.fill(col)
             item = SpriteItem(pix, self, None)
             item.setZValue(data.get('z',0))
             self.g_scene.addItem(item)
@@ -2352,7 +2361,8 @@ class Editor(QMainWindow):
                         raise ValueError(f'Invalid image {obj.image_path}')
                 else:
                     pix = QPixmap(32, 32)
-                    pix.fill(QColor(*obj.color))
+                    color = QColor(*(obj.color or (255, 255, 255, 255)))
+                    pix.fill(color)
                 item = SpriteItem(pix, self, obj)
                 item.setZValue(obj.z)
                 item.apply_object_transform()

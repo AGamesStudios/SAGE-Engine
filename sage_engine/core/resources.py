@@ -24,6 +24,7 @@ class ResourceManager:
     def __init__(self, root: str):
         self.root = root
         os.makedirs(self.root, exist_ok=True)
+        logger.info("Resource manager initialized at %s", self.root)
 
     def path(self, *parts: str) -> str:
         return os.path.join(self.root, *parts)
