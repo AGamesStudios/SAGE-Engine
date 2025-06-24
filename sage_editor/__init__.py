@@ -1420,10 +1420,12 @@ class Editor(QMainWindow):
             self.rotate_handle.hide()
             return
         item = self.items[idx][0]
-        rect = item.mapRectToScene(item.boundingRect())
+        # map the item's bounding rectangle to scene coordinates
+        mapped = item.mapToScene(item.boundingRect())
+        rect = mapped.boundingRect()
         self.gizmo.setRect(rect)
         self.gizmo.show()
-        # position handles
+        # place handles at the bottom-right corner and slightly above the top
         self.scale_handle.setPos(rect.bottomRight())
         self.scale_handle.show()
         self.rotate_handle.setPos(rect.topLeft() + QPointF(0, -20))
