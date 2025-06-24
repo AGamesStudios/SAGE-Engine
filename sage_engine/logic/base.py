@@ -28,6 +28,16 @@ def register_action(name: str):
 
     return decorator
 
+
+def get_registered_conditions() -> list[str]:
+    """Return the list of available condition names."""
+    return list(CONDITION_REGISTRY.keys())
+
+
+def get_registered_actions() -> list[str]:
+    """Return the list of available action names."""
+    return list(ACTION_REGISTRY.keys())
+
 class Condition:
     """Base condition interface."""
     def check(self, engine, scene, dt):

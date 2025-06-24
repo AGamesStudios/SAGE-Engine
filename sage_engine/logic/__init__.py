@@ -7,22 +7,17 @@ from .base import (
     CONDITION_REGISTRY, ACTION_REGISTRY,
 )
 
-# Import built-in conditions and actions so they register themselves
-from .conditions import (
-    KeyPressed, KeyReleased, MouseButton, InputState, Collision, AfterTime,
-    OnStart, EveryFrame, VariableCompare,
-)
-from .actions import (
-    Move, SetPosition, Destroy, Print, PlaySound, Spawn,
-    SetVariable, ModifyVariable,
-)
+# Automatically import all submodules so built-ins register themselves
+import importlib
+import pkgutil
+
+for mod in pkgutil.iter_modules(__path__):
+    if mod.name not in {'base', '__pycache__'}:
+        importlib.import_module(f'{__name__}.{mod.name}')
 
 __all__ = [
     'Condition', 'Action', 'Event', 'EventSystem',
     'register_condition', 'register_action',
     'condition_from_dict', 'action_from_dict',
-    'KeyPressed', 'KeyReleased', 'MouseButton', 'InputState', 'Collision', 'AfterTime',
-    'OnStart', 'EveryFrame', 'VariableCompare',
-    'Move', 'SetPosition', 'Destroy', 'Print', 'PlaySound', 'Spawn',
-    'SetVariable', 'ModifyVariable'
-]
+    'CONDITION_REGISTRY', 'ACTION_REGISTRY',
+] + list(CONDITION_REGISTRY.keys()) + list(ACTION_REGISTRY.keys())

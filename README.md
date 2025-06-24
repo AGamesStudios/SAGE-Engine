@@ -161,7 +161,10 @@ pass, the actions run. Built-in blocks include `KeyPressed`, `Collision`,
 `AfterTime`, `Move`, `SetPosition`, `Destroy` and `Print`. You can subclass
 `Condition` or `Action` to create your own.  Conditions and actions live in
 separate modules and register themselves automatically so new types can be
-added without touching the core loader.
+added without touching the core loader.  The `logic` package automatically
+imports all of its submodules on startup so any plugin that registers new
+conditions or actions becomes available immediately.  Use
+`get_registered_conditions()` or `get_registered_actions()` to list them.
 
 ```python
 import glfw

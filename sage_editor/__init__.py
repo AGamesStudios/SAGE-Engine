@@ -289,11 +289,9 @@ class ConditionDialog(QDialog):
         self.variables = variables
         layout = QFormLayout(self)
 
+        from sage_engine.logic.base import get_registered_conditions
         self.type_box = QComboBox()
-        for name in [
-            'KeyPressed', 'KeyReleased', 'MouseButton', 'InputState', 'AfterTime',
-            'Collision', 'OnStart', 'EveryFrame', 'VariableCompare'
-        ]:
+        for name in get_registered_conditions():
             self.type_box.addItem(parent.t(name) if parent else name, name)
         layout.addRow(parent.t('type') if parent else 'Type:', self.type_box)
 
@@ -534,8 +532,9 @@ class ActionDialog(QDialog):
         self.variables = variables
         layout = QFormLayout(self)
 
+        from sage_engine.logic.base import get_registered_actions
         self.type_box = QComboBox()
-        for name in ['Move', 'SetPosition', 'Destroy', 'Print', 'PlaySound', 'Spawn', 'SetVariable', 'ModifyVariable']:
+        for name in get_registered_actions():
             self.type_box.addItem(parent.t(name) if parent else name, name)
         layout.addRow(parent.t('type') if parent else 'Type:', self.type_box)
 
