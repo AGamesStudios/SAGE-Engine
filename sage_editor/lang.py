@@ -92,6 +92,12 @@ LANGUAGES = {
         , 'snap_to_grid': 'Snap to Grid'
         , 'grid_size': 'Grid Size:'
         , 'grid_color': 'Grid Color'
+        , 'objects': 'Objects'
+        , 'transform': 'Transform'
+        , 'rotation': 'Rotation:'
+        , 'scale_label': 'Scale:'
+        , 'z': 'z:'
+        , 'cut': 'Cut'
         , 'add_object': 'Add Object'
         , 'edit_object': 'Edit Object'
         , 'color': 'Color:'
@@ -189,6 +195,12 @@ LANGUAGES = {
         , 'snap_to_grid': 'Привязка к сетке'
         , 'grid_size': 'Шаг сетки:'
         , 'grid_color': 'Цвет сетки'
+        , 'objects': 'Объекты'
+        , 'transform': 'Трансформ'
+        , 'rotation': 'Поворот:'
+        , 'scale_label': 'Масштаб:'
+        , 'z': 'z:'
+        , 'cut': 'Вырезать'
     }
 }
 import locale

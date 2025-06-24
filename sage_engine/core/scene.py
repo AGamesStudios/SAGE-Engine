@@ -39,7 +39,7 @@ class Scene:
             obj.update(dt)
 
     def draw(self, surface):
-        for obj in self.objects:
+        for obj in sorted(self.objects, key=lambda o: getattr(o, 'z', 0)):
             obj.draw(surface)
 
     @classmethod
@@ -52,6 +52,7 @@ class Scene:
                 entry.get("image", ""),
                 entry.get("x", 0),
                 entry.get("y", 0),
+                entry.get("z", 0),
                 entry.get("name"),
                 entry.get("scale", 1.0),
                 entry.get("angle", 0.0),
@@ -76,6 +77,7 @@ class Scene:
                     "image": o.image_path,
                     "x": o.x,
                     "y": o.y,
+                    "z": getattr(o, "z", 0),
                     "name": o.name,
                     "scale": o.scale,
                     "angle": o.angle,

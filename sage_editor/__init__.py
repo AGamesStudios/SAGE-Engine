@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import (
     QGraphicsView, QGraphicsScene, QGraphicsPixmapItem, QGraphicsLineItem, QGraphicsEllipseItem,
     QTabWidget, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QListWidget, QTableWidget, QTableWidgetItem, QPushButton, QDialog, QFormLayout,
-    QDialogButtonBox, QLineEdit, QSpinBox, QComboBox,
+    QDialogButtonBox, QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox,
     QTextEdit, QDockWidget, QGroupBox, QCheckBox, QMessageBox, QMenu, QColorDialog,
     QStyle, QHeaderView, QAbstractItemView
 )
@@ -840,6 +840,35 @@ class Editor(QMainWindow):
         # update gizmo when the selection changes
         self.g_scene.selectionChanged.connect(self._on_selection_changed)
 
+        # object list and transform inspector dock
+        obj_widget = QWidget()
+        obj_layout = QVBoxLayout(obj_widget)
+        self.object_list = QListWidget()
+        self.object_list.itemSelectionChanged.connect(self._on_object_list_select)
+        self.object_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.object_list.customContextMenuRequested.connect(self._object_menu)
+        obj_layout.addWidget(self.object_list)
+
+        self.transform_group = QGroupBox(self.t('transform'))
+        form = QFormLayout(self.transform_group)
+        self.x_spin = QDoubleSpinBox(); self.x_spin.setRange(-10000, 10000)
+        self.y_spin = QDoubleSpinBox(); self.y_spin.setRange(-10000, 10000)
+        self.z_spin = QDoubleSpinBox(); self.z_spin.setRange(-1000, 1000)
+        self.scale_spin = QDoubleSpinBox(); self.scale_spin.setRange(0.01, 100)
+        self.angle_spin = QDoubleSpinBox(); self.angle_spin.setRange(-360, 360)
+        for spin in (self.x_spin, self.y_spin, self.z_spin, self.scale_spin, self.angle_spin):
+            spin.valueChanged.connect(self._apply_transform)
+        form.addRow(self.t('x'), self.x_spin)
+        form.addRow(self.t('y'), self.y_spin)
+        form.addRow(self.t('z'), self.z_spin)
+        form.addRow(self.t('scale_label'), self.scale_spin)
+        form.addRow(self.t('rotation'), self.angle_spin)
+        obj_layout.addWidget(self.transform_group)
+        obj_dock = QDockWidget(self.t('objects'), self)
+        obj_dock.setWidget(obj_widget)
+        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, obj_dock)
+        self.objects_dock = obj_dock
+
         # logic tab with object-specific events and variables
         self.logic_widget = QWidget()
         main_layout = QVBoxLayout(self.logic_widget)
@@ -892,6 +921,7 @@ class Editor(QMainWindow):
         self.project_path: str | None = None
         self.items = []
         self.recent_projects = load_recent()
+        self._clip_object = None
         self._init_actions()
         if autoshow:
             self.showMaximized()
@@ -926,6 +956,10 @@ class Editor(QMainWindow):
         self.var_table.setHorizontalHeaderLabels([self.t('name'), self.t('value')])
         self.add_var_btn.setText(self.t('add_variable'))
         self.console_dock.setWindowTitle(self.t('console'))
+        self.objects_dock.setWindowTitle(self.t('objects'))
+        self.transform_group.setTitle(self.t('transform'))
+        self.x_spin.setPrefix(''); self.y_spin.setPrefix(''); self.z_spin.setPrefix('')
+        self.scale_spin.setPrefix(''); self.angle_spin.setPrefix('')
         self.run_btn.setText(self.t('run'))
         self.add_obj_btn.setText(self.t('add_object'))
         self.grid_act.setText(self.t('show_grid'))
@@ -946,6 +980,7 @@ class Editor(QMainWindow):
         self.add_obj_btn.setEnabled(enabled)
         self.add_var_btn.setEnabled(enabled)
         self.run_btn.setEnabled(enabled)
+        self.objects_dock.setEnabled(enabled)
         self._update_title()
 
     def _update_title(self):
@@ -1258,6 +1293,7 @@ class Editor(QMainWindow):
             self.items.append((item, obj))
             item.index = len(self.items) - 1
             self.object_combo.addItem(obj.name, item.index)
+            self.object_list.addItem(obj.name)
             if self.object_combo.currentIndex() == -1:
                 self.object_combo.setCurrentIndex(0)
             self._update_gizmo()
@@ -1283,6 +1319,7 @@ class Editor(QMainWindow):
             self.items.append((item, obj))
             item.index = len(self.items) - 1
             self.object_combo.addItem(obj.name, item.index)
+            self.object_list.addItem(obj.name)
             if self.object_combo.currentIndex() == -1:
                 self.object_combo.setCurrentIndex(0)
             self._update_gizmo()
@@ -1420,6 +1457,7 @@ class Editor(QMainWindow):
             self.gizmo.hide()
             self.scale_handle.hide()
             self.rotate_handle.hide()
+            self._update_transform_panel()
             return
         item = self.items[idx][0]
         # use the item's scene bounding box so rotation and scale are accounted for
@@ -1431,6 +1469,7 @@ class Editor(QMainWindow):
         self.scale_handle.show()
         self.rotate_handle.setPos(rect.topLeft() + QPointF(0, -20))
         self.rotate_handle.show()
+        self._update_transform_panel()
 
     def _on_selection_changed(self):
         """Sync the object combo with the selected graphics item."""
@@ -1440,6 +1479,7 @@ class Editor(QMainWindow):
         item = selected[0]
         if item.index is not None:
             self.object_combo.setCurrentIndex(item.index)
+            self.object_list.setCurrentRow(item.index)
 
     def _create_grid(self):
         """Create grid and axis lines."""
@@ -1502,6 +1542,117 @@ class Editor(QMainWindow):
         if color.isValid():
             self.grid_color = color
             self._create_grid()
+
+    def _update_transform_panel(self):
+        idx = self.object_combo.currentIndex()
+        if idx < 0 or idx >= len(self.items):
+            self.transform_group.setEnabled(False)
+            return
+        item, obj = self.items[idx]
+        self.transform_group.setEnabled(True)
+        self.x_spin.blockSignals(True); self.x_spin.setValue(obj.x); self.x_spin.blockSignals(False)
+        self.y_spin.blockSignals(True); self.y_spin.setValue(obj.y); self.y_spin.blockSignals(False)
+        self.z_spin.blockSignals(True); self.z_spin.setValue(getattr(obj, 'z', 0)); self.z_spin.blockSignals(False)
+        self.scale_spin.blockSignals(True); self.scale_spin.setValue(obj.scale); self.scale_spin.blockSignals(False)
+        self.angle_spin.blockSignals(True); self.angle_spin.setValue(obj.angle); self.angle_spin.blockSignals(False)
+
+    def _apply_transform(self):
+        idx = self.object_combo.currentIndex()
+        if idx < 0 or idx >= len(self.items):
+            return
+        item, obj = self.items[idx]
+        obj.x = self.x_spin.value(); obj.y = self.y_spin.value(); obj.z = self.z_spin.value()
+        obj.scale = self.scale_spin.value(); obj.angle = self.angle_spin.value()
+        item.setPos(obj.x, obj.y)
+        item.setZValue(obj.z)
+        item.setScale(obj.scale)
+        item.setRotation(obj.angle)
+        self._update_gizmo()
+
+    def _object_menu(self, pos):
+        item = self.object_list.itemAt(pos)
+        menu = QMenu(self)
+        paste_act = menu.addAction(self.t('paste')) if self._clip_object else None
+        if item:
+            cut_act = menu.addAction(self.t('cut'))
+            copy_act = menu.addAction(self.t('copy'))
+            del_act = menu.addAction(self.t('delete'))
+        action = menu.exec(self.object_list.mapToGlobal(pos))
+        if action == paste_act and self._clip_object:
+            self._paste_object()
+        elif item:
+            row = self.object_list.row(item)
+            if action == copy_act or action == cut_act:
+                self._clip_object = self._serialize_object(row)
+            if action == cut_act:
+                self._delete_object(row)
+            elif action == del_act:
+                self._delete_object(row)
+
+    def _serialize_object(self, index):
+        item, obj = self.items[index]
+        return {
+            'image': obj.image_path,
+            'x': obj.x,
+            'y': obj.y,
+            'z': getattr(obj, 'z', 0),
+            'name': obj.name,
+            'scale': obj.scale,
+            'angle': obj.angle,
+            'color': list(obj.color) if obj.color else None,
+            'events': obj.events,
+        }
+
+    def _paste_object(self):
+        data = self._clip_object
+        if not data:
+            return
+        try:
+            if data['image']:
+                pix = QPixmap(data['image'])
+                if pix.isNull():
+                    raise ValueError('invalid image')
+            else:
+                pix = QPixmap(32,32); pix.fill(QColor(*(data['color'] or (255,255,255,255))))
+            item = SpriteItem(pix, self, None)
+            item.setScale(data.get('scale',1.0))
+            item.setRotation(data.get('angle',0.0))
+            item.setZValue(data.get('z',0))
+            item.setPos(data.get('x',0), data.get('y',0))
+            self.g_scene.addItem(item)
+            obj = GameObject(
+                data['image'], data.get('x',0), data.get('y',0), data.get('z',0), data.get('name'),
+                data.get('scale',1.0), data.get('angle',0.0), tuple(data['color']) if data['color'] else None
+            )
+            obj.events = list(data.get('events', []))
+            self.scene.add_object(obj)
+            item.obj = obj
+            self.items.append((item,obj))
+            item.index = len(self.items)-1
+            self.object_combo.addItem(obj.name, item.index)
+            self.object_list.addItem(obj.name)
+        except Exception as exc:
+            self.console.append(f'Failed to paste object: {exc}')
+        self._update_gizmo()
+        self.refresh_events()
+
+    def _delete_object(self, index):
+        if index < 0 or index >= len(self.items):
+            return
+        item, obj = self.items.pop(index)
+        self.g_scene.removeItem(item)
+        self.scene.remove_object(obj)
+        self.object_combo.removeItem(index)
+        self.object_list.takeItem(index)
+        # update indexes
+        for i,(it,o) in enumerate(self.items):
+            it.index = i
+            self.object_combo.setItemData(i, i)
+        if index == self.object_combo.currentIndex() and self.items:
+            self.object_combo.setCurrentIndex(0)
+            self.object_list.setCurrentRow(0)
+        self._update_gizmo()
+        self.refresh_events()
 
     def add_condition(self, row):
         if not self._check_project():
@@ -1596,6 +1747,7 @@ class Editor(QMainWindow):
         self.g_scene.blockSignals(False)
         self.items.clear()
         self.object_combo.clear()
+        self.object_list.clear()
         # redraw canvas and grid after clearing the scene
         self.canvas = self.g_scene.addRect(
             QRectF(0, 0, self.window_width, self.window_height), QPen(QColor('red'))
@@ -1618,6 +1770,7 @@ class Editor(QMainWindow):
                 self.items.append((item, obj))
                 item.index = len(self.items)-1
                 self.object_combo.addItem(obj.name, item.index)
+                self.object_list.addItem(obj.name)
             except Exception as exc:
                 self.console.append(f'Failed to load sprite {obj.image_path}: {exc}')
         self.refresh_events()

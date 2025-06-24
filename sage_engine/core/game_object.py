@@ -16,6 +16,7 @@ class GameObject:
     image_path: str = ""
     x: float = 0
     y: float = 0
+    z: float = 0
     name: str | None = None
     scale: float = 1.0
     angle: float = 0.0
