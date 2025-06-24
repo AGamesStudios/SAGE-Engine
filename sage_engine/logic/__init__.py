@@ -1,7 +1,6 @@
 # SAGE Logic - a simple condition/action event system
 # Provides Clickteam-style logic for both 2D and 3D games
 
-import pygame
 import traceback
 
 # registries used to map names to classes so new logic blocks can be added
@@ -141,8 +140,7 @@ class KeyPressed(Condition):
         self.key = key
 
     def check(self, engine, scene, dt):
-        keys = pygame.key.get_pressed()
-        return keys[self.key]
+        return engine.input.is_key_down(self.key)
 
 @register_condition('Collision')
 class Collision(Condition):
@@ -176,8 +174,7 @@ class KeyReleased(Condition):
         self.prev = False
 
     def check(self, engine, scene, dt):
-        keys = pygame.key.get_pressed()
-        pressed = keys[self.key]
+        pressed = engine.input.is_key_down(self.key)
         result = self.prev and not pressed
         self.prev = pressed
         return result
@@ -192,8 +189,7 @@ class MouseButton(Condition):
         self.prev = False
 
     def check(self, engine, scene, dt):
-        buttons = pygame.mouse.get_pressed()
-        pressed = buttons[self.button - 1]
+        pressed = engine.input.is_button_down(self.button)
         if self.state == 'down':
             return pressed
         else:
@@ -311,25 +307,25 @@ _SOUND_CACHE = {}
 
 @register_action('PlaySound')
 class PlaySound(Action):
-    """Play a sound file using pygame.mixer."""
+    """Play a sound file using simpleaudio."""
 
     def __init__(self, path):
         self.path = path
+        self.wave = None
 
     def execute(self, engine, scene, dt):
         sound = _SOUND_CACHE.get(self.path)
         if sound is None:
             try:
-                if pygame.mixer.get_init() is None:
-                    pygame.mixer.init()
-                sound = pygame.mixer.Sound(self.path)
+                import simpleaudio
+                sound = simpleaudio.WaveObject.from_wave_file(self.path)
                 _SOUND_CACHE[self.path] = sound
-            except pygame.error as exc:
+            except Exception as exc:
                 print(f'Failed to load sound {self.path}: {exc}')
                 return
         try:
             sound.play()
-        except pygame.error as exc:
+        except Exception as exc:
             print(f'Failed to play sound {self.path}: {exc}')
 
 @register_action('Spawn')

@@ -7,7 +7,7 @@ class Project:
     """Simple container for a SAGE project including scene data."""
 
     scene: dict
-    renderer: str = 'pygame'
+    renderer: str = 'opengl'
 
     @classmethod
     def load(cls, path: str) -> "Project":
@@ -21,7 +21,7 @@ class Project:
                     scene = json.load(sf)
             else:
                 scene = {}
-        renderer = data.get('renderer', 'pygame')
+        renderer = data.get('renderer', 'opengl')
         return cls(scene or {}, renderer)
 
     def save(self, path: str):

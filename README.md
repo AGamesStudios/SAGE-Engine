@@ -15,10 +15,10 @@ so games can depend on the engine without pulling in the editor.
 ### Renderer
 
 Rendering is handled by modules under `sage_engine/renderers`.  The
-default `PygameRenderer` draws scenes using pygame, but you can also
-use `OpenGLRenderer` for hardware accelerated 2D via PyOpenGL.
-Any renderer with the same interface can be plugged in so the core logic
-remains independent of the drawing backend.
+engine ships with an `OpenGLRenderer` implemented using glfw and
+PyOpenGL.  The base `Renderer` interface allows additional backends
+to be implemented later (for example Vulkan) without modifying the
+core engine.
 When launching the editor a **Project Manager** window appears. It lists your
 recent projects with their creation date and full path.  Buttons let you create
 a new project, open an existing file or clear the list for a clean start.
@@ -50,7 +50,7 @@ many incremental edits. The
 project file stores the entire scene
 including object positions, events and variables.
 Use **File → New Project** to generate a folder for your game. The dialog asks
-for a project name, location, and which renderer to use (Pygame or OpenGL).
+for a project name and location; the engine currently uses the OpenGL renderer.
 It then creates the folder with a `.sageproject` file. Each new object
 receives a generic name like `New Object (1)` so conditions always target the
 correct item. The editor disables sprite, variable and logic actions until a
@@ -69,15 +69,15 @@ without crashes.
 Window dimensions can be changed under **Settings → Window Settings**. The
 game window title matches the editor, e.g. `SAGE Editor: MyGame - Scene1`.
 When you edit the scene the title gains an `(unsaved)` suffix until you save.
-The renderer can be switched later from **Settings → Renderer** so you can test
-both Pygame and OpenGL modes.
+Future versions may add other renderer backends. A project records the
+renderer name so it can be upgraded later.
 When defining variables, boolean values are edited with a convenient check box
 instead of typing "true" or "false".
 When comparing variables, the name is selected from a drop-down list so typos
 are avoided.
 
 Sprites are loaded lazily at runtime so the editor no longer relies on
-`pygame`'s display module. This prevents crashes when adding images on systems
+any particular window system. This prevents crashes when adding images on systems
 without an SDL window. The editor also validates image and variable input and
 ensures combo boxes always point to valid objects, preventing crashes when
 adding multiple sprites, variables, or conditions on older hardware.
@@ -104,7 +104,7 @@ Run a saved project with:
 ```bash
 python -m sage_engine path/to/project.sageproject
 # the engine uses the renderer stored in the project file
-# pass `--renderer opengl` or `--renderer pygame` to override
+# pass `--renderer opengl` to override the project setting
 ```
 
 Project files store the entire scene data so you can share a single file. Use
@@ -136,7 +136,7 @@ pass, the actions run. Built-in blocks include `KeyPressed`, `Collision`,
 `Condition` or `Action` to create your own.
 
 ```python
-import pygame
+import glfw
 from sage_engine import Engine, Scene, GameObject
 from sage_engine.logic import EventSystem, Event, KeyPressed, Timer, Move
 
@@ -145,7 +145,7 @@ scene = Scene()
 scene.add_object(player)
 
 events = EventSystem()
-events.add_event(Event([KeyPressed(pygame.K_RIGHT)], [Move(player, 5, 0)]))
+events.add_event(Event([KeyPressed(glfw.KEY_RIGHT)], [Move(player, 5, 0)]))
 events.add_event(Event([Timer(5.0)], [Move(player, -5, 0)]))
 
 Engine(scene=scene, events=events).run()
@@ -186,7 +186,7 @@ extensible.
 SAGE Engine aims to run smoothly even on older hardware. Images and sounds
 are cached after the first load so repeated objects or effects do not reload
 files from disk. The `Engine` class accepts an `fps` argument (default 60) to
-control the frame rate and uses `pygame.time.Clock` to limit CPU usage.
+control the frame rate using `time.sleep` for consistent timing.
 You can clear the image cache with `sage_engine.clear_image_cache()` if memory
 becomes tight. These optimizations keep the runtime light without sacrificing
 visual quality.

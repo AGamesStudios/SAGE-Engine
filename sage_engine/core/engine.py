@@ -1,34 +1,32 @@
 import sys
 import argparse
 import traceback
+import time
 from .scene import Scene
 from .project import Project
-from ..renderers import PygameRenderer, OpenGLRenderer
+from .input import Input
+from ..renderers import OpenGLRenderer, Renderer
 
 class Engine:
     """Main loop that delegates drawing to a renderer."""
 
     def __init__(self, width=640, height=480, scene=None, events=None, fps=60,
-                 title='SAGE 2D', renderer=None):
-        import pygame
-        self._pg = pygame
-        pygame.init()
-        self.clock = pygame.time.Clock()
+                 title='SAGE 2D', renderer: Renderer | None = None):
         self.fps = fps
         self.scene = scene or Scene()
         self.events = events if events is not None else self.scene.build_event_system()
-        if renderer is None:
-            self.renderer = PygameRenderer(width, height, title)
-        else:
-            self.renderer = renderer
+        self.renderer = renderer or OpenGLRenderer(width, height, title)
+        from .input import Input
+        self.input = Input(self.renderer.window)
+        self._last = time.perf_counter()
 
     def run(self):
         running = True
-        while running:
-            dt = self.clock.tick(self.fps) / 1000.0
-            for event in self._pg.event.get():
-                if event.type == self._pg.QUIT:
-                    running = False
+        while running and not self.renderer.should_close():
+            now = time.perf_counter()
+            dt = now - self._last
+            self._last = now
+            self.input.poll()
             try:
                 self.events.update(self, self.scene, dt)
                 self.scene.update(dt)
@@ -39,8 +37,10 @@ class Engine:
                 print(f'Runtime error: {exc}')
                 traceback.print_exc()
                 running = False
+            if self.fps:
+                time.sleep(max(0, 1.0 / self.fps - (time.perf_counter() - now)))
         self.renderer.close()
-        self._pg.quit()
+        self.input.shutdown()
 
 
 def main(argv=None):
@@ -51,29 +51,23 @@ def main(argv=None):
     parser.add_argument('--width', type=int, default=640, help='Window width')
     parser.add_argument('--height', type=int, default=480, help='Window height')
     parser.add_argument('--title', default='SAGE 2D', help='Window title')
-    parser.add_argument('--renderer', choices=['pygame', 'opengl'],
-                        help='Rendering backend')
+    parser.add_argument('--renderer', choices=['opengl'],
+                        help='Rendering backend (currently only opengl)')
     args = parser.parse_args(argv)
 
     scene = Scene()
-    renderer_name = None
     if args.file:
         path = args.file
         if path.endswith('.sageproject'):
             proj = Project.load(path)
             if proj.scene:
                 scene = Scene.from_dict(proj.scene)
-            renderer_name = proj.renderer
         else:
             scene = Scene.load(path)
 
-    if args.renderer:
-        renderer_name = args.renderer
+            _ = proj.renderer
 
-    if renderer_name == 'opengl':
-        renderer = OpenGLRenderer(args.width, args.height, args.title)
-    else:
-        renderer = PygameRenderer(args.width, args.height, args.title)
+    renderer = OpenGLRenderer(args.width, args.height, args.title)
 
     Engine(width=args.width, height=args.height, title=args.title,
            scene=scene, events=scene.build_event_system(), renderer=renderer).run()

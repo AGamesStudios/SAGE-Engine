@@ -2,10 +2,10 @@ from dataclasses import dataclass, field
 import os
 import traceback
 import math
-import pygame
+from PIL import Image
 
 # cache loaded images so repeated sprites don't reload files
-_IMAGE_CACHE: dict[str, pygame.Surface] = {}
+_IMAGE_CACHE: dict[str, Image.Image] = {}
 
 def clear_image_cache():
     """Remove all cached images."""
@@ -36,8 +36,10 @@ class GameObject:
     angle: float = 0.0
     color: tuple[int, int, int, int] | None = None
     events: list = field(default_factory=list)
-    sprite: pygame.Surface | None = field(init=False, default=None)
     rotation: tuple[float, float, float, float] = field(init=False)
+    image: Image.Image | None = field(init=False, default=None)
+    width: int = field(init=False, default=0)
+    height: int = field(init=False, default=0)
 
     @property
     def scale(self) -> float:
@@ -51,7 +53,7 @@ class GameObject:
         self.rotation = _angle_to_quat(self.angle)
         if self.name is None:
             self.name = "New Object"
-
+        self._load_image()
     @property
     def angle(self) -> float:
         return _quat_to_angle(self.rotation)
@@ -63,43 +65,23 @@ class GameObject:
     def update(self, dt: float):
         pass
 
-    def _ensure_sprite(self):
-        if self.sprite is None:
-            if self.image_path:
-                sprite = _IMAGE_CACHE.get(self.image_path)
-                if sprite is None:
-                    try:
-                        sprite = pygame.image.load(self.image_path).convert_alpha()
-                        _IMAGE_CACHE[self.image_path] = sprite
-                    except Exception as exc:
-                        print(f'Failed to load image {self.image_path}: {exc}')
-                        traceback.print_exc()
-                        sprite = pygame.Surface((32, 32), pygame.SRCALPHA)
-                        sprite.fill(self.color or (255, 255, 255, 255))
-                self.sprite = sprite
-            else:
-                sprite = pygame.Surface((32, 32), pygame.SRCALPHA)
-                sprite.fill(self.color or (255, 255, 255, 255))
-                self.sprite = sprite
 
-    def draw(self, surface: pygame.Surface):
-        self._ensure_sprite()
-        img = self.sprite
-        if self.scale_x != 1.0 or self.scale_y != 1.0:
-            w = max(1, int(img.get_width() * self.scale_x))
-            h = max(1, int(img.get_height() * self.scale_y))
-            img = pygame.transform.scale(img, (w, h))
-        if self.angle != 0.0:
-            img = pygame.transform.rotate(img, -self.angle)
-        surface.blit(img, (self.x, self.y))
+    def _load_image(self):
+        """Load the object's image with Pillow."""
+        if not self.image_path:
+            img = Image.new('RGBA', (32, 32), self.color or (255, 255, 255, 255))
+        else:
+            img = _IMAGE_CACHE.get(self.image_path)
+            if img is None:
+                try:
+                    img = Image.open(self.image_path).convert('RGBA')
+                    _IMAGE_CACHE[self.image_path] = img
+                except Exception as exc:
+                    print(f'Failed to load image {self.image_path}: {exc}')
+                    traceback.print_exc()
+                    img = Image.new('RGBA', (32, 32), self.color or (255, 255, 255, 255))
+        self.image = img
+        self.width, self.height = img.size
 
-    def rect(self) -> pygame.Rect:
-        self._ensure_sprite()
-        img = self.sprite
-        if self.scale_x != 1.0 or self.scale_y != 1.0:
-            w = max(1, int(img.get_width() * self.scale_x))
-            h = max(1, int(img.get_height() * self.scale_y))
-            img = pygame.transform.scale(img, (w, h))
-        if self.angle != 0.0:
-            img = pygame.transform.rotate(img, -self.angle)
-        return img.get_rect(topleft=(self.x, self.y))
+    def rect(self):
+        return (self.x, self.y, self.width * self.scale_x, self.height * self.scale_y)

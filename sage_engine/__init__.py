@@ -1,5 +1,5 @@
 from .core import GameObject, Scene, Engine, Project
-from .renderers import PygameRenderer, OpenGLRenderer
+from .renderers import OpenGLRenderer, Renderer
 from .core.game_object import clear_image_cache
 from .core.engine import main
 from .logic import (
@@ -14,5 +14,5 @@ __all__ = [
     'Always', 'Move', 'SetPosition', 'Destroy', 'Print', 'PlaySound', 'Spawn',
     'OnStart', 'EveryFrame', 'VariableCompare',
     'SetVariable', 'ModifyVariable', 'Project',
-    'clear_image_cache', 'PygameRenderer', 'OpenGLRenderer', 'main'
+    'clear_image_cache', 'Renderer', 'OpenGLRenderer', 'main'
 ]
