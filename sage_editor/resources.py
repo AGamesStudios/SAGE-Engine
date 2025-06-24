@@ -1,8 +1,12 @@
 import os
 from PyQt6.QtWidgets import (
     QDockWidget, QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
-    QLineEdit, QAbstractItemView, QTreeView, QTreeWidget, QFileSystemModel
+    QLineEdit, QAbstractItemView, QTreeView, QTreeWidget
 )
+try:  # QFileSystemModel is missing in some PyQt6 builds
+    from PyQt6.QtWidgets import QFileSystemModel
+except Exception:  # pragma: no cover - optional dependency
+    QFileSystemModel = None
 from PyQt6.QtCore import Qt, QSortFilterProxyModel
 
 
