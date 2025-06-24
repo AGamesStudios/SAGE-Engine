@@ -93,6 +93,8 @@ def condition_from_dict(data, objects, variables):
             return cls(data['key'])
         if typ == 'MouseButton':
             return cls(data['button'], data.get('state', 'down'))
+        if typ == 'InputState':
+            return cls(data.get('device', 'keyboard'), data.get('code'), data.get('state', 'down'))
         if typ == 'Timer':
             return cls(data['duration'])
         if typ == 'VariableCompare':

@@ -1,5 +1,29 @@
 # Built-in conditions
 from .base import Condition, register_condition
+
+@register_condition('InputState')
+class InputState(Condition):
+    """Check a key or mouse button with optional device selection."""
+
+    def __init__(self, device='keyboard', code=None, state='down'):
+        self.device = device
+        self.code = code
+        self.state = state
+        self.prev = False
+
+    def check(self, engine, scene, dt):
+        inp = engine.input
+        if self.device == 'mouse':
+            pressed = inp.is_button_down(self.code) if self.code is not None else bool(inp._buttons)
+        else:
+            pressed = inp.is_key_down(self.code) if self.code is not None else bool(inp._keys)
+        if self.state in ('pressed', 'released'):
+            result = (not self.prev and pressed) if self.state == 'pressed' else (self.prev and not pressed)
+            self.prev = pressed
+            return result
+        return pressed if self.state == 'down' else not pressed
+
+
 @register_condition('KeyPressed')
 class KeyPressed(InputState):
     def __init__(self, key):
@@ -41,28 +65,6 @@ class MouseButton(InputState):
 
     def __init__(self, button, state='down'):
         super().__init__('mouse', button, state)
-
-@register_condition('InputState')
-class InputState(Condition):
-    """Check a key or mouse button with optional device selection."""
-
-    def __init__(self, device='keyboard', code=None, state='down'):
-        self.device = device
-        self.code = code
-        self.state = state
-        self.prev = False
-
-    def check(self, engine, scene, dt):
-        inp = engine.input
-        if self.device == 'mouse':
-            pressed = inp.is_button_down(self.code) if self.code is not None else bool(inp._buttons)
-        else:
-            pressed = inp.is_key_down(self.code) if self.code is not None else bool(inp._keys)
-        if self.state in ('pressed', 'released'):
-            result = (not self.prev and pressed) if self.state == 'pressed' else (self.prev and not pressed)
-            self.prev = pressed
-            return result
-        return pressed if self.state == 'down' else not pressed
 
 @register_condition('Always')
 class Always(Condition):

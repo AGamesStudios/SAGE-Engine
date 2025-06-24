@@ -967,8 +967,8 @@ class Editor(QMainWindow):
         # canvas rectangle representing the game window
         self.canvas = None
         self.camera_rect = None
-        self._update_canvas()
         self.scene = Scene()
+        self._update_canvas()
         self.project_path: str | None = None
         self.items = []
         self.dirty = False
