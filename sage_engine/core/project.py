@@ -13,6 +13,7 @@ class Project:
     height: int = 480
     title: str = 'SAGE 2D'
     version: str = ENGINE_VERSION
+    resources: str = 'resources'
 
     @classmethod
     def load(cls, path: str) -> "Project":
@@ -31,7 +32,8 @@ class Project:
         height = data.get('height', 480)
         title = data.get('title', 'SAGE 2D')
         version = data.get('version', ENGINE_VERSION)
-        return cls(scene or {}, renderer, width, height, title, version)
+        resources = data.get('resources', 'resources')
+        return cls(scene or {}, renderer, width, height, title, version, resources)
 
     def save(self, path: str):
         with open(path, 'w') as f:
@@ -42,5 +44,6 @@ class Project:
                 'height': self.height,
                 'title': self.title,
                 'version': self.version,
+                'resources': self.resources,
             }, f, indent=2)
 

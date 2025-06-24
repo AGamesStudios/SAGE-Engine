@@ -72,13 +72,15 @@ class GameObject:
         if not self.image_path:
             img = Image.new('RGBA', (32, 32), self.color or (255, 255, 255, 255))
         else:
-            img = _IMAGE_CACHE.get(self.image_path)
+            from .resources import get_resource_path
+            path = get_resource_path(self.image_path)
+            img = _IMAGE_CACHE.get(path)
             if img is None:
                 try:
-                    img = Image.open(self.image_path).convert('RGBA')
-                    _IMAGE_CACHE[self.image_path] = img
+                    img = Image.open(path).convert('RGBA')
+                    _IMAGE_CACHE[path] = img
                 except Exception as exc:
-                    print(f'Failed to load image {self.image_path}: {exc}')
+                    print(f'Failed to load image {path}: {exc}')
                     traceback.print_exc()
                     img = Image.new('RGBA', (32, 32), self.color or (255, 255, 255, 255))
         self.image = img

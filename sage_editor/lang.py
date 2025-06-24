@@ -118,6 +118,9 @@ LANGUAGES = {
         , 'unsaved_changes': 'Unsaved Changes'
         , 'save_before_exit': 'Save changes before exiting?'
         , 'clear_log': 'Clear Log'
+        , 'resources': 'Resources'
+        , 'new_folder': 'New Folder'
+        , 'import_files': 'Import Files'
     },
     'Русский': {
         'file': 'Файл',
@@ -235,6 +238,9 @@ LANGUAGES = {
         , 'unsaved_changes': 'Есть несохраненные изменения'
         , 'save_before_exit': 'Сохранить перед выходом?'
         , 'clear_log': 'Очистить лог'
+        , 'resources': 'Ресурсы'
+        , 'new_folder': 'Новая папка'
+        , 'import_files': 'Импорт файлов'
     }
 }
 import locale

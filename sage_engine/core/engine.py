@@ -2,6 +2,7 @@ import sys
 import argparse
 import traceback
 import time
+import os
 from .scene import Scene
 from .project import Project
 from .input import Input
@@ -77,6 +78,8 @@ def main(argv=None):
             height = args.height or proj.height
             title = args.title or proj.title
             renderer_name = args.renderer or proj.renderer
+            from .resources import set_resource_root
+            set_resource_root(os.path.join(os.path.dirname(path), proj.resources))
         else:
             scene = Scene.load(path)
 

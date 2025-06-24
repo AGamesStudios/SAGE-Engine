@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import (
     QListWidget, QTableWidget, QTableWidgetItem, QPushButton, QDialog, QFormLayout,
     QDialogButtonBox, QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox,
     QTextEdit, QDockWidget, QGroupBox, QCheckBox, QMessageBox, QMenu, QColorDialog,
+    QTreeView, QFileSystemModel, QInputDialog,
     QStyle, QHeaderView, QAbstractItemView
 )
 from PyQt6.QtGui import QPixmap, QPen, QColor, QPalette, QFont, QAction, QTransform
@@ -928,6 +929,7 @@ class Editor(QMainWindow):
         self.window_width = 640
         self.window_height = 480
         self.renderer_name = 'opengl'
+        self.resource_dir: str | None = None
         self.setWindowTitle(f'SAGE Editor ({ENGINE_VERSION})')
         # set up tabs
         self.tabs = QTabWidget()
@@ -1004,6 +1006,21 @@ class Editor(QMainWindow):
         obj_dock.setWidget(obj_widget)
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, obj_dock)
         self.objects_dock = obj_dock
+
+        # resources dock on the left
+        self.resource_view = QTreeView()
+        from PyQt6.QtWidgets import QFileSystemModel
+        self.resource_model = QFileSystemModel()
+        self.resource_model.setReadOnly(False)
+        self.resource_view.setModel(self.resource_model)
+        self.resource_view.setHeaderHidden(True)
+        self.resource_view.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
+        self.resource_view.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.resource_view.customContextMenuRequested.connect(self._resource_menu)
+        res_dock = QDockWidget(self.t('resources'), self)
+        res_dock.setWidget(self.resource_view)
+        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, res_dock)
+        self.resources_dock = res_dock
 
         # logic tab with object-specific events and variables
         self.logic_widget = QWidget()
@@ -1093,6 +1110,7 @@ class Editor(QMainWindow):
         self.add_var_btn.setText(self.t('add_variable'))
         self.console_dock.setWindowTitle(self.t('console'))
         self.objects_dock.setWindowTitle(self.t('objects'))
+        self.resources_dock.setWindowTitle(self.t('resources'))
         self.transform_group.setTitle(self.t('transform'))
         self.x_spin.setPrefix(''); self.y_spin.setPrefix(''); self.z_spin.setPrefix('')
         self.scale_x_spin.setPrefix(''); self.scale_y_spin.setPrefix(''); self.angle_spin.setPrefix('')
@@ -1124,6 +1142,7 @@ class Editor(QMainWindow):
         self.add_var_btn.setEnabled(enabled)
         self.run_btn.setEnabled(enabled)
         self.objects_dock.setEnabled(enabled)
+        self.resources_dock.setEnabled(enabled)
         self._update_title()
 
     def _update_title(self):
@@ -1282,6 +1301,8 @@ class Editor(QMainWindow):
             return
         proj_dir = os.path.join(folder, name)
         os.makedirs(proj_dir, exist_ok=True)
+        resources_dir = os.path.join(proj_dir, 'resources')
+        os.makedirs(resources_dir, exist_ok=True)
         proj_path = os.path.join(proj_dir, f'{name}.sageproject')
         self.renderer_name = dlg.render_combo.currentData()
         self.scene = Scene()
@@ -1292,12 +1313,18 @@ class Editor(QMainWindow):
                 width=self.window_width,
                 height=self.window_height,
                 title=f'SAGE 2D',
-                version=ENGINE_VERSION
+                version=ENGINE_VERSION,
+                resources='resources'
             ).save(proj_path)
         except Exception as exc:
             QMessageBox.warning(self, 'Error', f'Failed to create project: {exc}')
             return
         self.project_path = proj_path
+        from sage_engine import set_resource_root
+        set_resource_root(resources_dir)
+        self.resource_dir = resources_dir
+        self.resource_model.setRootPath(self.resource_dir)
+        self.resource_view.setRootIndex(self.resource_model.index(self.resource_dir))
         try:
             self.load_scene(self.scene)
         except Exception as exc:
@@ -1324,6 +1351,11 @@ class Editor(QMainWindow):
             self.window_height = proj.height
             self.load_scene(Scene.from_dict(proj.scene))
             self._update_canvas()
+            self.resource_dir = os.path.join(os.path.dirname(path), proj.resources)
+            from sage_engine import set_resource_root
+            set_resource_root(self.resource_dir)
+            self.resource_model.setRootPath(self.resource_dir)
+            self.resource_view.setRootIndex(self.resource_model.index(self.resource_dir))
         except Exception as exc:
             QMessageBox.warning(self, 'Error', f'Failed to open project: {exc}')
             self.project_path = None
@@ -1356,7 +1388,8 @@ class Editor(QMainWindow):
                 width=self.window_width,
                 height=self.window_height,
                 title=f'SAGE 2D',
-                version=ENGINE_VERSION
+                version=ENGINE_VERSION,
+                resources=os.path.relpath(self.resource_dir, os.path.dirname(self.project_path)) if self.resource_dir else 'resources'
             ).save(self.project_path)
             self._add_recent(self.project_path)
             self.dirty = False
@@ -1911,6 +1944,28 @@ class Editor(QMainWindow):
                 self._delete_object(row)
             elif action == del_act:
                 self._delete_object(row)
+
+    def _resource_menu(self, pos):
+        if not self.resource_dir:
+            return
+        index = self.resource_view.indexAt(pos)
+        base = self.resource_model.filePath(index) if index.isValid() else self.resource_dir
+        menu = QMenu(self)
+        new_folder_act = menu.addAction(self.t('new_folder'))
+        import_act = menu.addAction(self.t('import_files'))
+        act = menu.exec(self.resource_view.viewport().mapToGlobal(pos))
+        if act == new_folder_act:
+            name, ok = QInputDialog.getText(self, self.t('new_folder'), self.t('name'))
+            if ok and name:
+                os.makedirs(os.path.join(base, name), exist_ok=True)
+        elif act == import_act:
+            files, _ = QFileDialog.getOpenFileNames(self, self.t('import_files'), '', self.t('image_files'))
+            for f in files:
+                try:
+                    import shutil
+                    shutil.copy(f, base)
+                except Exception as exc:
+                    QMessageBox.warning(self, self.t('error'), str(exc))
 
     def _serialize_object(self, index):
         item, obj = self.items[index]
