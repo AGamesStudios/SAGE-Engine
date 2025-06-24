@@ -146,6 +146,9 @@ correctly because the engine maps them back to their English identifiers at
 runtime.  The mapping comes from simple dictionaries included with both the
 editor and the engine (`sage_editor/lang.py` and `engine/lang.py`), so even
 projects opened without the editor present continue to load.
+The loader always converts localized condition and action names back to their
+English identifiers before resolving them, so translated files remain
+compatible with future releases.
 
 The condition and action lists offer context menus with **Edit**, **Copy**,
 **Paste**, and **Delete** options. Right-click an empty area to add a new block

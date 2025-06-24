@@ -177,10 +177,9 @@ class EventSystem:
 def condition_from_dict(data, objects, variables):
     """Instantiate a condition from its dictionary description."""
     typ = data.get('type')
-    cls = CONDITION_REGISTRY.get(typ)
-    if cls is None and typ in TRANSLATION_LOOKUP:
+    if typ in TRANSLATION_LOOKUP:
         typ = TRANSLATION_LOOKUP[typ]
-        cls = CONDITION_REGISTRY.get(typ)
+    cls = CONDITION_REGISTRY.get(typ)
     if cls is None:
         logger.warning('Unknown condition type %s', typ)
         return None
@@ -216,10 +215,9 @@ def condition_from_dict(data, objects, variables):
 def action_from_dict(data, objects):
     """Instantiate an action from its dictionary description."""
     typ = data.get('type')
-    cls = ACTION_REGISTRY.get(typ)
-    if cls is None and typ in TRANSLATION_LOOKUP:
+    if typ in TRANSLATION_LOOKUP:
         typ = TRANSLATION_LOOKUP[typ]
-        cls = ACTION_REGISTRY.get(typ)
+    cls = ACTION_REGISTRY.get(typ)
     if cls is None:
         logger.warning('Unknown action type %s', typ)
         return None
