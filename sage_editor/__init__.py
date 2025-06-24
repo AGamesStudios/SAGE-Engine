@@ -837,6 +837,8 @@ class Editor(QMainWindow):
         self.g_scene.addItem(self.rotate_handle)
         self.rotate_handle.hide()
         self.g_scene.changed.connect(self._update_gizmo)
+        # update gizmo when the selection changes
+        self.g_scene.selectionChanged.connect(self._on_selection_changed)
 
         # logic tab with object-specific events and variables
         self.logic_widget = QWidget()
@@ -1420,9 +1422,8 @@ class Editor(QMainWindow):
             self.rotate_handle.hide()
             return
         item = self.items[idx][0]
-        # map the item's bounding rectangle to scene coordinates
-        mapped = item.mapToScene(item.boundingRect())
-        rect = mapped.boundingRect()
+        # use the item's scene bounding box so rotation and scale are accounted for
+        rect = item.sceneBoundingRect()
         self.gizmo.setRect(rect)
         self.gizmo.show()
         # place handles at the bottom-right corner and slightly above the top
@@ -1430,6 +1431,15 @@ class Editor(QMainWindow):
         self.scale_handle.show()
         self.rotate_handle.setPos(rect.topLeft() + QPointF(0, -20))
         self.rotate_handle.show()
+
+    def _on_selection_changed(self):
+        """Sync the object combo with the selected graphics item."""
+        selected = [it for it in self.g_scene.selectedItems() if isinstance(it, SpriteItem)]
+        if not selected:
+            return
+        item = selected[0]
+        if item.index is not None:
+            self.object_combo.setCurrentIndex(item.index)
 
     def _create_grid(self):
         """Create grid and axis lines."""
