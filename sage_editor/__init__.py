@@ -2143,11 +2143,15 @@ class Editor(QMainWindow):
         scene = getattr(self, 'scene', None)
         cam = getattr(scene, 'camera', None) if scene else None
         if cam:
-            x, y, w, h = cam.view_rect()
+            w = cam.width / cam.zoom
+            h = cam.height / cam.zoom
+            x = cam.x - w / 2
+            y = cam.y - h / 2
         else:
-            x = y = 0
             w = getattr(self, 'window_width', 640)
             h = getattr(self, 'window_height', 480)
+            x = -w / 2
+            y = -h / 2
         cam_rect = QRectF(x, y, w, h)
         if getattr(self, 'camera_rect', None) and self.camera_rect.scene() is self.g_scene:
             self.camera_rect.setRect(cam_rect)
@@ -2535,8 +2539,9 @@ class Editor(QMainWindow):
         self.object_combo.removeItem(index)
         self.object_list.takeItem(index)
         # update indexes
-        for i,(it,o) in enumerate(self.items):
-            it.index = i
+        for i, (it, o) in enumerate(self.items):
+            if it is not None:
+                it.index = i
             self.object_combo.setItemData(i, i)
         if index == self.object_combo.currentIndex() and self.items:
             self.object_combo.setCurrentIndex(0)
