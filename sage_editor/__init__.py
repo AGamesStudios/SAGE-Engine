@@ -6,9 +6,13 @@ from PyQt6.QtWidgets import (
     QListWidget, QTableWidget, QTableWidgetItem, QPushButton, QDialog, QFormLayout,
     QDialogButtonBox, QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox,
     QTextEdit, QDockWidget, QGroupBox, QCheckBox, QMessageBox, QMenu, QColorDialog,
-    QTreeView, QFileSystemModel, QInputDialog,
+    QTreeView, QInputDialog,
     QStyle, QHeaderView, QAbstractItemView
 )
+try:
+    from PyQt6.QtWidgets import QFileSystemModel
+except Exception:  # pragma: no cover - handle older PyQt versions
+    QFileSystemModel = None
 from PyQt6.QtGui import QPixmap, QPen, QColor, QPalette, QFont, QAction, QTransform
 from PyQt6.QtCore import QRectF, Qt, QProcess, QPointF
 try:
@@ -1009,10 +1013,14 @@ class Editor(QMainWindow):
 
         # resources dock on the left
         self.resource_view = QTreeView()
-        from PyQt6.QtWidgets import QFileSystemModel
-        self.resource_model = QFileSystemModel()
-        self.resource_model.setReadOnly(False)
-        self.resource_view.setModel(self.resource_model)
+        if QFileSystemModel is None:
+            self.resource_model = None
+        else:
+            self.resource_model = QFileSystemModel()
+            self.resource_model.setReadOnly(False)
+            self.resource_view.setModel(self.resource_model)
+        if self.resource_model is None:
+            self.resource_view.setEnabled(False)
         self.resource_view.setHeaderHidden(True)
         self.resource_view.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
         self.resource_view.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
