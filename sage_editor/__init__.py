@@ -271,6 +271,34 @@ class _HandleItem(QGraphicsEllipseItem):
         super().mouseReleaseEvent(event)
 
 
+class ResourceTreeWidget(QTreeWidget):
+    """Tree widget that mirrors the filesystem for resources."""
+
+    def __init__(self, editor):
+        super().__init__()
+        self.editor = editor
+        self.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
+
+    def dropEvent(self, event):
+        item = self.currentItem()
+        if item is None:
+            super().dropEvent(event)
+            return
+        old_path = item.data(0, Qt.ItemDataRole.UserRole)
+        super().dropEvent(event)
+        parent = item.parent()
+        if parent:
+            base = parent.data(0, Qt.ItemDataRole.UserRole)
+        else:
+            base = self.editor.resource_dir
+        new_path = os.path.join(base, item.text(0))
+        if old_path != new_path:
+            if self.editor._move_resource(old_path, new_path):
+                item.setData(0, Qt.ItemDataRole.UserRole, new_path)
+            else:
+                self.editor._refresh_resource_tree()
+
+
 def describe_condition(cond, objects, t=lambda x: x):
     typ = cond.get('type', '')
     if typ in ('KeyPressed', 'KeyReleased'):
@@ -1091,7 +1119,7 @@ class Editor(QMainWindow):
 
         # resources dock on the left
         if QFileSystemModel is None:
-            self.resource_view = QTreeWidget()
+            self.resource_view = ResourceTreeWidget(self)
             self.resource_view.setHeaderHidden(True)
             self.resource_model = None
             self.proxy_model = None
@@ -2184,6 +2212,21 @@ class Editor(QMainWindow):
         rel = os.path.relpath(target, self.resource_dir)
         self._refresh_resource_tree()
         return target, rel
+
+    def _move_resource(self, src: str, dst: str) -> bool:
+        """Move a resource within the project tree."""
+        try:
+            if self.resource_manager:
+                rel_src = os.path.relpath(src, self.resource_dir)
+                rel_dst = os.path.relpath(dst, self.resource_dir)
+                self.resource_manager.move(rel_src, rel_dst)
+            else:
+                os.rename(src, dst)
+            _log(f'Moved resource {src} -> {dst}')
+            return True
+        except Exception as exc:
+            QMessageBox.warning(self, self.t('error'), str(exc))
+            return False
 
     def _import_resources(self, base: str | None = None) -> None:
         """Copy selected files into the resources directory."""
