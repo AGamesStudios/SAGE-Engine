@@ -6,6 +6,7 @@ from .core.game_object import clear_image_cache
 from .api import load_project, run_project, create_engine, load_scene, run_scene
 from .core.resources import ResourceManager, set_resource_root, get_resource_path
 from .core.engine import main
+from .log import logger
 from .logic import (
     EventSystem, Event, KeyPressed, KeyReleased, MouseButton, InputState, Collision, AfterTime,
     OnStart, EveryFrame, VariableCompare,
@@ -19,6 +20,6 @@ __all__ = [
     'OnStart', 'EveryFrame', 'VariableCompare',
     'SetVariable', 'ModifyVariable', 'Project', 'Camera',
     'clear_image_cache', 'Renderer', 'OpenGLRenderer', 'GLSettings', 'main',
-    'ENGINE_VERSION', 'ResourceManager', 'set_resource_root', 'get_resource_path',
+    'ENGINE_VERSION', 'logger', 'ResourceManager', 'set_resource_root', 'get_resource_path',
     'load_project', 'run_project', 'create_engine', 'load_scene', 'run_scene'
 ]

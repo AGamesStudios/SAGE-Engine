@@ -2395,14 +2395,17 @@ def main(argv=None):
         editor.console.append(text)
         orig_err.write(text)
         orig_err.flush()
-        logger.error(text)
+        logger.error('Unhandled exception', exc_info=(exc_type, exc, tb))
         QMessageBox.critical(editor, editor.t('error'), text)
 
     sys.excepthook = handle_exception
     print('SAGE Editor started')
     _log('SAGE Editor started')
 
-    return app.exec()
+    try:
+        return app.exec()
+    finally:
+        _log('SAGE Editor closed')
 
 
 if __name__ == '__main__':

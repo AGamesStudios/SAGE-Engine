@@ -3,7 +3,6 @@ import argparse
 import traceback
 import time
 import os
-import logging
 from datetime import datetime
 from .scene import Scene
 from .project import Project
@@ -11,20 +10,13 @@ from .input import Input
 from .camera import Camera
 from ..renderers import OpenGLRenderer, Renderer
 from .. import ENGINE_VERSION
+from ..log import logger
 
-LOG_FILE = os.path.join(os.path.expanduser('~'), '.sage_engine.log')
+def _exception_handler(exc_type, exc, tb):
+    """Log uncaught exceptions."""
+    logger.error("Uncaught exception", exc_info=(exc_type, exc, tb))
 
-logger = logging.getLogger('sage_engine')
-if not logger.handlers:
-    logger.setLevel(logging.INFO)
-    fmt = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
-    fh = logging.FileHandler(LOG_FILE, encoding='utf-8')
-    fh.setFormatter(fmt)
-    logger.addHandler(fh)
-    ch = logging.StreamHandler()
-    ch.setFormatter(fmt)
-    logger.addHandler(ch)
-    logger.info('Logger initialized')
+sys.excepthook = _exception_handler
 
 def _log(text: str) -> None:
     """Write a line to the log file and console."""
