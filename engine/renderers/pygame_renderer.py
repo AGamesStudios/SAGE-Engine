@@ -1,0 +1,88 @@
+from dataclasses import dataclass
+import pygame
+from PIL import Image
+from engine.core.camera import Camera
+from engine import units
+
+@dataclass
+class PygameRenderer:
+    """Simple renderer using pygame."""
+
+    def __init__(self, width=640, height=480, title="SAGE 2D"):
+        pygame.init()
+        self.surface = pygame.display.set_mode((width, height))
+        pygame.display.set_caption(title)
+        self.width = width
+        self.height = height
+        self.window = None  # for API compatibility
+        self.textures = {}
+        self._should_close = False
+
+    def update_size(self):
+        self.width, self.height = self.surface.get_size()
+
+    def set_window_size(self, width, height):
+        self.surface = pygame.display.set_mode((width, height))
+        self.update_size()
+
+    def should_close(self):
+        return self._should_close
+
+    def clear(self, color=(0, 0, 0)):
+        self.surface.fill(color)
+
+    def _get_texture(self, obj):
+        tex = self.textures.get(obj.image_path)
+        if tex:
+            return tex
+        img = obj.image
+        if img is None:
+            img = Image.new('RGBA', (32, 32), obj.color or (255, 255, 255, 255))
+        mode = img.mode
+        size = img.size
+        data = img.tobytes()
+        tex = pygame.image.frombuffer(data, size, mode)
+        self.textures[obj.image_path] = tex
+        return tex
+
+    def draw_scene(self, scene, camera=None):
+        scale = units.UNITS_PER_METER
+        camx = camy = 0
+        camw = self.width
+        camh = self.height
+        zoom = 1.0
+        if camera is not None:
+            camx = camera.x * scale
+            camy = camera.y * scale
+            camw = (camera.width / camera.zoom) * scale
+            camh = (camera.height / camera.zoom) * scale
+            zoom = camera.zoom
+        scene._sort_objects()
+        for obj in scene.objects:
+            if isinstance(obj, Camera):
+                continue
+            if camera is not None:
+                x, y, w, h = obj.rect()
+                if (x + w < camx or x > camx + camw or
+                        y + h < camy or y > camy + camh):
+                    continue
+            self.draw_object(obj, camx, camy, zoom)
+
+    def draw_object(self, obj, camx=0, camy=0, zoom=1.0):
+        surf = self._get_texture(obj)
+        w = int(obj.width * obj.scale_x)
+        h = int(obj.height * obj.scale_y)
+        if w != obj.width or h != obj.height:
+            surf = pygame.transform.scale(surf, (w, h))
+        if obj.angle:
+            surf = pygame.transform.rotate(surf, -obj.angle)
+        x = (obj.x - camx / units.UNITS_PER_METER) * zoom * units.UNITS_PER_METER
+        y = (obj.y - camy / units.UNITS_PER_METER) * zoom * units.UNITS_PER_METER
+        rect = surf.get_rect(center=(int(x), int(y)))
+        self.surface.blit(surf, rect)
+
+    def present(self):
+        pygame.display.flip()
+
+    def close(self):
+        pygame.quit()

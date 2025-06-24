@@ -1,6 +1,12 @@
 """Renderer interface and registry."""
 
-from .opengl_renderer import OpenGLRenderer, GLSettings
+try:
+    from .opengl_renderer import OpenGLRenderer, GLSettings
+except Exception:  # pragma: no cover - optional dependency
+    OpenGLRenderer = None
+    class GLSettings:
+        pass
+from .pygame_renderer import PygameRenderer
 
 RENDERER_REGISTRY: dict[str, type] = {}
 
@@ -12,7 +18,9 @@ def get_renderer(name: str) -> type | None:
     """Return the renderer class associated with ``name``."""
     return RENDERER_REGISTRY.get(name)
 
-register_renderer("opengl", OpenGLRenderer)
+register_renderer("pygame", PygameRenderer)
+if OpenGLRenderer:
+    register_renderer("opengl", OpenGLRenderer)
 
 class Renderer:
     """Abstract renderer interface."""
@@ -32,6 +40,6 @@ class Renderer:
         return False
 
 __all__ = [
-    'Renderer', 'OpenGLRenderer', 'GLSettings',
+    'Renderer', 'OpenGLRenderer', 'PygameRenderer', 'GLSettings',
     'register_renderer', 'get_renderer', 'RENDERER_REGISTRY'
 ]

@@ -8,7 +8,7 @@ class Project:
     """Simple container for a SAGE project including scene data."""
 
     scene: dict
-    renderer: str = 'opengl'
+    renderer: str = 'pygame'
     width: int = 640
     height: int = 480
     title: str = 'SAGE 2D'
@@ -28,7 +28,7 @@ class Project:
                     scene = json.load(sf)
             else:
                 scene = {}
-        renderer = data.get('renderer', 'opengl')
+        renderer = data.get('renderer', 'pygame')
         width = data.get('width', 640)
         height = data.get('height', 480)
         title = data.get('title', 'SAGE 2D')

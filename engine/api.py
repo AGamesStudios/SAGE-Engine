@@ -3,7 +3,7 @@
 from .core.engine import Engine
 from .core.scene import Scene
 from .core.project import Project
-from .renderers import OpenGLRenderer
+from .renderers import get_renderer, PygameRenderer
 from .core.camera import Camera
 from .core.objects import register_object, object_from_dict, object_to_dict
 
@@ -35,7 +35,8 @@ def create_engine(project: Project, fps: int = 60) -> Engine:
     """Create an :class:`Engine` for the given project."""
     scene = Scene.from_dict(project.scene)
     camera = scene.camera or Camera(0, 0, project.width, project.height)
-    renderer = OpenGLRenderer(project.width, project.height, project.title)
+    rcls = get_renderer(project.renderer) or PygameRenderer
+    renderer = rcls(project.width, project.height, project.title)
     events = scene.build_event_system()
     return Engine(
         width=project.width,
@@ -70,7 +71,8 @@ def run_scene(path: str, width: int = 640, height: int = 480,
     """Run a single scene file directly."""
     scene = load_scene(path)
     camera = scene.camera or Camera(0, 0, width, height)
-    renderer = OpenGLRenderer(width, height, title or "SAGE 2D")
+    rcls = get_renderer('pygame') or PygameRenderer
+    renderer = rcls(width, height, title or "SAGE 2D")
     events = scene.build_event_system()
     Engine(
         width=width,

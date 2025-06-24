@@ -30,11 +30,11 @@ other tools only requires importing these modules.
 ### Renderer
 
 Rendering is handled by modules under `engine/renderers`.  The
-engine ships with an `OpenGLRenderer` implemented using glfw and
-PyOpenGL.  Renderers register themselves through a small registry
-so projects can select a backend by name.  The base `Renderer`
-interface allows additional backends (for example Vulkan) to be added
-without touching the core engine.
+default backend is a simple `PygameRenderer` while an
+`OpenGLRenderer` remains available for experimentation.
+Renderers register themselves through a small registry so projects can
+select a backend by name.  The base `Renderer` interface allows
+additional backends to be added without touching the core engine.
 Resources are loaded through `ResourceManager` which resolves paths
 relative to the project's `resources` folder so assets remain
 organized and portable.
@@ -108,7 +108,8 @@ reorganizing files will not break existing scenes.
 If PyQt does not provide ``QFileSystemModel`` the editor falls back to a
 simpler tree widget that still lets you create folders and import files.
 Use **File → New Project** to generate a folder for your game. The dialog asks
-for a project name and location; the engine currently uses the OpenGL renderer.
+for a project name and location; projects default to the Pygame renderer while
+the OpenGL backend is still in development.
 It then creates the folder with a `.sageproject` file. Each new object
 receives a generic name like `New Object (1)` so conditions always target the
 correct item. The editor disables sprite, variable and logic actions until a
@@ -171,7 +172,7 @@ Run a saved project with:
 ```bash
 python -m engine path/to/project.sageproject
 # the engine uses the renderer stored in the project file
-# pass `--renderer opengl` or any registered name to override
+# pass `--renderer pygame` or `--renderer opengl` to override
 ```
 
 Project files store the entire scene data so you can share a single file. Use

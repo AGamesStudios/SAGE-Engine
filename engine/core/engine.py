@@ -6,9 +6,10 @@ import os
 from datetime import datetime
 from .scene import Scene
 from .project import Project
-from .input import Input
+from .input import Input as GLFWInput
+from .input_pygame import PygameInput
 from .camera import Camera
-from ..renderers import OpenGLRenderer, Renderer, get_renderer
+from ..renderers import OpenGLRenderer, PygameRenderer, Renderer, get_renderer
 from .. import ENGINE_VERSION
 from ..log import logger
 
@@ -34,8 +35,8 @@ class Engine:
         self.camera = camera or getattr(self.scene, 'camera', None) or Camera(0, 0, width, height)
         self.events = events if events is not None else self.scene.build_event_system()
         if renderer is None:
-            cls = get_renderer('opengl')
-            self.renderer = cls(width, height, title) if cls else OpenGLRenderer(width, height, title)
+            cls = get_renderer('pygame')
+            self.renderer = cls(width, height, title) if cls else PygameRenderer(width, height, title)
         elif isinstance(renderer, str):
             cls = get_renderer(renderer)
             if cls is None:
@@ -46,13 +47,16 @@ class Engine:
         # keep camera dimensions in sync with the window size
         self.camera.width = self.renderer.width
         self.camera.height = self.renderer.height
-        from .input import Input
-        self.input = Input(self.renderer.window)
-        try:
-            import glfw
-            glfw.set_window_size_callback(self.renderer.window, self._on_resize)
-        except Exception:
-            pass
+        if isinstance(self.renderer, PygameRenderer):
+            self.input = PygameInput(self.renderer)
+        else:
+            self.input = GLFWInput(self.renderer.window)
+        if not isinstance(self.renderer, PygameRenderer):
+            try:
+                import glfw
+                glfw.set_window_size_callback(self.renderer.window, self._on_resize)
+            except Exception:
+                pass
         self._last = time.perf_counter()
         try:
             from .. import load_engine_plugins
@@ -107,15 +111,15 @@ def main(argv=None):
     parser.add_argument('--width', type=int, help='Window width')
     parser.add_argument('--height', type=int, help='Window height')
     parser.add_argument('--title', help='Window title')
-    parser.add_argument('--renderer', choices=['opengl'],
-                        help='Rendering backend (currently only opengl)')
+    parser.add_argument('--renderer', choices=['pygame', 'opengl'],
+                        help='Rendering backend (default pygame)')
     args = parser.parse_args(argv)
 
     scene = Scene()
     width = args.width or 640
     height = args.height or 480
     title = args.title or 'SAGE 2D'
-    renderer_name = args.renderer or 'opengl'
+    renderer_name = args.renderer or 'pygame'
     if args.file:
         path = args.file
         if path.endswith('.sageproject'):
