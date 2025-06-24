@@ -49,10 +49,15 @@ class Print(Action):
         if self.text is None:
             logger.warning('Print action missing text')
             return
+        # resolve variable references before formatting so the log shows the
+        # actual value rather than a ``VarRef`` object representation
+        value = resolve_value(self.text, engine)
+        if not isinstance(value, str):
+            value = str(value)
         try:
-            msg = self.text.format(**engine.events.variables)
+            msg = value.format(**engine.events.variables)
         except Exception:
-            msg = str(self.text)
+            msg = value
         logger.info(msg)
 
 _SOUND_CACHE = {}
