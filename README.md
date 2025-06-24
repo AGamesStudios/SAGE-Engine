@@ -253,6 +253,16 @@ load and save new object classes without modifying the loader. All objects,
 scenes and projects expose a ``metadata`` dictionary for custom attributes so
 tools can store extra information without affecting the runtime.
 
+### Editor Plugins
+
+The editor can be extended with optional plugins.  Set the environment
+variable `SAGE_EDITOR_PLUGINS` to one or more directories separated by
+your OS path separator.  Each Python file in those directories may define
+an ``init(editor)`` function that receives the running :class:`Editor`
+instance.  Plugins can also be registered programmatically via
+``sage_editor.plugins.register_plugin``.  This keeps the built-in editor
+simple while allowing advanced features to be packaged separately.
+
 ### Versioning
 
 Each project stores the engine version string so upgrades are painless. Older

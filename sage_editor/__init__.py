@@ -34,6 +34,8 @@ import tempfile
 import os
 import glfw
 from engine import Scene, GameObject, Project, Camera, ENGINE_VERSION, get_resource_path
+from . import plugins
+register_plugin = plugins.register_plugin
 import json
 
 RECENT_FILE = os.path.join(os.path.expanduser('~'), '.sage_recent.json')
@@ -1352,6 +1354,8 @@ class Editor(QMainWindow):
         self._apply_language()
         self._update_project_state()
         self._update_recent_menu()
+        # load optional editor plugins
+        plugins.load_plugins(self)
 
     def t(self, key: str) -> str:
         """Translate a key for the current language."""
