@@ -29,9 +29,10 @@ class OpenGLRenderer:
             raise RuntimeError("Failed to create window")
         glfw.make_context_current(self.window)
         glfw.swap_interval(1 if settings.vsync else 0)
-        self.width = width
-        self.height = height
-        self._setup_projection(width, height)
+        fbw, fbh = glfw.get_framebuffer_size(self.window)
+        self.width = fbw
+        self.height = fbh
+        self._setup_projection(fbw, fbh)
         GL.glEnable(GL.GL_TEXTURE_2D)
         self.textures = {}
 
@@ -42,11 +43,16 @@ class OpenGLRenderer:
         GL.glLoadMatrixf([proj[c][r] for c in range(4) for r in range(4)])
         GL.glMatrixMode(GL.GL_MODELVIEW)
 
+    def update_framebuffer_size(self):
+        """Refresh stored size from the actual framebuffer."""
+        fbw, fbh = glfw.get_framebuffer_size(self.window)
+        self.width = fbw
+        self.height = fbh
+        self._setup_projection(fbw, fbh)
+
     def set_window_size(self, width, height):
-        self.width = width
-        self.height = height
         glfw.set_window_size(self.window, width, height)
-        self._setup_projection(width, height)
+        self.update_framebuffer_size()
 
     def should_close(self):
         return glfw.window_should_close(self.window)
