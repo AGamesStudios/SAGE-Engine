@@ -948,13 +948,16 @@ class AddEventDialog(QDialog):
         self.conditions = []
         self.actions = []
         layout = QGridLayout(self)
+        layout.setContentsMargins(8, 8, 8, 8)
+        layout.setHorizontalSpacing(12)
+        layout.setVerticalSpacing(6)
 
         left_box = QGroupBox(parent.t('conditions') if parent else 'Conditions')
         left = QVBoxLayout(left_box)
         right_box = QGroupBox(parent.t('actions') if parent else 'Actions')
         right = QVBoxLayout(right_box)
-        self.cond_list = QListWidget(); left.addWidget(self.cond_list)
-        self.act_list = QListWidget(); right.addWidget(self.act_list)
+        self.cond_list = QListWidget(); self.cond_list.setAlternatingRowColors(True); self.cond_list.setSpacing(2); left.addWidget(self.cond_list)
+        self.act_list = QListWidget(); self.act_list.setAlternatingRowColors(True); self.act_list.setSpacing(2); right.addWidget(self.act_list)
         self.cond_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.act_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.cond_list.customContextMenuRequested.connect(self._cond_menu)
@@ -1125,6 +1128,9 @@ class Editor(QMainWindow):
         obj_widget = QWidget()
         obj_layout = QVBoxLayout(obj_widget)
         self.object_list = QListWidget()
+        self.object_list.setAlternatingRowColors(True)
+        self.object_list.setSpacing(2)
+        self.object_list.setMinimumWidth(160)
         self.object_list.itemSelectionChanged.connect(self._on_object_list_select)
         self.object_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.object_list.customContextMenuRequested.connect(self._object_menu)
@@ -1366,17 +1372,30 @@ class Editor(QMainWindow):
         self.edit_menu = menubar.addMenu(self.t('edit'))
 
         toolbar = self.addToolBar('main')
-        self.run_btn = toolbar.addAction(self.t('run'))
+        toolbar.setIconSize(QSize(24, 24))
+        self.run_btn = toolbar.addAction(
+            self.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay),
+            self.t('run')
+        )
         self.run_btn.triggered.connect(self.run_game)
-        self.grid_act = toolbar.addAction(self.t('show_grid'))
+        self.grid_act = toolbar.addAction(
+            self.style().standardIcon(QStyle.StandardPixmap.SP_DesktopIcon),
+            self.t('show_grid')
+        )
         self.grid_act.setCheckable(True)
         self.grid_act.setChecked(True)
         self.grid_act.toggled.connect(self.toggle_grid)
-        self.gizmo_act = toolbar.addAction(self.t('show_gizmo'))
+        self.gizmo_act = toolbar.addAction(
+            self.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogDetailedView),
+            self.t('show_gizmo')
+        )
         self.gizmo_act.setCheckable(True)
         self.gizmo_act.setChecked(True)
         self.gizmo_act.toggled.connect(self.toggle_gizmo)
-        self.snap_act = toolbar.addAction(self.t('snap_to_grid'))
+        self.snap_act = toolbar.addAction(
+            self.style().standardIcon(QStyle.StandardPixmap.SP_LinkIcon),
+            self.t('snap_to_grid')
+        )
         self.snap_act.setCheckable(True)
         self.snap_act.toggled.connect(self.toggle_snap)
         toolbar.addWidget(QLabel(self.t('grid_size')))
@@ -1385,13 +1404,19 @@ class Editor(QMainWindow):
         self.grid_spin.setValue(self.grid_size)
         self.grid_spin.valueChanged.connect(self.set_grid_size)
         toolbar.addWidget(self.grid_spin)
-        color_act = toolbar.addAction(self.t('grid_color'))
+        color_act = toolbar.addAction(
+            self.style().standardIcon(QStyle.StandardPixmap.SP_DriveDVDIcon),
+            self.t('grid_color')
+        )
         color_act.triggered.connect(self.choose_grid_color)
         from PyQt6.QtWidgets import QWidget, QSizePolicy
         spacer = QWidget()
         spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         toolbar.addWidget(spacer)
-        self.clear_log_act = toolbar.addAction(self.t('clear_log'))
+        self.clear_log_act = toolbar.addAction(
+            self.style().standardIcon(QStyle.StandardPixmap.SP_DialogResetButton),
+            self.t('clear_log')
+        )
         self.clear_log_act.triggered.connect(self.console.clear)
         self.lang_box = QComboBox()
         self.lang_box.addItems(list(LANGUAGES.keys()))

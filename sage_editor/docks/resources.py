@@ -50,13 +50,14 @@ class ResourceDock(QDockWidget):
         self.search_edit.textChanged.connect(editor._filter_resources)
 
         ctrl_layout = QHBoxLayout()
+        ctrl_layout.setSpacing(4)
         ctrl_layout.addWidget(self.new_folder_btn)
         ctrl_layout.addWidget(self.import_btn)
         ctrl_layout.addWidget(self.search_edit)
 
         res_widget = QWidget()
         res_layout = QVBoxLayout(res_widget)
-        res_layout.setContentsMargins(0, 0, 0, 0)
+        res_layout.setContentsMargins(6, 6, 6, 6)
         res_layout.addLayout(ctrl_layout)
         res_layout.addWidget(self.resource_view)
         self.setWidget(res_widget)

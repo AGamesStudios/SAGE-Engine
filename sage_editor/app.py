@@ -14,6 +14,13 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPalette, QColor, QFont
 
+STYLE_SHEET = """
+QToolBar { icon-size: 24px; spacing: 6px; }
+QDockWidget::title { padding: 4px; background: #333; color: #ddd; }
+QGroupBox { margin-top: 8px; }
+QGroupBox::title { subcontrol-origin: margin; left: 4px; padding: 0 2px; }
+"""
+
 from .editor import Editor, save_recent, load_recent, _log, logger
 
 
@@ -170,8 +177,9 @@ def main(argv=None):
     palette.setColor(QPalette.ColorRole.Highlight, QColor(42, 130, 218))
     palette.setColor(QPalette.ColorRole.HighlightedText, QColor(0, 0, 0))
     app.setPalette(palette)
+    app.setStyleSheet(STYLE_SHEET)
     font = QFont()
-    font.setPointSize(font.pointSize() + 2)
+    font.setPointSize(font.pointSize() + 3)
     app.setFont(font)
     editor = Editor(autoshow=False)
     pm = ProjectManager(editor)

@@ -13,8 +13,11 @@ class PropertiesDock(QDockWidget):
         self.editor = editor
         prop_widget = QWidget()
         prop_layout = QVBoxLayout(prop_widget)
+        prop_layout.setContentsMargins(6, 6, 6, 6)
         self.transform_group = QGroupBox(editor.t('transform'))
         form = QFormLayout(self.transform_group)
+        form.setHorizontalSpacing(6)
+        form.setVerticalSpacing(4)
         self.x_spin = QDoubleSpinBox(); self.x_spin.setRange(-10000, 10000)
         self.y_spin = QDoubleSpinBox(); self.y_spin.setRange(-10000, 10000)
         self.z_spin = QDoubleSpinBox(); self.z_spin.setRange(-1000, 1000)
@@ -42,6 +45,8 @@ class PropertiesDock(QDockWidget):
 
         self.camera_group = QGroupBox(editor.t('camera'))
         cam_form = QFormLayout(self.camera_group)
+        cam_form.setHorizontalSpacing(6)
+        cam_form.setVerticalSpacing(4)
         self.cam_w_spin = QSpinBox(); self.cam_w_spin.setRange(100, 4096)
         self.cam_h_spin = QSpinBox(); self.cam_h_spin.setRange(100, 4096)
         self.cam_zoom_spin = QDoubleSpinBox(); self.cam_zoom_spin.setRange(0.1, 100)

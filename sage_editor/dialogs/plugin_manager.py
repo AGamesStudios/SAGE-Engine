@@ -20,6 +20,8 @@ class PluginManager(QDialog):
         self.editor = editor
         self.setWindowTitle(editor.t('manage_plugins'))
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(8, 8, 8, 8)
+        layout.setSpacing(6)
 
         self.table = QTableWidget(0, 2)
         self.table.setHorizontalHeaderLabels([editor.t('plugin'), editor.t('enabled')])
@@ -27,6 +29,7 @@ class PluginManager(QDialog):
         layout.addWidget(self.table)
 
         btn_row = QHBoxLayout()
+        btn_row.setSpacing(6)
         self.add_btn = QPushButton(editor.t('add_plugin'))
         self.del_btn = QPushButton(editor.t('delete'))
         self.close_btn = QPushButton(editor.t('close'))
