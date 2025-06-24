@@ -51,22 +51,26 @@ def main(argv=None):
     parser.add_argument('--width', type=int, default=640, help='Window width')
     parser.add_argument('--height', type=int, default=480, help='Window height')
     parser.add_argument('--title', default='SAGE 2D', help='Window title')
-    parser.add_argument('--renderer', choices=['pygame', 'opengl'], default='pygame',
+    parser.add_argument('--renderer', choices=['pygame', 'opengl'],
                         help='Rendering backend')
     args = parser.parse_args(argv)
 
     scene = Scene()
+    renderer_name = None
     if args.file:
         path = args.file
         if path.endswith('.sageproject'):
             proj = Project.load(path)
             if proj.scene:
                 scene = Scene.from_dict(proj.scene)
+            renderer_name = proj.renderer
         else:
             scene = Scene.load(path)
 
     renderer = None
-    if args.renderer == 'opengl':
+    if args.renderer:
+        renderer_name = args.renderer
+    if renderer_name == 'opengl':
         renderer = OpenGLRenderer(args.width, args.height, args.title)
     Engine(width=args.width, height=args.height, title=args.title,
            scene=scene, events=scene.build_event_system(), renderer=renderer).run()

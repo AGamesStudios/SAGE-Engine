@@ -832,6 +832,7 @@ class Editor(QMainWindow):
         self.lang = DEFAULT_LANGUAGE
         self.window_width = 640
         self.window_height = 480
+        self.renderer_name = 'pygame'
         self.setWindowTitle('SAGE Editor')
         # set up tabs
         self.tabs = QTabWidget()
@@ -1000,6 +1001,7 @@ class Editor(QMainWindow):
         self.recent_menu.setTitle(self.t('recent_projects'))
         self.settings_menu.setTitle(self.t('settings'))
         self.window_settings_act.setText(self.t('window_settings'))
+        self.renderer_settings_act.setText(self.t('renderer_settings'))
         self._update_recent_menu()
         self._update_title()
         
@@ -1077,6 +1079,9 @@ class Editor(QMainWindow):
         self.window_settings_act = QAction(self.t('window_settings'), self)
         self.window_settings_act.triggered.connect(self.show_window_settings)
         self.settings_menu.addAction(self.window_settings_act)
+        self.renderer_settings_act = QAction(self.t('renderer_settings'), self)
+        self.renderer_settings_act.triggered.connect(self.show_renderer_settings)
+        self.settings_menu.addAction(self.renderer_settings_act)
 
         self.edit_menu = menubar.addMenu(self.t('edit'))
 
@@ -1129,12 +1134,16 @@ class Editor(QMainWindow):
                 self.path_edit = QLineEdit()
                 browse_btn = QPushButton(parent.t('browse'))
                 browse_btn.clicked.connect(self.browse)
+                self.render_combo = QComboBox()
+                self.render_combo.addItem(parent.t('pygame'), 'pygame')
+                self.render_combo.addItem(parent.t('opengl'), 'opengl')
                 form = QFormLayout(self)
                 form.addRow(parent.t('project_name'), self.name_edit)
                 path_row = QHBoxLayout()
                 path_row.addWidget(self.path_edit)
                 path_row.addWidget(browse_btn)
                 form.addRow(parent.t('project_path'), path_row)
+                form.addRow(parent.t('renderer'), self.render_combo)
                 buttons = QDialogButtonBox(
                     QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
                 )
@@ -1158,9 +1167,10 @@ class Editor(QMainWindow):
         proj_dir = os.path.join(folder, name)
         os.makedirs(proj_dir, exist_ok=True)
         proj_path = os.path.join(proj_dir, f'{name}.sageproject')
+        self.renderer_name = dlg.render_combo.currentData()
         self.scene = Scene()
         try:
-            Project(self.scene.to_dict()).save(proj_path)
+            Project(self.scene.to_dict(), renderer=self.renderer_name).save(proj_path)
         except Exception as exc:
             QMessageBox.warning(self, 'Error', f'Failed to create project: {exc}')
             return
@@ -1186,6 +1196,7 @@ class Editor(QMainWindow):
         try:
             proj = Project.load(path)
             self.project_path = path
+            self.renderer_name = proj.renderer
             self.load_scene(Scene.from_dict(proj.scene))
         except Exception as exc:
             QMessageBox.warning(self, 'Error', f'Failed to open project: {exc}')
@@ -1213,7 +1224,7 @@ class Editor(QMainWindow):
             obj.scale = item.scale()
             obj.angle = item.rotation()
         try:
-            Project(self.scene.to_dict()).save(self.project_path)
+            Project(self.scene.to_dict(), renderer=self.renderer_name).save(self.project_path)
             self._add_recent(self.project_path)
             self.dirty = False
             self._update_title()
@@ -1252,6 +1263,25 @@ class Editor(QMainWindow):
             self.window_height = h_spin.value()
             self._update_canvas()
 
+    def show_renderer_settings(self):
+        dlg = QDialog(self)
+        dlg.setWindowTitle(self.t('renderer_settings'))
+        combo = QComboBox()
+        combo.addItem(self.t('pygame'), 'pygame')
+        combo.addItem(self.t('opengl'), 'opengl')
+        combo.setCurrentText(self.t(self.renderer_name))
+        form = QFormLayout(dlg)
+        form.addRow(self.t('renderer'), combo)
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
+        buttons.accepted.connect(dlg.accept)
+        buttons.rejected.connect(dlg.reject)
+        form.addRow(buttons)
+        if dlg.exec() == QDialog.DialogCode.Accepted:
+            self.renderer_name = combo.currentData()
+            self._mark_dirty()
+
     def run_game(self):
         if not self._check_project():
             return
@@ -1262,7 +1292,7 @@ class Editor(QMainWindow):
             pos = item.pos()
             obj.x = pos.x()
             obj.y = pos.y()
-        Project(self.scene.to_dict()).save(proj_path)
+        Project(self.scene.to_dict(), renderer=self.renderer_name).save(proj_path)
         self._tmp_project = proj_path
         self.process = QProcess(self)
         self.process.setProgram(sys.executable)
@@ -1275,6 +1305,7 @@ class Editor(QMainWindow):
             '--width', str(self.window_width),
             '--height', str(self.window_height),
             '--title', title,
+            '--renderer', self.renderer_name,
         ]
         self.process.setArguments(args)
         self.process.readyReadStandardOutput.connect(self._read_output)

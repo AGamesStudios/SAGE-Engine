@@ -45,11 +45,11 @@ scaling so objects spin correctly even when Scale X and Scale Y differ. The
 project file stores the entire scene
 including object positions, events and variables.
 Use **File → New Project** to generate a folder for your game. The dialog asks
-for a project name and a location and then creates the folder with a
-`.sageproject` file. Each new object receives a generic name like `New Object (1)` so
-conditions always target the correct item. The
-editor disables sprite, variable and logic actions until a project is opened,
-ensuring all changes are saved to a `.sageproject` file.
+for a project name, location, and which renderer to use (Pygame or OpenGL).
+It then creates the folder with a `.sageproject` file. Each new object
+receives a generic name like `New Object (1)` so conditions always target the
+correct item. The editor disables sprite, variable and logic actions until a
+project is opened, ensuring all changes are saved to a `.sageproject` file.
 The **Logic** tab lists object events with
 conditions on the left and actions on the right. The event dialog now provides
 drop-down lists for keys and shows only parameters relevant to the chosen
@@ -64,6 +64,8 @@ without crashes.
 Window dimensions can be changed under **Settings → Window Settings**. The
 game window title matches the editor, e.g. `SAGE Editor: MyGame - Scene1`.
 When you edit the scene the title gains an `(unsaved)` suffix until you save.
+The renderer can be switched later from **Settings → Renderer** so you can test
+both Pygame and OpenGL modes.
 When defining variables, boolean values are edited with a convenient check box
 instead of typing "true" or "false".
 When comparing variables, the name is selected from a drop-down list so typos
@@ -96,7 +98,7 @@ Run a saved project with:
 
 ```bash
 python -m sage_engine path/to/project.sageproject
-# pass `--renderer opengl` to test the OpenGL backend
+# use `--renderer opengl` to override the project's setting
 ```
 
 Project files store the entire scene data so you can share a single file. Use
