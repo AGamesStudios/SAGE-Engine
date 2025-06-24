@@ -23,7 +23,7 @@ import traceback
 from .lang import LANGUAGES, DEFAULT_LANGUAGE
 import tempfile
 import os
-import pygame
+import glfw
 from sage_engine import Scene, GameObject, Project, Camera
 import json
 
@@ -49,17 +49,18 @@ def save_recent(lst):
         pass
 
 KEY_OPTIONS = [
-    ('Up', pygame.K_UP),
-    ('Down', pygame.K_DOWN),
-    ('Left', pygame.K_LEFT),
-    ('Right', pygame.K_RIGHT),
-    ('Space', pygame.K_SPACE),
-    ('Return', pygame.K_RETURN),
-    ('A', pygame.K_a),
-    ('S', pygame.K_s),
-    ('D', pygame.K_d),
-    ('W', pygame.K_w),
+    ('Up', glfw.KEY_UP),
+    ('Down', glfw.KEY_DOWN),
+    ('Left', glfw.KEY_LEFT),
+    ('Right', glfw.KEY_RIGHT),
+    ('Space', glfw.KEY_SPACE),
+    ('Enter', glfw.KEY_ENTER),
+    ('A', glfw.KEY_A),
+    ('S', glfw.KEY_S),
+    ('D', glfw.KEY_D),
+    ('W', glfw.KEY_W),
 ]
+KEY_NAME_LOOKUP = {code: name for name, code in KEY_OPTIONS}
 
 
 class GraphicsView(QGraphicsView):
@@ -217,7 +218,8 @@ class _HandleItem(QGraphicsEllipseItem):
 def describe_condition(cond, objects, t=lambda x: x):
     typ = cond.get('type', '')
     if typ in ('KeyPressed', 'KeyReleased'):
-        key = pygame.key.name(cond.get('key', 0))
+        code = cond.get('key', 0)
+        key = KEY_NAME_LOOKUP.get(code, str(code))
         return f"{t(typ)} {key}"
     if typ == 'MouseButton':
         btn = cond.get('button', 0)
@@ -474,7 +476,7 @@ class ConditionDialog(QDialog):
         if idx >= 0:
             self.type_box.setCurrentIndex(idx)
         if typ in ('KeyPressed', 'KeyReleased'):
-            key = data.get('key', pygame.K_SPACE)
+            key = data.get('key', glfw.KEY_SPACE)
             i = self.key_combo.findData(key)
             if i >= 0:
                 self.key_combo.setCurrentIndex(i)
@@ -489,7 +491,7 @@ class ConditionDialog(QDialog):
             i = self.device_box.findText(dev)
             if i >= 0:
                 self.device_box.setCurrentIndex(i)
-            key = data.get('code', pygame.K_SPACE)
+            key = data.get('code', glfw.KEY_SPACE)
             i = self.key_combo.findData(key)
             if i >= 0:
                 self.key_combo.setCurrentIndex(i)
@@ -925,7 +927,7 @@ class Editor(QMainWindow):
         self.lang = DEFAULT_LANGUAGE
         self.window_width = 640
         self.window_height = 480
-        self.renderer_name = 'pygame'
+        self.renderer_name = 'opengl'
         self.setWindowTitle('SAGE Editor')
         # set up tabs
         self.tabs = QTabWidget()
@@ -1249,7 +1251,6 @@ class Editor(QMainWindow):
                 browse_btn = QPushButton(parent.t('browse'))
                 browse_btn.clicked.connect(self.browse)
                 self.render_combo = QComboBox()
-                self.render_combo.addItem(parent.t('pygame'), 'pygame')
                 self.render_combo.addItem(parent.t('opengl'), 'opengl')
                 form = QFormLayout(self)
                 form.addRow(parent.t('project_name'), self.name_edit)
@@ -1423,7 +1424,6 @@ class Editor(QMainWindow):
         dlg = QDialog(self)
         dlg.setWindowTitle(self.t('renderer_settings'))
         combo = QComboBox()
-        combo.addItem(self.t('pygame'), 'pygame')
         combo.addItem(self.t('opengl'), 'opengl')
         combo.setCurrentText(self.t(self.renderer_name))
         form = QFormLayout(dlg)
