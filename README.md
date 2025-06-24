@@ -16,9 +16,8 @@ provided in the same package, and the event system lives in
 `engine/logic`.  High level helpers live in `engine/api` so scripts can load,
 save and run projects in just a few lines. **SAGE Editor** builds on these pieces
 but remains optional so games can depend on the engine without pulling in the
-editor.  Both components are now accessible through a common
-`sage` package so you can `import sage.engine` or `import sage.editor`
-while keeping them modular.
+editor.  Simply import the engine from `engine` and the editor from
+`sage_editor` to keep them modular.
 
 ### Renderer
 
@@ -142,7 +141,7 @@ or paste the previously copied one.
 Run a saved project with:
 
 ```bash
-python -m sage.engine path/to/project.sageproject
+python -m engine path/to/project.sageproject
 # the engine uses the renderer stored in the project file
 # pass `--renderer opengl` or any registered name to override
 ```
@@ -159,9 +158,9 @@ Launch the editor with:
 ```bash
 python main.py
 # or
-python -m sage.editor
+python -m sage_editor
 # or from Python
-python -c "import sage.editor as ed; ed.main()"
+python -c "import sage_editor as ed; ed.main()"
 ```
 
 Sprite positions are stored when you save so the runtime engine can render them

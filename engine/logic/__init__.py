@@ -8,12 +8,17 @@ from .base import (
     CONDITION_REGISTRY, ACTION_REGISTRY,
 )
 
+# Import built-in conditions and actions so static analyzers
+# can resolve them. They also register themselves here.
+from . import conditions  # noqa: F401
+from . import actions     # noqa: F401
+
 # Automatically import all submodules so built-ins register themselves
 import importlib
 import pkgutil
 
 for mod in pkgutil.iter_modules(__path__):
-    if mod.name not in {"base", "__pycache__"}:
+    if mod.name not in {"base", "actions", "conditions", "__pycache__"}:
         importlib.import_module(f"{__name__}.{mod.name}")
 
 # expose registered classes at the package level so users can simply import
