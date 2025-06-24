@@ -82,6 +82,8 @@ so projects stay organized. Any image chosen from outside the project is copied
 into this directory automatically, so scenes never reference files that might
 disappear. The engine loads all assets relative to this directory, ensuring
 reorganizing files will not break existing scenes.
+If PyQt does not provide ``QFileSystemModel`` the editor falls back to a
+simpler tree widget that still lets you create folders and import files.
 Use **File → New Project** to generate a folder for your game. The dialog asks
 for a project name and location; the engine currently uses the OpenGL renderer.
 It then creates the folder with a `.sageproject` file. Each new object

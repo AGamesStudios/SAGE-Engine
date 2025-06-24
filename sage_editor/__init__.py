@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (
     QListWidget, QTableWidget, QTableWidgetItem, QPushButton, QDialog, QFormLayout,
     QDialogButtonBox, QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox,
     QTextEdit, QDockWidget, QGroupBox, QCheckBox, QMessageBox, QMenu, QColorDialog,
-    QTreeView, QInputDialog,
+    QTreeView, QInputDialog, QTreeWidget, QTreeWidgetItem,
     QStyle, QHeaderView, QAbstractItemView
 )
 try:
@@ -1090,11 +1090,13 @@ class Editor(QMainWindow):
         self.objects_dock = obj_dock
 
         # resources dock on the left
-        self.resource_view = QTreeView()
         if QFileSystemModel is None:
+            self.resource_view = QTreeWidget()
+            self.resource_view.setHeaderHidden(True)
             self.resource_model = None
             self.proxy_model = None
         else:
+            self.resource_view = QTreeView()
             self.resource_model = QFileSystemModel()
             self.resource_model.setReadOnly(False)
             self.proxy_model = QSortFilterProxyModel(self)
@@ -1448,6 +1450,8 @@ class Editor(QMainWindow):
                 self.resource_view.setRootIndex(self.proxy_model.mapFromSource(src_index))
             else:
                 self.resource_view.setRootIndex(self.resource_model.index(self.resource_dir))
+        else:
+            self._refresh_resource_tree()
         try:
             self.load_scene(self.scene)
         except Exception as exc:
@@ -1486,6 +1490,8 @@ class Editor(QMainWindow):
                     self.resource_view.setRootIndex(self.proxy_model.mapFromSource(src_index))
                 else:
                     self.resource_view.setRootIndex(self.resource_model.index(self.resource_dir))
+            else:
+                self._refresh_resource_tree()
         except Exception as exc:
             QMessageBox.warning(self, 'Error', f'Failed to open project: {exc}')
             self.project_path = None
@@ -2101,12 +2107,17 @@ class Editor(QMainWindow):
     def _resource_menu(self, pos):
         if not self.resource_dir:
             return
-        index = self.resource_view.indexAt(pos)
         base = self.resource_dir
-        if self.resource_model is not None and index.isValid():
-            if self.proxy_model is not None:
-                index = self.proxy_model.mapToSource(index)
-            base = self.resource_model.filePath(index)
+        if isinstance(self.resource_view, QTreeWidget):
+            item = self.resource_view.itemAt(pos)
+            if item is not None:
+                base = item.data(0, Qt.ItemDataRole.UserRole)
+        else:
+            index = self.resource_view.indexAt(pos)
+            if self.resource_model is not None and index.isValid():
+                if self.proxy_model is not None:
+                    index = self.proxy_model.mapToSource(index)
+                base = self.resource_model.filePath(index)
         menu = QMenu(self)
         new_folder_act = menu.addAction(self.t('new_folder'))
         import_act = menu.addAction(self.t('import_files'))
@@ -2135,6 +2146,7 @@ class Editor(QMainWindow):
                 folder = os.path.join(base, name)
                 os.makedirs(folder, exist_ok=True)
             _log(f'Created folder {folder}')
+            self._refresh_resource_tree()
 
     def _copy_to_resources(self, path: str, base: str | None = None) -> tuple[str, str]:
         """Copy ``path`` into resources if needed and return (abs, rel)."""
@@ -2167,7 +2179,9 @@ class Editor(QMainWindow):
             _log(f'Imported resource {abs_path} -> {target}')
         except Exception as exc:
             QMessageBox.warning(self, self.t('error'), str(exc))
-        return target, os.path.relpath(target, self.resource_dir)
+        rel = os.path.relpath(target, self.resource_dir)
+        self._refresh_resource_tree()
+        return target, rel
 
     def _import_resources(self, base: str | None = None) -> None:
         """Copy selected files into the resources directory."""
@@ -2183,10 +2197,51 @@ class Editor(QMainWindow):
         for f in files:
             self._copy_to_resources(f, base)
             _log(f'Imported {f} to {base}')
+        self._refresh_resource_tree()
 
     def _filter_resources(self, text: str) -> None:
         if self.proxy_model is not None:
             self.proxy_model.setFilterWildcard(f"*{text}*")
+        elif isinstance(self.resource_view, QTreeWidget):
+            text = text.lower()
+            def _filter(item):
+                visible = text in item.text(0).lower()
+                for i in range(item.childCount()):
+                    child_vis = _filter(item.child(i))
+                    visible = visible or child_vis
+                item.setHidden(not visible)
+                return visible
+
+            root = self.resource_view.invisibleRootItem()
+            for i in range(root.childCount()):
+                _filter(root.child(i))
+
+    def _refresh_resource_tree(self) -> None:
+        """Rebuild the resource view when QFileSystemModel is unavailable."""
+        if not isinstance(self.resource_view, QTreeWidget):
+            return
+        self.resource_view.clear()
+        if not self.resource_dir:
+            return
+
+        def add_children(parent, path):
+            try:
+                entries = sorted(os.listdir(path))
+            except Exception:
+                entries = []
+            for name in entries:
+                full = os.path.join(path, name)
+                item = QTreeWidgetItem([name])
+                item.setData(0, Qt.ItemDataRole.UserRole, full)
+                parent.addChild(item)
+                if os.path.isdir(full):
+                    add_children(item, full)
+
+        root_item = QTreeWidgetItem([os.path.basename(self.resource_dir)])
+        root_item.setData(0, Qt.ItemDataRole.UserRole, self.resource_dir)
+        self.resource_view.addTopLevelItem(root_item)
+        add_children(root_item, self.resource_dir)
+        self.resource_view.expandAll()
 
     def _serialize_object(self, index):
         item, obj = self.items[index]
