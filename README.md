@@ -24,9 +24,11 @@ size and color are adjustable and snapping ensures objects align cleanly when
 enabled. A red rectangle shows the canvas (the game window) for reference.
 The toolbar also includes an **Add Object** button which places a white square
 sprite. Double-click an object to open a small editor for changing its image or
-RGBA color. Objects show a yellow gizmo outline when selected with handles in the
-corner for scaling and a handle above for rotation so they are easy to
-manipulate. Projects are saved in a single `.sageproject` file
+RGBA color. Clicking a sprite selects it and the cursor switches between an open
+and closed hand while dragging. A yellow gizmo outline appears with a corner
+handle for scaling and a small crosshair above for rotation so objects are easy
+to manipulate. The gizmo and handles always appear above other sprites so they
+remain visible. Projects are saved in a single `.sageproject` file
 that stores the entire scene including object positions, events and variables.
 Use **File → New Project** to generate a folder for your game. The dialog asks
 for a project name and a location and then creates the folder with a

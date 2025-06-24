@@ -84,6 +84,8 @@ class SpriteItem(QGraphicsPixmapItem):
         self.setFlag(flag_enum.ItemIsMovable, True)
         self.setFlag(flag_enum.ItemSendsGeometryChanges, True)
         self.setFlag(flag_enum.ItemIsSelectable, True)
+        self.setCursor(Qt.CursorShape.OpenHandCursor)
+        self.index = None
 
     def itemChange(self, change, value):
         from PyQt6.QtWidgets import QGraphicsItem
@@ -95,11 +97,23 @@ class SpriteItem(QGraphicsPixmapItem):
             self.obj.x = value.x()
             self.obj.y = value.y()
             self.editor._update_gizmo()
+        if change == QGraphicsItem.GraphicsItemChange.ItemSelectedHasChanged and bool(value):
+            if self.index is not None:
+                self.editor.object_combo.setCurrentIndex(self.index)
+                self.editor._update_gizmo()
         return super().itemChange(change, value)
 
     def mouseDoubleClickEvent(self, event):
         self.editor.edit_object(self)
         super().mouseDoubleClickEvent(event)
+
+    def mousePressEvent(self, event):
+        self.setCursor(Qt.CursorShape.ClosedHandCursor)
+        super().mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        self.setCursor(Qt.CursorShape.OpenHandCursor)
+        super().mouseReleaseEvent(event)
 
 
 class _HandleItem(QGraphicsEllipseItem):
@@ -116,6 +130,10 @@ class _HandleItem(QGraphicsEllipseItem):
             flag_enum = QGraphicsItem.GraphicsItemFlag
         self.setFlag(flag_enum.ItemIsMovable, True)
         self.setZValue(10001)
+        if self.kind == 'scale':
+            self.setCursor(Qt.CursorShape.SizeFDiagCursor)
+        else:
+            self.setCursor(Qt.CursorShape.CrossCursor)
         self.start_pos = QPointF()
         self.start_scale = 1.0
         self.start_angle = 0.0
@@ -128,6 +146,7 @@ class _HandleItem(QGraphicsEllipseItem):
         self.start_pos = event.scenePos()
         self.start_scale = item.scale()
         self.start_angle = item.rotation()
+        self.editor.view.setCursor(self.cursor())
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
@@ -149,6 +168,10 @@ class _HandleItem(QGraphicsEllipseItem):
             obj.angle = angle
         self.editor._update_gizmo()
         super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        self.editor.view.unsetCursor()
+        super().mouseReleaseEvent(event)
 
 
 def describe_condition(cond, objects, t=lambda x: x):
@@ -1231,7 +1254,8 @@ class Editor(QMainWindow):
             self.scene.add_object(obj)
             item.obj = obj
             self.items.append((item, obj))
-            self.object_combo.addItem(obj.name, len(self.items) - 1)
+            item.index = len(self.items) - 1
+            self.object_combo.addItem(obj.name, item.index)
             if self.object_combo.currentIndex() == -1:
                 self.object_combo.setCurrentIndex(0)
             self._update_gizmo()
@@ -1255,7 +1279,8 @@ class Editor(QMainWindow):
             item.obj = obj
             item.setPos(0, 0)
             self.items.append((item, obj))
-            self.object_combo.addItem(obj.name, len(self.items) - 1)
+            item.index = len(self.items) - 1
+            self.object_combo.addItem(obj.name, item.index)
             if self.object_combo.currentIndex() == -1:
                 self.object_combo.setCurrentIndex(0)
             self._update_gizmo()
@@ -1264,7 +1289,7 @@ class Editor(QMainWindow):
         self.refresh_events()
 
     def edit_object(self, item: SpriteItem):
-        idx = self.items.index((item, item.obj)) if item and item.obj else -1
+        idx = item.index if item and item.obj else -1
         if idx == -1:
             return
         obj = item.obj
@@ -1579,7 +1604,8 @@ class Editor(QMainWindow):
                 item.setPos(obj.x, obj.y)
                 self.g_scene.addItem(item)
                 self.items.append((item, obj))
-                self.object_combo.addItem(obj.name, len(self.items)-1)
+                item.index = len(self.items)-1
+                self.object_combo.addItem(obj.name, item.index)
             except Exception as exc:
                 self.console.append(f'Failed to load sprite {obj.image_path}: {exc}')
         self.refresh_events()
