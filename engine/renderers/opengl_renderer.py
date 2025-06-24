@@ -2,8 +2,20 @@ from dataclasses import dataclass
 from OpenGL import GL
 import glfw
 from PIL import Image
-import glm
 from engine.core.camera import Camera
+
+
+def _ortho(left, right, bottom, top, near=-1.0, far=1.0) -> list[float]:
+    """Return an orthographic projection matrix as a flat list."""
+    rl = right - left
+    tb = top - bottom
+    fn = far - near
+    return [
+        2.0 / rl, 0.0, 0.0, -(right + left) / rl,
+        0.0, 2.0 / tb, 0.0, -(top + bottom) / tb,
+        0.0, 0.0, -2.0 / fn, -(far + near) / fn,
+        0.0, 0.0, 0.0, 1.0,
+    ]
 
 
 @dataclass
@@ -46,9 +58,9 @@ class OpenGLRenderer:
         if fbh is None:
             fbh = height
         GL.glViewport(0, 0, fbw, fbh)
-        proj = glm.ortho(0.0, float(width), float(height), 0.0, -1.0, 1.0)
+        proj = _ortho(0.0, float(width), float(height), 0.0, -1.0, 1.0)
         GL.glMatrixMode(GL.GL_PROJECTION)
-        GL.glLoadMatrixf([proj[c][r] for c in range(4) for r in range(4)])
+        GL.glLoadMatrixf(proj)
         GL.glMatrixMode(GL.GL_MODELVIEW)
 
     def update_size(self):
@@ -103,7 +115,8 @@ class OpenGLRenderer:
         GL.glPushMatrix()
         GL.glTranslatef(-camx, -camy, 0)
         GL.glScalef(zoom, zoom, 1)
-        for obj in sorted(scene.objects, key=lambda o: getattr(o, 'z', 0)):
+        scene._sort_objects()
+        for obj in scene.objects:
             if isinstance(obj, Camera):
                 continue
             if camera is not None:

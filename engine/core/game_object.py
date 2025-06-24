@@ -3,7 +3,6 @@ import os
 import traceback
 from ..log import logger
 import math
-import glm
 from PIL import Image
 from .objects import register_object
 from ..logic import EventSystem, Event, condition_from_dict, action_from_dict
@@ -114,17 +113,26 @@ class GameObject:
         return (self.x, self.y, self.width * self.scale_x, self.height * self.scale_y)
 
     def transform_matrix(self):
-        """Return a 4x4 column-major matrix for OpenGL using GLM."""
-        angle = math.radians(self.angle)
+        """Return a 4x4 column-major transform matrix without PyGLM."""
+        ang = math.radians(self.angle)
+        ca = math.cos(ang)
+        sa = math.sin(ang)
+        sx = self.scale_x
+        sy = self.scale_y
         px = self.width * self.pivot_x
         py = self.height * self.pivot_y
-        pivot = glm.translate(glm.mat4(1.0), glm.vec3(px, py, 0))
-        pivot_inv = glm.translate(glm.mat4(1.0), glm.vec3(-px, -py, 0))
-        scale = glm.scale(glm.mat4(1.0), glm.vec3(self.scale_x, self.scale_y, 1.0))
-        rotate = glm.rotate(glm.mat4(1.0), angle, glm.vec3(0, 0, 1))
-        translate = glm.translate(glm.mat4(1.0), glm.vec3(self.x, self.y, 0))
-        m = translate * pivot * scale * rotate * pivot_inv
-        return [m[c][r] for c in range(4) for r in range(4)]
+        m00 = ca * sx
+        m01 = -sa * sy
+        m10 = sa * sx
+        m11 = ca * sy
+        tx = self.x + px - (m00 * px + m01 * py)
+        ty = self.y + py - (m10 * px + m11 * py)
+        return [
+            m00, m10, 0.0, 0.0,
+            m01, m11, 0.0, 0.0,
+            0.0, 0.0, 1.0, 0.0,
+            tx,  ty,  0.0, 1.0,
+        ]
 
     def build_event_system(self, objects, variables) -> EventSystem:
         """Construct an EventSystem from the object's event data."""
