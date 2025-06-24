@@ -3,12 +3,22 @@ import argparse
 import traceback
 import time
 import os
+from datetime import datetime
 from .scene import Scene
 from .project import Project
 from .input import Input
 from .camera import Camera
 from ..renderers import OpenGLRenderer, Renderer
 from .. import ENGINE_VERSION
+
+LOG_FILE = os.path.join(os.path.expanduser('~'), 'sage_engine.log')
+
+def _log(text: str) -> None:
+    try:
+        with open(LOG_FILE, 'a', encoding='utf-8') as f:
+            f.write(f"[{datetime.now().isoformat()}] {text}\n")
+    except Exception:
+        pass
 
 class Engine:
     """Main loop that delegates drawing to a renderer."""
@@ -27,6 +37,7 @@ class Engine:
 
     def run(self):
         print(f'SAGE Engine {ENGINE_VERSION}')
+        _log(f'Starting engine version {ENGINE_VERSION}')
         running = True
         while running and not self.renderer.should_close():
             now = time.perf_counter()
@@ -40,8 +51,11 @@ class Engine:
                 self.renderer.draw_scene(self.scene, self.camera)
                 self.renderer.present()
             except Exception as exc:
-                print(f'Runtime error: {exc}')
+                msg = f'Runtime error: {exc}'
+                print(msg)
                 traceback.print_exc()
+                _log(msg)
+                _log(traceback.format_exc())
                 running = False
             if self.fps:
                 time.sleep(max(0, 1.0 / self.fps - (time.perf_counter() - now)))
@@ -49,6 +63,7 @@ class Engine:
         # glfw errors about the library not being initialized
         self.input.shutdown()
         self.renderer.close()
+        _log('Engine shutdown')
 
 
 def main(argv=None):

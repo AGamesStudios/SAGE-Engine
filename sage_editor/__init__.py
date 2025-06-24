@@ -33,6 +33,15 @@ from sage_engine import Scene, GameObject, Project, Camera, ENGINE_VERSION
 import json
 
 RECENT_FILE = os.path.join(os.path.expanduser('~'), '.sage_recent.json')
+LOG_FILE = os.path.join(os.path.expanduser('~'), '.sage_editor.log')
+
+def _log(text: str) -> None:
+    """Append a message to the debug log."""
+    try:
+        with open(LOG_FILE, 'a', encoding='utf-8') as f:
+            f.write(text.rstrip() + '\n')
+    except Exception:
+        pass
 
 def load_recent():
     """Return a list of recent project files that still exist."""
@@ -1525,12 +1534,19 @@ class Editor(QMainWindow):
         out = bytes(self.process.readAllStandardOutput()).decode('utf-8')
         if out:
             self.console.append(out.rstrip())
+            _log(out)
         err = bytes(self.process.readAllStandardError()).decode('utf-8')
         if err:
             self.console.append(err.rstrip())
+            _log(err)
 
-    def _cleanup_process(self):
+    def _cleanup_process(self, exit_code: int = 0,
+                         exit_status: QProcess.ExitStatus = QProcess.ExitStatus.NormalExit):
         """Terminate the running game process and delete temp files."""
+        if exit_code or exit_status != QProcess.ExitStatus.NormalExit:
+            msg = f'Game process finished with code {exit_code} status {exit_status.name}'
+            self.console.append(msg)
+            _log(msg)
         if self.process:
             if self.process.state() != QProcess.ProcessState.NotRunning:
                 self.process.terminate()
