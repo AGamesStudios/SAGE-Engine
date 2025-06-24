@@ -36,7 +36,12 @@ class Collision(Condition):
         self.obj_b = obj_b
 
     def check(self, engine, scene, dt):
-        return self.obj_a.rect().colliderect(self.obj_b.rect())
+        ax, ay, aw, ah = self.obj_a.rect()
+        bx, by, bw, bh = self.obj_b.rect()
+        return not (
+            ax + aw <= bx or ax >= bx + bw or
+            ay + ah <= by or ay >= by + bh
+        )
 
 @register_condition('AfterTime')
 class AfterTime(Condition):

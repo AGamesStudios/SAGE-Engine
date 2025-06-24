@@ -14,9 +14,11 @@ The core engine code resides under `engine/core` which defines the
 generic `GameObject`, `Scene`, `Engine` and `Project` classes. 2D helpers are
 provided in the same package, and the event system lives in
 `engine/logic`.  High level helpers live in `engine/api` so scripts can load,
-save and run projects in just a few lines. `sage_editor` builds on these pieces
+save and run projects in just a few lines. **SAGE Editor** builds on these pieces
 but remains optional so games can depend on the engine without pulling in the
-editor.
+editor.  Both components are now accessible through a common
+`sage` package so you can `import sage.engine` or `import sage.editor`
+while keeping them modular.
 
 ### Renderer
 
@@ -138,7 +140,7 @@ or paste the previously copied one.
 Run a saved project with:
 
 ```bash
-python -m engine path/to/project.sageproject
+python -m sage.engine path/to/project.sageproject
 # the engine uses the renderer stored in the project file
 # pass `--renderer opengl` to override the project setting
 ```
@@ -155,7 +157,9 @@ Launch the editor with:
 ```bash
 python main.py
 # or
-python -m sage_editor
+python -m sage.editor
+# or from Python
+python -c "import sage.editor as ed; ed.main()"
 ```
 
 Sprite positions are stored when you save so the runtime engine can render them
