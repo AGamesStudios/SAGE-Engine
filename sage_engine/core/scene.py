@@ -66,6 +66,10 @@ class Scene:
                 entry.get("angle", 0.0),
                 tuple(entry.get("color", [255, 255, 255, 255])) if entry.get("color") is not None else None,
             )
+            if "quaternion" in entry:
+                q = entry["quaternion"]
+                if isinstance(q, list) and len(q) == 4:
+                    obj.rotation = tuple(float(v) for v in q)
             obj.events = entry.get("events", [])
             scene.add_object(obj)
         return scene
@@ -91,6 +95,7 @@ class Scene:
                     "scale_y": o.scale_y,
                     "scale": o.scale,
                     "angle": o.angle,
+                    "quaternion": list(o.rotation),
                     "color": list(o.color) if o.color is not None else None,
                     "events": getattr(o, "events", []),
                 }

@@ -44,7 +44,9 @@ lets you keep both scales in sync. Rotation now accounts for non-uniform
 scaling so objects spin correctly even when Scale X and Scale Y differ. The
 transform dock also includes a **Coordinate Mode** drop-down for switching
 between *Global* and *Local* coordinates. In local mode the gizmo rotates with
-the object so scaling and rotating follow its orientation. The
+the object so scaling and rotating follow its orientation. Internally every
+object stores its rotation as a quaternion so angles remain stable even after
+many incremental edits. The
 project file stores the entire scene
 including object positions, events and variables.
 Use **File → New Project** to generate a folder for your game. The dialog asks
@@ -101,7 +103,8 @@ Run a saved project with:
 
 ```bash
 python -m sage_engine path/to/project.sageproject
-# use `--renderer opengl` to override the project's setting
+# the engine uses the renderer stored in the project file
+# pass `--renderer opengl` or `--renderer pygame` to override
 ```
 
 Project files store the entire scene data so you can share a single file. Use

@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 import os
 import traceback
+import math
 import pygame
 
 # cache loaded images so repeated sprites don't reload files
@@ -9,6 +10,18 @@ _IMAGE_CACHE: dict[str, pygame.Surface] = {}
 def clear_image_cache():
     """Remove all cached images."""
     _IMAGE_CACHE.clear()
+
+
+def _angle_to_quat(angle: float) -> tuple[float, float, float, float]:
+    """Return a quaternion representing rotation around Z."""
+    rad = math.radians(angle) / 2.0
+    return (0.0, 0.0, math.sin(rad), math.cos(rad))
+
+
+def _quat_to_angle(quat: tuple[float, float, float, float]) -> float:
+    """Return the Z rotation in degrees from a quaternion."""
+    z, w = quat[2], quat[3]
+    return math.degrees(2.0 * math.atan2(z, w))
 
 @dataclass
 class GameObject:
@@ -24,6 +37,7 @@ class GameObject:
     color: tuple[int, int, int, int] | None = None
     events: list = field(default_factory=list)
     sprite: pygame.Surface | None = field(init=False, default=None)
+    rotation: tuple[float, float, float, float] = field(init=False)
 
     @property
     def scale(self) -> float:
@@ -34,9 +48,17 @@ class GameObject:
         self.scale_x = self.scale_y = value
 
     def __post_init__(self):
+        self.rotation = _angle_to_quat(self.angle)
         if self.name is None:
-            base = "New Object"
-            self.name = base
+            self.name = "New Object"
+
+    @property
+    def angle(self) -> float:
+        return _quat_to_angle(self.rotation)
+
+    @angle.setter
+    def angle(self, value: float):
+        self.rotation = _angle_to_quat(value)
 
     def update(self, dt: float):
         pass

@@ -67,10 +67,13 @@ def main(argv=None):
         else:
             scene = Scene.load(path)
 
-    renderer = None
     if args.renderer:
         renderer_name = args.renderer
+
     if renderer_name == 'opengl':
         renderer = OpenGLRenderer(args.width, args.height, args.title)
+    else:
+        renderer = PygameRenderer(args.width, args.height, args.title)
+
     Engine(width=args.width, height=args.height, title=args.title,
            scene=scene, events=scene.build_event_system(), renderer=renderer).run()
