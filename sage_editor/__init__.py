@@ -94,7 +94,14 @@ KEY_OPTIONS = [
     ('D', glfw.KEY_D),
     ('W', glfw.KEY_W),
 ]
+MOUSE_OPTIONS = [
+    ('Left', 1),
+    ('Right', 2),
+    ('Middle', 3),
+]
+
 KEY_NAME_LOOKUP = {code: name for name, code in KEY_OPTIONS}
+MOUSE_NAME_LOOKUP = {code: name for name, code in MOUSE_OPTIONS}
 
 
 class GraphicsView(QGraphicsView):
@@ -273,7 +280,17 @@ def describe_condition(cond, objects, t=lambda x: x):
     if typ == 'MouseButton':
         btn = cond.get('button', 0)
         state = cond.get('state', 'down')
-        return f"{t('MouseButton')} {btn} {state}"
+        name = MOUSE_NAME_LOOKUP.get(btn, str(btn))
+        return f"{t('MouseButton')} {name} {state}"
+    if typ == 'InputState':
+        dev = cond.get('device', 'keyboard')
+        code = cond.get('code', 0)
+        state = cond.get('state', 'down')
+        if dev == 'mouse':
+            name = MOUSE_NAME_LOOKUP.get(code, str(code))
+        else:
+            name = KEY_NAME_LOOKUP.get(code, str(code))
+        return f"{t('InputState')} {dev} {name} {state}"
     if typ == 'AfterTime':
         sec = cond.get('seconds', 0)
         m = cond.get('minutes', 0)
@@ -410,10 +427,19 @@ class ConditionDialog(QDialog):
         layout.addRow(buttons)
 
         self.type_box.currentTextChanged.connect(self._update_fields)
+        self.device_box.currentTextChanged.connect(self._update_key_list)
         self.var_name_box.currentTextChanged.connect(self._update_var_warning)
         self._update_fields()
         if data:
             self.set_condition(data)
+
+    def _update_key_list(self, force_device=None):
+        """Populate the key combo based on device choice."""
+        device = force_device or self.device_box.currentText()
+        self.key_combo.clear()
+        opts = KEY_OPTIONS if device == 'keyboard' else MOUSE_OPTIONS
+        for name, val in opts:
+            self.key_combo.addItem(name, val)
 
     def _update_fields(self):
         typ = self.type_box.currentText()
@@ -438,11 +464,13 @@ class ConditionDialog(QDialog):
         if typ in ('KeyPressed', 'KeyReleased'):
             self.key_label.setVisible(True)
             self.key_combo.setVisible(True)
+            self._update_key_list('keyboard')
         elif typ == 'MouseButton':
             self.key_label.setVisible(True)
             self.key_combo.setVisible(True)
             self.state_label.setVisible(True)
             self.state_box.setVisible(True)
+            self._update_key_list('mouse')
         elif typ == 'InputState':
             self.device_label.setVisible(True)
             self.device_box.setVisible(True)
@@ -450,6 +478,7 @@ class ConditionDialog(QDialog):
             self.key_combo.setVisible(True)
             self.state_label.setVisible(True)
             self.state_box.setVisible(True)
+            self._update_key_list()
         elif typ == 'AfterTime':
             self.duration_label.setVisible(True)
             self.hour_spin.setVisible(True)
@@ -524,10 +553,12 @@ class ConditionDialog(QDialog):
             self.type_box.setCurrentIndex(idx)
         if typ in ('KeyPressed', 'KeyReleased'):
             key = data.get('key', glfw.KEY_SPACE)
+            self._update_key_list('keyboard')
             i = self.key_combo.findData(key)
             if i >= 0:
                 self.key_combo.setCurrentIndex(i)
         elif typ == 'MouseButton':
+            self._update_key_list('mouse')
             self.key_combo.setCurrentIndex(data.get('button', 1) - 1)
             st = data.get('state', 'down')
             i = self.state_box.findText(st)
@@ -538,6 +569,7 @@ class ConditionDialog(QDialog):
             i = self.device_box.findText(dev)
             if i >= 0:
                 self.device_box.setCurrentIndex(i)
+            self._update_key_list()
             key = data.get('code', glfw.KEY_SPACE)
             i = self.key_combo.findData(key)
             if i >= 0:
