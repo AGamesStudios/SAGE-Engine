@@ -192,6 +192,7 @@ def condition_from_dict(data, objects, variables):
         val = data.get(key)
         if kind == 'object':
             if val is None or val < 0 or val >= len(objects):
+                logger.warning('Condition %s has invalid object index for %s', typ, arg)
                 return None
             obj = objects[val]
             if allowed:
@@ -230,6 +231,7 @@ def action_from_dict(data, objects):
         val = data.get(key)
         if kind == 'object':
             if val is None or val < 0 or val >= len(objects):
+                logger.warning('Action %s has invalid object index for %s', typ, arg)
                 return None
             obj = objects[val]
             if allowed:

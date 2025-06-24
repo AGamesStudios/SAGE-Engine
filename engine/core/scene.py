@@ -55,13 +55,6 @@ class Scene:
         scene = cls()
         scene.variables = data.get("variables", {})
         scene.metadata = data.get("metadata", {})
-        cam = data.get("camera")
-        if isinstance(cam, dict):
-            # legacy single camera field
-            obj = object_from_dict({"type": "camera", **cam})
-            if obj is not None:
-                scene.add_object(obj)
-                scene.camera = obj
         for entry in data.get("objects", []):
             obj = object_from_dict(entry)
             if obj is None:
@@ -76,6 +69,14 @@ class Scene:
                 logger.debug('Object %s does not support settings', type(obj).__name__)
             scene.add_object(obj)
             if isinstance(obj, Camera):
+                scene.camera = obj
+        has_cam = scene.camera is not None
+        cam = data.get("camera")
+        if not has_cam and isinstance(cam, dict):
+            # legacy single camera field
+            obj = object_from_dict({"type": "camera", **cam})
+            if obj is not None:
+                scene.add_object(obj)
                 scene.camera = obj
         return scene
 
@@ -105,7 +106,7 @@ class Scene:
         }
         if self.metadata:
             data["metadata"] = self.metadata
-        if self.camera:
+        if self.camera and self.camera not in self.objects:
             data["camera"] = object_to_dict(self.camera)
         return data
 

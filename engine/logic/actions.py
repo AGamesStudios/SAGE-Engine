@@ -46,10 +46,13 @@ class Print(Action):
         self.text = text
 
     def execute(self, engine, scene, dt):
+        if self.text is None:
+            logger.warning('Print action missing text')
+            return
         try:
             msg = self.text.format(**engine.events.variables)
         except Exception:
-            msg = self.text
+            msg = str(self.text)
         logger.info(msg)
 
 _SOUND_CACHE = {}
