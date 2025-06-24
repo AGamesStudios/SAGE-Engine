@@ -1327,6 +1327,10 @@ class Editor(QMainWindow):
         self._cleanup_process()
         proj_fd, proj_path = tempfile.mkstemp(suffix='.sageproject')
         os.close(proj_fd)
+        title = 'SAGE 2D'
+        if self.project_path:
+            name = os.path.splitext(os.path.basename(self.project_path))[0]
+            title = f'{name} - Scene1'
         for item, obj in self.items:
             pos = item.pos()
             obj.x = pos.x()
@@ -1341,10 +1345,6 @@ class Editor(QMainWindow):
         self._tmp_project = proj_path
         self.process = QProcess(self)
         self.process.setProgram(sys.executable)
-        title = 'SAGE 2D'
-        if self.project_path:
-            name = os.path.splitext(os.path.basename(self.project_path))[0]
-            title = f'{name} - Scene1'
         args = [
             '-m', 'sage_engine', proj_path,
             '--width', str(self.window_width),
