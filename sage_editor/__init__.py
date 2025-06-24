@@ -826,14 +826,16 @@ class AddEventDialog(QDialog):
         if dlg.exec() == QDialog.DialogCode.Accepted:
             cond = dlg.get_condition()
             self.conditions.append(cond)
-            self.cond_list.addItem(self.t(cond['type']))
+            desc = describe_condition(cond, self.objects, self.parent().t if self.parent() else self.t)
+            self.cond_list.addItem(desc)
 
     def add_action(self):
         dlg = ActionDialog(self.objects, self.variables, self)
         if dlg.exec() == QDialog.DialogCode.Accepted:
             act = dlg.get_action()
             self.actions.append(act)
-            self.act_list.addItem(self.t(act['type']))
+            desc = describe_action(act, self.objects, self.parent().t if self.parent() else self.t)
+            self.act_list.addItem(desc)
 
     def get_event(self):
         return {'conditions': self.conditions, 'actions': self.actions}
@@ -851,7 +853,12 @@ class AddEventDialog(QDialog):
                 dlg = ConditionDialog(self.objects, self.variables, self, self.conditions[row])
                 if dlg.exec() == QDialog.DialogCode.Accepted:
                     self.conditions[row] = dlg.get_condition()
-                    item.setText(self.parent().t(self.conditions[row]['type']) if self.parent() else self.conditions[row]['type'])
+                    desc = describe_condition(
+                        self.conditions[row],
+                        self.objects,
+                        self.parent().t if self.parent() else self.t,
+                    )
+                    item.setText(desc)
             elif action == copy_act:
                 self._clip_cond = dict(self.conditions[row])
             elif action == delete_act:
@@ -865,7 +872,12 @@ class AddEventDialog(QDialog):
                 self.add_condition()
             elif action == paste and self._clip_cond:
                 self.conditions.append(dict(self._clip_cond))
-                self.cond_list.addItem(self.parent().t(self._clip_cond['type']) if self.parent() else self._clip_cond['type'])
+                desc = describe_condition(
+                    self._clip_cond,
+                    self.objects,
+                    self.parent().t if self.parent() else self.t,
+                )
+                self.cond_list.addItem(desc)
 
     def _act_menu(self, pos):
         menu = QMenu(self)
@@ -880,7 +892,12 @@ class AddEventDialog(QDialog):
                 dlg = ActionDialog(self.objects, self.variables, self, self.actions[row])
                 if dlg.exec() == QDialog.DialogCode.Accepted:
                     self.actions[row] = dlg.get_action()
-                    item.setText(self.parent().t(self.actions[row]['type']) if self.parent() else self.actions[row]['type'])
+                    desc = describe_action(
+                        self.actions[row],
+                        self.objects,
+                        self.parent().t if self.parent() else self.t,
+                    )
+                    item.setText(desc)
             elif action == copy_act:
                 self._clip_act = dict(self.actions[row])
             elif action == delete_act:
@@ -894,7 +911,12 @@ class AddEventDialog(QDialog):
                 self.add_action()
             elif action == paste and self._clip_act:
                 self.actions.append(dict(self._clip_act))
-                self.act_list.addItem(self.parent().t(self._clip_act['type']) if self.parent() else self._clip_act['type'])
+                desc = describe_action(
+                    self._clip_act,
+                    self.objects,
+                    self.parent().t if self.parent() else self.t,
+                )
+                self.act_list.addItem(desc)
 
 
 class Editor(QMainWindow):
