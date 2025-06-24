@@ -1357,8 +1357,9 @@ class Editor(QMainWindow):
         from sage_engine import set_resource_root
         set_resource_root(resources_dir)
         self.resource_dir = resources_dir
-        self.resource_model.setRootPath(self.resource_dir)
-        self.resource_view.setRootIndex(self.resource_model.index(self.resource_dir))
+        if self.resource_model is not None:
+            self.resource_model.setRootPath(self.resource_dir)
+            self.resource_view.setRootIndex(self.resource_model.index(self.resource_dir))
         try:
             self.load_scene(self.scene)
         except Exception as exc:
@@ -1388,8 +1389,9 @@ class Editor(QMainWindow):
             self.resource_dir = os.path.join(os.path.dirname(path), proj.resources)
             from sage_engine import set_resource_root
             set_resource_root(self.resource_dir)
-            self.resource_model.setRootPath(self.resource_dir)
-            self.resource_view.setRootIndex(self.resource_model.index(self.resource_dir))
+            if self.resource_model is not None:
+                self.resource_model.setRootPath(self.resource_dir)
+                self.resource_view.setRootIndex(self.resource_model.index(self.resource_dir))
         except Exception as exc:
             QMessageBox.warning(self, 'Error', f'Failed to open project: {exc}')
             self.project_path = None
@@ -1991,7 +1993,9 @@ class Editor(QMainWindow):
         if not self.resource_dir:
             return
         index = self.resource_view.indexAt(pos)
-        base = self.resource_model.filePath(index) if index.isValid() else self.resource_dir
+        base = self.resource_dir
+        if self.resource_model is not None and index.isValid():
+            base = self.resource_model.filePath(index)
         menu = QMenu(self)
         new_folder_act = menu.addAction(self.t('new_folder'))
         import_act = menu.addAction(self.t('import_files'))
