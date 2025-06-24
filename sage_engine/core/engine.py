@@ -4,17 +4,19 @@ import pygame
 import traceback
 from .scene import Scene
 from .project import Project
+from ..renderers import PygameRenderer
 
 class Engine:
-    """Main loop and rendering."""
-    def __init__(self, width=640, height=480, scene=None, events=None, fps=60, title='SAGE 2D'):
+    """Main loop that delegates drawing to a renderer."""
+
+    def __init__(self, width=640, height=480, scene=None, events=None, fps=60,
+                 title='SAGE 2D', renderer=None):
         pygame.init()
-        self.screen = pygame.display.set_mode((width, height))
-        pygame.display.set_caption(title)
         self.clock = pygame.time.Clock()
         self.fps = fps
         self.scene = scene or Scene()
         self.events = events if events is not None else self.scene.build_event_system()
+        self.renderer = renderer or PygameRenderer(width, height, title)
 
     def run(self):
         running = True
@@ -26,13 +28,14 @@ class Engine:
             try:
                 self.events.update(self, self.scene, dt)
                 self.scene.update(dt)
-                self.screen.fill((0, 0, 0))
-                self.scene.draw(self.screen)
-                pygame.display.flip()
+                self.renderer.clear()
+                self.renderer.draw_scene(self.scene)
+                self.renderer.present()
             except Exception as exc:
                 print(f'Runtime error: {exc}')
                 traceback.print_exc()
                 running = False
+        self.renderer.close()
         pygame.quit()
 
 

@@ -11,6 +11,13 @@ generic `GameObject`, `Scene`, `Engine` and `Project` classes. 2D helpers are
 provided in the same package, and the event system lives in
 `sage_engine/logic`. `sage_editor` builds on these pieces but remains optional
 so games can depend on the engine without pulling in the editor.
+
+### Renderer
+
+Rendering is handled by a small module under `sage_engine/renderers`.  The
+default `PygameRenderer` draws scenes using pygame but the engine accepts any
+renderer with the same interface.  This keeps the core logic independent of the
+rendering backend so it can be swapped for another implementation later.
 When launching the editor a **Project Manager** window appears. It lists your
 recent projects with their creation date and full path.  Buttons let you create
 a new project, open an existing file or clear the list for a clean start.

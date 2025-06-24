@@ -1,4 +1,5 @@
 from .core import GameObject, Scene, Engine, Project
+from .renderers import PygameRenderer
 from .core.game_object import clear_image_cache
 from .core.engine import main
 from .logic import (
@@ -12,5 +13,6 @@ __all__ = [
     'Event', 'KeyPressed', 'KeyReleased', 'MouseButton', 'Collision', 'Timer',
     'Always', 'Move', 'SetPosition', 'Destroy', 'Print', 'PlaySound', 'Spawn',
     'OnStart', 'EveryFrame', 'VariableCompare',
-    'SetVariable', 'ModifyVariable', 'Project', 'clear_image_cache', 'main'
+    'SetVariable', 'ModifyVariable', 'Project',
+    'clear_image_cache', 'PygameRenderer', 'main'
 ]
