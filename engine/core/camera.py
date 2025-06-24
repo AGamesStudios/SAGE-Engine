@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from .objects import register_object
 from ..logic import EventSystem, Event, condition_from_dict, action_from_dict
 from ..log import logger
+from .. import units
 
 @register_object(
     'camera',
@@ -34,9 +35,13 @@ class Camera:
 
     def view_rect(self) -> tuple[float, float, float, float]:
         """Return the visible world rectangle."""
-        return (self.x, self.y,
-                self.width / self.zoom,
-                self.height / self.zoom)
+        scale = units.UNITS_PER_METER
+        return (
+            self.x * scale,
+            self.y * scale,
+            (self.width / self.zoom) * scale,
+            (self.height / self.zoom) * scale,
+        )
 
     def update(self, dt: float) -> None:
         """Camera objects currently have no behaviour."""

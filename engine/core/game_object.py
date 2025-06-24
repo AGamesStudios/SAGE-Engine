@@ -6,6 +6,7 @@ import math
 from PIL import Image
 from .objects import register_object
 from ..logic import EventSystem, Event, condition_from_dict, action_from_dict
+from .. import units
 
 # cache loaded images so repeated sprites don't reload files
 _IMAGE_CACHE: dict[str, Image.Image] = {}
@@ -110,7 +111,13 @@ class GameObject:
         self.width, self.height = img.size
 
     def rect(self):
-        return (self.x, self.y, self.width * self.scale_x, self.height * self.scale_y)
+        scale = units.UNITS_PER_METER
+        return (
+            self.x * scale,
+            self.y * scale,
+            self.width * self.scale_x,
+            self.height * self.scale_y,
+        )
 
     def transform_matrix(self):
         """Return a 4x4 column-major transform matrix without PyGLM."""
@@ -125,8 +132,9 @@ class GameObject:
         m01 = -sa * sy
         m10 = sa * sx
         m11 = ca * sy
-        tx = self.x + px - (m00 * px + m01 * py)
-        ty = self.y + py - (m10 * px + m11 * py)
+        scale = units.UNITS_PER_METER
+        tx = self.x * scale + px - (m00 * px + m01 * py)
+        ty = self.y * scale + py - (m10 * px + m11 * py)
         return [
             m00, m10, 0.0, 0.0,
             m01, m11, 0.0, 0.0,

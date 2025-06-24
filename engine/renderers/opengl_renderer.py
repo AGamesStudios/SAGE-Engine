@@ -3,6 +3,7 @@ from OpenGL import GL
 import glfw
 from PIL import Image
 from engine.core.camera import Camera
+from engine import units
 
 
 def _ortho(left, right, bottom, top, near=-1.0, far=1.0) -> list[float]:
@@ -29,12 +30,15 @@ class OpenGLRenderer:
     """Basic 2D renderer using glfw and OpenGL."""
 
     def __init__(self, width=640, height=480, title="SAGE 2D",
-                 settings: GLSettings | None = None):
+                 settings: GLSettings | None = None,
+                 units_per_meter: float | None = None):
         if not glfw.init():
             raise RuntimeError("Failed to init glfw")
         settings = settings or GLSettings()
         glfw.window_hint(glfw.CONTEXT_VERSION_MAJOR, settings.major)
         glfw.window_hint(glfw.CONTEXT_VERSION_MINOR, settings.minor)
+        if units_per_meter is not None:
+            units.set_units_per_meter(units_per_meter)
         self.window = glfw.create_window(width, height, title, None, None)
         if not self.window:
             glfw.terminate()
@@ -102,15 +106,16 @@ class OpenGLRenderer:
         return tex
 
     def draw_scene(self, scene, camera=None):
+        scale = units.UNITS_PER_METER
         camx = camy = 0
         camw = self.width
         camh = self.height
         zoom = 1.0
         if camera is not None:
-            camx = camera.x
-            camy = camera.y
-            camw = camera.width / camera.zoom
-            camh = camera.height / camera.zoom
+            camx = camera.x * scale
+            camy = camera.y * scale
+            camw = (camera.width / camera.zoom) * scale
+            camh = (camera.height / camera.zoom) * scale
             zoom = camera.zoom
         GL.glPushMatrix()
         GL.glTranslatef(-camx, -camy, 0)

@@ -44,6 +44,14 @@ OpenGL context versions and toggle vsync if needed. The renderer relies on
 matrices easily.
 The editor's viewport also uses an OpenGL widget and calls `glViewport` on
 resize so what you see while editing matches the game window exactly.
+
+### Units
+
+All positions in the engine use **world units** which can be mapped to real
+distances. By default one unit equals one pixel, but you can set how many
+units represent a meter with ``engine.set_units_per_meter()``.  Helper
+functions ``engine.meters()`` and ``engine.kilometers()`` convert distances so
+objects can be placed using real-world values.
 When launching the editor a **Project Manager** window appears. It lists your
 recent projects with their creation date and full path.  Buttons let you create
 a new project, open an existing file or clear the list for a clean start. The

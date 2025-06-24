@@ -16,6 +16,12 @@ from .core.resources import ResourceManager, set_resource_root, get_resource_pat
 from .core.engine import main
 from .log import logger
 from .diagnostics import warn, error, exception
+from . import units
+set_units_per_meter = units.set_units_per_meter
+meters = units.meters
+kilometers = units.kilometers
+to_units = units.to_units
+from_units = units.from_units
 from sage_sdk.plugins import register_plugin as register_engine_plugin, load_plugins as _load_engine_plugins
 
 def load_engine_plugins(engine, paths=None):
@@ -42,7 +48,8 @@ __all__ = [
     'load_project', 'save_project', 'run_project', 'create_engine',
     'load_scene', 'save_scene', 'run_scene',
     'warn', 'error', 'exception',
-    'register_engine_plugin', 'load_engine_plugins'
+    'register_engine_plugin', 'load_engine_plugins',
+    'units', 'set_units_per_meter', 'meters', 'kilometers', 'to_units', 'from_units'
 ]
 
 # validate that all exported names exist and warn if any are missing
