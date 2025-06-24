@@ -449,14 +449,23 @@ class ConditionDialog(QDialog):
 
         self.a_label = QLabel(parent.t('object_a') if parent else 'Object A:')
         self.a_box = QComboBox()
+        self.cam_label = QLabel(parent.t('camera') if parent else 'Camera:')
+        self.cam_box = QComboBox()
         self.b_label = QLabel(parent.t('object_b') if parent else 'Object B:')
         self.b_box = QComboBox()
+        from engine import Camera
         for i, obj in enumerate(objects):
             label = f'{i}: {obj.name}'
             self.a_box.addItem(label, i)
+            if isinstance(obj, Camera):
+                self.cam_box.addItem(label, i)
             self.b_box.addItem(label, i)
         layout.addRow(self.a_label, self.a_box)
         layout.addRow(self.b_label, self.b_box)
+
+        self.value_label = QLabel(parent.t('value') if parent else 'Value:')
+        self.value_spin = QDoubleSpinBox()
+        layout.addRow(self.value_label, self.value_spin)
 
         self.var_name_label = QLabel(parent.t('variable') if parent else 'Variable:')
         self.var_name_box = QComboBox()
@@ -517,6 +526,8 @@ class ConditionDialog(QDialog):
             (self.state_label, self.state_box),
             (self.a_label, self.a_box),
             (self.b_label, self.b_box),
+            (self.cam_label, self.cam_box),
+            (self.value_label, self.value_spin),
             (self.var_name_label, self.var_name_box),
             (self.var_op_box, self.var_op_box),
             (self.var_value_edit, self.var_value_edit),
@@ -556,6 +567,11 @@ class ConditionDialog(QDialog):
             self.a_box.setVisible(True)
             self.b_label.setVisible(True)
             self.b_box.setVisible(True)
+        elif typ == 'ZoomAbove':
+            self.cam_label.setVisible(True)
+            self.cam_box.setVisible(True)
+            self.value_label.setVisible(True)
+            self.value_spin.setVisible(True)
         elif typ == 'VariableCompare':
             self.var_name_label.setVisible(True)
             self.var_name_box.setVisible(True)
@@ -604,6 +620,12 @@ class ConditionDialog(QDialog):
             }
         if typ == 'Collision':
             return {'type': 'Collision', 'a': self.a_box.currentData(), 'b': self.b_box.currentData()}
+        if typ == 'ZoomAbove':
+            return {
+                'type': 'ZoomAbove',
+                'camera': self.cam_box.currentData(),
+                'value': self.value_spin.value(),
+            }
         if typ == 'VariableCompare':
             return {
                 'type': 'VariableCompare',
@@ -657,6 +679,9 @@ class ConditionDialog(QDialog):
         elif typ == 'Collision':
             self.a_box.setCurrentIndex(int(data.get('a', 0)))
             self.b_box.setCurrentIndex(int(data.get('b', 0)))
+        elif typ == 'ZoomAbove':
+            self.cam_box.setCurrentIndex(int(data.get('camera', 0)))
+            self.value_spin.setValue(float(data.get('value', 0)))
         elif typ == 'VariableCompare':
             name = data.get('name', '')
             i = self.var_name_box.findText(name)
@@ -688,6 +713,9 @@ class ActionDialog(QDialog):
 
         self.target_label = QLabel(parent.t('target') if parent else 'Target:')
         self.target_box = QComboBox()
+        from engine import Camera
+        self.all_objects = objects
+        self.camera_indices = [i for i, o in enumerate(objects) if isinstance(o, Camera)]
         for i, obj in enumerate(objects):
             self.target_box.addItem(f'{i}: {obj.name}', i)
         layout.addRow(self.target_label, self.target_box)
@@ -705,6 +733,10 @@ class ActionDialog(QDialog):
         self.y_spin = QSpinBox(); self.y_spin.setRange(-10000, 10000)
         layout.addRow(self.x_label, self.x_spin)
         layout.addRow(self.y_label, self.y_spin)
+
+        self.zoom_label = QLabel(parent.t('zoom') if parent else 'Zoom:')
+        self.zoom_spin = QDoubleSpinBox(); self.zoom_spin.setRange(0.1, 100.0); self.zoom_spin.setValue(1.0)
+        layout.addRow(self.zoom_label, self.zoom_spin)
 
         self.text_label = QLabel(parent.t('text_label') if parent else 'Text:')
         self.text_edit = QLineEdit()
@@ -778,6 +810,12 @@ class ActionDialog(QDialog):
             return {'type': 'PlaySound', 'path': self.path_edit.text()}
         if typ == 'Spawn':
             return {'type': 'Spawn', 'image': self.path_edit.text(), 'x': self.x_spin.value(), 'y': self.y_spin.value()}
+        if typ == 'SetZoom':
+            return {
+                'type': 'SetZoom',
+                'target': self.target_box.currentData(),
+                'zoom': self.zoom_spin.value(),
+            }
         if typ == 'SetVariable':
             value = self.var_value_edit.text()
             if self.bool_check.isVisible():
@@ -797,6 +835,14 @@ class ActionDialog(QDialog):
 
     def _update_fields(self):
         typ = self.type_box.currentText()
+        self.target_box.clear()
+        if typ == 'SetZoom':
+            for i in self.camera_indices:
+                obj = self.all_objects[i]
+                self.target_box.addItem(f'{i}: {obj.name}', i)
+        else:
+            for i, obj in enumerate(self.all_objects):
+                self.target_box.addItem(f'{i}: {obj.name}', i)
         widgets = [
             (self.target_label, self.target_box),
             (self.dx_label, self.dx_spin),
@@ -809,6 +855,7 @@ class ActionDialog(QDialog):
             (self.var_name_label, self.var_name_box),
             (self.mod_op_box, self.mod_op_box),
             (self.var_value_edit, self.var_value_edit),
+            (self.zoom_label, self.zoom_spin),
             (self.bool_check, self.bool_check),
             (self.mod_warn_icon, self.mod_warn_icon),
             (self.mod_warn_text, self.mod_warn_text),
@@ -839,6 +886,15 @@ class ActionDialog(QDialog):
                 pair[0].setVisible(True)
                 pair[1].setVisible(True)
             self.browse_btn.setVisible(True)
+        elif typ == 'SetZoom':
+            self.target_label.setVisible(True)
+            self.target_box.setVisible(True)
+            self.zoom_label.setVisible(True)
+            self.zoom_spin.setVisible(True)
+            self.target_box.clear()
+            for i in self.camera_indices:
+                obj = self.all_objects[i]
+                self.target_box.addItem(f'{i}: {obj.name}', i)
         elif typ == 'SetVariable':
             for pair in [
                 (self.var_name_label, self.var_name_box),
@@ -913,6 +969,9 @@ class ActionDialog(QDialog):
             self.path_edit.setText(data.get('image', ''))
             self.x_spin.setValue(int(data.get('x', 0)))
             self.y_spin.setValue(int(data.get('y', 0)))
+        elif typ == 'SetZoom':
+            self.target_box.setCurrentIndex(int(data.get('target', 0)))
+            self.zoom_spin.setValue(float(data.get('zoom', 1)))
         elif typ == 'SetVariable':
             name = data.get('name', '')
             i = self.var_name_box.findText(name)
