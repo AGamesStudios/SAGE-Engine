@@ -24,9 +24,10 @@ while keeping them modular.
 
 Rendering is handled by modules under `engine/renderers`.  The
 engine ships with an `OpenGLRenderer` implemented using glfw and
-PyOpenGL.  The base `Renderer` interface allows additional backends
-to be implemented later (for example Vulkan) without modifying the
-core engine.
+PyOpenGL.  Renderers register themselves through a small registry
+so projects can select a backend by name.  The base `Renderer`
+interface allows additional backends (for example Vulkan) to be added
+without touching the core engine.
 Resources are loaded through `ResourceManager` which resolves paths
 relative to the project's `resources` folder so assets remain
 organized and portable.
@@ -143,7 +144,7 @@ Run a saved project with:
 ```bash
 python -m sage.engine path/to/project.sageproject
 # the engine uses the renderer stored in the project file
-# pass `--renderer opengl` to override the project setting
+# pass `--renderer opengl` or any registered name to override
 ```
 
 Project files store the entire scene data so you can share a single file. Use

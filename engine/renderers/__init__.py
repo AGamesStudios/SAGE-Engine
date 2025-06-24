@@ -1,4 +1,18 @@
+"""Renderer interface and registry."""
+
 from .opengl_renderer import OpenGLRenderer, GLSettings
+
+RENDERER_REGISTRY: dict[str, type] = {}
+
+def register_renderer(name: str, cls: type) -> None:
+    """Register a renderer class under ``name``."""
+    RENDERER_REGISTRY[name] = cls
+
+def get_renderer(name: str) -> type | None:
+    """Return the renderer class associated with ``name``."""
+    return RENDERER_REGISTRY.get(name)
+
+register_renderer("opengl", OpenGLRenderer)
 
 class Renderer:
     """Abstract renderer interface."""
@@ -17,4 +31,7 @@ class Renderer:
     def should_close(self) -> bool:
         return False
 
-__all__ = ['Renderer', 'OpenGLRenderer', 'GLSettings']
+__all__ = [
+    'Renderer', 'OpenGLRenderer', 'GLSettings',
+    'register_renderer', 'get_renderer', 'RENDERER_REGISTRY'
+]

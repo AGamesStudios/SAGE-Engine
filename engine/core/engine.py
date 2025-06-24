@@ -8,7 +8,7 @@ from .scene import Scene
 from .project import Project
 from .input import Input
 from .camera import Camera
-from ..renderers import OpenGLRenderer, Renderer
+from ..renderers import OpenGLRenderer, Renderer, get_renderer
 from .. import ENGINE_VERSION
 from ..log import logger
 
@@ -26,13 +26,22 @@ class Engine:
     """Main loop that delegates drawing to a renderer."""
 
     def __init__(self, width=640, height=480, scene=None, events=None, fps=60,
-                 title='SAGE 2D', renderer: Renderer | None = None,
+                 title='SAGE 2D', renderer: Renderer | str | None = None,
                  camera: Camera | None = None):
         self.fps = fps
         self.scene = scene or Scene()
         self.camera = camera or getattr(self.scene, 'camera', None) or Camera(0, 0, width, height)
         self.events = events if events is not None else self.scene.build_event_system()
-        self.renderer = renderer or OpenGLRenderer(width, height, title)
+        if renderer is None:
+            cls = get_renderer('opengl')
+            self.renderer = cls(width, height, title) if cls else OpenGLRenderer(width, height, title)
+        elif isinstance(renderer, str):
+            cls = get_renderer(renderer)
+            if cls is None:
+                raise ValueError(f'Unknown renderer: {renderer}')
+            self.renderer = cls(width, height, title)
+        else:
+            self.renderer = renderer
         # keep camera dimensions in sync with the window size
         self.camera.width = self.renderer.width
         self.camera.height = self.renderer.height
@@ -110,7 +119,10 @@ def main(argv=None):
         else:
             scene = Scene.load(path)
 
-    renderer = OpenGLRenderer(width, height, title)
+    cls = get_renderer(renderer_name)
+    if cls is None:
+        raise ValueError(f'Unknown renderer: {renderer_name}')
+    renderer = cls(width, height, title)
     camera = scene.camera or Camera(0, 0, width, height)
 
     Engine(width=width, height=height, title=title,
