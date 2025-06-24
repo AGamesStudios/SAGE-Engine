@@ -56,8 +56,9 @@ tabs: **Viewport** and **Logic**. The viewport uses a virtually infinite
 `QGraphicsScene` so you can pan freely. It renders through a Qt
 `QOpenGLWidget` so what you see matches the OpenGL runtime. Hold **Ctrl** and
 scroll to zoom the view. A configurable grid and axis lines can be toggled from
-the toolbar. Grid size and color are adjustable and snapping ensures objects
-align cleanly when enabled.
+the toolbar. Buttons use simple text labels instead of icons to keep the
+interface lightweight. Grid size and color are adjustable and snapping ensures
+objects align cleanly when enabled.
 An **Add Object** button beneath the object list places a white square sprite
 with a default name like `New Object`. Double-click an object to open a
 small editor for changing its image or RGBA color. Clicking a sprite selects it
@@ -297,7 +298,8 @@ packaged separately and installed by simply dropping a file into the plugins
 folder.  ``SAGE_ENGINE_PLUGINS`` and ``SAGE_EDITOR_PLUGINS`` provide
 component-specific search paths. The editor exposes **Manage Plugins** under the
 Settings menu which copies Python files into ``~/.sage_plugins`` and lets you
-enable or disable them.
+enable or disable them. Plugin installation is entirely local; the editor does
+not download code from the internet.
 
 ### Versioning
 
@@ -309,7 +311,7 @@ title so you always know which release you are using.
 
 SAGE Engine aims to run smoothly even on older hardware. Images and sounds
 are cached after the first load so repeated objects or effects do not reload
-files from disk. The `Engine` class accepts an `fps` argument (default 60) to
+files from disk. The `Engine` class accepts an `fps` argument (default 30) to
 control the frame rate using `time.sleep` for consistent timing.
 You can clear the image cache with `engine.clear_image_cache()` if memory
 becomes tight. These optimizations keep the runtime light without sacrificing

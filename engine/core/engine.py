@@ -25,7 +25,7 @@ def _log(text: str) -> None:
 class Engine:
     """Main loop that delegates drawing to a renderer."""
 
-    def __init__(self, width=640, height=480, scene=None, events=None, fps=60,
+    def __init__(self, width=640, height=480, scene=None, events=None, fps=30,
                  title='SAGE 2D', renderer: Renderer | str | None = None,
                  camera: Camera | None = None):
         self.fps = fps
