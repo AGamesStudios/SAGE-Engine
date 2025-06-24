@@ -10,19 +10,24 @@ class PygameRenderer:
 
     def __init__(self, width=640, height=480, title="SAGE 2D"):
         pygame.init()
-        self.surface = pygame.display.set_mode((width, height))
+        self.surface = pygame.display.set_mode(
+            (width, height), pygame.HWSURFACE | pygame.DOUBLEBUF
+        )
         pygame.display.set_caption(title)
         self.width = width
         self.height = height
         self.window = None  # for API compatibility
         self.textures = {}
+        self._cache = {}
         self._should_close = False
 
     def update_size(self):
         self.width, self.height = self.surface.get_size()
 
     def set_window_size(self, width, height):
-        self.surface = pygame.display.set_mode((width, height))
+        self.surface = pygame.display.set_mode(
+            (width, height), pygame.HWSURFACE | pygame.DOUBLEBUF
+        )
         self.update_size()
 
     def should_close(self):
@@ -69,13 +74,21 @@ class PygameRenderer:
             self.draw_object(obj, camx, camy, zoom)
 
     def draw_object(self, obj, camx=0, camy=0, zoom=1.0):
-        surf = self._get_texture(obj)
-        w = int(obj.width * obj.scale_x)
-        h = int(obj.height * obj.scale_y)
-        if w != obj.width or h != obj.height:
-            surf = pygame.transform.scale(surf, (w, h))
-        if obj.angle:
-            surf = pygame.transform.rotate(surf, -obj.angle)
+        tex = self._get_texture(obj)
+        key = id(obj)
+        info = (obj.scale_x, obj.scale_y, obj.angle)
+        cached = self._cache.get(key)
+        if cached and cached[1] == info:
+            surf = cached[0]
+        else:
+            surf = tex
+            w = int(obj.width * obj.scale_x)
+            h = int(obj.height * obj.scale_y)
+            if w != obj.width or h != obj.height:
+                surf = pygame.transform.scale(surf, (w, h))
+            if obj.angle:
+                surf = pygame.transform.rotate(surf, -obj.angle)
+            self._cache[key] = (surf, info)
         x = (obj.x - camx / units.UNITS_PER_METER) * zoom * units.UNITS_PER_METER
         y = (obj.y - camy / units.UNITS_PER_METER) * zoom * units.UNITS_PER_METER
         rect = surf.get_rect(center=(int(x), int(y)))
