@@ -117,10 +117,10 @@ class ProjectManager(QDialog):
                     shutil.rmtree(dir_path, ignore_errors=True)
                 except Exception as exc:
                     QMessageBox.warning(self, self.editor.t('error'), str(exc))
-            if path in self.editor.recent_projects:
-                self.editor.recent_projects.remove(path)
-                save_recent(self.editor.recent_projects)
-            self.populate()
+                if path in self.editor.recent_projects:
+                    self.editor.recent_projects.remove(path)
+                    save_recent(self.editor.recent_projects)
+                self.populate()
 
     def populate(self):
         from datetime import datetime

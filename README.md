@@ -312,11 +312,11 @@ title so you always know which release you are using.
 
 SAGE Engine aims to run smoothly even on older hardware. Images and sounds
 are cached after the first load so repeated objects or effects do not reload
-files from disk. The `Engine` class accepts an `fps` argument (default 60) to
+files from disk. The `Engine` class accepts an `fps` argument (default 30) to
 control the frame rate using `time.sleep` for consistent timing.
 You can clear the image cache with `engine.clear_image_cache()` if memory
 becomes tight. These optimizations keep the runtime light without sacrificing
-visual quality.
+visual quality while keeping CPU usage low.
 
 ### SAGE API
 
