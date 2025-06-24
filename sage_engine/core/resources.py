@@ -40,3 +40,25 @@ class ResourceManager:
         if not os.path.exists(base):
             return []
         return sorted(os.listdir(base))
+
+    def import_file(self, src: str, dest: str | None = None) -> str:
+        """Copy ``src`` into the resource tree and return its relative path."""
+        import shutil
+
+        if dest is None:
+            dest = self.root
+        else:
+            dest = self.path(dest)
+        os.makedirs(dest, exist_ok=True)
+
+        base = os.path.basename(src)
+        name, ext = os.path.splitext(base)
+        target = os.path.join(dest, base)
+        counter = 1
+        while os.path.exists(target):
+            target = os.path.join(dest, f"{name}_{counter}{ext}")
+            counter += 1
+        shutil.copy(src, target)
+        if target.startswith(self.root):
+            return os.path.relpath(target, self.root)
+        return target

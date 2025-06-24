@@ -33,7 +33,7 @@ from .lang import LANGUAGES, DEFAULT_LANGUAGE
 import tempfile
 import os
 import glfw
-from sage_engine import Scene, GameObject, Project, Camera, ENGINE_VERSION
+from sage_engine import Scene, GameObject, Project, Camera, ENGINE_VERSION, get_resource_path
 import json
 
 RECENT_FILE = os.path.join(os.path.expanduser('~'), '.sage_recent.json')
@@ -962,6 +962,7 @@ class Editor(QMainWindow):
         self.window_height = 480
         self.renderer_name = 'opengl'
         self.resource_dir: str | None = None
+        self.resource_manager = None
         self.scene = Scene()
         self.setWindowTitle(f'SAGE Editor ({ENGINE_VERSION})')
         # set up tabs
@@ -1389,6 +1390,8 @@ class Editor(QMainWindow):
         from sage_engine import set_resource_root
         set_resource_root(resources_dir)
         self.resource_dir = resources_dir
+        from sage_engine import ResourceManager
+        self.resource_manager = ResourceManager(self.resource_dir)
         if self.resource_model is not None:
             self.resource_model.setRootPath(self.resource_dir)
             if self.proxy_model is not None:
@@ -1423,8 +1426,9 @@ class Editor(QMainWindow):
             self.load_scene(Scene.from_dict(proj.scene))
             self._update_canvas()
             self.resource_dir = os.path.join(os.path.dirname(path), proj.resources)
-            from sage_engine import set_resource_root
+            from sage_engine import set_resource_root, ResourceManager
             set_resource_root(self.resource_dir)
+            self.resource_manager = ResourceManager(self.resource_dir)
             if self.resource_model is not None:
                 self.resource_model.setRootPath(self.resource_dir)
                 if self.proxy_model is not None:
@@ -1632,13 +1636,14 @@ class Editor(QMainWindow):
         if not path:
             return
         try:
-            pix = QPixmap(path)
+            abs_path, rel_path = self._copy_to_resources(path)
+            pix = QPixmap(abs_path)
             if pix.isNull():
                 raise ValueError('failed to load image')
             item = SpriteItem(pix, self, None)
             item.setZValue(0)
             self.g_scene.addItem(item)
-            obj = GameObject(path, 0, 0, 0, None, 1.0, 1.0, 0.0, None)
+            obj = GameObject(rel_path, 0, 0, 0, None, 1.0, 1.0, 0.0, None)
             obj.name = self.t('new_object')
             obj.settings = {}
             self.scene.add_object(obj)
@@ -1713,7 +1718,8 @@ class Editor(QMainWindow):
             def browse(self):
                 path, _ = QFileDialog.getOpenFileName(self, self.parent().t('browse'), '', self.parent().t('image_files'))
                 if path:
-                    self.path_edit.setText(path)
+                    _, rel = self.parent()._copy_to_resources(path)
+                    self.path_edit.setText(rel)
 
             def pick_color(self):
                 color = QColorDialog.getColor(self.color, self)
@@ -1730,7 +1736,7 @@ class Editor(QMainWindow):
         obj.image_path = dlg.path_edit.text().strip()
         obj.color = tuple(dlg.color.getRgb())
         if obj.image_path:
-            pm = QPixmap(obj.image_path)
+            pm = QPixmap(get_resource_path(obj.image_path))
         else:
             pm = QPixmap(32, 32)
             pm.fill(QColor(*obj.color))
@@ -2035,6 +2041,8 @@ class Editor(QMainWindow):
         index = self.resource_view.indexAt(pos)
         base = self.resource_dir
         if self.resource_model is not None and index.isValid():
+            if self.proxy_model is not None:
+                index = self.proxy_model.mapToSource(index)
             base = self.resource_model.filePath(index)
         menu = QMenu(self)
         new_folder_act = menu.addAction(self.t('new_folder'))
@@ -2054,6 +2062,32 @@ class Editor(QMainWindow):
         name, ok = QInputDialog.getText(self, self.t('new_folder'), self.t('name'))
         if ok and name:
             os.makedirs(os.path.join(base, name), exist_ok=True)
+            _log(f'Created folder {os.path.join(base, name)}')
+
+    def _copy_to_resources(self, path: str, base: str | None = None) -> tuple[str, str]:
+        """Copy ``path`` into resources if needed and return (abs, rel)."""
+        if not self.resource_dir:
+            return path, path
+        res_root = os.path.abspath(self.resource_dir)
+        abs_path = os.path.abspath(path)
+        if abs_path.startswith(res_root):
+            rel = os.path.relpath(abs_path, res_root)
+            return abs_path, rel
+        dest_dir = base if base else self.resource_dir
+        base_name = os.path.basename(path)
+        name, ext = os.path.splitext(base_name)
+        target = os.path.join(dest_dir, base_name)
+        counter = 1
+        while os.path.exists(target):
+            target = os.path.join(dest_dir, f"{name}_{counter}{ext}")
+            counter += 1
+        import shutil
+        try:
+            shutil.copy(abs_path, target)
+            _log(f'Imported resource {abs_path} -> {target}')
+        except Exception as exc:
+            QMessageBox.warning(self, self.t('error'), str(exc))
+        return target, os.path.relpath(target, self.resource_dir)
 
     def _import_resources(self, base: str | None = None) -> None:
         """Copy selected files into the resources directory."""
@@ -2065,11 +2099,7 @@ class Editor(QMainWindow):
             self, self.t('import_files'), '', self.t('image_files')
         )
         for f in files:
-            try:
-                import shutil
-                shutil.copy(f, base)
-            except Exception as exc:
-                QMessageBox.warning(self, self.t('error'), str(exc))
+            self._copy_to_resources(f, base)
 
     def _filter_resources(self, text: str) -> None:
         if self.proxy_model is not None:
@@ -2097,8 +2127,11 @@ class Editor(QMainWindow):
         if not data:
             return
         try:
-            if data['image']:
-                pix = QPixmap(data['image'])
+            img_path = data['image']
+            if img_path:
+                abs_path, rel_path = self._copy_to_resources(img_path)
+                pix = QPixmap(abs_path)
+                img_path = rel_path
                 if pix.isNull():
                     raise ValueError('invalid image')
             else:
@@ -2108,7 +2141,7 @@ class Editor(QMainWindow):
             item.setPos(data.get('x',0), data.get('y',0))
             self.g_scene.addItem(item)
             obj = GameObject(
-                data['image'], data.get('x',0), data.get('y',0), data.get('z',0), data.get('name'),
+                img_path or '', data.get('x',0), data.get('y',0), data.get('z',0), data.get('name'),
                 data.get('scale_x', data.get('scale',1.0)), data.get('scale_y', data.get('scale',1.0)), data.get('angle',0.0), tuple(data['color']) if data['color'] else None
             )
             obj.events = list(data.get('events', []))

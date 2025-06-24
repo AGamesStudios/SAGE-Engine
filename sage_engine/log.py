@@ -11,7 +11,8 @@ def _setup_logger() -> logging.Logger:
     os.makedirs(LOG_DIR, exist_ok=True)
     logger = logging.getLogger('sage_engine')
     if not logger.handlers:
-        logger.setLevel(logging.INFO)
+        level = os.environ.get('SAGE_LOG_LEVEL', 'INFO').upper()
+        logger.setLevel(getattr(logging, level, logging.INFO))
         fmt = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
         fh = logging.FileHandler(LOG_FILE, encoding='utf-8')
         fh.setFormatter(fmt)
