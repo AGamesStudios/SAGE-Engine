@@ -6,6 +6,7 @@ class Camera:
 
     x: float = 0.0
     y: float = 0.0
+    z: float = 0.0
     width: int = 640
     height: int = 480
     zoom: float = 1.0

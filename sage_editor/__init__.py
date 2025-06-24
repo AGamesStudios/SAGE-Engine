@@ -2144,15 +2144,16 @@ class Editor(QMainWindow):
         cam = getattr(scene, 'camera', None) if scene else None
         if cam:
             x, y, w, h = cam.view_rect()
-            cam_rect = QRectF(x, y, w, h)
-            if getattr(self, 'camera_rect', None) and self.camera_rect.scene() is self.g_scene:
-                self.camera_rect.setRect(cam_rect)
-            else:
-                pen = QPen(QColor('cyan'))
-                self.camera_rect = self.g_scene.addRect(cam_rect, pen)
-        elif getattr(self, 'camera_rect', None):
-            self.g_scene.removeItem(self.camera_rect)
-            self.camera_rect = None
+        else:
+            x = y = 0
+            w = getattr(self, 'window_width', 640)
+            h = getattr(self, 'window_height', 480)
+        cam_rect = QRectF(x, y, w, h)
+        if getattr(self, 'camera_rect', None) and self.camera_rect.scene() is self.g_scene:
+            self.camera_rect.setRect(cam_rect)
+        else:
+            pen = QPen(QColor('cyan'))
+            self.camera_rect = self.g_scene.addRect(cam_rect, pen)
 
     def toggle_grid(self, checked: bool):
         for line in self.grid_lines:

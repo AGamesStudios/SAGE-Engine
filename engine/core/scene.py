@@ -56,6 +56,7 @@ class Scene:
             scene.camera = Camera(
                 cam.get("x", 0),
                 cam.get("y", 0),
+                cam.get("z", 0),
                 cam.get("width", 640),
                 cam.get("height", 480),
                 cam.get("zoom", 1.0),
@@ -67,6 +68,7 @@ class Scene:
                 cam = Camera(
                     entry.get("x", 0),
                     entry.get("y", 0),
+                    entry.get("z", 0),
                     entry.get("width", 640),
                     entry.get("height", 480),
                     entry.get("zoom", 1.0),
@@ -138,6 +140,7 @@ class Scene:
                     "type": "camera",
                     "x": o.x,
                     "y": o.y,
+                    "z": o.z,
                     "width": o.width,
                     "height": o.height,
                     "zoom": o.zoom,
@@ -170,6 +173,7 @@ class Scene:
             data["camera"] = {
                 "x": self.camera.x,
                 "y": self.camera.y,
+                "z": self.camera.z,
                 "width": self.camera.width,
                 "height": self.camera.height,
                 "zoom": self.camera.zoom,
