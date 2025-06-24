@@ -36,8 +36,8 @@ scroll to zoom the view. A configurable grid and axis lines can be toggled from
 the toolbar. Grid size and color are adjustable and snapping ensures objects
 align cleanly when enabled. A red rectangle shows the canvas (the game window)
 for reference.
-The toolbar also includes an **Add Object** button which places a white square
-sprite with a default name like `New Object`. Double-click an object to open a
+An **Add Object** button beneath the object list places a white square sprite
+with a default name like `New Object`. Double-click an object to open a
 small editor for changing its image or RGBA color. Clicking a sprite selects it
 and the cursor switches between an open
 and closed hand while dragging. A yellow gizmo outline appears with a corner
@@ -56,7 +56,8 @@ transform dock also includes a **Coordinate Mode** drop-down for switching
 between *Global* and *Local* coordinates. In local mode the gizmo rotates with
 the object so scaling and rotating follow its orientation. Internally every
 object stores its rotation as a quaternion so angles remain stable even after
-many incremental edits. The
+many incremental edits. Each object also keeps its own settings dictionary so
+properties remain independent across different items. The
 project file stores the entire scene
 including object positions, events and variables.
 Use **File → New Project** to generate a folder for your game. The dialog asks

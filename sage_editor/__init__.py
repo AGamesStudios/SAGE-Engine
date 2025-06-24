@@ -971,6 +971,9 @@ class Editor(QMainWindow):
         self.object_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.object_list.customContextMenuRequested.connect(self._object_menu)
         obj_layout.addWidget(self.object_list)
+        self.add_obj_btn = QPushButton(self.t('add_object'))
+        self.add_obj_btn.clicked.connect(self.add_object)
+        obj_layout.addWidget(self.add_obj_btn)
 
         self.transform_group = QGroupBox(self.t('transform'))
         form = QFormLayout(self.transform_group)
@@ -1200,8 +1203,6 @@ class Editor(QMainWindow):
         toolbar = self.addToolBar('main')
         self.run_btn = toolbar.addAction(self.t('run'))
         self.run_btn.triggered.connect(self.run_game)
-        self.add_obj_btn = toolbar.addAction(self.t('add_object'))
-        self.add_obj_btn.triggered.connect(self.add_object)
         self.grid_act = toolbar.addAction(self.t('show_grid'))
         self.grid_act.setCheckable(True)
         self.grid_act.setChecked(True)
@@ -1523,6 +1524,7 @@ class Editor(QMainWindow):
             self.g_scene.addItem(item)
             obj = GameObject(path, 0, 0, 0, None, 1.0, 1.0, 0.0, None)
             obj.name = self.t('new_object')
+            obj.settings = {}
             self.scene.add_object(obj)
             item.obj = obj
             t = item.transform(); t.reset(); t.scale(obj.scale_x, obj.scale_y); item.setTransform(t); item.setRotation(obj.angle)
@@ -1550,6 +1552,7 @@ class Editor(QMainWindow):
             self.g_scene.addItem(item)
             obj = GameObject('', 0, 0, 0, None, 1.0, 1.0, 0.0, (255, 255, 255, 255))
             obj.name = self.t('new_object')
+            obj.settings = {}
             self.scene.add_object(obj)
             item.obj = obj
             item.setPos(0, 0)
@@ -1923,6 +1926,7 @@ class Editor(QMainWindow):
             'angle': obj.angle,
             'color': list(obj.color) if obj.color else None,
             'events': obj.events,
+            'settings': obj.settings,
         }
 
     def _paste_object(self):
@@ -1945,6 +1949,7 @@ class Editor(QMainWindow):
                 data.get('scale_x', data.get('scale',1.0)), data.get('scale_y', data.get('scale',1.0)), data.get('angle',0.0), tuple(data['color']) if data['color'] else None
             )
             obj.events = list(data.get('events', []))
+            obj.settings = dict(data.get('settings', {}))
             self.scene.add_object(obj)
             item.obj = obj
             t = item.transform(); t.reset(); t.scale(obj.scale_x, obj.scale_y); item.setTransform(t); item.setRotation(obj.angle)

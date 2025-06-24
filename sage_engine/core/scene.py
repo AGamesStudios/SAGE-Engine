@@ -81,6 +81,7 @@ class Scene:
                 if isinstance(q, list) and len(q) == 4:
                     obj.rotation = tuple(float(v) for v in q)
             obj.events = entry.get("events", [])
+            obj.settings = entry.get("settings", {})
             scene.add_object(obj)
         return scene
 
@@ -108,6 +109,7 @@ class Scene:
                     "quaternion": list(o.rotation),
                     "color": list(o.color) if o.color is not None else None,
                     "events": getattr(o, "events", []),
+                    "settings": getattr(o, "settings", {}),
                 }
                 for o in self.objects
             ],

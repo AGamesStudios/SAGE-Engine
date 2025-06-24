@@ -36,6 +36,7 @@ class GameObject:
     angle: float = 0.0
     color: tuple[int, int, int, int] | None = None
     events: list = field(default_factory=list)
+    settings: dict = field(default_factory=dict)
     rotation: tuple[float, float, float, float] = field(init=False)
     image: Image.Image | None = field(init=False, default=None)
     width: int = field(init=False, default=0)

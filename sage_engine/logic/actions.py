@@ -83,6 +83,7 @@ class Spawn(Action):
         except Exception:
             return
         obj = GameObject(self.image, self.x, self.y)
+        obj.settings = {}
         if hasattr(scene, 'add_object'):
             scene.add_object(obj)
 
