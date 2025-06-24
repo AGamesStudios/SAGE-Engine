@@ -17,3 +17,11 @@ class Camera:
         return (self.x, self.y,
                 self.width / self.zoom,
                 self.height / self.zoom)
+
+    def update(self, dt: float) -> None:
+        """Camera objects currently have no behaviour."""
+        pass
+
+    def draw(self, surface) -> None:
+        """Camera objects are not drawn with sprites."""
+        pass
