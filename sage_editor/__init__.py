@@ -35,10 +35,12 @@ from sage_engine import Scene, GameObject, Project, Camera, ENGINE_VERSION
 import json
 
 RECENT_FILE = os.path.join(os.path.expanduser('~'), '.sage_recent.json')
-LOG_FILE = os.path.join(os.path.expanduser('~'), '.sage_editor.log')
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+LOG_DIR = os.path.join(BASE_DIR, 'logs')
+LOG_FILE = os.path.join(LOG_DIR, 'editor.log')
 
 def _setup_logger() -> logging.Logger:
-    os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
+    os.makedirs(LOG_DIR, exist_ok=True)
     logger = logging.getLogger('sage_editor')
     if not logger.handlers:
         logger.setLevel(logging.INFO)

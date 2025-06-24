@@ -184,8 +184,8 @@ Engine(scene=scene, events=events).run()
 
 The editor now includes a **Console** dock at the bottom. All output from the
 game process and the editor itself appears here so you can easily debug your
-scripts. All messages are also written to `~/.sage_editor.log` while the
-runtime engine logs to `~/.sage_engine.log` so you can review issues later.
+scripts. All messages are also written to `logs/editor.log` while the
+runtime engine logs to `logs/engine.log` so you can review issues later.
 Events can combine many more conditions and actions such as
 `KeyReleased`, `MouseButton`, `InputState`, `PlaySound` and `Spawn`. The *Logic* tab lists
 each event with its conditions on the left and actions on the right. When adding
