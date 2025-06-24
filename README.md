@@ -23,8 +23,9 @@ view. A configurable grid and axis lines can be toggled from the toolbar. Grid
 size and color are adjustable and snapping ensures objects align cleanly when
 enabled. A red rectangle shows the canvas (the game window) for reference.
 The toolbar also includes an **Add Object** button which places a white square
-sprite. Double-click an object to open a small editor for changing its image or
-RGBA color. Clicking a sprite selects it and the cursor switches between an open
+sprite with a default name like `New Object`. Double-click an object to open a
+small editor for changing its image or RGBA color. Clicking a sprite selects it
+and the cursor switches between an open
 and closed hand while dragging. A yellow gizmo outline appears with a corner
 handle for scaling and a small crosshair above for rotation so objects are easy
 to manipulate. The gizmo and handles always appear above other sprites so they
@@ -34,8 +35,8 @@ panel with X, Y, Z, scale and rotation fields so you can tweak values precisely.
 that stores the entire scene including object positions, events and variables.
 Use **File → New Project** to generate a folder for your game. The dialog asks
 for a project name and a location and then creates the folder with a
-`.sageproject` file. Each sprite receives a unique name like `enemy (1)` if
-necessary so conditions always target the correct object. The
+`.sageproject` file. Each new object receives a generic name like `New Object (1)` so
+conditions always target the correct item. The
 editor disables sprite, variable and logic actions until a project is opened,
 ensuring all changes are saved to a `.sageproject` file.
 The **Logic** tab lists object events with

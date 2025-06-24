@@ -9,6 +9,7 @@ LANGUAGES = {
         'add_object': 'Add Object',
         'edit_object': 'Edit Object',
         'color': 'Color:',
+        'new_object': 'New Object',
         'object': 'Object:',
         'add_variable': 'Add Variable',
         'conditions': 'Conditions',
@@ -200,6 +201,7 @@ LANGUAGES = {
         , 'rotation': 'Поворот:'
         , 'scale_label': 'Масштаб:'
         , 'z': 'z:'
+        , 'new_object': 'Новый объект'
         , 'cut': 'Вырезать'
     }
 }

@@ -26,7 +26,8 @@ class GameObject:
 
     def __post_init__(self):
         if self.name is None:
-            self.name = os.path.basename(self.image_path)
+            base = "New Object"
+            self.name = base
 
     def update(self, dt: float):
         pass

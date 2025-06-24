@@ -948,7 +948,6 @@ class Editor(QMainWindow):
         self.new_proj_act.setText(self.t('new_project'))
         self.open_proj_act.setText(self.t('open_project'))
         self.save_proj_act.setText(self.t('save_project'))
-        self.add_sprite_act.setText(self.t('add_sprite'))
         self.tabs.setTabText(0, self.t('viewport'))
         self.tabs.setTabText(1, self.t('logic'))
         self.object_label.setText(self.t('object'))
@@ -976,7 +975,6 @@ class Editor(QMainWindow):
     def _update_project_state(self):
         """Enable or disable project-dependent actions."""
         enabled = self.project_path is not None
-        self.add_sprite_act.setEnabled(enabled)
         self.add_obj_btn.setEnabled(enabled)
         self.add_var_btn.setEnabled(enabled)
         self.run_btn.setEnabled(enabled)
@@ -1042,10 +1040,6 @@ class Editor(QMainWindow):
         self.settings_menu.addAction(self.window_settings_act)
 
         self.edit_menu = menubar.addMenu(self.t('edit'))
-        self.add_sprite_act = QAction(self.t('add_sprite'), self)
-        self.add_sprite_act.triggered.connect(self.add_sprite)
-        self.edit_menu.addAction(self.add_sprite_act)
-        menubar.addMenu(self.t('logic'))
 
         toolbar = self.addToolBar('main')
         self.run_btn = toolbar.addAction(self.t('run'))
@@ -1288,6 +1282,7 @@ class Editor(QMainWindow):
             item.setRotation(0.0)
             self.g_scene.addItem(item)
             obj = GameObject(path)
+            obj.name = self.t('new_object')
             self.scene.add_object(obj)
             item.obj = obj
             self.items.append((item, obj))
@@ -1313,6 +1308,7 @@ class Editor(QMainWindow):
             item.setRotation(0.0)
             self.g_scene.addItem(item)
             obj = GameObject('', color=(255, 255, 255, 255))
+            obj.name = self.t('new_object')
             self.scene.add_object(obj)
             item.obj = obj
             item.setPos(0, 0)
