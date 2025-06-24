@@ -20,6 +20,7 @@ class Scene:
         self.objects: List[GameObject | Camera] = []
         self.variables: dict = {}
         self.camera: Camera | None = None
+        self.metadata: dict = {}
 
     def add_object(self, obj: GameObject | Camera):
         existing = {o.name for o in self.objects}
@@ -52,6 +53,7 @@ class Scene:
         """Construct a Scene from a plain dictionary."""
         scene = cls()
         scene.variables = data.get("variables", {})
+        scene.metadata = data.get("metadata", {})
         cam = data.get("camera")
         if isinstance(cam, dict):
             # legacy single camera field
@@ -94,6 +96,8 @@ class Scene:
             "variables": self.variables,
             "objects": obj_list,
         }
+        if self.metadata:
+            data["metadata"] = self.metadata
         if self.camera:
             data["camera"] = object_to_dict(self.camera)
         return data

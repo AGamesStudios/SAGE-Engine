@@ -39,6 +39,7 @@ def _quat_to_angle(quat: tuple[float, float, float, float]) -> float:
         ('pivot_x', None),
         ('pivot_y', None),
         ('color', None),
+        ('metadata', 'metadata'),
     ],
 )
 @dataclass(slots=True)
@@ -55,6 +56,7 @@ class GameObject:
     pivot_x: float = 0.5
     pivot_y: float = 0.5
     color: tuple[int, int, int, int] | None = None
+    metadata: dict = field(default_factory=dict)
     events: list = field(default_factory=list)
     settings: dict = field(default_factory=dict)
     rotation: tuple[float, float, float, float] = field(init=False)

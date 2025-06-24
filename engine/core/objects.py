@@ -9,10 +9,16 @@ OBJECT_META: dict[str, list[tuple[str, str | None]]] = {}
 
 def register_object(name: str, params: list[tuple[str, str | None]] | None = None) -> Callable[[Type[Any]], Type[Any]]:
     """Decorator to register an object class with optional metadata."""
+
     def decorator(cls: Type[Any]) -> Type[Any]:
+        plist = params[:] if params else []
+        # always support arbitrary metadata
+        if not any(p[0] == "metadata" for p in plist):
+            plist.append(("metadata", "metadata"))
         OBJECT_REGISTRY[name] = cls
-        OBJECT_META[name] = params or []
+        OBJECT_META[name] = plist
         return cls
+
     return decorator
 
 
@@ -24,7 +30,9 @@ def object_from_dict(data: dict) -> Any | None:
         return None
     params = {}
     for attr, key in OBJECT_META.get(typ, []):
-        params[attr] = data.get(key or attr)
+        k = key or attr
+        if k in data:
+            params[attr] = data[k]
     try:
         return cls(**params)
     except Exception:
@@ -38,6 +46,9 @@ def object_to_dict(obj: Any) -> dict | None:
             params = OBJECT_META.get(name, [])
             data = {"type": name}
             for attr, key in params:
-                data[key or attr] = getattr(obj, attr)
+                val = getattr(obj, attr)
+                if attr == "metadata" and not val:
+                    continue
+                data[key or attr] = val
             return data
     return None

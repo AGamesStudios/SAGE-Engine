@@ -239,7 +239,9 @@ suitable for editor integration.
 Scene objects use a similar registry. The ``register_object`` decorator
 associates each object type with a list of constructor parameters. Functions
 ``object_from_dict`` and ``object_to_dict`` rely on this metadata so scenes can
-load and save new object classes without modifying the loader.
+load and save new object classes without modifying the loader. All objects,
+scenes and projects expose a ``metadata`` dictionary for custom attributes so
+tools can store extra information without affecting the runtime.
 
 ### Versioning
 

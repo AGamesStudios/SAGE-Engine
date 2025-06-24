@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from .objects import register_object
 
 @register_object(
@@ -11,6 +11,7 @@ from .objects import register_object
         ('height', None),
         ('zoom', None),
         ('name', None),
+        ('metadata', 'metadata'),
     ],
 )
 @dataclass(slots=True)
@@ -25,6 +26,7 @@ class Camera:
     zoom: float = 1.0
     name: str = "Camera"
     type: str = "camera"
+    metadata: dict = field(default_factory=dict)
 
     def view_rect(self) -> tuple[float, float, float, float]:
         """Return the visible world rectangle."""
