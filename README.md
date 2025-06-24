@@ -19,6 +19,10 @@ but remains optional so games can depend on the engine without pulling in the
 editor.  Simply import the engine from `engine` and the editor from
 `sage_editor` to keep them modular.  The ``sage_sdk`` package provides shared
 utilities like the plugin loader used by both components.
+The editor code is split into a lightweight ``sage_editor.core`` module with
+the main window implementation and ``sage_editor.app`` which contains the
+startup logic and project manager.  Embedding the editor in other tools only
+requires importing these modules.
 
 ### Renderer
 

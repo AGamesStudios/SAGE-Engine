@@ -1,0 +1,203 @@
+"""Standalone application entry point and project manager."""
+
+from __future__ import annotations
+
+import sys
+import os
+import traceback
+
+from PyQt6.QtWidgets import (
+    QApplication, QDialog, QVBoxLayout, QLabel, QTableWidget, QTableWidgetItem,
+    QPushButton, QMenu, QHBoxLayout, QAbstractItemView, QHeaderView, QMessageBox
+)
+from PyQt6.QtGui import QPalette, QColor, QFont
+
+from .core import Editor, save_recent, load_recent, _log, logger
+
+
+class ProjectManager(QDialog):
+    """Startup dialog listing recent projects and actions."""
+
+    def __init__(self, editor: Editor):
+        super().__init__(editor)
+        self.editor = editor
+        self.setWindowTitle(editor.t('project_manager'))
+        layout = QVBoxLayout(self)
+
+        info = QLabel(editor.t('select_project_info'))
+        layout.addWidget(info)
+
+        self.table = QTableWidget(0, 4)
+        self.table.setHorizontalHeaderLabels([
+            editor.t('current'), editor.t('name'),
+            editor.t('created'), editor.t('path')
+        ])
+        self.table.verticalHeader().hide()
+        self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        header = self.table.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
+        self.table.setAlternatingRowColors(True)
+        self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.table.setShowGrid(False)
+        self.table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.table.customContextMenuRequested.connect(self.show_context_menu)
+        layout.addWidget(self.table)
+
+        btn_row = QHBoxLayout()
+        self.new_btn = QPushButton(editor.t('new_project'))
+        self.open_btn = QPushButton(editor.t('open_project'))
+        self.clear_btn = QPushButton(editor.t('clear_recent'))
+        self.cancel_btn = QPushButton(editor.t('cancel'))
+        btn_row.addWidget(self.new_btn)
+        btn_row.addWidget(self.open_btn)
+        btn_row.addWidget(self.clear_btn)
+        btn_row.addStretch(1)
+        btn_row.addWidget(self.cancel_btn)
+        layout.addLayout(btn_row)
+
+        self.new_btn.clicked.connect(self.create_project)
+        self.open_btn.clicked.connect(self.browse_project)
+        self.clear_btn.clicked.connect(self.clear_list)
+        self.cancel_btn.clicked.connect(self.reject)
+        self.table.itemDoubleClicked.connect(self.open_selected)
+
+        self.populate()
+
+    def show_context_menu(self, pos):
+        row = self.table.indexAt(pos).row()
+        if row < 0:
+            return
+        menu = QMenu(self)
+        open_act = menu.addAction(self.editor.t('open'))
+        del_act = menu.addAction(self.editor.t('delete'))
+        action = menu.exec(self.table.mapToGlobal(pos))
+        if action == open_act:
+            self.table.selectRow(row)
+            self.open_selected()
+        elif action == del_act:
+            path = self.table.item(row, 3).text()
+            if path in self.editor.recent_projects:
+                self.editor.recent_projects.remove(path)
+                save_recent(self.editor.recent_projects)
+            self.populate()
+
+    def populate(self):
+        from datetime import datetime
+        self.table.setRowCount(0)
+        valid = []
+        for path in self.editor.recent_projects:
+            if not os.path.exists(path):
+                continue
+            row = self.table.rowCount()
+            self.table.insertRow(row)
+            current = '✓' if path == self.editor.project_path else ''
+            name = os.path.splitext(os.path.basename(path))[0]
+            try:
+                ts = os.path.getctime(path)
+                created = datetime.fromtimestamp(ts).strftime('%Y-%m-%d')
+            except Exception:
+                created = ''
+            self.table.setItem(row, 0, QTableWidgetItem(current))
+            self.table.setItem(row, 1, QTableWidgetItem(name))
+            self.table.setItem(row, 2, QTableWidgetItem(created))
+            self.table.setItem(row, 3, QTableWidgetItem(path))
+            valid.append(path)
+        if valid != self.editor.recent_projects:
+            self.editor.recent_projects = valid
+            save_recent(valid)
+
+    def open_selected(self):
+        row = self.table.currentRow()
+        if row < 0:
+            return
+        path = self.table.item(row, 3).text()
+        self.editor.open_project(path)
+        if self.editor.project_path:
+            self.accept()
+
+    def browse_project(self):
+        self.editor.open_project()
+        if self.editor.project_path:
+            self.accept()
+
+    def create_project(self):
+        self.editor.new_project()
+        if self.editor.project_path:
+            self.accept()
+
+    def clear_list(self):
+        self.editor.recent_projects = []
+        save_recent([])
+        self.populate()
+
+
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+    app = QApplication(argv)
+    app.setStyle('Fusion')
+    palette = QPalette()
+    palette.setColor(QPalette.ColorRole.Window, QColor(53, 53, 53))
+    palette.setColor(QPalette.ColorRole.WindowText, QColor(220, 220, 220))
+    palette.setColor(QPalette.ColorRole.Base, QColor(35, 35, 35))
+    palette.setColor(QPalette.ColorRole.AlternateBase, QColor(53, 53, 53))
+    palette.setColor(QPalette.ColorRole.ToolTipBase, QColor(255, 255, 255))
+    palette.setColor(QPalette.ColorRole.ToolTipText, QColor(220, 220, 220))
+    palette.setColor(QPalette.ColorRole.Text, QColor(220, 220, 220))
+    palette.setColor(QPalette.ColorRole.Button, QColor(53, 53, 53))
+    palette.setColor(QPalette.ColorRole.ButtonText, QColor(220, 220, 220))
+    palette.setColor(QPalette.ColorRole.Highlight, QColor(42, 130, 218))
+    palette.setColor(QPalette.ColorRole.HighlightedText, QColor(0, 0, 0))
+    app.setPalette(palette)
+    font = QFont()
+    font.setPointSize(font.pointSize() + 2)
+    app.setFont(font)
+    editor = Editor(autoshow=False)
+    pm = ProjectManager(editor)
+    if pm.exec() != QDialog.DialogCode.Accepted:
+        app.quit()
+        return 0
+    editor.showMaximized()
+
+    orig_out = sys.stdout
+    orig_err = sys.stderr
+
+    class _Stream:
+        def __init__(self, edit, orig):
+            self.edit = edit
+            self.orig = orig
+
+        def write(self, text):
+            if text.strip():
+                self.edit.append(text.rstrip())
+            self.orig.write(text)
+
+        def flush(self):
+            self.orig.flush()
+
+    sys.stdout = _Stream(editor.console, orig_out)
+    sys.stderr = _Stream(editor.console, orig_err)
+
+    def handle_exception(exc_type, exc, tb):
+        text = ''.join(traceback.format_exception(exc_type, exc, tb))
+        editor.console.append(text)
+        orig_err.write(text)
+        orig_err.flush()
+        logger.error('Unhandled exception', exc_info=(exc_type, exc, tb))
+        QMessageBox.critical(editor, editor.t('error'), text)
+
+    sys.excepthook = handle_exception
+    print('SAGE Editor started')
+    _log('SAGE Editor started')
+
+    try:
+        return app.exec()
+    finally:
+        _log('SAGE Editor closed')
+
+
+if __name__ == '__main__':
+    main()
