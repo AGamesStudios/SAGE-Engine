@@ -65,6 +65,22 @@ class Scene:
                 scale_x = scale
             if scale_y is None:
                 scale_y = scale
+            px = entry.get("pivot_x", 0.5)
+            py = entry.get("pivot_y", 0.5)
+            try:
+                if isinstance(px, (list, tuple)):
+                    px = float(px[0]) if px else 0.5
+                else:
+                    px = float(px)
+            except Exception:
+                px = 0.5
+            try:
+                if isinstance(py, (list, tuple)):
+                    py = float(py[0]) if py else 0.5
+                else:
+                    py = float(py)
+            except Exception:
+                py = 0.5
             obj = GameObject(
                 entry.get("image", ""),
                 entry.get("x", 0),
@@ -74,8 +90,8 @@ class Scene:
                 scale_x,
                 scale_y,
                 entry.get("angle", 0.0),
-                entry.get("pivot_x", 0.5),
-                entry.get("pivot_y", 0.5),
+                px,
+                py,
                 color=(
                     tuple(entry.get("color", [255, 255, 255, 255]))
                     if entry.get("color") is not None

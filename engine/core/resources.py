@@ -29,8 +29,9 @@ class ResourceManager:
     def path(self, *parts: str) -> str:
         return os.path.join(self.root, *parts)
 
-    def add_folder(self, name: str) -> str:
-        p = self.path(name)
+    def add_folder(self, *parts: str) -> str:
+        """Create a subfolder and return its path."""
+        p = self.path(*parts)
         os.makedirs(p, exist_ok=True)
         logger.info("Created resource folder %s", p)
         return p

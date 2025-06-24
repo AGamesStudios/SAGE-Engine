@@ -2126,8 +2126,13 @@ class Editor(QMainWindow):
             return
         name, ok = QInputDialog.getText(self, self.t('new_folder'), self.t('name'))
         if ok and name:
-            folder = self.resource_manager.add_folder(name) if self.resource_manager else os.path.join(base, name)
-            if not self.resource_manager:
+            rel_base = os.path.relpath(base, self.resource_dir) if base else ''
+            if rel_base == '.':
+                rel_base = ''
+            if self.resource_manager:
+                folder = self.resource_manager.add_folder(rel_base, name)
+            else:
+                folder = os.path.join(base, name)
                 os.makedirs(folder, exist_ok=True)
             _log(f'Created folder {folder}')
 
@@ -2142,10 +2147,10 @@ class Editor(QMainWindow):
             return abs_path, rel
         dest_dir = base if base else self.resource_dir
         if self.resource_manager:
-            rel = self.resource_manager.import_file(
-                abs_path,
-                os.path.relpath(dest_dir, self.resource_dir),
-            )
+            rel_base = os.path.relpath(dest_dir, self.resource_dir)
+            if rel_base == '.':
+                rel_base = ''
+            rel = self.resource_manager.import_file(abs_path, rel_base)
             abs_copy = os.path.join(self.resource_dir, rel)
             _log(f'Imported resource {abs_path} -> {abs_copy}')
             return abs_copy, rel

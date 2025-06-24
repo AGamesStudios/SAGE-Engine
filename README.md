@@ -74,14 +74,14 @@ many incremental edits. Each object also keeps its own settings dictionary so
 properties remain independent across different items. The
 project file stores the entire scene
 including object positions, events and variables.
-A **Resources** dock on the left shows the files inside your project's
-`resources` folder. Buttons above the file list let you create subfolders or
-import images. A search field filters the view and you can drag items between
-folders. Files are sorted alphabetically so projects stay organized. Any image
-chosen from outside the project is copied into this directory automatically, so
-scenes never reference files that might disappear. The engine
-loads all assets relative to this directory, ensuring reorganizing files will
-not break existing scenes.
+A **Resources** dock on the left lists everything under your project's
+`resources` folder. Buttons above the tree and a right click menu let you create
+folders anywhere in the hierarchy or import new files. A search field filters
+the view and you can drag items between folders. Files are sorted alphabetically
+so projects stay organized. Any image chosen from outside the project is copied
+into this directory automatically, so scenes never reference files that might
+disappear. The engine loads all assets relative to this directory, ensuring
+reorganizing files will not break existing scenes.
 Use **File → New Project** to generate a folder for your game. The dialog asks
 for a project name and location; the engine currently uses the OpenGL renderer.
 It then creates the folder with a `.sageproject` file. Each new object
