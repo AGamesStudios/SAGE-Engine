@@ -59,6 +59,10 @@ class Engine:
         except Exception:
             logger.exception('Failed to load engine plugins')
 
+    def variable(self, name):
+        """Return the value of an event variable."""
+        return self.events.variables.get(name)
+
     def _on_resize(self, window, width, height):
         """Resize callback that keeps the camera and projection in sync."""
         self.renderer.update_size()

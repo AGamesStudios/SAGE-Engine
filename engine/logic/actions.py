@@ -1,5 +1,5 @@
 # Built-in actions
-from .base import Action, register_action
+from .base import Action, register_action, resolve_value
 from ..log import logger
 @register_action('Move', [
     ('obj', 'object', 'target'),
@@ -13,8 +13,8 @@ class Move(Action):
         self.dy = dy
 
     def execute(self, engine, scene, dt):
-        self.obj.x += self.dx
-        self.obj.y += self.dy
+        self.obj.x += resolve_value(self.dx, engine)
+        self.obj.y += resolve_value(self.dy, engine)
 
 @register_action('SetPosition', [
     ('obj', 'object', 'target'),
@@ -28,8 +28,8 @@ class SetPosition(Action):
         self.y = y
 
     def execute(self, engine, scene, dt):
-        self.obj.x = self.x
-        self.obj.y = self.y
+        self.obj.x = resolve_value(self.x, engine)
+        self.obj.y = resolve_value(self.y, engine)
 
 @register_action('Destroy', [('obj', 'object', 'target')])
 class Destroy(Action):
@@ -95,7 +95,9 @@ class Spawn(Action):
             from engine import GameObject
         except Exception:
             return
-        obj = GameObject(self.image, self.x, self.y)
+        obj = GameObject(self.image,
+                         resolve_value(self.x, engine),
+                         resolve_value(self.y, engine))
         obj.settings = {}
         if hasattr(scene, 'add_object'):
             scene.add_object(obj)
@@ -111,7 +113,7 @@ class SetVariable(Action):
         self.value = value
 
     def execute(self, engine, scene, dt):
-        engine.events.variables[self.name] = self.value
+        engine.events.variables[self.name] = resolve_value(self.value, engine)
 
 @register_action('ModifyVariable', [
     ('name', 'value', None),
@@ -140,7 +142,7 @@ class ModifyVariable(Action):
             return
         try:
             cur = float(cur)
-            val = float(self.value)
+            val = float(resolve_value(self.value, engine))
             func = self.OPS.get(self.op, lambda a, b: a)
             engine.events.variables[self.name] = func(cur, val)
         except Exception:
@@ -159,6 +161,6 @@ class SetZoom(Action):
         self.zoom = zoom
 
     def execute(self, engine, scene, dt):
-        self.camera.zoom = self.zoom
+        self.camera.zoom = resolve_value(self.zoom, engine)
 
 __all__ = ['Move','SetPosition','Destroy','Print','PlaySound','Spawn','SetVariable','ModifyVariable','SetZoom']

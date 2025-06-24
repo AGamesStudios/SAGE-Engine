@@ -1,5 +1,5 @@
 # Built-in conditions
-from .base import Condition, register_condition
+from .base import Condition, register_condition, resolve_value
 
 @register_condition('InputState', [
     ('device', 'value', None),
@@ -145,11 +145,11 @@ class VariableCompare(Condition):
         cmp = self.OPS.get(self.op, lambda a, b: False)
         try:
             if isinstance(val, (int, float)):
-                return cmp(float(val), float(self.value))
+                return cmp(float(val), float(resolve_value(self.value, engine)))
             if isinstance(val, bool):
                 if self.op not in ('==', '!='):
                     return False
-                ref = self.value
+                ref = resolve_value(self.value, engine)
                 if isinstance(ref, str):
                     ref = ref.lower() in ('true', '1', 'yes')
                 return cmp(val, bool(ref))
@@ -171,7 +171,7 @@ class ZoomAbove(Condition):
         self.value = value
 
     def check(self, engine, scene, dt):
-        return self.camera.zoom > self.value
+        return self.camera.zoom > resolve_value(self.value, engine)
 
 __all__ = [
     'KeyPressed', 'KeyReleased', 'MouseButton', 'InputState',

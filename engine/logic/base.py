@@ -28,6 +28,35 @@ except Exception:
     # running without the editor installed
     pass
 
+import re
+
+class VarRef:
+    """Reference to a variable that resolves at runtime."""
+
+    def __init__(self, name: str):
+        self.name = name
+
+    def get(self, engine):
+        return engine.events.variables.get(self.name)
+
+
+_VAR_RE = re.compile(r"engine\.variable\([\'\"](.+?)[\'\"]\)")
+
+def parse_value(val):
+    """Return ``val`` or a :class:`VarRef` if it matches the variable syntax."""
+    if isinstance(val, str):
+        m = _VAR_RE.fullmatch(val.strip())
+        if m:
+            return VarRef(m.group(1))
+    return val
+
+
+def resolve_value(val, engine):
+    """Return the runtime value for ``val``."""
+    if isinstance(val, VarRef):
+        return val.get(engine)
+    return val
+
 
 def register_condition(name: str, params: list[tuple] | None = None):
     """Decorator to register a Condition subclass.
@@ -158,9 +187,9 @@ def condition_from_dict(data, objects, variables):
                     return None
             params[arg] = obj
         elif kind == 'variable':
-            params[arg] = variables.get(val)
+            params[arg] = VarRef(val) if isinstance(val, str) else val
         else:
-            params[arg] = val
+            params[arg] = parse_value(val)
     try:
         return cls(**params)
     except Exception:
@@ -196,8 +225,10 @@ def action_from_dict(data, objects):
                     logger.warning('Action %s requires %s for %s', typ, allowed, arg)
                     return None
             params[arg] = obj
+        elif kind == 'variable':
+            params[arg] = VarRef(val) if isinstance(val, str) else val
         else:
-            params[arg] = val
+            params[arg] = parse_value(val)
     try:
         return cls(**params)
     except Exception:
