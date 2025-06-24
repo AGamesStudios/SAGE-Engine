@@ -14,6 +14,20 @@ ACTION_REGISTRY: dict[str, type] = {}
 CONDITION_META: dict[str, list[tuple]] = {}
 ACTION_META: dict[str, list[tuple]] = {}
 
+# fallback dictionary mapping translated names back to the English
+# identifiers used internally. This lets old projects saved with
+# localized names continue to load.
+TRANSLATION_LOOKUP: dict[str, str] = {}
+try:
+    from sage_editor.lang import LANGUAGES
+    for entries in LANGUAGES.values():
+        for eng, local in entries.items():
+            if eng != local:
+                TRANSLATION_LOOKUP[local] = eng
+except Exception:
+    # running without the editor installed
+    pass
+
 
 def register_condition(name: str, params: list[tuple] | None = None):
     """Decorator to register a Condition subclass.
@@ -119,6 +133,9 @@ def condition_from_dict(data, objects, variables):
     """Instantiate a condition from its dictionary description."""
     typ = data.get('type')
     cls = CONDITION_REGISTRY.get(typ)
+    if cls is None and typ in TRANSLATION_LOOKUP:
+        typ = TRANSLATION_LOOKUP[typ]
+        cls = CONDITION_REGISTRY.get(typ)
     if cls is None:
         logger.warning('Unknown condition type %s', typ)
         return None
@@ -155,6 +172,9 @@ def action_from_dict(data, objects):
     """Instantiate an action from its dictionary description."""
     typ = data.get('type')
     cls = ACTION_REGISTRY.get(typ)
+    if cls is None and typ in TRANSLATION_LOOKUP:
+        typ = TRANSLATION_LOOKUP[typ]
+        cls = ACTION_REGISTRY.get(typ)
     if cls is None:
         logger.warning('Unknown action type %s', typ)
         return None

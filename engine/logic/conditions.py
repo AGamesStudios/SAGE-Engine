@@ -64,6 +64,9 @@ class AfterTime(Condition):
     """True once after the specified time has elapsed."""
 
     def __init__(self, seconds=0.0, minutes=0.0, hours=0.0):
+        seconds = 0.0 if seconds is None else float(seconds)
+        minutes = 0.0 if minutes is None else float(minutes)
+        hours = 0.0 if hours is None else float(hours)
         self.target = seconds + minutes * 60 + hours * 3600
         self.elapsed = 0.0
         self.triggered = False

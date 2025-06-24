@@ -141,6 +141,9 @@ matching your system locale, but you can change it via the toolbar drop-down.
 All strings come from simple dictionaries in `sage_editor/lang.py`, so adding
 more languages only requires editing this file. Translations cover file dialogs,
 logic windows and event lists so the whole interface is localized.
+Old projects saved with translated condition or action names still load
+correctly because the engine maps them back to their English identifiers at
+runtime.
 
 The condition and action lists offer context menus with **Edit**, **Copy**,
 **Paste**, and **Delete** options. Right-click an empty area to add a new block
