@@ -204,6 +204,9 @@ runtime engine logs to `logs/engine.log` so you can review issues later.
 Set the environment variable `SAGE_LOG_LEVEL` to `DEBUG`, `INFO`, `WARNING` or
 `ERROR` to control how much detail is recorded. Unknown objects, conditions and
 actions generate warnings so issues show up in the log instead of failing silently.
+The engine also checks its exported names at import time and warns if a symbol
+listed in ``__all__`` does not exist. This helps catch mistakes like missing
+imports.
 Events can combine many more conditions and actions such as
 `KeyReleased`, `MouseButton`, `InputState`, `PlaySound`, `Spawn`,
 `ZoomAbove` and `SetZoom`. The *Logic* tab lists

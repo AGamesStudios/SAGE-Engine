@@ -33,3 +33,10 @@ __all__ = [
     'condition_from_dict', 'action_from_dict',
     'CONDITION_REGISTRY', 'ACTION_REGISTRY',
 ] + list(CONDITION_REGISTRY.keys()) + list(ACTION_REGISTRY.keys())
+
+# warn about any missing exports at import time
+_missing = [name for name in __all__ if name not in globals()]
+from ..diagnostics import warn
+for _name in _missing:
+    warn("Missing reference %s in logic.__init__", _name)
+del _missing

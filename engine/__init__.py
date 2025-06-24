@@ -38,3 +38,9 @@ __all__ = [
     'load_scene', 'save_scene', 'run_scene',
     'warn', 'error', 'exception'
 ]
+
+# validate that all exported names exist and warn if any are missing
+_missing = [name for name in __all__ if name not in globals()]
+for _name in _missing:
+    warn("Missing reference %s in __init__", _name)
+del _missing
