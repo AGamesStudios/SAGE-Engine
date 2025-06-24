@@ -21,8 +21,9 @@ editor.  Simply import the engine from `engine` and the editor from
 utilities like the plugin loader used by both components.
 The editor code is split into a lightweight ``sage_editor.core`` module with
 the main window implementation and ``sage_editor.app`` which contains the
-startup logic and project manager.  Embedding the editor in other tools only
-requires importing these modules.
+startup logic and project manager.  The OpenGL viewport widget lives in
+``sage_editor.viewport`` so it can be reused independently. Embedding the
+editor in other tools only requires importing these modules.
 
 ### Renderer
 
@@ -269,7 +270,9 @@ component starts.  Plugins can also be registered programmatically via
 This keeps the core lightweight while allowing advanced features to be
 packaged separately and installed by simply dropping a file into the plugins
 folder.  ``SAGE_ENGINE_PLUGINS`` and ``SAGE_EDITOR_PLUGINS`` provide
-component-specific search paths.
+component-specific search paths. The editor exposes **Manage Plugins** under the
+Settings menu which copies Python files into ``~/.sage_plugins`` and lets you
+enable or disable them.
 
 ### Versioning
 

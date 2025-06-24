@@ -35,6 +35,7 @@ import os
 import glfw
 from engine import Scene, GameObject, Project, Camera, ENGINE_VERSION, get_resource_path
 from . import plugins
+from .viewport import GraphicsView
 register_plugin = plugins.register_plugin
 import json
 
@@ -106,71 +107,6 @@ KEY_NAME_LOOKUP = {code: name for name, code in KEY_OPTIONS}
 MOUSE_NAME_LOOKUP = {code: name for name, code in MOUSE_OPTIONS}
 
 
-class GLViewport:
-    """Mixin providing an OpenGL overlay for gizmos."""
-
-    def _init_gl_viewport(self):
-        try:
-            from PyQt6.QtOpenGLWidgets import QOpenGLWidget
-        except Exception:  # pragma: no cover - Qt < 6.5
-            from PyQt6.QtOpenGL import QOpenGLWidget  # type: ignore
-
-        class _Overlay(QOpenGLWidget):
-            def __init__(self, view):
-                super().__init__(view)
-                self.view = view
-
-            def paintGL(self):
-                from OpenGL import GL
-                GL.glViewport(0, 0, self.width(), self.height())
-                GL.glMatrixMode(GL.GL_PROJECTION)
-                GL.glLoadIdentity()
-                GL.glOrtho(0, self.width(), self.height(), 0, -1, 1)
-                GL.glMatrixMode(GL.GL_MODELVIEW)
-                GL.glLoadIdentity()
-                GL.glClear(GL.GL_DEPTH_BUFFER_BIT)
-                lines = getattr(self.view, "gizmo_lines", [])
-                if not lines:
-                    return
-                GL.glColor3f(1.0, 1.0, 0.0)
-                GL.glBegin(GL.GL_LINES)
-                for x1, y1, x2, y2 in lines:
-                    GL.glVertex2f(x1, y1)
-                    GL.glVertex2f(x2, y2)
-                GL.glEnd()
-
-        overlay = _Overlay(self)
-        self.setViewport(overlay)
-        self._overlay = overlay
-
-
-class GraphicsView(QGraphicsView, GLViewport):
-    """View with Ctrl+wheel zoom using an OpenGL viewport."""
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self._init_gl_viewport()
-        self._zoom = 1.0
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        try:
-            from OpenGL import GL
-            vp = self.viewport()
-            GL.glViewport(0, 0, vp.width(), vp.height())
-        except Exception:
-            pass
-
-    def wheelEvent(self, event):
-        if QApplication.keyboardModifiers() == Qt.KeyboardModifier.ControlModifier:
-            angle = event.angleDelta().y()
-            factor = 1.001 ** angle
-            self._zoom *= factor
-            self.scale(factor, factor)
-        else:
-            super().wheelEvent(event)
 
 
 class SpriteItem(QGraphicsPixmapItem):
@@ -1407,6 +1343,7 @@ class Editor(QMainWindow):
         self.settings_menu.setTitle(self.t('settings'))
         self.window_settings_act.setText(self.t('window_settings'))
         self.renderer_settings_act.setText(self.t('renderer_settings'))
+        self.plugins_act.setText(self.t('manage_plugins'))
         self.coord_combo.setItemText(0, self.t('global'))
         self.coord_combo.setItemText(1, self.t('local'))
         self.link_scale.setText(self.t('link_scale'))
@@ -1493,6 +1430,9 @@ class Editor(QMainWindow):
         self.renderer_settings_act = QAction(self.t('renderer_settings'), self)
         self.renderer_settings_act.triggered.connect(self.show_renderer_settings)
         self.settings_menu.addAction(self.renderer_settings_act)
+        self.plugins_act = QAction(self.t('manage_plugins'), self)
+        self.plugins_act.triggered.connect(self.show_plugin_manager)
+        self.settings_menu.addAction(self.plugins_act)
 
         self.edit_menu = menubar.addMenu(self.t('edit'))
 
@@ -1774,6 +1714,10 @@ class Editor(QMainWindow):
         if dlg.exec() == QDialog.DialogCode.Accepted:
             self.renderer_name = combo.currentData()
             self._mark_dirty()
+
+    def show_plugin_manager(self):
+        from .plugin_manager import PluginManager
+        PluginManager(self).exec()
 
     def run_game(self):
         if not self._check_project():
