@@ -32,7 +32,9 @@ to manipulate. The gizmo and handles always appear above other sprites so they
 remain visible. Projects are saved in a single `.sageproject` file
 All objects are listed in a dock on the right. Selecting one shows a **Transform**
 panel with X, Y, Z, separate Scale X/Y and Rotation fields. A *Link XY* checkbox
-lets you keep both scales in sync. The project file stores the entire scene
+lets you keep both scales in sync. Rotation now accounts for non-uniform
+scaling so objects spin correctly even when Scale X and Scale Y differ. The
+project file stores the entire scene
 including object positions, events and variables.
 Use **File → New Project** to generate a folder for your game. The dialog asks
 for a project name and a location and then creates the folder with a

@@ -62,18 +62,22 @@ class GameObject:
 
     def draw(self, surface: pygame.Surface):
         self._ensure_sprite()
-        img = pygame.transform.rotozoom(self.sprite, -self.angle, 1.0)
+        img = self.sprite
         if self.scale_x != 1.0 or self.scale_y != 1.0:
             w = max(1, int(img.get_width() * self.scale_x))
             h = max(1, int(img.get_height() * self.scale_y))
             img = pygame.transform.scale(img, (w, h))
+        if self.angle != 0.0:
+            img = pygame.transform.rotate(img, -self.angle)
         surface.blit(img, (self.x, self.y))
 
     def rect(self) -> pygame.Rect:
         self._ensure_sprite()
-        img = pygame.transform.rotozoom(self.sprite, -self.angle, 1.0)
+        img = self.sprite
         if self.scale_x != 1.0 or self.scale_y != 1.0:
             w = max(1, int(img.get_width() * self.scale_x))
             h = max(1, int(img.get_height() * self.scale_y))
             img = pygame.transform.scale(img, (w, h))
+        if self.angle != 0.0:
+            img = pygame.transform.rotate(img, -self.angle)
         return img.get_rect(topleft=(self.x, self.y))
