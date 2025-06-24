@@ -27,6 +27,7 @@ class Camera:
     name: str = "Camera"
     type: str = "camera"
     metadata: dict = field(default_factory=dict)
+    events: list = field(default_factory=list)
 
     def view_rect(self) -> tuple[float, float, float, float]:
         """Return the visible world rectangle."""

@@ -2164,6 +2164,8 @@ class Editor(QMainWindow):
             line.setVisible(checked)
         for line in getattr(self, 'axes', []):
             line.setVisible(checked)
+        if hasattr(self.view, 'viewport'):
+            self.view.viewport().update()
 
     def toggle_gizmo(self, checked: bool):
         if checked:
@@ -2558,6 +2560,9 @@ class Editor(QMainWindow):
             if idx is None or idx < 0 or idx >= len(self.items):
                 return
             obj = self.items[idx][1]
+            if not hasattr(obj, 'events'):
+                self.console.append('Object has no events list')
+                return
             if row < 0:
                 return
             creating_new = row >= len(obj.events)
@@ -2579,9 +2584,12 @@ class Editor(QMainWindow):
             idx = self.object_combo.currentData()
             if idx is None or idx < 0 or idx >= len(self.items):
                 return
-            if row < 0 or row >= len(self.items[idx][1].events):
-                return
             obj = self.items[idx][1]
+            if not hasattr(obj, 'events'):
+                self.console.append('Object has no events list')
+                return
+            if row < 0 or row >= len(obj.events):
+                return
             evt = obj.events[row]
             dlg = ActionDialog([o for _, o in self.items], self.scene.variables, self)
             if dlg.exec() == QDialog.DialogCode.Accepted:
