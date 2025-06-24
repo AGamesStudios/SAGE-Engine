@@ -25,10 +25,11 @@ def _log(text: str) -> None:
 class Engine:
     """Main loop that delegates drawing to a renderer."""
 
-    def __init__(self, width=640, height=480, scene=None, events=None, fps=30,
+    def __init__(self, width=640, height=480, scene=None, events=None, fps=60,
                  title='SAGE 2D', renderer: Renderer | str | None = None,
                  camera: Camera | None = None):
         self.fps = fps
+        self._frame_interval = 1.0 / fps if fps else 0
         self.scene = scene or Scene()
         self.camera = camera or getattr(self.scene, 'camera', None) or Camera(0, 0, width, height)
         self.events = events if events is not None else self.scene.build_event_system()
@@ -88,7 +89,9 @@ class Engine:
                 logger.exception('Runtime error')
                 running = False
             if self.fps:
-                time.sleep(max(0, 1.0 / self.fps - (time.perf_counter() - now)))
+                delay = self._frame_interval - (time.perf_counter() - now)
+                if delay > 0:
+                    time.sleep(delay)
         # shut down input callbacks before destroying the window to avoid
         # glfw errors about the library not being initialized
         self.input.shutdown()

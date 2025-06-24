@@ -22,6 +22,12 @@ class Scene:
         self.variables: dict = {}
         self.camera: Camera | None = None
         self.metadata: dict = {}
+        self._sorted = False
+
+    def _sort_objects(self):
+        if not self._sorted:
+            self.objects.sort(key=lambda o: getattr(o, 'z', 0))
+            self._sorted = True
 
     def add_object(self, obj: GameObject | Camera):
         existing = {o.name for o in self.objects}
@@ -36,17 +42,21 @@ class Scene:
         self.objects.append(obj)
         if isinstance(obj, Camera):
             self.camera = obj
+        self._sorted = False
 
     def remove_object(self, obj: GameObject):
         if obj in self.objects:
             self.objects.remove(obj)
+            self._sorted = False
 
     def update(self, dt: float):
+        self._sort_objects()
         for obj in self.objects:
             obj.update(dt)
 
     def draw(self, surface):
-        for obj in sorted(self.objects, key=lambda o: getattr(o, 'z', 0)):
+        self._sort_objects()
+        for obj in self.objects:
             obj.draw(surface)
 
     @classmethod
