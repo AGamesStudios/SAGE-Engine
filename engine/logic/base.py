@@ -56,14 +56,18 @@ class VarRef:
         return engine.events.variables.get(self.name)
 
 
-_VAR_RE = re.compile(r"engine\.variable\([\'\"](.+?)[\'\"]\)")
+# support multiple variable reference syntaxes: engine.variable("name"),
+# $name or {name}
+_VAR_RE = re.compile(
+    r"engine\.variable\([\'\"](.+?)[\'\"]\)|\$(\w+)|\{(\w+)\}")
 
 def parse_value(val):
     """Return ``val`` or a :class:`VarRef` if it matches the variable syntax."""
     if isinstance(val, str):
         m = _VAR_RE.fullmatch(val.strip())
         if m:
-            return VarRef(m.group(1))
+            name = m.group(1) or m.group(2) or m.group(3)
+            return VarRef(name)
     return val
 
 
@@ -140,14 +144,22 @@ class Action:
 class Event:
     """Combination of conditions and actions."""
 
-    def __init__(self, conditions, actions, once=False):
+    def __init__(self, conditions, actions, once=False, name=None, enabled=True):
         self.conditions = conditions
         self.actions = actions
         self.once = once
+        self.name = name
+        self.enabled = enabled
         self.triggered = False
 
+    def enable(self):
+        self.enabled = True
+
+    def disable(self):
+        self.enabled = False
+
     def update(self, engine, scene, dt):
-        if self.once and self.triggered:
+        if not self.enabled or (self.once and self.triggered):
             return
         try:
             if all(cond.check(engine, scene, dt) for cond in self.conditions):
@@ -165,6 +177,15 @@ class EventSystem:
     def __init__(self, variables=None):
         self.events = []
         self.variables = variables if variables is not None else {}
+
+    def get_event(self, name):
+        for evt in self.events:
+            if evt.name == name:
+                return evt
+        return None
+
+    def remove_event(self, name):
+        self.events = [e for e in self.events if e.name != name]
 
     def add_event(self, event):
         self.events.append(event)
