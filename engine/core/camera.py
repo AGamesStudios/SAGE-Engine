@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from .objects import register_object
 from ..logic import EventSystem, Event, condition_from_dict, action_from_dict
+from ..log import logger
 
 @register_object(
     'camera',
