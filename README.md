@@ -57,7 +57,9 @@ handle for scaling and a small crosshair above for rotation so objects are easy
 to manipulate. The gizmo and handles always appear above other sprites so they
 remain visible. Use the **Show Gizmo** toolbar button to hide or show them as
 needed. A cyan rectangle indicates the active camera frustum. If no camera
-exists the window size is used instead. Camera objects now include a **Z**
+exists the window size is used instead. The active camera automatically
+updates its width and height to match the window whenever it is resized,
+preserving the aspect ratio. Camera objects now include a **Z**
 position so they can be layered with sprites. Projects are saved in a single
 `.sageproject` file
 All objects are listed in a dock on the right. Selecting one shows a **Transform**

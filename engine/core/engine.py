@@ -35,7 +35,19 @@ class Engine:
         self.renderer = renderer or OpenGLRenderer(width, height, title)
         from .input import Input
         self.input = Input(self.renderer.window)
+        try:
+            import glfw
+            glfw.set_window_size_callback(self.renderer.window, self._on_resize)
+        except Exception:
+            pass
         self._last = time.perf_counter()
+
+    def _on_resize(self, window, width, height):
+        """Resize callback that keeps the camera and projection in sync."""
+        self.renderer.set_window_size(width, height)
+        if self.camera:
+            self.camera.width = width
+            self.camera.height = height
 
     def run(self):
         _log(f'Starting engine version {ENGINE_VERSION}')
