@@ -1107,7 +1107,9 @@ class Editor(QMainWindow):
             self.resource_view.sortByColumn(0, Qt.SortOrder.AscendingOrder)
             self.resource_view.setSortingEnabled(True)
         if self.resource_model is None:
-            self.resource_view.setEnabled(False)
+            # When QFileSystemModel is missing we still want the fallback tree
+            # to be interactive so users can manage resources normally.
+            self.resource_view.setEnabled(True)
         self.resource_view.setHeaderHidden(True)
         self.resource_view.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
         self.resource_view.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
@@ -2223,6 +2225,7 @@ class Editor(QMainWindow):
         self.resource_view.clear()
         if not self.resource_dir:
             return
+        _log(f'Refreshing resource tree at {self.resource_dir}')
 
         def add_children(parent, path):
             try:
