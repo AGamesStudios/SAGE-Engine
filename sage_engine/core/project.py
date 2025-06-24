@@ -8,6 +8,9 @@ class Project:
 
     scene: dict
     renderer: str = 'opengl'
+    width: int = 640
+    height: int = 480
+    title: str = 'SAGE 2D'
 
     @classmethod
     def load(cls, path: str) -> "Project":
@@ -22,9 +25,18 @@ class Project:
             else:
                 scene = {}
         renderer = data.get('renderer', 'opengl')
-        return cls(scene or {}, renderer)
+        width = data.get('width', 640)
+        height = data.get('height', 480)
+        title = data.get('title', 'SAGE 2D')
+        return cls(scene or {}, renderer, width, height, title)
 
     def save(self, path: str):
         with open(path, 'w') as f:
-            json.dump({'scene': self.scene, 'renderer': self.renderer}, f, indent=2)
+            json.dump({
+                'scene': self.scene,
+                'renderer': self.renderer,
+                'width': self.width,
+                'height': self.height,
+                'title': self.title,
+            }, f, indent=2)
 

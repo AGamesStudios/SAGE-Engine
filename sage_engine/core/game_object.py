@@ -85,3 +85,19 @@ class GameObject:
 
     def rect(self):
         return (self.x, self.y, self.width * self.scale_x, self.height * self.scale_y)
+
+    def transform_matrix(self):
+        """Return a 4x4 column-major matrix for OpenGL."""
+        rad = math.radians(self.angle)
+        cos_a = math.cos(rad)
+        sin_a = math.sin(rad)
+        sx = self.scale_x
+        sy = self.scale_y
+        tx = self.x + self.width / 2
+        ty = self.y + self.height / 2
+        return [
+            cos_a * sx, -sin_a * sy, 0, 0,
+            sin_a * sx, cos_a * sy, 0, 0,
+            0, 0, 1, 0,
+            tx, ty, 0, 1,
+        ]

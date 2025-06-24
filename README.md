@@ -69,8 +69,9 @@ without crashes.
 Window dimensions can be changed under **Settings → Window Settings**. The
 game window title matches the editor, e.g. `SAGE Editor: MyGame - Scene1`.
 When you edit the scene the title gains an `(unsaved)` suffix until you save.
-Future versions may add other renderer backends. A project records the
-renderer name so it can be upgraded later.
+Project files now record the window `width`, `height` and `title` so the engine
+launches with exactly the same viewport size. Future versions may add other
+renderer backends, and each project remembers which renderer to use.
 When defining variables, boolean values are edited with a convenient check box
 instead of typing "true" or "false".
 When comparing variables, the name is selected from a drop-down list so typos

@@ -48,26 +48,32 @@ def main(argv=None):
         argv = sys.argv[1:]
     parser = argparse.ArgumentParser(description='Run a SAGE project or scene')
     parser.add_argument('file', nargs='?', help='Scene or project file')
-    parser.add_argument('--width', type=int, default=640, help='Window width')
-    parser.add_argument('--height', type=int, default=480, help='Window height')
-    parser.add_argument('--title', default='SAGE 2D', help='Window title')
+    parser.add_argument('--width', type=int, help='Window width')
+    parser.add_argument('--height', type=int, help='Window height')
+    parser.add_argument('--title', help='Window title')
     parser.add_argument('--renderer', choices=['opengl'],
                         help='Rendering backend (currently only opengl)')
     args = parser.parse_args(argv)
 
     scene = Scene()
+    width = args.width or 640
+    height = args.height or 480
+    title = args.title or 'SAGE 2D'
+    renderer_name = args.renderer or 'opengl'
     if args.file:
         path = args.file
         if path.endswith('.sageproject'):
             proj = Project.load(path)
             if proj.scene:
                 scene = Scene.from_dict(proj.scene)
+            width = args.width or proj.width
+            height = args.height or proj.height
+            title = args.title or proj.title
+            renderer_name = args.renderer or proj.renderer
         else:
             scene = Scene.load(path)
 
-            _ = proj.renderer
+    renderer = OpenGLRenderer(width, height, title)
 
-    renderer = OpenGLRenderer(args.width, args.height, args.title)
-
-    Engine(width=args.width, height=args.height, title=args.title,
+    Engine(width=width, height=height, title=title,
            scene=scene, events=scene.build_event_system(), renderer=renderer).run()

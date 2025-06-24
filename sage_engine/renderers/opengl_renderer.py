@@ -15,13 +15,22 @@ class OpenGLRenderer:
         glfw.make_context_current(self.window)
         self.width = width
         self.height = height
+        self._setup_projection(width, height)
+        GL.glEnable(GL.GL_TEXTURE_2D)
+        self.textures = {}
+
+    def _setup_projection(self, width, height):
         GL.glViewport(0, 0, width, height)
         GL.glMatrixMode(GL.GL_PROJECTION)
         GL.glLoadIdentity()
         GL.glOrtho(0, width, height, 0, -1, 1)
         GL.glMatrixMode(GL.GL_MODELVIEW)
-        GL.glEnable(GL.GL_TEXTURE_2D)
-        self.textures = {}
+
+    def set_window_size(self, width, height):
+        self.width = width
+        self.height = height
+        glfw.set_window_size(self.window, width, height)
+        self._setup_projection(width, height)
 
     def should_close(self):
         return glfw.window_should_close(self.window)
@@ -57,11 +66,8 @@ class OpenGLRenderer:
         tex_id, w, h = self._get_texture(obj)
         GL.glBindTexture(GL.GL_TEXTURE_2D, tex_id)
         GL.glPushMatrix()
-        GL.glTranslatef(obj.x, obj.y, 0)
-        GL.glTranslatef(w/2, h/2, 0)
-        GL.glRotatef(-obj.angle, 0, 0, 1)
-        GL.glScalef(obj.scale_x, obj.scale_y, 1)
-        GL.glTranslatef(-w/2, -h/2, 0)
+        GL.glMultMatrixf(obj.transform_matrix())
+        GL.glTranslatef(-w / 2, -h / 2, 0)
         if obj.color:
             GL.glColor4f(*(c/255.0 for c in obj.color))
         else:

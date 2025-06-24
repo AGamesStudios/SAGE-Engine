@@ -1186,7 +1186,13 @@ class Editor(QMainWindow):
         self.renderer_name = dlg.render_combo.currentData()
         self.scene = Scene()
         try:
-            Project(self.scene.to_dict(), renderer=self.renderer_name).save(proj_path)
+            Project(
+                self.scene.to_dict(),
+                renderer=self.renderer_name,
+                width=self.window_width,
+                height=self.window_height,
+                title=f'SAGE 2D'
+            ).save(proj_path)
         except Exception as exc:
             QMessageBox.warning(self, 'Error', f'Failed to create project: {exc}')
             return
@@ -1213,7 +1219,10 @@ class Editor(QMainWindow):
             proj = Project.load(path)
             self.project_path = path
             self.renderer_name = proj.renderer
+            self.window_width = proj.width
+            self.window_height = proj.height
             self.load_scene(Scene.from_dict(proj.scene))
+            self._update_canvas()
         except Exception as exc:
             QMessageBox.warning(self, 'Error', f'Failed to open project: {exc}')
             self.project_path = None
@@ -1240,7 +1249,13 @@ class Editor(QMainWindow):
             obj.scale = item.scale()
             obj.angle = item.rotation()
         try:
-            Project(self.scene.to_dict(), renderer=self.renderer_name).save(self.project_path)
+            Project(
+                self.scene.to_dict(),
+                renderer=self.renderer_name,
+                width=self.window_width,
+                height=self.window_height,
+                title=f'SAGE 2D'
+            ).save(self.project_path)
             self._add_recent(self.project_path)
             self.dirty = False
             self._update_title()
@@ -1308,7 +1323,13 @@ class Editor(QMainWindow):
             pos = item.pos()
             obj.x = pos.x()
             obj.y = pos.y()
-        Project(self.scene.to_dict(), renderer=self.renderer_name).save(proj_path)
+        Project(
+            self.scene.to_dict(),
+            renderer=self.renderer_name,
+            width=self.window_width,
+            height=self.window_height,
+            title=title
+        ).save(proj_path)
         self._tmp_project = proj_path
         self.process = QProcess(self)
         self.process.setProgram(sys.executable)
