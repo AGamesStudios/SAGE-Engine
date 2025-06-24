@@ -16,18 +16,22 @@ from .core.resources import ResourceManager, set_resource_root, get_resource_pat
 from .core.engine import main
 from .log import logger
 from .diagnostics import warn, error, exception
-from .logic import (
-    EventSystem, Event, KeyPressed, KeyReleased, MouseButton, InputState, Collision, AfterTime,
-    OnStart, EveryFrame, VariableCompare,
-    Move, SetPosition, Destroy, Print, PlaySound, Spawn, SetVariable, ModifyVariable,
+from .logic.base import Event, EventSystem
+from .logic.conditions import (
+    KeyPressed, KeyReleased, MouseButton, InputState, Collision,
+    AfterTime, OnStart, EveryFrame, VariableCompare, ZoomAbove,
+)
+from .logic.actions import (
+    Move, SetPosition, Destroy, Print, PlaySound, Spawn,
+    SetVariable, ModifyVariable, SetZoom,
 )
 
 __all__ = [
     'GameObject', 'Scene', 'Engine', 'EventSystem',
     'Event', 'KeyPressed', 'KeyReleased', 'MouseButton', 'InputState', 'Collision', 'AfterTime',
     'Move', 'SetPosition', 'Destroy', 'Print', 'PlaySound', 'Spawn',
-    'OnStart', 'EveryFrame', 'VariableCompare',
-    'SetVariable', 'ModifyVariable', 'Project', 'Camera',
+    'OnStart', 'EveryFrame', 'VariableCompare', 'ZoomAbove',
+    'SetVariable', 'ModifyVariable', 'SetZoom', 'Project', 'Camera',
     'clear_image_cache', 'Renderer', 'OpenGLRenderer', 'GLSettings', 'main',
     'ENGINE_VERSION', 'logger', 'ResourceManager', 'set_resource_root', 'get_resource_path',
     'load_project', 'save_project', 'run_project', 'create_engine',
