@@ -63,10 +63,18 @@ KEY_OPTIONS = [
 
 
 class GraphicsView(QGraphicsView):
-    """View with Ctrl+wheel zoom."""
+    """View with Ctrl+wheel zoom using an OpenGL viewport."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        # Use QOpenGLWidget for smoother rendering and to keep the viewport in
+        # sync with the OpenGL runtime
+        try:
+            from PyQt6.QtOpenGLWidgets import QOpenGLWidget
+        except Exception:
+            # Qt < 6.5 may provide QOpenGLWidget in QtOpenGL
+            from PyQt6.QtOpenGL import QOpenGLWidget  # type: ignore
+        self.setViewport(QOpenGLWidget())
         self._zoom = 1.0
 
     def wheelEvent(self, event):

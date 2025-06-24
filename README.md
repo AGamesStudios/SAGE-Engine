@@ -26,10 +26,12 @@ Right click a project to open it immediately or remove it from the list.
 Once a project is chosen the editor opens maximized in a dark Fusion
 theme and provides two
 tabs: **Viewport** and **Logic**. The viewport uses a virtually infinite
-`QGraphicsScene` so you can pan freely. Hold **Ctrl** and scroll to zoom the
-view. A configurable grid and axis lines can be toggled from the toolbar. Grid
-size and color are adjustable and snapping ensures objects align cleanly when
-enabled. A red rectangle shows the canvas (the game window) for reference.
+`QGraphicsScene` so you can pan freely. It renders through a Qt
+`QOpenGLWidget` so what you see matches the OpenGL runtime. Hold **Ctrl** and
+scroll to zoom the view. A configurable grid and axis lines can be toggled from
+the toolbar. Grid size and color are adjustable and snapping ensures objects
+align cleanly when enabled. A red rectangle shows the canvas (the game window)
+for reference.
 The toolbar also includes an **Add Object** button which places a white square
 sprite with a default name like `New Object`. Double-click an object to open a
 small editor for changing its image or RGBA color. Clicking a sprite selects it

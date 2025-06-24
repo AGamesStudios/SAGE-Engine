@@ -39,8 +39,10 @@ class Engine:
                 running = False
             if self.fps:
                 time.sleep(max(0, 1.0 / self.fps - (time.perf_counter() - now)))
-        self.renderer.close()
+        # shut down input callbacks before destroying the window to avoid
+        # glfw errors about the library not being initialized
         self.input.shutdown()
+        self.renderer.close()
 
 
 def main(argv=None):
