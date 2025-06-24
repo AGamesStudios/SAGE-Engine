@@ -46,6 +46,7 @@ LANGUAGES = {
         'type': 'Type:',
         'key_button': 'Key/Button:',
         'duration': 'Duration:',
+        'time': 'Time:',
         'state': 'State:',
         'object_a': 'Object A:',
         'object_b': 'Object B:',
@@ -79,9 +80,8 @@ LANGUAGES = {
         , 'KeyPressed': 'Key Pressed'
         , 'KeyReleased': 'Key Released'
         , 'MouseButton': 'Mouse Button'
-        , 'Timer': 'Timer'
+        , 'AfterTime': 'After Time'
         , 'Collision': 'Collision'
-        , 'Always': 'Always'
         , 'OnStart': 'On Start'
         , 'EveryFrame': 'Every Frame'
         , 'VariableCompare': 'Variable Compare'
@@ -164,6 +164,7 @@ LANGUAGES = {
         'type': 'Тип:',
         'key_button': 'Клавиша/кнопка:',
         'duration': 'Длительность:',
+        'time': 'Время:',
         'state': 'Состояние:',
         'object_a': 'Объект A:',
         'object_b': 'Объект B:',
@@ -197,9 +198,8 @@ LANGUAGES = {
         , 'KeyPressed': 'Нажата клавиша'
         , 'KeyReleased': 'Клавиша отпущена'
         , 'MouseButton': 'Кнопка мыши'
-        , 'Timer': 'Таймер'
+        , 'AfterTime': 'Через время'
         , 'Collision': 'Столкновение'
-        , 'Always': 'Всегда'
         , 'OnStart': 'При старте'
         , 'EveryFrame': 'Каждый кадр'
         , 'VariableCompare': 'Сравнение переменной'

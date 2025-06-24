@@ -3,15 +3,15 @@ from .renderers import OpenGLRenderer, Renderer
 from .core.game_object import clear_image_cache
 from .core.engine import main
 from .logic import (
-    EventSystem, Event, KeyPressed, KeyReleased, MouseButton, InputState, Collision, Timer,
-    Always, OnStart, EveryFrame, VariableCompare,
+    EventSystem, Event, KeyPressed, KeyReleased, MouseButton, InputState, Collision, AfterTime,
+    OnStart, EveryFrame, VariableCompare,
     Move, SetPosition, Destroy, Print, PlaySound, Spawn, SetVariable, ModifyVariable,
 )
 
 __all__ = [
     'GameObject', 'Scene', 'Engine', 'EventSystem',
-    'Event', 'KeyPressed', 'KeyReleased', 'MouseButton', 'InputState', 'Collision', 'Timer',
-    'Always', 'Move', 'SetPosition', 'Destroy', 'Print', 'PlaySound', 'Spawn',
+    'Event', 'KeyPressed', 'KeyReleased', 'MouseButton', 'InputState', 'Collision', 'AfterTime',
+    'Move', 'SetPosition', 'Destroy', 'Print', 'PlaySound', 'Spawn',
     'OnStart', 'EveryFrame', 'VariableCompare',
     'SetVariable', 'ModifyVariable', 'Project', 'Camera',
     'clear_image_cache', 'Renderer', 'OpenGLRenderer', 'main'

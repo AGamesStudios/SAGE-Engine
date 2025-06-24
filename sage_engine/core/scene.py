@@ -6,8 +6,8 @@ from .camera import Camera
 from ..logic import (
     EventSystem, Event,
     condition_from_dict, action_from_dict,
-    KeyPressed, KeyReleased, MouseButton, Collision, Timer,
-    Always, OnStart, EveryFrame, VariableCompare,
+    KeyPressed, KeyReleased, MouseButton, Collision, AfterTime,
+    OnStart, EveryFrame, VariableCompare,
     Move, SetPosition, Destroy, Print, PlaySound, Spawn,
     SetVariable, ModifyVariable,
 )

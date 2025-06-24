@@ -139,7 +139,7 @@ you created in the editor.
 The engine ships with **SAGE Logic**, a small condition/action system inspired
 by Clickteam. Events consist of *conditions* and *actions*. When all conditions
 pass, the actions run. Built-in blocks include `KeyPressed`, `Collision`,
-`Timer`, `Move`, `SetPosition`, `Destroy` and `Print`. You can subclass
+`AfterTime`, `Move`, `SetPosition`, `Destroy` and `Print`. You can subclass
 `Condition` or `Action` to create your own.  Conditions and actions live in
 separate modules and register themselves automatically so new types can be
 added without touching the core loader.
@@ -147,7 +147,7 @@ added without touching the core loader.
 ```python
 import glfw
 from sage_engine import Engine, Scene, GameObject
-from sage_engine.logic import EventSystem, Event, KeyPressed, Timer, Move
+from sage_engine.logic import EventSystem, Event, KeyPressed, AfterTime, Move
 
 player = GameObject('player.png')
 scene = Scene()
@@ -155,7 +155,7 @@ scene.add_object(player)
 
 events = EventSystem()
 events.add_event(Event([KeyPressed(glfw.KEY_RIGHT)], [Move(player, 5, 0)]))
-events.add_event(Event([Timer(5.0)], [Move(player, -5, 0)]))
+events.add_event(Event([AfterTime(seconds=5)], [Move(player, -5, 0)]))
 
 Engine(scene=scene, events=events).run()
 ```

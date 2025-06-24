@@ -38,17 +38,21 @@ class Collision(Condition):
     def check(self, engine, scene, dt):
         return self.obj_a.rect().colliderect(self.obj_b.rect())
 
-@register_condition('Timer')
-class Timer(Condition):
-    """True every `duration` seconds."""
-    def __init__(self, duration):
-        self.duration = duration
+@register_condition('AfterTime')
+class AfterTime(Condition):
+    """True once after the specified time has elapsed."""
+
+    def __init__(self, seconds=0.0, minutes=0.0, hours=0.0):
+        self.target = seconds + minutes * 60 + hours * 3600
         self.elapsed = 0.0
+        self.triggered = False
 
     def check(self, engine, scene, dt):
+        if self.triggered:
+            return False
         self.elapsed += dt
-        if self.elapsed >= self.duration:
-            self.elapsed -= self.duration
+        if self.elapsed >= self.target:
+            self.triggered = True
             return True
         return False
 
@@ -66,12 +70,6 @@ class MouseButton(InputState):
     def __init__(self, button, state='down'):
         super().__init__('mouse', button, state)
 
-@register_condition('Always')
-class Always(Condition):
-    """Condition that is always true."""
-
-    def check(self, engine, scene, dt):
-        return True
 
 @register_condition('OnStart')
 class OnStart(Condition):
@@ -87,7 +85,7 @@ class OnStart(Condition):
 
 @register_condition('EveryFrame')
 class EveryFrame(Condition):
-    """Alias for Always to clarify intent."""
+    """True on every engine tick."""
     def check(self, engine, scene, dt):
         return True
 
@@ -128,4 +126,8 @@ class VariableCompare(Condition):
             pass
         return False
 
-__all__ = ['KeyPressed','KeyReleased','MouseButton','InputState','Collision','Timer','Always','OnStart','EveryFrame','VariableCompare']
+__all__ = [
+    'KeyPressed', 'KeyReleased', 'MouseButton', 'InputState',
+    'Collision', 'AfterTime', 'OnStart', 'EveryFrame',
+    'VariableCompare'
+]

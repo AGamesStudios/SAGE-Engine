@@ -223,8 +223,18 @@ def describe_condition(cond, objects, t=lambda x: x):
         btn = cond.get('button', 0)
         state = cond.get('state', 'down')
         return f"{t('MouseButton')} {btn} {state}"
-    if typ == 'Timer':
-        return f"{t('Timer')} {cond.get('duration')}s"
+    if typ == 'AfterTime':
+        sec = cond.get('seconds', 0)
+        m = cond.get('minutes', 0)
+        h = cond.get('hours', 0)
+        parts = []
+        if h:
+            parts.append(f"{h}h")
+        if m:
+            parts.append(f"{m}m")
+        if sec or not parts:
+            parts.append(f"{sec}s")
+        return f"{t('AfterTime')} {' '.join(parts)}"
     if typ == 'Collision':
         a = cond.get('a'); b = cond.get('b')
         a_name = objects[a].name if a is not None and 0 <= a < len(objects) else 'N/A'
@@ -274,7 +284,7 @@ class ConditionDialog(QDialog):
 
         self.type_box = QComboBox()
         for name in [
-            'KeyPressed', 'KeyReleased', 'MouseButton', 'Timer', 'Collision', 'Always',
+            'KeyPressed', 'KeyReleased', 'MouseButton', 'AfterTime', 'Collision',
             'OnStart', 'EveryFrame', 'VariableCompare'
         ]:
             self.type_box.addItem(parent.t(name) if parent else name, name)
@@ -286,11 +296,15 @@ class ConditionDialog(QDialog):
             self.key_combo.addItem(name, val)
         layout.addRow(self.key_label, self.key_combo)
 
-        self.duration_label = QLabel(parent.t('duration') if parent else 'Duration:')
-        self.duration_spin = QSpinBox()
-        self.duration_spin.setRange(0, 9999)
-        self.duration_spin.setValue(1)
-        layout.addRow(self.duration_label, self.duration_spin)
+        self.duration_label = QLabel(parent.t('time') if parent else 'Time:')
+        self.hour_spin = QSpinBox(); self.hour_spin.setRange(0, 23)
+        self.min_spin = QSpinBox(); self.min_spin.setRange(0, 59)
+        self.sec_spin = QSpinBox(); self.sec_spin.setRange(0, 59)
+        time_row = QHBoxLayout()
+        time_row.addWidget(self.hour_spin)
+        time_row.addWidget(self.min_spin)
+        time_row.addWidget(self.sec_spin)
+        layout.addRow(self.duration_label, time_row)
 
         self.state_label = QLabel(parent.t('state') if parent else 'State:')
         self.state_box = QComboBox()
@@ -351,7 +365,9 @@ class ConditionDialog(QDialog):
         typ = self.type_box.currentText()
         widgets = [
             (self.key_label, self.key_combo),
-            (self.duration_label, self.duration_spin),
+            (self.duration_label, self.hour_spin),
+            (self.duration_label, self.min_spin),
+            (self.duration_label, self.sec_spin),
             (self.state_label, self.state_box),
             (self.a_label, self.a_box),
             (self.b_label, self.b_box),
@@ -372,9 +388,11 @@ class ConditionDialog(QDialog):
             self.key_combo.setVisible(True)
             self.state_label.setVisible(True)
             self.state_box.setVisible(True)
-        elif typ == 'Timer':
+        elif typ == 'AfterTime':
             self.duration_label.setVisible(True)
-            self.duration_spin.setVisible(True)
+            self.hour_spin.setVisible(True)
+            self.min_spin.setVisible(True)
+            self.sec_spin.setVisible(True)
         elif typ == 'Collision':
             self.a_label.setVisible(True)
             self.a_box.setVisible(True)
@@ -411,8 +429,13 @@ class ConditionDialog(QDialog):
             button = self.key_combo.currentIndex() + 1
             state = self.state_box.currentText()
             return {'type': 'MouseButton', 'button': button, 'state': state}
-        if typ == 'Timer':
-            return {'type': 'Timer', 'duration': self.duration_spin.value()}
+        if typ == 'AfterTime':
+            return {
+                'type': 'AfterTime',
+                'hours': self.hour_spin.value(),
+                'minutes': self.min_spin.value(),
+                'seconds': self.sec_spin.value(),
+            }
         if typ == 'Collision':
             return {'type': 'Collision', 'a': self.a_box.currentData(), 'b': self.b_box.currentData()}
         if typ == 'VariableCompare':
@@ -441,8 +464,10 @@ class ConditionDialog(QDialog):
             i = self.state_box.findText(st)
             if i >= 0:
                 self.state_box.setCurrentIndex(i)
-        elif typ == 'Timer':
-            self.duration_spin.setValue(int(data.get('duration', 1)))
+        elif typ == 'AfterTime':
+            self.hour_spin.setValue(int(data.get('hours', 0)))
+            self.min_spin.setValue(int(data.get('minutes', 0)))
+            self.sec_spin.setValue(int(data.get('seconds', 0)))
         elif typ == 'Collision':
             self.a_box.setCurrentIndex(int(data.get('a', 0)))
             self.b_box.setCurrentIndex(int(data.get('b', 0)))
