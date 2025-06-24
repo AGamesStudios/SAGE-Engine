@@ -104,6 +104,19 @@ class ProjectManager(QDialog):
             self.open_selected()
         elif action == del_act:
             path = self.table.item(row, 3).text()
+            dir_path = os.path.dirname(path)
+            reply = QMessageBox.question(
+                self,
+                self.editor.t('delete_project'),
+                self.editor.t('confirm_delete_project'),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+            )
+            if reply == QMessageBox.StandardButton.Yes:
+                try:
+                    import shutil
+                    shutil.rmtree(dir_path, ignore_errors=True)
+                except Exception as exc:
+                    QMessageBox.warning(self, self.editor.t('error'), str(exc))
             if path in self.editor.recent_projects:
                 self.editor.recent_projects.remove(path)
                 save_recent(self.editor.recent_projects)

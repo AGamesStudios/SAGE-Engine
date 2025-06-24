@@ -49,7 +49,8 @@ recent projects with their creation date and full path.  Buttons let you create
 a new project, open an existing file or clear the list for a clean start. The
 dialog now groups the table under a "Recent Projects" heading with larger
 fonts and spacing so paths are easy to read. Right click a project to open it
-immediately or remove it from the list.
+immediately or remove it from the list. Choosing **Delete** now asks for
+confirmation and then removes the entire project folder along with its files.
 Once a project is chosen the editor opens maximized in a dark Fusion
 theme and provides two
 tabs: **Viewport** and **Logic**. The viewport uses a virtually infinite
@@ -311,7 +312,7 @@ title so you always know which release you are using.
 
 SAGE Engine aims to run smoothly even on older hardware. Images and sounds
 are cached after the first load so repeated objects or effects do not reload
-files from disk. The `Engine` class accepts an `fps` argument (default 30) to
+files from disk. The `Engine` class accepts an `fps` argument (default 60) to
 control the frame rate using `time.sleep` for consistent timing.
 You can clear the image cache with `engine.clear_image_cache()` if memory
 becomes tight. These optimizations keep the runtime light without sacrificing
