@@ -56,6 +56,7 @@ class Scene:
                 cam.get("y", 0),
                 cam.get("width", 640),
                 cam.get("height", 480),
+                cam.get("zoom", 1.0),
             )
         for entry in data.get("objects", []):
             scale_x = entry.get("scale_x")
@@ -144,6 +145,7 @@ class Scene:
                 "y": self.camera.y,
                 "width": self.camera.width,
                 "height": self.camera.height,
+                "zoom": self.camera.zoom,
             }
         return data
 

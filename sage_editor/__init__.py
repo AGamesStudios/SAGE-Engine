@@ -1245,10 +1245,9 @@ class Editor(QMainWindow):
         self._tmp_project = None
         self.console_dock = dock
 
-        # canvas rectangle representing the game window
-        self.canvas = None
+        # camera rectangle showing the visible area
         self.camera_rect = None
-        self._update_canvas()
+        self._update_camera_rect()
         self.project_path: str | None = None
         self.items = []
         self.dirty = False
@@ -1307,7 +1306,6 @@ class Editor(QMainWindow):
         self.recent_menu.setTitle(self.t('recent_projects'))
         self.settings_menu.setTitle(self.t('settings'))
         self.window_settings_act.setText(self.t('window_settings'))
-        self.camera_settings_act.setText(self.t('camera_settings'))
         self.renderer_settings_act.setText(self.t('renderer_settings'))
         self.coord_combo.setItemText(0, self.t('global'))
         self.coord_combo.setItemText(1, self.t('local'))
@@ -1391,9 +1389,6 @@ class Editor(QMainWindow):
         self.window_settings_act = QAction(self.t('window_settings'), self)
         self.window_settings_act.triggered.connect(self.show_window_settings)
         self.settings_menu.addAction(self.window_settings_act)
-        self.camera_settings_act = QAction(self.t('camera_settings'), self)
-        self.camera_settings_act.triggered.connect(self.show_camera_settings)
-        self.settings_menu.addAction(self.camera_settings_act)
         self.renderer_settings_act = QAction(self.t('renderer_settings'), self)
         self.renderer_settings_act.triggered.connect(self.show_renderer_settings)
         self.settings_menu.addAction(self.renderer_settings_act)
@@ -1541,7 +1536,7 @@ class Editor(QMainWindow):
             self.window_width = proj.width
             self.window_height = proj.height
             self.load_scene(Scene.from_dict(proj.scene))
-            self._update_canvas()
+            self._update_camera_rect()
             self.resource_dir = os.path.join(os.path.dirname(path), proj.resources)
             from engine import set_resource_root, ResourceManager
             set_resource_root(self.resource_dir)
@@ -1627,7 +1622,7 @@ class Editor(QMainWindow):
         if dlg.exec() == QDialog.DialogCode.Accepted:
             self.window_width = w_spin.value()
             self.window_height = h_spin.value()
-            self._update_canvas()
+            self._update_camera_rect()
 
     def show_camera_settings(self):
         cam = getattr(self.scene, 'camera', None)
@@ -1640,11 +1635,13 @@ class Editor(QMainWindow):
         y_spin = QDoubleSpinBox(); y_spin.setRange(-10000, 10000); y_spin.setValue(cam.y)
         w_spin = QSpinBox(); w_spin.setRange(100, 4096); w_spin.setValue(cam.width)
         h_spin = QSpinBox(); h_spin.setRange(100, 4096); h_spin.setValue(cam.height)
+        z_spin = QDoubleSpinBox(); z_spin.setRange(0.1, 100); z_spin.setValue(cam.zoom)
         form = QFormLayout(dlg)
         form.addRow(self.t('x'), x_spin)
         form.addRow(self.t('y'), y_spin)
         form.addRow(self.t('width'), w_spin)
         form.addRow(self.t('height'), h_spin)
+        form.addRow('Zoom:', z_spin)
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         buttons.accepted.connect(dlg.accept)
         buttons.rejected.connect(dlg.reject)
@@ -1654,7 +1651,8 @@ class Editor(QMainWindow):
             cam.y = y_spin.value()
             cam.width = w_spin.value()
             cam.height = h_spin.value()
-            self._update_canvas()
+            cam.zoom = z_spin.value()
+            self._update_camera_rect()
 
     def show_renderer_settings(self):
         dlg = QDialog(self)
@@ -2074,18 +2072,13 @@ class Editor(QMainWindow):
         for line in self.grid_lines:
             line.setVisible(getattr(self, 'grid_act', None) is None or self.grid_act.isChecked())
 
-    def _update_canvas(self):
-        """Ensure the red canvas rectangle matches the window size."""
-        rect = QRectF(0, 0, self.window_width, self.window_height)
-        if getattr(self, 'canvas', None) and self.canvas.scene() is self.g_scene:
-            self.canvas.setRect(rect)
-        else:
-            pen = QPen(QColor('red'))
-            self.canvas = self.g_scene.addRect(rect, pen)
+    def _update_camera_rect(self):
+        """Show the active camera frustum."""
         scene = getattr(self, 'scene', None)
         cam = getattr(scene, 'camera', None) if scene else None
         if cam:
-            cam_rect = QRectF(cam.x, cam.y, cam.width, cam.height)
+            x, y, w, h = cam.view_rect()
+            cam_rect = QRectF(x, y, w, h)
             if getattr(self, 'camera_rect', None) and self.camera_rect.scene() is self.g_scene:
                 self.camera_rect.setRect(cam_rect)
             else:
@@ -2529,8 +2522,8 @@ class Editor(QMainWindow):
         self.items.clear()
         self.object_combo.clear()
         self.object_list.clear()
-        # redraw canvas and grid after clearing the scene
-        self._update_canvas()
+        # redraw frustum and grid after clearing the scene
+        self._update_camera_rect()
         self._create_grid()
         for obj in self.scene.objects:
             try:

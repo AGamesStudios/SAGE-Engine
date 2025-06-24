@@ -47,8 +47,7 @@ tabs: **Viewport** and **Logic**. The viewport uses a virtually infinite
 `QOpenGLWidget` so what you see matches the OpenGL runtime. Hold **Ctrl** and
 scroll to zoom the view. A configurable grid and axis lines can be toggled from
 the toolbar. Grid size and color are adjustable and snapping ensures objects
-align cleanly when enabled. A red rectangle shows the canvas (the game window)
-for reference.
+align cleanly when enabled.
 An **Add Object** button beneath the object list places a white square sprite
 with a default name like `New Object`. Double-click an object to open a
 small editor for changing its image or RGBA color. Clicking a sprite selects it
@@ -57,9 +56,8 @@ and closed hand while dragging. A yellow gizmo outline appears with a corner
 handle for scaling and a small crosshair above for rotation so objects are easy
 to manipulate. The gizmo and handles always appear above other sprites so they
 remain visible. Use the **Show Gizmo** toolbar button to hide or show them as
-needed. A cyan rectangle indicates the active camera; if no camera exists the
-red canvas rectangle shows the window bounds instead. Camera parameters can be
-edited under **Settings → Camera Settings**. Projects are saved in a single
+needed. A cyan rectangle indicates the active camera frustum; if no camera
+exists the window size is used instead. Projects are saved in a single
 `.sageproject` file
 All objects are listed in a dock on the right. Selecting one shows a **Transform**
 panel with X, Y, Z, separate Scale X/Y and Rotation fields. A *Link XY* checkbox

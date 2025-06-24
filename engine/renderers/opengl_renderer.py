@@ -77,13 +77,16 @@ class OpenGLRenderer:
         camx = camy = 0
         camw = self.width
         camh = self.height
+        zoom = 1.0
         if camera is not None:
             camx = camera.x
             camy = camera.y
-            camw = camera.width
-            camh = camera.height
+            camw = camera.width / camera.zoom
+            camh = camera.height / camera.zoom
+            zoom = camera.zoom
         GL.glPushMatrix()
         GL.glTranslatef(-camx, -camy, 0)
+        GL.glScalef(zoom, zoom, 1)
         for obj in sorted(scene.objects, key=lambda o: getattr(o, 'z', 0)):
             if camera is not None:
                 x, y, w, h = obj.rect()
