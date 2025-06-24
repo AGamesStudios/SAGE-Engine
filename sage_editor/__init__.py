@@ -2070,6 +2070,7 @@ class Editor(QMainWindow):
         self.axes.append(self.g_scene.addLine(0, rect.top(), 0, rect.bottom(), pen_axis_y))
         for line in self.axes:
             line.setZValue(-0.5)
+            line.setVisible(getattr(self, 'grid_act', None) is None or self.grid_act.isChecked())
         for line in self.grid_lines:
             line.setVisible(getattr(self, 'grid_act', None) is None or self.grid_act.isChecked())
 
@@ -2097,6 +2098,8 @@ class Editor(QMainWindow):
     def toggle_grid(self, checked: bool):
         for line in self.grid_lines:
             line.setVisible(checked)
+        for line in getattr(self, 'axes', []):
+            line.setVisible(checked)
 
     def toggle_gizmo(self, checked: bool):
         if checked:
@@ -2117,6 +2120,9 @@ class Editor(QMainWindow):
             self.gizmo.hide()
             self.scale_handle.hide()
             self.rotate_handle.hide()
+            if hasattr(self.view, 'gizmo_lines'):
+                self.view.gizmo_lines = []
+                self.view.viewport().update()
 
     def toggle_snap(self, checked: bool):
         self.snap_to_grid = checked
