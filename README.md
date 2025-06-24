@@ -17,7 +17,8 @@ provided in the same package, and the event system lives in
 save and run projects in just a few lines. **SAGE Editor** builds on these pieces
 but remains optional so games can depend on the engine without pulling in the
 editor.  Simply import the engine from `engine` and the editor from
-`sage_editor` to keep them modular.
+`sage_editor` to keep them modular.  The ``sage_sdk`` package provides shared
+utilities like the plugin loader used by both components.
 
 ### Renderer
 
@@ -253,15 +254,18 @@ load and save new object classes without modifying the loader. All objects,
 scenes and projects expose a ``metadata`` dictionary for custom attributes so
 tools can store extra information without affecting the runtime.
 
-### Editor Plugins
+### SAGE SDK and Plugins
 
-The editor can be extended with optional plugins.  Set the environment
-variable `SAGE_EDITOR_PLUGINS` to one or more directories separated by
-your OS path separator.  Each Python file in those directories may define
-an ``init(editor)`` function that receives the running :class:`Editor`
-instance.  Plugins can also be registered programmatically via
-``sage_editor.plugins.register_plugin``.  This keeps the built-in editor
-simple while allowing advanced features to be packaged separately.
+The ``sage_sdk`` package ships with a small plugin loader used by both the
+engine and editor.  Directories listed in ``SAGE_PLUGINS`` are scanned for
+Python files.  Each module may define ``init_editor(editor)`` and/or
+``init_engine(engine)`` functions which are called when the respective
+component starts.  Plugins can also be registered programmatically via
+``sage_sdk.register_plugin('editor', func)`` or ``'engine'`` for runtime hooks.
+This keeps the core lightweight while allowing advanced features to be
+packaged separately and installed by simply dropping a file into the plugins
+folder.  ``SAGE_ENGINE_PLUGINS`` and ``SAGE_EDITOR_PLUGINS`` provide
+component-specific search paths.
 
 ### Versioning
 

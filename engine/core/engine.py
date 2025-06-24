@@ -53,6 +53,11 @@ class Engine:
         except Exception:
             pass
         self._last = time.perf_counter()
+        try:
+            from .. import load_engine_plugins
+            load_engine_plugins(self)
+        except Exception:
+            logger.exception('Failed to load engine plugins')
 
     def _on_resize(self, window, width, height):
         """Resize callback that keeps the camera and projection in sync."""
