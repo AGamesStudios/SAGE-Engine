@@ -67,7 +67,11 @@ LANGUAGES = {
         'operation': 'Operation',
         'name_label': 'Name:',
         'type_label': 'Type:',
-        'value_label': 'Value:'
+        'value_label': 'Value:',
+        'text_not_comparable': 'Text variables cannot be compared',
+        'hours_short': 'h',
+        'minutes_short': 'm',
+        'seconds_short': 's'
         , 'settings': 'Settings'
         , 'window_settings': 'Window Settings'
         , 'width': 'Width:'
@@ -206,6 +210,10 @@ LANGUAGES = {
         'name_label': 'Имя:',
         'type_label': 'Тип:',
         'value_label': 'Значение:'
+        , 'text_not_comparable': 'Сравнение текстовых переменных невозможно'
+        , 'hours_short': 'ч'
+        , 'minutes_short': 'м'
+        , 'seconds_short': 'с'
         , 'settings': 'Настройки'
         , 'window_settings': 'Параметры окна'
         , 'width': 'Ширина:'

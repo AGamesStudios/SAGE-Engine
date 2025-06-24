@@ -181,7 +181,8 @@ you created in the editor.
 The engine ships with **SAGE Logic**, a small condition/action system inspired
 by Clickteam. Events consist of *conditions* and *actions*. When all conditions
 pass, the actions run. Built-in blocks include `KeyPressed`, `Collision`,
-`AfterTime`, `Move`, `SetPosition`, `Destroy` and `Print`. You can subclass
+`AfterTime`, `Move`, `SetPosition`, `Destroy` and `Print`. `AfterTime` accepts
+hours, minutes and seconds so you can delay events precisely. You can subclass
 `Condition` or `Action` to create your own.  Conditions and actions live in
 separate modules and register themselves automatically so new types can be
 added without touching the core loader.  The `logic` package automatically
@@ -230,11 +231,11 @@ control of which input triggers the event.
 Additional math-friendly blocks make it easy to build counters or timers.
 `VariableCompare` tests a variable against a value using operators like `>`,
 `<`, or `==`. `ModifyVariable` adjusts a variable with `+`, `-`, `*`, or `/` so
-you can implement score systems without custom scripting. Arithmetic works only
-with numeric variables; boolean and string values cannot be modified with math
-operations. When such a variable is selected the operator combo box disappears
-and a warning icon explains why. `PlaySound` now caches each sound after the
-first use and reports any errors instead of crashing.
+you can implement score systems without custom scripting. Comparisons accept
+numeric or boolean variables; strings cannot be compared. Boolean variables
+only support `==` and `!=`. When a variable is not numeric the operator box
+adapts or disappears with a warning. `PlaySound` now caches each sound after
+the first use and reports any errors instead of crashing.
 
 The `Print` action is handy for debugging. The text is formatted with the
 current variables so using `Score: {score}` will display the latest value of a

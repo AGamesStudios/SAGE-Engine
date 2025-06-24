@@ -150,9 +150,7 @@ class VariableCompare(Condition):
                 if isinstance(ref, str):
                     ref = ref.lower() in ('true', '1', 'yes')
                 return cmp(val, bool(ref))
-            # strings or other types use string comparison for == and !=
-            if self.op in ('==', '!='):
-                return cmp(str(val), str(self.value))
+            # text and other types are not supported
         except Exception:
             pass
         return False

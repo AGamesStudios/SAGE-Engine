@@ -378,6 +378,14 @@ class ConditionDialog(QDialog):
         self.hour_spin = QSpinBox(); self.hour_spin.setRange(0, 23)
         self.min_spin = QSpinBox(); self.min_spin.setRange(0, 59)
         self.sec_spin = QSpinBox(); self.sec_spin.setRange(0, 59)
+        if parent:
+            self.hour_spin.setSuffix(parent.t('hours_short'))
+            self.min_spin.setSuffix(parent.t('minutes_short'))
+            self.sec_spin.setSuffix(parent.t('seconds_short'))
+        else:
+            self.hour_spin.setSuffix('h')
+            self.min_spin.setSuffix('m')
+            self.sec_spin.setSuffix('s')
         time_row = QHBoxLayout()
         time_row.addWidget(self.hour_spin)
         time_row.addWidget(self.min_spin)
@@ -524,16 +532,25 @@ class ConditionDialog(QDialog):
             self._update_var_warning()
 
     def _update_var_warning(self):
-        """Show or hide the operator combo depending on variable type."""
+        """Adjust available operators based on variable type."""
         name = self.var_name_box.currentText()
         val = self.variables.get(name)
+        self.var_op_box.clear()
         if isinstance(val, (int, float)):
+            self.var_op_box.addItems(['==', '!=', '<', '<=', '>', '>='])
+            self.var_op_box.show()
+            self.var_warn_icon.hide()
+            self.var_warn_text.hide()
+        elif isinstance(val, bool):
+            self.var_op_box.addItems(['==', '!='])
             self.var_op_box.show()
             self.var_warn_icon.hide()
             self.var_warn_text.hide()
         else:
             self.var_op_box.hide()
             self.var_warn_icon.show()
+            if self.parent():
+                self.var_warn_text.setText(self.parent().t('text_not_comparable'))
             self.var_warn_text.show()
 
     def get_condition(self):
