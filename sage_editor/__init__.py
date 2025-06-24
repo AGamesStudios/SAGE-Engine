@@ -10,7 +10,15 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import QPixmap, QPen, QColor, QPalette, QFont, QAction
 from PyQt6.QtCore import QRectF, Qt, QProcess, QPointF
-from sip import isdeleted
+try:
+    from PyQt6.sip import isdeleted  # PyQt6 >= 6.5
+except Exception:  # pragma: no cover - optional dependency
+    try:
+        from sip import isdeleted  # PyQt5/PyQt6 < 6.5
+    except Exception:
+        def isdeleted(obj):
+            """Fallback when sip is unavailable."""
+            return False
 import traceback
 from .lang import LANGUAGES, DEFAULT_LANGUAGE
 import tempfile
