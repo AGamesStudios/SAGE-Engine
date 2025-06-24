@@ -3,6 +3,7 @@ import argparse
 import traceback
 import time
 import os
+import logging
 from datetime import datetime
 from .scene import Scene
 from .project import Project
@@ -11,14 +12,22 @@ from .camera import Camera
 from ..renderers import OpenGLRenderer, Renderer
 from .. import ENGINE_VERSION
 
-LOG_FILE = os.path.join(os.path.expanduser('~'), 'sage_engine.log')
+LOG_FILE = os.path.join(os.path.expanduser('~'), '.sage_engine.log')
+
+logger = logging.getLogger('sage_engine')
+if not logger.handlers:
+    logger.setLevel(logging.INFO)
+    fmt = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
+    fh = logging.FileHandler(LOG_FILE, encoding='utf-8')
+    fh.setFormatter(fmt)
+    logger.addHandler(fh)
+    ch = logging.StreamHandler()
+    ch.setFormatter(fmt)
+    logger.addHandler(ch)
 
 def _log(text: str) -> None:
-    try:
-        with open(LOG_FILE, 'a', encoding='utf-8') as f:
-            f.write(f"[{datetime.now().isoformat()}] {text}\n")
-    except Exception:
-        pass
+    """Write a line to the log file and console."""
+    logger.info(text)
 
 class Engine:
     """Main loop that delegates drawing to a renderer."""
@@ -36,7 +45,6 @@ class Engine:
         self._last = time.perf_counter()
 
     def run(self):
-        print(f'SAGE Engine {ENGINE_VERSION}')
         _log(f'Starting engine version {ENGINE_VERSION}')
         running = True
         while running and not self.renderer.should_close():
@@ -50,12 +58,8 @@ class Engine:
                 self.renderer.clear()
                 self.renderer.draw_scene(self.scene, self.camera)
                 self.renderer.present()
-            except Exception as exc:
-                msg = f'Runtime error: {exc}'
-                print(msg)
-                traceback.print_exc()
-                _log(msg)
-                _log(traceback.format_exc())
+            except Exception:
+                logger.exception('Runtime error')
                 running = False
             if self.fps:
                 time.sleep(max(0, 1.0 / self.fps - (time.perf_counter() - now)))
