@@ -5,7 +5,7 @@ from typing import Any, Callable, Type
 from ..log import logger
 
 OBJECT_REGISTRY: dict[str, Type[Any]] = {}
-OBJECT_META: dict[str, list[tuple[str, str | None]]] = {}
+OBJECT_META: dict[str, list[tuple]] = {}
 
 
 def register_object(name: str, params: list[tuple[str, str | None]] | None = None) -> Callable[[Type[Any]], Type[Any]]:
@@ -56,3 +56,15 @@ def object_to_dict(obj: Any) -> dict | None:
             return data
     logger.warning('Attempted to serialize unregistered object %s', type(obj).__name__)
     return None
+
+
+def get_object_type(obj: Any) -> str | None:
+    """Return the registry name for ``obj`` or ``None``."""
+    for name, cls in OBJECT_REGISTRY.items():
+        if isinstance(obj, cls):
+            return name
+    return None
+
+
+__all__ = ['register_object', 'object_from_dict', 'object_to_dict', 'get_object_type',
+           'OBJECT_REGISTRY', 'OBJECT_META']

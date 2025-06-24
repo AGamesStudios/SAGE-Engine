@@ -11,18 +11,19 @@ ACTION_REGISTRY: dict[str, type] = {}
 # automatically from dictionaries. Each entry maps a name to a list of
 # ``(param_name, kind)`` tuples where ``kind`` can be ``object`` for
 # GameObject references or ``variable`` for variable names.
-CONDITION_META: dict[str, list[tuple[str, str, str | None]]] = {}
-ACTION_META: dict[str, list[tuple[str, str, str | None]]] = {}
+CONDITION_META: dict[str, list[tuple]] = {}
+ACTION_META: dict[str, list[tuple]] = {}
 
 
-def register_condition(name: str, params: list[tuple[str, str, str | None]] | None = None):
+def register_condition(name: str, params: list[tuple] | None = None):
     """Decorator to register a Condition subclass.
 
-    ``params`` defines a list of tuples describing constructor arguments. Each
-    tuple is ``(arg_name, kind, key)`` where ``arg_name`` is the parameter name
-    of the constructor, ``kind`` is ``'value'`` for plain values, ``'object'`` to
-    look up a scene object by index and ``'variable'`` for variables. ``key`` is
-    the dictionary key when loading; when omitted it defaults to ``arg_name``.
+    ``params`` defines a list of tuples describing constructor arguments.
+    Entries are ``(arg_name, kind[, key[, types]])`` where ``kind`` is
+    ``'value'`` for plain values, ``'object'`` to look up a scene object by
+    index and ``'variable'`` for variables. ``key`` is the dictionary key when
+    loading, defaulting to ``arg_name``. ``types`` optionally lists allowed
+    object types when ``kind`` is ``'object'``.
     """
 
     def decorator(cls):
@@ -33,8 +34,12 @@ def register_condition(name: str, params: list[tuple[str, str, str | None]] | No
     return decorator
 
 
-def register_action(name: str, params: list[tuple[str, str, str | None]] | None = None):
-    """Decorator to register an Action subclass with optional metadata."""
+def register_action(name: str, params: list[tuple] | None = None):
+    """Decorator to register an Action subclass with optional metadata.
+
+    ``params`` follows the same format as :func:`register_condition` and may
+    include a list of allowed object types for ``'object'`` parameters.
+    """
 
     def decorator(cls):
         ACTION_REGISTRY[name] = cls
@@ -49,7 +54,7 @@ def get_registered_conditions() -> list[str]:
     return list(CONDITION_REGISTRY.keys())
 
 
-def get_condition_params(name: str) -> list[tuple[str, str, str | None]]:
+def get_condition_params(name: str) -> list[tuple]:
     """Return parameter metadata for ``name``."""
     return CONDITION_META.get(name, [])
 
@@ -59,7 +64,7 @@ def get_registered_actions() -> list[str]:
     return list(ACTION_REGISTRY.keys())
 
 
-def get_action_params(name: str) -> list[tuple[str, str, str | None]]:
+def get_action_params(name: str) -> list[tuple]:
     """Return parameter metadata for ``name``."""
     return ACTION_META.get(name, [])
 
@@ -118,13 +123,23 @@ def condition_from_dict(data, objects, variables):
         logger.warning('Unknown condition type %s', typ)
         return None
     params = {}
-    for arg, kind, key in CONDITION_META.get(typ, []):
-        dict_key = key or arg
-        val = data.get(dict_key)
+    for entry in CONDITION_META.get(typ, []):
+        arg = entry[0]
+        kind = entry[1] if len(entry) > 1 else 'value'
+        key = entry[2] if len(entry) > 2 else arg
+        allowed = entry[3] if len(entry) > 3 else None
+        val = data.get(key)
         if kind == 'object':
             if val is None or val < 0 or val >= len(objects):
                 return None
-            params[arg] = objects[val]
+            obj = objects[val]
+            if allowed:
+                from ..core.objects import get_object_type
+                typ_name = get_object_type(obj)
+                if typ_name not in allowed:
+                    logger.warning('Condition %s requires %s for %s', typ, allowed, arg)
+                    return None
+            params[arg] = obj
         elif kind == 'variable':
             params[arg] = variables.get(val)
         else:
@@ -144,13 +159,23 @@ def action_from_dict(data, objects):
         logger.warning('Unknown action type %s', typ)
         return None
     params = {}
-    for arg, kind, key in ACTION_META.get(typ, []):
-        dict_key = key or arg
-        val = data.get(dict_key)
+    for entry in ACTION_META.get(typ, []):
+        arg = entry[0]
+        kind = entry[1] if len(entry) > 1 else 'value'
+        key = entry[2] if len(entry) > 2 else arg
+        allowed = entry[3] if len(entry) > 3 else None
+        val = data.get(key)
         if kind == 'object':
             if val is None or val < 0 or val >= len(objects):
                 return None
-            params[arg] = objects[val]
+            obj = objects[val]
+            if allowed:
+                from ..core.objects import get_object_type
+                typ_name = get_object_type(obj)
+                if typ_name not in allowed:
+                    logger.warning('Action %s requires %s for %s', typ, allowed, arg)
+                    return None
+            params[arg] = obj
         else:
             params[arg] = val
     try:

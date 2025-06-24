@@ -206,7 +206,8 @@ Set the environment variable `SAGE_LOG_LEVEL` to `DEBUG`, `INFO`, `WARNING` or
 `ERROR` to control how much detail is recorded. Unknown objects, conditions and
 actions generate warnings so issues show up in the log instead of failing silently.
 Events can combine many more conditions and actions such as
-`KeyReleased`, `MouseButton`, `InputState`, `PlaySound` and `Spawn`. The *Logic* tab lists
+`KeyReleased`, `MouseButton`, `InputState`, `PlaySound`, `Spawn`,
+`ZoomAbove` and `SetZoom`. The *Logic* tab lists
 each event with its conditions on the left and actions on the right. When adding
 an event you choose keys from a drop‑down list and only the relevant parameters
 for the selected action are shown so it is quick to create complex behavior.
@@ -237,7 +238,10 @@ can be added without modifying the engine. `register_condition` and
 `register_action` accept a small metadata table describing the constructor
 arguments. This allows `condition_from_dict` and `action_from_dict` to
 instantiate new blocks automatically, making the system easily extensible and
-suitable for editor integration.
+suitable for editor integration. Metadata tuples may also list allowed object
+types for parameters that reference a scene object. For example
+`('camera', 'object', 'target', ['camera'])` restricts the parameter to Camera
+objects while omitting the list accepts any object.
 
 Scene objects use a similar registry. The ``register_object`` decorator
 associates each object type with a list of constructor parameters. Functions

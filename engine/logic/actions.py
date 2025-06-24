@@ -146,4 +146,19 @@ class ModifyVariable(Action):
         except Exception:
             logger.warning('Failed to modify variable %s', self.name)
 
-__all__ = ['Move','SetPosition','Destroy','Print','PlaySound','Spawn','SetVariable','ModifyVariable']
+
+@register_action('SetZoom', [
+    ('camera', 'object', 'target', ['camera']),
+    ('zoom', 'value', None),
+])
+class SetZoom(Action):
+    """Set the zoom level of a camera object."""
+
+    def __init__(self, camera, zoom):
+        self.camera = camera
+        self.zoom = zoom
+
+    def execute(self, engine, scene, dt):
+        self.camera.zoom = self.zoom
+
+__all__ = ['Move','SetPosition','Destroy','Print','PlaySound','Spawn','SetVariable','ModifyVariable','SetZoom']

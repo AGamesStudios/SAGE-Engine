@@ -149,8 +149,23 @@ class VariableCompare(Condition):
             pass
         return False
 
+
+@register_condition('ZoomAbove', [
+    ('camera', 'object', 'target', ['camera']),
+    ('value', 'value', None),
+])
+class ZoomAbove(Condition):
+    """True when the camera zoom is greater than ``value``."""
+
+    def __init__(self, camera, value):
+        self.camera = camera
+        self.value = value
+
+    def check(self, engine, scene, dt):
+        return self.camera.zoom > self.value
+
 __all__ = [
     'KeyPressed', 'KeyReleased', 'MouseButton', 'InputState',
     'Collision', 'AfterTime', 'OnStart', 'EveryFrame',
-    'VariableCompare'
+    'VariableCompare', 'ZoomAbove'
 ]
