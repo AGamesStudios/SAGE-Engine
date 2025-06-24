@@ -31,8 +31,9 @@ handle for scaling and a small crosshair above for rotation so objects are easy
 to manipulate. The gizmo and handles always appear above other sprites so they
 remain visible. Projects are saved in a single `.sageproject` file
 All objects are listed in a dock on the right. Selecting one shows a **Transform**
-panel with X, Y, Z, scale and rotation fields so you can tweak values precisely.
-that stores the entire scene including object positions, events and variables.
+panel with X, Y, Z, separate Scale X/Y and Rotation fields. A *Link XY* checkbox
+lets you keep both scales in sync. The project file stores the entire scene
+including object positions, events and variables.
 Use **File → New Project** to generate a folder for your game. The dialog asks
 for a project name and a location and then creates the folder with a
 `.sageproject` file. Each new object receives a generic name like `New Object (1)` so
@@ -67,6 +68,7 @@ Any errors when creating conditions, actions, or variables are caught and
 printed to the console instead of closing the editor.
 If something goes wrong during gameplay, the console shows the full
 Python traceback so you can identify exactly where the problem occurred.
+Use the **Clear Log** toolbar button to empty the console at any time.
 
 ### Localization
 

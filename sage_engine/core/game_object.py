@@ -18,11 +18,20 @@ class GameObject:
     y: float = 0
     z: float = 0
     name: str | None = None
-    scale: float = 1.0
+    scale_x: float = 1.0
+    scale_y: float = 1.0
     angle: float = 0.0
     color: tuple[int, int, int, int] | None = None
     events: list = field(default_factory=list)
     sprite: pygame.Surface | None = field(init=False, default=None)
+
+    @property
+    def scale(self) -> float:
+        return (self.scale_x + self.scale_y) / 2
+
+    @scale.setter
+    def scale(self, value: float):
+        self.scale_x = self.scale_y = value
 
     def __post_init__(self):
         if self.name is None:
@@ -53,10 +62,18 @@ class GameObject:
 
     def draw(self, surface: pygame.Surface):
         self._ensure_sprite()
-        img = pygame.transform.rotozoom(self.sprite, -self.angle, self.scale)
+        img = pygame.transform.rotozoom(self.sprite, -self.angle, 1.0)
+        if self.scale_x != 1.0 or self.scale_y != 1.0:
+            w = max(1, int(img.get_width() * self.scale_x))
+            h = max(1, int(img.get_height() * self.scale_y))
+            img = pygame.transform.scale(img, (w, h))
         surface.blit(img, (self.x, self.y))
 
     def rect(self) -> pygame.Rect:
         self._ensure_sprite()
-        img = pygame.transform.rotozoom(self.sprite, -self.angle, self.scale)
+        img = pygame.transform.rotozoom(self.sprite, -self.angle, 1.0)
+        if self.scale_x != 1.0 or self.scale_y != 1.0:
+            w = max(1, int(img.get_width() * self.scale_x))
+            h = max(1, int(img.get_height() * self.scale_y))
+            img = pygame.transform.scale(img, (w, h))
         return img.get_rect(topleft=(self.x, self.y))

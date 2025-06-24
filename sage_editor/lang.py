@@ -95,6 +95,9 @@ LANGUAGES = {
         , 'grid_color': 'Grid Color'
         , 'objects': 'Objects'
         , 'transform': 'Transform'
+        , 'scale_x': 'Scale X:'
+        , 'scale_y': 'Scale Y:'
+        , 'link_scale': 'Link XY'
         , 'rotation': 'Rotation:'
         , 'scale_label': 'Scale:'
         , 'z': 'z:'
@@ -104,6 +107,7 @@ LANGUAGES = {
         , 'color': 'Color:'
         , 'unsaved_changes': 'Unsaved Changes'
         , 'save_before_exit': 'Save changes before exiting?'
+        , 'clear_log': 'Clear Log'
     },
     'Русский': {
         'file': 'Файл',
@@ -200,6 +204,9 @@ LANGUAGES = {
         , 'grid_color': 'Цвет сетки'
         , 'objects': 'Объекты'
         , 'transform': 'Трансформ'
+        , 'scale_x': 'Масштаб X:'
+        , 'scale_y': 'Масштаб Y:'
+        , 'link_scale': 'Связать XY'
         , 'rotation': 'Поворот:'
         , 'scale_label': 'Масштаб:'
         , 'z': 'z:'
@@ -207,6 +214,7 @@ LANGUAGES = {
         , 'cut': 'Вырезать'
         , 'unsaved_changes': 'Есть несохраненные изменения'
         , 'save_before_exit': 'Сохранить перед выходом?'
+        , 'clear_log': 'Очистить лог'
     }
 }
 import locale

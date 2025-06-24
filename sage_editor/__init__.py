@@ -10,6 +10,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import QPixmap, QPen, QColor, QPalette, QFont, QAction
 from PyQt6.QtCore import QRectF, Qt, QProcess, QPointF
+from sip import isdeleted
 import traceback
 from .lang import LANGUAGES, DEFAULT_LANGUAGE
 import tempfile
@@ -86,6 +87,14 @@ class SpriteItem(QGraphicsPixmapItem):
         self.setFlag(flag_enum.ItemIsSelectable, True)
         self.setCursor(Qt.CursorShape.OpenHandCursor)
         self.index = None
+        if obj:
+            self.setPos(obj.x, obj.y)
+            self.setRotation(obj.angle)
+            self.setTransformOriginPoint(self.boundingRect().center())
+            self.setScale(1.0)
+            t = self.transform()
+            t.scale(obj.scale_x, obj.scale_y)
+            self.setTransform(t)
 
     def itemChange(self, change, value):
         from PyQt6.QtWidgets import QGraphicsItem
@@ -144,7 +153,9 @@ class _HandleItem(QGraphicsEllipseItem):
             return
         item = self.editor.items[idx][0]
         self.start_pos = event.scenePos()
-        self.start_scale = item.scale()
+        t = item.transform()
+        self.start_scale_x = t.m11()
+        self.start_scale_y = t.m22()
         self.start_angle = item.rotation()
         self.editor.view.setCursor(self.cursor())
         super().mousePressEvent(event)
@@ -156,9 +167,16 @@ class _HandleItem(QGraphicsEllipseItem):
         item, obj = self.editor.items[idx]
         if self.kind == 'scale':
             delta = event.scenePos() - self.start_pos
-            new_scale = max(0.1, self.start_scale + (delta.x() + delta.y()) / 100)
-            item.setScale(new_scale)
-            obj.scale = new_scale
+            new_scale = max(0.1, (self.start_scale_x + self.start_scale_y)/2 + (delta.x() + delta.y()) / 100)
+            if self.editor.link_scale.isChecked():
+                obj.scale_x = obj.scale_y = new_scale
+            else:
+                obj.scale_x = max(0.1, self.start_scale_x + delta.x() / 100)
+                obj.scale_y = max(0.1, self.start_scale_y + delta.y() / 100)
+            t = item.transform()
+            t.reset()
+            t.scale(obj.scale_x, obj.scale_y)
+            item.setTransform(t)
         elif self.kind == 'rotate':
             center = item.mapToScene(item.boundingRect().center())
             pos = event.scenePos() - center
@@ -854,14 +872,18 @@ class Editor(QMainWindow):
         self.x_spin = QDoubleSpinBox(); self.x_spin.setRange(-10000, 10000)
         self.y_spin = QDoubleSpinBox(); self.y_spin.setRange(-10000, 10000)
         self.z_spin = QDoubleSpinBox(); self.z_spin.setRange(-1000, 1000)
-        self.scale_spin = QDoubleSpinBox(); self.scale_spin.setRange(0.01, 100)
+        self.scale_x_spin = QDoubleSpinBox(); self.scale_x_spin.setRange(0.01, 100)
+        self.scale_y_spin = QDoubleSpinBox(); self.scale_y_spin.setRange(0.01, 100)
+        self.link_scale = QCheckBox(self.t('link_scale'))
         self.angle_spin = QDoubleSpinBox(); self.angle_spin.setRange(-360, 360)
-        for spin in (self.x_spin, self.y_spin, self.z_spin, self.scale_spin, self.angle_spin):
+        for spin in (self.x_spin, self.y_spin, self.z_spin, self.scale_x_spin, self.scale_y_spin, self.angle_spin):
             spin.valueChanged.connect(self._apply_transform)
         form.addRow(self.t('x'), self.x_spin)
         form.addRow(self.t('y'), self.y_spin)
         form.addRow(self.t('z'), self.z_spin)
-        form.addRow(self.t('scale_label'), self.scale_spin)
+        form.addRow(self.t('scale_x'), self.scale_x_spin)
+        form.addRow(self.t('scale_y'), self.scale_y_spin)
+        form.addRow("", self.link_scale)
         form.addRow(self.t('rotation'), self.angle_spin)
         obj_layout.addWidget(self.transform_group)
         obj_dock = QDockWidget(self.t('objects'), self)
@@ -958,9 +980,10 @@ class Editor(QMainWindow):
         self.objects_dock.setWindowTitle(self.t('objects'))
         self.transform_group.setTitle(self.t('transform'))
         self.x_spin.setPrefix(''); self.y_spin.setPrefix(''); self.z_spin.setPrefix('')
-        self.scale_spin.setPrefix(''); self.angle_spin.setPrefix('')
+        self.scale_x_spin.setPrefix(''); self.scale_y_spin.setPrefix(''); self.angle_spin.setPrefix('')
         self.run_btn.setText(self.t('run'))
         self.add_obj_btn.setText(self.t('add_object'))
+        self.clear_log_act.setText(self.t('clear_log'))
         self.grid_act.setText(self.t('show_grid'))
         self.snap_act.setText(self.t('snap_to_grid'))
         self.grid_spin.setPrefix('')
@@ -1073,6 +1096,8 @@ class Editor(QMainWindow):
         spacer = QWidget()
         spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         toolbar.addWidget(spacer)
+        self.clear_log_act = toolbar.addAction(self.t('clear_log'))
+        self.clear_log_act.triggered.connect(self.console.clear)
         self.lang_box = QComboBox()
         self.lang_box.addItems(list(LANGUAGES.keys()))
         self.lang_box.setCurrentText(self.lang)
@@ -1290,14 +1315,13 @@ class Editor(QMainWindow):
             if pix.isNull():
                 raise ValueError('failed to load image')
             item = SpriteItem(pix, self, None)
-            item.setScale(1.0)
-            item.setRotation(0.0)
             item.setZValue(0)
             self.g_scene.addItem(item)
-            obj = GameObject(path)
+            obj = GameObject(path, 0, 0, 0, None, 1.0, 1.0, 0.0, None)
             obj.name = self.t('new_object')
             self.scene.add_object(obj)
             item.obj = obj
+            t = item.transform(); t.reset(); t.scale(obj.scale_x, obj.scale_y); item.setTransform(t); item.setRotation(obj.angle)
             self.items.append((item, obj))
             item.index = len(self.items) - 1
             self.object_combo.addItem(obj.name, item.index)
@@ -1318,15 +1342,14 @@ class Editor(QMainWindow):
             pix = QPixmap(32, 32)
             pix.fill(QColor(255, 255, 255, 255))
             item = SpriteItem(pix, self, None)
-            item.setScale(1.0)
-            item.setRotation(0.0)
             item.setZValue(0)
             self.g_scene.addItem(item)
-            obj = GameObject('', color=(255, 255, 255, 255))
+            obj = GameObject('', 0, 0, 0, None, 1.0, 1.0, 0.0, (255, 255, 255, 255))
             obj.name = self.t('new_object')
             self.scene.add_object(obj)
             item.obj = obj
             item.setPos(0, 0)
+            t = item.transform(); t.reset(); t.scale(obj.scale_x, obj.scale_y); item.setTransform(t); item.setRotation(obj.angle)
             self.items.append((item, obj))
             item.index = len(self.items) - 1
             self.object_combo.addItem(obj.name, item.index)
@@ -1491,6 +1514,8 @@ class Editor(QMainWindow):
 
     def _on_selection_changed(self):
         """Sync the object combo with the selected graphics item."""
+        if isdeleted(self.g_scene):
+            return
         selected = [it for it in self.g_scene.selectedItems() if isinstance(it, SpriteItem)]
         if not selected:
             return
@@ -1593,7 +1618,9 @@ class Editor(QMainWindow):
         self.x_spin.blockSignals(True); self.x_spin.setValue(obj.x); self.x_spin.blockSignals(False)
         self.y_spin.blockSignals(True); self.y_spin.setValue(obj.y); self.y_spin.blockSignals(False)
         self.z_spin.blockSignals(True); self.z_spin.setValue(getattr(obj, 'z', 0)); self.z_spin.blockSignals(False)
-        self.scale_spin.blockSignals(True); self.scale_spin.setValue(obj.scale); self.scale_spin.blockSignals(False)
+        self.scale_x_spin.blockSignals(True); self.scale_x_spin.setValue(obj.scale_x); self.scale_x_spin.blockSignals(False)
+        self.scale_y_spin.blockSignals(True); self.scale_y_spin.setValue(obj.scale_y); self.scale_y_spin.blockSignals(False)
+        self.link_scale.blockSignals(True); self.link_scale.setChecked(obj.scale_x == obj.scale_y); self.link_scale.blockSignals(False)
         self.angle_spin.blockSignals(True); self.angle_spin.setValue(obj.angle); self.angle_spin.blockSignals(False)
 
     def _apply_transform(self):
@@ -1602,10 +1629,19 @@ class Editor(QMainWindow):
             return
         item, obj = self.items[idx]
         obj.x = self.x_spin.value(); obj.y = self.y_spin.value(); obj.z = self.z_spin.value()
-        obj.scale = self.scale_spin.value(); obj.angle = self.angle_spin.value()
+        obj.scale_x = self.scale_x_spin.value();
+        if self.link_scale.isChecked():
+            obj.scale_y = obj.scale_x
+            self.scale_y_spin.blockSignals(True); self.scale_y_spin.setValue(obj.scale_y); self.scale_y_spin.blockSignals(False)
+        else:
+            obj.scale_y = self.scale_y_spin.value()
+        obj.angle = self.angle_spin.value()
         item.setPos(obj.x, obj.y)
         item.setZValue(obj.z)
-        item.setScale(obj.scale)
+        t = item.transform()
+        t.reset()
+        t.scale(obj.scale_x, obj.scale_y)
+        item.setTransform(t)
         item.setRotation(obj.angle)
         self._mark_dirty()
         self._update_gizmo()
@@ -1638,6 +1674,8 @@ class Editor(QMainWindow):
             'y': obj.y,
             'z': getattr(obj, 'z', 0),
             'name': obj.name,
+            'scale_x': obj.scale_x,
+            'scale_y': obj.scale_y,
             'scale': obj.scale,
             'angle': obj.angle,
             'color': list(obj.color) if obj.color else None,
@@ -1656,18 +1694,17 @@ class Editor(QMainWindow):
             else:
                 pix = QPixmap(32,32); pix.fill(QColor(*(data['color'] or (255,255,255,255))))
             item = SpriteItem(pix, self, None)
-            item.setScale(data.get('scale',1.0))
-            item.setRotation(data.get('angle',0.0))
             item.setZValue(data.get('z',0))
             item.setPos(data.get('x',0), data.get('y',0))
             self.g_scene.addItem(item)
             obj = GameObject(
                 data['image'], data.get('x',0), data.get('y',0), data.get('z',0), data.get('name'),
-                data.get('scale',1.0), data.get('angle',0.0), tuple(data['color']) if data['color'] else None
+                data.get('scale_x', data.get('scale',1.0)), data.get('scale_y', data.get('scale',1.0)), data.get('angle',0.0), tuple(data['color']) if data['color'] else None
             )
             obj.events = list(data.get('events', []))
             self.scene.add_object(obj)
             item.obj = obj
+            t = item.transform(); t.reset(); t.scale(obj.scale_x, obj.scale_y); item.setTransform(t); item.setRotation(obj.angle)
             self.items.append((item,obj))
             item.index = len(self.items)-1
             self.object_combo.addItem(obj.name, item.index)
@@ -1806,10 +1843,9 @@ class Editor(QMainWindow):
                     pix = QPixmap(32, 32)
                     pix.fill(QColor(*obj.color))
                 item = SpriteItem(pix, self, obj)
-                item.setScale(obj.scale)
-                item.setRotation(obj.angle)
                 item.setPos(obj.x, obj.y)
                 item.setZValue(obj.z)
+                t = item.transform(); t.reset(); t.scale(obj.scale_x, obj.scale_y); item.setTransform(t); item.setRotation(obj.angle)
                 self.g_scene.addItem(item)
                 self.items.append((item, obj))
                 item.index = len(self.items)-1
@@ -1843,6 +1879,11 @@ class Editor(QMainWindow):
             elif res == QMessageBox.StandardButton.Cancel:
                 event.ignore()
                 return
+        try:
+            self.g_scene.selectionChanged.disconnect(self._on_selection_changed)
+            self.g_scene.changed.disconnect(self._update_gizmo)
+        except Exception:
+            pass
         self._cleanup_process()
         event.accept()
 

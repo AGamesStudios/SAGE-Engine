@@ -48,13 +48,21 @@ class Scene:
         scene = cls()
         scene.variables = data.get("variables", {})
         for entry in data.get("objects", []):
+            scale_x = entry.get("scale_x")
+            scale_y = entry.get("scale_y")
+            scale = entry.get("scale", 1.0)
+            if scale_x is None:
+                scale_x = scale
+            if scale_y is None:
+                scale_y = scale
             obj = GameObject(
                 entry.get("image", ""),
                 entry.get("x", 0),
                 entry.get("y", 0),
                 entry.get("z", 0),
                 entry.get("name"),
-                entry.get("scale", 1.0),
+                scale_x,
+                scale_y,
                 entry.get("angle", 0.0),
                 tuple(entry.get("color", [255, 255, 255, 255])) if entry.get("color") is not None else None,
             )
@@ -79,6 +87,8 @@ class Scene:
                     "y": o.y,
                     "z": getattr(o, "z", 0),
                     "name": o.name,
+                    "scale_x": o.scale_x,
+                    "scale_y": o.scale_y,
                     "scale": o.scale,
                     "angle": o.angle,
                     "color": list(o.color) if o.color is not None else None,
