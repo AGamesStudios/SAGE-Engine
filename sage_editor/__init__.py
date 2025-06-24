@@ -104,20 +104,53 @@ KEY_NAME_LOOKUP = {code: name for name, code in KEY_OPTIONS}
 MOUSE_NAME_LOOKUP = {code: name for name, code in MOUSE_OPTIONS}
 
 
-class GraphicsView(QGraphicsView):
+class GLViewport:
+    """Mixin providing an OpenGL overlay for gizmos."""
+
+    def _init_gl_viewport(self):
+        try:
+            from PyQt6.QtOpenGLWidgets import QOpenGLWidget
+        except Exception:  # pragma: no cover - Qt < 6.5
+            from PyQt6.QtOpenGL import QOpenGLWidget  # type: ignore
+
+        class _Overlay(QOpenGLWidget):
+            def __init__(self, view):
+                super().__init__(view)
+                self.view = view
+
+            def paintGL(self):
+                from OpenGL import GL
+                GL.glViewport(0, 0, self.width(), self.height())
+                GL.glMatrixMode(GL.GL_PROJECTION)
+                GL.glLoadIdentity()
+                GL.glOrtho(0, self.width(), self.height(), 0, -1, 1)
+                GL.glMatrixMode(GL.GL_MODELVIEW)
+                GL.glLoadIdentity()
+                GL.glClear(GL.GL_DEPTH_BUFFER_BIT)
+                lines = getattr(self.view, "gizmo_lines", [])
+                if not lines:
+                    return
+                GL.glColor3f(1.0, 1.0, 0.0)
+                GL.glBegin(GL.GL_LINES)
+                for x1, y1, x2, y2 in lines:
+                    GL.glVertex2f(x1, y1)
+                    GL.glVertex2f(x2, y2)
+                GL.glEnd()
+
+        overlay = _Overlay(self)
+        self.setViewport(overlay)
+        self._overlay = overlay
+
+
+class GraphicsView(QGraphicsView, GLViewport):
     """View with Ctrl+wheel zoom using an OpenGL viewport."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        # Use QOpenGLWidget for smoother rendering and to keep the viewport in
-        # sync with the OpenGL runtime
-        try:
-            from PyQt6.QtOpenGLWidgets import QOpenGLWidget
-        except Exception:
-            # Qt < 6.5 may provide QOpenGLWidget in QtOpenGL
-            from PyQt6.QtOpenGL import QOpenGLWidget  # type: ignore
-        self.setViewport(QOpenGLWidget())
+        self._init_gl_viewport()
         self._zoom = 1.0
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -1046,6 +1079,7 @@ class Editor(QMainWindow):
 
         # viewport tab
         self.view = GraphicsView()
+        self.view.gizmo_lines = []
         self.g_scene = QGraphicsScene()
         # large scene rectangle to simulate an "infinite" workspace
         self.g_scene.setSceneRect(QRectF(-10000, -10000, 20000, 20000))
@@ -1914,12 +1948,18 @@ class Editor(QMainWindow):
             self.gizmo.hide()
             self.scale_handle.hide()
             self.rotate_handle.hide()
+            if hasattr(self.view, 'gizmo_lines'):
+                self.view.gizmo_lines = []
+                self.view.viewport().update()
             return
         idx = self.object_combo.currentData()
         if idx is None or idx < 0 or idx >= len(self.items):
             self.gizmo.hide()
             self.scale_handle.hide()
             self.rotate_handle.hide()
+            if hasattr(self.view, 'gizmo_lines'):
+                self.view.gizmo_lines = []
+                self.view.viewport().update()
             self._update_transform_panel()
             return
         item = self.items[idx][0]
@@ -1947,6 +1987,20 @@ class Editor(QMainWindow):
         self.scale_handle.show()
         self.rotate_handle.setZValue(z + 0.02)
         self.rotate_handle.show()
+        # update OpenGL gizmo overlay
+        if hasattr(self.view, 'mapFromScene'):
+            m = self.view.mapFromScene
+            p1 = m(rect.topLeft())
+            p2 = m(rect.topRight())
+            p3 = m(rect.bottomRight())
+            p4 = m(rect.bottomLeft())
+            self.view.gizmo_lines = [
+                (p1.x(), p1.y(), p2.x(), p2.y()),
+                (p2.x(), p2.y(), p3.x(), p3.y()),
+                (p3.x(), p3.y(), p4.x(), p4.y()),
+                (p4.x(), p4.y(), p1.x(), p1.y()),
+            ]
+            self.view.viewport().update()
         self._update_transform_panel()
 
     def _on_selection_changed(self):
