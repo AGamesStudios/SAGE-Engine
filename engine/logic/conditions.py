@@ -171,7 +171,11 @@ class ZoomAbove(Condition):
         self.value = value
 
     def check(self, engine, scene, dt):
-        return self.camera.zoom > resolve_value(self.value, engine)
+        val = resolve_value(self.value, engine)
+        try:
+            return self.camera.zoom > float(val)
+        except Exception:
+            return False
 
 __all__ = [
     'KeyPressed', 'KeyReleased', 'MouseButton', 'InputState',
