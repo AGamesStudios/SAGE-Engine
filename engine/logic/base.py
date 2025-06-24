@@ -192,9 +192,20 @@ def condition_from_dict(data, objects, variables):
         val = data.get(key)
         if kind == 'object':
             if val is None or val < 0 or val >= len(objects):
-                logger.warning('Condition %s has invalid object index for %s', typ, arg)
-                return None
-            obj = objects[val]
+                # try to find a default object matching the allowed type
+                obj = None
+                if allowed:
+                    from ..core.objects import get_object_type
+                    for candidate in objects:
+                        typ_name = get_object_type(candidate)
+                        if typ_name in allowed:
+                            obj = candidate
+                            break
+                if obj is None:
+                    logger.warning('Condition %s has invalid object index for %s', typ, arg)
+                    return None
+            else:
+                obj = objects[val]
             if allowed:
                 from ..core.objects import get_object_type
                 typ_name = get_object_type(obj)
@@ -231,9 +242,19 @@ def action_from_dict(data, objects):
         val = data.get(key)
         if kind == 'object':
             if val is None or val < 0 or val >= len(objects):
-                logger.warning('Action %s has invalid object index for %s', typ, arg)
-                return None
-            obj = objects[val]
+                obj = None
+                if allowed:
+                    from ..core.objects import get_object_type
+                    for candidate in objects:
+                        typ_name = get_object_type(candidate)
+                        if typ_name in allowed:
+                            obj = candidate
+                            break
+                if obj is None:
+                    logger.warning('Action %s has invalid object index for %s', typ, arg)
+                    return None
+            else:
+                obj = objects[val]
             if allowed:
                 from ..core.objects import get_object_type
                 typ_name = get_object_type(obj)
