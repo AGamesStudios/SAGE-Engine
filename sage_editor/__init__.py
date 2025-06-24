@@ -129,7 +129,6 @@ class _HandleItem(QGraphicsEllipseItem):
             from PyQt6.QtWidgets import QGraphicsItem
             flag_enum = QGraphicsItem.GraphicsItemFlag
         self.setFlag(flag_enum.ItemIsMovable, True)
-        self.setZValue(10001)
         if self.kind == 'scale':
             self.setCursor(Qt.CursorShape.SizeFDiagCursor)
         else:
@@ -828,7 +827,6 @@ class Editor(QMainWindow):
         self._create_grid()
         # gizmo rectangle with scale and rotate handles
         self.gizmo = self.g_scene.addRect(QRectF(), QPen(QColor('yellow')))
-        self.gizmo.setZValue(10000)
         self.gizmo.hide()
         self.scale_handle = _HandleItem(self, 'scale')
         self.g_scene.addItem(self.scale_handle)
@@ -914,9 +912,8 @@ class Editor(QMainWindow):
         self.console_dock = dock
 
         # canvas rectangle representing the game window
-        self.canvas = self.g_scene.addRect(
-            QRectF(0, 0, self.window_width, self.window_height), QPen(QColor('red'))
-        )
+        self.canvas = None
+        self._update_canvas()
         self.scene = Scene()
         self.project_path: str | None = None
         self.items = []
@@ -1205,7 +1202,7 @@ class Editor(QMainWindow):
         if dlg.exec() == QDialog.DialogCode.Accepted:
             self.window_width = w_spin.value()
             self.window_height = h_spin.value()
-            self.canvas.setRect(0, 0, self.window_width, self.window_height)
+            self._update_canvas()
 
     def run_game(self):
         if not self._check_project():
@@ -1280,6 +1277,7 @@ class Editor(QMainWindow):
             item = SpriteItem(pix, self, None)
             item.setScale(1.0)
             item.setRotation(0.0)
+            item.setZValue(0)
             self.g_scene.addItem(item)
             obj = GameObject(path)
             obj.name = self.t('new_object')
@@ -1306,6 +1304,7 @@ class Editor(QMainWindow):
             item = SpriteItem(pix, self, None)
             item.setScale(1.0)
             item.setRotation(0.0)
+            item.setZValue(0)
             self.g_scene.addItem(item)
             obj = GameObject('', color=(255, 255, 255, 255))
             obj.name = self.t('new_object')
@@ -1459,11 +1458,15 @@ class Editor(QMainWindow):
         # use the item's scene bounding box so rotation and scale are accounted for
         rect = item.sceneBoundingRect()
         self.gizmo.setRect(rect)
+        z = item.zValue()
+        self.gizmo.setZValue(z + 0.01)
         self.gizmo.show()
         # place handles at the bottom-right corner and slightly above the top
         self.scale_handle.setPos(rect.bottomRight())
+        self.scale_handle.setZValue(z + 0.02)
         self.scale_handle.show()
         self.rotate_handle.setPos(rect.topLeft() + QPointF(0, -20))
+        self.rotate_handle.setZValue(z + 0.02)
         self.rotate_handle.show()
         self._update_transform_panel()
 
@@ -1534,6 +1537,15 @@ class Editor(QMainWindow):
             line.setZValue(-0.5)
         for line in self.grid_lines:
             line.setVisible(getattr(self, 'grid_act', None) is None or self.grid_act.isChecked())
+
+    def _update_canvas(self):
+        """Ensure the red canvas rectangle matches the window size."""
+        rect = QRectF(0, 0, self.window_width, self.window_height)
+        if getattr(self, 'canvas', None) and self.canvas.scene() is self.g_scene:
+            self.canvas.setRect(rect)
+        else:
+            pen = QPen(QColor('red'))
+            self.canvas = self.g_scene.addRect(rect, pen)
 
     def toggle_grid(self, checked: bool):
         for line in self.grid_lines:
@@ -1758,9 +1770,7 @@ class Editor(QMainWindow):
         self.object_combo.clear()
         self.object_list.clear()
         # redraw canvas and grid after clearing the scene
-        self.canvas = self.g_scene.addRect(
-            QRectF(0, 0, self.window_width, self.window_height), QPen(QColor('red'))
-        )
+        self._update_canvas()
         self._create_grid()
         for obj in self.scene.objects:
             try:
@@ -1775,6 +1785,7 @@ class Editor(QMainWindow):
                 item.setScale(obj.scale)
                 item.setRotation(obj.angle)
                 item.setPos(obj.x, obj.y)
+                item.setZValue(obj.z)
                 self.g_scene.addItem(item)
                 self.items.append((item, obj))
                 item.index = len(self.items)-1
