@@ -143,7 +143,9 @@ more languages only requires editing this file. Translations cover file dialogs,
 logic windows and event lists so the whole interface is localized.
 Old projects saved with translated condition or action names still load
 correctly because the engine maps them back to their English identifiers at
-runtime.
+runtime.  The mapping comes from simple dictionaries included with both the
+editor and the engine (`sage_editor/lang.py` and `engine/lang.py`), so even
+projects opened without the editor present continue to load.
 
 The condition and action lists offer context menus with **Edit**, **Copy**,
 **Paste**, and **Delete** options. Right-click an empty area to add a new block
