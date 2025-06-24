@@ -117,30 +117,7 @@ class Scene:
     def build_event_system(self) -> EventSystem:
         es = EventSystem(variables=self.variables)
         for obj in self.objects:
-            events = getattr(obj, "events", [])
-            if not isinstance(events, list):
-                continue
-            for evt in events:
-                if not isinstance(evt, dict):
-                    continue
-                conditions = []
-                for cond in evt.get("conditions", []):
-                    if not isinstance(cond, dict):
-                        continue
-                    cobj = condition_from_dict(cond, self.objects, self.variables)
-                    if cobj is not None:
-                        conditions.append(cobj)
-                    else:
-                        logger.warning('Skipped invalid condition %s', cond)
-
-                actions = []
-                for act in evt.get("actions", []):
-                    if not isinstance(act, dict):
-                        continue
-                    aobj = action_from_dict(act, self.objects)
-                    if aobj is not None:
-                        actions.append(aobj)
-                    else:
-                        logger.warning('Skipped invalid action %s', act)
-                es.add_event(Event(conditions, actions, evt.get("once", False)))
+            if hasattr(obj, "build_event_system"):
+                obj_es = obj.build_event_system(self.objects, self.variables)
+                es.events.extend(obj_es.events)
         return es

@@ -2,9 +2,9 @@
 from .base import Condition, register_condition, resolve_value
 
 @register_condition('InputState', [
-    ('device', 'value', None),
-    ('code', 'value', None),
-    ('state', 'value', None),
+    ('device', 'value'),
+    ('code', 'value'),
+    ('state', 'value'),
 ])
 class InputState(Condition):
     """Check a key or mouse button with optional device selection."""
@@ -29,8 +29,8 @@ class InputState(Condition):
 
 
 @register_condition('KeyPressed', [
-    ('key', 'value', None),
-    ('device', 'value', None),
+    ('key', 'value'),
+    ('device', 'value'),
 ])
 class KeyPressed(InputState):
     """True while the selected key or button is held down."""
@@ -56,9 +56,9 @@ class Collision(Condition):
         )
 
 @register_condition('AfterTime', [
-    ('seconds', 'value', None),
-    ('minutes', 'value', None),
-    ('hours', 'value', None),
+    ('seconds', 'value'),
+    ('minutes', 'value'),
+    ('hours', 'value'),
 ])
 class AfterTime(Condition):
     """True once after the specified time has elapsed."""
@@ -81,8 +81,8 @@ class AfterTime(Condition):
         return False
 
 @register_condition('KeyReleased', [
-    ('key', 'value', None),
-    ('device', 'value', None),
+    ('key', 'value'),
+    ('device', 'value'),
 ])
 class KeyReleased(InputState):
     """True once when the key transitions from pressed to released."""
@@ -91,8 +91,8 @@ class KeyReleased(InputState):
         super().__init__(device, key, 'released')
 
 @register_condition('MouseButton', [
-    ('button', 'value', None),
-    ('state', 'value', None),
+    ('button', 'value'),
+    ('state', 'value'),
 ])
 class MouseButton(InputState):
     """Check mouse button state ('down' or 'up')."""
@@ -120,9 +120,9 @@ class EveryFrame(Condition):
         return True
 
 @register_condition('VariableCompare', [
-    ('name', 'value', None),
-    ('op', 'value', None),
-    ('value', 'value', None),
+    ('name', 'value'),
+    ('op', 'value'),
+    ('value', 'value'),
 ])
 class VariableCompare(Condition):
     """Compare a variable to a value using an operator."""
@@ -161,7 +161,7 @@ class VariableCompare(Condition):
 
 @register_condition('ZoomAbove', [
     ('camera', 'object', 'target', ['camera']),
-    ('value', 'value', None),
+    ('value', 'value'),
 ])
 class ZoomAbove(Condition):
     """True when the camera zoom is greater than ``value``."""

@@ -3,8 +3,8 @@ from .base import Action, register_action, resolve_value
 from ..log import logger
 @register_action('Move', [
     ('obj', 'object', 'target'),
-    ('dx', 'value', None),
-    ('dy', 'value', None),
+    ('dx', 'value'),
+    ('dy', 'value'),
 ])
 class Move(Action):
     def __init__(self, obj, dx, dy):
@@ -18,8 +18,8 @@ class Move(Action):
 
 @register_action('SetPosition', [
     ('obj', 'object', 'target'),
-    ('x', 'value', None),
-    ('y', 'value', None),
+    ('x', 'value'),
+    ('y', 'value'),
 ])
 class SetPosition(Action):
     def __init__(self, obj, x, y):
@@ -40,7 +40,7 @@ class Destroy(Action):
         if hasattr(scene, 'remove_object'):
             scene.remove_object(self.obj)
 
-@register_action('Print', [('text', 'value', None)])
+@register_action('Print', [('text', 'value')])
 class Print(Action):
     def __init__(self, text):
         self.text = text
@@ -57,7 +57,7 @@ class Print(Action):
 
 _SOUND_CACHE = {}
 
-@register_action('PlaySound', [('path', 'value', None)])
+@register_action('PlaySound', [('path', 'value')])
 class PlaySound(Action):
     """Play a sound file using simpleaudio."""
 
@@ -81,9 +81,9 @@ class PlaySound(Action):
             logger.warning('Failed to play sound %s: %s', self.path, exc)
 
 @register_action('Spawn', [
-    ('image', 'value', None),
-    ('x', 'value', None),
-    ('y', 'value', None),
+    ('image', 'value'),
+    ('x', 'value'),
+    ('y', 'value'),
 ])
 class Spawn(Action):
     """Spawn a new GameObject into the scene."""
@@ -106,8 +106,8 @@ class Spawn(Action):
             scene.add_object(obj)
 
 @register_action('SetVariable', [
-    ('name', 'value', None),
-    ('value', 'value', None),
+    ('name', 'value'),
+    ('value', 'value'),
 ])
 class SetVariable(Action):
     """Set a variable in the event system."""
@@ -119,9 +119,9 @@ class SetVariable(Action):
         engine.events.variables[self.name] = resolve_value(self.value, engine)
 
 @register_action('ModifyVariable', [
-    ('name', 'value', None),
-    ('op', 'value', None),
-    ('value', 'value', None),
+    ('name', 'value'),
+    ('op', 'value'),
+    ('value', 'value'),
 ])
 class ModifyVariable(Action):
     """Modify a numeric variable with an operation."""
@@ -154,7 +154,7 @@ class ModifyVariable(Action):
 
 @register_action('SetZoom', [
     ('camera', 'object', 'target', ['camera']),
-    ('zoom', 'value', None),
+    ('zoom', 'value'),
 ])
 class SetZoom(Action):
     """Set the zoom level of a camera object."""

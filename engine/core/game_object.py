@@ -6,6 +6,7 @@ import math
 import glm
 from PIL import Image
 from .objects import register_object
+from ..logic import EventSystem, Event, condition_from_dict, action_from_dict
 
 # cache loaded images so repeated sprites don't reload files
 _IMAGE_CACHE: dict[str, Image.Image] = {}
@@ -60,6 +61,7 @@ class GameObject:
     metadata: dict = field(default_factory=dict)
     events: list = field(default_factory=list)
     settings: dict = field(default_factory=dict)
+    event_system: EventSystem | None = field(init=False, default=None)
     rotation: tuple[float, float, float, float] = field(init=False)
     image: Image.Image | None = field(init=False, default=None)
     width: int = field(init=False, default=0)
@@ -123,3 +125,31 @@ class GameObject:
         translate = glm.translate(glm.mat4(1.0), glm.vec3(self.x, self.y, 0))
         m = translate * pivot * scale * rotate * pivot_inv
         return [m[c][r] for c in range(4) for r in range(4)]
+
+    def build_event_system(self, objects, variables) -> EventSystem:
+        """Construct an EventSystem from the object's event data."""
+        es = EventSystem(variables=variables)
+        for evt in getattr(self, "events", []):
+            if not isinstance(evt, dict):
+                continue
+            conditions = []
+            for cond in evt.get("conditions", []):
+                if not isinstance(cond, dict):
+                    continue
+                cobj = condition_from_dict(cond, objects, variables)
+                if cobj is not None:
+                    conditions.append(cobj)
+                else:
+                    logger.warning('Skipped invalid condition %s', cond)
+            actions = []
+            for act in evt.get("actions", []):
+                if not isinstance(act, dict):
+                    continue
+                aobj = action_from_dict(act, objects)
+                if aobj is not None:
+                    actions.append(aobj)
+                else:
+                    logger.warning('Skipped invalid action %s', act)
+            es.add_event(Event(conditions, actions, evt.get("once", False)))
+        self.event_system = es
+        return es
