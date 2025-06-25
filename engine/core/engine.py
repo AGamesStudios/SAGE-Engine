@@ -35,6 +35,9 @@ class Engine:
         if camera is None:
             cam = getattr(self.scene, 'get_active_camera', None)
             camera = cam() if callable(cam) else getattr(self.scene, 'camera', None)
+        if camera is not None:
+            width = camera.width
+            height = camera.height
         self.camera = camera or Camera(width / 2, height / 2, width, height)
         self.events = events if events is not None else self.scene.build_event_system()
         if renderer is None:

@@ -78,12 +78,13 @@ to manipulate. The gizmo and handles always appear above other sprites so they
 remain visible. Use the **Show Gizmo** toolbar button to hide or show them as
 needed. A cyan rectangle indicates the active camera frustum. Camera ``x`` and
 ``y`` describe its centre, so the rectangle surrounds that point. If no camera
-exists the window size is used instead. The active camera automatically
-updates its width and height to match the window whenever it is resized,
-preserving the aspect ratio. Scenes can contain multiple cameras. Select a
-camera in the object list (or use its context menu) and choose **Set Active
-Camera** to decide which one is used. When launching the engine from code use
-``scene.set_active_camera(name)``.
+exists the window size is used instead. When launching a project the engine
+creates the window using the active camera ``width`` and ``height`` so both
+match from the start. The camera continues to update its dimensions whenever
+the window is resized, preserving the aspect ratio. Scenes can contain multiple
+cameras. Select a camera in the object list (or use its context menu) and
+choose **Set Active Camera** to decide which one is used. When launching the
+engine from code use ``scene.set_active_camera(name)``.
 Camera objects now include a **Z**
 position so they can be layered with sprites. Projects are saved in a single
 `.sageproject` file
@@ -134,9 +135,11 @@ without crashes.
 Window dimensions can be changed under **Settings → Window Settings**. The
 game window title matches the editor, e.g. `SAGE Editor: MyGame - Scene1`.
 When you edit the scene the title gains an `(unsaved)` suffix until you save.
-Project files now record the window `width`, `height` and `title` so the engine
-launches with exactly the same viewport size. Future versions may add other
-renderer backends, and each project remembers which renderer to use.
+Project files record the window `width`, `height` and `title`. When loading a
+project the engine creates its window using these values and applies them to
+the active camera so the viewport and scene match perfectly. Future versions
+may add other renderer backends and each project remembers which renderer to
+use.
 When defining variables, boolean values are edited with a convenient check box
 instead of typing "true" or "false".
 When comparing variables, the name is selected from a drop-down list so typos

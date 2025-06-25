@@ -37,11 +37,11 @@ def create_engine(project: Project, fps: int = 60) -> Engine:
     camera = scene.camera or Camera(project.width / 2, project.height / 2,
                                     project.width, project.height)
     rcls = get_renderer(project.renderer) or PygameRenderer
-    renderer = rcls(project.width, project.height, project.title)
+    renderer = rcls(camera.width, camera.height, project.title)
     events = scene.build_event_system()
     return Engine(
-        width=project.width,
-        height=project.height,
+        width=camera.width,
+        height=camera.height,
         scene=scene,
         events=events,
         fps=fps,
@@ -73,11 +73,11 @@ def run_scene(path: str, width: int = 640, height: int = 480,
     scene = load_scene(path)
     camera = scene.camera or Camera(width / 2, height / 2, width, height)
     rcls = get_renderer('pygame') or PygameRenderer
-    renderer = rcls(width, height, title or "SAGE 2D")
+    renderer = rcls(camera.width, camera.height, title or "SAGE 2D")
     events = scene.build_event_system()
     Engine(
-        width=width,
-        height=height,
+        width=camera.width,
+        height=camera.height,
         scene=scene,
         events=events,
         title=title or "SAGE 2D",
