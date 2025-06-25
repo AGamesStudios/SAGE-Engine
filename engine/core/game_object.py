@@ -80,6 +80,8 @@ class GameObject:
     def __setattr__(self, name, value):
         if name in GameObject._DIRTY_FIELDS:
             object.__setattr__(self, '_dirty', True)
+        if name == 'angle':
+            object.__setattr__(self, 'rotation', _angle_to_quat(value))
         object.__setattr__(self, name, value)
 
     @property
@@ -95,13 +97,7 @@ class GameObject:
         if self.name is None:
             self.name = "New Object"
         self._load_image()
-    @property
-    def angle(self) -> float:
-        return _quat_to_angle(self.rotation)
 
-    @angle.setter
-    def angle(self, value: float):
-        self.rotation = _angle_to_quat(value)
 
     def update(self, dt: float):
         pass
