@@ -1,7 +1,8 @@
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QLabel, QComboBox, QTableWidget,
-    QPushButton, QHBoxLayout
+    QPushButton, QHBoxLayout, QHeaderView
 )
+from PyQt6.QtCore import Qt
 
 
 class LogicTab(QWidget):
@@ -24,7 +25,15 @@ class LogicTab(QWidget):
         self.event_list.setHorizontalHeaderLabels([
             editor.t('conditions'), editor.t('actions')
         ])
-        self.event_list.horizontalHeader().setStretchLastSection(True)
+        header = self.event_list.horizontalHeader()
+        header.setStretchLastSection(True)
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Interactive)
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Interactive)
+        self.event_list.setColumnWidth(0, 250)
+        self.event_list.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        self.event_list.setWordWrap(True)
+        self.event_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.event_list.customContextMenuRequested.connect(editor._event_menu)
 
         self.var_table = QTableWidget(0, 2)
         self.var_table.setHorizontalHeaderLabels([

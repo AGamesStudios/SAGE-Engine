@@ -18,6 +18,7 @@ from PyQt6.QtCore import (
     QRectF, Qt, QProcess, QPointF, QSortFilterProxyModel, QSize, QUrl
 )
 import logging
+import copy
 import atexit
 import traceback
 import inspect
@@ -1061,6 +1062,8 @@ class Editor(QMainWindow):
         self.object_label = self.logic_widget.object_label
         self.add_var_btn = self.logic_widget.add_var_btn
         self.tabs.addTab(self.logic_widget, self.t('logic'))
+        self.event_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.event_list.customContextMenuRequested.connect(self._event_menu)
         self.object_combo.currentIndexChanged.connect(self._update_transform_panel)
         self.name_edit.editingFinished.connect(self._object_name_changed)
         self.type_combo.currentIndexChanged.connect(self._object_type_changed)
@@ -1081,6 +1084,7 @@ class Editor(QMainWindow):
         self.dirty = False
         self.recent_projects = load_recent()
         self._clip_object = None
+        self._clip_event = None
         self._init_actions()
         if autoshow:
             self.showMaximized()
@@ -2019,6 +2023,45 @@ class Editor(QMainWindow):
         elif act == del_act:
             self._delete_resource(path)
 
+    def _event_menu(self, pos):
+        """Show context actions for the event list."""
+        idx = self.object_combo.currentData()
+        if idx is None or idx < 0 or idx >= len(self.items):
+            return
+        obj = self.items[idx][1]
+        events = getattr(obj, 'events', [])
+        item = self.event_list.itemAt(pos)
+        menu = QMenu(self)
+        paste_act = menu.addAction(self.t('paste')) if self._clip_event else None
+        if item and self.event_list.row(item) < len(events):
+            row = self.event_list.row(item)
+            cut_act = menu.addAction(self.t('cut'))
+            copy_act = menu.addAction(self.t('copy'))
+            del_act = menu.addAction(self.t('delete'))
+            action = menu.exec(self.event_list.viewport().mapToGlobal(pos))
+            if action == paste_act and self._clip_event:
+                events.insert(row + 1, copy.deepcopy(self._clip_event))
+                self._mark_dirty()
+            elif action == cut_act or action == copy_act:
+                self._clip_event = copy.deepcopy(events[row])
+                if action == cut_act:
+                    events.pop(row)
+                    self._mark_dirty()
+            elif action == del_act:
+                events.pop(row)
+                self._mark_dirty()
+        else:
+            add_act = menu.addAction(self.t('add_event'))
+            if paste_act:
+                menu.addAction(self.t('paste'))
+            action = menu.exec(self.event_list.viewport().mapToGlobal(pos))
+            if action == add_act:
+                self.add_condition(len(events))
+            elif action == paste_act and self._clip_event:
+                events.append(copy.deepcopy(self._clip_event))
+                self._mark_dirty()
+        self.refresh_events()
+
     def _new_folder(self, base: str | None = None) -> None:
         """Create a subfolder inside the resources directory."""
         if not self._check_project():
@@ -2465,6 +2508,7 @@ class Editor(QMainWindow):
         btn_new = QPushButton(self.t('add_condition'))
         btn_new.clicked.connect(lambda _, r=row: self.add_condition(r))
         self.event_list.setCellWidget(row, 0, btn_new)
+        self.event_list.resizeRowsToContents()
 
     def load_scene(self, scene_or_path):
         if isinstance(scene_or_path, Scene):

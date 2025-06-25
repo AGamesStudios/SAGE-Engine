@@ -175,6 +175,10 @@ The condition and action lists offer context menus with **Edit**, **Copy**,
 **Paste**, and **Delete** options. Right-click an empty area to add a new block
 or paste the previously copied one.
 
+The events table now reserves more room for the condition descriptions and
+expands rows to fit their text. Right-click the list itself to add a new event
+or copy, cut, paste and delete existing ones.
+
 Run a saved project with:
 
 ```bash
