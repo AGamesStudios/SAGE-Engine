@@ -209,7 +209,7 @@ class ResourceDock(QDockWidget):
         self.import_btn.clicked.connect(self._import_clicked)
 
         self.new_folder_btn = QPushButton(editor.t('new_folder'))
-        self.new_folder_btn.setIcon(load_icon('new_folder.png'))
+        self.new_folder_btn.setIcon(load_icon('folder.png'))
         self.new_folder_btn.clicked.connect(self._new_folder_clicked)
 
         self.search_edit = QLineEdit()

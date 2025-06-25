@@ -1247,7 +1247,7 @@ class Editor(QMainWindow):
         self.edit_menu = menubar.addMenu(self.t('edit'))
 
         toolbar = self.addToolBar('main')
-        self.run_btn = QAction(load_icon('play.png'), self.t('run'), self)
+        self.run_btn = QAction(load_icon('start.png'), self.t('run'), self)
         self.run_btn.setShortcut('F5')
         self.run_btn.triggered.connect(self.run_game)
         toolbar.addAction(self.run_btn)
@@ -1777,7 +1777,7 @@ class Editor(QMainWindow):
         from engine import Camera
         if isinstance(obj, Camera):
             return load_icon('camera.png')
-        return load_icon('sprite.png')
+        return load_icon('object.png')
 
     def _refresh_object_labels(self):
         """Show which camera is active in the object list."""

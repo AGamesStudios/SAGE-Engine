@@ -52,10 +52,12 @@ tabs: **Viewport** and **Logic**. The old QGraphics-based viewport has been
 removed entirely, leaving only a placeholder panel. Rendering tools will return
 once the new Pygame widget is implemented.
 An **Add Object** button beneath the list places a blank object with a default
-name like `New Object`. Every toolbar action and list item loads its icon from
-the `sage_editor/icons` folder, so you can replace these images with your own
-to completely theme the interface. Object properties can be edited in a dock
-but there is no visual manipulation until rendering support returns.
+ name like `New Object`. Every toolbar action and list item loads its icon from
+ the `sage_editor/icons` folder, so you can replace these images with your own
+ to completely theme the interface. The Run button uses `start.png`, the New
+ Folder button uses `folder.png` and objects show `object.png` or `camera.png`
+ depending on their type. Object properties can be edited in a dock but there
+ is no visual manipulation until rendering support returns.
 A cyan rectangle shows the active camera frustum. Camera ``x`` and ``y``
 describe its centre, so the rectangle surrounds that point. Scenes always
 contain at least one camera; if an older scene lacks one the engine creates a
@@ -90,7 +92,8 @@ project file stores the entire scene
 including object positions, events and variables.
 The **Resources** dock sits above the object list on the left and lists everything under your project's
 `resources` folder. Two buttons above the tree (**Import** and **New Folder**)
-sit on the first row while a search field appears below them. You can drag items
+sit on the first row while a search field appears below them. The folder button
+uses `folder.png` from the `icons` directory. You can drag items
 between folders or drop files from outside the application. Dragging files out of
 the dock is disabled so resources remain inside the project. Files are sorted alphabetically so projects stay
 organized. Any asset chosen from outside the project is copied into this
@@ -121,8 +124,8 @@ in conditions or actions. Mathematical actions only apply to int or float
 variables, ensuring booleans and strings remain unchanged. When setting a variable in an action the name is
 chosen from a drop-down list and booleans use a check box. Events attach to specific objects and can trigger on
 game start or every frame. Fonts are slightly larger for readability. Use the
-*Run* button in the toolbar to launch the current scene directly from the
-editor. Temporary files are cleaned up each time so you can run repeatedly
+*Run* button (icon `start.png`) in the toolbar to launch the current scene
+directly from the editor. Temporary files are cleaned up each time so you can run repeatedly
 without crashes.
 Window dimensions can be changed under **Settings → Window Settings**. The
 game window title matches the editor, e.g. `SAGE Editor: MyGame - Scene1`.
