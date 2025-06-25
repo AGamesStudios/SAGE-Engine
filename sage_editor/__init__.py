@@ -170,7 +170,8 @@ class SpriteItem(QGraphicsPixmapItem):
         t.rotate(obj.angle)
         t.translate(-px, -py)
         self.setTransform(t)
-        self.setPos(obj.x, obj.y)
+        # Qt's scene coordinates use Y down, invert to display Y up
+        self.setPos(obj.x, -obj.y)
 
     def itemChange(self, change, value):
         from PyQt6.QtWidgets import QGraphicsItem
@@ -180,7 +181,8 @@ class SpriteItem(QGraphicsPixmapItem):
             return QPointF(x, y)
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged and self.obj:
             self.obj.x = value.x()
-            self.obj.y = value.y()
+            # convert back to engine coordinates
+            self.obj.y = -value.y()
             self.editor._mark_dirty()
             self.editor._update_gizmo()
         if change == QGraphicsItem.GraphicsItemChange.ItemSelectedHasChanged and bool(value):
@@ -259,7 +261,8 @@ class _HandleItem(QGraphicsEllipseItem):
             center = item.mapToScene(item.boundingRect().center())
             pos = event.scenePos() - center
             import math
-            angle = math.degrees(math.atan2(pos.y(), pos.x()))
+            # scene coordinates use Y down, invert for engine orientation
+            angle = math.degrees(math.atan2(-pos.y(), pos.x()))
             obj.angle = angle
             item.apply_object_transform()
         self.editor._mark_dirty()
@@ -1544,7 +1547,8 @@ class Editor(QMainWindow):
         for item, obj in self.items:
             pos = item.pos()
             obj.x = pos.x()
-            obj.y = pos.y()
+            # store engine coordinates (Y up)
+            obj.y = -pos.y()
             obj.scale = item.scale()
             obj.angle = item.rotation()
         try:
@@ -1571,7 +1575,7 @@ class Editor(QMainWindow):
             for item, obj in self.items:
                 pos = item.pos()
                 obj.x = pos.x()
-                obj.y = pos.y()
+                obj.y = -pos.y()
                 obj.scale = item.scale()
                 obj.angle = item.rotation()
             self.scene.save(path)
@@ -1653,7 +1657,7 @@ class Editor(QMainWindow):
         for item, obj in self.items:
             pos = item.pos()
             obj.x = pos.x()
-            obj.y = pos.y()
+            obj.y = -pos.y()
         Project(
             self.scene.to_dict(),
             renderer=self.renderer_name,
@@ -2008,7 +2012,7 @@ class Editor(QMainWindow):
             line.setZValue(-1)
             self.grid_lines.append(line)
             y += step
-        pen_axis_x = QPen(QColor('blue'))
+        pen_axis_x = QPen(QColor('red'))
         pen_axis_x.setCosmetic(True)
         pen_axis_y = QPen(QColor('green'))
         pen_axis_y.setCosmetic(True)
@@ -2030,7 +2034,7 @@ class Editor(QMainWindow):
         scene = getattr(self, 'scene', None)
         cam = getattr(scene, 'camera', None) if scene else None
         if cam:
-            cam_rect = QRectF(cam.x, cam.y, cam.width, cam.height)
+            cam_rect = QRectF(cam.x, -cam.y, cam.width, cam.height)
             if getattr(self, 'camera_rect', None) and self.camera_rect.scene() is self.g_scene:
                 self.camera_rect.setRect(cam_rect)
             else:
@@ -2502,7 +2506,7 @@ class Editor(QMainWindow):
         for item, obj in self.items:
             pos = item.pos()
             obj.x = pos.x()
-            obj.y = pos.y()
+            obj.y = -pos.y()
         if self.dirty:
             res = QMessageBox.question(
                 self,
