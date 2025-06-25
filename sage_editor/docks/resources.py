@@ -43,12 +43,12 @@ class ResourceDock(QDockWidget):
         editor.proxy_model = self.proxy_model
 
         self.import_btn = QPushButton(editor.t('import_files'))
-        self.import_btn.clicked.connect(editor._import_resources)
+        self.import_btn.clicked.connect(self._import_clicked)
         self.new_folder_btn = QPushButton(editor.t('new_folder'))
-        self.new_folder_btn.clicked.connect(editor._new_folder)
+        self.new_folder_btn.clicked.connect(self._new_folder_clicked)
         self.search_edit = QLineEdit()
         self.search_edit.setPlaceholderText(editor.t('search'))
-        self.search_edit.textChanged.connect(editor._filter_resources)
+        self.search_edit.textChanged.connect(self._filter_changed)
 
         ctrl_layout = QHBoxLayout()
         ctrl_layout.setSpacing(4)
@@ -63,4 +63,18 @@ class ResourceDock(QDockWidget):
         res_layout.addWidget(self.resource_view)
         self.setWidget(res_widget)
         editor.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self)
+
+    # slot wrappers ---------------------------------------------------------
+
+    def _import_clicked(self) -> None:  # pragma: no cover - UI callback
+        """Handle the Import button."""
+        self.editor._import_resources()
+
+    def _new_folder_clicked(self) -> None:  # pragma: no cover - UI callback
+        """Handle the New Folder button."""
+        self.editor._new_folder()
+
+    def _filter_changed(self, text: str) -> None:  # pragma: no cover - UI callback
+        """Handle resource search edits."""
+        self.editor._filter_resources(text)
 
