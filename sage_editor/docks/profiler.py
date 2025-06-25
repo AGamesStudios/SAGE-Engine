@@ -2,11 +2,14 @@ from __future__ import annotations
 
 from collections import deque
 
-from PyQt6.QtWidgets import QDockWidget
-from PyQt6.QtCore import Qt, QTimer
-
-from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
-from matplotlib.figure import Figure
+from PyQt6.QtWidgets import QDockWidget, QWidget, QVBoxLayout
+from PyQt6.QtCore import Qt, QTimer, QPointF
+from PyQt6.QtCharts import (
+    QChart,
+    QChartView,
+    QLineSeries,
+    QValueAxis,
+)
 import psutil
 try:
     import GPUtil
@@ -22,22 +25,24 @@ class ProfilerDock(QDockWidget):
     def __init__(self, editor):
         super().__init__(editor.t('profiler'), editor)
         self.editor = editor
-        fig = Figure(figsize=(4, 3))
-        self.canvas = FigureCanvasQTAgg(fig)
-        self.setWidget(self.canvas)
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        self.setWidget(widget)
 
-        self.cpu_ax = fig.add_subplot(311)
-        self.mem_ax = fig.add_subplot(312)
-        self.gpu_ax = fig.add_subplot(313)
+        self.cpu_series = QLineSeries()
+        self.cpu_series.setColor(Qt.GlobalColor.red)
+        self.mem_series = QLineSeries()
+        self.mem_series.setColor(Qt.GlobalColor.green)
+        self.gpu_series = QLineSeries()
+        self.gpu_series.setColor(Qt.GlobalColor.blue)
 
-        self.cpu_ax.set_ylabel('CPU %')
-        self.mem_ax.set_ylabel('RAM %')
-        self.gpu_ax.set_ylabel('GPU %')
-        self.gpu_ax.set_xlabel('time (s)')
+        self.cpu_chart = self._make_chart('CPU %', self.cpu_series)
+        self.mem_chart = self._make_chart('RAM %', self.mem_series)
+        self.gpu_chart = self._make_chart('GPU %', self.gpu_series)
 
-        self.cpu_line, = self.cpu_ax.plot([], [], color='red')
-        self.mem_line, = self.mem_ax.plot([], [], color='green')
-        self.gpu_line, = self.gpu_ax.plot([], [], color='blue')
+        layout.addWidget(QChartView(self.cpu_chart))
+        layout.addWidget(QChartView(self.mem_chart))
+        layout.addWidget(QChartView(self.gpu_chart))
 
         self.cpu_data: deque[float] = deque(maxlen=self.HISTORY)
         self.mem_data: deque[float] = deque(maxlen=self.HISTORY)
@@ -63,11 +68,26 @@ class ProfilerDock(QDockWidget):
         self._update_plot()
 
     def _update_plot(self) -> None:
-        x = list(range(len(self.cpu_data)))
-        self.cpu_line.set_data(x, list(self.cpu_data))
-        self.mem_line.set_data(x, list(self.mem_data))
-        self.gpu_line.set_data(x, list(self.gpu_data))
-        for ax in (self.cpu_ax, self.mem_ax, self.gpu_ax):
-            ax.set_xlim(0, self.HISTORY)
-            ax.set_ylim(0, 100)
-        self.canvas.draw_idle()
+        self._update_series(self.cpu_series, self.cpu_data)
+        self._update_series(self.mem_series, self.mem_data)
+        self._update_series(self.gpu_series, self.gpu_data)
+
+    def _update_series(self, series: QLineSeries, data: deque[float]) -> None:
+        series.clear()
+        for i, val in enumerate(data):
+            series.append(QPointF(i, val))
+
+    def _make_chart(self, title: str, series: QLineSeries) -> QChart:
+        chart = QChart()
+        chart.setTitle(title)
+        chart.addSeries(series)
+        chart.legend().hide()
+        axis_x = QValueAxis()
+        axis_x.setRange(0, self.HISTORY)
+        axis_y = QValueAxis()
+        axis_y.setRange(0, 100)
+        chart.addAxis(axis_x, Qt.AlignmentFlag.AlignBottom)
+        chart.addAxis(axis_y, Qt.AlignmentFlag.AlignLeft)
+        series.attachAxis(axis_x)
+        series.attachAxis(axis_y)
+        return chart
