@@ -355,9 +355,17 @@ memory becomes tight. The `Engine` class accepts an `fps` argument (default 30)
 to control the frame rate. `Engine.run()` now launches a Qt **GameWindow** that
 updates via a `QTimer` instead of a tight loop, keeping CPU usage low. Object
 lists are sorted only when modified and heavy math dependencies were removed.
-The editor delays resource searches slightly so typing does not rebuild the tree
-on every keystroke. These optimizations keep the runtime light without
-sacrificing visual quality.
+Expensive transform calculations are accelerated with **Numba** when installed
+by decorating them with ``@njit``. The editor delays resource searches slightly
+so typing does not rebuild the tree on every keystroke. These optimizations
+keep the runtime light without sacrificing visual quality.
+
+Installing `numba` will JIT compile the math helpers and can
+significantly speed up large scenes:
+
+```bash
+pip install numba
+```
 
 ### SAGE API
 

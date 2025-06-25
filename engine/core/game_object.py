@@ -3,8 +3,13 @@ import os
 import traceback
 from ..log import logger
 import math
-# builtin modules
 from collections import OrderedDict
+from .fastmath import (
+    angle_to_quat as _angle_to_quat,
+    quat_to_angle as _quat_to_angle,
+    calc_rect as _calc_rect,
+    calc_matrix as _calc_matrix,
+)
 from PIL import Image
 from .objects import register_object
 from ..logic import EventSystem, Event, condition_from_dict, action_from_dict
@@ -19,16 +24,6 @@ def clear_image_cache():
     _IMAGE_CACHE.clear()
 
 
-def _angle_to_quat(angle: float) -> tuple[float, float, float, float]:
-    """Return a quaternion representing rotation around Z."""
-    rad = math.radians(angle) / 2.0
-    return (0.0, 0.0, math.sin(rad), math.cos(rad))
-
-
-def _quat_to_angle(quat: tuple[float, float, float, float]) -> float:
-    """Return the Z rotation in degrees from a quaternion."""
-    z, w = quat[2], quat[3]
-    return math.degrees(2.0 * math.atan2(z, w))
 
 @register_object(
     'sprite',
@@ -130,37 +125,13 @@ class GameObject:
         """Return an axis-aligned bounding box in world units."""
         if not self._dirty and self._cached_rect is not None:
             return self._cached_rect
-        scale = units.UNITS_PER_METER
-        px = self.width * self.pivot_x
-        py = self.height * self.pivot_y
-        sx = self.scale_x
-        sy = self.scale_y
-        rad = math.radians(self.angle)
-        ca = math.cos(rad)
-        sa = math.sin(rad)
-        corners = [
-            (-px, -py),
-            (self.width - px, -py),
-            (self.width - px, self.height - py),
-            (-px, self.height - py),
-        ]
-        sign = 1.0 if units.Y_UP else -1.0
-        tx = self.x * scale
-        ty = self.y * scale * sign
-        xs: list[float] = []
-        ys: list[float] = []
-        for cx, cy in corners:
-            cx *= sx
-            cy *= sy
-            rx = cx * ca - cy * sa
-            ry = cx * sa + cy * ca
-            xs.append(tx + rx)
-            ys.append(ty + ry)
-        left = min(xs)
-        right = max(xs)
-        bottom = min(ys)
-        top = max(ys)
-        self._cached_rect = (left, bottom, right - left, top - bottom)
+        left, bottom, width, height = _calc_rect(
+            self.x, self.y, self.width, self.height,
+            self.pivot_x, self.pivot_y,
+            self.scale_x, self.scale_y,
+            self.angle, units.UNITS_PER_METER, units.Y_UP,
+        )
+        self._cached_rect = (left, bottom, width, height)
         self._dirty = False
         return self._cached_rect
 
@@ -168,27 +139,12 @@ class GameObject:
         """Return a 4x4 column-major transform matrix without PyGLM."""
         if not self._dirty and self._cached_matrix is not None:
             return self._cached_matrix
-        ang = math.radians(self.angle)
-        ca = math.cos(ang)
-        sa = math.sin(ang)
-        sx = self.scale_x
-        sy = self.scale_y
-        px = self.width * self.pivot_x
-        py = self.height * self.pivot_y
-        m00 = ca * sx
-        m01 = -sa * sy
-        m10 = sa * sx
-        m11 = ca * sy
-        scale = units.UNITS_PER_METER
-        sign = 1.0 if units.Y_UP else -1.0
-        tx = self.x * scale + px - (m00 * px + m01 * py)
-        ty = self.y * scale * sign + py - (m10 * px + m11 * py)
-        self._cached_matrix = [
-            m00, m10, 0.0, 0.0,
-            m01, m11, 0.0, 0.0,
-            0.0, 0.0, 1.0, 0.0,
-            tx,  ty,  0.0, 1.0,
-        ]
+        self._cached_matrix = list(_calc_matrix(
+            self.x, self.y, self.width, self.height,
+            self.pivot_x, self.pivot_y,
+            self.scale_x, self.scale_y,
+            self.angle, units.UNITS_PER_METER, units.Y_UP,
+        ))
         self._dirty = False
         return self._cached_matrix
 
