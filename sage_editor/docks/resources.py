@@ -208,6 +208,10 @@ class ResourceDock(QDockWidget):
         self.new_folder_btn.setIcon(load_icon('folder.png'))
         self.new_folder_btn.clicked.connect(self._new_folder_clicked)
 
+        self.refresh_btn = QPushButton(editor.t('refresh'))
+        self.refresh_btn.setIcon(load_icon('refresh.png'))
+        self.refresh_btn.clicked.connect(self._refresh_clicked)
+
         self.search_edit = QLineEdit()
         self.search_edit.setPlaceholderText(editor.t('search'))
         self.search_edit.setClearButtonEnabled(True)
@@ -218,6 +222,7 @@ class ResourceDock(QDockWidget):
         btn_layout.setSpacing(4)
         btn_layout.addWidget(self.import_btn)
         btn_layout.addWidget(self.new_folder_btn)
+        btn_layout.addWidget(self.refresh_btn)
 
         search_layout = QHBoxLayout()
         search_layout.setSpacing(4)
@@ -252,6 +257,10 @@ class ResourceDock(QDockWidget):
     def _new_folder_clicked(self) -> None:  # pragma: no cover - UI callback
         """Handle the New Folder button."""
         self.editor._new_folder()
+
+    def _refresh_clicked(self) -> None:  # pragma: no cover - UI callback
+        """Handle the Refresh button."""
+        self.editor.refresh_resources()
 
     def _filter_changed(self, text: str) -> None:  # pragma: no cover - UI callback
         """Handle resource search edits."""

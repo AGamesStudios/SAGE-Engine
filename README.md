@@ -55,7 +55,8 @@ An **Add Object** button beneath the list places a blank object with a default
  name like `New Object`. Every toolbar action and list item loads its icon from
  the `sage_editor/icons` folder, so you can replace these images with your own
  to completely theme the interface. The Run button uses `start.png`, the Import
- button loads `add.png`, the New Folder button uses `folder.png`, the New
+ button loads `add.png`, the New Folder button uses `folder.png`, the Refresh
+ button uses `refresh.png`, the New
  Project action shows `file.png`, Save Project uses `save.png`, the Recent
  Projects menu displays `recent.png` and objects show `object.png` or
  `camera.png` depending on their type. Object properties
@@ -94,15 +95,15 @@ dictionary so properties remain independent across different items. The
 project file stores the entire scene
 including object positions, events and variables.
 The **Resources** dock sits on the left and lists everything under your project's
-`resources` folder. Two buttons above the tree (**Import** and **New Folder**)
-sit on the first row while a search field appears below them. The folder button
+`resources` folder. Three buttons above the tree (**Import**, **New Folder** and
+**Refresh**) sit on the first row while a search field appears below them. The folder button
 uses `folder.png` from the `icons` directory. You can drag items
 between folders or drop files from outside the application. Dragging files out of
 the dock is disabled so resources remain inside the project. Files are sorted alphabetically so projects stay
 organized. Any asset chosen from outside the project is copied into this
 directory automatically, so scenes never reference files that might disappear.
-When many files are imported at once a small progress dialog measures bytes as
-they copy so large folders do not freeze the interface or leave you guessing.
+Imports accept files, folders or even `.zip` archives. A progress dialog shows
+the current path and counts bytes so large batches do not freeze the interface.
 Imported files are loaded immediately into a small cache so previews appear
 instantly. The engine loads all assets relative to this directory, ensuring
 reorganizing files will not break existing scenes. If PyQt does not provide

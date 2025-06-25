@@ -75,7 +75,7 @@ class ResourceManager:
         self,
         src: str,
         dest: str | None = None,
-        progress_cb: Callable[[int], None] | None = None,
+        progress_cb: Callable[[int, str | None], None] | None = None,
     ) -> str:
         """Copy ``src`` into the resources and report progress via ``progress_cb``."""
 
@@ -84,6 +84,9 @@ class ResourceManager:
         else:
             dest = self.path(dest)
         os.makedirs(dest, exist_ok=True)
+
+        if src.lower().endswith('.zip'):
+            return self.import_zip(src, dest, progress_cb)
 
         target = self._unique_file(dest, os.path.basename(src))
 
@@ -95,7 +98,7 @@ class ResourceManager:
                         break
                     fdst.write(chunk)
                     if progress_cb:
-                        progress_cb(len(chunk))
+                        progress_cb(len(chunk), os.path.relpath(target, self.root))
             logger.info("Imported resource %s -> %s", src, target)
         except Exception:
             logger.exception("Failed to import %s", src)
@@ -109,7 +112,7 @@ class ResourceManager:
         self,
         src: str,
         dest: str | None = None,
-        progress_cb: Callable[[int], None] | None = None,
+        progress_cb: Callable[[int, str | None], None] | None = None,
     ) -> str:
         """Recursively copy a folder into the resources tree reporting progress."""
 
@@ -138,10 +141,54 @@ class ResourceManager:
                                 break
                             fout.write(chunk)
                             if progress_cb:
-                                progress_cb(len(chunk))
+                                progress_cb(len(chunk), os.path.relpath(dfile, self.root))
             logger.info("Imported folder %s -> %s", src, target)
         except Exception:
             logger.exception("Failed to import folder %s", src)
+            raise
+
+        if target.startswith(self.root):
+            return os.path.relpath(target, self.root)
+        return target
+
+    def import_zip(
+        self,
+        src: str,
+        dest: str | None = None,
+        progress_cb: Callable[[int, str | None], None] | None = None,
+    ) -> str:
+        """Extract ``src`` zip archive into the resources tree."""
+
+        if dest is None:
+            dest = self.root
+        else:
+            dest = self.path(dest)
+        os.makedirs(dest, exist_ok=True)
+
+        from zipfile import ZipFile
+
+        base_name = os.path.splitext(os.path.basename(src))[0]
+        target = self._unique_dir(dest, base_name)
+
+        try:
+            with ZipFile(src) as zf:
+                for info in zf.infolist():
+                    out_path = os.path.join(target, info.filename)
+                    if info.is_dir():
+                        os.makedirs(out_path, exist_ok=True)
+                        continue
+                    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+                    with zf.open(info) as fin, open(out_path, "wb") as fout:
+                        while True:
+                            chunk = fin.read(1024 * 1024)
+                            if not chunk:
+                                break
+                            fout.write(chunk)
+                            if progress_cb:
+                                progress_cb(len(chunk), os.path.relpath(out_path, self.root))
+            logger.info("Imported zip %s -> %s", src, target)
+        except Exception:
+            logger.exception("Failed to import zip %s", src)
             raise
 
         if target.startswith(self.root):

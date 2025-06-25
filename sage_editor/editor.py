@@ -2097,7 +2097,7 @@ class Editor(QMainWindow):
         self,
         path: str,
         base: str | None = None,
-        progress_cb: Callable[[int], None] | None = None,
+        progress_cb: Callable[[int, str | None], None] | None = None,
     ) -> tuple[str, str]:
         """Copy ``path`` into resources if needed and return (abs, rel)."""
         if not self.resource_dir:
@@ -2149,14 +2149,14 @@ class Editor(QMainWindow):
                         while os.path.exists(dfile):
                             dfile = os.path.join(dest_root, f"{base}_{count}{ext}")
                             count += 1
-                        with open(sfile, 'rb') as fin, open(dfile, 'wb') as fout:
-                            while True:
-                                chunk = fin.read(1024 * 1024)
-                                if not chunk:
-                                    break
-                                fout.write(chunk)
-                                if progress_cb:
-                                    progress_cb(len(chunk))
+                    with open(sfile, 'rb') as fin, open(dfile, 'wb') as fout:
+                        while True:
+                            chunk = fin.read(1024 * 1024)
+                            if not chunk:
+                                break
+                            fout.write(chunk)
+                            if progress_cb:
+                                progress_cb(len(chunk), os.path.relpath(dfile, self.resource_dir))
                 _log(f'Imported folder {abs_path} -> {target}')
             except Exception as exc:
                 logger.exception('Failed to import folder %s', abs_path)
@@ -2197,7 +2197,7 @@ class Editor(QMainWindow):
                             break
                         fout.write(chunk)
                         if progress_cb:
-                            progress_cb(len(chunk))
+                            progress_cb(len(chunk), os.path.relpath(target, self.resource_dir))
                 _log(f'Imported resource {abs_path} -> {target}')
             except Exception as exc:
                 logger.exception('Failed to import resource %s', abs_path)
@@ -2225,25 +2225,36 @@ class Editor(QMainWindow):
                         except OSError:
                             pass
             else:
-                try:
-                    total += os.path.getsize(p)
-                except OSError:
-                    pass
+                if p.lower().endswith('.zip'):
+                    from zipfile import ZipFile
+                    try:
+                        with ZipFile(p) as zf:
+                            total += sum(i.file_size for i in zf.infolist())
+                    except Exception:
+                        pass
+                else:
+                    try:
+                        total += os.path.getsize(p)
+                    except OSError:
+                        pass
         dlg = QProgressDialog(self.t('importing'), self.t('cancel'), 0, total, self)
         dlg.setWindowTitle(self.t('import'))
         dlg.setWindowModality(Qt.WindowModality.ApplicationModal)
         progress = 0
 
-        def step(n: int) -> None:
+        def step(n: int, current: str | None = None) -> None:
             nonlocal progress
             progress += n
             dlg.setValue(progress)
+            if current:
+                dlg.setLabelText(f"{self.t('importing')} {current}")
             QApplication.processEvents()
 
         for p in paths:
             if dlg.wasCanceled():
                 break
             try:
+                dlg.setLabelText(f"{self.t('importing')} {os.path.basename(p)}")
                 self._copy_to_resources(p, base, step)
                 _log(f'Imported {p} to {base}')
             except Exception as exc:
@@ -2398,6 +2409,18 @@ class Editor(QMainWindow):
         self.resource_view.addTopLevelItem(root_item)
         add_children(root_item, self.resource_dir)
         self.resource_view.expandAll()
+
+    def refresh_resources(self) -> None:
+        """Reload the resource view from disk."""
+        if self.resource_model is not None:
+            self.resource_model.setRootPath("")
+            self.resource_model.setRootPath(self.resource_dir)
+            if self.proxy_model is not None:
+                src = self.resource_model.index(self.resource_dir)
+                self.resource_view.setRootIndex(self.proxy_model.mapFromSource(src))
+            else:
+                self.resource_view.setRootIndex(self.resource_model.index(self.resource_dir))
+        self._refresh_resource_tree()
 
     def _serialize_object(self, index):
         item, obj = self.items[index]
