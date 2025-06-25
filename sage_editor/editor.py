@@ -2639,5 +2639,12 @@ class Editor(QMainWindow):
                 event.ignore()
                 return
         event.accept()
+        # ensure viewport timers stop and renderer closes cleanly
+        if hasattr(self, "view"):
+            try:
+                self.view.close()
+            except Exception:
+                pass
+        super().closeEvent(event)
 
 

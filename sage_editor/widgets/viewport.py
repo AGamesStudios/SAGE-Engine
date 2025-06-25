@@ -50,7 +50,9 @@ class Viewport(QWidget):
         data = pygame.image.tobytes(self.renderer.surface, "RGB")
         # PyQt6 stores image format enums under QImage.Format
         fmt = QImage.Format.Format_RGB888
-        self._image = QImage(data, self.renderer.width, self.renderer.height, fmt)
+        img = QImage(data, self.renderer.width, self.renderer.height, fmt)
+        # make a deep copy so the temporary buffer can be released safely
+        self._image = img.copy()
         self.update()
 
     def showEvent(self, event) -> None:  # pragma: no cover - UI interaction
