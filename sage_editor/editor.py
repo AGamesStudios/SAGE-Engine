@@ -965,6 +965,7 @@ class Editor(QMainWindow):
         self.resource_dir: str | None = None
         self.resource_manager = None
         self.scene = Scene()
+        self.scene_path: str | None = None
         self.setWindowTitle(f'SAGE Editor ({ENGINE_VERSION})')
         self.engine_completer = QCompleter(_engine_completions(), self)
         self.engine_completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
@@ -1250,9 +1251,10 @@ class Editor(QMainWindow):
 
     def open_scene(self):
         path, _ = QFileDialog.getOpenFileName(
-            self, self.t('open_scene'), '', self.t('json_files')
+            self, self.t('open_scene'), '', self.t('scene_files')
         )
         if path:
+            self.scene_path = path
             self.load_scene(path)
 
     def new_project(self):
@@ -1298,10 +1300,13 @@ class Editor(QMainWindow):
         proj_dir = os.path.join(folder, name)
         os.makedirs(proj_dir, exist_ok=True)
         resources_dir = os.path.join(proj_dir, 'resources')
+        scenes_dir = os.path.join(proj_dir, 'Scenes')
         os.makedirs(resources_dir, exist_ok=True)
+        os.makedirs(scenes_dir, exist_ok=True)
         proj_path = os.path.join(proj_dir, f'{name}.sageproject')
         self.renderer_name = 'none'
         self.scene = Scene()
+        self.scene_path = os.path.join(scenes_dir, 'Scene1.sagescene')
         try:
             Project(
                 self.scene.to_dict(),
@@ -1309,7 +1314,9 @@ class Editor(QMainWindow):
                 height=self.window_height,
                 title=f'SAGE 2D',
                 version=ENGINE_VERSION,
-                resources='resources'
+                resources='resources',
+                scenes='Scenes',
+                scene_file='Scenes/Scene1.sagescene'
             ).save(proj_path)
         except Exception as exc:
             QMessageBox.warning(self, 'Error', f'Failed to create project: {exc}')
@@ -1354,6 +1361,7 @@ class Editor(QMainWindow):
             self.renderer_name = 'none'
             self.window_width = proj.width
             self.window_height = proj.height
+            self.scene_path = os.path.join(os.path.dirname(path), proj.scene_file)
             self.load_scene(Scene.from_dict(proj.scene))
             self._update_camera_rect()
             self.resource_dir = os.path.join(os.path.dirname(path), proj.resources)
@@ -1404,7 +1412,9 @@ class Editor(QMainWindow):
                 height=self.window_height,
                 title=f'SAGE 2D',
                 version=ENGINE_VERSION,
-                resources=os.path.relpath(self.resource_dir, os.path.dirname(self.project_path)) if self.resource_dir else 'resources'
+                resources=os.path.relpath(self.resource_dir, os.path.dirname(self.project_path)) if self.resource_dir else 'resources',
+                scenes='Scenes',
+                scene_file=os.path.relpath(self.scene_path, os.path.dirname(self.project_path)) if self.scene_path else 'Scenes/Scene1.sagescene'
             ).save(self.project_path)
             self._add_recent(self.project_path)
             self.dirty = False
@@ -1414,7 +1424,7 @@ class Editor(QMainWindow):
 
     def save_scene(self):
         path, _ = QFileDialog.getSaveFileName(
-            self, self.t('save_scene'), '', self.t('json_files')
+            self, self.t('save_scene'), '', self.t('scene_files')
         )
         if path:
             for item, obj in self.items:
@@ -1423,6 +1433,7 @@ class Editor(QMainWindow):
                 obj.y = pos.y()
                 obj.scale = item.scale()
                 obj.angle = item.rotation()
+            self.scene_path = path
             self.scene.save(path)
 
     def show_window_settings(self):
@@ -2012,6 +2023,13 @@ class Editor(QMainWindow):
             path = self.resource_model.filePath(index)
         if not path or os.path.isdir(path):
             return
+        if path.lower().endswith('.sagescene'):
+            self.scene_path = path
+            try:
+                self.load_scene(path)
+                return
+            except Exception:
+                logger.exception('Failed to load scene %s', path)
         try:
             QDesktopServices.openUrl(QUrl.fromLocalFile(path))
             _log(f'Opened resource {path}')

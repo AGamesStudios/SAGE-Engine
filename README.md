@@ -98,11 +98,14 @@ lets you create folders and import resources. Hovering an image reveals a
 floating preview just offset from the cursor so files are easy to identify. The preview is
 confined to the editor window and disappears when it loses focus. Thumbnails are
 cached in memory so browsing many files does not lag.
+Double-clicking a `.sagescene` file in this dock loads it in the editor so you
+can quickly switch between scenes.
 Use **File → New Project** to generate a folder for your game. The dialog asks
 for a project name and location and lets you choose a rendering backend.
 Pygame is the default option while an experimental OpenGL (alpha) renderer and
 a simple SDL2 renderer remain available for testing.
-It then creates the folder with a `.sageproject` file. Each new object
+It then creates the folder with a `.sageproject` file and a `Scenes` subfolder
+containing `Scene1.sagescene`. Each new object
 receives a generic name like `New Object (1)` so conditions always target the
 correct item. The editor disables sprite, variable and logic actions until a
 project is opened, ensuring all changes are saved to a `.sageproject` file.
