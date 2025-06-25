@@ -75,15 +75,12 @@ class SDLRenderer:
             zoom = camera.zoom
             camx = camera.x * scale
             camy = camera.y * scale
-            camw = camera.width * scale
-            camh = camera.height * scale
+            _, _, camw, camh = camera.view_rect()
         s = min(self.width / camw, self.height / camh)
         view_w = camw * s
         view_h = camh * s
         off_x = (self.width - view_w) / 2
         off_y = (self.height - view_h) / 2
-        camw /= zoom
-        camh /= zoom
         scene._sort_objects()
         for obj in scene.objects:
             if isinstance(obj, Camera):

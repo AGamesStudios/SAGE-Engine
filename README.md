@@ -86,8 +86,8 @@ needed. A cyan rectangle indicates the active camera frustum. Camera ``x`` and
 exists the window size is used instead. Projects store a window ``width`` and
 ``height`` separately from the active camera size. When these differ the engine
 centres the camera view inside the window and letterboxes the unused area so
-the aspect ratio is preserved. The Pygame window is resizable and the active
-camera automatically updates to match the new size. Scenes can contain multiple
+the aspect ratio is preserved. The Pygame window is resizable and the camera
+keeps its own dimensions while the engine letterboxes the viewport. Scenes can contain multiple
 cameras. Select a camera in the object list (or use its context menu) and
 choose **Set Active Camera** to decide which one is used. When launching the
 engine from code use ``scene.set_active_camera(name)``.
