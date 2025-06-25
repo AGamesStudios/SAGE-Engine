@@ -1405,6 +1405,8 @@ class Editor(QMainWindow):
             obj.y = pos.y()
             obj.scale = item.scale()
             obj.angle = item.rotation()
+        if self.scene_path:
+            os.makedirs(os.path.dirname(self.scene_path), exist_ok=True)
         try:
             Project(
                 self.scene.to_dict(),
@@ -2011,10 +2013,12 @@ class Editor(QMainWindow):
     def _resource_double_click(self, index) -> None:
         """Open a resource file using the default application."""
         if isinstance(self.resource_view, QTreeWidget):
-            item = index
-            if item is None:
+            if isinstance(index, QTreeWidgetItem):
+                path = index.data(0, Qt.ItemDataRole.UserRole)
+            else:
+                path = index.data(Qt.ItemDataRole.UserRole)
+            if not path:
                 return
-            path = item.data(0, Qt.ItemDataRole.UserRole)
         else:
             if self.resource_model is None or not index.isValid():
                 return
