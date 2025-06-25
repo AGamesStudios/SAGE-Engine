@@ -18,6 +18,7 @@ from PyQt6.QtCore import (
     QRectF, Qt, QProcess, QPointF, QSortFilterProxyModel, QSize, QUrl
 )
 import logging
+from typing import Callable
 import copy
 import atexit
 import traceback
@@ -2092,7 +2093,12 @@ class Editor(QMainWindow):
                 QMessageBox.warning(self, self.t('error'), str(exc))
             self._refresh_resource_tree()
 
-    def _copy_to_resources(self, path: str, base: str | None = None) -> tuple[str, str]:
+    def _copy_to_resources(
+        self,
+        path: str,
+        base: str | None = None,
+        progress_cb: Callable[[int], None] | None = None,
+    ) -> tuple[str, str]:
         """Copy ``path`` into resources if needed and return (abs, rel)."""
         if not self.resource_dir:
             return path, path
@@ -2115,14 +2121,13 @@ class Editor(QMainWindow):
                 if rel_base == '.':
                     rel_base = ''
                 try:
-                    rel = self.resource_manager.import_folder(abs_path, rel_base)
+                    rel = self.resource_manager.import_folder(abs_path, rel_base, progress_cb)
                     abs_copy = os.path.join(self.resource_dir, rel)
                     _log(f'Imported folder {abs_path} -> {abs_copy}')
                     return abs_copy, rel
                 except Exception as exc:
                     QMessageBox.warning(self, self.t('error'), str(exc))
                     return abs_path, ''
-            import shutil
             base_name = os.path.basename(os.path.normpath(path))
             target = os.path.join(dest_dir, base_name)
             counter = 1
@@ -2130,7 +2135,28 @@ class Editor(QMainWindow):
                 target = os.path.join(dest_dir, f"{base_name}_{counter}")
                 counter += 1
             try:
-                shutil.copytree(abs_path, target)
+                for root_dir, dirs, files in os.walk(abs_path):
+                    rel_root = os.path.relpath(root_dir, abs_path)
+                    dest_root = os.path.join(target, rel_root) if rel_root != '.' else target
+                    os.makedirs(dest_root, exist_ok=True)
+                    for d in dirs:
+                        os.makedirs(os.path.join(dest_root, d), exist_ok=True)
+                    for f in files:
+                        sfile = os.path.join(root_dir, f)
+                        dfile = os.path.join(dest_root, f)
+                        base, ext = os.path.splitext(f)
+                        count = 1
+                        while os.path.exists(dfile):
+                            dfile = os.path.join(dest_root, f"{base}_{count}{ext}")
+                            count += 1
+                        with open(sfile, 'rb') as fin, open(dfile, 'wb') as fout:
+                            while True:
+                                chunk = fin.read(1024 * 1024)
+                                if not chunk:
+                                    break
+                                fout.write(chunk)
+                                if progress_cb:
+                                    progress_cb(len(chunk))
                 _log(f'Imported folder {abs_path} -> {target}')
             except Exception as exc:
                 logger.exception('Failed to import folder %s', abs_path)
@@ -2145,7 +2171,7 @@ class Editor(QMainWindow):
                 if rel_base == '.':
                     rel_base = ''
                 try:
-                    rel = self.resource_manager.import_file(abs_path, rel_base)
+                    rel = self.resource_manager.import_file(abs_path, rel_base, progress_cb)
                     abs_copy = os.path.join(self.resource_dir, rel)
                     _log(f'Imported resource {abs_path} -> {abs_copy}')
                     try:
@@ -2163,9 +2189,15 @@ class Editor(QMainWindow):
             while os.path.exists(target):
                 target = os.path.join(dest_dir, f"{name}_{counter}{ext}")
                 counter += 1
-            import shutil
             try:
-                shutil.copy(abs_path, target)
+                with open(abs_path, 'rb') as fin, open(target, 'wb') as fout:
+                    while True:
+                        chunk = fin.read(1024 * 1024)
+                        if not chunk:
+                            break
+                        fout.write(chunk)
+                        if progress_cb:
+                            progress_cb(len(chunk))
                 _log(f'Imported resource {abs_path} -> {target}')
             except Exception as exc:
                 logger.exception('Failed to import resource %s', abs_path)
@@ -2183,20 +2215,42 @@ class Editor(QMainWindow):
         """Copy multiple resources showing a progress bar."""
         if not paths:
             return
-        dlg = QProgressDialog(self.t('importing'), self.t('cancel'), 0, len(paths), self)
+        total = 0
+        for p in paths:
+            if os.path.isdir(p):
+                for root, _, files in os.walk(p):
+                    for f in files:
+                        try:
+                            total += os.path.getsize(os.path.join(root, f))
+                        except OSError:
+                            pass
+            else:
+                try:
+                    total += os.path.getsize(p)
+                except OSError:
+                    pass
+        dlg = QProgressDialog(self.t('importing'), self.t('cancel'), 0, total, self)
         dlg.setWindowTitle(self.t('import'))
         dlg.setWindowModality(Qt.WindowModality.ApplicationModal)
-        for i, p in enumerate(paths, start=1):
+        progress = 0
+
+        def step(n: int) -> None:
+            nonlocal progress
+            progress += n
+            dlg.setValue(progress)
+            QApplication.processEvents()
+
+        for p in paths:
             if dlg.wasCanceled():
                 break
-            QApplication.processEvents()
             try:
-                self._copy_to_resources(p, base)
+                self._copy_to_resources(p, base, step)
                 _log(f'Imported {p} to {base}')
             except Exception as exc:
                 logger.exception('Failed to import %s', p)
                 QMessageBox.warning(self, self.t('error'), str(exc))
-            dlg.setValue(i)
+            if dlg.wasCanceled():
+                break
         dlg.close()
         self._refresh_resource_tree()
 

@@ -1,5 +1,6 @@
 # Simple resource management for SAGE Engine
 import os
+from typing import Callable
 from ..log import logger
 
 _RESOURCE_ROOT = ""
@@ -27,6 +28,26 @@ class ResourceManager:
         os.makedirs(self.root, exist_ok=True)
         logger.info("Resource manager initialized at %s", self.root)
 
+    # ------------------------------------------------------------------
+    def _unique_file(self, dest: str, name: str) -> str:
+        """Return a non-conflicting path under *dest* for *name*."""
+        base, ext = os.path.splitext(name)
+        target = os.path.join(dest, name)
+        counter = 1
+        while os.path.exists(target):
+            target = os.path.join(dest, f"{base}_{counter}{ext}")
+            counter += 1
+        return target
+
+    def _unique_dir(self, dest: str, name: str) -> str:
+        """Return a non-conflicting folder path under *dest* named *name*."""
+        target = os.path.join(dest, name)
+        counter = 1
+        while os.path.exists(target):
+            target = os.path.join(dest, f"{name}_{counter}")
+            counter += 1
+        return target
+
     def path(self, *parts: str) -> str:
         return os.path.join(self.root, *parts)
 
@@ -50,9 +71,13 @@ class ResourceManager:
             return []
         return sorted(os.listdir(base))
 
-    def import_file(self, src: str, dest: str | None = None) -> str:
-        """Copy ``src`` into the resource tree and return its relative path."""
-        import shutil
+    def import_file(
+        self,
+        src: str,
+        dest: str | None = None,
+        progress_cb: Callable[[int], None] | None = None,
+    ) -> str:
+        """Copy ``src`` into the resources and report progress via ``progress_cb``."""
 
         if dest is None:
             dest = self.root
@@ -60,22 +85,33 @@ class ResourceManager:
             dest = self.path(dest)
         os.makedirs(dest, exist_ok=True)
 
-        base = os.path.basename(src)
-        name, ext = os.path.splitext(base)
-        target = os.path.join(dest, base)
-        counter = 1
-        while os.path.exists(target):
-            target = os.path.join(dest, f"{name}_{counter}{ext}")
-            counter += 1
-        shutil.copy(src, target)
-        logger.info("Imported resource %s -> %s", src, target)
+        target = self._unique_file(dest, os.path.basename(src))
+
+        try:
+            with open(src, "rb") as fsrc, open(target, "wb") as fdst:
+                while True:
+                    chunk = fsrc.read(1024 * 1024)
+                    if not chunk:
+                        break
+                    fdst.write(chunk)
+                    if progress_cb:
+                        progress_cb(len(chunk))
+            logger.info("Imported resource %s -> %s", src, target)
+        except Exception:
+            logger.exception("Failed to import %s", src)
+            raise
+
         if target.startswith(self.root):
             return os.path.relpath(target, self.root)
         return target
 
-    def import_folder(self, src: str, dest: str | None = None) -> str:
-        """Recursively copy a folder into the resources tree."""
-        import shutil
+    def import_folder(
+        self,
+        src: str,
+        dest: str | None = None,
+        progress_cb: Callable[[int], None] | None = None,
+    ) -> str:
+        """Recursively copy a folder into the resources tree reporting progress."""
 
         if dest is None:
             dest = self.root
@@ -83,18 +119,31 @@ class ResourceManager:
             dest = self.path(dest)
         os.makedirs(dest, exist_ok=True)
 
-        base = os.path.basename(os.path.normpath(src))
-        target = os.path.join(dest, base)
-        counter = 1
-        while os.path.exists(target):
-            target = os.path.join(dest, f"{base}_{counter}")
-            counter += 1
+        target = self._unique_dir(dest, os.path.basename(os.path.normpath(src)))
+
         try:
-            shutil.copytree(src, target)
+            for root_dir, dirs, files in os.walk(src):
+                rel_root = os.path.relpath(root_dir, src)
+                dest_root = os.path.join(target, rel_root) if rel_root != "." else target
+                os.makedirs(dest_root, exist_ok=True)
+                for d in dirs:
+                    os.makedirs(os.path.join(dest_root, d), exist_ok=True)
+                for f in files:
+                    sfile = os.path.join(root_dir, f)
+                    dfile = self._unique_file(dest_root, f)
+                    with open(sfile, "rb") as fin, open(dfile, "wb") as fout:
+                        while True:
+                            chunk = fin.read(1024 * 1024)
+                            if not chunk:
+                                break
+                            fout.write(chunk)
+                            if progress_cb:
+                                progress_cb(len(chunk))
             logger.info("Imported folder %s -> %s", src, target)
         except Exception:
             logger.exception("Failed to import folder %s", src)
             raise
+
         if target.startswith(self.root):
             return os.path.relpath(target, self.root)
         return target
