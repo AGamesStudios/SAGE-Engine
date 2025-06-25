@@ -37,7 +37,10 @@ class ResourceManager:
         return p
 
     def move(self, src: str, dst: str) -> None:
-        os.rename(self.path(src), self.path(dst))
+        src_path = self.path(src)
+        dst_path = self.path(dst)
+        os.makedirs(os.path.dirname(dst_path), exist_ok=True)
+        os.rename(src_path, dst_path)
         logger.info("Moved resource %s -> %s", src, dst)
 
     def list(self, rel: str = "") -> list[str]:

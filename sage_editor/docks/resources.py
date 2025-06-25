@@ -58,6 +58,8 @@ class ResourceTreeWidget(QTreeWidget):
         super().dropEvent(event)
         parent = item.parent()
         base = parent.data(0, Qt.ItemDataRole.UserRole) if parent else self.editor.resource_dir
+        if base and not os.path.isdir(base):
+            base = os.path.dirname(base)
         new_path = os.path.join(base, item.text(0))
         if old_path != new_path:
             if self.editor._move_resource(old_path, new_path):
@@ -199,7 +201,7 @@ class ResourceDock(QDockWidget):
     def _tree_selection(self) -> None:  # pragma: no cover - UI callback
         items = self.resource_view.selectedItems()
         path = items[0].data(0, Qt.ItemDataRole.UserRole) if items else ''
-        self._show_preview(path, QCursor.pos() + QPoint(16, 16))
+        self._show_preview(path, QCursor.pos() + QPoint(8, 8))
 
     def _view_selection(self, current, _prev) -> None:  # pragma: no cover - UI callback
         if self.editor.resource_model is None:
@@ -207,7 +209,7 @@ class ResourceDock(QDockWidget):
         if self.editor.proxy_model is not None:
             current = self.editor.proxy_model.mapToSource(current)
         path = self.editor.resource_model.filePath(current)
-        self._show_preview(path, QCursor.pos() + QPoint(16, 16))
+        self._show_preview(path, QCursor.pos() + QPoint(8, 8))
 
     def _show_preview(self, path: str, pos: QPoint | None = None) -> None:
         """Show a floating image preview near *pos* if the file is an image."""
@@ -238,7 +240,7 @@ class ResourceDock(QDockWidget):
                             index = self.editor.proxy_model.mapToSource(index)
                         path = self.editor.resource_model.filePath(index)
                 if path and os.path.isfile(path) and os.path.splitext(path)[1].lower() in {'.png', '.jpg', '.jpeg', '.bmp', '.gif'}:
-                    self._show_preview(path, self.resource_view.viewport().mapToGlobal(event.pos()) + QPoint(16, 16))
+                    self._show_preview(path, self.resource_view.viewport().mapToGlobal(event.pos()) + QPoint(8, 8))
                 elif not self.hover_preview.underMouse():
                     self.hover_preview.hide()
             elif event.type() == QEvent.Type.Leave:

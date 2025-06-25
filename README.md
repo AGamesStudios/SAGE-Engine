@@ -95,7 +95,7 @@ The engine loads all assets relative to this directory, ensuring reorganizing
 files will not break existing scenes. If PyQt does not provide
 ``QFileSystemModel`` the editor falls back to a simpler tree widget that still
 lets you create folders and import resources. Hovering an image reveals a
-floating preview near the cursor so files are easy to identify. The preview is
+floating preview just offset from the cursor so files are easy to identify. The preview is
 confined to the editor window and disappears when it loses focus. Thumbnails are
 cached in memory so browsing many files does not lag.
 Use **File → New Project** to generate a folder for your game. The dialog asks
