@@ -23,6 +23,7 @@ class ResourceManager:
 
     def __init__(self, root: str):
         self.root = root
+        self._cache: dict[str, bytes] = {}
         os.makedirs(self.root, exist_ok=True)
         logger.info("Resource manager initialized at %s", self.root)
 
@@ -97,3 +98,20 @@ class ResourceManager:
         if target.startswith(self.root):
             return os.path.relpath(target, self.root)
         return target
+
+    def load_data(self, rel_path: str) -> bytes:
+        """Return the contents of a resource and cache it."""
+        path = self.path(rel_path)
+        with open(path, 'rb') as fh:
+            data = fh.read()
+        self._cache[rel_path] = data
+        logger.info("Loaded resource %s (%d bytes)", rel_path, len(data))
+        return data
+
+    def get_cached(self, rel_path: str) -> bytes | None:
+        """Return cached data if available."""
+        return self._cache.get(rel_path)
+
+    def clear_cache(self) -> None:
+        """Empty the internal resource cache."""
+        self._cache.clear()

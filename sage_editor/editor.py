@@ -2100,6 +2100,11 @@ class Editor(QMainWindow):
         abs_path = os.path.abspath(path)
         if abs_path.startswith(res_root):
             rel = os.path.relpath(abs_path, res_root)
+            if self.resource_manager and os.path.isfile(abs_path):
+                try:
+                    self.resource_manager.load_data(rel)
+                except Exception:
+                    logger.exception('Failed to load resource %s', rel)
             return abs_path, rel
         dest_dir = base if base else self.resource_dir
         if dest_dir and not os.path.isdir(dest_dir):
@@ -2143,6 +2148,10 @@ class Editor(QMainWindow):
                     rel = self.resource_manager.import_file(abs_path, rel_base)
                     abs_copy = os.path.join(self.resource_dir, rel)
                     _log(f'Imported resource {abs_path} -> {abs_copy}')
+                    try:
+                        self.resource_manager.load_data(rel)
+                    except Exception:
+                        logger.exception('Failed to load resource %s', rel)
                     return abs_copy, rel
                 except Exception as exc:
                     QMessageBox.warning(self, self.t('error'), str(exc))
@@ -2162,6 +2171,11 @@ class Editor(QMainWindow):
                 logger.exception('Failed to import resource %s', abs_path)
                 QMessageBox.warning(self, self.t('error'), str(exc))
             rel = os.path.relpath(target, self.resource_dir)
+            if self.resource_manager:
+                try:
+                    self.resource_manager.load_data(rel)
+                except Exception:
+                    logger.exception('Failed to load resource %s', rel)
             self._refresh_resource_tree()
             return target, rel
 

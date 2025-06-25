@@ -101,8 +101,9 @@ between folders or drop files from outside the application. Dragging files out o
 the dock is disabled so resources remain inside the project. Files are sorted alphabetically so projects stay
 organized. Any asset chosen from outside the project is copied into this
 directory automatically, so scenes never reference files that might disappear.
-The engine loads all assets relative to this directory, ensuring reorganizing
-files will not break existing scenes. If PyQt does not provide
+Imported files are loaded immediately into a small cache so previews appear
+instantly. The engine loads all assets relative to this directory, ensuring
+reorganizing files will not break existing scenes. If PyQt does not provide
 ``QFileSystemModel`` the editor falls back to a simpler tree widget that still
 lets you create folders and import resources. Right-clicking any item offers to
 open it with the default application (icon `open.png`) or delete it from the project. Hovering an image reveals a
