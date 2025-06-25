@@ -10,7 +10,7 @@ from OpenGL.GL import (
     glTexCoord2f, glBindTexture, glTexParameteri, glTexImage2D, glGenTextures,
     GL_BLEND, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_COLOR_BUFFER_BIT,
     GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_TEXTURE_MAG_FILTER, GL_LINEAR,
-    GL_QUADS, GL_RGBA, GL_UNSIGNED_BYTE
+    GL_QUADS, GL_LINES, GL_RGBA, GL_UNSIGNED_BYTE
 )
 from PIL import Image
 
@@ -27,6 +27,7 @@ class GLWidget(QOpenGLWidget):
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glEnable(GL_TEXTURE_2D)
+        self.renderer and self.renderer._setup_view()
 
     def paintGL(self):
         if self.renderer:
@@ -49,12 +50,15 @@ class OpenGLRenderer:
         self.widget.resize(self.width, self.height)
         self._should_close = False
         self.textures: dict[int, int] = {}
+        self._scene = None
+        self._camera = None
 
     def set_window_size(self, width: int, height: int):
         if self.widget:
             self.widget.resize(width, height)
         self.width = width
         self.height = height
+        self._setup_view()
 
     def should_close(self) -> bool:
         return self._should_close
@@ -62,6 +66,14 @@ class OpenGLRenderer:
     def clear(self, color=(0, 0, 0)):
         glClearColor(color[0]/255.0, color[1]/255.0, color[2]/255.0, 1.0)
         glClear(GL_COLOR_BUFFER_BIT)
+
+    def _setup_view(self):
+        from OpenGL.GL import glMatrixMode, glLoadIdentity, glOrtho, GL_PROJECTION, GL_MODELVIEW
+        glMatrixMode(GL_PROJECTION)
+        glLoadIdentity()
+        glOrtho(0, self.width, 0, self.height, -1, 1)
+        glMatrixMode(GL_MODELVIEW)
+        glLoadIdentity()
 
     def _get_texture(self, obj) -> int:
         tex = self.textures.get(id(obj.image))
@@ -98,11 +110,15 @@ class OpenGLRenderer:
         # called from GLWidget.paintGL
         self.clear()
         if self._scene:
-            self.draw_scene(self._scene, self._camera)
+            self._render_scene(self._scene, self._camera)
 
     def draw_scene(self, scene, camera: Camera | None = None):
+        """Store the scene and camera then schedule a repaint."""
         self._scene = scene
         self._camera = camera
+        self.widget.update()
+
+    def _render_scene(self, scene, camera: Camera | None):
         glPushMatrix()
         scale = units.UNITS_PER_METER
         if camera:
@@ -129,7 +145,6 @@ class OpenGLRenderer:
             glPopMatrix()
         self._draw_origin(50 * scale)
         glPopMatrix()
-        self.widget.update()
 
     def present(self):
         self.widget.update()
