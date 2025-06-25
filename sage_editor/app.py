@@ -13,6 +13,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPalette, QColor, QFont
+from .icons import load_icon
 
 STYLE_SHEET = """
 QToolBar { icon-size: 24px; spacing: 6px; }
@@ -101,7 +102,7 @@ class ProjectManager(QDialog):
             return
         menu = QMenu(self)
         open_act = menu.addAction(self.editor.t('open'))
-        del_act = menu.addAction(self.editor.t('delete'))
+        del_act = menu.addAction(load_icon('delete.png'), self.editor.t('delete'))
         action = menu.exec(self.table.mapToGlobal(pos))
         if action == open_act:
             self.table.selectRow(row)

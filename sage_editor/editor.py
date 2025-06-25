@@ -881,8 +881,10 @@ class AddEventDialog(QDialog):
         item = self.cond_list.itemAt(pos)
         if item:
             edit_act = menu.addAction(self.parent().t('edit') if self.parent() else 'Edit')
-            copy_act = menu.addAction(self.parent().t('copy') if self.parent() else 'Copy')
-            delete_act = menu.addAction(self.parent().t('delete') if self.parent() else 'Delete')
+            copy_act = menu.addAction(load_icon('copy.png'),
+                                     self.parent().t('copy') if self.parent() else 'Copy')
+            delete_act = menu.addAction(load_icon('delete.png'),
+                                       self.parent().t('delete') if self.parent() else 'Delete')
             action = menu.exec(self.cond_list.mapToGlobal(pos))
             row = self.cond_list.row(item)
             if action == edit_act:
@@ -901,8 +903,10 @@ class AddEventDialog(QDialog):
                 self.conditions.pop(row)
                 self.cond_list.takeItem(row)
         else:
-            add = menu.addAction(self.parent().t('add_condition') if self.parent() else 'Add Condition')
-            paste = menu.addAction(self.parent().t('paste') if self.parent() else 'Paste')
+            add = menu.addAction(load_icon('add.png'),
+                                self.parent().t('add_condition') if self.parent() else 'Add Condition')
+            paste = menu.addAction(load_icon('paste.png'),
+                                  self.parent().t('paste') if self.parent() else 'Paste')
             action = menu.exec(self.cond_list.mapToGlobal(pos))
             if action == add:
                 self.add_condition()
@@ -920,8 +924,10 @@ class AddEventDialog(QDialog):
         item = self.act_list.itemAt(pos)
         if item:
             edit_act = menu.addAction(self.parent().t('edit') if self.parent() else 'Edit')
-            copy_act = menu.addAction(self.parent().t('copy') if self.parent() else 'Copy')
-            delete_act = menu.addAction(self.parent().t('delete') if self.parent() else 'Delete')
+            copy_act = menu.addAction(load_icon('copy.png'),
+                                     self.parent().t('copy') if self.parent() else 'Copy')
+            delete_act = menu.addAction(load_icon('delete.png'),
+                                       self.parent().t('delete') if self.parent() else 'Delete')
             action = menu.exec(self.act_list.mapToGlobal(pos))
             row = self.act_list.row(item)
             if action == edit_act:
@@ -940,8 +946,10 @@ class AddEventDialog(QDialog):
                 self.actions.pop(row)
                 self.act_list.takeItem(row)
         else:
-            add = menu.addAction(self.parent().t('add_action') if self.parent() else 'Add Action')
-            paste = menu.addAction(self.parent().t('paste') if self.parent() else 'Paste')
+            add = menu.addAction(load_icon('add.png'),
+                                self.parent().t('add_action') if self.parent() else 'Add Action')
+            paste = menu.addAction(load_icon('paste.png'),
+                                  self.parent().t('paste') if self.parent() else 'Paste')
             action = menu.exec(self.act_list.mapToGlobal(pos))
             if action == add:
                 self.add_action()
@@ -1966,12 +1974,12 @@ class Editor(QMainWindow):
     def _object_menu(self, pos):
         item = self.object_list.itemAt(pos)
         menu = QMenu(self)
-        paste_act = menu.addAction(self.t('paste')) if self._clip_object else None
+        paste_act = menu.addAction(load_icon('paste.png'), self.t('paste')) if self._clip_object else None
         active_act = None
         if item:
-            cut_act = menu.addAction(self.t('cut'))
-            copy_act = menu.addAction(self.t('copy'))
-            del_act = menu.addAction(self.t('delete'))
+            cut_act = menu.addAction(load_icon('cut.png'), self.t('cut'))
+            copy_act = menu.addAction(load_icon('copy.png'), self.t('copy'))
+            del_act = menu.addAction(load_icon('delete.png'), self.t('delete'))
             row = self.object_list.row(item)
             _, obj = self.items[row]
             from engine import Camera
@@ -2012,7 +2020,7 @@ class Editor(QMainWindow):
         open_act = menu.addAction(self.t('open'))
         new_folder_act = menu.addAction(self.t('new_folder'))
         import_act = menu.addAction(self.t('import'))
-        del_act = menu.addAction(self.t('delete'))
+        del_act = menu.addAction(load_icon('delete.png'), self.t('delete'))
         act = menu.exec(self.resource_view.viewport().mapToGlobal(pos))
         if act == open_act:
             self._open_resource(path)
@@ -2032,12 +2040,12 @@ class Editor(QMainWindow):
         events = getattr(obj, 'events', [])
         item = self.event_list.itemAt(pos)
         menu = QMenu(self)
-        paste_act = menu.addAction(self.t('paste')) if self._clip_event else None
+        paste_act = menu.addAction(load_icon('paste.png'), self.t('paste')) if self._clip_event else None
         if item and self.event_list.row(item) < len(events):
             row = self.event_list.row(item)
-            cut_act = menu.addAction(self.t('cut'))
-            copy_act = menu.addAction(self.t('copy'))
-            del_act = menu.addAction(self.t('delete'))
+            cut_act = menu.addAction(load_icon('cut.png'), self.t('cut'))
+            copy_act = menu.addAction(load_icon('copy.png'), self.t('copy'))
+            del_act = menu.addAction(load_icon('delete.png'), self.t('delete'))
             action = menu.exec(self.event_list.viewport().mapToGlobal(pos))
             if action == paste_act and self._clip_event:
                 events.insert(row + 1, copy.deepcopy(self._clip_event))
@@ -2051,7 +2059,7 @@ class Editor(QMainWindow):
                 events.pop(row)
                 self._mark_dirty()
         else:
-            add_act = menu.addAction(self.t('add_event'))
+            add_act = menu.addAction(load_icon('add.png'), self.t('add_event'))
             action = menu.exec(self.event_list.viewport().mapToGlobal(pos))
             if action == add_act:
                 self.add_condition(len(events))
