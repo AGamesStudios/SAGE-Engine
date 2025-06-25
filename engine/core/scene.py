@@ -21,6 +21,7 @@ class Scene:
         self.objects: List[GameObject | Camera] = []
         self.variables: dict = {}
         self.camera: Camera | None = None
+        self.active_camera: str | None = None
         self.metadata: dict = {}
         self._sorted = False
 
@@ -41,13 +42,36 @@ class Scene:
             obj.name = new_name
         self.objects.append(obj)
         if isinstance(obj, Camera):
-            self.camera = obj
+            if self.camera is None:
+                self.camera = obj
+                self.active_camera = obj.name
         self._sorted = False
 
     def remove_object(self, obj: GameObject):
         if obj in self.objects:
             self.objects.remove(obj)
+            if obj is self.camera:
+                self.camera = None
+                self.active_camera = None
             self._sorted = False
+
+    def set_active_camera(self, camera: Camera | str | None):
+        """Select which camera is used for rendering."""
+        if isinstance(camera, str):
+            camera = next((o for o in self.objects
+                           if isinstance(o, Camera) and o.name == camera), None)
+        if camera is None or camera not in self.objects:
+            self.camera = None
+            self.active_camera = None
+        else:
+            self.camera = camera
+            self.active_camera = camera.name
+
+    def get_active_camera(self) -> Camera | None:
+        """Return the currently active camera."""
+        if self.camera is None and self.active_camera:
+            self.set_active_camera(self.active_camera)
+        return self.camera
 
     def update(self, dt: float):
         self._sort_objects()
@@ -65,6 +89,7 @@ class Scene:
         scene = cls()
         scene.variables = data.get("variables", {})
         scene.metadata = data.get("metadata", {})
+        scene.active_camera = data.get("active_camera")
         for entry in data.get("objects", []):
             obj = object_from_dict(entry)
             if obj is None:
@@ -79,7 +104,10 @@ class Scene:
                 logger.debug('Object %s does not support settings', type(obj).__name__)
             scene.add_object(obj)
             if isinstance(obj, Camera):
-                scene.camera = obj
+                if scene.camera is None:
+                    scene.camera = obj
+                if scene.active_camera and obj.name == scene.active_camera:
+                    scene.camera = obj
         has_cam = scene.camera is not None
         cam = data.get("camera")
         if not has_cam and isinstance(cam, dict):
@@ -88,6 +116,9 @@ class Scene:
             if obj is not None:
                 scene.add_object(obj)
                 scene.camera = obj
+                scene.active_camera = obj.name
+        if scene.camera is None and scene.active_camera:
+            scene.set_active_camera(scene.active_camera)
         return scene
 
     @classmethod
@@ -116,6 +147,10 @@ class Scene:
         }
         if self.metadata:
             data["metadata"] = self.metadata
+        if self.camera:
+            data["active_camera"] = self.camera.name
+        elif self.active_camera:
+            data["active_camera"] = self.active_camera
         if self.camera and self.camera not in self.objects:
             data["camera"] = object_to_dict(self.camera)
         return data

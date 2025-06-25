@@ -32,7 +32,10 @@ class Engine:
         self.fps = fps
         self._frame_interval = 1.0 / fps if fps else 0
         self.scene = scene or Scene()
-        self.camera = camera or getattr(self.scene, 'camera', None) or Camera(width / 2, height / 2, width, height)
+        if camera is None:
+            cam = getattr(self.scene, 'get_active_camera', None)
+            camera = cam() if callable(cam) else getattr(self.scene, 'camera', None)
+        self.camera = camera or Camera(width / 2, height / 2, width, height)
         self.events = events if events is not None else self.scene.build_event_system()
         if renderer is None:
             cls = get_renderer('pygame')
@@ -68,12 +71,23 @@ class Engine:
         """Return the value of an event variable."""
         return self.events.variables.get(name)
 
+    def set_camera(self, camera: Camera | str | None):
+        """Switch the camera used for rendering."""
+        if isinstance(camera, str):
+            camera = next((o for o in self.scene.objects
+                           if isinstance(o, Camera) and o.name == camera), None)
+        self.camera = camera
+        if self.camera is not None:
+            self.camera.width = self.renderer.width
+            self.camera.height = self.renderer.height
+
     def _on_resize(self, window, width, height):
         """Resize callback that keeps the camera and projection in sync."""
         self.renderer.update_size()
-        if self.camera:
-            self.camera.width = self.renderer.width
-            self.camera.height = self.renderer.height
+        cam = self.camera or getattr(self.scene, 'get_active_camera', lambda: None)()
+        if cam:
+            cam.width = self.renderer.width
+            cam.height = self.renderer.height
 
     def run(self):
         _log(f'Starting engine version {ENGINE_VERSION}')
@@ -87,7 +101,8 @@ class Engine:
                 self.events.update(self, self.scene, dt)
                 self.scene.update(dt)
                 self.renderer.clear()
-                self.renderer.draw_scene(self.scene, self.camera)
+                cam = self.camera or getattr(self.scene, 'get_active_camera', lambda: None)()
+                self.renderer.draw_scene(self.scene, cam)
                 self.renderer.present()
             except Exception:
                 logger.exception('Runtime error')
