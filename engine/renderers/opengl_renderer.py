@@ -43,9 +43,13 @@ class OpenGLRenderer:
     title: str = "SAGE 2D"
     widget: Optional[GLWidget] = None
 
+    def create_widget(self) -> GLWidget:
+        """Return the :class:`GLWidget` used for rendering."""
+        return GLWidget()
+
     def __post_init__(self):
         if self.widget is None:
-            self.widget = GLWidget()
+            self.widget = self.create_widget()
         self.widget.renderer = self
         self.widget.resize(self.width, self.height)
         self._should_close = False

@@ -5,6 +5,7 @@ from engine.renderers.opengl_renderer import OpenGLRenderer
 from engine.core.scene import Scene
 from engine.core.camera import Camera
 from engine.core.game_object import GameObject
+from engine import units
 
 
 class Viewport(QOpenGLWidget):
@@ -27,6 +28,7 @@ class Viewport(QOpenGLWidget):
         self.timer.timeout.connect(self._tick)
         self.timer.start()
         self.setMinimumSize(200, 150)
+        self._drag_pos = None
 
     # QOpenGLWidget overrides -------------------------------------------------
 
@@ -63,3 +65,25 @@ class Viewport(QOpenGLWidget):
     def hideEvent(self, event):  # pragma: no cover
         self.timer.stop()
         super().hideEvent(event)
+
+    # mouse drag for panning -------------------------------------------------
+
+    def mousePressEvent(self, event):  # pragma: no cover - UI interaction
+        if event.buttons() & event.Buttons.LeftButton:
+            self._drag_pos = event.position()
+        super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):  # pragma: no cover - UI interaction
+        if self._drag_pos is not None and event.buttons() & event.Buttons.LeftButton:
+            dx = event.position().x() - self._drag_pos.x()
+            dy = event.position().y() - self._drag_pos.y()
+            scale = units.UNITS_PER_METER
+            self.camera.x -= dx / scale
+            self.camera.y += (-1 if units.Y_UP else 1) * dy / scale
+            self._drag_pos = event.position()
+            self.update()
+        super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event):  # pragma: no cover - UI interaction
+        self._drag_pos = None
+        super().mouseReleaseEvent(event)
