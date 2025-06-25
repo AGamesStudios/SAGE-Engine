@@ -607,19 +607,11 @@ class ActionDialog(QDialog):
 
     def _browse_path(self):
         parent = self.parent()
-        start = parent.resource_dir if parent else ''
-        path, _ = QFileDialog.getOpenFileName(
-            self,
-            parent.t('select_file') if parent else 'Select File',
-            start,
-            'All Files (*)',
-        )
-        if not path:
+        if not parent:
             return
-        if start and not os.path.abspath(path).startswith(os.path.abspath(start)):
-            QMessageBox.warning(self, parent.t('error') if parent else 'Error', parent.t('resource_only') if parent else 'Resource only')
-            return
-        self.path_edit.setText(os.path.relpath(path, start) if start else path)
+        path = parent._resource_file_dialog(parent.t('select_file'))
+        if path:
+            self.path_edit.setText(os.path.relpath(path, parent.resource_dir))
 
     def get_action(self):
         typ = self.type_box.currentData()
@@ -1198,6 +1190,20 @@ class Editor(QMainWindow):
         self.recent_projects = []
         save_recent(self.recent_projects)
         self._update_recent_menu()
+
+    def _resource_file_dialog(self, title: str, filters: str = '') -> str:
+        """Return a file path chosen from the resources folder."""
+        start = self.resource_dir or ''
+        dlg = QFileDialog(self, title, start, filters or self.t('all_files'))
+        dlg.setFileMode(QFileDialog.FileMode.ExistingFile)
+        dlg.setOption(QFileDialog.Option.DontUseNativeDialog, True)
+        if not dlg.exec():  # pragma: no cover - UI interaction
+            return ''
+        path = dlg.selectedFiles()[0]
+        if start and not os.path.abspath(path).startswith(os.path.abspath(start)):
+            QMessageBox.warning(self, self.t('error'), self.t('resource_only'))
+            return ''
+        return path
 
     def _init_actions(self):
         menubar = self.menuBar()

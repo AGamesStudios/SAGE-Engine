@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import (
     QDockWidget, QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
-    QLineEdit, QAbstractItemView, QTreeView, QTreeWidget, QFileDialog,
+    QLineEdit, QLabel, QAbstractItemView, QTreeView, QTreeWidget, QFileDialog,
     QSizePolicy, QStyle,
 )
 try:  # QFileSystemModel is missing in some PyQt6 builds
@@ -8,6 +8,7 @@ try:  # QFileSystemModel is missing in some PyQt6 builds
 except Exception:  # pragma: no cover - optional dependency
     QFileSystemModel = None
 from PyQt6.QtCore import Qt, QSortFilterProxyModel
+from PyQt6.QtGui import QPixmap
 
 import os
 
@@ -166,8 +167,19 @@ class ResourceDock(QDockWidget):
         res_layout.setContentsMargins(6, 6, 6, 6)
         res_layout.addLayout(ctrl_layout)
         res_layout.addWidget(self.resource_view)
+        self.preview = QLabel(editor.t('preview'))
+        self.preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.preview.setMinimumHeight(120)
+        res_layout.addWidget(self.preview)
         self.setWidget(res_widget)
         editor.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self)
+
+        if isinstance(self.resource_view, QTreeWidget):
+            self.resource_view.itemSelectionChanged.connect(self._tree_selection)
+        else:
+            sel = self.resource_view.selectionModel()
+            if sel is not None:
+                sel.currentChanged.connect(self._view_selection)
 
     # slot wrappers ---------------------------------------------------------
 
@@ -182,4 +194,28 @@ class ResourceDock(QDockWidget):
     def _filter_changed(self, text: str) -> None:  # pragma: no cover - UI callback
         """Handle resource search edits."""
         self.editor._filter_resources(text)
+
+    def _tree_selection(self) -> None:  # pragma: no cover - UI callback
+        items = self.resource_view.selectedItems()
+        path = items[0].data(0, Qt.ItemDataRole.UserRole) if items else ''
+        self._show_preview(path)
+
+    def _view_selection(self, current, _prev) -> None:  # pragma: no cover - UI callback
+        if self.editor.resource_model is None:
+            return
+        if self.editor.proxy_model is not None:
+            current = self.editor.proxy_model.mapToSource(current)
+        path = self.editor.resource_model.filePath(current)
+        self._show_preview(path)
+
+    def _show_preview(self, path: str) -> None:
+        if path and os.path.isfile(path):
+            ext = os.path.splitext(path)[1].lower()
+            if ext in {'.png', '.jpg', '.jpeg', '.bmp', '.gif'}:
+                pix = QPixmap(path)
+                if not pix.isNull():
+                    self.preview.setPixmap(pix.scaled(120, 120, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+                    return
+        self.preview.setPixmap(QPixmap())
+        self.preview.setText(self.editor.t('preview'))
 

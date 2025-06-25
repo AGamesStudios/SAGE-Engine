@@ -94,7 +94,8 @@ directory automatically, so scenes never reference files that might disappear.
 The engine loads all assets relative to this directory, ensuring reorganizing
 files will not break existing scenes. If PyQt does not provide
 ``QFileSystemModel`` the editor falls back to a simpler tree widget that still
-lets you create folders and import resources.
+lets you create folders and import resources. Selecting an image shows a small
+preview below the tree so you can quickly identify files.
 Use **File → New Project** to generate a folder for your game. The dialog asks
 for a project name and location and lets you choose a rendering backend.
 Pygame is the default option while an experimental OpenGL (alpha) renderer and
@@ -146,7 +147,9 @@ The editor supports multiple languages. On startup it selects the language
 matching your system locale, but you can change it via the toolbar drop-down.
 All strings come from simple dictionaries in `sage_editor/lang.py`, so adding
 more languages only requires editing this file. Translations cover file dialogs,
-logic windows and event lists so the whole interface is localized.
+logic windows and event lists so the whole interface is localized. When
+choosing assets the editor restricts the file dialog to the project's resources
+folder so paths stay valid.
 Old projects saved with translated condition or action names still load
 correctly because the engine maps them back to their English identifiers at
 runtime.  The mapping comes from simple dictionaries included with both the
