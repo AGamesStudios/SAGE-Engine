@@ -8,7 +8,7 @@ try:  # QFileSystemModel is missing in some PyQt6 builds
 except Exception:  # pragma: no cover - optional dependency
     QFileSystemModel = None
 from PyQt6.QtCore import Qt, QSortFilterProxyModel, QEvent, QPoint
-from PyQt6.QtGui import QPixmap
+from PyQt6.QtGui import QPixmap, QCursor
 from ..widgets import ImagePreview
 
 import os
@@ -199,7 +199,7 @@ class ResourceDock(QDockWidget):
     def _tree_selection(self) -> None:  # pragma: no cover - UI callback
         items = self.resource_view.selectedItems()
         path = items[0].data(0, Qt.ItemDataRole.UserRole) if items else ''
-        self._show_preview(path)
+        self._show_preview(path, QCursor.pos() + QPoint(16, 16))
 
     def _view_selection(self, current, _prev) -> None:  # pragma: no cover - UI callback
         if self.editor.resource_model is None:
@@ -207,14 +207,16 @@ class ResourceDock(QDockWidget):
         if self.editor.proxy_model is not None:
             current = self.editor.proxy_model.mapToSource(current)
         path = self.editor.resource_model.filePath(current)
-        self._show_preview(path)
+        self._show_preview(path, QCursor.pos() + QPoint(16, 16))
 
-    def _show_preview(self, path: str) -> None:
+    def _show_preview(self, path: str, pos: QPoint | None = None) -> None:
+        """Show a floating image preview near *pos* if the file is an image."""
         if path and os.path.isfile(path):
             ext = os.path.splitext(path)[1].lower()
             if ext in {'.png', '.jpg', '.jpeg', '.bmp', '.gif'}:
                 self.hover_preview.set_image(path)
-                pos = self.mapToGlobal(QPoint(0, 0))
+                if pos is None:
+                    pos = QCursor.pos()
                 self.hover_preview.move(pos)
                 self.hover_preview.show()
                 return
@@ -236,7 +238,7 @@ class ResourceDock(QDockWidget):
                             index = self.editor.proxy_model.mapToSource(index)
                         path = self.editor.resource_model.filePath(index)
                 if path and os.path.isfile(path) and os.path.splitext(path)[1].lower() in {'.png', '.jpg', '.jpeg', '.bmp', '.gif'}:
-                    self._show_preview(path)
+                    self._show_preview(path, self.resource_view.viewport().mapToGlobal(event.pos()) + QPoint(16, 16))
                 elif not self.hover_preview.underMouse():
                     self.hover_preview.hide()
             elif event.type() == QEvent.Type.Leave:
