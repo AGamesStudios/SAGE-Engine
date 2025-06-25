@@ -2052,8 +2052,6 @@ class Editor(QMainWindow):
                 self._mark_dirty()
         else:
             add_act = menu.addAction(self.t('add_event'))
-            if paste_act:
-                menu.addAction(self.t('paste'))
             action = menu.exec(self.event_list.viewport().mapToGlobal(pos))
             if action == add_act:
                 self.add_condition(len(events))
