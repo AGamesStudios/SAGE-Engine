@@ -78,10 +78,10 @@ to manipulate. The gizmo and handles always appear above other sprites so they
 remain visible. Use the **Show Gizmo** toolbar button to hide or show them as
 needed. A cyan rectangle indicates the active camera frustum. Camera ``x`` and
 ``y`` describe its centre, so the rectangle surrounds that point. If no camera
-exists the window size is used instead. When launching a project the engine
-creates the window using the active camera ``width`` and ``height`` so both
-match from the start. The camera continues to update its dimensions whenever
-the window is resized, preserving the aspect ratio. Scenes can contain multiple
+exists the window size is used instead. Projects store a window ``width`` and
+``height`` separately from the active camera size. When these differ the engine
+centres the camera view inside the window and letterboxes the unused area so
+the aspect ratio is preserved. Scenes can contain multiple
 cameras. Select a camera in the object list (or use its context menu) and
 choose **Set Active Camera** to decide which one is used. When launching the
 engine from code use ``scene.set_active_camera(name)``.
@@ -136,8 +136,9 @@ Window dimensions can be changed under **Settings → Window Settings**. The
 game window title matches the editor, e.g. `SAGE Editor: MyGame - Scene1`.
 When you edit the scene the title gains an `(unsaved)` suffix until you save.
 Project files record the window `width`, `height` and `title`. When loading a
-project the engine creates its window using these values and applies them to
-the active camera so the viewport and scene match perfectly. Future versions
+project the engine creates its window using these values. The active camera
+keeps its own resolution, with any extra window space filled by black bars so
+the scene maintains its aspect ratio. Future versions
 may add other renderer backends and each project remembers which renderer to
 use.
 When defining variables, boolean values are edited with a convenient check box

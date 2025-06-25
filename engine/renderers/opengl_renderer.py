@@ -115,12 +115,19 @@ class OpenGLRenderer:
             zoom = camera.zoom
             camx = camera.x * scale
             camy = camera.y * scale
-            camw = (camera.width / zoom) * scale
-            camh = (camera.height / zoom) * scale
+            camw = camera.width * scale
+            camh = camera.height * scale
+        s = min(self.width / camw, self.height / camh)
+        view_w = camw * s
+        view_h = camh * s
+        off_x = (self.width - view_w) / 2
+        off_y = (self.height - view_h) / 2
         GL.glPushMatrix()
-        GL.glTranslatef(self.width / 2, self.height / 2, 0)
-        GL.glScalef(zoom, zoom, 1)
+        GL.glTranslatef(off_x + view_w / 2, off_y + view_h / 2, 0)
+        GL.glScalef(s * zoom, s * zoom, 1)
         GL.glTranslatef(-camx, -camy, 0)
+        camw /= zoom
+        camh /= zoom
         scene._sort_objects()
         for obj in scene.objects:
             if isinstance(obj, Camera):

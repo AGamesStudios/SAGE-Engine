@@ -60,8 +60,15 @@ class PygameRenderer:
             zoom = camera.zoom
             camx = camera.x * scale
             camy = camera.y * scale
-            camw = (camera.width / zoom) * scale
-            camh = (camera.height / zoom) * scale
+            camw = camera.width * scale
+            camh = camera.height * scale
+        s = min(self.width / camw, self.height / camh)
+        view_w = camw * s
+        view_h = camh * s
+        off_x = (self.width - view_w) / 2
+        off_y = (self.height - view_h) / 2
+        camw /= zoom
+        camh /= zoom
         scene._sort_objects()
         for obj in scene.objects:
             if isinstance(obj, Camera):
@@ -73,9 +80,10 @@ class PygameRenderer:
                 if (x + w < left or x > left + camw or
                         y + h < top or y > top + camh):
                     continue
-            self.draw_object(obj, camx, camy, zoom)
+            self.draw_object(obj, camx, camy, zoom, s, off_x + view_w / 2, off_y + view_h / 2)
 
-    def draw_object(self, obj, camx=0, camy=0, zoom=1.0):
+    def draw_object(self, obj, camx=0, camy=0, zoom=1.0, scale_factor=1.0,
+                    cx=None, cy=None):
         tex = self._get_texture(obj)
         key = id(obj)
         info = (obj.scale_x, obj.scale_y, obj.angle)
@@ -92,8 +100,12 @@ class PygameRenderer:
                 surf = pygame.transform.rotate(surf, -obj.angle)
             self._cache[key] = (surf, info)
         scale = units.UNITS_PER_METER
-        x = (obj.x - camx / scale) * zoom * scale + self.width / 2
-        y = (obj.y - camy / scale) * zoom * scale + self.height / 2
+        if cx is None:
+            cx = self.width / 2
+        if cy is None:
+            cy = self.height / 2
+        x = (obj.x - camx / scale) * zoom * scale * scale_factor + cx
+        y = (obj.y - camy / scale) * zoom * scale * scale_factor + cy
         rect = surf.get_rect(center=(int(x), int(y)))
         self.surface.blit(surf, rect)
 

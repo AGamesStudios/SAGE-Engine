@@ -35,10 +35,9 @@ class Engine:
         if camera is None:
             cam = getattr(self.scene, 'get_active_camera', None)
             camera = cam() if callable(cam) else getattr(self.scene, 'camera', None)
-        if camera is not None:
-            width = camera.width
-            height = camera.height
-        self.camera = camera or Camera(width / 2, height / 2, width, height)
+            if camera is None:
+                camera = Camera(width / 2, height / 2, width, height)
+        self.camera = camera
         self.events = events if events is not None else self.scene.build_event_system()
         if renderer is None:
             cls = get_renderer('pygame')
@@ -50,9 +49,6 @@ class Engine:
             self.renderer = cls(width, height, title)
         else:
             self.renderer = renderer
-        # keep camera dimensions in sync with the window size
-        self.camera.width = self.renderer.width
-        self.camera.height = self.renderer.height
         if isinstance(self.renderer, PygameRenderer):
             self.input = PygameInput(self.renderer)
         else:
@@ -80,17 +76,10 @@ class Engine:
             camera = next((o for o in self.scene.objects
                            if isinstance(o, Camera) and o.name == camera), None)
         self.camera = camera
-        if self.camera is not None:
-            self.camera.width = self.renderer.width
-            self.camera.height = self.renderer.height
 
     def _on_resize(self, window, width, height):
         """Resize callback that keeps the camera and projection in sync."""
         self.renderer.update_size()
-        cam = self.camera or getattr(self.scene, 'get_active_camera', lambda: None)()
-        if cam:
-            cam.width = self.renderer.width
-            cam.height = self.renderer.height
 
     def run(self):
         _log(f'Starting engine version {ENGINE_VERSION}')
