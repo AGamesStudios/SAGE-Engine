@@ -80,7 +80,7 @@ class GameObject:
     def __setattr__(self, name, value):
         if name in GameObject._DIRTY_FIELDS:
             object.__setattr__(self, '_dirty', True)
-        super().__setattr__(name, value)
+        object.__setattr__(self, name, value)
 
     @property
     def scale(self) -> float:
