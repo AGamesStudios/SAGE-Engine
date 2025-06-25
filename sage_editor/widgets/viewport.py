@@ -25,6 +25,17 @@ class Viewport(QWidget):
         self.timer.start()
         self.setMinimumSize(200, 150)
 
+    def closeEvent(self, event) -> None:  # pragma: no cover - cleanup
+        self.timer.stop()
+        self.renderer.close()
+        super().closeEvent(event)
+
+    def __del__(self):  # pragma: no cover - cleanup
+        try:
+            self.renderer.close()
+        except Exception:
+            pass
+
     def set_scene(self, scene: Scene) -> None:
         self.scene = scene
         self.camera = scene.camera or Camera(
