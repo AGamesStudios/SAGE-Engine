@@ -35,10 +35,15 @@ class Engine:
         self._frame_interval = 1.0 / fps if fps else 0
         self.scene = scene or Scene()
         if camera is None:
-            cam = getattr(self.scene, 'get_active_camera', None)
-            camera = cam() if callable(cam) else getattr(self.scene, 'camera', None)
+            cam_getter = getattr(self.scene, 'get_active_camera', None)
+            camera = cam_getter() if callable(cam_getter) else getattr(self.scene, 'camera', None)
             if camera is None:
-                camera = Camera(width / 2, height / 2, width, height)
+                camera = Camera(x=width / 2, y=height / 2, width=width, height=height)
+                if hasattr(self.scene, 'add_object'):
+                    self.scene.add_object(camera)
+        elif camera not in getattr(self.scene, 'objects', []):
+            if hasattr(self.scene, 'add_object'):
+                self.scene.add_object(camera)
         self.camera = camera
         self.events = events if events is not None else self.scene.build_event_system()
         if renderer is None:
@@ -152,7 +157,7 @@ def main(argv=None):
     if cls is None:
         raise ValueError(f'Unknown renderer: {renderer_name}')
     renderer = cls(width, height, title)
-    camera = scene.camera or Camera(width / 2, height / 2, width, height)
+    camera = scene.camera or Camera(x=width / 2, y=height / 2, width=width, height=height)
 
     Engine(width=width, height=height, title=title,
            scene=scene, events=scene.build_event_system(), renderer=renderer,

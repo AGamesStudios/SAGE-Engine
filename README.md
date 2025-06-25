@@ -82,8 +82,9 @@ handle for scaling and a small crosshair above for rotation so objects are easy
 to manipulate. The gizmo and handles always appear above other sprites so they
 remain visible. Use the **Show Gizmo** toolbar button to hide or show them as
 needed. A cyan rectangle indicates the active camera frustum. Camera ``x`` and
-``y`` describe its centre, so the rectangle surrounds that point. If no camera
-exists the window size is used instead. Projects store a window ``width`` and
+``y`` describe its centre, so the rectangle surrounds that point. Scenes always
+contain at least one camera; if an older scene lacks one the engine creates a
+camera centred on the window. Projects store a window ``width`` and
 ``height`` separately from the active camera size. When these differ the engine
 centres the camera view inside the window and letterboxes the unused area so
 the aspect ratio is preserved. The Pygame window is resizable and the camera
