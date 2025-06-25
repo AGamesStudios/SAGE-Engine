@@ -1,6 +1,16 @@
 """Unit conversion helpers for SAGE Engine."""
 UNITS_PER_METER = 1.0
 
+# orientation flag. When ``True`` positive Y values point upward and
+# negative values point downward. Setting this flag to ``False`` inverts
+# the axis so positive values go down the screen.
+Y_UP = True
+
+def set_y_up(flag: bool) -> None:
+    """Set whether the engine uses a Y-up coordinate system."""
+    global Y_UP
+    Y_UP = bool(flag)
+
 
 def set_units_per_meter(scale: float) -> None:
     """Set how many engine units represent one meter."""

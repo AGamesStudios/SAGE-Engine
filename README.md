@@ -32,13 +32,15 @@ other tools only requires importing these modules.
 The original rendering backends have been removed. Rendering will be
 reimplemented in a future update.
 
-### Units
+### Units and Coordinates
 
 All positions in the engine use **world units** which can be mapped to real
 distances. By default one unit equals one pixel, but you can set how many
 units represent a meter with ``engine.set_units_per_meter()``.  Helper
 functions ``engine.meters()`` and ``engine.kilometers()`` convert distances so
-objects can be placed using real-world values.
+objects can be placed using real-world values. The coordinate system is
+**Y-up**, meaning positive ``y`` values move objects upward while negative
+values move them down.
 When launching the editor a **Project Manager** window appears. It lists your
 recent projects with their creation date and full path.  Buttons let you create
 a new project, open an existing file or clear the list for a clean start. The
@@ -49,8 +51,10 @@ confirmation and then removes the entire project folder along with its files.
 Once a project is chosen the editor opens maximized in a dark Fusion
 theme and provides two
 tabs: **Viewport** and **Logic**. The old QGraphics-based viewport has been
-removed entirely, leaving only a placeholder panel. Rendering tools will return
-once the new Pygame widget is implemented.
+removed entirely. A simple placeholder now draws red and green axis lines so
+you can orient objects while rendering tools are rebuilt. The X axis is red
+and the Y axis is green. Full rendering will return once the new Pygame widget
+is implemented.
 An **Add Object** button beneath the list places a blank object with a default
  name like `New Object`. Every toolbar action and list item loads its icon from
  the `sage_editor/icons` folder, so you can replace these images with your own

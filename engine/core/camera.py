@@ -39,8 +39,8 @@ class Camera:
         w = (self.width / self.zoom) * scale
         h = (self.height / self.zoom) * scale
         left = self.x * scale - w / 2
-        top = self.y * scale - h / 2
-        return (left, top, w, h)
+        bottom = self.y * scale - h / 2
+        return (left, bottom, w, h)
 
     def update(self, dt: float) -> None:
         """Camera objects currently have no behaviour."""

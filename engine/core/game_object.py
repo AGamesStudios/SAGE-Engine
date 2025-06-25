@@ -148,8 +148,9 @@ class GameObject:
             (self.width - px, self.height - py),
             (-px, self.height - py),
         ]
+        sign = 1.0 if units.Y_UP else -1.0
         tx = self.x * scale
-        ty = self.y * scale
+        ty = self.y * scale * sign
         xs: list[float] = []
         ys: list[float] = []
         for cx, cy in corners:
@@ -183,8 +184,9 @@ class GameObject:
         m10 = sa * sx
         m11 = ca * sy
         scale = units.UNITS_PER_METER
+        sign = 1.0 if units.Y_UP else -1.0
         tx = self.x * scale + px - (m00 * px + m01 * py)
-        ty = self.y * scale + py - (m10 * px + m11 * py)
+        ty = self.y * scale * sign + py - (m10 * px + m11 * py)
         self._cached_matrix = [
             m00, m10, 0.0, 0.0,
             m01, m11, 0.0, 0.0,

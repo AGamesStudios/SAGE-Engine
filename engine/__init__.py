@@ -22,6 +22,8 @@ meters = units.meters
 kilometers = units.kilometers
 to_units = units.to_units
 from_units = units.from_units
+set_y_up = units.set_y_up
+Y_UP = units.Y_UP
 from sage_sdk.plugins import register_plugin as register_engine_plugin, load_plugins as _load_engine_plugins
 
 def load_engine_plugins(engine, paths=None):
@@ -49,7 +51,8 @@ __all__ = [
     'load_scene', 'save_scene', 'run_scene',
     'warn', 'error', 'exception',
     'register_engine_plugin', 'load_engine_plugins',
-    'units', 'set_units_per_meter', 'meters', 'kilometers', 'to_units', 'from_units'
+    'units', 'set_units_per_meter', 'meters', 'kilometers', 'to_units', 'from_units',
+    'set_y_up', 'Y_UP'
 ]
 
 # validate that all exported names exist and warn if any are missing
