@@ -1,4 +1,3 @@
-import os
 from PyQt6.QtWidgets import (
     QDockWidget, QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
     QLineEdit, QAbstractItemView, QTreeView, QTreeWidget

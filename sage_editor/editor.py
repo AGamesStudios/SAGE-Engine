@@ -6,13 +6,13 @@ from PyQt6.QtWidgets import (
     QDialogButtonBox, QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox, QCompleter,
     QTextEdit, QDockWidget, QGroupBox, QCheckBox, QMessageBox, QMenu, QColorDialog,
     QTreeView, QInputDialog, QTreeWidget, QTreeWidgetItem,
-    QStyle, QHeaderView, QAbstractItemView, QDesktopServices
+    QStyle, QHeaderView, QAbstractItemView
 )
 try:
     from PyQt6.QtWidgets import QFileSystemModel
 except Exception:  # pragma: no cover - handle older PyQt versions
     QFileSystemModel = None
-from PyQt6.QtGui import QPixmap, QColor, QAction
+from PyQt6.QtGui import QPixmap, QColor, QAction, QDesktopServices
 from PyQt6.QtCore import (
     QRectF, Qt, QProcess, QPointF, QSortFilterProxyModel, QSize, QUrl
 )
