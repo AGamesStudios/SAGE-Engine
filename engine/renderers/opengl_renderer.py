@@ -33,6 +33,10 @@ class GLWidget(QOpenGLWidget):
         if self.renderer:
             self.renderer._paint()
 
+    def resizeGL(self, width: int, height: int):
+        if self.renderer:
+            self.renderer.set_window_size(width, height)
+
 
 @dataclass
 class OpenGLRenderer:
@@ -54,6 +58,7 @@ class OpenGLRenderer:
         self.widget.resize(self.width, self.height)
         self._should_close = False
         self.textures: dict[int, int] = {}
+        self._blank_texture: int | None = None
         self._scene = None
         self._camera = None
 
@@ -79,13 +84,27 @@ class OpenGLRenderer:
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
 
+    def _get_blank_texture(self) -> int:
+        """Return a 1x1 white texture used for colored objects."""
+        if self._blank_texture is None:
+            data = b"\xff\xff\xff\xff"
+            self._blank_texture = glGenTextures(1)
+            glBindTexture(GL_TEXTURE_2D, self._blank_texture)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+            glTexImage2D(
+                GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0,
+                GL_RGBA, GL_UNSIGNED_BYTE, data
+            )
+        return self._blank_texture
+
     def _get_texture(self, obj) -> int:
+        if obj.image is None:
+            return self._get_blank_texture()
         tex = self.textures.get(id(obj.image))
         if tex:
             return tex
         img = obj.image
-        if img is None:
-            img = Image.new('RGBA', (32, 32), obj.color or (255, 255, 255, 255))
         img = img.transpose(Image.Transpose.FLIP_TOP_BOTTOM)
         data = img.tobytes()
         tex_id = glGenTextures(1)

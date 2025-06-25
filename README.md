@@ -59,8 +59,8 @@ Once a project is chosen the editor opens maximized in a dark Fusion
 theme and provides two
 tabs: **Viewport** and **Logic**. The viewport now uses the same
 **OpenGLRenderer** as the runtime so what you see while editing
-matches the game window. It refreshes roughly thirty times per second so the
-editor stays below about 20% CPU usage even on slower machines.
+matches the game window. It refreshes roughly sixty times per second and only
+updates on resize, keeping CPU usage low even on slower machines.
 An **Add Object** button beneath the list places a blank object with a default
  name like `New Object`. Every toolbar action and list item loads its icon from
  the `sage_editor/icons` folder, so you can replace these images with your own

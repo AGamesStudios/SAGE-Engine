@@ -25,7 +25,7 @@ class Viewport(QOpenGLWidget):
         self._center_camera()
         self.renderer = OpenGLRenderer(self.width(), self.height(), widget=self)
         self.timer = QTimer(self)
-        self.timer.setInterval(33)  # ~30 FPS
+        self.timer.setInterval(16)  # ~60 FPS
         self.timer.timeout.connect(self._tick)
         self.timer.start()
         self.setMinimumSize(200, 150)
@@ -51,6 +51,10 @@ class Viewport(QOpenGLWidget):
     def paintGL(self) -> None:  # pragma: no cover - GUI callback
         self.renderer._paint()
 
+    def resizeEvent(self, event):  # pragma: no cover - handle resize
+        super().resizeEvent(event)
+        self.renderer.set_window_size(self.width(), self.height())
+
     def closeEvent(self, event):  # pragma: no cover - cleanup
         self.timer.stop()
         self.renderer.close()
@@ -69,7 +73,6 @@ class Viewport(QOpenGLWidget):
         self._center_camera()
 
     def _tick(self) -> None:
-        self.renderer.set_window_size(self.width(), self.height())
         self.renderer.draw_scene(self.scene, self.camera)
 
     def showEvent(self, event):  # pragma: no cover
