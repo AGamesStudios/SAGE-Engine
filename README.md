@@ -151,9 +151,9 @@ If something goes wrong during gameplay, the console shows the full
 Python traceback so you can identify exactly where the problem occurred.
 Use the **Clear Log** toolbar button to empty the console at any time.
 
-The editor also provides a **Profiler** dock. It uses QtCharts to graph CPU,
-memory and GPU usage with red, green and blue lines. The graphs update every
-second so you can monitor performance while editing projects.
+The editor also provides a **Profiler** dock with simple graphs showing CPU,
+memory and GPU usage. The lines are drawn in red, green and blue and update
+each second so you can monitor performance while editing projects.
 
 ### Localization
 
