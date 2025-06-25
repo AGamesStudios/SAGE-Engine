@@ -55,8 +55,10 @@ An **Add Object** button beneath the list places a blank object with a default
  name like `New Object`. Every toolbar action and list item loads its icon from
  the `sage_editor/icons` folder, so you can replace these images with your own
  to completely theme the interface. The Run button uses `start.png`, the Import
- button loads `add.png`, the New Folder button uses `folder.png` and objects
- show `object.png` or `camera.png` depending on their type. Object properties
+ button loads `add.png`, the New Folder button uses `folder.png`, the New
+ Project action shows `file.png`, Save Project uses `save.png`, the Recent
+ Projects menu displays `recent.png` and objects show `object.png` or
+ `camera.png` depending on their type. Object properties
  can be edited in a dock but there
  is no visual manipulation until rendering support returns.
 A cyan rectangle shows the active camera frustum. Camera ``x`` and ``y``
