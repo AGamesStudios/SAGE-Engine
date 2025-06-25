@@ -29,26 +29,8 @@ other tools only requires importing these modules.
 
 ### Renderer
 
-Rendering is handled by modules under `engine/renderers`.  The
-default backend is a simple `PygameRenderer` while an
-`OpenGLRenderer` remains available for experimentation.
-A lightweight `SDLRenderer` uses **PySDL2** so window handling is
-consistent across backends.  All renderers register themselves through
-a small registry so projects can select a backend by name.  The base
-`Renderer` interface allows additional backends to be added without
-touching the core engine.
-Renderers register themselves through a small registry so projects can
-select a backend by name.  The base `Renderer` interface allows
-additional backends to be added without touching the core engine.
-Resources are loaded through `ResourceManager` which resolves paths
-relative to the project's `resources` folder so assets remain
-organized and portable.
-`OpenGLRenderer` accepts a `GLSettings` object so projects can control
-OpenGL context versions and toggle vsync if needed. The renderer relies on
-**GLM** for its projection matrix so custom backends can produce compatible
-matrices easily.
-The editor's viewport also uses an OpenGL widget and calls `glViewport` on
-resize so what you see while editing matches the game window exactly.
+The original rendering backends have been removed. Rendering will be
+reimplemented in a future update.
 
 ### Units
 
