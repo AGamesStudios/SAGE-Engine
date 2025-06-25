@@ -32,8 +32,12 @@ class ResourceTreeWidget(QTreeWidget):
     def dragMoveEvent(self, event):  # pragma: no cover - UI interaction
         if event.mimeData().hasUrls():
             event.acceptProposedAction()
-        else:
-            super().dragMoveEvent(event)
+            return
+        item = self.itemAt(event.pos())
+        if item and not os.path.isdir(item.data(0, Qt.ItemDataRole.UserRole)):
+            event.ignore()
+            return
+        super().dragMoveEvent(event)
 
     def dropEvent(self, event):  # pragma: no cover - UI interaction
         if event.mimeData().hasUrls():
@@ -53,6 +57,10 @@ class ResourceTreeWidget(QTreeWidget):
         item = self.currentItem()
         if item is None:
             super().dropEvent(event)
+            return
+        target = self.itemAt(event.position().toPoint()) if hasattr(event, "position") else self.itemAt(event.pos())
+        if target and not os.path.isdir(target.data(0, Qt.ItemDataRole.UserRole)):
+            event.ignore()
             return
         old_path = item.data(0, Qt.ItemDataRole.UserRole)
         super().dropEvent(event)
@@ -86,8 +94,17 @@ class ResourceTreeView(QTreeView):
     def dragMoveEvent(self, event):  # pragma: no cover - UI interaction
         if event.mimeData().hasUrls():
             event.acceptProposedAction()
-        else:
-            super().dragMoveEvent(event)
+            return
+        index = self.indexAt(event.pos())
+        if index.isValid() and self.editor.resource_model is not None:
+            src_index = index
+            if self.editor.proxy_model is not None:
+                src_index = self.editor.proxy_model.mapToSource(index)
+            path = self.editor.resource_model.filePath(src_index)
+            if os.path.isfile(path):
+                event.ignore()
+                return
+        super().dragMoveEvent(event)
 
     def dropEvent(self, event):  # pragma: no cover - UI interaction
         if event.mimeData().hasUrls():
@@ -107,6 +124,15 @@ class ResourceTreeView(QTreeView):
             event.acceptProposedAction()
             return
 
+        target = self.indexAt(event.position().toPoint()) if hasattr(event, "position") else self.indexAt(event.pos())
+        if target.isValid() and self.editor.resource_model is not None:
+            src_index = target
+            if self.editor.proxy_model is not None:
+                src_index = self.editor.proxy_model.mapToSource(target)
+            path = self.editor.resource_model.filePath(src_index)
+            if os.path.isfile(path):
+                event.ignore()
+                return
         super().dropEvent(event)
 
 
@@ -219,6 +245,8 @@ class ResourceDock(QDockWidget):
                 self.hover_preview.set_image(path)
                 if pos is None:
                     pos = QCursor.pos()
+                if self.hover_preview.parent() is not None:
+                    pos = self.hover_preview.parent().mapFromGlobal(pos)
                 self.hover_preview.move(pos)
                 self.hover_preview.show()
                 return
