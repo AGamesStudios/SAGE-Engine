@@ -71,7 +71,8 @@ position so they can be layered with sprites. Projects are saved in a single
 All objects are listed in a dock on the right. Selecting one shows a **Transform**
 panel with X, Y, Z, separate Scale X/Y and Rotation fields. A *Link XY* checkbox
 lets you keep both scales in sync. When no object is selected the Properties
-dock is empty so old values do not linger. Rotation now accounts for non-uniform
+dock is empty so old values do not linger. The panel scrolls vertically so
+every field stays reachable even when the dock is short. Rotation now accounts for non-uniform
 scaling so objects spin correctly even when Scale X and Scale Y differ. Scaling
 also stays centered on the sprite regardless of rotation. Transform calculations
 now use **GLM** so scaling occurs before rotation and objects rotate around

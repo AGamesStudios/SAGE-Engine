@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import (
     QDockWidget, QWidget, QVBoxLayout, QGroupBox, QFormLayout,
-    QDoubleSpinBox, QCheckBox, QComboBox, QSpinBox, QLineEdit
+    QDoubleSpinBox, QCheckBox, QComboBox, QSpinBox, QLineEdit,
+    QScrollArea
 )
 from PyQt6.QtCore import Qt
 
@@ -14,6 +15,13 @@ class PropertiesDock(QDockWidget):
         prop_widget = QWidget()
         prop_layout = QVBoxLayout(prop_widget)
         prop_layout.setContentsMargins(6, 6, 6, 6)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
+        scroll.setWidget(prop_widget)
 
         self.object_group = QGroupBox(editor.t('object'))
         obj_form = QFormLayout(self.object_group)
@@ -71,6 +79,6 @@ class PropertiesDock(QDockWidget):
         self.camera_group.setVisible(False)
         prop_layout.addStretch(1)
 
-        self.setWidget(prop_widget)
+        self.setWidget(scroll)
         editor.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self)
 
