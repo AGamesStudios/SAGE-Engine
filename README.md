@@ -24,8 +24,8 @@ utilities like the plugin loader used by both components.
 The editor code is split into ``sage_editor.editor`` for the main window and
 ``sage_editor.app`` which contains the startup logic and project manager.
 Dock widgets live under ``sage_editor.docks`` while reusable widgets live in
-``sage_editor.widgets``. The viewport currently draws simple axis lines as a
-placeholder until rendering is rewritten. Embedding the editor in other tools
+``sage_editor.widgets``. The viewport is currently blank while rendering is
+being rewritten. Embedding the editor in other tools
 only requires importing these modules.
 
 ### Renderer
@@ -52,9 +52,8 @@ confirmation and then removes the entire project folder along with its files.
 Once a project is chosen the editor opens maximized in a dark Fusion
 theme and provides two
 tabs: **Viewport** and **Logic**. The old QGraphics-based viewport has been
-removed entirely. The viewport is a lightweight placeholder that draws red and
-green axis lines so you can orient objects. Full rendering will return once the
-new system is ready.
+removed entirely. The viewport is a lightweight placeholder with no drawing
+until the new renderer is ready.
 An **Add Object** button beneath the list places a blank object with a default
  name like `New Object`. Every toolbar action and list item loads its icon from
  the `sage_editor/icons` folder, so you can replace these images with your own
@@ -62,22 +61,14 @@ An **Add Object** button beneath the list places a blank object with a default
  Folder button uses `folder.png`, the Refresh button uses `refresh.png`, the New
  Project action shows `file.png`, Save Project uses `save.png`, the Recent
  Projects menu displays `recent.png` and objects show `object.png` or
- `camera.png` depending on their type. Object properties
+`camera.png` depending on their type. Object properties
  can be edited in a dock but there
  is no visual manipulation until rendering support returns.
-A cyan rectangle shows the active camera frustum. Camera ``x`` and ``y``
-describe its centre, so the rectangle surrounds that point. Scenes always
-contain at least one camera; if an older scene lacks one the engine creates a
-camera centred on the window. Projects store a window ``width`` and
-``height`` separately from the active camera size. When these differ the engine
-centres the camera view inside the window and letterboxes the unused area so
-the aspect ratio is preserved. Scenes can contain multiple
-cameras. Select a camera in the object list (or use its context menu) and
-choose **Set Active Camera** to decide which one is used. When launching the
-engine from code use ``scene.set_active_camera(name)``.
-Camera objects now include a **Z**
-position so they can be layered with sprites. Projects are saved in a single
-`.sageproject` file
+Projects store a window ``width`` and ``height`` separately from the active
+camera size. Scenes can contain multiple cameras. Select a camera in the object
+list (or use its context menu) and choose **Set Active Camera** to decide which
+one is used. Camera objects now include a **Z** position so they can be layered
+with sprites. Projects are saved in a single `.sageproject` file
 The object list sits on the right above the Properties panel. Selecting one shows a **Transform**
 panel on the right with X, Y, Z, separate Scale X/Y and Rotation fields. A *Link XY* checkbox
 lets you keep both scales in sync. When no object is selected the Properties
