@@ -1,5 +1,5 @@
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
-from PyQt6.QtCore import QTimer
+from PyQt6.QtCore import QTimer, Qt
 
 from engine.renderers.opengl_renderer import OpenGLRenderer
 from engine.core.scene import Scene
@@ -22,6 +22,7 @@ class Viewport(QOpenGLWidget):
             y=0,
             width=self.width(), height=self.height(),
         )
+        self._center_camera()
         self.renderer = OpenGLRenderer(self.width(), self.height(), widget=self)
         self.timer = QTimer(self)
         self.timer.setInterval(33)  # ~30 FPS
@@ -29,6 +30,18 @@ class Viewport(QOpenGLWidget):
         self.timer.start()
         self.setMinimumSize(200, 150)
         self._drag_pos = None
+
+    def _center_camera(self) -> None:
+        """Center the camera on existing objects."""
+        objs = [o for o in self.scene.objects if not isinstance(o, Camera)]
+        if not objs:
+            self.camera.x = 0
+            self.camera.y = 0
+            return
+        xs = [o.x for o in objs]
+        ys = [o.y for o in objs]
+        self.camera.x = sum(xs) / len(xs)
+        self.camera.y = sum(ys) / len(ys)
 
     # QOpenGLWidget overrides -------------------------------------------------
 
@@ -53,6 +66,7 @@ class Viewport(QOpenGLWidget):
             y=0,
             width=self.width(), height=self.height(),
         )
+        self._center_camera()
 
     def _tick(self) -> None:
         self.renderer.set_window_size(self.width(), self.height())
@@ -69,12 +83,12 @@ class Viewport(QOpenGLWidget):
     # mouse drag for panning -------------------------------------------------
 
     def mousePressEvent(self, event):  # pragma: no cover - UI interaction
-        if event.buttons() & event.Buttons.LeftButton:
+        if event.buttons() & Qt.MouseButton.LeftButton:
             self._drag_pos = event.position()
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):  # pragma: no cover - UI interaction
-        if self._drag_pos is not None and event.buttons() & event.Buttons.LeftButton:
+        if self._drag_pos is not None and event.buttons() & Qt.MouseButton.LeftButton:
             dx = event.position().x() - self._drag_pos.x()
             dy = event.position().y() - self._drag_pos.y()
             scale = units.UNITS_PER_METER
