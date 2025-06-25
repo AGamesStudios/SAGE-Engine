@@ -70,8 +70,8 @@ engine from code use ``scene.set_active_camera(name)``.
 Camera objects now include a **Z**
 position so they can be layered with sprites. Projects are saved in a single
 `.sageproject` file
-All objects are listed in a dock on the right. Selecting one shows a **Transform**
-panel with X, Y, Z, separate Scale X/Y and Rotation fields. A *Link XY* checkbox
+All objects are listed in a dock below the resources on the left. Selecting one shows a **Transform**
+panel on the right with X, Y, Z, separate Scale X/Y and Rotation fields. A *Link XY* checkbox
 lets you keep both scales in sync. When no object is selected the Properties
 dock is empty so old values do not linger. The panel scrolls vertically so
 every field stays reachable even when the dock is short. Rotation now accounts for non-uniform
@@ -88,7 +88,7 @@ between *Sprite* and *Camera*. Each object also keeps its own settings
 dictionary so properties remain independent across different items. The
 project file stores the entire scene
 including object positions, events and variables.
-A **Resources** dock on the left lists everything under your project's
+The **Resources** dock sits above the object list on the left and lists everything under your project's
 `resources` folder. Buttons above the tree and a context menu let you create
 folders anywhere in the hierarchy. A single **Import** button accepts both files
 and complete folders. A search field filters the view and you can drag items

@@ -22,6 +22,7 @@ QGroupBox::title { subcontrol-origin: margin; left: 4px; padding: 0 2px; }
 QPushButton { padding: 4px 8px; }
 QLineEdit { padding: 2px 4px; }
 QListWidget { background: #222; }
+QDockWidget { font-size: 11px; }
 """
 
 from .editor import Editor, save_recent, load_recent, _log, logger

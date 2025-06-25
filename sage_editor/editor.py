@@ -1024,7 +1024,7 @@ class Editor(QMainWindow):
         form.addRow(self.t('rotation'), self.angle_spin)
         obj_dock = QDockWidget(self.t('objects'), self)
         obj_dock.setWidget(obj_widget)
-        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, obj_dock)
+        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, obj_dock)
         self.objects_dock = obj_dock
 
         # properties dock
@@ -1053,6 +1053,7 @@ class Editor(QMainWindow):
         self.import_btn = res_dock.import_btn
         self.new_folder_btn = res_dock.new_folder_btn
         self.search_edit = res_dock.search_edit
+        self.splitDockWidget(res_dock, self.objects_dock, Qt.Orientation.Vertical)
 
         # logic tab with object-specific events and variables
         self.logic_widget = LogicTab(self)
