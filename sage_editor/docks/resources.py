@@ -7,8 +7,8 @@ try:  # QFileSystemModel is missing in some PyQt6 builds
     from PyQt6.QtWidgets import QFileSystemModel
 except Exception:  # pragma: no cover - optional dependency
     QFileSystemModel = None
-from PyQt6.QtCore import Qt, QSortFilterProxyModel, QEvent, QPoint
-from PyQt6.QtGui import QPixmap, QCursor, QDrag, QMimeData
+from PyQt6.QtCore import Qt, QSortFilterProxyModel, QEvent, QPoint, QMimeData
+from PyQt6.QtGui import QPixmap, QCursor, QDrag
 from ..widgets import ImagePreview
 
 import os
