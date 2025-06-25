@@ -23,14 +23,15 @@ sage.editor`` continue to work.  The ``sage_sdk`` package provides shared
 utilities like the plugin loader used by both components.
 The editor code is split into ``sage_editor.editor`` for the main window and
 ``sage_editor.app`` which contains the startup logic and project manager.
-Dock widgets live under ``sage_editor.docks`` while reusable widgets like the
-OpenGL viewport reside in ``sage_editor.widgets``. Embedding the editor in
-other tools only requires importing these modules.
+Dock widgets live under ``sage_editor.docks`` while reusable widgets live in
+``sage_editor.widgets``. The viewport currently draws simple axis lines as a
+placeholder until rendering is rewritten. Embedding the editor in other tools
+only requires importing these modules.
 
 ### Renderer
 
-The original rendering backends have been removed. Rendering will be
-reimplemented in a future update.
+The original rendering backends have been removed. Rendering will return in a
+future update but the editor itself runs without GPU acceleration.
 
 ### Units and Coordinates
 
@@ -51,16 +52,14 @@ confirmation and then removes the entire project folder along with its files.
 Once a project is chosen the editor opens maximized in a dark Fusion
 theme and provides two
 tabs: **Viewport** and **Logic**. The old QGraphics-based viewport has been
-removed entirely. A simple placeholder now draws red and green axis lines so
-you can orient objects while rendering tools are rebuilt. The X axis is red
-and the Y axis is green. Full rendering will return once the new Pygame widget
-is implemented.
+removed entirely. The viewport is a lightweight placeholder that draws red and
+green axis lines so you can orient objects. Full rendering will return once the
+new system is ready.
 An **Add Object** button beneath the list places a blank object with a default
  name like `New Object`. Every toolbar action and list item loads its icon from
  the `sage_editor/icons` folder, so you can replace these images with your own
- to completely theme the interface. The Run button uses `start.png`, the Import
- button loads `add.png`, the New Folder button uses `folder.png`, the Refresh
- button uses `refresh.png`, the New
+ to completely theme the interface. The Import button loads `add.png`, the New
+ Folder button uses `folder.png`, the Refresh button uses `refresh.png`, the New
  Project action shows `file.png`, Save Project uses `save.png`, the Recent
  Projects menu displays `recent.png` and objects show `object.png` or
  `camera.png` depending on their type. Object properties
@@ -72,8 +71,7 @@ contain at least one camera; if an older scene lacks one the engine creates a
 camera centred on the window. Projects store a window ``width`` and
 ``height`` separately from the active camera size. When these differ the engine
 centres the camera view inside the window and letterboxes the unused area so
-the aspect ratio is preserved. The Pygame window is resizable and the camera
-keeps its own dimensions while the engine letterboxes the viewport. Scenes can contain multiple
+the aspect ratio is preserved. Scenes can contain multiple
 cameras. Select a camera in the object list (or use its context menu) and
 choose **Set Active Camera** to decide which one is used. When launching the
 engine from code use ``scene.set_active_camera(name)``.
@@ -124,9 +122,8 @@ confined to the editor window and disappears when it loses focus. Thumbnails are
 cached in memory so browsing many files does not lag. Double-clicking a
 `.sagescene` file loads it in the editor so you can quickly switch between scenes.
 Use **File → New Project** to generate a folder for your game. The dialog asks
-for a project name and location and lets you choose a rendering backend.
-Pygame is the default option while an experimental OpenGL (alpha) renderer and
-a simple SDL2 renderer remain available for testing.
+for a project name and location. Rendering options have been removed for now
+so projects always use the lightweight placeholder viewport.
 It then creates the folder with a `.sageproject` file and a `Scenes` subfolder
 containing `Scene1.sagescene`. Each new object
 receives a generic name like `New Object (1)` so conditions always target the
@@ -139,10 +136,7 @@ action. Variables of type int, float, string and bool can be defined and used
 in conditions or actions. Mathematical actions only apply to int or float
 variables, ensuring booleans and strings remain unchanged. When setting a variable in an action the name is
 chosen from a drop-down list and booleans use a check box. Events attach to specific objects and can trigger on
-game start or every frame. Fonts are slightly larger for readability. Use the
-*Run* button (icon `start.png`) in the toolbar to launch the current scene
-directly from the editor. Temporary files are cleaned up each time so you can run repeatedly
-without crashes.
+game start or every frame. Fonts are slightly larger for readability.
 Window dimensions can be changed under **Settings → Window Settings**. The
 game window title matches the editor, e.g. `SAGE Editor: MyGame - Scene1`.
 When you edit the scene the title gains an `(unsaved)` suffix until you save.
@@ -150,17 +144,14 @@ Project files record the window `width`, `height` and `title`. When loading a
 project the engine creates its window using these values. The active camera
 keeps its own resolution. The window can be resized at runtime and the camera
 follows the new dimensions while unused space is letterboxed so
-the scene maintains its aspect ratio. Future versions
-may add other renderer backends and each project remembers which renderer to
-use.
+the scene maintains its aspect ratio.
 When defining variables, boolean values are edited with a convenient check box
 instead of typing "true" or "false".
 When comparing variables, the name is selected from a drop-down list so typos
 are avoided.
 
-Sprites are loaded lazily at runtime so the editor no longer relies on
-any particular window system. This prevents crashes when adding images on systems
-without an SDL window. The editor also validates image and variable input and
+Sprites are loaded lazily so the editor does not depend on any particular
+window system. The editor also validates image and variable input and
 ensures combo boxes always point to valid objects, preventing crashes when
 adding multiple sprites, variables, or conditions on older hardware.
 Any errors when creating conditions, actions, or variables are caught and
@@ -354,8 +345,8 @@ are cached after the first load and only the most recent 32 images are kept in
 memory.  A helper `engine.clear_image_cache()` empties this LRU cache if
 memory becomes tight. The `Engine` class accepts an `fps` argument (default 60)
 to control the frame rate using `time.sleep` for consistent timing. Object
-lists are sorted only when modified and renderer math avoids heavy
-dependencies. The editor delays resource searches slightly so typing does not
+lists are sorted only when modified and heavy math dependencies were removed.
+The editor delays resource searches slightly so typing does not
 rebuild the tree on every keystroke. These optimizations keep the runtime light
 without sacrificing visual quality while keeping CPU usage low.
 

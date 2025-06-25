@@ -21,11 +21,10 @@ def _log(text: str) -> None:
     logger.info(text)
 
 class Engine:
-    """Main loop that delegates drawing to a renderer."""
+    """Main loop that updates the scene without any rendering."""
 
     def __init__(self, width=640, height=480, scene=None, events=None, fps=60,
-                 title='SAGE 2D', renderer=None,
-                 camera: Camera | None = None):
+                 title='SAGE 2D', camera: Camera | None = None):
         self.fps = fps
         self._frame_interval = 1.0 / fps if fps else 0
         self.scene = scene or Scene()
@@ -41,7 +40,6 @@ class Engine:
                 self.scene.add_object(camera)
         self.camera = camera
         self.events = events if events is not None else self.scene.build_event_system()
-        self.renderer = renderer
         self.input = None
         self._last = time.perf_counter()
         try:

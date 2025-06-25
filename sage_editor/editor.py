@@ -15,7 +15,7 @@ except Exception:  # pragma: no cover - handle older PyQt versions
 from PyQt6.QtGui import QPixmap, QColor, QAction, QDesktopServices
 from .icons import load_icon
 from PyQt6.QtCore import (
-    QRectF, Qt, QProcess, QPointF, QSortFilterProxyModel, QSize, QUrl, QTimer
+    QRectF, Qt, QPointF, QSortFilterProxyModel, QSize, QUrl, QTimer
 )
 import logging
 from typing import Callable
@@ -24,7 +24,6 @@ import atexit
 import traceback
 import inspect
 from .lang import LANGUAGES, DEFAULT_LANGUAGE
-import tempfile
 import os
 import glfw
 from engine import Scene, GameObject, Project, Camera, ENGINE_VERSION, get_resource_path
@@ -970,7 +969,6 @@ class Editor(QMainWindow):
         self.lang = DEFAULT_LANGUAGE
         self.window_width = 640
         self.window_height = 480
-        self.renderer_name = 'none'
         self.resource_dir: str | None = None
         self.resource_manager = None
         self.scene = Scene()
@@ -1084,7 +1082,6 @@ class Editor(QMainWindow):
         cons = ConsoleDock(self)
         self.console_dock = cons
         self.console = cons.text
-        self.process = None
         self._tmp_project = None
 
         # camera rectangle showing the visible area
@@ -1145,7 +1142,6 @@ class Editor(QMainWindow):
         self.type_combo.setItemText(1, self.t('camera'))
         self.x_spin.setPrefix(''); self.y_spin.setPrefix(''); self.z_spin.setPrefix('')
         self.scale_x_spin.setPrefix(''); self.scale_y_spin.setPrefix(''); self.angle_spin.setPrefix('')
-        self.run_btn.setText(self.t('run'))
         self.add_obj_btn.setText(self.t('add_object'))
         self.add_cam_btn.setText(self.t('add_camera'))
         self.clear_log_act.setText(self.t('clear_log'))
@@ -1169,7 +1165,6 @@ class Editor(QMainWindow):
         self.add_obj_btn.setEnabled(enabled)
         self.add_cam_btn.setEnabled(enabled)
         self.add_var_btn.setEnabled(enabled)
-        self.run_btn.setEnabled(enabled)
         self.objects_dock.setEnabled(enabled)
         self.resources_dock.setEnabled(enabled)
         self._update_title()
@@ -1263,10 +1258,6 @@ class Editor(QMainWindow):
         self.edit_menu = menubar.addMenu(self.t('edit'))
 
         toolbar = self.addToolBar('main')
-        self.run_btn = QAction(load_icon('start.png'), self.t('run'), self)
-        self.run_btn.setShortcut('F5')
-        self.run_btn.triggered.connect(self.run_game)
-        toolbar.addAction(self.run_btn)
         from PyQt6.QtWidgets import QWidget, QSizePolicy
         spacer = QWidget()
         spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
@@ -1335,7 +1326,6 @@ class Editor(QMainWindow):
         os.makedirs(resources_dir, exist_ok=True)
         os.makedirs(scenes_dir, exist_ok=True)
         proj_path = os.path.join(proj_dir, f'{name}.sageproject')
-        self.renderer_name = 'none'
         self.scene = Scene()
         self.scene_path = os.path.join(scenes_dir, 'Scene1.sagescene')
         try:
@@ -1389,7 +1379,6 @@ class Editor(QMainWindow):
         try:
             proj = Project.load(path)
             self.project_path = path
-            self.renderer_name = 'none'
             self.window_width = proj.width
             self.window_height = proj.height
             self.scene_path = os.path.join(os.path.dirname(path), proj.scene_file)
@@ -1526,78 +1515,6 @@ class Editor(QMainWindow):
         from .dialogs.plugin_manager import PluginManager
         PluginManager(self).exec()
 
-    def run_game(self):
-        if not self._check_project():
-            return
-        self._cleanup_process()
-        proj_fd, proj_path = tempfile.mkstemp(suffix='.sageproject')
-        os.close(proj_fd)
-        title = 'SAGE 2D'
-        if self.project_path:
-            name = os.path.splitext(os.path.basename(self.project_path))[0]
-            title = f'{name} - Scene1'
-        for item, obj in self.items:
-            if item is None:
-                continue
-            pos = item.pos()
-            obj.x = pos.x()
-            obj.y = pos.y()
-        Project(
-            self.scene.to_dict(),
-            width=self.window_width,
-            height=self.window_height,
-            title=title,
-            version=ENGINE_VERSION,
-        ).save(proj_path)
-        self._tmp_project = proj_path
-        self.process = QProcess(self)
-        self.process.setProgram(sys.executable)
-        args = [
-            '-m', 'engine', proj_path,
-            '--width', str(self.window_width),
-            '--height', str(self.window_height),
-            '--title', title,
-        ]
-        self.process.setArguments(args)
-        self.process.readyReadStandardOutput.connect(self._read_output)
-        self.process.readyReadStandardError.connect(self._read_output)
-        self.process.finished.connect(self._cleanup_process)
-        self.process.start()
-
-    def _read_output(self):
-        if self.process is None:
-            return
-        out = bytes(self.process.readAllStandardOutput()).decode('utf-8')
-        if out:
-            self.console.append(out.rstrip())
-            _log(out)
-        err = bytes(self.process.readAllStandardError()).decode('utf-8')
-        if err:
-            self.console.append(err.rstrip())
-            _log(err)
-
-    def _cleanup_process(self, exit_code: int = 0,
-                         exit_status: QProcess.ExitStatus = QProcess.ExitStatus.NormalExit):
-        """Terminate the running game process and delete temp files."""
-        if exit_code or exit_status != QProcess.ExitStatus.NormalExit:
-            msg = f'Game process finished with code {exit_code} status {exit_status.name}'
-            self.console.append(msg)
-            _log(msg)
-        if self.process:
-            if self.process.state() != QProcess.ProcessState.NotRunning:
-                self.process.terminate()
-                if not self.process.waitForFinished(3000):
-                    self.process.kill()
-                    self.process.waitForFinished()
-            self.process = None
-        for attr in ('_tmp_project',):
-            path = getattr(self, attr)
-            if path:
-                try:
-                    os.remove(path)
-                except Exception:
-                    pass
-                setattr(self, attr, None)
 
     def add_sprite(self):
         if not self._check_project():
@@ -2693,7 +2610,6 @@ class Editor(QMainWindow):
             elif res == QMessageBox.StandardButton.Cancel:
                 event.ignore()
                 return
-        self._cleanup_process()
         event.accept()
 
 

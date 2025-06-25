@@ -8,7 +8,6 @@ class Project:
     """Simple container for a SAGE project including scene data."""
 
     scene: dict
-    renderer: str = 'pygame'
     width: int = 640
     height: int = 480
     title: str = 'SAGE 2D'
@@ -36,14 +35,13 @@ class Project:
                     scene = json.load(sf)
             else:
                 scene = {}
-        renderer = data.get('renderer', 'pygame')
         width = data.get('width', 640)
         height = data.get('height', 480)
         title = data.get('title', 'SAGE 2D')
         version = data.get('version', ENGINE_VERSION)
         resources = data.get('resources', 'resources')
         metadata = data.get('metadata', {})
-        return cls(scene or {}, renderer, width, height, title, version,
+        return cls(scene or {}, width, height, title, version,
                    resources, scenes_dir, scene_file or 'Scenes/Scene1.sagescene',
                    metadata)
 
@@ -62,7 +60,6 @@ class Project:
         with open(path, 'w') as f:
             json.dump({
                 'scene': scene_entry,
-                'renderer': self.renderer,
                 'width': self.width,
                 'height': self.height,
                 'title': self.title,
