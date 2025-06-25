@@ -88,7 +88,13 @@ class Engine:
             now = time.perf_counter()
             dt = now - self._last
             self._last = now
+            prev_w, prev_h = self.renderer.width, self.renderer.height
             self.input.poll()
+            self.renderer.update_size()
+            if (self.renderer.width, self.renderer.height) != (prev_w, prev_h):
+                if self.camera is not None:
+                    self.camera.width = self.renderer.width
+                    self.camera.height = self.renderer.height
             try:
                 self.events.update(self, self.scene, dt)
                 self.scene.update(dt)

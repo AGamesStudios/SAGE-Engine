@@ -20,6 +20,8 @@ class PygameInput:
                 self._buttons.add(event.button)
             elif event.type == self._pygame.MOUSEBUTTONUP:
                 self._buttons.discard(event.button)
+            elif event.type == self._pygame.VIDEORESIZE:
+                self.renderer.set_window_size(event.w, event.h)
             elif event.type == self._pygame.QUIT:
                 self.renderer._should_close = True
 

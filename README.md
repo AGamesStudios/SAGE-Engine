@@ -81,7 +81,8 @@ needed. A cyan rectangle indicates the active camera frustum. Camera ``x`` and
 exists the window size is used instead. Projects store a window ``width`` and
 ``height`` separately from the active camera size. When these differ the engine
 centres the camera view inside the window and letterboxes the unused area so
-the aspect ratio is preserved. Scenes can contain multiple
+the aspect ratio is preserved. The Pygame window is resizable and the active
+camera automatically updates to match the new size. Scenes can contain multiple
 cameras. Select a camera in the object list (or use its context menu) and
 choose **Set Active Camera** to decide which one is used. When launching the
 engine from code use ``scene.set_active_camera(name)``.
@@ -137,7 +138,8 @@ game window title matches the editor, e.g. `SAGE Editor: MyGame - Scene1`.
 When you edit the scene the title gains an `(unsaved)` suffix until you save.
 Project files record the window `width`, `height` and `title`. When loading a
 project the engine creates its window using these values. The active camera
-keeps its own resolution, with any extra window space filled by black bars so
+keeps its own resolution. The window can be resized at runtime and the camera
+follows the new dimensions while unused space is letterboxed so
 the scene maintains its aspect ratio. Future versions
 may add other renderer backends and each project remembers which renderer to
 use.

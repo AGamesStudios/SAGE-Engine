@@ -8,14 +8,16 @@ from engine import units
 class PygameRenderer:
     """Simple renderer using pygame."""
 
-    def __init__(self, width=640, height=480, title="SAGE 2D"):
+    def __init__(self, width=640, height=480, title="SAGE 2D", resizable=True):
         pygame.init()
-        self.surface = pygame.display.set_mode(
-            (width, height), pygame.HWSURFACE | pygame.DOUBLEBUF
-        )
+        flags = pygame.HWSURFACE | pygame.DOUBLEBUF
+        if resizable:
+            flags |= pygame.RESIZABLE
+        self.surface = pygame.display.set_mode((width, height), flags)
         pygame.display.set_caption(title)
         self.width = width
         self.height = height
+        self.resizable = resizable
         self.window = None  # for API compatibility
         self.textures = {}
         self._cache = {}
@@ -25,9 +27,10 @@ class PygameRenderer:
         self.width, self.height = self.surface.get_size()
 
     def set_window_size(self, width, height):
-        self.surface = pygame.display.set_mode(
-            (width, height), pygame.HWSURFACE | pygame.DOUBLEBUF
-        )
+        flags = pygame.HWSURFACE | pygame.DOUBLEBUF
+        if self.resizable:
+            flags |= pygame.RESIZABLE
+        self.surface = pygame.display.set_mode((width, height), flags)
         self.update_size()
 
     def should_close(self):
