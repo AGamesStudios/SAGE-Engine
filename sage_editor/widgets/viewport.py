@@ -20,7 +20,7 @@ class GLViewport:
                 GL.glViewport(0, 0, self.width(), self.height())
                 GL.glMatrixMode(GL.GL_PROJECTION)
                 GL.glLoadIdentity()
-                GL.glOrtho(0, self.width(), 0, self.height(), -1, 1)
+                GL.glOrtho(0, self.width(), self.height(), 0, -1, 1)
                 GL.glMatrixMode(GL.GL_MODELVIEW)
                 GL.glLoadIdentity()
                 GL.glClear(GL.GL_DEPTH_BUFFER_BIT)

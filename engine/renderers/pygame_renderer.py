@@ -76,9 +76,9 @@ class PygameRenderer:
             if camera is not None:
                 x, y, w, h = obj.rect()
                 left = camx - camw / 2
-                bottom = camy - camh / 2
+                top = camy - camh / 2
                 if (x + w < left or x > left + camw or
-                        y + h < bottom or y > bottom + camh):
+                        y + h < top or y > top + camh):
                     continue
             self.draw_object(obj, camx, camy, zoom, s, off_x + view_w / 2, off_y + view_h / 2)
 
@@ -105,7 +105,7 @@ class PygameRenderer:
         if cy is None:
             cy = self.height / 2
         x = (obj.x - camx / scale) * zoom * scale * scale_factor + cx
-        y = cy - (obj.y - camy / scale) * zoom * scale * scale_factor
+        y = (obj.y - camy / scale) * zoom * scale * scale_factor + cy
         rect = surf.get_rect(center=(int(x), int(y)))
         self.surface.blit(surf, rect)
 
