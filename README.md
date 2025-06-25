@@ -94,8 +94,8 @@ directory automatically, so scenes never reference files that might disappear.
 The engine loads all assets relative to this directory, ensuring reorganizing
 files will not break existing scenes. If PyQt does not provide
 ``QFileSystemModel`` the editor falls back to a simpler tree widget that still
-lets you create folders and import resources. Selecting an image shows a small
-preview below the tree so you can quickly identify files.
+lets you create folders and import resources. Hovering an image reveals a
+floating preview in the top left corner so files are easy to identify.
 Use **File → New Project** to generate a folder for your game. The dialog asks
 for a project name and location and lets you choose a rendering backend.
 Pygame is the default option while an experimental OpenGL (alpha) renderer and

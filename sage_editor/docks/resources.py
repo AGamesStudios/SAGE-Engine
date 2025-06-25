@@ -7,8 +7,9 @@ try:  # QFileSystemModel is missing in some PyQt6 builds
     from PyQt6.QtWidgets import QFileSystemModel
 except Exception:  # pragma: no cover - optional dependency
     QFileSystemModel = None
-from PyQt6.QtCore import Qt, QSortFilterProxyModel
+from PyQt6.QtCore import Qt, QSortFilterProxyModel, QEvent, QPoint
 from PyQt6.QtGui import QPixmap
+from ..widgets import ImagePreview
 
 import os
 
@@ -167,11 +168,11 @@ class ResourceDock(QDockWidget):
         res_layout.setContentsMargins(6, 6, 6, 6)
         res_layout.addLayout(ctrl_layout)
         res_layout.addWidget(self.resource_view)
-        self.preview = QLabel(editor.t('preview'))
-        self.preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.preview.setMinimumHeight(120)
-        res_layout.addWidget(self.preview)
         self.setWidget(res_widget)
+
+        self.hover_preview = ImagePreview(self)
+        self.resource_view.viewport().installEventFilter(self)
+        self.resource_view.setMouseTracking(True)
         editor.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self)
 
         if isinstance(self.resource_view, QTreeWidget):
@@ -212,10 +213,34 @@ class ResourceDock(QDockWidget):
         if path and os.path.isfile(path):
             ext = os.path.splitext(path)[1].lower()
             if ext in {'.png', '.jpg', '.jpeg', '.bmp', '.gif'}:
-                pix = QPixmap(path)
-                if not pix.isNull():
-                    self.preview.setPixmap(pix.scaled(120, 120, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
-                    return
-        self.preview.setPixmap(QPixmap())
-        self.preview.setText(self.editor.t('preview'))
+                self.hover_preview.set_image(path)
+                pos = self.mapToGlobal(QPoint(0, 0))
+                self.hover_preview.move(pos)
+                self.hover_preview.show()
+                return
+        self.hover_preview.hide()
+
+    # ------------------------------------------------------------------
+    def eventFilter(self, obj, event):  # pragma: no cover - UI interaction
+        if obj is self.resource_view.viewport():
+            if event.type() == QEvent.Type.MouseMove:
+                index = self.resource_view.indexAt(event.pos())
+                path = ''
+                if isinstance(self.resource_view, QTreeWidget):
+                    item = self.resource_view.itemAt(event.pos())
+                    if item:
+                        path = item.data(0, Qt.ItemDataRole.UserRole)
+                else:
+                    if index.isValid() and self.editor.resource_model is not None:
+                        if self.editor.proxy_model is not None:
+                            index = self.editor.proxy_model.mapToSource(index)
+                        path = self.editor.resource_model.filePath(index)
+                if path and os.path.isfile(path) and os.path.splitext(path)[1].lower() in {'.png', '.jpg', '.jpeg', '.bmp', '.gif'}:
+                    self._show_preview(path)
+                elif not self.hover_preview.underMouse():
+                    self.hover_preview.hide()
+            elif event.type() == QEvent.Type.Leave:
+                if not self.hover_preview.underMouse():
+                    self.hover_preview.hide()
+        return super().eventFilter(obj, event)
 
