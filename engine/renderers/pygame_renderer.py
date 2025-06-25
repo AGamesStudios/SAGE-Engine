@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import math
 import pygame
 from PIL import Image
 from engine.core.camera import Camera
@@ -53,6 +54,41 @@ class PygameRenderer:
         self.textures[obj.image_path] = tex
         return tex
 
+    def _sprite_rect(self, obj):
+        """Return axis-aligned bounds for drawing without pivot offset."""
+        scale = units.UNITS_PER_METER
+        w = obj.width * obj.scale_x
+        h = obj.height * obj.scale_y
+        px = obj.width * 0.5
+        py = obj.height * 0.5
+        sx = obj.scale_x
+        sy = obj.scale_y
+        rad = math.radians(obj.angle)
+        ca = math.cos(rad)
+        sa = math.sin(rad)
+        corners = [
+            (-px, -py),
+            (obj.width - px, -py),
+            (obj.width - px, obj.height - py),
+            (-px, obj.height - py),
+        ]
+        tx = obj.x * scale
+        ty = obj.y * scale
+        xs = []
+        ys = []
+        for cx, cy in corners:
+            cx *= sx
+            cy *= sy
+            rx = cx * ca - cy * sa
+            ry = cx * sa + cy * ca
+            xs.append(tx + rx)
+            ys.append(ty + ry)
+        left = min(xs)
+        right = max(xs)
+        bottom = min(ys)
+        top = max(ys)
+        return (left, bottom, right - left, top - bottom)
+
     def draw_scene(self, scene, camera=None):
         scale = units.UNITS_PER_METER
         zoom = 1.0
@@ -74,11 +110,11 @@ class PygameRenderer:
             if isinstance(obj, Camera):
                 continue
             if camera is not None:
-                x, y, w, h = obj.rect()
+                x, y, w, h = self._sprite_rect(obj)
                 left = camx - camw / 2
-                top = camy - camh / 2
+                bottom = camy - camh / 2
                 if (x + w < left or x > left + camw or
-                        y + h < top or y > top + camh):
+                        y + h < bottom or y > bottom + camh):
                     continue
             self.draw_object(obj, camx, camy, zoom, s, off_x + view_w / 2, off_y + view_h / 2)
 
