@@ -119,33 +119,6 @@ MOUSE_NAME_LOOKUP = {code: name for name, code in MOUSE_OPTIONS}
 
 
 
-class ResourceTreeWidget(QTreeWidget):
-    """Tree widget that mirrors the filesystem for resources."""
-
-    def __init__(self, editor):
-        super().__init__()
-        self.editor = editor
-        self.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
-
-    def dropEvent(self, event):
-        item = self.currentItem()
-        if item is None:
-            super().dropEvent(event)
-            return
-        old_path = item.data(0, Qt.ItemDataRole.UserRole)
-        super().dropEvent(event)
-        parent = item.parent()
-        if parent:
-            base = parent.data(0, Qt.ItemDataRole.UserRole)
-        else:
-            base = self.editor.resource_dir
-        new_path = os.path.join(base, item.text(0))
-        if old_path != new_path:
-            if self.editor._move_resource(old_path, new_path):
-                item.setData(0, Qt.ItemDataRole.UserRole, new_path)
-            else:
-                self.editor._refresh_resource_tree()
-
 
 def describe_condition(cond, objects, t=lambda x: x):
     typ = cond.get('type', '')
@@ -633,11 +606,20 @@ class ActionDialog(QDialog):
             self.set_action(data)
 
     def _browse_path(self):
+        parent = self.parent()
+        start = parent.resource_dir if parent else ''
         path, _ = QFileDialog.getOpenFileName(
-            self, self.parent().t('select_file') if self.parent() else 'Select File', '', 'All Files (*)'
+            self,
+            parent.t('select_file') if parent else 'Select File',
+            start,
+            'All Files (*)',
         )
-        if path:
-            self.path_edit.setText(path)
+        if not path:
+            return
+        if start and not os.path.abspath(path).startswith(os.path.abspath(start)):
+            QMessageBox.warning(self, parent.t('error') if parent else 'Error', parent.t('resource_only') if parent else 'Resource only')
+            return
+        self.path_edit.setText(os.path.relpath(path, start) if start else path)
 
     def get_action(self):
         typ = self.type_box.currentData()

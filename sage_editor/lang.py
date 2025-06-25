@@ -150,6 +150,7 @@ LANGUAGES = {
         , 'import_files': 'Import Files'
         , 'search': 'Search'
         , 'py_files': 'Python Files (*.py)'
+        , 'resource_only': 'Please choose a file inside Resources'
         , 'unsaved_short': 'unsaved'
     },
     'Русский': {
@@ -300,6 +301,7 @@ LANGUAGES = {
         , 'import_files': 'Импорт файлов'
         , 'search': 'Поиск'
         , 'py_files': 'Файлы Python (*.py)'
+        , 'resource_only': 'Выберите файл только из папки Resources'
         , 'unsaved_short': 'несохранено'
     }
 }

@@ -1,12 +1,108 @@
 from PyQt6.QtWidgets import (
     QDockWidget, QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
-    QLineEdit, QAbstractItemView, QTreeView, QTreeWidget
+    QLineEdit, QAbstractItemView, QTreeView, QTreeWidget, QFileDialog,
 )
 try:  # QFileSystemModel is missing in some PyQt6 builds
     from PyQt6.QtWidgets import QFileSystemModel
 except Exception:  # pragma: no cover - optional dependency
     QFileSystemModel = None
-from PyQt6.QtCore import Qt, QSortFilterProxyModel
+from PyQt6.QtCore import Qt, QSortFilterProxyModel, QMimeData, QPointF
+
+import os
+
+
+class ResourceTreeWidget(QTreeWidget):
+    """Tree widget that mirrors the filesystem for resources."""
+
+    def __init__(self, editor):
+        super().__init__()
+        self.editor = editor
+        self.setAcceptDrops(True)
+        self.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
+
+    def dragEnterEvent(self, event):  # pragma: no cover - UI interaction
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+        else:
+            super().dragEnterEvent(event)
+
+    def dragMoveEvent(self, event):  # pragma: no cover - UI interaction
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+        else:
+            super().dragMoveEvent(event)
+
+    def dropEvent(self, event):  # pragma: no cover - UI interaction
+        if event.mimeData().hasUrls():
+            item = self.itemAt(event.position().toPoint()) if hasattr(event, "position") else self.itemAt(event.pos())
+            base = self.editor.resource_dir
+            if item:
+                path = item.data(0, Qt.ItemDataRole.UserRole)
+                base = path if os.path.isdir(path) else os.path.dirname(path)
+            for url in event.mimeData().urls():
+                file_path = url.toLocalFile()
+                if file_path:
+                    self.editor._copy_to_resources(file_path, base)
+            self.editor._refresh_resource_tree()
+            event.acceptProposedAction()
+            return
+
+        item = self.currentItem()
+        if item is None:
+            super().dropEvent(event)
+            return
+        old_path = item.data(0, Qt.ItemDataRole.UserRole)
+        super().dropEvent(event)
+        parent = item.parent()
+        base = parent.data(0, Qt.ItemDataRole.UserRole) if parent else self.editor.resource_dir
+        new_path = os.path.join(base, item.text(0))
+        if old_path != new_path:
+            if self.editor._move_resource(old_path, new_path):
+                item.setData(0, Qt.ItemDataRole.UserRole, new_path)
+            else:
+                self.editor._refresh_resource_tree()
+
+
+class ResourceTreeView(QTreeView):
+    """Tree view bound to QFileSystemModel with drag-and-drop support."""
+
+    def __init__(self, editor):
+        super().__init__()
+        self.editor = editor
+        self.setAcceptDrops(True)
+        self.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
+
+    def dragEnterEvent(self, event):  # pragma: no cover - UI interaction
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+        else:
+            super().dragEnterEvent(event)
+
+    def dragMoveEvent(self, event):  # pragma: no cover - UI interaction
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+        else:
+            super().dragMoveEvent(event)
+
+    def dropEvent(self, event):  # pragma: no cover - UI interaction
+        if event.mimeData().hasUrls():
+            index = self.indexAt(event.position().toPoint()) if hasattr(event, "position") else self.indexAt(event.pos())
+            base = self.editor.resource_dir
+            if index.isValid() and self.editor.resource_model is not None:
+                src_index = index
+                if self.editor.proxy_model is not None:
+                    src_index = self.editor.proxy_model.mapToSource(index)
+                path = self.editor.resource_model.filePath(src_index)
+                base = path if os.path.isdir(path) else os.path.dirname(path)
+            for url in event.mimeData().urls():
+                file_path = url.toLocalFile()
+                if file_path:
+                    self.editor._copy_to_resources(file_path, base)
+            self.editor._refresh_resource_tree()
+            event.acceptProposedAction()
+            return
+
+        super().dropEvent(event)
 
 
 class ResourceDock(QDockWidget):
@@ -16,11 +112,11 @@ class ResourceDock(QDockWidget):
         super().__init__(editor.t('resources'), editor)
         self.editor = editor
         if QFileSystemModel is None:
-            self.resource_view = QTreeWidget()
+            self.resource_view = ResourceTreeWidget(editor)
             self.resource_model = None
             self.proxy_model = None
         else:
-            self.resource_view = QTreeView()
+            self.resource_view = ResourceTreeView(editor)
             self.resource_model = QFileSystemModel()
             self.resource_model.setReadOnly(False)
             self.proxy_model = QSortFilterProxyModel(self)
