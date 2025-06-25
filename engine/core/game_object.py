@@ -112,12 +112,11 @@ class GameObject:
 
     def rect(self):
         scale = units.UNITS_PER_METER
-        return (
-            self.x * scale,
-            self.y * scale,
-            self.width * self.scale_x,
-            self.height * self.scale_y,
-        )
+        w = self.width * self.scale_x
+        h = self.height * self.scale_y
+        left = self.x * scale - self.width * self.pivot_x * self.scale_x
+        top = self.y * scale - self.height * self.pivot_y * self.scale_y
+        return (left, top, w, h)
 
     def transform_matrix(self):
         """Return a 4x4 column-major transform matrix without PyGLM."""
