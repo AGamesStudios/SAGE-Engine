@@ -1803,16 +1803,37 @@ class Editor(QMainWindow):
     def choose_grid_color(self):
         pass
 
+    def _clear_transform_panel(self):
+        """Hide property groups and reset their values."""
+        self.object_group.setVisible(False)
+        self.object_group.setEnabled(False)
+        self.transform_group.setVisible(False)
+        self.transform_group.setEnabled(False)
+        if hasattr(self, 'camera_group'):
+            self.camera_group.setVisible(False)
+        # clear values so stale data never shows
+        for spin in (
+            self.x_spin, self.y_spin, self.z_spin,
+            self.scale_x_spin, self.scale_y_spin, self.angle_spin,
+            self.cam_w_spin, self.cam_h_spin, self.cam_zoom_spin,
+        ):
+            spin.blockSignals(True)
+            spin.setValue(0)
+            spin.blockSignals(False)
+        self.name_edit.blockSignals(True)
+        self.name_edit.clear()
+        self.name_edit.blockSignals(False)
+        self.type_combo.blockSignals(True)
+        self.type_combo.setCurrentIndex(-1)
+        self.type_combo.blockSignals(False)
+
     def _update_transform_panel(self):
         idx = self.object_combo.currentIndex()
         if idx < 0 or idx >= len(self.items):
-            self.object_group.setVisible(False)
-            self.transform_group.setVisible(False)
-            self.transform_group.setEnabled(False)
-            if hasattr(self, 'camera_group'):
-                self.camera_group.setVisible(False)
+            self._clear_transform_panel()
             return
         self.object_group.setVisible(True)
+        self.object_group.setEnabled(True)
         self.transform_group.setVisible(True)
         self.transform_group.setEnabled(True)
         item, obj = self.items[idx]
