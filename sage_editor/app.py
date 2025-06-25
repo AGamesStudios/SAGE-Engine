@@ -198,6 +198,7 @@ def main(argv=None):
     pm = ProjectManager(editor)
     if pm.exec() != QDialog.DialogCode.Accepted:
         app.quit()
+        sys.exit(0)
         return 0
     editor.showMaximized()
 

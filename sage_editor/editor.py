@@ -1869,32 +1869,36 @@ class Editor(QMainWindow):
                 self._set_active_camera(row)
 
     def _resource_menu(self, pos):
+        """Show a context menu for the item at *pos* in the resources view."""
         if not self.resource_dir:
             return
-        base = self.resource_dir
+        path = self.resource_dir
         if isinstance(self.resource_view, QTreeWidget):
             item = self.resource_view.itemAt(pos)
             if item is not None:
-                base = item.data(0, Qt.ItemDataRole.UserRole)
+                path = item.data(0, Qt.ItemDataRole.UserRole)
         else:
             index = self.resource_view.indexAt(pos)
             if self.resource_model is not None and index.isValid():
                 if self.proxy_model is not None:
                     index = self.proxy_model.mapToSource(index)
-                base = self.resource_model.filePath(index)
-        if base and not os.path.isdir(base):
-            base = os.path.dirname(base)
+                path = self.resource_model.filePath(index)
+        base = path if os.path.isdir(path) else os.path.dirname(path)
+
         menu = QMenu(self)
+        open_act = menu.addAction(self.t('open'))
         new_folder_act = menu.addAction(self.t('new_folder'))
         import_act = menu.addAction(self.t('import'))
         del_act = menu.addAction(self.t('delete'))
         act = menu.exec(self.resource_view.viewport().mapToGlobal(pos))
-        if act == new_folder_act:
+        if act == open_act:
+            self._open_resource(path)
+        elif act == new_folder_act:
             self._new_folder(base)
         elif act == import_act:
             self._import_resources(base)
         elif act == del_act:
-            self._delete_resource(base)
+            self._delete_resource(path)
 
     def _new_folder(self, base: str | None = None) -> None:
         """Create a subfolder inside the resources directory."""
@@ -2025,7 +2029,15 @@ class Editor(QMainWindow):
             if self.proxy_model is not None:
                 index = self.proxy_model.mapToSource(index)
             path = self.resource_model.filePath(index)
-        if not path or os.path.isdir(path):
+        self._open_resource(path)
+
+    def _open_resource(self, path: str) -> None:
+        """Open the given resource path."""
+        if not path:
+            return
+        if os.path.isdir(path):
+            QDesktopServices.openUrl(QUrl.fromLocalFile(path))
+            _log(f'Opened folder {path}')
             return
         if path.lower().endswith('.sagescene'):
             self.scene_path = path
@@ -2054,10 +2066,21 @@ class Editor(QMainWindow):
             else:
                 os.remove(path)
             _log(f'Deleted resource {path}')
+            self._cleanup_empty_dirs(os.path.dirname(path))
         except Exception as exc:
             logger.exception('Failed to delete resource %s', path)
             QMessageBox.warning(self, self.t('error'), str(exc))
         self._refresh_resource_tree()
+
+    def _cleanup_empty_dirs(self, path: str) -> None:
+        """Remove empty directories up to the resources root."""
+        root = os.path.abspath(self.resource_dir) if self.resource_dir else ''
+        while path and os.path.abspath(path) != root:
+            try:
+                os.rmdir(path)
+            except OSError:
+                break
+            path = os.path.dirname(path)
 
     def _import_resources(self, base: str | None = None) -> None:
         """Import files or folders into the project resources."""
