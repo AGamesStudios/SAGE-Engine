@@ -35,8 +35,11 @@ class ProfilerDock(QDockWidget):
         layout.addWidget(self.gpu_graph)
 
         self.timer = QTimer(self)
+        self.timer.setInterval(1000)
         self.timer.timeout.connect(self._sample)
-        self.timer.start(1000)
+        self.visibilityChanged.connect(self._on_visible)
+        if self.isVisible():
+            self.timer.start()
         self.process = psutil.Process()
         self.last_time = time.perf_counter()
 
@@ -57,3 +60,11 @@ class ProfilerDock(QDockWidget):
             except Exception:
                 gpu_val = 0.0
         self.gpu_graph.append(gpu_val)
+
+    def _on_visible(self, visible: bool) -> None:
+        """Start or stop sampling when the dock visibility changes."""
+        self.last_time = time.perf_counter()
+        if visible:
+            self.timer.start()
+        else:
+            self.timer.stop()

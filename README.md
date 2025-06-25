@@ -153,9 +153,9 @@ Use the **Clear Log** toolbar button to empty the console at any time.
 
 The editor also provides a **Profiler** dock with graphs for overall CPU,
 RAM usage of the editor process, GPU load and the editor process CPU. Frame time in milliseconds is also
-tracked so you can see how long each update takes. The graphs are updated
-every second with colored lines so you can monitor performance while
-editing projects.
+tracked so you can see how long each update takes. Sampling only runs while the dock is visible to
+keep CPU usage low. The graphs update every second with colored lines so you can monitor performance
+without wasting power when the profiler is hidden.
 
 ### Localization
 
