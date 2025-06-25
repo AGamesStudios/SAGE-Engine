@@ -36,7 +36,9 @@ class Viewport(QWidget):
         self.renderer.clear()
         self.renderer.draw_scene(self.scene, self.camera)
         data = pygame.image.tobytes(self.renderer.surface, "RGB")
-        self._image = QImage(data, self.renderer.width, self.renderer.height, QImage.Format_RGB888)
+        # PyQt6 stores image format enums under QImage.Format
+        fmt = QImage.Format.Format_RGB888
+        self._image = QImage(data, self.renderer.width, self.renderer.height, fmt)
         self.update()
 
     def paintEvent(self, event: QPaintEvent) -> None:  # pragma: no cover - UI drawing
