@@ -80,7 +80,15 @@ class OpenGLRenderer:
         from OpenGL.GL import glMatrixMode, glLoadIdentity, glOrtho, GL_PROJECTION, GL_MODELVIEW
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
-        glOrtho(0, self.width, 0, self.height, -1, 1)
+        # center the origin so camera transforms are stable
+        glOrtho(
+            -self.width / 2,
+            self.width / 2,
+            -self.height / 2,
+            self.height / 2,
+            -1,
+            1,
+        )
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
 
@@ -144,10 +152,12 @@ class OpenGLRenderer:
     def _render_scene(self, scene, camera: Camera | None):
         glPushMatrix()
         scale = units.UNITS_PER_METER
+        sign = 1.0 if units.Y_UP else -1.0
         if camera:
-            glTranslatef(self.width / 2 - camera.x * scale,
-                         self.height / 2 - camera.y * scale,
+            glTranslatef(-camera.x * scale,
+                         -camera.y * scale * sign,
                          0)
+            glScalef(camera.zoom, camera.zoom, 1.0)
         scene._sort_objects()
         for obj in scene.objects:
             if isinstance(obj, Camera):

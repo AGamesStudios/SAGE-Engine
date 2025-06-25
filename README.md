@@ -59,7 +59,7 @@ Once a project is chosen the editor opens maximized in a dark Fusion
 theme and provides two
 tabs: **Viewport** and **Logic**. The viewport now uses the same
 **OpenGLRenderer** as the runtime so what you see while editing
-matches the game window. It refreshes roughly sixty times per second and only
+matches the game window. It refreshes about thirty times per second and only
 updates on resize, keeping CPU usage low even on slower machines.
 An **Add Object** button beneath the list places a blank object with a default
  name like `New Object`. Every toolbar action and list item loads its icon from
