@@ -15,7 +15,7 @@ except Exception:  # pragma: no cover - handle older PyQt versions
 from PyQt6.QtGui import QPixmap, QColor, QAction, QDesktopServices
 from .icons import load_icon
 from PyQt6.QtCore import (
-    QRectF, Qt, QProcess, QPointF, QSortFilterProxyModel, QSize, QUrl
+    QRectF, Qt, QProcess, QPointF, QSortFilterProxyModel, QSize, QUrl, QTimer
 )
 import logging
 from typing import Callable
@@ -1061,6 +1061,10 @@ class Editor(QMainWindow):
         self.import_btn = res_dock.import_btn
         self.new_folder_btn = res_dock.new_folder_btn
         self.search_edit = res_dock.search_edit
+        self._filter_timer = QTimer(self)
+        self._filter_timer.setSingleShot(True)
+        self._filter_timer.timeout.connect(self._apply_resource_filter)
+        self._pending_filter = ""
         self.splitDockWidget(self.objects_dock, self.properties_dock, Qt.Orientation.Vertical)
 
         # logic tab with object-specific events and variables
@@ -2366,7 +2370,12 @@ class Editor(QMainWindow):
             return
         self._copy_with_progress(dlg.selectedFiles(), base)
 
-    def _filter_resources(self, text: str) -> None:
+    def _on_filter_change(self, text: str) -> None:
+        self._pending_filter = text
+        self._filter_timer.start(200)
+
+    def _apply_resource_filter(self) -> None:
+        text = self._pending_filter
         if self.proxy_model is not None:
             self.proxy_model.setFilterWildcard(f"*{text}*")
         elif isinstance(self.resource_view, QTreeWidget):

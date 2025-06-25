@@ -66,20 +66,24 @@ class Engine:
     def run(self):
         _log(f'Starting engine version {ENGINE_VERSION}')
         running = True
+        update_events = self.events.update
+        update_scene = self.scene.update
+        sleep = time.sleep
+        perf_counter = time.perf_counter
         while running:
-            now = time.perf_counter()
+            now = perf_counter()
             dt = now - self._last
             self._last = now
             try:
-                self.events.update(self, self.scene, dt)
-                self.scene.update(dt)
+                update_events(self, self.scene, dt)
+                update_scene(dt)
             except Exception:
                 logger.exception('Runtime error')
                 running = False
             if self.fps:
-                delay = self._frame_interval - (time.perf_counter() - now)
+                delay = self._frame_interval - (perf_counter() - now)
                 if delay > 0:
-                    time.sleep(delay)
+                    sleep(delay)
         _log('Engine shutdown')
 
 

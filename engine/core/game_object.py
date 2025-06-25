@@ -3,13 +3,16 @@ import os
 import traceback
 from ..log import logger
 import math
+# builtin modules
+from collections import OrderedDict
 from PIL import Image
 from .objects import register_object
 from ..logic import EventSystem, Event, condition_from_dict, action_from_dict
 from .. import units
 
-# cache loaded images so repeated sprites don't reload files
-_IMAGE_CACHE: dict[str, Image.Image] = {}
+# LRU cache so repeated sprites don't reload files on low spec machines
+_IMAGE_CACHE: "OrderedDict[str, Image.Image]" = OrderedDict()
+_MAX_CACHE = 32
 
 def clear_image_cache():
     """Remove all cached images."""
@@ -66,6 +69,18 @@ class GameObject:
     image: Image.Image | None = field(init=False, default=None)
     width: int = field(init=False, default=0)
     height: int = field(init=False, default=0)
+    _dirty: bool = field(init=False, default=True)
+    _cached_rect: tuple[float, float, float, float] | None = field(init=False, default=None)
+    _cached_matrix: list[float] | None = field(init=False, default=None)
+
+    _DIRTY_FIELDS = {
+        'x', 'y', 'z', 'scale_x', 'scale_y', 'angle', 'pivot_x', 'pivot_y'
+    }
+
+    def __setattr__(self, name, value):
+        if name in GameObject._DIRTY_FIELDS:
+            object.__setattr__(self, '_dirty', True)
+        super().__setattr__(name, value)
 
     @property
     def scale(self) -> float:
@@ -104,14 +119,21 @@ class GameObject:
                 try:
                     img = Image.open(path).convert('RGBA')
                     _IMAGE_CACHE[path] = img
+                    while len(_IMAGE_CACHE) > _MAX_CACHE:
+                        _IMAGE_CACHE.popitem(last=False)
                 except Exception:
                     logger.exception('Failed to load image %s', path)
                     img = Image.new('RGBA', (32, 32), self.color or (255, 255, 255, 255))
         self.image = img
         self.width, self.height = img.size
+        self._dirty = True
+        self._cached_rect = None
+        self._cached_matrix = None
 
     def rect(self):
         """Return an axis-aligned bounding box in world units."""
+        if not self._dirty and self._cached_rect is not None:
+            return self._cached_rect
         scale = units.UNITS_PER_METER
         px = self.width * self.pivot_x
         py = self.height * self.pivot_y
@@ -128,8 +150,8 @@ class GameObject:
         ]
         tx = self.x * scale
         ty = self.y * scale
-        xs = []
-        ys = []
+        xs: list[float] = []
+        ys: list[float] = []
         for cx, cy in corners:
             cx *= sx
             cy *= sy
@@ -141,10 +163,14 @@ class GameObject:
         right = max(xs)
         bottom = min(ys)
         top = max(ys)
-        return (left, bottom, right - left, top - bottom)
+        self._cached_rect = (left, bottom, right - left, top - bottom)
+        self._dirty = False
+        return self._cached_rect
 
     def transform_matrix(self):
         """Return a 4x4 column-major transform matrix without PyGLM."""
+        if not self._dirty and self._cached_matrix is not None:
+            return self._cached_matrix
         ang = math.radians(self.angle)
         ca = math.cos(ang)
         sa = math.sin(ang)
@@ -159,12 +185,14 @@ class GameObject:
         scale = units.UNITS_PER_METER
         tx = self.x * scale + px - (m00 * px + m01 * py)
         ty = self.y * scale + py - (m10 * px + m11 * py)
-        return [
+        self._cached_matrix = [
             m00, m10, 0.0, 0.0,
             m01, m11, 0.0, 0.0,
             0.0, 0.0, 1.0, 0.0,
             tx,  ty,  0.0, 1.0,
         ]
+        self._dirty = False
+        return self._cached_matrix
 
     def build_event_system(self, objects, variables) -> EventSystem:
         """Construct an EventSystem from the object's event data."""

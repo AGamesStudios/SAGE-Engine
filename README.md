@@ -108,12 +108,14 @@ The window keeps a fixed width so long filenames will not stretch the dialog.
 Windows paths are automatically prefixed so deeply nested archives import
 without hitting the 260 character limit.
 Imported files are loaded immediately into a small cache so previews appear
-instantly. The engine loads all assets relative to this directory, ensuring
-reorganizing files will not break existing scenes. If PyQt does not provide
-``QFileSystemModel`` the editor falls back to a simpler tree widget that still
-lets you create folders and import resources. Right-clicking any item offers to
-open it with the default application (icon `open.png`) or delete it from the project. Hovering an image reveals a
-floating preview just offset from the cursor so files are easy to identify. The preview is
+instantly. Only the most recent images are kept using an LRU scheme so the
+cache never grows without bound. The engine loads all assets relative to this
+directory, ensuring reorganizing files will not break existing scenes. If PyQt
+does not provide ``QFileSystemModel`` the editor falls back to a simpler tree
+widget that still lets you create folders and import resources. Right-clicking
+any item offers to open it with the default application (icon `open.png`) or
+delete it from the project. Hovering an image reveals a floating preview just
+offset from the cursor so files are easy to identify. The preview is
 confined to the editor window and disappears when it loses focus. Thumbnails are
 cached in memory so browsing many files does not lag. Double-clicking a
 `.sagescene` file loads it in the editor so you can quickly switch between scenes.
@@ -344,14 +346,14 @@ title so you always know which release you are using.
 ### Performance
 
 SAGE Engine aims to run smoothly even on older hardware. Images and sounds
-are cached after the first load so repeated objects or effects do not reload
-files from disk. The `Engine` class accepts an `fps` argument (default 60) to
-control the frame rate using `time.sleep` for consistent timing. Object lists
-are sorted only when modified and the renderer no longer relies on PyGLM;
-simple math keeps matrices lightweight. You can clear the image cache with
-`engine.clear_image_cache()` if memory becomes tight. These optimizations keep
-the runtime light without sacrificing visual quality while keeping CPU usage
-low.
+are cached after the first load and only the most recent 32 images are kept in
+memory.  A helper `engine.clear_image_cache()` empties this LRU cache if
+memory becomes tight. The `Engine` class accepts an `fps` argument (default 60)
+to control the frame rate using `time.sleep` for consistent timing. Object
+lists are sorted only when modified and renderer math avoids heavy
+dependencies. The editor delays resource searches slightly so typing does not
+rebuild the tree on every keystroke. These optimizations keep the runtime light
+without sacrificing visual quality while keeping CPU usage low.
 
 ### SAGE API
 

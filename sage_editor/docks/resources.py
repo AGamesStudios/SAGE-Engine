@@ -264,7 +264,7 @@ class ResourceDock(QDockWidget):
 
     def _filter_changed(self, text: str) -> None:  # pragma: no cover - UI callback
         """Handle resource search edits."""
-        self.editor._filter_resources(text)
+        self.editor._on_filter_change(text)
 
     def _tree_selection(self) -> None:  # pragma: no cover - UI callback
         items = self.resource_view.selectedItems()
