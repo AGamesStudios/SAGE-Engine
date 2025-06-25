@@ -51,9 +51,11 @@ theme and provides two
 tabs: **Viewport** and **Logic**. The old QGraphics-based viewport has been
 removed entirely, leaving only a placeholder panel. Rendering tools will return
 once the new Pygame widget is implemented.
-An **Add Object** button beneath the object list places a blank object with a
-default name like `New Object`. Object properties can be edited in a dock but
-there is no visual manipulation until rendering support returns.
+An **Add Object** button beneath the list places a blank object with a default
+name like `New Object`. The toolbar now uses icons so common actions are easy to
+spot and each item in the object list shows a small icon indicating whether it
+is a sprite or a camera. Object properties can be edited in a dock but there is
+no visual manipulation until rendering support returns.
 A cyan rectangle shows the active camera frustum. Camera ``x`` and ``y``
 describe its centre, so the rectangle surrounds that point. Scenes always
 contain at least one camera; if an older scene lacks one the engine creates a

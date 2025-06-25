@@ -2,7 +2,7 @@ import sys
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QFileDialog,
     QTabWidget, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-    QListWidget, QTableWidget, QTableWidgetItem, QPushButton, QDialog, QFormLayout,
+    QListWidget, QListWidgetItem, QTableWidget, QTableWidgetItem, QPushButton, QDialog, QFormLayout,
     QDialogButtonBox, QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox, QCompleter,
     QTextEdit, QDockWidget, QGroupBox, QCheckBox, QMessageBox, QMenu, QColorDialog,
     QTreeView, QInputDialog, QTreeWidget, QTreeWidgetItem,
@@ -988,10 +988,13 @@ class Editor(QMainWindow):
         self.object_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.object_list.customContextMenuRequested.connect(self._object_menu)
         obj_layout.addWidget(self.object_list)
+        style = self.style()
         self.add_obj_btn = QPushButton(self.t('add_object'))
+        self.add_obj_btn.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_FileIcon))
         self.add_obj_btn.clicked.connect(self.add_object)
         obj_layout.addWidget(self.add_obj_btn)
         self.add_cam_btn = QPushButton(self.t('add_camera'))
+        self.add_cam_btn.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_DesktopIcon))
         self.add_cam_btn.clicked.connect(self.add_camera)
         obj_layout.addWidget(self.add_cam_btn)
 
@@ -1219,6 +1222,7 @@ class Editor(QMainWindow):
 
     def _init_actions(self):
         menubar = self.menuBar()
+        style = self.style()
         self.file_menu = menubar.addMenu(self.t('file'))
         self.new_proj_act = QAction(self.t('new_project'), self)
         self.new_proj_act.setShortcut('Ctrl+N')
@@ -1245,15 +1249,19 @@ class Editor(QMainWindow):
         self.edit_menu = menubar.addMenu(self.t('edit'))
 
         toolbar = self.addToolBar('main')
-        self.run_btn = toolbar.addAction(self.t('run'))
+        run_icon = style.standardIcon(QStyle.StandardPixmap.SP_MediaPlay)
+        self.run_btn = QAction(run_icon, self.t('run'), self)
         self.run_btn.setShortcut('F5')
         self.run_btn.triggered.connect(self.run_game)
+        toolbar.addAction(self.run_btn)
         from PyQt6.QtWidgets import QWidget, QSizePolicy
         spacer = QWidget()
         spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         toolbar.addWidget(spacer)
-        self.clear_log_act = toolbar.addAction(self.t('clear_log'))
+        clear_icon = style.standardIcon(QStyle.StandardPixmap.SP_DialogResetButton)
+        self.clear_log_act = QAction(clear_icon, self.t('clear_log'), self)
         self.clear_log_act.triggered.connect(self.console.clear)
+        toolbar.addAction(self.clear_log_act)
         self.lang_box = QComboBox()
         self.lang_box.addItems(list(LANGUAGES.keys()))
         self.lang_box.setCurrentText(self.lang)
@@ -1602,7 +1610,9 @@ class Editor(QMainWindow):
             self.items.append((None, obj))
             index = len(self.items) - 1
             self.object_combo.addItem(obj.name, index)
-            self.object_list.addItem(obj.name)
+            item = QListWidgetItem(obj.name)
+            item.setIcon(self._object_icon(obj))
+            self.object_list.addItem(item)
             if self.object_combo.currentIndex() == -1:
                 self.object_combo.setCurrentIndex(0)
                 self.object_list.setCurrentRow(0)
@@ -1627,7 +1637,9 @@ class Editor(QMainWindow):
             self.items.append((None, obj))
             index = len(self.items) - 1
             self.object_combo.addItem(obj.name, index)
-            self.object_list.addItem(obj.name)
+            item = QListWidgetItem(obj.name)
+            item.setIcon(self._object_icon(obj))
+            self.object_list.addItem(item)
             if self.object_combo.currentIndex() == -1:
                 self.object_combo.setCurrentIndex(0)
                 self.object_list.setCurrentRow(0)
@@ -1648,7 +1660,9 @@ class Editor(QMainWindow):
         self.items.append((None, cam))
         index = len(self.items) - 1
         self.object_combo.addItem(cam.name, index)
-        self.object_list.addItem(cam.name)
+        item = QListWidgetItem(cam.name)
+        item.setIcon(self._object_icon(cam))
+        self.object_list.addItem(item)
         if self.object_combo.currentIndex() == -1:
             self.object_combo.setCurrentIndex(0)
             self.object_list.setCurrentRow(0)
@@ -1762,6 +1776,15 @@ class Editor(QMainWindow):
         """Placeholder until a new viewport is implemented."""
         return
 
+    def _object_icon(self, obj):
+        """Return an icon representing *obj* type."""
+        from engine import Camera
+        if isinstance(obj, Camera):
+            pix = QStyle.StandardPixmap.SP_DesktopIcon
+        else:
+            pix = QStyle.StandardPixmap.SP_FileIcon
+        return self.style().standardIcon(pix)
+
     def _refresh_object_labels(self):
         """Show which camera is active in the object list."""
         for i, (_, obj) in enumerate(self.items):
@@ -1772,6 +1795,7 @@ class Editor(QMainWindow):
             item = self.object_list.item(i)
             if item is not None:
                 item.setText(text)
+                item.setIcon(self._object_icon(obj))
 
     def _set_active_camera(self, index: int):
         """Make the selected camera the scene's active camera."""
@@ -2297,7 +2321,9 @@ class Editor(QMainWindow):
                 self.items.append((None, obj))
                 index = len(self.items) - 1
                 self.object_combo.addItem(obj.name, index)
-                self.object_list.addItem(obj.name)
+                item = QListWidgetItem(obj.name)
+                item.setIcon(self._object_icon(obj))
+                self.object_list.addItem(item)
                 self._mark_dirty()
                 self._update_camera_rect()
                 self._refresh_object_labels()
@@ -2325,7 +2351,9 @@ class Editor(QMainWindow):
                 self.items.append((None, obj))
                 index = len(self.items) - 1
                 self.object_combo.addItem(obj.name, index)
-                self.object_list.addItem(obj.name)
+                item = QListWidgetItem(obj.name)
+                item.setIcon(self._object_icon(obj))
+                self.object_list.addItem(item)
                 self._mark_dirty()
                 self._refresh_object_labels()
         except Exception as exc:
@@ -2459,12 +2487,16 @@ class Editor(QMainWindow):
                     self.items.append((None, obj))
                     index = len(self.items) - 1
                     self.object_combo.addItem(obj.name, index)
-                    self.object_list.addItem(obj.name)
+                    item = QListWidgetItem(obj.name)
+                    item.setIcon(self._object_icon(obj))
+                    self.object_list.addItem(item)
                     continue
                 self.items.append((None, obj))
                 index = len(self.items) - 1
                 self.object_combo.addItem(obj.name, index)
-                self.object_list.addItem(obj.name)
+                item = QListWidgetItem(obj.name)
+                item.setIcon(self._object_icon(obj))
+                self.object_list.addItem(item)
             except Exception as exc:
                 self.console.append(f'Failed to load sprite {obj.image_path}: {exc}')
         self.refresh_events()

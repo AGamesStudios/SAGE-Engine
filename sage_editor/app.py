@@ -19,6 +19,9 @@ QToolBar { icon-size: 24px; spacing: 6px; }
 QDockWidget::title { padding: 4px; background: #333; color: #ddd; }
 QGroupBox { margin-top: 8px; }
 QGroupBox::title { subcontrol-origin: margin; left: 4px; padding: 0 2px; }
+QPushButton { padding: 4px 8px; }
+QLineEdit { padding: 2px 4px; }
+QListWidget { background: #222; }
 """
 
 from .editor import Editor, save_recent, load_recent, _log, logger
