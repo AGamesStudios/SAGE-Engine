@@ -1,7 +1,6 @@
 import sys
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QFileDialog,
-    QGraphicsView, QGraphicsScene, QGraphicsPixmapItem, QGraphicsLineItem, QGraphicsEllipseItem,
     QTabWidget, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QListWidget, QTableWidget, QTableWidgetItem, QPushButton, QDialog, QFormLayout,
     QDialogButtonBox, QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox, QCompleter,
@@ -13,19 +12,10 @@ try:
     from PyQt6.QtWidgets import QFileSystemModel
 except Exception:  # pragma: no cover - handle older PyQt versions
     QFileSystemModel = None
-from PyQt6.QtGui import QPixmap, QPen, QColor, QPalette, QFont, QAction, QTransform
+from PyQt6.QtGui import QPixmap, QColor, QAction
 from PyQt6.QtCore import (
     QRectF, Qt, QProcess, QPointF, QSortFilterProxyModel, QSize
 )
-try:
-    from PyQt6.sip import isdeleted  # PyQt6 >= 6.5
-except Exception:  # pragma: no cover - optional dependency
-    try:
-        from sip import isdeleted  # PyQt5/PyQt6 < 6.5
-    except Exception:
-        def isdeleted(obj):
-            """Fallback when sip is unavailable."""
-            return False
 import logging
 import atexit
 import traceback
@@ -36,7 +26,7 @@ import os
 import glfw
 from engine import Scene, GameObject, Project, Camera, ENGINE_VERSION, get_resource_path
 from . import plugins
-from .widgets.viewport import GraphicsView
+from .widgets import Viewport
 register_plugin = plugins.register_plugin
 import json
 from .docks.console import ConsoleDock
@@ -127,138 +117,6 @@ MOUSE_NAME_LOOKUP = {code: name for name, code in MOUSE_OPTIONS}
 
 
 
-
-class SpriteItem(QGraphicsPixmapItem):
-    """Movable pixmap item with optional grid snapping."""
-
-    def __init__(self, pixmap, editor, obj):
-        super().__init__(pixmap)
-        self.editor = editor
-        self.obj = obj
-        flag_enum = getattr(QGraphicsPixmapItem, 'GraphicsItemFlag', None)
-        if flag_enum is None:
-            from PyQt6.QtWidgets import QGraphicsItem
-            flag_enum = QGraphicsItem.GraphicsItemFlag
-        self.setFlag(flag_enum.ItemIsMovable, True)
-        self.setFlag(flag_enum.ItemSendsGeometryChanges, True)
-        self.setFlag(flag_enum.ItemIsSelectable, True)
-        self.setCursor(Qt.CursorShape.OpenHandCursor)
-        self.index = None
-        if obj:
-            self.apply_object_transform()
-
-    def apply_object_transform(self):
-        """Sync this item's transform from its object."""
-        if not self.obj:
-            return
-        obj = self.obj
-        t = QTransform()
-        px = obj.pivot_x * obj.width
-        py = obj.pivot_y * obj.height
-        t.translate(px, py)
-        t.scale(obj.scale_x, obj.scale_y)
-        t.rotate(obj.angle)
-        t.translate(-px, -py)
-        self.setTransform(t)
-        self.setPos(obj.x, obj.y)
-
-    def itemChange(self, change, value):
-        from PyQt6.QtWidgets import QGraphicsItem
-        if change == QGraphicsItem.GraphicsItemChange.ItemPositionChange and self.editor.snap_to_grid:
-            x = round(value.x() / self.editor.grid_size) * self.editor.grid_size
-            y = round(value.y() / self.editor.grid_size) * self.editor.grid_size
-            return QPointF(x, y)
-        if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged and self.obj:
-            self.obj.x = value.x()
-            self.obj.y = value.y()
-            self.editor._mark_dirty()
-            self.editor._update_gizmo()
-        if change == QGraphicsItem.GraphicsItemChange.ItemSelectedHasChanged and bool(value):
-            if self.index is not None:
-                self.editor.object_combo.setCurrentIndex(self.index)
-                self.editor._update_gizmo()
-        return super().itemChange(change, value)
-
-    def mouseDoubleClickEvent(self, event):
-        self.editor.edit_object(self)
-        super().mouseDoubleClickEvent(event)
-
-    def mousePressEvent(self, event):
-        self.setCursor(Qt.CursorShape.ClosedHandCursor)
-        super().mousePressEvent(event)
-
-    def mouseReleaseEvent(self, event):
-        self.setCursor(Qt.CursorShape.OpenHandCursor)
-        super().mouseReleaseEvent(event)
-
-
-class _HandleItem(QGraphicsEllipseItem):
-    def __init__(self, editor, kind):
-        super().__init__(-4, -4, 8, 8)
-        self.editor = editor
-        self.kind = kind
-        pen = QPen(QColor('yellow'))
-        self.setPen(pen)
-        self.setBrush(QColor('yellow'))
-        flag_enum = getattr(QGraphicsEllipseItem, 'GraphicsItemFlag', None)
-        if flag_enum is None:
-            from PyQt6.QtWidgets import QGraphicsItem
-            flag_enum = QGraphicsItem.GraphicsItemFlag
-        self.setFlag(flag_enum.ItemIsMovable, True)
-        if self.kind == 'scale':
-            self.setCursor(Qt.CursorShape.SizeFDiagCursor)
-        else:
-            self.setCursor(Qt.CursorShape.CrossCursor)
-        self.start_pos = QPointF()
-        self.start_scale = 1.0
-        self.start_angle = 0.0
-
-    def mousePressEvent(self, event):
-        idx = self.editor.object_combo.currentData()
-        if idx is None or idx < 0 or idx >= len(self.editor.items):
-            return
-        item, obj = self.editor.items[idx]
-        self.start_pos = event.scenePos()
-        self.start_scale_x = obj.scale_x
-        self.start_scale_y = obj.scale_y
-        self.start_angle = obj.angle
-        self.editor.view.setCursor(self.cursor())
-        super().mousePressEvent(event)
-
-    def mouseMoveEvent(self, event):
-        idx = self.editor.object_combo.currentData()
-        if idx is None or idx < 0 or idx >= len(self.editor.items):
-            return
-        item, obj = self.editor.items[idx]
-        if self.kind == 'scale':
-            scene_delta = event.scenePos() - self.start_pos
-            if self.editor.local_coords:
-                rot = QTransform()
-                rot.rotate(item.rotation())
-                delta = rot.inverted()[0].map(scene_delta)
-            else:
-                delta = scene_delta
-            new_scale = max(0.1, (self.start_scale_x + self.start_scale_y)/2 + (delta.x() + delta.y()) / 100)
-            if self.editor.link_scale.isChecked():
-                obj.scale_x = obj.scale_y = new_scale
-            else:
-                obj.scale_x = max(0.1, self.start_scale_x + delta.x() / 100)
-                obj.scale_y = max(0.1, self.start_scale_y + delta.y() / 100)
-            item.apply_object_transform()
-        elif self.kind == 'rotate':
-            center = item.mapToScene(item.boundingRect().center())
-            pos = event.scenePos() - center
-            import math
-            angle = math.degrees(math.atan2(pos.y(), pos.x()))
-            obj.angle = angle
-            item.apply_object_transform()
-        self.editor._mark_dirty()
-        self.editor._update_gizmo()
-        super().mouseMoveEvent(event)
-
-    def mouseReleaseEvent(self, event):
-        self.editor.view.unsetCursor()
-        super().mouseReleaseEvent(event)
 
 
 class ResourceTreeWidget(QTreeWidget):
@@ -1140,37 +998,9 @@ class Editor(QMainWindow):
         self.tabs = QTabWidget()
         self.setCentralWidget(self.tabs)
 
-        # viewport tab
-        self.view = GraphicsView()
-        self.view.gizmo_lines = []
-        self.g_scene = QGraphicsScene()
-        # large scene rectangle to simulate an "infinite" workspace
-        self.g_scene.setSceneRect(QRectF(-10000, -10000, 20000, 20000))
-        self.view.setScene(self.g_scene)
-        # use new PyQt6 enum syntax
-        self.view.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
-        self.view.centerOn(0, 0)
+        # viewport tab (currently blank)
+        self.view = Viewport()
         self.tabs.addTab(self.view, self.t('viewport'))
-        self.grid_size = 32
-        self.grid_color = QColor(80, 80, 80)
-        self.grid_lines = []
-        self.axes = []
-        self.snap_to_grid = False
-        self.local_coords = False
-        self._create_grid()
-        # gizmo rectangle with scale and rotate handles
-        self.gizmo = self.g_scene.addRect(QRectF(), QPen(QColor('yellow')))
-        self.gizmo.hide()
-        self.scale_handle = _HandleItem(self, 'scale')
-        self.g_scene.addItem(self.scale_handle)
-        self.scale_handle.hide()
-        self.rotate_handle = _HandleItem(self, 'rotate')
-        self.g_scene.addItem(self.rotate_handle)
-        self.rotate_handle.hide()
-        self.g_scene.changed.connect(self._update_gizmo)
-        self._gizmo_connected = True
-        # update gizmo when the selection changes
-        self.g_scene.selectionChanged.connect(self._on_selection_changed)
 
         # object list and transform inspector dock
         obj_widget = QWidget()
@@ -1316,12 +1146,6 @@ class Editor(QMainWindow):
         self.add_obj_btn.setText(self.t('add_object'))
         self.add_cam_btn.setText(self.t('add_camera'))
         self.clear_log_act.setText(self.t('clear_log'))
-        self.grid_act.setText(self.t('show_grid'))
-        self.gizmo_act.setText(self.t('show_gizmo'))
-        self.snap_act.setText(self.t('snap_to_grid'))
-        self.grid_spin.setPrefix('')
-        self.grid_spin.setSuffix('')
-        self.grid_spin.setToolTip(self.t('grid_size'))
         self.recent_menu.setTitle(self.t('recent_projects'))
         self.settings_menu.setTitle(self.t('settings'))
         self.window_settings_act.setText(self.t('window_settings'))
@@ -1424,25 +1248,6 @@ class Editor(QMainWindow):
         self.run_btn = toolbar.addAction(self.t('run'))
         self.run_btn.setShortcut('F5')
         self.run_btn.triggered.connect(self.run_game)
-        self.grid_act = toolbar.addAction(self.t('show_grid'))
-        self.grid_act.setCheckable(True)
-        self.grid_act.setChecked(True)
-        self.grid_act.toggled.connect(self.toggle_grid)
-        self.gizmo_act = toolbar.addAction(self.t('show_gizmo'))
-        self.gizmo_act.setCheckable(True)
-        self.gizmo_act.setChecked(True)
-        self.gizmo_act.toggled.connect(self.toggle_gizmo)
-        self.snap_act = toolbar.addAction(self.t('snap_to_grid'))
-        self.snap_act.setCheckable(True)
-        self.snap_act.toggled.connect(self.toggle_snap)
-        toolbar.addWidget(QLabel(self.t('grid_size')))
-        self.grid_spin = QSpinBox()
-        self.grid_spin.setRange(8, 512)
-        self.grid_spin.setValue(self.grid_size)
-        self.grid_spin.valueChanged.connect(self.set_grid_size)
-        toolbar.addWidget(self.grid_spin)
-        color_act = toolbar.addAction(self.t('grid_color'))
-        color_act.triggered.connect(self.choose_grid_color)
         from PyQt6.QtWidgets import QWidget, QSizePolicy
         spacer = QWidget()
         spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
@@ -1775,9 +1580,6 @@ class Editor(QMainWindow):
             pix = QPixmap(abs_path)
             if pix.isNull():
                 raise ValueError('failed to load image')
-            item = SpriteItem(pix, self, None)
-            item.setZValue(0)
-            self.g_scene.addItem(item)
             obj = GameObject(
                 rel_path, 0, 0, 0, None, 1.0, 1.0, 0.0,
                 0.5, 0.5, color=None
@@ -1785,15 +1587,12 @@ class Editor(QMainWindow):
             obj.name = self.t('new_object')
             obj.settings = {}
             self.scene.add_object(obj)
-            item.obj = obj
-            item.apply_object_transform()
-            self.items.append((item, obj))
-            item.index = len(self.items) - 1
-            self.object_combo.addItem(obj.name, item.index)
+            self.items.append((None, obj))
+            index = len(self.items) - 1
+            self.object_combo.addItem(obj.name, index)
             self.object_list.addItem(obj.name)
             if self.object_combo.currentIndex() == -1:
                 self.object_combo.setCurrentIndex(0)
-            self._update_gizmo()
             self._mark_dirty()
         except Exception as exc:
             self.console.append(f'Failed to add sprite: {exc}')
@@ -1804,11 +1603,6 @@ class Editor(QMainWindow):
         if not self._check_project():
             return
         try:
-            pix = QPixmap(32, 32)
-            pix.fill(QColor(255, 255, 255, 255))
-            item = SpriteItem(pix, self, None)
-            item.setZValue(0)
-            self.g_scene.addItem(item)
             obj = GameObject(
                 '', 0, 0, 0, None, 1.0, 1.0, 0.0,
                 0.5, 0.5, color=(255, 255, 255, 255)
@@ -1816,15 +1610,12 @@ class Editor(QMainWindow):
             obj.name = self.t('new_object')
             obj.settings = {}
             self.scene.add_object(obj)
-            item.obj = obj
-            item.apply_object_transform()
-            self.items.append((item, obj))
-            item.index = len(self.items) - 1
-            self.object_combo.addItem(obj.name, item.index)
+            self.items.append((None, obj))
+            index = len(self.items) - 1
+            self.object_combo.addItem(obj.name, index)
             self.object_list.addItem(obj.name)
             if self.object_combo.currentIndex() == -1:
                 self.object_combo.setCurrentIndex(0)
-            self._update_gizmo()
             self._mark_dirty()
         except Exception as exc:
             self.console.append(f'Failed to add object: {exc}')
@@ -1848,64 +1639,6 @@ class Editor(QMainWindow):
         self._update_camera_rect()
         self._refresh_object_labels()
 
-    def edit_object(self, item: SpriteItem):
-        idx = item.index if item and item.obj else -1
-        if idx == -1:
-            return
-        obj = item.obj
-        class ObjDialog(QDialog):
-            def __init__(self, parent=None):
-                super().__init__(parent)
-                self.setWindowTitle(parent.t('edit_object'))
-                self.path_edit = QLineEdit(obj.image_path)
-                if parent:
-                    parent.apply_engine_completer(self.path_edit)
-                browse = QPushButton(parent.t('browse'))
-                browse.clicked.connect(self.browse)
-                self.color_btn = QPushButton()
-                self.color = QColor(*obj.color) if obj.color else QColor(255,255,255,255)
-                self._update_color()
-                self.color_btn.clicked.connect(self.pick_color)
-                form = QFormLayout(self)
-                path_row = QHBoxLayout(); path_row.addWidget(self.path_edit); path_row.addWidget(browse)
-                form.addRow(parent.t('path_label'), path_row)
-                form.addRow(parent.t('color'), self.color_btn)
-                buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
-                buttons.accepted.connect(self.accept)
-                buttons.rejected.connect(self.reject)
-                form.addRow(buttons)
-
-            def browse(self):
-                path, _ = QFileDialog.getOpenFileName(self, self.parent().t('browse'), '', self.parent().t('image_files'))
-                if path:
-                    _, rel = self.parent()._copy_to_resources(path)
-                    self.path_edit.setText(rel)
-
-            def pick_color(self):
-                color = QColorDialog.getColor(self.color, self)
-                if color.isValid():
-                    self.color = color
-                    self._update_color()
-
-            def _update_color(self):
-                self.color_btn.setStyleSheet(f'background-color: {self.color.name(QColor.NameFormat.HexArgb)}')
-
-        dlg = ObjDialog(self)
-        if dlg.exec() != QDialog.DialogCode.Accepted:
-            return
-        obj.image_path = dlg.path_edit.text().strip()
-        obj.color = tuple(dlg.color.getRgb())
-        if obj.image_path:
-            pm = QPixmap(get_resource_path(obj.image_path))
-        else:
-            pm = QPixmap(32, 32)
-            col = QColor(*(obj.color or (255, 255, 255, 255)))
-            pm.fill(col)
-        item.setPixmap(pm)
-        self.object_combo.setItemText(idx, obj.name)
-        self._refresh_object_labels()
-        self._update_gizmo()
-        self._mark_dirty()
 
     def add_variable(self):
         if not self._check_project():
@@ -1982,88 +1715,12 @@ class Editor(QMainWindow):
             self.var_table.setItem(row, 1, QTableWidgetItem(str(value)))
 
     def _update_gizmo(self):
-        if hasattr(self, 'gizmo_act') and (not self.gizmo_act.isChecked() or not getattr(self, '_gizmo_connected', False)):
-            self.gizmo.hide()
-            self.scale_handle.hide()
-            self.rotate_handle.hide()
-            if hasattr(self.view, 'gizmo_lines'):
-                self.view.gizmo_lines = []
-                self.view.viewport().update()
-            return
-        idx = self.object_combo.currentData()
-        if idx is None or idx < 0 or idx >= len(self.items):
-            self.gizmo.hide()
-            self.scale_handle.hide()
-            self.rotate_handle.hide()
-            if hasattr(self.view, 'gizmo_lines'):
-                self.view.gizmo_lines = []
-                self.view.viewport().update()
-            self._update_transform_panel()
-            return
-        item, obj = self.items[idx]
-        if item is None:
-            self.gizmo.hide()
-            self.scale_handle.hide()
-            self.rotate_handle.hide()
-            if hasattr(self.view, 'gizmo_lines'):
-                self.view.gizmo_lines = []
-                self.view.viewport().update()
-            self._update_transform_panel()
-            return
-        z = item.zValue()
-        if self.local_coords:
-            rect = item.boundingRect()
-            t = item.sceneTransform()
-            self.gizmo.setTransform(t)
-            self.scale_handle.setTransform(t)
-            self.rotate_handle.setTransform(t)
-            self.gizmo.setRect(rect)
-            self.scale_handle.setPos(rect.bottomRight())
-            self.rotate_handle.setPos(QPointF(rect.left(), rect.top() - 20))
-        else:
-            rect = item.sceneBoundingRect()
-            self.gizmo.setTransform(QTransform())
-            self.scale_handle.setTransform(QTransform())
-            self.rotate_handle.setTransform(QTransform())
-            self.gizmo.setRect(rect)
-            self.scale_handle.setPos(rect.bottomRight())
-            self.rotate_handle.setPos(rect.topLeft() + QPointF(0, -20))
-        self.gizmo.setZValue(z + 0.01)
-        self.gizmo.show()
-        self.scale_handle.setZValue(z + 0.02)
-        self.scale_handle.show()
-        self.rotate_handle.setZValue(z + 0.02)
-        self.rotate_handle.show()
-        # update OpenGL gizmo overlay
-        if hasattr(self.view, 'mapFromScene'):
-            m = self.view.mapFromScene
-            p1 = m(rect.topLeft())
-            p2 = m(rect.topRight())
-            p3 = m(rect.bottomRight())
-            p4 = m(rect.bottomLeft())
-            self.view.gizmo_lines = [
-                (p1.x(), p1.y(), p2.x(), p2.y()),
-                (p2.x(), p2.y(), p3.x(), p3.y()),
-                (p3.x(), p3.y(), p4.x(), p4.y()),
-                (p4.x(), p4.y(), p1.x(), p1.y()),
-            ]
-            self.view.viewport().update()
-        self._update_transform_panel()
+        """Placeholder until a new viewport is implemented."""
+        return
 
     def _on_selection_changed(self):
-        """Sync the object combo with the selected graphics item."""
-        if isdeleted(self.g_scene):
-            return
-        selected = [it for it in self.g_scene.selectedItems() if isinstance(it, SpriteItem)]
-        if not selected:
-            return
-        item = selected[0]
-        if item.index is not None:
-            self.object_combo.setCurrentIndex(item.index)
-            self.object_list.setCurrentRow(item.index)
-            _, obj = self.items[item.index]
-            if isinstance(obj, Camera):
-                self._set_active_camera(item.index)
+        """Placeholder until a new viewport is implemented."""
+        return
 
     def _on_object_list_select(self):
         """Select the corresponding sprite when the user picks an item."""
@@ -2071,84 +1728,18 @@ class Editor(QMainWindow):
         if row < 0 or row >= len(self.items):
             return
         self.object_combo.setCurrentIndex(row)
-        item, obj = self.items[row]
-        self.g_scene.blockSignals(True)
-        for it, _ in self.items:
-            if it is not None:
-                it.setSelected(False)
-        if item is not None:
-            item.setSelected(True)
+        _, obj = self.items[row]
         if isinstance(obj, Camera):
             self._set_active_camera(row)
-        self.g_scene.blockSignals(False)
         self._update_gizmo()
 
     def _create_grid(self):
-        """Create grid and axis lines."""
-        for line in getattr(self, 'grid_lines', []):
-            try:
-                if line.scene() is self.g_scene:
-                    self.g_scene.removeItem(line)
-            except RuntimeError:
-                pass
-        self.grid_lines = []
-        for line in getattr(self, 'axes', []):
-            try:
-                if line.scene() is self.g_scene:
-                    self.g_scene.removeItem(line)
-            except RuntimeError:
-                pass
-        self.axes = []
-        rect = self.g_scene.sceneRect()
-        pen = QPen(self.grid_color)
-        pen.setCosmetic(True)
-        step = self.grid_size
-        if step <= 0:
-            step = 32
-        x = int(rect.left()) - (int(rect.left()) % step)
-        while x < rect.right():
-            line = self.g_scene.addLine(x, rect.top(), x, rect.bottom(), pen)
-            line.setZValue(-1)
-            self.grid_lines.append(line)
-            x += step
-        y = int(rect.top()) - (int(rect.top()) % step)
-        while y < rect.bottom():
-            line = self.g_scene.addLine(rect.left(), y, rect.right(), y, pen)
-            line.setZValue(-1)
-            self.grid_lines.append(line)
-            y += step
-        pen_axis_x = QPen(QColor('red'))
-        pen_axis_x.setCosmetic(True)
-        pen_axis_y = QPen(QColor('green'))
-        pen_axis_y.setCosmetic(True)
-        self.axes.append(self.g_scene.addLine(rect.left(), 0, rect.right(), 0, pen_axis_x))
-        self.axes.append(self.g_scene.addLine(0, rect.top(), 0, rect.bottom(), pen_axis_y))
-        for line in self.axes:
-            line.setZValue(-0.5)
-            line.setVisible(getattr(self, 'grid_act', None) is None or self.grid_act.isChecked())
-        for line in self.grid_lines:
-            line.setVisible(getattr(self, 'grid_act', None) is None or self.grid_act.isChecked())
+        """Placeholder until a new viewport is implemented."""
+        return
 
     def _update_camera_rect(self):
-        """Show the active camera frustum."""
-        scene = getattr(self, 'scene', None)
-        cam = getattr(scene, 'camera', None) if scene else None
-        if cam:
-            w = cam.width / cam.zoom
-            h = cam.height / cam.zoom
-            x = cam.x - w / 2
-            y = cam.y - h / 2
-        else:
-            w = getattr(self, 'window_width', 640)
-            h = getattr(self, 'window_height', 480)
-            x = 0
-            y = 0
-        cam_rect = QRectF(x, y, w, h)
-        if getattr(self, 'camera_rect', None) and self.camera_rect.scene() is self.g_scene:
-            self.camera_rect.setRect(cam_rect)
-        else:
-            pen = QPen(QColor('cyan'))
-            self.camera_rect = self.g_scene.addRect(cam_rect, pen)
+        """Placeholder until a new viewport is implemented."""
+        return
 
     def _refresh_object_labels(self):
         """Show which camera is active in the object list."""
@@ -2174,52 +1765,22 @@ class Editor(QMainWindow):
         self._refresh_object_labels()
 
     def toggle_grid(self, checked: bool):
-        for line in self.grid_lines:
-            line.setVisible(checked)
-        for line in getattr(self, 'axes', []):
-            line.setVisible(checked)
-        if hasattr(self.view, 'viewport'):
-            self.view.viewport().update()
+        pass
 
     def toggle_gizmo(self, checked: bool):
-        if checked:
-            if not getattr(self, '_gizmo_connected', False):
-                try:
-                    self.g_scene.changed.connect(self._update_gizmo)
-                except Exception:
-                    pass
-                self._gizmo_connected = True
-            self._update_gizmo()
-        else:
-            if getattr(self, '_gizmo_connected', False):
-                try:
-                    self.g_scene.changed.disconnect(self._update_gizmo)
-                except Exception:
-                    pass
-                self._gizmo_connected = False
-            self.gizmo.hide()
-            self.scale_handle.hide()
-            self.rotate_handle.hide()
-            if hasattr(self.view, 'gizmo_lines'):
-                self.view.gizmo_lines = []
-                self.view.viewport().update()
+        pass
 
     def toggle_snap(self, checked: bool):
-        self.snap_to_grid = checked
+        pass
 
     def set_grid_size(self, size: int):
-        self.grid_size = size
-        self._create_grid()
+        pass
 
     def _on_coord_mode(self):
-        self.local_coords = self.coord_combo.currentData()
-        self._update_gizmo()
+        pass
 
     def choose_grid_color(self):
-        color = QColorDialog.getColor(self.grid_color, self, self.t('grid_color'))
-        if color.isValid():
-            self.grid_color = color
-            self._create_grid()
+        pass
 
     def _update_transform_panel(self):
         idx = self.object_combo.currentIndex()
@@ -2515,17 +2076,7 @@ class Editor(QMainWindow):
                 img_path = data.get('image', '')
                 if img_path:
                     abs_path, rel_path = self._copy_to_resources(img_path)
-                    pix = QPixmap(abs_path)
                     img_path = rel_path
-                    if pix.isNull():
-                        raise ValueError('invalid image')
-                else:
-                    pix = QPixmap(32, 32)
-                    col = QColor(*((data.get('color') or (255, 255, 255, 255))))
-                    pix.fill(col)
-                item = SpriteItem(pix, self, None)
-                item.setZValue(data.get('z',0))
-                self.g_scene.addItem(item)
                 obj = GameObject(
                     img_path or '',
                     data.get('x', 0),
@@ -2542,37 +2093,29 @@ class Editor(QMainWindow):
                 obj.events = list(data.get('events', []))
                 obj.settings = dict(data.get('settings', {}))
                 self.scene.add_object(obj)
-                item.obj = obj
-                item.apply_object_transform()
-                self.items.append((item,obj))
-                item.index = len(self.items)-1
-                self.object_combo.addItem(obj.name, item.index)
+                self.items.append((None, obj))
+                index = len(self.items) - 1
+                self.object_combo.addItem(obj.name, index)
                 self.object_list.addItem(obj.name)
                 self._mark_dirty()
                 self._refresh_object_labels()
         except Exception as exc:
             self.console.append(f'Failed to paste object: {exc}')
-        self._update_gizmo()
         self.refresh_events()
 
     def _delete_object(self, index):
         if index < 0 or index >= len(self.items):
             return
-        item, obj = self.items.pop(index)
-        if item is not None:
-            self.g_scene.removeItem(item)
+        _, obj = self.items.pop(index)
         self.scene.remove_object(obj)
         self.object_combo.removeItem(index)
         self.object_list.takeItem(index)
         # update indexes
-        for i, (it, o) in enumerate(self.items):
-            if it is not None:
-                it.index = i
+        for i, (_, _) in enumerate(self.items):
             self.object_combo.setItemData(i, i)
         if index == self.object_combo.currentIndex() and self.items:
             self.object_combo.setCurrentIndex(0)
             self.object_list.setCurrentRow(0)
-        self._update_gizmo()
         self.refresh_events()
         self._mark_dirty()
         self._refresh_object_labels()
@@ -2672,17 +2215,10 @@ class Editor(QMainWindow):
             self.scene = scene_or_path
         else:
             self.scene = Scene.load(scene_or_path)
-        # clear existing graphics safely without triggering stale item access
-        self.g_scene.blockSignals(True)
-        for it in list(self.g_scene.items()):
-            self.g_scene.removeItem(it)
-        self.g_scene.blockSignals(False)
         self.items.clear()
         self.object_combo.clear()
         self.object_list.clear()
-        # redraw frustum and grid after clearing the scene
         self._update_camera_rect()
-        self._create_grid()
         for obj in self.scene.objects:
             try:
                 if isinstance(obj, Camera):
@@ -2691,38 +2227,19 @@ class Editor(QMainWindow):
                     self.object_combo.addItem(obj.name, index)
                     self.object_list.addItem(obj.name)
                     continue
-                if obj.image_path:
-                    pix = QPixmap(obj.image_path)
-                    if pix.isNull():
-                        raise ValueError(f'Invalid image {obj.image_path}')
-                else:
-                    pix = QPixmap(32, 32)
-                    color = QColor(*(obj.color or (255, 255, 255, 255)))
-                    pix.fill(color)
-                item = SpriteItem(pix, self, obj)
-                item.setZValue(obj.z)
-                item.apply_object_transform()
-                self.g_scene.addItem(item)
-                self.items.append((item, obj))
-                item.index = len(self.items)-1
-                self.object_combo.addItem(obj.name, item.index)
+                self.items.append((None, obj))
+                index = len(self.items) - 1
+                self.object_combo.addItem(obj.name, index)
                 self.object_list.addItem(obj.name)
             except Exception as exc:
                 self.console.append(f'Failed to load sprite {obj.image_path}: {exc}')
         self.refresh_events()
         self.refresh_variables()
-        self._update_gizmo()
         self._refresh_object_labels()
         self.dirty = False
         self._update_title()
 
     def closeEvent(self, event):
-        for item, obj in self.items:
-            if item is None:
-                continue
-            pos = item.pos()
-            obj.x = pos.x()
-            obj.y = pos.y()
         if self.dirty:
             res = QMessageBox.question(
                 self,
@@ -2738,11 +2255,6 @@ class Editor(QMainWindow):
             elif res == QMessageBox.StandardButton.Cancel:
                 event.ignore()
                 return
-        try:
-            self.g_scene.selectionChanged.disconnect(self._on_selection_changed)
-            self.g_scene.changed.disconnect(self._update_gizmo)
-        except Exception:
-            pass
         self._cleanup_process()
         event.accept()
 

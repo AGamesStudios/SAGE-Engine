@@ -1,5 +1,5 @@
 """Reusable widgets for SAGE Editor."""
 
-from .viewport import GraphicsView
+from .viewport import Viewport
 
-__all__ = ['GraphicsView']
+__all__ = ['Viewport']

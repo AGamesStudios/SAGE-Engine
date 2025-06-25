@@ -48,20 +48,14 @@ immediately or remove it from the list. Choosing **Delete** now asks for
 confirmation and then removes the entire project folder along with its files.
 Once a project is chosen the editor opens maximized in a dark Fusion
 theme and provides two
-tabs: **Viewport** and **Logic**. The viewport previously relied on a
-`QGraphicsScene` with an OpenGL overlay for editing. This rendering setup has
-been removed, so the view is currently blank. Hold **Ctrl** and scroll to zoom
-the empty panel. Grid and axis tools will return when rendering is reintroduced.
-An **Add Object** button beneath the object list places a white square sprite
-with a default name like `New Object`. Double-click an object to open a
-small editor for changing its image or RGBA color. Clicking a sprite selects it
-and the cursor switches between an open
-and closed hand while dragging. A yellow gizmo outline appears with a corner
-handle for scaling and a small crosshair above for rotation so objects are easy
-to manipulate. The gizmo and handles always appear above other sprites so they
-remain visible. Use the **Show Gizmo** toolbar button to hide or show them as
-needed. A cyan rectangle indicates the active camera frustum. Camera ``x`` and
-``y`` describe its centre, so the rectangle surrounds that point. Scenes always
+tabs: **Viewport** and **Logic**. The old QGraphics-based viewport has been
+removed entirely, leaving only a placeholder panel. Rendering tools will return
+once the new Pygame widget is implemented.
+An **Add Object** button beneath the object list places a blank object with a
+default name like `New Object`. Object properties can be edited in a dock but
+there is no visual manipulation until rendering support returns.
+A cyan rectangle shows the active camera frustum. Camera ``x`` and ``y``
+describe its centre, so the rectangle surrounds that point. Scenes always
 contain at least one camera; if an older scene lacks one the engine creates a
 camera centred on the window. Projects store a window ``width`` and
 ``height`` separately from the active camera size. When these differ the engine
@@ -81,12 +75,12 @@ scaling so objects spin correctly even when Scale X and Scale Y differ. Scaling
 also stays centered on the sprite regardless of rotation. Transform calculations
 now use **GLM** so scaling occurs before rotation and objects rotate around
 their center without skewing. Each object also defines a **pivot** so the
-viewport matches the runtime and rotations occur around the desired point. The transform dock also includes a **Coordinate Mode** drop-down for switching
-between *Global* and *Local* coordinates. In local mode the gizmo rotates with
-the object so scaling and rotating follow its orientation. Internally every
-object stores its rotation as a quaternion so angles remain stable even after
-many incremental edits. Each object also keeps its own settings dictionary so
-properties remain independent across different items. The
+coordinate system matches the runtime. The transform dock also includes a
+**Coordinate Mode** drop-down for switching between *Global* and *Local*
+coordinates. Internally every object stores its rotation as a quaternion so
+angles remain stable even after many incremental edits. Each object also keeps
+its own settings dictionary so properties remain independent across different
+items. The
 project file stores the entire scene
 including object positions, events and variables.
 A **Resources** dock on the left lists everything under your project's
