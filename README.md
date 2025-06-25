@@ -85,8 +85,9 @@ project file stores the entire scene
 including object positions, events and variables.
 A **Resources** dock on the left lists everything under your project's
 `resources` folder. Buttons above the tree and a right click menu let you create
-folders anywhere in the hierarchy or import files and whole folders. A search
-field filters the view and you can drag items between folders or drop files from
+folders anywhere in the hierarchy. A single **Import** button accepts both files
+and complete folders. A search field filters the view and you can drag items
+between folders or drop files from
 outside the application. Files are sorted alphabetically so projects stay
 organized. Any asset chosen from outside the project is copied into this
 directory automatically, so scenes never reference files that might disappear.

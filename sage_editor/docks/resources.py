@@ -141,13 +141,9 @@ class ResourceDock(QDockWidget):
 
         style = self.style()
 
-        self.import_btn = QPushButton(editor.t('import_files'))
+        self.import_btn = QPushButton(editor.t('import'))
         self.import_btn.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_DialogOpenButton))
         self.import_btn.clicked.connect(self._import_clicked)
-
-        self.import_folder_btn = QPushButton(editor.t('import_folder'))
-        self.import_folder_btn.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_FileDialogNewFolder))
-        self.import_folder_btn.clicked.connect(self._import_folder_clicked)
 
         self.new_folder_btn = QPushButton(editor.t('new_folder'))
         self.new_folder_btn.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_FileDialogNewFolder))
@@ -163,7 +159,6 @@ class ResourceDock(QDockWidget):
         ctrl_layout.setSpacing(4)
         ctrl_layout.addWidget(self.new_folder_btn)
         ctrl_layout.addWidget(self.import_btn)
-        ctrl_layout.addWidget(self.import_folder_btn)
         ctrl_layout.addWidget(self.search_edit)
 
         res_widget = QWidget()
@@ -179,10 +174,6 @@ class ResourceDock(QDockWidget):
     def _import_clicked(self) -> None:  # pragma: no cover - UI callback
         """Handle the Import button."""
         self.editor._import_resources()
-
-    def _import_folder_clicked(self) -> None:  # pragma: no cover - UI callback
-        """Handle the Import Folder button."""
-        self.editor._import_folder()
 
     def _new_folder_clicked(self) -> None:  # pragma: no cover - UI callback
         """Handle the New Folder button."""

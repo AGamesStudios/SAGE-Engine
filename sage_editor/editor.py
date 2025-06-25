@@ -1116,7 +1116,7 @@ class Editor(QMainWindow):
         self.console_dock.setWindowTitle(self.t('console'))
         self.objects_dock.setWindowTitle(self.t('objects'))
         self.resources_dock.setWindowTitle(self.t('resources'))
-        self.import_btn.setText(self.t('import_files'))
+        self.import_btn.setText(self.t('import'))
         self.new_folder_btn.setText(self.t('new_folder'))
         self.search_edit.setPlaceholderText(self.t('search'))
         self.transform_group.setTitle(self.t('transform'))
@@ -1865,16 +1865,13 @@ class Editor(QMainWindow):
                 base = self.resource_model.filePath(index)
         menu = QMenu(self)
         new_folder_act = menu.addAction(self.t('new_folder'))
-        import_act = menu.addAction(self.t('import_files'))
-        import_folder_act = menu.addAction(self.t('import_folder'))
+        import_act = menu.addAction(self.t('import'))
         del_act = menu.addAction(self.t('delete'))
         act = menu.exec(self.resource_view.viewport().mapToGlobal(pos))
         if act == new_folder_act:
             self._new_folder(base)
         elif act == import_act:
             self._import_resources(base)
-        elif act == import_folder_act:
-            self._import_folder(base)
         elif act == del_act:
             self._delete_resource(base)
 
@@ -2031,49 +2028,25 @@ class Editor(QMainWindow):
         self._refresh_resource_tree()
 
     def _import_resources(self, base: str | None = None) -> None:
-        """Copy selected files into the resources directory."""
+        """Import files or folders into the project resources."""
         if not self._check_project():
             return
         if base is None:
             base = self.resource_dir
         if not base:
             return
-        files, _ = QFileDialog.getOpenFileNames(
-            self,
-            self.t('import_files'),
-            '',
-            f"{self.t('image_files')};;{self.t('all_files')}"
-        )
-        for f in files:
+        dlg = QFileDialog(self, self.t('import'))
+        dlg.setFileMode(QFileDialog.FileMode.ExistingFiles)
+        dlg.setOption(QFileDialog.Option.DontUseNativeDialog, True)
+        if not dlg.exec():  # pragma: no cover - UI interaction
+            return
+        for path in dlg.selectedFiles():
             try:
-                self._copy_to_resources(f, base)
-                _log(f'Imported {f} to {base}')
+                self._copy_to_resources(path, base)
+                _log(f'Imported {path} to {base}')
             except Exception as exc:
-                logger.exception('Failed to import %s', f)
+                logger.exception('Failed to import %s', path)
                 QMessageBox.warning(self, self.t('error'), str(exc))
-        self._refresh_resource_tree()
-
-    def _import_folder(self, base: str | None = None) -> None:
-        """Copy a folder into the resources directory."""
-        if not self._check_project():
-            return
-        if base is None:
-            base = self.resource_dir
-        if not base:
-            return
-        folder = QFileDialog.getExistingDirectory(
-            self,
-            self.t('import_folder'),
-            ''
-        )
-        if not folder:
-            return
-        try:
-            self._copy_to_resources(folder, base)
-            _log(f'Imported folder {folder} to {base}')
-        except Exception as exc:
-            logger.exception('Failed to import folder %s', folder)
-            QMessageBox.warning(self, self.t('error'), str(exc))
         self._refresh_resource_tree()
 
     def _filter_resources(self, text: str) -> None:
