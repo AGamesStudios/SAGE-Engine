@@ -205,7 +205,7 @@ class ResourceDock(QDockWidget):
         editor.proxy_model = self.proxy_model
 
         self.import_btn = QPushButton(editor.t('import'))
-        self.import_btn.setIcon(load_icon('import.png'))
+        self.import_btn.setIcon(load_icon('add.png'))
         self.import_btn.clicked.connect(self._import_clicked)
 
         self.new_folder_btn = QPushButton(editor.t('new_folder'))

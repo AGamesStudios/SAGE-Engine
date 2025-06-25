@@ -101,7 +101,7 @@ class ProjectManager(QDialog):
         if row < 0:
             return
         menu = QMenu(self)
-        open_act = menu.addAction(self.editor.t('open'))
+        open_act = menu.addAction(load_icon('open.png'), self.editor.t('open'))
         del_act = menu.addAction(load_icon('delete.png'), self.editor.t('delete'))
         action = menu.exec(self.table.mapToGlobal(pos))
         if action == open_act:

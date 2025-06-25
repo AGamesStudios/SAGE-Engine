@@ -54,9 +54,10 @@ once the new Pygame widget is implemented.
 An **Add Object** button beneath the list places a blank object with a default
  name like `New Object`. Every toolbar action and list item loads its icon from
  the `sage_editor/icons` folder, so you can replace these images with your own
- to completely theme the interface. The Run button uses `start.png`, the New
- Folder button uses `folder.png` and objects show `object.png` or `camera.png`
- depending on their type. Object properties can be edited in a dock but there
+ to completely theme the interface. The Run button uses `start.png`, the Import
+ button loads `add.png`, the New Folder button uses `folder.png` and objects
+ show `object.png` or `camera.png` depending on their type. Object properties
+ can be edited in a dock but there
  is no visual manipulation until rendering support returns.
 A cyan rectangle shows the active camera frustum. Camera ``x`` and ``y``
 describe its centre, so the rectangle surrounds that point. Scenes always
@@ -102,7 +103,7 @@ The engine loads all assets relative to this directory, ensuring reorganizing
 files will not break existing scenes. If PyQt does not provide
 ``QFileSystemModel`` the editor falls back to a simpler tree widget that still
 lets you create folders and import resources. Right-clicking any item offers to
-open it with the default application or delete it from the project. Hovering an image reveals a
+open it with the default application (icon `open.png`) or delete it from the project. Hovering an image reveals a
 floating preview just offset from the cursor so files are easy to identify. The preview is
 confined to the editor window and disappears when it loses focus. Thumbnails are
 cached in memory so browsing many files does not lag. Double-clicking a

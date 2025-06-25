@@ -1070,8 +1070,6 @@ class Editor(QMainWindow):
         self.object_label = self.logic_widget.object_label
         self.add_var_btn = self.logic_widget.add_var_btn
         self.tabs.addTab(self.logic_widget, self.t('logic'))
-        self.event_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.event_list.customContextMenuRequested.connect(self._event_menu)
         self.object_combo.currentIndexChanged.connect(self._update_transform_panel)
         self.name_edit.editingFinished.connect(self._object_name_changed)
         self.type_combo.currentIndexChanged.connect(self._object_type_changed)
@@ -1237,7 +1235,7 @@ class Editor(QMainWindow):
         self.new_proj_act = QAction(self.t('new_project'), self)
         self.new_proj_act.setShortcut('Ctrl+N')
         self.new_proj_act.triggered.connect(self.new_project)
-        self.open_proj_act = QAction(self.t('open_project'), self)
+        self.open_proj_act = QAction(load_icon('open.png'), self.t('open_project'), self)
         self.open_proj_act.setShortcut('Ctrl+O')
         self.open_proj_act.triggered.connect(self.open_project)
         self.save_proj_act = QAction(self.t('save_project'), self)
@@ -2017,9 +2015,9 @@ class Editor(QMainWindow):
         base = path if os.path.isdir(path) else os.path.dirname(path)
 
         menu = QMenu(self)
-        open_act = menu.addAction(self.t('open'))
-        new_folder_act = menu.addAction(self.t('new_folder'))
-        import_act = menu.addAction(self.t('import'))
+        open_act = menu.addAction(load_icon('open.png'), self.t('open'))
+        new_folder_act = menu.addAction(load_icon('folder.png'), self.t('new_folder'))
+        import_act = menu.addAction(load_icon('add.png'), self.t('import'))
         del_act = menu.addAction(load_icon('delete.png'), self.t('delete'))
         act = menu.exec(self.resource_view.viewport().mapToGlobal(pos))
         if act == open_act:
