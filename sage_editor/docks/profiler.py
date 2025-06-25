@@ -45,7 +45,7 @@ class ProfilerDock(QDockWidget):
     def _sample(self) -> None:
         self.cpu_graph.append(psutil.cpu_percent())
         self.proc_graph.append(self.process.cpu_percent())
-        self.mem_graph.append(psutil.virtual_memory().percent)
+        self.mem_graph.append(self.process.memory_percent())
         now = time.perf_counter()
         self.frame_graph.append((now - self.last_time) * 1000.0)
         self.last_time = now
