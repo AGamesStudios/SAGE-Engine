@@ -35,6 +35,7 @@ from .docks.console import ConsoleDock
 from .docks.properties import PropertiesDock
 from .docks.resources import ResourceDock
 from .docks.logic import LogicTab
+from .docks.profiler import ProfilerDock
 
 RECENT_FILE = os.path.join(os.path.expanduser('~'), '.sage_recent.json')
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
@@ -1082,6 +1083,8 @@ class Editor(QMainWindow):
         cons = ConsoleDock(self)
         self.console_dock = cons
         self.console = cons.text
+        # profiler dock
+        self.profiler_dock = ProfilerDock(self)
         self._tmp_project = None
 
         # camera rectangle showing the visible area

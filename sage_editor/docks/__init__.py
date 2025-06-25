@@ -4,7 +4,8 @@ from .console import ConsoleDock
 from .properties import PropertiesDock
 from .resources import ResourceDock
 from .logic import LogicTab
+from .profiler import ProfilerDock
 
 __all__ = [
-    'ConsoleDock', 'PropertiesDock', 'ResourceDock', 'LogicTab'
+    'ConsoleDock', 'PropertiesDock', 'ResourceDock', 'LogicTab', 'ProfilerDock'
 ]
