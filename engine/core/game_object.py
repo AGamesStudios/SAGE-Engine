@@ -111,12 +111,37 @@ class GameObject:
         self.width, self.height = img.size
 
     def rect(self):
+        """Return an axis-aligned bounding box in world units."""
         scale = units.UNITS_PER_METER
-        w = self.width * self.scale_x
-        h = self.height * self.scale_y
-        left = self.x * scale - self.width * self.pivot_x * self.scale_x
-        top = self.y * scale - self.height * self.pivot_y * self.scale_y
-        return (left, top, w, h)
+        px = self.width * self.pivot_x
+        py = self.height * self.pivot_y
+        sx = self.scale_x
+        sy = self.scale_y
+        rad = math.radians(self.angle)
+        ca = math.cos(rad)
+        sa = math.sin(rad)
+        corners = [
+            (-px, -py),
+            (self.width - px, -py),
+            (self.width - px, self.height - py),
+            (-px, self.height - py),
+        ]
+        tx = self.x * scale
+        ty = self.y * scale
+        xs = []
+        ys = []
+        for cx, cy in corners:
+            cx *= sx
+            cy *= sy
+            rx = cx * ca - cy * sa
+            ry = cx * sa + cy * ca
+            xs.append(tx + rx)
+            ys.append(ty + ry)
+        left = min(xs)
+        right = max(xs)
+        bottom = min(ys)
+        top = max(ys)
+        return (left, bottom, right - left, top - bottom)
 
     def transform_matrix(self):
         """Return a 4x4 column-major transform matrix without PyGLM."""

@@ -104,7 +104,7 @@ class SDLRenderer:
         if cy is None:
             cy = self.height / 2
         x = (obj.x - camx / scale) * zoom * scale * scale_factor + cx
-        y = (obj.y - camy / scale) * zoom * scale * scale_factor + cy
+        y = cy - (obj.y - camy / scale) * zoom * scale * scale_factor
         w = int(obj.width * obj.scale_x)
         h = int(obj.height * obj.scale_y)
         dst = sdl2.SDL_FRect(x - w / 2, y - h / 2, w, h)

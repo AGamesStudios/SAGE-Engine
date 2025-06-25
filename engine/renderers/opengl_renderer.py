@@ -62,7 +62,7 @@ class OpenGLRenderer:
         if fbh is None:
             fbh = height
         GL.glViewport(0, 0, fbw, fbh)
-        proj = _ortho(0.0, float(width), float(height), 0.0, -1.0, 1.0)
+        proj = _ortho(0.0, float(width), 0.0, float(height), -1.0, 1.0)
         GL.glMatrixMode(GL.GL_PROJECTION)
         GL.glLoadMatrixf(proj)
         GL.glMatrixMode(GL.GL_MODELVIEW)

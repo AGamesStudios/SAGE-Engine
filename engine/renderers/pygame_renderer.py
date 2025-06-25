@@ -105,7 +105,7 @@ class PygameRenderer:
         if cy is None:
             cy = self.height / 2
         x = (obj.x - camx / scale) * zoom * scale * scale_factor + cx
-        y = (obj.y - camy / scale) * zoom * scale * scale_factor + cy
+        y = cy - (obj.y - camy / scale) * zoom * scale * scale_factor
         rect = surf.get_rect(center=(int(x), int(y)))
         self.surface.blit(surf, rect)
 
