@@ -32,7 +32,8 @@ Embedding the editor in other tools only requires importing these modules.
 
 Rendering now uses a lightweight **OpenGLRenderer**. The same renderer draws the
 scene in the editor viewport and when running a project so what you see while
-editing matches the game window.
+editing matches the game window. A small cross at the scene origin helps
+orient objects.
 
 ### Units and Coordinates
 
@@ -54,7 +55,7 @@ Once a project is chosen the editor opens maximized in a dark Fusion
 theme and provides two
 tabs: **Viewport** and **Logic**. The viewport now uses the same
 **OpenGLRenderer** as the runtime so what you see while editing
-matches the game window. It refreshes roughly twenty times per second so the
+matches the game window. It refreshes roughly thirty times per second so the
 editor stays below about 20% CPU usage even on slower machines.
 An **Add Object** button beneath the list places a blank object with a default
  name like `New Object`. Every toolbar action and list item loads its icon from
@@ -347,11 +348,12 @@ SAGE Engine aims to run smoothly even on older hardware. Images and sounds
 are cached after the first load and only the most recent 32 images are kept in
 memory.  A helper `engine.clear_image_cache()` empties this LRU cache if
 memory becomes tight. The `Engine` class accepts an `fps` argument (default 30)
-to control the frame rate using `time.sleep` for consistent timing. Object
+to control the frame rate. `Engine.run()` now launches a Qt **GameWindow** that
+updates via a `QTimer` instead of a tight loop, keeping CPU usage low. Object
 lists are sorted only when modified and heavy math dependencies were removed.
-The editor delays resource searches slightly so typing does not
-rebuild the tree on every keystroke. These optimizations keep the runtime light
-without sacrificing visual quality while keeping CPU usage low.
+The editor delays resource searches slightly so typing does not rebuild the tree
+on every keystroke. These optimizations keep the runtime light without
+sacrificing visual quality.
 
 ### SAGE API
 

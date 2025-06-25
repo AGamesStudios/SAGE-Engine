@@ -75,31 +75,13 @@ class Engine:
         self.camera = camera
 
     def run(self):
+        """Start the engine in a Qt :class:`GameWindow`."""
         _log(f"Starting engine version {ENGINE_VERSION}")
         app = QApplication.instance() or QApplication([])
-        self.renderer.widget.show()
-        running = True
-        while running and not self.renderer.should_close():
-            now = time.perf_counter()
-            dt = now - self._last
-            self._last = now
-            app.processEvents()
-            self.input.poll()
-            try:
-                self.events.update(self, self.scene, dt)
-                self.scene.update(dt)
-                cam = self.camera or getattr(self.scene, "get_active_camera", lambda: None)()
-                self.renderer.draw_scene(self.scene, cam)
-                self.renderer.present()
-            except Exception:
-                logger.exception("Runtime error")
-                running = False
-            if self.fps:
-                delay = self._frame_interval - (time.perf_counter() - now)
-                if delay > 0:
-                    time.sleep(delay)
-        self.input.shutdown()
-        self.renderer.close()
+        from ..game_window import GameWindow
+        win = GameWindow(self)
+        win.show()
+        app.exec()
         _log("Engine shutdown")
 
 

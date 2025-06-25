@@ -2,6 +2,7 @@ ENGINE_VERSION = '2D prototype v0.0.01a'
 
 from .core import GameObject, Scene, Engine, Project, Camera
 from .renderers import OpenGLRenderer, Renderer
+from .game_window import GameWindow
 from .core.game_object import clear_image_cache
 from .api import (
     load_project,
@@ -52,7 +53,7 @@ __all__ = [
     'warn', 'error', 'exception',
     'register_engine_plugin', 'load_engine_plugins',
     'units', 'set_units_per_meter', 'meters', 'kilometers', 'to_units', 'from_units',
-    'set_y_up', 'Y_UP'
+    'set_y_up', 'Y_UP', 'GameWindow'
 ]
 
 # validate that all exported names exist and warn if any are missing

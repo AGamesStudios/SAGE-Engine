@@ -18,7 +18,7 @@ class Viewport(QOpenGLWidget):
         )
         self.renderer = OpenGLRenderer(self.width(), self.height(), widget=self)
         self.timer = QTimer(self)
-        self.timer.setInterval(50)  # ~20 FPS
+        self.timer.setInterval(33)  # ~30 FPS
         self.timer.timeout.connect(self._tick)
         self.timer.start()
         self.setMinimumSize(200, 150)

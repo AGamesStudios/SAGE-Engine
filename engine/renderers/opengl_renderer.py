@@ -4,7 +4,15 @@ from dataclasses import dataclass
 from typing import Optional
 
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
-from OpenGL.GL import *
+from OpenGL.GL import (
+    glEnable, glBlendFunc, glClearColor, glClear, glPushMatrix, glPopMatrix,
+    glTranslatef, glRotatef, glScalef, glBegin, glEnd, glVertex2f, glColor4f,
+    glTexCoord2f, glBindTexture, glTexParameteri, glTexImage2D, glGenTextures,
+    GL_BLEND, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_COLOR_BUFFER_BIT,
+    GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_TEXTURE_MAG_FILTER, GL_LINEAR,
+    GL_QUADS, GL_RGBA, GL_UNSIGNED_BYTE
+)
+from PIL import Image
 
 from engine.core.camera import Camera
 from engine import units
@@ -18,6 +26,7 @@ class GLWidget(QOpenGLWidget):
     def initializeGL(self):
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glEnable(GL_TEXTURE_2D)
 
     def paintGL(self):
         if self.renderer:
@@ -39,7 +48,7 @@ class OpenGLRenderer:
         self.widget.renderer = self
         self.widget.resize(self.width, self.height)
         self._should_close = False
-        self.textures: dict[str, int] = {}
+        self.textures: dict[int, int] = {}
 
     def set_window_size(self, width: int, height: int):
         if self.widget:
@@ -54,6 +63,37 @@ class OpenGLRenderer:
         glClearColor(color[0]/255.0, color[1]/255.0, color[2]/255.0, 1.0)
         glClear(GL_COLOR_BUFFER_BIT)
 
+    def _get_texture(self, obj) -> int:
+        tex = self.textures.get(id(obj.image))
+        if tex:
+            return tex
+        img = obj.image
+        if img is None:
+            img = Image.new('RGBA', (32, 32), obj.color or (255, 255, 255, 255))
+        img = img.transpose(Image.Transpose.FLIP_TOP_BOTTOM)
+        data = img.tobytes()
+        tex_id = glGenTextures(1)
+        glBindTexture(GL_TEXTURE_2D, tex_id)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+        glTexImage2D(
+            GL_TEXTURE_2D, 0, GL_RGBA, img.width, img.height, 0,
+            GL_RGBA, GL_UNSIGNED_BYTE, data
+        )
+        self.textures[id(obj.image)] = tex_id
+        return tex_id
+
+    def _draw_origin(self, size: float = 1.0):
+        glBindTexture(GL_TEXTURE_2D, 0)
+        glBegin(GL_LINES)
+        glColor4f(1.0, 0.0, 0.0, 1.0)
+        glVertex2f(-size, 0.0)
+        glVertex2f(size, 0.0)
+        glColor4f(0.0, 1.0, 0.0, 1.0)
+        glVertex2f(0.0, -size)
+        glVertex2f(0.0, size)
+        glEnd()
+
     def _paint(self):
         # called from GLWidget.paintGL
         self.clear()
@@ -66,22 +106,28 @@ class OpenGLRenderer:
         glPushMatrix()
         scale = units.UNITS_PER_METER
         if camera:
-            glTranslatef(-camera.x, -camera.y, 0)
+            glTranslatef(-camera.x * scale, -camera.y * scale, 0)
         scene._sort_objects()
         for obj in scene.objects:
             if isinstance(obj, Camera):
                 continue
-            x = obj.x * scale
-            y = obj.y * scale
-            w = obj.width * obj.scale_x
-            h = obj.height * obj.scale_y
+            tex = self._get_texture(obj)
+            glBindTexture(GL_TEXTURE_2D, tex)
+            glPushMatrix()
+            glTranslatef(obj.x * scale, obj.y * scale, 0)
+            glRotatef(obj.angle, 0, 0, 1)
+            glScalef(obj.scale_x * scale, obj.scale_y * scale, 1)
+            w = obj.width
+            h = obj.height
             glColor4f(*(c/255.0 for c in (obj.color or (255, 255, 255, 255))))
             glBegin(GL_QUADS)
-            glVertex2f(x - w/2, y - h/2)
-            glVertex2f(x + w/2, y - h/2)
-            glVertex2f(x + w/2, y + h/2)
-            glVertex2f(x - w/2, y + h/2)
+            glTexCoord2f(0.0, 0.0); glVertex2f(-w/2, -h/2)
+            glTexCoord2f(1.0, 0.0); glVertex2f( w/2, -h/2)
+            glTexCoord2f(1.0, 1.0); glVertex2f( w/2,  h/2)
+            glTexCoord2f(0.0, 1.0); glVertex2f(-w/2,  h/2)
             glEnd()
+            glPopMatrix()
+        self._draw_origin(50 * scale)
         glPopMatrix()
         self.widget.update()
 
