@@ -62,7 +62,7 @@ class OpenGLRenderer:
         if fbh is None:
             fbh = height
         GL.glViewport(0, 0, fbw, fbh)
-        proj = _ortho(0.0, float(width), float(height), 0.0, -1.0, 1.0)
+        proj = _ortho(0.0, float(width), 0.0, float(height), -1.0, 1.0)
         GL.glMatrixMode(GL.GL_PROJECTION)
         GL.glLoadMatrixf(proj)
         GL.glMatrixMode(GL.GL_MODELVIEW)
@@ -132,9 +132,9 @@ class OpenGLRenderer:
             if camera is not None:
                 x, y, w, h = obj.rect()
                 left = camx - camw / 2
-                top = camy - camh / 2
+                bottom = camy - camh / 2
                 if (x + w < left or x > left + camw or
-                        y + h < top or y > top + camh):
+                        y + h < bottom or y > bottom + camh):
                     continue
             self.draw_object(obj)
         GL.glPopMatrix()

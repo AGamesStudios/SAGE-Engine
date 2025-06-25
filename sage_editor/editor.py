@@ -2144,7 +2144,7 @@ class Editor(QMainWindow):
             line.setZValue(-1)
             self.grid_lines.append(line)
             y += step
-        pen_axis_x = QPen(QColor('blue'))
+        pen_axis_x = QPen(QColor('red'))
         pen_axis_x.setCosmetic(True)
         pen_axis_y = QPen(QColor('green'))
         pen_axis_y.setCosmetic(True)

@@ -88,9 +88,9 @@ class SDLRenderer:
             if camera is not None:
                 x, y, w, h = obj.rect()
                 left = camx - camw / 2
-                top = camy - camh / 2
+                bottom = camy - camh / 2
                 if (x + w < left or x > left + camw or
-                        y + h < top or y > top + camh):
+                        y + h < bottom or y > bottom + camh):
                     continue
             self.draw_object(obj, camx, camy, zoom, s,
                              off_x + view_w / 2, off_y + view_h / 2)
@@ -104,7 +104,7 @@ class SDLRenderer:
         if cy is None:
             cy = self.height / 2
         x = (obj.x - camx / scale) * zoom * scale * scale_factor + cx
-        y = (obj.y - camy / scale) * zoom * scale * scale_factor + cy
+        y = cy - (obj.y - camy / scale) * zoom * scale * scale_factor
         w = int(obj.width * obj.scale_x)
         h = int(obj.height * obj.scale_y)
         dst = sdl2.SDL_FRect(x - w / 2, y - h / 2, w, h)
