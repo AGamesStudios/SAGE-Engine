@@ -1866,12 +1866,15 @@ class Editor(QMainWindow):
         menu = QMenu(self)
         new_folder_act = menu.addAction(self.t('new_folder'))
         import_act = menu.addAction(self.t('import_files'))
+        import_folder_act = menu.addAction(self.t('import_folder'))
         del_act = menu.addAction(self.t('delete'))
         act = menu.exec(self.resource_view.viewport().mapToGlobal(pos))
         if act == new_folder_act:
             self._new_folder(base)
         elif act == import_act:
             self._import_resources(base)
+        elif act == import_folder_act:
+            self._import_folder(base)
         elif act == del_act:
             self._delete_resource(base)
 
@@ -1910,31 +1913,66 @@ class Editor(QMainWindow):
             rel = os.path.relpath(abs_path, res_root)
             return abs_path, rel
         dest_dir = base if base else self.resource_dir
-        if self.resource_manager:
-            rel_base = os.path.relpath(dest_dir, self.resource_dir)
-            if rel_base == '.':
-                rel_base = ''
-            rel = self.resource_manager.import_file(abs_path, rel_base)
-            abs_copy = os.path.join(self.resource_dir, rel)
-            _log(f'Imported resource {abs_path} -> {abs_copy}')
-            return abs_copy, rel
-        base_name = os.path.basename(path)
-        name, ext = os.path.splitext(base_name)
-        target = os.path.join(dest_dir, base_name)
-        counter = 1
-        while os.path.exists(target):
-            target = os.path.join(dest_dir, f"{name}_{counter}{ext}")
-            counter += 1
-        import shutil
-        try:
-            shutil.copy(abs_path, target)
-            _log(f'Imported resource {abs_path} -> {target}')
-        except Exception as exc:
-            logger.exception('Failed to import resource %s', abs_path)
-            QMessageBox.warning(self, self.t('error'), str(exc))
-        rel = os.path.relpath(target, self.resource_dir)
-        self._refresh_resource_tree()
-        return target, rel
+        if os.path.isdir(abs_path):
+            if self.resource_manager:
+                rel_base = os.path.relpath(dest_dir, self.resource_dir)
+                if rel_base == '.':
+                    rel_base = ''
+                try:
+                    rel = self.resource_manager.import_folder(abs_path, rel_base)
+                    abs_copy = os.path.join(self.resource_dir, rel)
+                    _log(f'Imported folder {abs_path} -> {abs_copy}')
+                    return abs_copy, rel
+                except Exception as exc:
+                    QMessageBox.warning(self, self.t('error'), str(exc))
+                    return abs_path, ''
+            import shutil
+            base_name = os.path.basename(os.path.normpath(path))
+            target = os.path.join(dest_dir, base_name)
+            counter = 1
+            while os.path.exists(target):
+                target = os.path.join(dest_dir, f"{base_name}_{counter}")
+                counter += 1
+            try:
+                shutil.copytree(abs_path, target)
+                _log(f'Imported folder {abs_path} -> {target}')
+            except Exception as exc:
+                logger.exception('Failed to import folder %s', abs_path)
+                QMessageBox.warning(self, self.t('error'), str(exc))
+                return abs_path, ''
+            rel = os.path.relpath(target, self.resource_dir)
+            self._refresh_resource_tree()
+            return target, rel
+        else:
+            if self.resource_manager:
+                rel_base = os.path.relpath(dest_dir, self.resource_dir)
+                if rel_base == '.':
+                    rel_base = ''
+                try:
+                    rel = self.resource_manager.import_file(abs_path, rel_base)
+                    abs_copy = os.path.join(self.resource_dir, rel)
+                    _log(f'Imported resource {abs_path} -> {abs_copy}')
+                    return abs_copy, rel
+                except Exception as exc:
+                    QMessageBox.warning(self, self.t('error'), str(exc))
+                    return abs_path, ''
+            base_name = os.path.basename(path)
+            name, ext = os.path.splitext(base_name)
+            target = os.path.join(dest_dir, base_name)
+            counter = 1
+            while os.path.exists(target):
+                target = os.path.join(dest_dir, f"{name}_{counter}{ext}")
+                counter += 1
+            import shutil
+            try:
+                shutil.copy(abs_path, target)
+                _log(f'Imported resource {abs_path} -> {target}')
+            except Exception as exc:
+                logger.exception('Failed to import resource %s', abs_path)
+                QMessageBox.warning(self, self.t('error'), str(exc))
+            rel = os.path.relpath(target, self.resource_dir)
+            self._refresh_resource_tree()
+            return target, rel
 
     def _move_resource(self, src: str, dst: str) -> bool:
         """Move a resource within the project tree."""
@@ -2001,7 +2039,10 @@ class Editor(QMainWindow):
         if not base:
             return
         files, _ = QFileDialog.getOpenFileNames(
-            self, self.t('import_files'), '', self.t('image_files')
+            self,
+            self.t('import_files'),
+            '',
+            f"{self.t('image_files')};;{self.t('all_files')}"
         )
         for f in files:
             try:
@@ -2010,6 +2051,29 @@ class Editor(QMainWindow):
             except Exception as exc:
                 logger.exception('Failed to import %s', f)
                 QMessageBox.warning(self, self.t('error'), str(exc))
+        self._refresh_resource_tree()
+
+    def _import_folder(self, base: str | None = None) -> None:
+        """Copy a folder into the resources directory."""
+        if not self._check_project():
+            return
+        if base is None:
+            base = self.resource_dir
+        if not base:
+            return
+        folder = QFileDialog.getExistingDirectory(
+            self,
+            self.t('import_folder'),
+            ''
+        )
+        if not folder:
+            return
+        try:
+            self._copy_to_resources(folder, base)
+            _log(f'Imported folder {folder} to {base}')
+        except Exception as exc:
+            logger.exception('Failed to import folder %s', folder)
+            QMessageBox.warning(self, self.t('error'), str(exc))
         self._refresh_resource_tree()
 
     def _filter_resources(self, text: str) -> None:

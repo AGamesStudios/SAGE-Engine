@@ -68,3 +68,29 @@ class ResourceManager:
         if target.startswith(self.root):
             return os.path.relpath(target, self.root)
         return target
+
+    def import_folder(self, src: str, dest: str | None = None) -> str:
+        """Recursively copy a folder into the resources tree."""
+        import shutil
+
+        if dest is None:
+            dest = self.root
+        else:
+            dest = self.path(dest)
+        os.makedirs(dest, exist_ok=True)
+
+        base = os.path.basename(os.path.normpath(src))
+        target = os.path.join(dest, base)
+        counter = 1
+        while os.path.exists(target):
+            target = os.path.join(dest, f"{base}_{counter}")
+            counter += 1
+        try:
+            shutil.copytree(src, target)
+            logger.info("Imported folder %s -> %s", src, target)
+        except Exception:
+            logger.exception("Failed to import folder %s", src)
+            raise
+        if target.startswith(self.root):
+            return os.path.relpath(target, self.root)
+        return target

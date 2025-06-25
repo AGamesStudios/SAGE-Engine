@@ -85,14 +85,15 @@ project file stores the entire scene
 including object positions, events and variables.
 A **Resources** dock on the left lists everything under your project's
 `resources` folder. Buttons above the tree and a right click menu let you create
-folders anywhere in the hierarchy or import new files. A search field filters
-the view and you can drag items between folders. Files are sorted alphabetically
-so projects stay organized. Any image chosen from outside the project is copied
-into this directory automatically, so scenes never reference files that might
-disappear. The engine loads all assets relative to this directory, ensuring
-reorganizing files will not break existing scenes.
-If PyQt does not provide ``QFileSystemModel`` the editor falls back to a
-simpler tree widget that still lets you create folders and import files.
+folders anywhere in the hierarchy or import files and whole folders. A search
+field filters the view and you can drag items between folders or drop files from
+outside the application. Files are sorted alphabetically so projects stay
+organized. Any asset chosen from outside the project is copied into this
+directory automatically, so scenes never reference files that might disappear.
+The engine loads all assets relative to this directory, ensuring reorganizing
+files will not break existing scenes. If PyQt does not provide
+``QFileSystemModel`` the editor falls back to a simpler tree widget that still
+lets you create folders and import resources.
 Use **File → New Project** to generate a folder for your game. The dialog asks
 for a project name and location and lets you choose a rendering backend.
 Pygame is the default option while an experimental OpenGL (alpha) renderer and

@@ -1,12 +1,13 @@
 from PyQt6.QtWidgets import (
     QDockWidget, QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
     QLineEdit, QAbstractItemView, QTreeView, QTreeWidget, QFileDialog,
+    QSizePolicy, QStyle,
 )
 try:  # QFileSystemModel is missing in some PyQt6 builds
     from PyQt6.QtWidgets import QFileSystemModel
 except Exception:  # pragma: no cover - optional dependency
     QFileSystemModel = None
-from PyQt6.QtCore import Qt, QSortFilterProxyModel, QMimeData, QPointF
+from PyQt6.QtCore import Qt, QSortFilterProxyModel
 
 import os
 
@@ -138,18 +139,31 @@ class ResourceDock(QDockWidget):
         editor.resource_model = self.resource_model
         editor.proxy_model = self.proxy_model
 
+        style = self.style()
+
         self.import_btn = QPushButton(editor.t('import_files'))
+        self.import_btn.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_DialogOpenButton))
         self.import_btn.clicked.connect(self._import_clicked)
+
+        self.import_folder_btn = QPushButton(editor.t('import_folder'))
+        self.import_folder_btn.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_FileDialogNewFolder))
+        self.import_folder_btn.clicked.connect(self._import_folder_clicked)
+
         self.new_folder_btn = QPushButton(editor.t('new_folder'))
+        self.new_folder_btn.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_FileDialogNewFolder))
         self.new_folder_btn.clicked.connect(self._new_folder_clicked)
+
         self.search_edit = QLineEdit()
         self.search_edit.setPlaceholderText(editor.t('search'))
+        self.search_edit.setClearButtonEnabled(True)
+        self.search_edit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.search_edit.textChanged.connect(self._filter_changed)
 
         ctrl_layout = QHBoxLayout()
         ctrl_layout.setSpacing(4)
         ctrl_layout.addWidget(self.new_folder_btn)
         ctrl_layout.addWidget(self.import_btn)
+        ctrl_layout.addWidget(self.import_folder_btn)
         ctrl_layout.addWidget(self.search_edit)
 
         res_widget = QWidget()
@@ -165,6 +179,10 @@ class ResourceDock(QDockWidget):
     def _import_clicked(self) -> None:  # pragma: no cover - UI callback
         """Handle the Import button."""
         self.editor._import_resources()
+
+    def _import_folder_clicked(self) -> None:  # pragma: no cover - UI callback
+        """Handle the Import Folder button."""
+        self.editor._import_folder()
 
     def _new_folder_clicked(self) -> None:  # pragma: no cover - UI callback
         """Handle the New Folder button."""
