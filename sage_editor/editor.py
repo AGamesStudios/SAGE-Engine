@@ -2086,7 +2086,7 @@ class Editor(QMainWindow):
                     folder = self.resource_manager.add_folder(rel_base, name)
                 else:
                     folder = os.path.join(base, name)
-                    os.makedirs(folder, exist_ok=True)
+                    os.makedirs(self.resource_manager._win_path(folder), exist_ok=True)
                 _log(f'Created folder {folder}')
             except Exception as exc:
                 logger.exception('Failed to create folder %s', name)
@@ -2138,9 +2138,9 @@ class Editor(QMainWindow):
                 for root_dir, dirs, files in os.walk(abs_path):
                     rel_root = os.path.relpath(root_dir, abs_path)
                     dest_root = os.path.join(target, rel_root) if rel_root != '.' else target
-                    os.makedirs(dest_root, exist_ok=True)
+                    os.makedirs(self.resource_manager._win_path(dest_root), exist_ok=True)
                     for d in dirs:
-                        os.makedirs(os.path.join(dest_root, d), exist_ok=True)
+                        os.makedirs(self.resource_manager._win_path(os.path.join(dest_root, d)), exist_ok=True)
                     for f in files:
                         sfile = os.path.join(root_dir, f)
                         dfile = os.path.join(dest_root, f)
@@ -2149,7 +2149,7 @@ class Editor(QMainWindow):
                         while os.path.exists(dfile):
                             dfile = os.path.join(dest_root, f"{base}_{count}{ext}")
                             count += 1
-                    with open(sfile, 'rb') as fin, open(dfile, 'wb') as fout:
+                    with open(self.resource_manager._win_path(sfile), 'rb') as fin, open(self.resource_manager._win_path(dfile), 'wb') as fout:
                         while True:
                             chunk = fin.read(1024 * 1024)
                             if not chunk:
@@ -2190,7 +2190,7 @@ class Editor(QMainWindow):
                 target = os.path.join(dest_dir, f"{name}_{counter}{ext}")
                 counter += 1
             try:
-                with open(abs_path, 'rb') as fin, open(target, 'wb') as fout:
+                with open(self.resource_manager._win_path(abs_path), 'rb') as fin, open(self.resource_manager._win_path(target), 'wb') as fout:
                     while True:
                         chunk = fin.read(1024 * 1024)
                         if not chunk:
