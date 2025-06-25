@@ -1,6 +1,6 @@
 """Renderer interface and registry."""
 
-from .pygame_renderer import PygameRenderer
+from .opengl_renderer import OpenGLRenderer
 
 RENDERER_REGISTRY: dict[str, type] = {}
 
@@ -15,7 +15,7 @@ def get_renderer(name: str) -> type | None:
     return RENDERER_REGISTRY.get(name)
 
 
-register_renderer("pygame", PygameRenderer)
+register_renderer("opengl", OpenGLRenderer)
 
 
 class Renderer:
@@ -39,7 +39,7 @@ class Renderer:
 
 __all__ = [
     "Renderer",
-    "PygameRenderer",
+    "OpenGLRenderer",
     "register_renderer",
     "get_renderer",
     "RENDERER_REGISTRY",

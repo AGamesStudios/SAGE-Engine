@@ -24,13 +24,13 @@ utilities like the plugin loader used by both components.
 The editor code is split into ``sage_editor.editor`` for the main window and
 ``sage_editor.app`` which contains the startup logic and project manager.
 Dock widgets live under ``sage_editor.docks`` while reusable widgets live in
-``sage_editor.widgets``. The viewport now embeds a small Pygame renderer so the
+``sage_editor.widgets``. The viewport now uses **QOpenGLWidget** so the
 scene you edit is visible inside the editor as well as when running the game.
 Embedding the editor in other tools only requires importing these modules.
 
 ### Renderer
 
-Rendering now uses a lightweight **PygameRenderer**. The same renderer draws the
+Rendering now uses a lightweight **OpenGLRenderer**. The same renderer draws the
 scene in the editor viewport and when running a project so what you see while
 editing matches the game window.
 
@@ -52,8 +52,8 @@ immediately or remove it from the list. Choosing **Delete** now asks for
 confirmation and then removes the entire project folder along with its files.
 Once a project is chosen the editor opens maximized in a dark Fusion
 theme and provides two
-tabs: **Viewport** and **Logic**. The viewport now embeds the same
-**PygameRenderer** used when running a project so what you see while editing
+tabs: **Viewport** and **Logic**. The viewport now uses the same
+**OpenGLRenderer** as the runtime so what you see while editing
 matches the game window. It refreshes roughly twenty times per second so the
 editor stays below about 20% CPU usage even on slower machines.
 An **Add Object** button beneath the list places a blank object with a default
@@ -116,7 +116,7 @@ confined to the editor window and disappears when it loses focus. Thumbnails are
 cached in memory so browsing many files does not lag. Double-clicking a
 `.sagescene` file loads it in the editor so you can quickly switch between scenes.
 Use **File → New Project** to generate a folder for your game. The dialog asks
-for a project name and location. Projects always use the Pygame renderer so the
+for a project name and location. Projects always use the OpenGL renderer so the
 editor viewport and runtime look the same.
 It then creates the folder with a `.sageproject` file and a `Scenes` subfolder
 containing `Scene1.sagescene`. Each new object
@@ -196,7 +196,7 @@ python -m engine path/to/project.sageproject
 ```
 
 The editor toolbar provides a **Run** button with the same effect. It saves the
-current project and launches it in a separate Pygame window.
+current project and launches it in a separate OpenGL window.
 
 
 Project files store the entire scene data so you can share a single file. Use

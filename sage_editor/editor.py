@@ -25,7 +25,7 @@ import traceback
 import inspect
 from .lang import LANGUAGES, DEFAULT_LANGUAGE
 import os
-import glfw
+from PyQt6.QtCore import Qt
 from engine import Scene, GameObject, Project, Camera, ENGINE_VERSION, get_resource_path
 from . import plugins
 from .widgets import Viewport
@@ -98,21 +98,21 @@ def save_recent(lst):
         pass
 
 KEY_OPTIONS = [
-    ('Up', glfw.KEY_UP),
-    ('Down', glfw.KEY_DOWN),
-    ('Left', glfw.KEY_LEFT),
-    ('Right', glfw.KEY_RIGHT),
-    ('Space', glfw.KEY_SPACE),
-    ('Enter', glfw.KEY_ENTER),
-    ('A', glfw.KEY_A),
-    ('S', glfw.KEY_S),
-    ('D', glfw.KEY_D),
-    ('W', glfw.KEY_W),
+    ('Up', Qt.Key.Key_Up),
+    ('Down', Qt.Key.Key_Down),
+    ('Left', Qt.Key.Key_Left),
+    ('Right', Qt.Key.Key_Right),
+    ('Space', Qt.Key.Key_Space),
+    ('Enter', Qt.Key.Key_Return),
+    ('A', Qt.Key.Key_A),
+    ('S', Qt.Key.Key_S),
+    ('D', Qt.Key.Key_D),
+    ('W', Qt.Key.Key_W),
 ]
 MOUSE_OPTIONS = [
-    ('Left', 1),
-    ('Right', 2),
-    ('Middle', 3),
+    ('Left', Qt.MouseButton.LeftButton),
+    ('Right', Qt.MouseButton.RightButton),
+    ('Middle', Qt.MouseButton.MiddleButton),
 ]
 
 KEY_NAME_LOOKUP = {code: name for name, code in KEY_OPTIONS}
@@ -459,7 +459,7 @@ class ConditionDialog(QDialog):
             if i >= 0:
                 self.device_box.setCurrentIndex(i)
             self._update_key_list()
-            key = data.get('key', glfw.KEY_SPACE)
+            key = data.get('key', Qt.Key.Key_Space)
             i = self.key_combo.findData(key)
             if i >= 0:
                 self.key_combo.setCurrentIndex(i)
@@ -476,7 +476,7 @@ class ConditionDialog(QDialog):
             if i >= 0:
                 self.device_box.setCurrentIndex(i)
             self._update_key_list()
-            key = data.get('code', glfw.KEY_SPACE)
+            key = data.get('code', Qt.Key.Key_Space)
             i = self.key_combo.findData(key)
             if i >= 0:
                 self.key_combo.setCurrentIndex(i)

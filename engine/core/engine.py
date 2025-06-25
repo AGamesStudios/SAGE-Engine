@@ -3,11 +3,12 @@ import argparse
 import time
 import os
 from datetime import datetime
+from PyQt6.QtWidgets import QApplication
 from .scene import Scene
 from .project import Project
-from .input_pygame import PygameInput
+from .input_qt import QtInput
 from .camera import Camera
-from ..renderers import PygameRenderer, Renderer, get_renderer
+from ..renderers import OpenGLRenderer, Renderer, get_renderer
 from .. import ENGINE_VERSION
 from ..log import logger
 
@@ -45,7 +46,7 @@ class Engine:
         self.camera = camera
         self.events = events if events is not None else self.scene.build_event_system()
         if renderer is None:
-            cls = get_renderer("pygame") or PygameRenderer
+            cls = get_renderer("opengl") or OpenGLRenderer
             self.renderer = cls(width, height, title)
         elif isinstance(renderer, str):
             cls = get_renderer(renderer)
@@ -54,7 +55,7 @@ class Engine:
             self.renderer = cls(width, height, title)
         else:
             self.renderer = renderer
-        self.input = PygameInput(self.renderer)
+        self.input = QtInput(self.renderer.widget)
         self._last = time.perf_counter()
         try:
             from .. import load_engine_plugins
@@ -75,16 +76,18 @@ class Engine:
 
     def run(self):
         _log(f"Starting engine version {ENGINE_VERSION}")
+        app = QApplication.instance() or QApplication([])
+        self.renderer.widget.show()
         running = True
         while running and not self.renderer.should_close():
             now = time.perf_counter()
             dt = now - self._last
             self._last = now
+            app.processEvents()
             self.input.poll()
             try:
                 self.events.update(self, self.scene, dt)
                 self.scene.update(dt)
-                self.renderer.clear()
                 cam = self.camera or getattr(self.scene, "get_active_camera", lambda: None)()
                 self.renderer.draw_scene(self.scene, cam)
                 self.renderer.present()
@@ -108,8 +111,8 @@ def main(argv=None):
     parser.add_argument("--width", type=int, help="Window width")
     parser.add_argument("--height", type=int, help="Window height")
     parser.add_argument("--title", help="Window title")
-    parser.add_argument("--renderer", choices=["pygame"], default="pygame",
-                        help="Rendering backend (default pygame)")
+    parser.add_argument("--renderer", choices=["opengl"], default="opengl",
+                        help="Rendering backend (default opengl)")
     args = parser.parse_args(argv)
 
     scene = Scene()
@@ -130,7 +133,7 @@ def main(argv=None):
             set_resource_root(os.path.join(os.path.dirname(path), proj.resources))
         else:
             scene = Scene.load(path)
-    cls = get_renderer(renderer_name) or PygameRenderer
+    cls = get_renderer(renderer_name) or OpenGLRenderer
     renderer = cls(width, height, title)
     camera = scene.camera or Camera(width / 2, height / 2, width, height)
     Engine(width=width, height=height, title=title,

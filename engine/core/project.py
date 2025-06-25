@@ -7,7 +7,7 @@ from .. import ENGINE_VERSION
 class Project:
     """Simple container for a SAGE project including scene data."""
     scene: dict
-    renderer: str = "pygame"
+    renderer: str = "opengl"
     width: int = 640
     height: int = 480
     title: str = 'SAGE 2D'
@@ -21,7 +21,7 @@ class Project:
     def load(cls, path: str) -> "Project":
         with open(path, "r") as f:
             data = json.load(f)
-        renderer = data.get("renderer", "pygame")
+        renderer = data.get("renderer", "opengl")
         scene = data.get('scene')
         scene_file = data.get('scene_file')
         scenes_dir = data.get('scenes', 'Scenes')
