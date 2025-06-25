@@ -28,6 +28,14 @@ class Viewport(QOpenGLWidget):
         self.timer.start()
         self.setMinimumSize(200, 150)
 
+    # QOpenGLWidget overrides -------------------------------------------------
+
+    def initializeGL(self) -> None:  # pragma: no cover - GUI callback
+        self.renderer._setup_view()
+
+    def paintGL(self) -> None:  # pragma: no cover - GUI callback
+        self.renderer._paint()
+
     def closeEvent(self, event):  # pragma: no cover - cleanup
         self.timer.stop()
         self.renderer.close()
