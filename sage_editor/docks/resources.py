@@ -219,16 +219,20 @@ class ResourceDock(QDockWidget):
         self.search_edit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.search_edit.textChanged.connect(self._filter_changed)
 
-        ctrl_layout = QHBoxLayout()
-        ctrl_layout.setSpacing(4)
-        ctrl_layout.addWidget(self.new_folder_btn)
-        ctrl_layout.addWidget(self.import_btn)
-        ctrl_layout.addWidget(self.search_edit)
+        btn_layout = QHBoxLayout()
+        btn_layout.setSpacing(4)
+        btn_layout.addWidget(self.import_btn)
+        btn_layout.addWidget(self.new_folder_btn)
+
+        search_layout = QHBoxLayout()
+        search_layout.setSpacing(4)
+        search_layout.addWidget(self.search_edit)
 
         res_widget = QWidget()
         res_layout = QVBoxLayout(res_widget)
         res_layout.setContentsMargins(6, 6, 6, 6)
-        res_layout.addLayout(ctrl_layout)
+        res_layout.addLayout(btn_layout)
+        res_layout.addLayout(search_layout)
         res_layout.addWidget(self.resource_view)
         self.setWidget(res_widget)
 

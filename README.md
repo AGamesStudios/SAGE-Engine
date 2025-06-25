@@ -55,7 +55,9 @@ An **Add Object** button beneath the list places a blank object with a default
 name like `New Object`. The toolbar now uses icons so common actions are easy to
 spot and each item in the object list shows a small icon indicating whether it
 is a sprite or a camera. Object properties can be edited in a dock but there is
-no visual manipulation until rendering support returns.
+no visual manipulation until rendering support returns. Custom icons can be
+added under `sage_editor/icons` so you can theme the interface however you
+like.
 A cyan rectangle shows the active camera frustum. Camera ``x`` and ``y``
 describe its centre, so the rectangle surrounds that point. Scenes always
 contain at least one camera; if an older scene lacks one the engine creates a
@@ -89,9 +91,8 @@ dictionary so properties remain independent across different items. The
 project file stores the entire scene
 including object positions, events and variables.
 The **Resources** dock sits above the object list on the left and lists everything under your project's
-`resources` folder. Buttons above the tree and a context menu let you create
-folders anywhere in the hierarchy. A single **Import** button accepts both files
-and complete folders. A search field filters the view and you can drag items
+`resources` folder. Two buttons above the tree (**Import** and **New Folder**)
+sit on the first row while a search field appears below them. You can drag items
 between folders or drop files from outside the application. Dragging files out of
 the dock is disabled so resources remain inside the project. Files are sorted alphabetically so projects stay
 organized. Any asset chosen from outside the project is copied into this
