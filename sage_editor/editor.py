@@ -1129,7 +1129,7 @@ class Editor(QMainWindow):
         self.lang = DEFAULT_LANGUAGE
         self.window_width = 640
         self.window_height = 480
-        self.renderer_name = 'pygame'
+        self.renderer_name = 'none'
         self.resource_dir: str | None = None
         self.resource_manager = None
         self.scene = Scene()
@@ -1146,7 +1146,6 @@ class Editor(QMainWindow):
         self.g_scene = QGraphicsScene()
         # large scene rectangle to simulate an "infinite" workspace
         self.g_scene.setSceneRect(QRectF(-10000, -10000, 20000, 20000))
-        self.view.setScene(self.g_scene)
         # use new PyQt6 enum syntax
         self.view.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
         self.view.centerOn(0, 0)
@@ -1325,7 +1324,6 @@ class Editor(QMainWindow):
         self.recent_menu.setTitle(self.t('recent_projects'))
         self.settings_menu.setTitle(self.t('settings'))
         self.window_settings_act.setText(self.t('window_settings'))
-        self.renderer_settings_act.setText(self.t('renderer_settings'))
         self.plugins_act.setText(self.t('manage_plugins'))
         self.coord_combo.setItemText(0, self.t('global'))
         self.coord_combo.setItemText(1, self.t('local'))
@@ -1415,9 +1413,6 @@ class Editor(QMainWindow):
         self.window_settings_act = QAction(self.t('window_settings'), self)
         self.window_settings_act.triggered.connect(self.show_window_settings)
         self.settings_menu.addAction(self.window_settings_act)
-        self.renderer_settings_act = QAction(self.t('renderer_settings'), self)
-        self.renderer_settings_act.triggered.connect(self.show_renderer_settings)
-        self.settings_menu.addAction(self.renderer_settings_act)
         self.plugins_act = QAction(self.t('manage_plugins'), self)
         self.plugins_act.triggered.connect(self.show_plugin_manager)
         self.settings_menu.addAction(self.plugins_act)
@@ -1478,16 +1473,12 @@ class Editor(QMainWindow):
                     parent.apply_engine_completer(self.path_edit)
                 browse_btn = QPushButton(parent.t('browse'))
                 browse_btn.clicked.connect(self.browse)
-                self.render_combo = QComboBox()
-                self.render_combo.addItem(parent.t('pygame'), 'pygame')
-                self.render_combo.addItem(parent.t('opengl_alpha'), 'opengl')
                 form = QFormLayout(self)
                 form.addRow(parent.t('project_name'), self.name_edit)
                 path_row = QHBoxLayout()
                 path_row.addWidget(self.path_edit)
                 path_row.addWidget(browse_btn)
                 form.addRow(parent.t('project_path'), path_row)
-                form.addRow(parent.t('renderer'), self.render_combo)
                 buttons = QDialogButtonBox(
                     QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
                 )
@@ -1515,12 +1506,11 @@ class Editor(QMainWindow):
         resources_dir = os.path.join(proj_dir, 'resources')
         os.makedirs(resources_dir, exist_ok=True)
         proj_path = os.path.join(proj_dir, f'{name}.sageproject')
-        self.renderer_name = dlg.render_combo.currentData()
+        self.renderer_name = 'none'
         self.scene = Scene()
         try:
             Project(
                 self.scene.to_dict(),
-                renderer=self.renderer_name,
                 width=self.window_width,
                 height=self.window_height,
                 title=f'SAGE 2D',
@@ -1567,7 +1557,7 @@ class Editor(QMainWindow):
         try:
             proj = Project.load(path)
             self.project_path = path
-            self.renderer_name = proj.renderer
+            self.renderer_name = 'none'
             self.window_width = proj.width
             self.window_height = proj.height
             self.load_scene(Scene.from_dict(proj.scene))
@@ -1616,7 +1606,6 @@ class Editor(QMainWindow):
         try:
             Project(
                 self.scene.to_dict(),
-                renderer=self.renderer_name,
                 width=self.window_width,
                 height=self.window_height,
                 title=f'SAGE 2D',
@@ -1693,22 +1682,7 @@ class Editor(QMainWindow):
             self._update_camera_rect()
 
     def show_renderer_settings(self):
-        dlg = QDialog(self)
-        dlg.setWindowTitle(self.t('renderer_settings'))
-        combo = QComboBox()
-        combo.addItem(self.t('opengl'), 'opengl')
-        combo.setCurrentText(self.t(self.renderer_name))
-        form = QFormLayout(dlg)
-        form.addRow(self.t('renderer'), combo)
-        buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
-        )
-        buttons.accepted.connect(dlg.accept)
-        buttons.rejected.connect(dlg.reject)
-        form.addRow(buttons)
-        if dlg.exec() == QDialog.DialogCode.Accepted:
-            self.renderer_name = combo.currentData()
-            self._mark_dirty()
+        pass
 
     def show_plugin_manager(self):
         from .dialogs.plugin_manager import PluginManager
@@ -1732,11 +1706,10 @@ class Editor(QMainWindow):
             obj.y = pos.y()
         Project(
             self.scene.to_dict(),
-            renderer=self.renderer_name,
             width=self.window_width,
             height=self.window_height,
             title=title,
-            version=ENGINE_VERSION
+            version=ENGINE_VERSION,
         ).save(proj_path)
         self._tmp_project = proj_path
         self.process = QProcess(self)
@@ -1746,7 +1719,6 @@ class Editor(QMainWindow):
             '--width', str(self.window_width),
             '--height', str(self.window_height),
             '--title', title,
-            '--renderer', self.renderer_name,
         ]
         self.process.setArguments(args)
         self.process.readyReadStandardOutput.connect(self._read_output)

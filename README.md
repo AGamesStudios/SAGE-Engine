@@ -48,13 +48,10 @@ immediately or remove it from the list. Choosing **Delete** now asks for
 confirmation and then removes the entire project folder along with its files.
 Once a project is chosen the editor opens maximized in a dark Fusion
 theme and provides two
-tabs: **Viewport** and **Logic**. The viewport uses a virtually infinite
-`QGraphicsScene` so you can pan freely. It renders through a Qt
-`QOpenGLWidget` so what you see matches the OpenGL runtime. Hold **Ctrl** and
-scroll to zoom the view. A configurable grid and axis lines can be toggled from
-the toolbar. Buttons use simple text labels instead of icons to keep the
-interface lightweight. Grid size and color are adjustable and snapping ensures
-objects align cleanly when enabled.
+tabs: **Viewport** and **Logic**. The viewport previously relied on a
+`QGraphicsScene` with an OpenGL overlay for editing. This rendering setup has
+been removed, so the view is currently blank. Hold **Ctrl** and scroll to zoom
+the empty panel. Grid and axis tools will return when rendering is reintroduced.
 An **Add Object** button beneath the object list places a white square sprite
 with a default name like `New Object`. Double-click an object to open a
 small editor for changing its image or RGBA color. Clicking a sprite selects it
@@ -171,8 +168,7 @@ Run a saved project with:
 
 ```bash
 python -m engine path/to/project.sageproject
-# the engine uses the renderer stored in the project file
-# pass `--renderer pygame`, `--renderer opengl` or `--renderer sdl` to override
+# rendering backends have been removed so the engine runs with no visual output
 ```
 
 Project files store the entire scene data so you can share a single file. Use
