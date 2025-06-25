@@ -61,7 +61,14 @@ class ResourceManager:
     def move(self, src: str, dst: str) -> None:
         src_path = self.path(src)
         dst_path = self.path(dst)
-        os.makedirs(os.path.dirname(dst_path), exist_ok=True)
+        if not os.path.exists(src_path):
+            logger.warning("Source missing for move %s -> %s", src, dst)
+            return
+        try:
+            os.makedirs(os.path.dirname(dst_path), exist_ok=True)
+        except Exception:
+            logger.exception("Failed creating folder for %s", dst)
+            raise
         os.rename(src_path, dst_path)
         logger.info("Moved resource %s -> %s", src, dst)
 
@@ -134,14 +141,17 @@ class ResourceManager:
                 for f in files:
                     sfile = os.path.join(root_dir, f)
                     dfile = self._unique_file(dest_root, f)
-                    with open(sfile, "rb") as fin, open(dfile, "wb") as fout:
-                        while True:
-                            chunk = fin.read(1024 * 1024)
-                            if not chunk:
-                                break
-                            fout.write(chunk)
-                            if progress_cb:
-                                progress_cb(len(chunk), os.path.relpath(dfile, self.root))
+                    try:
+                        with open(sfile, "rb") as fin, open(dfile, "wb") as fout:
+                            while True:
+                                chunk = fin.read(1024 * 1024)
+                                if not chunk:
+                                    break
+                                fout.write(chunk)
+                                if progress_cb:
+                                    progress_cb(len(chunk), os.path.relpath(dfile, self.root))
+                    except Exception:
+                        logger.exception("Failed copying %s", sfile)
             logger.info("Imported folder %s -> %s", src, target)
         except Exception:
             logger.exception("Failed to import folder %s", src)
@@ -178,14 +188,17 @@ class ResourceManager:
                         os.makedirs(out_path, exist_ok=True)
                         continue
                     os.makedirs(os.path.dirname(out_path), exist_ok=True)
-                    with zf.open(info) as fin, open(out_path, "wb") as fout:
-                        while True:
-                            chunk = fin.read(1024 * 1024)
-                            if not chunk:
-                                break
-                            fout.write(chunk)
-                            if progress_cb:
-                                progress_cb(len(chunk), os.path.relpath(out_path, self.root))
+                    try:
+                        with zf.open(info) as fin, open(out_path, "wb") as fout:
+                            while True:
+                                chunk = fin.read(1024 * 1024)
+                                if not chunk:
+                                    break
+                                fout.write(chunk)
+                                if progress_cb:
+                                    progress_cb(len(chunk), os.path.relpath(out_path, self.root))
+                    except Exception:
+                        logger.exception("Failed extracting %s", info.filename)
             logger.info("Imported zip %s -> %s", src, target)
         except Exception:
             logger.exception("Failed to import zip %s", src)

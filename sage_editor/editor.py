@@ -2240,6 +2240,8 @@ class Editor(QMainWindow):
         dlg = QProgressDialog(self.t('importing'), self.t('cancel'), 0, total, self)
         dlg.setWindowTitle(self.t('import'))
         dlg.setWindowModality(Qt.WindowModality.ApplicationModal)
+        dlg.setMinimumWidth(400)
+        dlg.resize(400, dlg.sizeHint().height())
         progress = 0
 
         def step(n: int, current: str | None = None) -> None:
@@ -2247,7 +2249,7 @@ class Editor(QMainWindow):
             progress += n
             dlg.setValue(progress)
             if current:
-                dlg.setLabelText(f"{self.t('importing')} {current}")
+                dlg.setLabelText(f"{self.t('importing')} {os.path.basename(current)}")
             QApplication.processEvents()
 
         for p in paths:
