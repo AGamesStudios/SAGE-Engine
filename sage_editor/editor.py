@@ -1664,7 +1664,8 @@ class Editor(QMainWindow):
     def show_camera_settings(self):
         cam = getattr(self.scene, 'camera', None)
         if not cam:
-            cam = Camera(0, 0, self.window_width, self.window_height)
+            cam = Camera(self.window_width / 2, self.window_height / 2,
+                        self.window_width, self.window_height)
             self.scene.camera = cam
         dlg = QDialog(self)
         dlg.setWindowTitle(self.t('camera_settings'))
@@ -1860,7 +1861,8 @@ class Editor(QMainWindow):
         """Add a new camera object."""
         if not self._check_project():
             return
-        cam = Camera(0, 0, self.window_width, self.window_height)
+        cam = Camera(self.window_width / 2, self.window_height / 2,
+                    self.window_width, self.window_height)
         cam.name = self.t('camera')
         self.scene.add_object(cam)
         self.items.append((None, cam))
@@ -2161,8 +2163,8 @@ class Editor(QMainWindow):
         if cam:
             w = cam.width / cam.zoom
             h = cam.height / cam.zoom
-            x = cam.x
-            y = cam.y
+            x = cam.x - w / 2
+            y = cam.y - h / 2
         else:
             w = getattr(self, 'window_width', 640)
             h = getattr(self, 'window_height', 480)
@@ -2490,8 +2492,8 @@ class Editor(QMainWindow):
         try:
             if data.get('type') == 'camera':
                 obj = Camera(
-                    data.get('x', 0),
-                    data.get('y', 0),
+                    data.get('x', self.window_width / 2),
+                    data.get('y', self.window_height / 2),
                     data.get('width', 640),
                     data.get('height', 480),
                     data.get('zoom', 1.0),

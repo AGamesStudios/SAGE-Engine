@@ -32,7 +32,7 @@ class Engine:
         self.fps = fps
         self._frame_interval = 1.0 / fps if fps else 0
         self.scene = scene or Scene()
-        self.camera = camera or getattr(self.scene, 'camera', None) or Camera(0, 0, width, height)
+        self.camera = camera or getattr(self.scene, 'camera', None) or Camera(width / 2, height / 2, width, height)
         self.events = events if events is not None else self.scene.build_event_system()
         if renderer is None:
             cls = get_renderer('pygame')
@@ -139,7 +139,7 @@ def main(argv=None):
     if cls is None:
         raise ValueError(f'Unknown renderer: {renderer_name}')
     renderer = cls(width, height, title)
-    camera = scene.camera or Camera(0, 0, width, height)
+    camera = scene.camera or Camera(width / 2, height / 2, width, height)
 
     Engine(width=width, height=height, title=title,
            scene=scene, events=scene.build_event_system(), renderer=renderer,

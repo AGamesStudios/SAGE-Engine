@@ -34,7 +34,8 @@ def save_project(project: Project, path: str) -> None:
 def create_engine(project: Project, fps: int = 60) -> Engine:
     """Create an :class:`Engine` for the given project."""
     scene = Scene.from_dict(project.scene)
-    camera = scene.camera or Camera(0, 0, project.width, project.height)
+    camera = scene.camera or Camera(project.width / 2, project.height / 2,
+                                    project.width, project.height)
     rcls = get_renderer(project.renderer) or PygameRenderer
     renderer = rcls(project.width, project.height, project.title)
     events = scene.build_event_system()
@@ -70,7 +71,7 @@ def run_scene(path: str, width: int = 640, height: int = 480,
               title: str | None = None, fps: int = 60) -> None:
     """Run a single scene file directly."""
     scene = load_scene(path)
-    camera = scene.camera or Camera(0, 0, width, height)
+    camera = scene.camera or Camera(width / 2, height / 2, width, height)
     rcls = get_renderer('pygame') or PygameRenderer
     renderer = rcls(width, height, title or "SAGE 2D")
     events = scene.build_event_system()

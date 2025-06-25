@@ -34,14 +34,13 @@ class Camera:
     event_system: EventSystem | None = field(init=False, default=None)
 
     def view_rect(self) -> tuple[float, float, float, float]:
-        """Return the visible world rectangle."""
+        """Return the visible world rectangle with the camera centered."""
         scale = units.UNITS_PER_METER
-        return (
-            self.x * scale,
-            self.y * scale,
-            (self.width / self.zoom) * scale,
-            (self.height / self.zoom) * scale,
-        )
+        w = (self.width / self.zoom) * scale
+        h = (self.height / self.zoom) * scale
+        left = self.x * scale - w / 2
+        top = self.y * scale - h / 2
+        return (left, top, w, h)
 
     def update(self, dt: float) -> None:
         """Camera objects currently have no behaviour."""

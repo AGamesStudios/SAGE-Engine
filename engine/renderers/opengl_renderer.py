@@ -107,27 +107,30 @@ class OpenGLRenderer:
 
     def draw_scene(self, scene, camera=None):
         scale = units.UNITS_PER_METER
+        zoom = 1.0
         camx = camy = 0
         camw = self.width
         camh = self.height
-        zoom = 1.0
         if camera is not None:
+            zoom = camera.zoom
             camx = camera.x * scale
             camy = camera.y * scale
-            camw = (camera.width / camera.zoom) * scale
-            camh = (camera.height / camera.zoom) * scale
-            zoom = camera.zoom
+            camw = (camera.width / zoom) * scale
+            camh = (camera.height / zoom) * scale
         GL.glPushMatrix()
-        GL.glTranslatef(-camx, -camy, 0)
+        GL.glTranslatef(self.width / 2, self.height / 2, 0)
         GL.glScalef(zoom, zoom, 1)
+        GL.glTranslatef(-camx, -camy, 0)
         scene._sort_objects()
         for obj in scene.objects:
             if isinstance(obj, Camera):
                 continue
             if camera is not None:
                 x, y, w, h = obj.rect()
-                if (x + w < camx or x > camx + camw or
-                        y + h < camy or y > camy + camh):
+                left = camx - camw / 2
+                top = camy - camh / 2
+                if (x + w < left or x > left + camw or
+                        y + h < top or y > top + camh):
                     continue
             self.draw_object(obj)
         GL.glPopMatrix()

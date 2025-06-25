@@ -52,24 +52,26 @@ class PygameRenderer:
 
     def draw_scene(self, scene, camera=None):
         scale = units.UNITS_PER_METER
+        zoom = 1.0
         camx = camy = 0
         camw = self.width
         camh = self.height
-        zoom = 1.0
         if camera is not None:
+            zoom = camera.zoom
             camx = camera.x * scale
             camy = camera.y * scale
-            camw = (camera.width / camera.zoom) * scale
-            camh = (camera.height / camera.zoom) * scale
-            zoom = camera.zoom
+            camw = (camera.width / zoom) * scale
+            camh = (camera.height / zoom) * scale
         scene._sort_objects()
         for obj in scene.objects:
             if isinstance(obj, Camera):
                 continue
             if camera is not None:
                 x, y, w, h = obj.rect()
-                if (x + w < camx or x > camx + camw or
-                        y + h < camy or y > camy + camh):
+                left = camx - camw / 2
+                top = camy - camh / 2
+                if (x + w < left or x > left + camw or
+                        y + h < top or y > top + camh):
                     continue
             self.draw_object(obj, camx, camy, zoom)
 
@@ -89,8 +91,9 @@ class PygameRenderer:
             if obj.angle:
                 surf = pygame.transform.rotate(surf, -obj.angle)
             self._cache[key] = (surf, info)
-        x = (obj.x - camx / units.UNITS_PER_METER) * zoom * units.UNITS_PER_METER
-        y = (obj.y - camy / units.UNITS_PER_METER) * zoom * units.UNITS_PER_METER
+        scale = units.UNITS_PER_METER
+        x = (obj.x - camx / scale) * zoom * scale + self.width / 2
+        y = (obj.y - camy / scale) * zoom * scale + self.height / 2
         rect = surf.get_rect(center=(int(x), int(y)))
         self.surface.blit(surf, rect)
 
