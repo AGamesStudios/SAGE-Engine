@@ -24,14 +24,15 @@ utilities like the plugin loader used by both components.
 The editor code is split into ``sage_editor.editor`` for the main window and
 ``sage_editor.app`` which contains the startup logic and project manager.
 Dock widgets live under ``sage_editor.docks`` while reusable widgets live in
-``sage_editor.widgets``. The viewport is currently blank while rendering is
-being rewritten. Embedding the editor in other tools
-only requires importing these modules.
+``sage_editor.widgets``. The viewport now embeds a small Pygame renderer so the
+scene you edit is visible inside the editor as well as when running the game.
+Embedding the editor in other tools only requires importing these modules.
 
 ### Renderer
 
-The original rendering backends have been removed. Rendering will return in a
-future update but the editor itself runs without GPU acceleration.
+Rendering now uses a lightweight **PygameRenderer**. The same renderer draws the
+scene in the editor viewport and when running a project so what you see while
+editing matches the game window.
 
 ### Units and Coordinates
 
@@ -114,8 +115,8 @@ confined to the editor window and disappears when it loses focus. Thumbnails are
 cached in memory so browsing many files does not lag. Double-clicking a
 `.sagescene` file loads it in the editor so you can quickly switch between scenes.
 Use **File → New Project** to generate a folder for your game. The dialog asks
-for a project name and location. Rendering options have been removed for now
-so projects always use the lightweight placeholder viewport.
+for a project name and location. Projects always use the Pygame renderer so the
+editor viewport and runtime look the same.
 It then creates the folder with a `.sageproject` file and a `Scenes` subfolder
 containing `Scene1.sagescene`. Each new object
 receives a generic name like `New Object (1)` so conditions always target the

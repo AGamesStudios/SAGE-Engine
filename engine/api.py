@@ -1,9 +1,8 @@
-"""High level helpers for using SAGE Engine."""
-
-from .core.engine import Engine
 from .core.scene import Scene
 from .core.project import Project
+from .renderers import get_renderer, PygameRenderer
 from .core.camera import Camera
+from .core.engine import Engine
 from .core.objects import register_object, object_from_dict, object_to_dict
 
 __all__ = [
@@ -39,6 +38,8 @@ def create_engine(project: Project, fps: int = 60) -> Engine:
         width=project.width,
         height=project.height,
     )
+    rcls = get_renderer(getattr(project, "renderer", "pygame")) or PygameRenderer
+    renderer = rcls(project.width, project.height, project.title)
     events = scene.build_event_system()
     return Engine(
         width=project.width,
@@ -47,6 +48,7 @@ def create_engine(project: Project, fps: int = 60) -> Engine:
         events=events,
         fps=fps,
         title=project.title,
+        renderer=renderer,
         camera=camera,
     )
 
@@ -71,7 +73,9 @@ def run_scene(path: str, width: int = 640, height: int = 480,
               title: str | None = None, fps: int = 60) -> None:
     """Run a single scene file directly."""
     scene = load_scene(path)
-    camera = scene.camera or Camera(x=width / 2, y=height / 2, width=width, height=height)
+    camera = scene.camera or Camera(width / 2, height / 2, width, height)
+    rcls = get_renderer("pygame") or PygameRenderer
+    renderer = rcls(width, height, title or "SAGE 2D")
     events = scene.build_event_system()
     Engine(
         width=width,
@@ -79,6 +83,7 @@ def run_scene(path: str, width: int = 640, height: int = 480,
         scene=scene,
         events=events,
         title=title or "SAGE 2D",
+        renderer=renderer,
         camera=camera,
         fps=fps,
     ).run()

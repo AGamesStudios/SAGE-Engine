@@ -981,8 +981,8 @@ class Editor(QMainWindow):
         self.tabs = QTabWidget()
         self.setCentralWidget(self.tabs)
 
-        # viewport tab (currently blank)
-        self.view = Viewport()
+        # viewport tab renders the scene
+        self.view = Viewport(self.scene)
         self.tabs.addTab(self.view, self.t('viewport'))
 
         # object list and transform inspector dock
@@ -2578,6 +2578,7 @@ class Editor(QMainWindow):
         self.refresh_events()
         self.refresh_variables()
         self._refresh_object_labels()
+        self.view.set_scene(self.scene)
         if self.items:
             self.object_combo.setCurrentIndex(0)
             self.object_list.setCurrentRow(0)

@@ -6,8 +6,8 @@ from .. import ENGINE_VERSION
 @dataclass(slots=True)
 class Project:
     """Simple container for a SAGE project including scene data."""
-
     scene: dict
+    renderer: str = "pygame"
     width: int = 640
     height: int = 480
     title: str = 'SAGE 2D'
@@ -19,8 +19,9 @@ class Project:
 
     @classmethod
     def load(cls, path: str) -> "Project":
-        with open(path, 'r') as f:
+        with open(path, "r") as f:
             data = json.load(f)
+        renderer = data.get("renderer", "pygame")
         scene = data.get('scene')
         scene_file = data.get('scene_file')
         scenes_dir = data.get('scenes', 'Scenes')
@@ -41,7 +42,7 @@ class Project:
         version = data.get('version', ENGINE_VERSION)
         resources = data.get('resources', 'resources')
         metadata = data.get('metadata', {})
-        return cls(scene or {}, width, height, title, version,
+        return cls(scene or {}, renderer, width, height, title, version,
                    resources, scenes_dir, scene_file or 'Scenes/Scene1.sagescene',
                    metadata)
 
@@ -65,6 +66,7 @@ class Project:
                 'title': self.title,
                 'version': self.version,
                 'resources': self.resources,
+                'renderer': self.renderer,
                 'scenes': self.scenes,
                 'scene_file': self.scene_file,
                 'metadata': self.metadata,

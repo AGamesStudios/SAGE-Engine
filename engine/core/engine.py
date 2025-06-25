@@ -1,52 +1,66 @@
 import sys
 import argparse
-import traceback
 import time
 import os
 from datetime import datetime
 from .scene import Scene
 from .project import Project
+from .input_pygame import PygameInput
 from .camera import Camera
+from ..renderers import PygameRenderer, Renderer, get_renderer
 from .. import ENGINE_VERSION
 from ..log import logger
+
 
 def _exception_handler(exc_type, exc, tb):
     """Log uncaught exceptions."""
     logger.error("Uncaught exception", exc_info=(exc_type, exc, tb))
 
+
 sys.excepthook = _exception_handler
+
 
 def _log(text: str) -> None:
     """Write a line to the log file and console."""
     logger.info(text)
 
+
 class Engine:
-    """Main loop that updates the scene without any rendering."""
+    """Main loop that delegates drawing to a renderer."""
 
     def __init__(self, width=640, height=480, scene=None, events=None, fps=60,
-                 title='SAGE 2D', camera: Camera | None = None):
+                 title="SAGE 2D", renderer: Renderer | str | None = None,
+                 camera: Camera | None = None):
         self.fps = fps
         self._frame_interval = 1.0 / fps if fps else 0
         self.scene = scene or Scene()
         if camera is None:
-            cam_getter = getattr(self.scene, 'get_active_camera', None)
-            camera = cam_getter() if callable(cam_getter) else getattr(self.scene, 'camera', None)
+            cam = getattr(self.scene, "get_active_camera", None)
+            camera = cam() if callable(cam) else getattr(self.scene, "camera", None)
             if camera is None:
-                camera = Camera(x=width / 2, y=height / 2, width=width, height=height)
-                if hasattr(self.scene, 'add_object'):
-                    self.scene.add_object(camera)
-        elif camera not in getattr(self.scene, 'objects', []):
-            if hasattr(self.scene, 'add_object'):
+                camera = Camera(width / 2, height / 2, width, height)
+        elif camera not in getattr(self.scene, "objects", []):
+            if hasattr(self.scene, "add_object"):
                 self.scene.add_object(camera)
         self.camera = camera
         self.events = events if events is not None else self.scene.build_event_system()
-        self.input = None
+        if renderer is None:
+            cls = get_renderer("pygame") or PygameRenderer
+            self.renderer = cls(width, height, title)
+        elif isinstance(renderer, str):
+            cls = get_renderer(renderer)
+            if cls is None:
+                raise ValueError(f"Unknown renderer: {renderer}")
+            self.renderer = cls(width, height, title)
+        else:
+            self.renderer = renderer
+        self.input = PygameInput(self.renderer)
         self._last = time.perf_counter()
         try:
             from .. import load_engine_plugins
             load_engine_plugins(self)
         except Exception:
-            logger.exception('Failed to load engine plugins')
+            logger.exception("Failed to load engine plugins")
 
     def variable(self, name):
         """Return the value of an event variable."""
@@ -59,49 +73,53 @@ class Engine:
                            if isinstance(o, Camera) and o.name == camera), None)
         self.camera = camera
 
-
-
     def run(self):
-        _log(f'Starting engine version {ENGINE_VERSION}')
+        _log(f"Starting engine version {ENGINE_VERSION}")
         running = True
-        update_events = self.events.update
-        update_scene = self.scene.update
-        sleep = time.sleep
-        perf_counter = time.perf_counter
-        while running:
-            now = perf_counter()
+        while running and not self.renderer.should_close():
+            now = time.perf_counter()
             dt = now - self._last
             self._last = now
+            self.input.poll()
             try:
-                update_events(self, self.scene, dt)
-                update_scene(dt)
+                self.events.update(self, self.scene, dt)
+                self.scene.update(dt)
+                self.renderer.clear()
+                cam = self.camera or getattr(self.scene, "get_active_camera", lambda: None)()
+                self.renderer.draw_scene(self.scene, cam)
+                self.renderer.present()
             except Exception:
-                logger.exception('Runtime error')
+                logger.exception("Runtime error")
                 running = False
             if self.fps:
-                delay = self._frame_interval - (perf_counter() - now)
+                delay = self._frame_interval - (time.perf_counter() - now)
                 if delay > 0:
-                    sleep(delay)
-        _log('Engine shutdown')
+                    time.sleep(delay)
+        self.input.shutdown()
+        self.renderer.close()
+        _log("Engine shutdown")
 
 
 def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
-    parser = argparse.ArgumentParser(description='Run a SAGE project or scene')
-    parser.add_argument('file', nargs='?', help='Scene or project file')
-    parser.add_argument('--width', type=int, help='Window width')
-    parser.add_argument('--height', type=int, help='Window height')
-    parser.add_argument('--title', help='Window title')
+    parser = argparse.ArgumentParser(description="Run a SAGE project or scene")
+    parser.add_argument("file", nargs="?", help="Scene or project file")
+    parser.add_argument("--width", type=int, help="Window width")
+    parser.add_argument("--height", type=int, help="Window height")
+    parser.add_argument("--title", help="Window title")
+    parser.add_argument("--renderer", choices=["pygame"], default="pygame",
+                        help="Rendering backend (default pygame)")
     args = parser.parse_args(argv)
 
     scene = Scene()
     width = args.width or 640
     height = args.height or 480
-    title = args.title or 'SAGE 2D'
+    title = args.title or "SAGE 2D"
+    renderer_name = args.renderer
     if args.file:
         path = args.file
-        if path.endswith('.sageproject'):
+        if path.endswith(".sageproject"):
             proj = Project.load(path)
             if proj.scene:
                 scene = Scene.from_dict(proj.scene)
@@ -112,9 +130,9 @@ def main(argv=None):
             set_resource_root(os.path.join(os.path.dirname(path), proj.resources))
         else:
             scene = Scene.load(path)
-
-    camera = scene.camera or Camera(x=width / 2, y=height / 2, width=width, height=height)
-
+    cls = get_renderer(renderer_name) or PygameRenderer
+    renderer = cls(width, height, title)
+    camera = scene.camera or Camera(width / 2, height / 2, width, height)
     Engine(width=width, height=height, title=title,
            scene=scene, events=scene.build_event_system(),
-           camera=camera).run()
+           renderer=renderer, camera=camera).run()

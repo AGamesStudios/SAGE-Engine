@@ -1,7 +1,7 @@
 ENGINE_VERSION = '2D prototype v0.0.01a'
 
 from .core import GameObject, Scene, Engine, Project, Camera
-# rendering backends will be reimplemented in the future
+from .renderers import PygameRenderer, Renderer
 from .core.game_object import clear_image_cache
 from .api import (
     load_project,
@@ -45,7 +45,7 @@ __all__ = [
     'Move', 'SetPosition', 'Destroy', 'Print', 'PlaySound', 'Spawn',
     'OnStart', 'EveryFrame', 'VariableCompare', 'ZoomAbove',
     'SetVariable', 'ModifyVariable', 'SetZoom', 'Project', 'Camera',
-    'clear_image_cache', 'main',
+    'clear_image_cache', 'Renderer', 'PygameRenderer', 'main',
     'ENGINE_VERSION', 'logger', 'ResourceManager', 'set_resource_root', 'get_resource_path',
     'load_project', 'save_project', 'run_project', 'create_engine',
     'load_scene', 'save_scene', 'run_scene',
