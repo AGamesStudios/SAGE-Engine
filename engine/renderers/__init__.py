@@ -7,6 +7,10 @@ except Exception:  # pragma: no cover - optional dependency
     class GLSettings:
         pass
 from .pygame_renderer import PygameRenderer
+try:
+    from .sdl_renderer import SDLRenderer
+except Exception:  # pragma: no cover - optional dependency
+    SDLRenderer = None
 
 RENDERER_REGISTRY: dict[str, type] = {}
 
@@ -21,6 +25,8 @@ def get_renderer(name: str) -> type | None:
 register_renderer("pygame", PygameRenderer)
 if OpenGLRenderer:
     register_renderer("opengl", OpenGLRenderer)
+if SDLRenderer:
+    register_renderer("sdl", SDLRenderer)
 
 class Renderer:
     """Abstract renderer interface."""
@@ -40,6 +46,6 @@ class Renderer:
         return False
 
 __all__ = [
-    'Renderer', 'OpenGLRenderer', 'PygameRenderer', 'GLSettings',
+    'Renderer', 'OpenGLRenderer', 'PygameRenderer', 'SDLRenderer', 'GLSettings',
     'register_renderer', 'get_renderer', 'RENDERER_REGISTRY'
 ]

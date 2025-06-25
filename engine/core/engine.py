@@ -8,8 +8,10 @@ from .scene import Scene
 from .project import Project
 from .input import Input as GLFWInput
 from .input_pygame import PygameInput
+from .input_sdl import SDLInput
 from .camera import Camera
-from ..renderers import OpenGLRenderer, PygameRenderer, Renderer, get_renderer
+from ..renderers import (
+    OpenGLRenderer, PygameRenderer, SDLRenderer, Renderer, get_renderer)
 from .. import ENGINE_VERSION
 from ..log import logger
 
@@ -51,9 +53,11 @@ class Engine:
             self.renderer = renderer
         if isinstance(self.renderer, PygameRenderer):
             self.input = PygameInput(self.renderer)
+        elif isinstance(self.renderer, SDLRenderer):
+            self.input = SDLInput(self.renderer)
         else:
             self.input = GLFWInput(self.renderer.window)
-        if not isinstance(self.renderer, PygameRenderer):
+        if isinstance(self.renderer, OpenGLRenderer):
             try:
                 import glfw
                 glfw.set_window_size_callback(self.renderer.window, self._on_resize)
@@ -124,7 +128,7 @@ def main(argv=None):
     parser.add_argument('--width', type=int, help='Window width')
     parser.add_argument('--height', type=int, help='Window height')
     parser.add_argument('--title', help='Window title')
-    parser.add_argument('--renderer', choices=['pygame', 'opengl'],
+    parser.add_argument('--renderer', choices=['pygame', 'opengl', 'sdl'],
                         help='Rendering backend (default pygame)')
     args = parser.parse_args(argv)
 

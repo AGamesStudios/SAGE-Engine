@@ -32,6 +32,11 @@ other tools only requires importing these modules.
 Rendering is handled by modules under `engine/renderers`.  The
 default backend is a simple `PygameRenderer` while an
 `OpenGLRenderer` remains available for experimentation.
+A lightweight `SDLRenderer` uses **PySDL2** so window handling is
+consistent across backends.  All renderers register themselves through
+a small registry so projects can select a backend by name.  The base
+`Renderer` interface allows additional backends to be added without
+touching the core engine.
 Renderers register themselves through a small registry so projects can
 select a backend by name.  The base `Renderer` interface allows
 additional backends to be added without touching the core engine.
@@ -115,9 +120,9 @@ reorganizing files will not break existing scenes.
 If PyQt does not provide ``QFileSystemModel`` the editor falls back to a
 simpler tree widget that still lets you create folders and import files.
 Use **File → New Project** to generate a folder for your game. The dialog asks
-for a project name and location and lets you choose a rendering backend. Pygame
-is the default option while an experimental OpenGL (alpha) renderer remains
-available for testing.
+for a project name and location and lets you choose a rendering backend.
+Pygame is the default option while an experimental OpenGL (alpha) renderer and
+a simple SDL2 renderer remain available for testing.
 It then creates the folder with a `.sageproject` file. Each new object
 receives a generic name like `New Object (1)` so conditions always target the
 correct item. The editor disables sprite, variable and logic actions until a
@@ -184,7 +189,7 @@ Run a saved project with:
 ```bash
 python -m engine path/to/project.sageproject
 # the engine uses the renderer stored in the project file
-# pass `--renderer pygame` or `--renderer opengl` to override
+# pass `--renderer pygame`, `--renderer opengl` or `--renderer sdl` to override
 ```
 
 Project files store the entire scene data so you can share a single file. Use
