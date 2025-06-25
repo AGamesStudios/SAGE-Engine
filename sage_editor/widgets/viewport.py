@@ -85,6 +85,8 @@ class Viewport(QOpenGLWidget):
     def mousePressEvent(self, event):  # pragma: no cover - UI interaction
         if event.buttons() & Qt.MouseButton.LeftButton:
             self._drag_pos = event.position()
+            self.setCursor(Qt.CursorShape.BlankCursor)
+            self.grabMouse()
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):  # pragma: no cover - UI interaction
@@ -93,11 +95,13 @@ class Viewport(QOpenGLWidget):
             dy = event.position().y() - self._drag_pos.y()
             scale = units.UNITS_PER_METER
             self.camera.x -= dx / scale
-            self.camera.y += (-1 if units.Y_UP else 1) * dy / scale
+            self.camera.y += (1 if units.Y_UP else -1) * dy / scale
             self._drag_pos = event.position()
             self.update()
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):  # pragma: no cover - UI interaction
         self._drag_pos = None
+        self.releaseMouse()
+        self.setCursor(Qt.CursorShape.ArrowCursor)
         super().mouseReleaseEvent(event)

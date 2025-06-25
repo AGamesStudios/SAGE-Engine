@@ -35,8 +35,9 @@ scene in the editor viewport and when running a project so what you see while
 editing matches the game window. A small cross at the scene origin helps
 orient objects. When a scene has no objects a small green square is rendered at
 the origin so the viewport no longer appears empty. The editor viewport uses its
-own camera which can be panned by dragging with the left mouse button so you can
-inspect any part of the scene without affecting the runtime camera.
+own camera which can be panned by dragging with the left mouse button. The
+cursor is hidden and captured while dragging so the view responds smoothly and
+the runtime camera remains unchanged.
 
 ### Units and Coordinates
 
