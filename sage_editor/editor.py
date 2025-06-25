@@ -1605,6 +1605,8 @@ class Editor(QMainWindow):
             self.object_list.addItem(obj.name)
             if self.object_combo.currentIndex() == -1:
                 self.object_combo.setCurrentIndex(0)
+                self.object_list.setCurrentRow(0)
+                self._update_transform_panel()
             self._mark_dirty()
         except Exception as exc:
             self.console.append(f'Failed to add sprite: {exc}')
@@ -1628,6 +1630,8 @@ class Editor(QMainWindow):
             self.object_list.addItem(obj.name)
             if self.object_combo.currentIndex() == -1:
                 self.object_combo.setCurrentIndex(0)
+                self.object_list.setCurrentRow(0)
+                self._update_transform_panel()
             self._mark_dirty()
         except Exception as exc:
             self.console.append(f'Failed to add object: {exc}')
@@ -1647,6 +1651,8 @@ class Editor(QMainWindow):
         self.object_list.addItem(cam.name)
         if self.object_combo.currentIndex() == -1:
             self.object_combo.setCurrentIndex(0)
+            self.object_list.setCurrentRow(0)
+            self._update_transform_panel()
         self._mark_dirty()
         self._update_camera_rect()
         self._refresh_object_labels()
@@ -1738,6 +1744,8 @@ class Editor(QMainWindow):
         """Select the corresponding sprite when the user picks an item."""
         row = self.object_list.currentRow()
         if row < 0 or row >= len(self.items):
+            self.object_combo.setCurrentIndex(-1)
+            self._update_transform_panel()
             return
         self.object_combo.setCurrentIndex(row)
         _, obj = self.items[row]
@@ -1798,10 +1806,15 @@ class Editor(QMainWindow):
     def _update_transform_panel(self):
         idx = self.object_combo.currentIndex()
         if idx < 0 or idx >= len(self.items):
+            self.object_group.setVisible(False)
+            self.transform_group.setVisible(False)
             self.transform_group.setEnabled(False)
             if hasattr(self, 'camera_group'):
                 self.camera_group.setVisible(False)
             return
+        self.object_group.setVisible(True)
+        self.transform_group.setVisible(True)
+        self.transform_group.setEnabled(True)
         item, obj = self.items[idx]
         self.name_edit.blockSignals(True)
         self.name_edit.setText(obj.name)
@@ -2308,9 +2321,14 @@ class Editor(QMainWindow):
         # update indexes
         for i, (_, _) in enumerate(self.items):
             self.object_combo.setItemData(i, i)
-        if index == self.object_combo.currentIndex() and self.items:
-            self.object_combo.setCurrentIndex(0)
-            self.object_list.setCurrentRow(0)
+        if self.items:
+            if index == self.object_combo.currentIndex():
+                self.object_combo.setCurrentIndex(0)
+                self.object_list.setCurrentRow(0)
+        else:
+            self.object_combo.setCurrentIndex(-1)
+            self.object_list.clearSelection()
+        self._update_transform_panel()
         self.refresh_events()
         self._mark_dirty()
         self._refresh_object_labels()
@@ -2431,6 +2449,12 @@ class Editor(QMainWindow):
         self.refresh_events()
         self.refresh_variables()
         self._refresh_object_labels()
+        if self.items:
+            self.object_combo.setCurrentIndex(0)
+            self.object_list.setCurrentRow(0)
+        else:
+            self.object_combo.setCurrentIndex(-1)
+        self._update_transform_panel()
         self.dirty = False
         self._update_title()
 
