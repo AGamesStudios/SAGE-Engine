@@ -2295,12 +2295,19 @@ class Editor(QMainWindow):
 
     def closeEvent(self, event):
         if self.dirty:
-            res = QMessageBox.question(
-                self,
-                self.t('unsaved_changes'),
-                self.t('save_before_exit'),
-                QMessageBox.StandardButton.Save | QMessageBox.StandardButton.Discard | QMessageBox.StandardButton.Cancel
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Icon.Question)
+            msg.setWindowTitle(self.t('unsaved_changes'))
+            msg.setText(self.t('save_before_exit'))
+            msg.setStandardButtons(
+                QMessageBox.StandardButton.Save
+                | QMessageBox.StandardButton.Discard
+                | QMessageBox.StandardButton.Cancel
             )
+            msg.button(QMessageBox.StandardButton.Save).setText(self.t('save'))
+            msg.button(QMessageBox.StandardButton.Discard).setText(self.t('discard'))
+            msg.button(QMessageBox.StandardButton.Cancel).setText(self.t('cancel'))
+            res = msg.exec()
             if res == QMessageBox.StandardButton.Save:
                 self.save_project()
                 if self.dirty:
