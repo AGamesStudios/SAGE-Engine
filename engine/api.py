@@ -29,7 +29,7 @@ def save_project(project: Project, path: str) -> None:
     project.save(path)
 
 
-def create_engine(project: Project, fps: int = 60) -> Engine:
+def create_engine(project: Project, fps: int = 30) -> Engine:
     """Create an :class:`Engine` for the given project."""
     scene = Scene.from_dict(project.scene)
     camera = scene.camera or Camera(
@@ -53,7 +53,7 @@ def create_engine(project: Project, fps: int = 60) -> Engine:
     )
 
 
-def run_project(path: str, fps: int = 60):
+def run_project(path: str, fps: int = 30):
     """Load a project file and run it directly."""
     engine = create_engine(load_project(path), fps=fps)
     engine.run()
@@ -70,7 +70,7 @@ def save_scene(scene: Scene, path: str) -> None:
 
 
 def run_scene(path: str, width: int = 640, height: int = 480,
-              title: str | None = None, fps: int = 60) -> None:
+              title: str | None = None, fps: int = 30) -> None:
     """Run a single scene file directly."""
     scene = load_scene(path)
     camera = scene.camera or Camera(width / 2, height / 2, width, height)

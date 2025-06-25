@@ -52,18 +52,19 @@ immediately or remove it from the list. Choosing **Delete** now asks for
 confirmation and then removes the entire project folder along with its files.
 Once a project is chosen the editor opens maximized in a dark Fusion
 theme and provides two
-tabs: **Viewport** and **Logic**. The old QGraphics-based viewport has been
-removed entirely. The viewport is a lightweight placeholder that simply draws
-red and green axis lines so you know where the origin lies while the new
-renderer is developed. Positive ``y`` values move objects upward.
+tabs: **Viewport** and **Logic**. The viewport now embeds the same
+**PygameRenderer** used when running a project so what you see while editing
+matches the game window. It refreshes roughly twenty times per second so the
+editor stays below about 20% CPU usage even on slower machines.
 An **Add Object** button beneath the list places a blank object with a default
  name like `New Object`. Every toolbar action and list item loads its icon from
  the `sage_editor/icons` folder, so you can replace these images with your own
  to completely theme the interface. The Import button loads `add.png`, the New
- Folder button uses `folder.png`, the Refresh button uses `refresh.png`, the New
- Project action shows `file.png`, Save Project uses `save.png`, the Recent
- Projects menu displays `recent.png`, the Manage Plugins entry uses `plugin.png`
- and objects show `object.png` or `camera.png` depending on their type. Object properties
+ Folder button uses `folder.png`, the Refresh button uses `refresh.png`, the Run
+ action shows `start.png`, the New Project action shows `file.png`, Save Project
+ uses `save.png`, the Recent Projects menu displays `recent.png`, the Manage
+ Plugins entry uses `plugin.png` and objects show `object.png` or `camera.png`
+ depending on their type. Object properties
  can be edited in a dock but there
  is no visual manipulation until rendering support returns.
 Projects store a window ``width`` and ``height`` separately from the active
@@ -192,8 +193,11 @@ Run a saved project with:
 
 ```bash
 python -m engine path/to/project.sageproject
-# rendering backends have been removed so the engine runs with no visual output
 ```
+
+The editor toolbar provides a **Run** button with the same effect. It saves the
+current project and launches it in a separate Pygame window.
+
 
 Project files store the entire scene data so you can share a single file. Use
 **File → Save Project** to write the current project. The **Recent Projects**
@@ -342,7 +346,7 @@ title so you always know which release you are using.
 SAGE Engine aims to run smoothly even on older hardware. Images and sounds
 are cached after the first load and only the most recent 32 images are kept in
 memory.  A helper `engine.clear_image_cache()` empties this LRU cache if
-memory becomes tight. The `Engine` class accepts an `fps` argument (default 60)
+memory becomes tight. The `Engine` class accepts an `fps` argument (default 30)
 to control the frame rate using `time.sleep` for consistent timing. Object
 lists are sorted only when modified and heavy math dependencies were removed.
 The editor delays resource searches slightly so typing does not

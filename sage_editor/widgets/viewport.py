@@ -20,8 +20,9 @@ class Viewport(QWidget):
         self.renderer = PygameRenderer(self.width(), self.height(), surface=pygame.Surface((self.width(), self.height())))
         self._image: QImage | None = None
         self.timer = QTimer(self)
+        self.timer.setInterval(50)  # ~20 FPS to keep CPU usage low
         self.timer.timeout.connect(self._tick)
-        self.timer.start(33)
+        self.timer.start()
         self.setMinimumSize(200, 150)
 
     def set_scene(self, scene: Scene) -> None:
@@ -40,6 +41,14 @@ class Viewport(QWidget):
         fmt = QImage.Format.Format_RGB888
         self._image = QImage(data, self.renderer.width, self.renderer.height, fmt)
         self.update()
+
+    def showEvent(self, event) -> None:  # pragma: no cover - UI interaction
+        self.timer.start()
+        super().showEvent(event)
+
+    def hideEvent(self, event) -> None:  # pragma: no cover - UI interaction
+        self.timer.stop()
+        super().hideEvent(event)
 
     def paintEvent(self, event: QPaintEvent) -> None:  # pragma: no cover - UI drawing
         if not self._image:

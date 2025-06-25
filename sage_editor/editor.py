@@ -1146,6 +1146,7 @@ class Editor(QMainWindow):
         self.scale_x_spin.setPrefix(''); self.scale_y_spin.setPrefix(''); self.angle_spin.setPrefix('')
         self.add_obj_btn.setText(self.t('add_object'))
         self.add_cam_btn.setText(self.t('add_camera'))
+        self.run_act.setText(self.t('run'))
         self.clear_log_act.setText(self.t('clear_log'))
         self.recent_menu.setTitle(self.t('recent_projects'))
         self.recent_menu.setIcon(load_icon('recent.png'))
@@ -1167,6 +1168,7 @@ class Editor(QMainWindow):
         self.add_obj_btn.setEnabled(enabled)
         self.add_cam_btn.setEnabled(enabled)
         self.add_var_btn.setEnabled(enabled)
+        self.run_act.setEnabled(enabled)
         self.objects_dock.setEnabled(enabled)
         self.resources_dock.setEnabled(enabled)
         self._update_title()
@@ -1259,9 +1261,15 @@ class Editor(QMainWindow):
 
         toolbar = self.addToolBar('main')
         from PyQt6.QtWidgets import QWidget, QSizePolicy
-        spacer = QWidget()
-        spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-        toolbar.addWidget(spacer)
+        left_spacer = QWidget()
+        left_spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        toolbar.addWidget(left_spacer)
+        self.run_act = QAction(load_icon('start.png'), self.t('run'), self)
+        self.run_act.triggered.connect(self.run_project)
+        toolbar.addAction(self.run_act)
+        right_spacer = QWidget()
+        right_spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        toolbar.addWidget(right_spacer)
         self.clear_log_act = QAction(load_icon('clear.png'), self.t('clear_log'), self)
         self.clear_log_act.triggered.connect(self.console.clear)
         toolbar.addAction(self.clear_log_act)
@@ -1514,6 +1522,19 @@ class Editor(QMainWindow):
     def show_plugin_manager(self):
         from .dialogs.plugin_manager import PluginManager
         PluginManager(self).exec()
+
+    def run_project(self):
+        """Save and run the current project in a separate window."""
+        if not self._check_project():
+            return
+        self.save_project()
+        if not self.project_path:
+            return
+        import subprocess
+        try:
+            subprocess.Popen([sys.executable, '-m', 'engine', self.project_path])
+        except Exception as exc:  # pragma: no cover - subprocess errors
+            QMessageBox.warning(self, self.t('error'), str(exc))
 
 
     def add_sprite(self):
