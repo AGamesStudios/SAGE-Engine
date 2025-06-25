@@ -52,8 +52,9 @@ confirmation and then removes the entire project folder along with its files.
 Once a project is chosen the editor opens maximized in a dark Fusion
 theme and provides two
 tabs: **Viewport** and **Logic**. The old QGraphics-based viewport has been
-removed entirely. The viewport is a lightweight placeholder with no drawing
-until the new renderer is ready.
+removed entirely. The viewport is a lightweight placeholder that simply draws
+red and green axis lines so you know where the origin lies while the new
+renderer is developed. Positive ``y`` values move objects upward.
 An **Add Object** button beneath the list places a blank object with a default
  name like `New Object`. Every toolbar action and list item loads its icon from
  the `sage_editor/icons` folder, so you can replace these images with your own
