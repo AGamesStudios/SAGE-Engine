@@ -2240,8 +2240,8 @@ class Editor(QMainWindow):
         dlg = QProgressDialog(self.t('importing'), self.t('cancel'), 0, total, self)
         dlg.setWindowTitle(self.t('import'))
         dlg.setWindowModality(Qt.WindowModality.ApplicationModal)
-        dlg.setMinimumWidth(400)
-        dlg.resize(400, dlg.sizeHint().height())
+        dlg.setFixedWidth(400)
+        dlg.setSizeGripEnabled(False)
         progress = 0
 
         def step(n: int, current: str | None = None) -> None:

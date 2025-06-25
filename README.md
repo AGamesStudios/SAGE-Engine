@@ -104,6 +104,7 @@ organized. Any asset chosen from outside the project is copied into this
 directory automatically, so scenes never reference files that might disappear.
 Imports accept files, folders or even `.zip` archives. A progress dialog shows
 the current path and counts bytes so large batches do not freeze the interface.
+The window keeps a fixed width so long filenames will not stretch the dialog.
 Imported files are loaded immediately into a small cache so previews appear
 instantly. The engine loads all assets relative to this directory, ensuring
 reorganizing files will not break existing scenes. If PyQt does not provide
