@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (
     QDialogButtonBox, QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox, QCompleter,
     QTextEdit, QDockWidget, QGroupBox, QCheckBox, QMessageBox, QMenu, QColorDialog,
     QTreeView, QInputDialog, QTreeWidget, QTreeWidgetItem,
-    QStyle, QHeaderView, QAbstractItemView
+    QStyle, QHeaderView, QAbstractItemView, QDesktopServices
 )
 try:
     from PyQt6.QtWidgets import QFileSystemModel
@@ -14,7 +14,7 @@ except Exception:  # pragma: no cover - handle older PyQt versions
     QFileSystemModel = None
 from PyQt6.QtGui import QPixmap, QColor, QAction
 from PyQt6.QtCore import (
-    QRectF, Qt, QProcess, QPointF, QSortFilterProxyModel, QSize
+    QRectF, Qt, QProcess, QPointF, QSortFilterProxyModel, QSize, QUrl
 )
 import logging
 import atexit
@@ -1884,11 +1884,14 @@ class Editor(QMainWindow):
         menu = QMenu(self)
         new_folder_act = menu.addAction(self.t('new_folder'))
         import_act = menu.addAction(self.t('import_files'))
+        del_act = menu.addAction(self.t('delete'))
         act = menu.exec(self.resource_view.viewport().mapToGlobal(pos))
         if act == new_folder_act:
             self._new_folder(base)
         elif act == import_act:
             self._import_resources(base)
+        elif act == del_act:
+            self._delete_resource(base)
 
     def _new_folder(self, base: str | None = None) -> None:
         """Create a subfolder inside the resources directory."""
@@ -1903,12 +1906,16 @@ class Editor(QMainWindow):
             rel_base = os.path.relpath(base, self.resource_dir) if base else ''
             if rel_base == '.':
                 rel_base = ''
-            if self.resource_manager:
-                folder = self.resource_manager.add_folder(rel_base, name)
-            else:
-                folder = os.path.join(base, name)
-                os.makedirs(folder, exist_ok=True)
-            _log(f'Created folder {folder}')
+            try:
+                if self.resource_manager:
+                    folder = self.resource_manager.add_folder(rel_base, name)
+                else:
+                    folder = os.path.join(base, name)
+                    os.makedirs(folder, exist_ok=True)
+                _log(f'Created folder {folder}')
+            except Exception as exc:
+                logger.exception('Failed to create folder %s', name)
+                QMessageBox.warning(self, self.t('error'), str(exc))
             self._refresh_resource_tree()
 
     def _copy_to_resources(self, path: str, base: str | None = None) -> tuple[str, str]:
@@ -1941,6 +1948,7 @@ class Editor(QMainWindow):
             shutil.copy(abs_path, target)
             _log(f'Imported resource {abs_path} -> {target}')
         except Exception as exc:
+            logger.exception('Failed to import resource %s', abs_path)
             QMessageBox.warning(self, self.t('error'), str(exc))
         rel = os.path.relpath(target, self.resource_dir)
         self._refresh_resource_tree()
@@ -1958,8 +1966,49 @@ class Editor(QMainWindow):
             _log(f'Moved resource {src} -> {dst}')
             return True
         except Exception as exc:
+            logger.exception('Failed to move resource %s -> %s', src, dst)
             QMessageBox.warning(self, self.t('error'), str(exc))
             return False
+
+    def _resource_double_click(self, index) -> None:
+        """Open a resource file using the default application."""
+        if isinstance(self.resource_view, QTreeWidget):
+            item = index
+            if item is None:
+                return
+            path = item.data(0, Qt.ItemDataRole.UserRole)
+        else:
+            if self.resource_model is None or not index.isValid():
+                return
+            if self.proxy_model is not None:
+                index = self.proxy_model.mapToSource(index)
+            path = self.resource_model.filePath(index)
+        if not path or os.path.isdir(path):
+            return
+        try:
+            QDesktopServices.openUrl(QUrl.fromLocalFile(path))
+            _log(f'Opened resource {path}')
+        except Exception:
+            logger.exception('Failed to open resource %s', path)
+
+    def _delete_resource(self, path: str) -> None:
+        """Delete a resource file or folder."""
+        if not self._check_project() or not path:
+            return
+        if QMessageBox.question(
+                self, self.t('delete'), self.t('confirm_delete_project')) != QMessageBox.StandardButton.Yes:
+            return
+        try:
+            if os.path.isdir(path):
+                import shutil
+                shutil.rmtree(path)
+            else:
+                os.remove(path)
+            _log(f'Deleted resource {path}')
+        except Exception as exc:
+            logger.exception('Failed to delete resource %s', path)
+            QMessageBox.warning(self, self.t('error'), str(exc))
+        self._refresh_resource_tree()
 
     def _import_resources(self, base: str | None = None) -> None:
         """Copy selected files into the resources directory."""
@@ -1973,8 +2022,12 @@ class Editor(QMainWindow):
             self, self.t('import_files'), '', self.t('image_files')
         )
         for f in files:
-            self._copy_to_resources(f, base)
-            _log(f'Imported {f} to {base}')
+            try:
+                self._copy_to_resources(f, base)
+                _log(f'Imported {f} to {base}')
+            except Exception as exc:
+                logger.exception('Failed to import %s', f)
+                QMessageBox.warning(self, self.t('error'), str(exc))
         self._refresh_resource_tree()
 
     def _filter_resources(self, text: str) -> None:
@@ -2006,7 +2059,8 @@ class Editor(QMainWindow):
         def add_children(parent, path):
             try:
                 entries = sorted(os.listdir(path))
-            except Exception:
+            except Exception as exc:
+                logger.exception('Failed to list %s', path)
                 entries = []
             for name in entries:
                 full = os.path.join(path, name)

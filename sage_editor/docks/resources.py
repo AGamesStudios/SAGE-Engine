@@ -37,6 +37,8 @@ class ResourceDock(QDockWidget):
         self.resource_view.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
         self.resource_view.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.resource_view.customContextMenuRequested.connect(editor._resource_menu)
+        if hasattr(self.resource_view, "doubleClicked"):
+            self.resource_view.doubleClicked.connect(editor._resource_double_click)
         editor.resource_view = self.resource_view
         editor.resource_model = self.resource_model
         editor.proxy_model = self.proxy_model
