@@ -8,7 +8,7 @@ try:  # QFileSystemModel is missing in some PyQt6 builds
 except Exception:  # pragma: no cover - optional dependency
     QFileSystemModel = None
 from PyQt6.QtCore import Qt, QSortFilterProxyModel, QEvent, QPoint
-from PyQt6.QtGui import QPixmap, QCursor
+from PyQt6.QtGui import QPixmap, QCursor, QDrag, QMimeData
 from ..widgets import ImagePreview
 
 import os
@@ -22,6 +22,22 @@ class ResourceTreeWidget(QTreeWidget):
         self.editor = editor
         self.setAcceptDrops(True)
         self.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
+
+    def startDrag(self, supportedActions):  # pragma: no cover - UI interaction
+        """Disable external drags by stripping file URLs from the mime data."""
+        indexes = self.selectedIndexes()
+        if not indexes:
+            return
+        mime = self.model().mimeData(indexes)
+        if mime is None:
+            return
+        clean = QMimeData()
+        for fmt in mime.formats():
+            if fmt != 'text/uri-list':
+                clean.setData(fmt, mime.data(fmt))
+        drag = QDrag(self)
+        drag.setMimeData(clean)
+        drag.exec(supportedActions)
 
     def dragEnterEvent(self, event):  # pragma: no cover - UI interaction
         if event.mimeData().hasUrls():
@@ -136,6 +152,22 @@ class ResourceTreeView(QTreeView):
                 event.ignore()
                 return
         super().dropEvent(event)
+
+    def startDrag(self, supportedActions):  # pragma: no cover - UI interaction
+        """Disable external drags by removing file URLs from the mime data."""
+        indexes = self.selectedIndexes()
+        if not indexes:
+            return
+        mime = self.model().mimeData(indexes)
+        if mime is None:
+            return
+        clean = QMimeData()
+        for fmt in mime.formats():
+            if fmt != 'text/uri-list':
+                clean.setData(fmt, mime.data(fmt))
+        drag = QDrag(self)
+        drag.setMimeData(clean)
+        drag.exec(supportedActions)
 
 
 class ResourceDock(QDockWidget):
