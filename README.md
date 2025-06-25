@@ -60,8 +60,8 @@ An **Add Object** button beneath the list places a blank object with a default
  to completely theme the interface. The Import button loads `add.png`, the New
  Folder button uses `folder.png`, the Refresh button uses `refresh.png`, the New
  Project action shows `file.png`, Save Project uses `save.png`, the Recent
- Projects menu displays `recent.png` and objects show `object.png` or
-`camera.png` depending on their type. Object properties
+ Projects menu displays `recent.png`, the Manage Plugins entry uses `plugin.png`
+ and objects show `object.png` or `camera.png` depending on their type. Object properties
  can be edited in a dock but there
  is no visual manipulation until rendering support returns.
 Projects store a window ``width`` and ``height`` separately from the active

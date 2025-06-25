@@ -1120,7 +1120,6 @@ class Editor(QMainWindow):
 
     def _apply_language(self):
         self.file_menu.setTitle(self.t('file'))
-        self.edit_menu.setTitle(self.t('edit'))
         self.new_proj_act.setText(self.t('new_project'))
         self.open_proj_act.setText(self.t('open_project'))
         self.save_proj_act.setText(self.t('save_project'))
@@ -1254,11 +1253,9 @@ class Editor(QMainWindow):
         self.window_settings_act = QAction(self.t('window_settings'), self)
         self.window_settings_act.triggered.connect(self.show_window_settings)
         self.settings_menu.addAction(self.window_settings_act)
-        self.plugins_act = QAction(self.t('manage_plugins'), self)
+        self.plugins_act = QAction(load_icon('plugin.png'), self.t('manage_plugins'), self)
         self.plugins_act.triggered.connect(self.show_plugin_manager)
         self.settings_menu.addAction(self.plugins_act)
-
-        self.edit_menu = menubar.addMenu(self.t('edit'))
 
         toolbar = self.addToolBar('main')
         from PyQt6.QtWidgets import QWidget, QSizePolicy
