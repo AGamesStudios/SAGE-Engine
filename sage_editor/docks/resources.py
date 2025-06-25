@@ -64,11 +64,9 @@ class ResourceTreeWidget(QTreeWidget):
             if item:
                 path = item.data(0, Qt.ItemDataRole.UserRole)
                 base = path if os.path.isdir(path) else os.path.dirname(path)
-            for url in event.mimeData().urls():
-                file_path = url.toLocalFile()
-                if file_path:
-                    self.editor._copy_to_resources(file_path, base)
-            self.editor._refresh_resource_tree()
+            paths = [url.toLocalFile() for url in event.mimeData().urls() if url.toLocalFile()]
+            if paths:
+                self.editor._copy_with_progress(paths, base)
             event.acceptProposedAction()
             return
 
@@ -135,11 +133,9 @@ class ResourceTreeView(QTreeView):
                     src_index = self.editor.proxy_model.mapToSource(index)
                 path = self.editor.resource_model.filePath(src_index)
                 base = path if os.path.isdir(path) else os.path.dirname(path)
-            for url in event.mimeData().urls():
-                file_path = url.toLocalFile()
-                if file_path:
-                    self.editor._copy_to_resources(file_path, base)
-            self.editor._refresh_resource_tree()
+            paths = [url.toLocalFile() for url in event.mimeData().urls() if url.toLocalFile()]
+            if paths:
+                self.editor._copy_with_progress(paths, base)
             event.acceptProposedAction()
             return
 

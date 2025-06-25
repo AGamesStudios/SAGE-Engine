@@ -101,6 +101,8 @@ between folders or drop files from outside the application. Dragging files out o
 the dock is disabled so resources remain inside the project. Files are sorted alphabetically so projects stay
 organized. Any asset chosen from outside the project is copied into this
 directory automatically, so scenes never reference files that might disappear.
+When many files are imported at once a small progress dialog keeps track of the
+copy so large folders do not freeze the interface.
 Imported files are loaded immediately into a small cache so previews appear
 instantly. The engine loads all assets relative to this directory, ensuring
 reorganizing files will not break existing scenes. If PyQt does not provide

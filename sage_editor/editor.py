@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (
     QDialogButtonBox, QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox, QCompleter,
     QTextEdit, QDockWidget, QGroupBox, QCheckBox, QMessageBox, QMenu, QColorDialog,
     QTreeView, QInputDialog, QTreeWidget, QTreeWidgetItem,
-    QHeaderView, QAbstractItemView
+    QHeaderView, QAbstractItemView, QProgressDialog
 )
 try:
     from PyQt6.QtWidgets import QFileSystemModel
@@ -2179,6 +2179,27 @@ class Editor(QMainWindow):
             self._refresh_resource_tree()
             return target, rel
 
+    def _copy_with_progress(self, paths: list[str], base: str) -> None:
+        """Copy multiple resources showing a progress bar."""
+        if not paths:
+            return
+        dlg = QProgressDialog(self.t('importing'), self.t('cancel'), 0, len(paths), self)
+        dlg.setWindowTitle(self.t('import'))
+        dlg.setWindowModality(Qt.WindowModality.ApplicationModal)
+        for i, p in enumerate(paths, start=1):
+            if dlg.wasCanceled():
+                break
+            QApplication.processEvents()
+            try:
+                self._copy_to_resources(p, base)
+                _log(f'Imported {p} to {base}')
+            except Exception as exc:
+                logger.exception('Failed to import %s', p)
+                QMessageBox.warning(self, self.t('error'), str(exc))
+            dlg.setValue(i)
+        dlg.close()
+        self._refresh_resource_tree()
+
     def _move_resource(self, src: str, dst: str) -> bool:
         """Move a resource within the project tree."""
         try:
@@ -2276,14 +2297,7 @@ class Editor(QMainWindow):
         dlg.setOption(QFileDialog.Option.DontUseNativeDialog, True)
         if not dlg.exec():  # pragma: no cover - UI interaction
             return
-        for path in dlg.selectedFiles():
-            try:
-                self._copy_to_resources(path, base)
-                _log(f'Imported {path} to {base}')
-            except Exception as exc:
-                logger.exception('Failed to import %s', path)
-                QMessageBox.warning(self, self.t('error'), str(exc))
-        self._refresh_resource_tree()
+        self._copy_with_progress(dlg.selectedFiles(), base)
 
     def _filter_resources(self, text: str) -> None:
         if self.proxy_model is not None:
