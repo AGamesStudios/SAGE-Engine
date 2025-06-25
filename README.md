@@ -78,9 +78,10 @@ their center without skewing. Each object also defines a **pivot** so the
 coordinate system matches the runtime. The transform dock also includes a
 **Coordinate Mode** drop-down for switching between *Global* and *Local*
 coordinates. Internally every object stores its rotation as a quaternion so
-angles remain stable even after many incremental edits. Each object also keeps
-its own settings dictionary so properties remain independent across different
-items. The
+angles remain stable even after many incremental edits. A small **Object**
+section above the transform fields lets you rename items and change their type
+between *Sprite* and *Camera*. Each object also keeps its own settings
+dictionary so properties remain independent across different items. The
 project file stores the entire scene
 including object positions, events and variables.
 A **Resources** dock on the left lists everything under your project's

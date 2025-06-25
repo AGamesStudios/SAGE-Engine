@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import (
     QDockWidget, QWidget, QVBoxLayout, QGroupBox, QFormLayout,
-    QDoubleSpinBox, QCheckBox, QComboBox, QSpinBox
+    QDoubleSpinBox, QCheckBox, QComboBox, QSpinBox, QLineEdit
 )
 from PyQt6.QtCore import Qt
 
@@ -14,6 +14,18 @@ class PropertiesDock(QDockWidget):
         prop_widget = QWidget()
         prop_layout = QVBoxLayout(prop_widget)
         prop_layout.setContentsMargins(6, 6, 6, 6)
+
+        self.object_group = QGroupBox(editor.t('object'))
+        obj_form = QFormLayout(self.object_group)
+        obj_form.setHorizontalSpacing(6)
+        obj_form.setVerticalSpacing(4)
+        self.name_edit = QLineEdit()
+        self.type_combo = QComboBox()
+        self.type_combo.addItem(editor.t('sprite'), 'sprite')
+        self.type_combo.addItem(editor.t('camera'), 'camera')
+        obj_form.addRow(editor.t('name_label'), self.name_edit)
+        obj_form.addRow(editor.t('type_label'), self.type_combo)
+        prop_layout.addWidget(self.object_group)
         self.transform_group = QGroupBox(editor.t('transform'))
         form = QFormLayout(self.transform_group)
         form.setHorizontalSpacing(6)

@@ -1029,6 +1029,9 @@ class Editor(QMainWindow):
         self.properties_dock = prop_dock
         self.transform_group = prop_dock.transform_group
         self.camera_group = prop_dock.camera_group
+        self.object_group = prop_dock.object_group
+        self.name_edit = prop_dock.name_edit
+        self.type_combo = prop_dock.type_combo
         self.x_spin = prop_dock.x_spin
         self.y_spin = prop_dock.y_spin
         self.z_spin = prop_dock.z_spin
@@ -1056,6 +1059,10 @@ class Editor(QMainWindow):
         self.object_label = self.logic_widget.object_label
         self.add_var_btn = self.logic_widget.add_var_btn
         self.tabs.addTab(self.logic_widget, self.t('logic'))
+        self.object_combo.currentIndexChanged.connect(self._update_transform_panel)
+        self.name_edit.editingFinished.connect(self._object_name_changed)
+        self.type_combo.currentIndexChanged.connect(self._object_type_changed)
+        self._update_transform_panel()
 
         # console dock
         cons = ConsoleDock(self)
@@ -1115,6 +1122,10 @@ class Editor(QMainWindow):
         self.transform_group.setTitle(self.t('transform'))
         self.camera_group.setTitle(self.t('camera'))
         self.properties_dock.setWindowTitle(self.t('properties'))
+        self.object_group.setTitle(self.t('object'))
+        self.name_edit.setPlaceholderText(self.t('name'))
+        self.type_combo.setItemText(0, self.t('sprite'))
+        self.type_combo.setItemText(1, self.t('camera'))
         self.x_spin.setPrefix(''); self.y_spin.setPrefix(''); self.z_spin.setPrefix('')
         self.scale_x_spin.setPrefix(''); self.scale_y_spin.setPrefix(''); self.angle_spin.setPrefix('')
         self.run_btn.setText(self.t('run'))
@@ -1732,6 +1743,7 @@ class Editor(QMainWindow):
         _, obj = self.items[row]
         if isinstance(obj, Camera):
             self._set_active_camera(row)
+        self._update_transform_panel()
         self._update_gizmo()
 
     def _create_grid(self):
@@ -1791,6 +1803,16 @@ class Editor(QMainWindow):
                 self.camera_group.setVisible(False)
             return
         item, obj = self.items[idx]
+        self.name_edit.blockSignals(True)
+        self.name_edit.setText(obj.name)
+        self.name_edit.blockSignals(False)
+        from engine import Camera
+        typ = 'camera' if isinstance(obj, Camera) else 'sprite'
+        i = self.type_combo.findData(typ)
+        if i >= 0:
+            self.type_combo.blockSignals(True)
+            self.type_combo.setCurrentIndex(i)
+            self.type_combo.blockSignals(False)
         self.transform_group.setEnabled(True)
         self.x_spin.blockSignals(True); self.x_spin.setValue(obj.x); self.x_spin.blockSignals(False)
         self.y_spin.blockSignals(True); self.y_spin.setValue(obj.y); self.y_spin.blockSignals(False)
@@ -1839,6 +1861,51 @@ class Editor(QMainWindow):
                 item.apply_object_transform()
         self._mark_dirty()
         self._update_gizmo()
+
+    def _object_name_changed(self):
+        idx = self.object_combo.currentIndex()
+        if idx < 0 or idx >= len(self.items):
+            return
+        new_name = self.name_edit.text().strip()
+        if not new_name:
+            return
+        _, obj = self.items[idx]
+        obj.name = new_name
+        self.object_combo.setItemText(idx, new_name)
+        item = self.object_list.item(idx)
+        if item is not None:
+            item.setText(new_name)
+        self._refresh_object_labels()
+        self._mark_dirty()
+
+    def _object_type_changed(self):
+        idx = self.object_combo.currentIndex()
+        if idx < 0 or idx >= len(self.items):
+            return
+        target = self.type_combo.currentData()
+        from engine import Camera, GameObject
+        item, obj = self.items[idx]
+        if target == 'camera' and not isinstance(obj, Camera):
+            new_obj = Camera(obj.x, obj.y, obj.z, self.window_width, self.window_height)
+            new_obj.name = obj.name
+            self.scene.objects[self.scene.objects.index(obj)] = new_obj
+            if self.scene.camera is None:
+                self.scene.camera = new_obj
+                self.scene.active_camera = new_obj.name
+            self.items[idx] = (item, new_obj)
+        elif target == 'sprite' and isinstance(obj, Camera):
+            new_obj = GameObject('', obj.x, obj.y, obj.z, None, 1.0, 1.0, 0.0, 0.5, 0.5)
+            new_obj.name = obj.name
+            self.scene.objects[self.scene.objects.index(obj)] = new_obj
+            if obj is self.scene.camera:
+                self.scene.camera = None
+                self.scene.active_camera = None
+            self.items[idx] = (item, new_obj)
+        else:
+            return
+        self._refresh_object_labels()
+        self._update_transform_panel()
+        self._mark_dirty()
 
     def _object_menu(self, pos):
         item = self.object_list.itemAt(pos)
