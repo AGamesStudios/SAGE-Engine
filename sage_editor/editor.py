@@ -6,13 +6,14 @@ from PyQt6.QtWidgets import (
     QDialogButtonBox, QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox, QCompleter,
     QTextEdit, QDockWidget, QGroupBox, QCheckBox, QMessageBox, QMenu, QColorDialog,
     QTreeView, QInputDialog, QTreeWidget, QTreeWidgetItem,
-    QStyle, QHeaderView, QAbstractItemView
+    QHeaderView, QAbstractItemView
 )
 try:
     from PyQt6.QtWidgets import QFileSystemModel
 except Exception:  # pragma: no cover - handle older PyQt versions
     QFileSystemModel = None
 from PyQt6.QtGui import QPixmap, QColor, QAction, QDesktopServices
+from .icons import load_icon
 from PyQt6.QtCore import (
     QRectF, Qt, QProcess, QPointF, QSortFilterProxyModel, QSize, QUrl
 )
@@ -279,9 +280,8 @@ class ConditionDialog(QDialog):
         var_row.addWidget(self.var_value_edit)
         layout.addRow(self.var_name_label, var_row)
 
-        icon = self.style().standardIcon(QStyle.StandardPixmap.SP_MessageBoxWarning)
         self.var_warn_icon = QLabel()
-        self.var_warn_icon.setPixmap(icon.pixmap(16, 16))
+        self.var_warn_icon.setPixmap(load_icon('warning.png').pixmap(16, 16))
         self.var_warn_text = QLabel(parent.t('numeric_required') if parent else 'Operations require a numeric variable')
         warn_row = QHBoxLayout()
         warn_row.addWidget(self.var_warn_icon)
@@ -580,9 +580,8 @@ class ActionDialog(QDialog):
         var_row.addWidget(self.var_value_edit)
         layout.addRow(self.var_name_label, var_row)
         layout.addRow('', self.bool_check)
-        icon = self.style().standardIcon(QStyle.StandardPixmap.SP_MessageBoxWarning)
         self.mod_warn_icon = QLabel()
-        self.mod_warn_icon.setPixmap(icon.pixmap(16, 16))
+        self.mod_warn_icon.setPixmap(load_icon('warning.png').pixmap(16, 16))
         self.mod_warn_text = QLabel(parent.t('numeric_required') if parent else 'Variable must be numeric')
         warn_row = QHBoxLayout()
         warn_row.addWidget(self.mod_warn_icon)
@@ -988,13 +987,12 @@ class Editor(QMainWindow):
         self.object_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.object_list.customContextMenuRequested.connect(self._object_menu)
         obj_layout.addWidget(self.object_list)
-        style = self.style()
         self.add_obj_btn = QPushButton(self.t('add_object'))
-        self.add_obj_btn.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_FileIcon))
+        self.add_obj_btn.setIcon(load_icon('object.png'))
         self.add_obj_btn.clicked.connect(self.add_object)
         obj_layout.addWidget(self.add_obj_btn)
         self.add_cam_btn = QPushButton(self.t('add_camera'))
-        self.add_cam_btn.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_DesktopIcon))
+        self.add_cam_btn.setIcon(load_icon('camera.png'))
         self.add_cam_btn.clicked.connect(self.add_camera)
         obj_layout.addWidget(self.add_cam_btn)
 
@@ -1223,7 +1221,6 @@ class Editor(QMainWindow):
 
     def _init_actions(self):
         menubar = self.menuBar()
-        style = self.style()
         self.file_menu = menubar.addMenu(self.t('file'))
         self.new_proj_act = QAction(self.t('new_project'), self)
         self.new_proj_act.setShortcut('Ctrl+N')
@@ -1250,8 +1247,7 @@ class Editor(QMainWindow):
         self.edit_menu = menubar.addMenu(self.t('edit'))
 
         toolbar = self.addToolBar('main')
-        run_icon = style.standardIcon(QStyle.StandardPixmap.SP_MediaPlay)
-        self.run_btn = QAction(run_icon, self.t('run'), self)
+        self.run_btn = QAction(load_icon('play.png'), self.t('run'), self)
         self.run_btn.setShortcut('F5')
         self.run_btn.triggered.connect(self.run_game)
         toolbar.addAction(self.run_btn)
@@ -1259,8 +1255,7 @@ class Editor(QMainWindow):
         spacer = QWidget()
         spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         toolbar.addWidget(spacer)
-        clear_icon = style.standardIcon(QStyle.StandardPixmap.SP_DialogResetButton)
-        self.clear_log_act = QAction(clear_icon, self.t('clear_log'), self)
+        self.clear_log_act = QAction(load_icon('clear.png'), self.t('clear_log'), self)
         self.clear_log_act.triggered.connect(self.console.clear)
         toolbar.addAction(self.clear_log_act)
         self.lang_box = QComboBox()
@@ -1781,10 +1776,8 @@ class Editor(QMainWindow):
         """Return an icon representing *obj* type."""
         from engine import Camera
         if isinstance(obj, Camera):
-            pix = QStyle.StandardPixmap.SP_DesktopIcon
-        else:
-            pix = QStyle.StandardPixmap.SP_FileIcon
-        return self.style().standardIcon(pix)
+            return load_icon('camera.png')
+        return load_icon('sprite.png')
 
     def _refresh_object_labels(self):
         """Show which camera is active in the object list."""

@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import (
     QDockWidget, QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
     QLineEdit, QLabel, QAbstractItemView, QTreeView, QTreeWidget, QFileDialog,
-    QSizePolicy, QStyle,
+    QSizePolicy,
 )
 try:  # QFileSystemModel is missing in some PyQt6 builds
     from PyQt6.QtWidgets import QFileSystemModel
@@ -10,6 +10,7 @@ except Exception:  # pragma: no cover - optional dependency
 from PyQt6.QtCore import Qt, QSortFilterProxyModel, QEvent, QPoint, QMimeData
 from PyQt6.QtGui import QPixmap, QCursor, QDrag
 from ..widgets import ImagePreview
+from ..icons import load_icon
 
 import os
 
@@ -203,14 +204,12 @@ class ResourceDock(QDockWidget):
         editor.resource_model = self.resource_model
         editor.proxy_model = self.proxy_model
 
-        style = self.style()
-
         self.import_btn = QPushButton(editor.t('import'))
-        self.import_btn.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_DialogOpenButton))
+        self.import_btn.setIcon(load_icon('import.png'))
         self.import_btn.clicked.connect(self._import_clicked)
 
         self.new_folder_btn = QPushButton(editor.t('new_folder'))
-        self.new_folder_btn.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_FileDialogNewFolder))
+        self.new_folder_btn.setIcon(load_icon('new_folder.png'))
         self.new_folder_btn.clicked.connect(self._new_folder_clicked)
 
         self.search_edit = QLineEdit()
