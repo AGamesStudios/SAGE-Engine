@@ -9,14 +9,16 @@ from PyQt6.QtWidgets import QWidget
 
 
 class GraphWidget(QWidget):
-    """Simple line graph widget with a fixed 0-100 y-range."""
+    """Simple line graph widget with a configurable y-range."""
 
     HISTORY = 60
 
-    def __init__(self, title: str, color: QColor, parent: QWidget | None = None) -> None:
+    def __init__(self, title: str, color: QColor, max_value: float = 100.0,
+                 parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.title = title
         self.color = color
+        self.max_value = max_value
         self.data: Deque[float] = deque(maxlen=self.HISTORY)
 
     def append(self, value: float) -> None:
@@ -27,7 +29,8 @@ class GraphWidget(QWidget):
         painter = QPainter(self)
         painter.fillRect(event.rect(), self.palette().base())
         painter.setPen(Qt.GlobalColor.white)
-        painter.drawText(4, 14, self.title)
+        last = self.data[-1] if self.data else 0.0
+        painter.drawText(4, 14, f"{self.title} {last:.1f}")
         if len(self.data) < 2:
             return
         painter.setPen(self.color)
@@ -37,9 +40,9 @@ class GraphWidget(QWidget):
             return
         max_idx = len(self.data) - 1
         prev_x = 4
-        prev_y = 20 + h - (self.data[0] / 100) * h
+        prev_y = 20 + h - (self.data[0] / self.max_value) * h
         for i, val in enumerate(self.data):
             x = 4 + (i / max_idx) * w
-            y = 20 + h - (val / 100) * h
+            y = 20 + h - (val / self.max_value) * h
             painter.drawLine(int(prev_x), int(prev_y), int(x), int(y))
             prev_x, prev_y = x, y

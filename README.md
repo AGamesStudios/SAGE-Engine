@@ -151,9 +151,11 @@ If something goes wrong during gameplay, the console shows the full
 Python traceback so you can identify exactly where the problem occurred.
 Use the **Clear Log** toolbar button to empty the console at any time.
 
-The editor also provides a **Profiler** dock with simple graphs showing CPU,
-memory and GPU usage. The lines are drawn in red, green and blue and update
-each second so you can monitor performance while editing projects.
+The editor also provides a **Profiler** dock with graphs for overall CPU,
+RAM, GPU and the editor process itself. Frame time in milliseconds is also
+tracked so you can see how long each update takes. The graphs are updated
+every second with colored lines so you can monitor performance while
+editing projects.
 
 ### Localization
 
