@@ -1869,6 +1869,8 @@ class Editor(QMainWindow):
                 if self.proxy_model is not None:
                     index = self.proxy_model.mapToSource(index)
                 base = self.resource_model.filePath(index)
+        if base and not os.path.isdir(base):
+            base = os.path.dirname(base)
         menu = QMenu(self)
         new_folder_act = menu.addAction(self.t('new_folder'))
         import_act = menu.addAction(self.t('import'))
@@ -1916,6 +1918,8 @@ class Editor(QMainWindow):
             rel = os.path.relpath(abs_path, res_root)
             return abs_path, rel
         dest_dir = base if base else self.resource_dir
+        if dest_dir and not os.path.isdir(dest_dir):
+            dest_dir = os.path.dirname(dest_dir)
         if os.path.isdir(abs_path):
             if self.resource_manager:
                 rel_base = os.path.relpath(dest_dir, self.resource_dir)
