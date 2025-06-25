@@ -1873,6 +1873,7 @@ class Editor(QMainWindow):
             self.object_combo.setCurrentIndex(0)
         self._mark_dirty()
         self._update_camera_rect()
+        self._refresh_object_labels()
 
     def edit_object(self, item: SpriteItem):
         idx = item.index if item and item.obj else -1
@@ -1929,6 +1930,7 @@ class Editor(QMainWindow):
             pm.fill(col)
         item.setPixmap(pm)
         self.object_combo.setItemText(idx, obj.name)
+        self._refresh_object_labels()
         self._update_gizmo()
         self._mark_dirty()
 
@@ -2088,8 +2090,7 @@ class Editor(QMainWindow):
             self.object_list.setCurrentRow(item.index)
             _, obj = self.items[item.index]
             if isinstance(obj, Camera):
-                self.scene.camera = obj
-                self._update_camera_rect()
+                self._set_active_camera(item.index)
 
     def _on_object_list_select(self):
         """Select the corresponding sprite when the user picks an item."""
@@ -2105,8 +2106,7 @@ class Editor(QMainWindow):
         if item is not None:
             item.setSelected(True)
         if isinstance(obj, Camera):
-            self.scene.camera = obj
-            self._update_camera_rect()
+            self._set_active_camera(row)
         self.g_scene.blockSignals(False)
         self._update_gizmo()
 
@@ -2176,6 +2176,29 @@ class Editor(QMainWindow):
         else:
             pen = QPen(QColor('cyan'))
             self.camera_rect = self.g_scene.addRect(cam_rect, pen)
+
+    def _refresh_object_labels(self):
+        """Show which camera is active in the object list."""
+        for i, (_, obj) in enumerate(self.items):
+            text = obj.name
+            from engine import Camera
+            if isinstance(obj, Camera) and obj is self.scene.camera:
+                text += ' ' + self.t('active_camera')
+            item = self.object_list.item(i)
+            if item is not None:
+                item.setText(text)
+
+    def _set_active_camera(self, index: int):
+        """Make the selected camera the scene's active camera."""
+        if index < 0 or index >= len(self.items):
+            return
+        _, obj = self.items[index]
+        from engine import Camera
+        if not isinstance(obj, Camera):
+            return
+        self.scene.set_active_camera(obj)
+        self._update_camera_rect()
+        self._refresh_object_labels()
 
     def toggle_grid(self, checked: bool):
         for line in self.grid_lines:
@@ -2286,10 +2309,16 @@ class Editor(QMainWindow):
         item = self.object_list.itemAt(pos)
         menu = QMenu(self)
         paste_act = menu.addAction(self.t('paste')) if self._clip_object else None
+        active_act = None
         if item:
             cut_act = menu.addAction(self.t('cut'))
             copy_act = menu.addAction(self.t('copy'))
             del_act = menu.addAction(self.t('delete'))
+            row = self.object_list.row(item)
+            _, obj = self.items[row]
+            from engine import Camera
+            if isinstance(obj, Camera) and obj is not self.scene.camera:
+                active_act = menu.addAction(self.t('set_active_camera'))
         action = menu.exec(self.object_list.mapToGlobal(pos))
         if action == paste_act and self._clip_object:
             self._paste_object()
@@ -2301,6 +2330,8 @@ class Editor(QMainWindow):
                 self._delete_object(row)
             elif action == del_act:
                 self._delete_object(row)
+            elif action == active_act:
+                self._set_active_camera(row)
 
     def _resource_menu(self, pos):
         if not self.resource_dir:
@@ -2506,6 +2537,7 @@ class Editor(QMainWindow):
                 self.object_list.addItem(obj.name)
                 self._mark_dirty()
                 self._update_camera_rect()
+                self._refresh_object_labels()
             else:
                 img_path = data.get('image', '')
                 if img_path:
@@ -2544,6 +2576,7 @@ class Editor(QMainWindow):
                 self.object_combo.addItem(obj.name, item.index)
                 self.object_list.addItem(obj.name)
                 self._mark_dirty()
+                self._refresh_object_labels()
         except Exception as exc:
             self.console.append(f'Failed to paste object: {exc}')
         self._update_gizmo()
@@ -2569,6 +2602,7 @@ class Editor(QMainWindow):
         self._update_gizmo()
         self.refresh_events()
         self._mark_dirty()
+        self._refresh_object_labels()
 
     def add_condition(self, row):
         if not self._check_project():
@@ -2683,7 +2717,6 @@ class Editor(QMainWindow):
                     index = len(self.items) - 1
                     self.object_combo.addItem(obj.name, index)
                     self.object_list.addItem(obj.name)
-                    self.scene.camera = obj
                     continue
                 if obj.image_path:
                     pix = QPixmap(obj.image_path)
@@ -2706,6 +2739,7 @@ class Editor(QMainWindow):
         self.refresh_events()
         self.refresh_variables()
         self._update_gizmo()
+        self._refresh_object_labels()
         self.dirty = False
         self._update_title()
 

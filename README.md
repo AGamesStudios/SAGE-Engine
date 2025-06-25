@@ -80,8 +80,10 @@ needed. A cyan rectangle indicates the active camera frustum. Camera ``x`` and
 ``y`` describe its centre, so the rectangle surrounds that point. If no camera
 exists the window size is used instead. The active camera automatically
 updates its width and height to match the window whenever it is resized,
-preserving the aspect ratio. Scenes can contain multiple cameras; choose which
-one is used with ``scene.set_active_camera(name)`` before running the engine.
+preserving the aspect ratio. Scenes can contain multiple cameras. Select a
+camera in the object list (or use its context menu) and choose **Set Active
+Camera** to decide which one is used. When launching the engine from code use
+``scene.set_active_camera(name)``.
 Camera objects now include a **Z**
 position so they can be layered with sprites. Projects are saved in a single
 `.sageproject` file
