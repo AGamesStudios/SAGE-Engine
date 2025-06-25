@@ -4,6 +4,7 @@ from PyQt6.QtCore import QTimer
 from engine.renderers.opengl_renderer import OpenGLRenderer
 from engine.core.scene import Scene
 from engine.core.camera import Camera
+from engine.core.game_object import GameObject
 
 
 class Viewport(QOpenGLWidget):
@@ -12,8 +13,12 @@ class Viewport(QOpenGLWidget):
     def __init__(self, scene: Scene, parent=None):
         super().__init__(parent)
         self.scene = scene
+        if not scene.objects:
+            square = GameObject(color=(0, 255, 0, 255))
+            scene.add_object(square)
         self.camera = scene.camera or Camera(
-            x=self.width() / 2, y=self.height() / 2,
+            x=0,
+            y=0,
             width=self.width(), height=self.height(),
         )
         self.renderer = OpenGLRenderer(self.width(), self.height(), widget=self)
@@ -30,8 +35,12 @@ class Viewport(QOpenGLWidget):
 
     def set_scene(self, scene: Scene) -> None:
         self.scene = scene
+        if not scene.objects:
+            square = GameObject(color=(0, 255, 0, 255))
+            scene.add_object(square)
         self.camera = scene.camera or Camera(
-            x=self.width() / 2, y=self.height() / 2,
+            x=0,
+            y=0,
             width=self.width(), height=self.height(),
         )
 

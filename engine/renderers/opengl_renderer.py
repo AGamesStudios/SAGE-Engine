@@ -122,7 +122,9 @@ class OpenGLRenderer:
         glPushMatrix()
         scale = units.UNITS_PER_METER
         if camera:
-            glTranslatef(-camera.x * scale, -camera.y * scale, 0)
+            glTranslatef(self.width / 2 - camera.x * scale,
+                         self.height / 2 - camera.y * scale,
+                         0)
         scene._sort_objects()
         for obj in scene.objects:
             if isinstance(obj, Camera):

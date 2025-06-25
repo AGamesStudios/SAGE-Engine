@@ -33,7 +33,8 @@ Embedding the editor in other tools only requires importing these modules.
 Rendering now uses a lightweight **OpenGLRenderer**. The same renderer draws the
 scene in the editor viewport and when running a project so what you see while
 editing matches the game window. A small cross at the scene origin helps
-orient objects.
+orient objects. When a scene has no objects a small green square is rendered at
+the origin so the viewport no longer appears empty.
 
 ### Units and Coordinates
 
