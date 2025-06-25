@@ -33,7 +33,8 @@ class ResourceTreeWidget(QTreeWidget):
         if event.mimeData().hasUrls():
             event.acceptProposedAction()
             return
-        item = self.itemAt(event.pos())
+        pos = event.position().toPoint() if hasattr(event, "position") else event.pos()
+        item = self.itemAt(pos)
         if item and not os.path.isdir(item.data(0, Qt.ItemDataRole.UserRole)):
             event.ignore()
             return
@@ -95,7 +96,8 @@ class ResourceTreeView(QTreeView):
         if event.mimeData().hasUrls():
             event.acceptProposedAction()
             return
-        index = self.indexAt(event.pos())
+        pos = event.position().toPoint() if hasattr(event, "position") else event.pos()
+        index = self.indexAt(pos)
         if index.isValid() and self.editor.resource_model is not None:
             src_index = index
             if self.editor.proxy_model is not None:
