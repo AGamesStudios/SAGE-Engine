@@ -1,30 +1,25 @@
-"""OpenGL renderer using :class:`QOpenGLWidget`."""
-
-"""OpenGL renderer using :class:`QOpenGLWidget`."""
-
 from __future__ import annotations
 
+from dataclasses import dataclass
+from typing import Optional
 import math
-        # store a reference to the renderer once assigned
-        self.renderer = None
 
-    def __init__(self, width: int = 640, height: int = 480,
-                 title: str = "SAGE 2D", widget: Optional[GLWidget] = None,
-                 keep_aspect: bool = True,
-                 background: tuple[int, int, int] = (0, 0, 0)):
-        self.width = width
-        self.height = height
-        self.title = title
-        self.widget = widget if widget is not None else self.create_widget()
-        self.keep_aspect = bool(keep_aspect)
-        self.background = tuple(background)
+from PyQt6.QtOpenGLWidgets import QOpenGLWidget
+from OpenGL.GL import (
+    glEnable, glBlendFunc, glClearColor, glClear, glPushMatrix, glPopMatrix,
+    glTranslatef, glRotatef, glScalef, glBegin, glEnd, glVertex2f, glColor4f,
+    glTexCoord2f, glBindTexture, glTexParameteri, glTexImage2D, glGenTextures,
+    glLineWidth,
+    GL_BLEND, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_COLOR_BUFFER_BIT,
+    GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_TEXTURE_MAG_FILTER, GL_LINEAR,
+    GL_QUADS, GL_LINES, GL_LINE_LOOP, GL_TRIANGLES, GL_RGBA, GL_UNSIGNED_BYTE
+)
+from PIL import Image
 
-
-
-    def create_widget(self) -> GLWidget:
-        """Return the :class:`GLWidget` used for rendering."""
-        return GLWidget()
-
+from engine.core.camera import Camera
+from engine.core.game_object import GameObject
+from engine import units
+from pathlib import Path
 
 
 class GLWidget(QOpenGLWidget):
@@ -43,18 +38,16 @@ class GLWidget(QOpenGLWidget):
         if self.renderer:
             self.renderer.paint()
 
-        self.textures = {}
-        self._blank_texture = None
-        self._icon_cache = {}
-        self._hover_axis = None
-        self._drag_axis = None
-        self._cursor_pos = None
-        self._gizmo_mode = 'move'
+    def resizeGL(self, width: int, height: int):
+        if self.renderer:
+            self.renderer.set_window_size(width, height)
+
+
+@dataclass
+class OpenGLRenderer:
     """Renderer using PyOpenGL and QOpenGLWidget."""
 
     width: int = 640
-        self._gizmo_mode: str = 'move'
-        self._gizmo_mode: str = 'move'
     height: int = 480
     title: str = "SAGE 2D"
     widget: Optional[GLWidget] = None
@@ -81,6 +74,8 @@ class GLWidget(QOpenGLWidget):
         self._hover_axis: str | None = None
         self._drag_axis: str | None = None
         self._cursor_pos: tuple[float, float] | None = None
+        self._transform_mode: str = 'pan'
+        self._local_coords: bool = False
         self.keep_aspect = bool(self.keep_aspect)
         self.background = tuple(self.background)
 
@@ -210,34 +205,83 @@ class GLWidget(QOpenGLWidget):
         glColor4f(1.0, 0.0, 0.0, 1.0)
         glVertex2f(-size, 0.0)
         glVertex2f(size, 0.0)
-                    mode: str = 'move',
+        glColor4f(0.0, 1.0, 0.0, 1.0)
+        glVertex2f(0.0, -size)
+        glVertex2f(0.0, size)
+        glEnd()
+
+    def _draw_cursor(self, x: float, y: float, camera: Camera | None):
+        """Draw a small cross at the cursor position in world units."""
+        if camera is None:
+            zoom = 1.0
+        else:
+            zoom = camera.zoom
+        size = 5.0 / zoom
+        scale = units.UNITS_PER_METER
+        sign = 1.0 if units.Y_UP else -1.0
+        glBindTexture(GL_TEXTURE_2D, 0)
+        glPushMatrix()
+        glTranslatef(x * scale, y * scale * sign, 0)
+        glColor4f(1.0, 1.0, 1.0, 1.0)
+        glBegin(GL_LINES)
+        glVertex2f(-size, 0.0)
+        glVertex2f(size, 0.0)
+        glVertex2f(0.0, -size)
+        glVertex2f(0.0, size)
+        glEnd()
+        glPopMatrix()
+
+    def _draw_gizmo(
+        self,
+        obj: "GameObject",
+        camera: Camera | None,
+        hover: str | None = None,
+        dragging: str | None = None,
+        mode: str = 'move',
+        local: bool = False,
+    ):
+        if obj is None or mode == 'pan':
+            return
+        scale = units.UNITS_PER_METER
+        sign = 1.0 if units.Y_UP else -1.0
+        zoom = camera.zoom if camera else 1.0
+        inv = 1.0 / zoom if zoom else 1.0
+        size = 50 * inv
+        head = 10 * inv
+        rad = 4 * inv
+        sq = 6 * inv
+        ring_r = size * 1.2
+        ring_w = 4 * inv
+        glBindTexture(GL_TEXTURE_2D, 0)
+        glPushMatrix()
+        glTranslatef(obj.x * scale, obj.y * scale * sign, 0)
+        if local or mode == 'scale':
+            glRotatef(obj.angle, 0, 0, 1)
+        base_w = 6 * inv
+        glLineWidth(base_w)
         if mode == 'move':
-            color_x = 1.0 if not (hover in ("x", "xy") or dragging in ("x", "xy")) else 0.5
+            # translation arrows - highlight hovered or dragged axes
+            hx = hover in ("x", "xy") or dragging in ("x", "xy")
+            color_x = 1.0 if hx else 0.7
             glColor4f(color_x, 0.0, 0.0, 1.0)
+            glLineWidth(base_w * (1.5 if hx else 1.0))
             glBegin(GL_LINES)
             glVertex2f(0.0, 0.0)
-            glVertex2f(size, 0.0)
+            glVertex2f(size - head, 0.0)
             glEnd()
             glBegin(GL_TRIANGLES)
             glVertex2f(size, 0.0)
             glVertex2f(size - head, head / 2)
             glVertex2f(size - head, -head / 2)
             glEnd()
-        elif mode == 'scale':
-            color_sx = 1.0 if not (hover == 'sx' or dragging == 'sx') else 0.5
-            glColor4f(color_sx, 0.0, 0.0, 1.0)
-            glBegin(GL_QUADS)
-            glVertex2f(size - sq, -sq)
-            glVertex2f(size + sq, -sq)
-            glVertex2f(size + sq, sq)
-            glVertex2f(size - sq, sq)
-            glEnd()
-        if mode == 'move':
-            color_y = 1.0 if not (hover in ("y", "xy") or dragging in ("y", "xy")) else 0.5
+
+            hy = hover in ("y", "xy") or dragging in ("y", "xy")
+            color_y = 1.0 if hy else 0.7
             glColor4f(0.0, color_y, 0.0, 1.0)
+            glLineWidth(base_w * (1.5 if hy else 1.0))
             glBegin(GL_LINES)
             glVertex2f(0.0, 0.0)
-            glVertex2f(0.0, size * sign)
+            glVertex2f(0.0, sign * (size - head))
             glEnd()
             glBegin(GL_TRIANGLES)
             if units.Y_UP:
@@ -249,135 +293,70 @@ class GLWidget(QOpenGLWidget):
                 glVertex2f(-head / 2, -size + head)
                 glVertex2f(head / 2, -size + head)
             glEnd()
+
         elif mode == 'scale':
-            color_sy = 1.0 if not (hover == 'sy' or dragging == 'sy') else 0.5
+            # scale arrows using squares with tips extended beyond the line
+            sx_hover = hover == 'sx' or dragging == 'sx'
+            color_sx = 1.0 if sx_hover else 0.7
+            glColor4f(color_sx, 0.0, 0.0, 1.0)
+            glLineWidth(base_w * (1.5 if sx_hover else 1.0))
+            glBegin(GL_LINES)
+            glVertex2f(0.0, 0.0)
+            glVertex2f(size, 0.0)
+            glEnd()
+            sq_size = sq * (1.5 if sx_hover else 1.0)
+            glBegin(GL_QUADS)
+            glVertex2f(size, -sq_size)
+            glVertex2f(size + 2 * sq_size, -sq_size)
+            glVertex2f(size + 2 * sq_size, sq_size)
+            glVertex2f(size, sq_size)
+            glEnd()
+
+            sy_hover = hover == 'sy' or dragging == 'sy'
+            color_sy = 1.0 if sy_hover else 0.7
             glColor4f(0.0, color_sy, 0.0, 1.0)
+            glLineWidth(base_w * (1.5 if sy_hover else 1.0))
+            glBegin(GL_LINES)
+            glVertex2f(0.0, 0.0)
+            glVertex2f(0.0, size * sign)
+            glEnd()
+            sq_size = sq * (1.5 if sy_hover else 1.0)
             glBegin(GL_QUADS)
             if units.Y_UP:
-                glVertex2f(-sq, size - sq)
-                glVertex2f(sq, size - sq)
-                glVertex2f(sq, size + sq)
-                glVertex2f(-sq, size + sq)
+                glVertex2f(-sq_size, size)
+                glVertex2f(sq_size, size)
+                glVertex2f(sq_size, size + 2 * sq_size)
+                glVertex2f(-sq_size, size + 2 * sq_size)
             else:
-                glVertex2f(-sq, -size - sq)
-                glVertex2f(sq, -size - sq)
-                glVertex2f(sq, -size + sq)
-                glVertex2f(-sq, -size + sq)
+                glVertex2f(-sq_size, -size - 2 * sq_size)
+                glVertex2f(sq_size, -size - 2 * sq_size)
+                glVertex2f(sq_size, -size)
+                glVertex2f(-sq_size, -size)
             glEnd()
-        if mode == 'rotate':
-            color_rot = 1.0 if not (hover == 'rot' or dragging == 'rot') else 0.5
-            glColor4f(color_rot, color_rot, 0.0, 1.0)
-            glLineWidth(ring_w)
-            glBegin(GL_LINE_LOOP)
-            for i in range(32):
-                ang = (i / 32.0) * math.tau
-                glVertex2f(math.cos(ang) * ring_r, math.sin(ang) * ring_r * sign)
-            glEnd()
-            glLineWidth(4)
-            glBegin(GL_LINE_LOOP)
-            for i in range(32):
-                ang = (i / 32.0) * math.tau
-                glVertex2f(math.cos(ang) * ring_r, math.sin(ang) * ring_r * sign)
-            glEnd()
-            glLineWidth(4)
-        if obj is None:
-            return
-        scale = units.UNITS_PER_METER
-        sign = 1.0 if units.Y_UP else -1.0
-        zoom = camera.zoom if camera else 1.0
-        inv = 1.0 / zoom if zoom else 1.0
-        size = 50 * inv
-        head = 10 * inv
-        rad = 4 * inv
-        sq = 6 * inv
-        ring_r = size * 1.2
-        ring_w = 3 * inv
-        glBindTexture(GL_TEXTURE_2D, 0)
-        glPushMatrix()
-        glTranslatef(obj.x * scale, obj.y * scale * sign, 0)
-        glLineWidth(4)
-        # X axis translation
-        color_x = 1.0 if not (hover in ("x", "xy") or dragging in ("x", "xy")) else 0.5
-        glColor4f(color_x, 0.0, 0.0, 1.0)
-        glBegin(GL_LINES)
-        glVertex2f(0.0, 0.0)
-        glVertex2f(size, 0.0)
-        glEnd()
-        glBegin(GL_TRIANGLES)
-        glVertex2f(size, 0.0)
-        glVertex2f(size - head, head / 2)
-        glVertex2f(size - head, -head / 2)
-        glEnd()
-        # X axis scale square
-        color_sx = 1.0 if not (hover == 'sx' or dragging == 'sx') else 0.5
-        glColor4f(color_sx, 0.0, 0.0, 1.0)
-        glBegin(GL_QUADS)
-        glVertex2f(size - sq, -sq)
-        glVertex2f(size + sq, -sq)
-        glVertex2f(size + sq, sq)
-        glVertex2f(size - sq, sq)
-        glEnd()
 
-        # Y axis translation
-        color_y = 1.0 if not (hover in ("y", "xy") or dragging in ("y", "xy")) else 0.5
-        glColor4f(0.0, color_y, 0.0, 1.0)
-        glBegin(GL_LINES)
-        glVertex2f(0.0, 0.0)
-        glVertex2f(0.0, size * sign)
-        glEnd()
-        glBegin(GL_TRIANGLES)
-        if units.Y_UP:
-            glVertex2f(0.0, size)
-            glVertex2f(-head / 2, size - head)
-            glVertex2f(head / 2, size - head)
-        else:
-            glVertex2f(0.0, -size)
-            glVertex2f(-head / 2, -size + head)
-            glVertex2f(head / 2, -size + head)
-        glEnd()
-        # Y axis scale square
-        color_sy = 1.0 if not (hover == 'sy' or dragging == 'sy') else 0.5
-        glColor4f(0.0, color_sy, 0.0, 1.0)
-        glBegin(GL_QUADS)
-        if units.Y_UP:
-            glVertex2f(-sq, size - sq)
-            glVertex2f(sq, size - sq)
-            glVertex2f(sq, size + sq)
-            glVertex2f(-sq, size + sq)
-        else:
-            glVertex2f(-sq, -size - sq)
-            glVertex2f(sq, -size - sq)
-            glVertex2f(sq, -size + sq)
-                   cursor: tuple[float, float] | None = None,
-                   mode: str = 'move'):
-        self._gizmo_mode = mode
-                self._draw_gizmo(
-                    self._selected_obj, camera, self._gizmo_mode,
-                    self._hover_axis, self._drag_axis
-                )
-                   cursor: tuple[float, float] | None = None,
-                   mode: str = 'move'):
-        self._gizmo_mode = mode
-                self._draw_gizmo(
-                    self._selected_obj, camera, self._gizmo_mode,
-                    self._hover_axis, self._drag_axis
-                )
-        glLineWidth(ring_w)
-        glBegin(GL_LINE_LOOP)
-        for i in range(32):
-            ang = (i / 32.0) * math.tau
-            glVertex2f(math.cos(ang) * ring_r, math.sin(ang) * ring_r * sign)
-        glEnd()
-        glLineWidth(4)
+        elif mode == 'rotate':
+            # rotation ring colored like the Z axis
+            rot_hover = hover == 'rot' or dragging == 'rot'
+            color_rot = 1.0 if rot_hover else 0.7
+            glColor4f(0.0, 0.0, color_rot, 1.0)
+            glLineWidth(ring_w * (1.5 if rot_hover else 1.0))
+            glBegin(GL_LINE_LOOP)
+            for i in range(32):
+                ang = (i / 32.0) * math.tau
+                glVertex2f(math.cos(ang) * ring_r, math.sin(ang) * ring_r * sign)
+            glEnd()
+            glLineWidth(base_w)
 
         # pivot point
-        center_col = 0.5 if not (hover == 'xy' or dragging == 'xy') else 0.25
+        center_hover = hover == 'xy' or dragging == 'xy'
+        center_col = 1.0 if center_hover else 0.7
+        size = rad * (1.5 if center_hover else 1.0)
         glColor4f(center_col, center_col, center_col, 1.0)
         glBegin(GL_QUADS)
-        glVertex2f(-rad, -rad)
-        glVertex2f(rad, -rad)
-        glVertex2f(rad, rad)
-        glVertex2f(-rad, rad)
+        glVertex2f(-size, -size)
+        glVertex2f(size, -size)
+        glVertex2f(size, size)
+        glVertex2f(-size, size)
         glEnd()
         glLineWidth(1)
         glPopMatrix()
@@ -424,7 +403,8 @@ class GLWidget(QOpenGLWidget):
     def draw_scene(self, scene, camera: Camera | None = None, gizmos: bool = True,
                    selected: GameObject | None = None,
                    hover: str | None = None, dragging: str | None = None,
-                   cursor: tuple[float, float] | None = None):
+                   cursor: tuple[float, float] | None = None,
+                   mode: str = 'pan', local: bool = False):
         """Store the scene and camera then schedule a repaint."""
         self._scene = scene
         self._camera = camera
@@ -433,6 +413,8 @@ class GLWidget(QOpenGLWidget):
         self._hover_axis = hover
         self._drag_axis = dragging
         self._cursor_pos = cursor
+        self._transform_mode = mode
+        self._local_coords = local
         self.widget.update()
 
     def _render_scene(self, scene, camera: Camera | None):
@@ -477,10 +459,16 @@ class GLWidget(QOpenGLWidget):
                 self._draw_icon(
                     obj.x, obj.y, tex_icon, camera.zoom if camera else 1.0
                 )
-        if self._draw_gizmos:
-            if self._selected_obj:
-                self._draw_gizmo(self._selected_obj, camera,
-                                 self._hover_axis, self._drag_axis)
+            if self._draw_gizmos:
+                if self._selected_obj:
+                    self._draw_gizmo(
+                        self._selected_obj,
+                        camera,
+                        self._hover_axis,
+                        self._drag_axis,
+                        mode=self._transform_mode,
+                        local=self._local_coords,
+                    )
             self._draw_origin(50 * scale)
             if self._cursor_pos is not None:
                 self._draw_cursor(self._cursor_pos[0], self._cursor_pos[1],

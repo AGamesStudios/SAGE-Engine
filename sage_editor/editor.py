@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QFileDialog,
     QTabWidget, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QListWidget, QListWidgetItem, QTableWidget, QTableWidgetItem, QPushButton, QDialog, QFormLayout, QGridLayout,
-    QDialogButtonBox, QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox, QCompleter,
+    QDialogButtonBox, QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox, QCompleter, QToolButton,
     QTextEdit, QDockWidget, QGroupBox, QCheckBox, QMessageBox, QMenu, QColorDialog,
     QTreeView, QInputDialog, QTreeWidget, QTreeWidgetItem, QStackedWidget,
     QHeaderView, QAbstractItemView, QProgressDialog, QScrollArea, QStyleFactory
@@ -972,6 +972,7 @@ class Editor(QMainWindow):
         self.window_height = 480
         self.keep_aspect = True
         self.background_color = (0, 0, 0)
+        self.local_coords = False
         self.resource_dir: str | None = None
         self.resource_manager = None
         self.scene = Scene()
@@ -1112,6 +1113,7 @@ class Editor(QMainWindow):
         self._apply_language()
         self._update_project_state()
         self._update_recent_menu()
+        self._on_coord_mode()
         # load optional editor plugins
         plugins.load_plugins(self)
 
@@ -1168,6 +1170,8 @@ class Editor(QMainWindow):
         self.coord_combo.setItemText(1, self.t('local'))
         self.link_scale.setText(self.t('link_scale'))
         self.coord_combo.setToolTip(self.t('coord_mode'))
+        if hasattr(self, 'coord_mode_btn'):
+            self.coord_mode_btn.setToolTip(self.t('coord_mode'))
 
     def apply_engine_completer(self, widget: QLineEdit):
         """Attach the engine method completer to a line edit."""
@@ -1279,6 +1283,11 @@ class Editor(QMainWindow):
         self.run_act = QAction(load_icon('start.png'), self.t('run'), self)
         self.run_act.triggered.connect(self.run_project)
         toolbar.addAction(self.run_act)
+        self.coord_mode_btn = QToolButton()
+        self.coord_mode_btn.setCheckable(True)
+        self.coord_mode_btn.setIcon(load_icon('world.png'))
+        self.coord_mode_btn.clicked.connect(self._toggle_coord_mode)
+        toolbar.addWidget(self.coord_mode_btn)
         right_spacer = QWidget()
         right_spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         toolbar.addWidget(right_spacer)
@@ -1945,7 +1954,22 @@ class Editor(QMainWindow):
         pass
 
     def _on_coord_mode(self):
-        pass
+        self.local_coords = self.coord_combo.currentIndex() == 1
+        if hasattr(self, 'coord_mode_btn'):
+            self.coord_mode_btn.setChecked(self.local_coords)
+            self.coord_mode_btn.setIcon(load_icon('local.png' if self.local_coords else 'world.png'))
+        if hasattr(self, 'view'):
+            self.view.set_coord_mode(self.local_coords)
+
+    def _toggle_coord_mode(self, checked: bool):
+        self.local_coords = bool(checked)
+        if hasattr(self, 'coord_combo'):
+            self.coord_combo.blockSignals(True)
+            self.coord_combo.setCurrentIndex(1 if self.local_coords else 0)
+            self.coord_combo.blockSignals(False)
+        self.coord_mode_btn.setIcon(load_icon('local.png' if self.local_coords else 'world.png'))
+        if hasattr(self, 'view'):
+            self.view.set_coord_mode(self.local_coords)
 
     def choose_grid_color(self):
         pass
