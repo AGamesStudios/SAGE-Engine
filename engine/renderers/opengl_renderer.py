@@ -467,20 +467,19 @@ class OpenGLRenderer:
                 self._draw_icon(
                     obj.x, obj.y, tex_icon, camera.zoom if camera else 1.0
                 )
-            if self._draw_gizmos:
-                if self._selected_obj:
-                    self._draw_gizmo(
-                        self._selected_obj,
-                        camera,
-                        self._hover_axis,
-                        self._drag_axis,
-                        mode=self._transform_mode,
-                        local=self._local_coords,
-                    )
-            self._draw_origin(50 * scale)
-            if self._cursor_pos is not None:
-                self._draw_cursor(self._cursor_pos[0], self._cursor_pos[1],
-                                   camera)
+        if self._draw_gizmos and self._selected_obj:
+            self._draw_gizmo(
+                self._selected_obj,
+                camera,
+                self._hover_axis,
+                self._drag_axis,
+                mode=self._transform_mode,
+                local=self._local_coords,
+            )
+        self._draw_origin(50 * scale)
+        if self._cursor_pos is not None:
+            self._draw_cursor(self._cursor_pos[0], self._cursor_pos[1],
+                               camera)
         glPopMatrix()
 
     def present(self):
