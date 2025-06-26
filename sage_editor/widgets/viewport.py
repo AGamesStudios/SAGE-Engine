@@ -190,16 +190,16 @@ class Viewport(GLWidget):
                             world[1] - self.selected_obj.y,
                             world[0] - self.selected_obj.x,
                         ))
-                        self._drag_offset = self.selected_obj.angle - ang
+                        self._drag_offset = getattr(self.selected_obj, 'angle', 0.0) - ang
                     elif hit == 'sx':
                         self._drag_offset = (
                             world[0] - self.selected_obj.x,
-                            self.selected_obj.scale_x,
+                            getattr(self.selected_obj, 'scale_x', 1.0),
                         )
                     elif hit == 'sy':
                         self._drag_offset = (
                             world[1] - self.selected_obj.y,
-                            self.selected_obj.scale_y,
+                            getattr(self.selected_obj, 'scale_y', 1.0),
                         )
                     else:
                         self._drag_offset = (
@@ -366,7 +366,7 @@ class Viewport(GLWidget):
         handle = 12.0 * ratio
         ring = arrow * 1.2
         ring_tol = 12.0 * ratio
-        sign = -1.0 if units.Y_UP else 1.0
+        sign = 1.0 if units.Y_UP else -1.0
         # rotate into local coordinates when needed
         if self._transform_mode == 'scale' or self._local_coords:
             ang = math.radians(self.selected_obj.angle)
@@ -393,11 +393,12 @@ class Viewport(GLWidget):
             if ring - ring_tol <= dist <= ring + ring_tol:
                 result = 'rot'
 
-        allowed = {
-            'move': {'x', 'y', 'xy'},
-            'rotate': {'rot'},
-            'scale': {'sx', 'sy'},
-        }.get(self._transform_mode, set())
+        allowed = {'move': {'x', 'y', 'xy'}}
+        if hasattr(self.selected_obj, 'angle'):
+            allowed['rotate'] = {'rot'}
+        if hasattr(self.selected_obj, 'scale_x') and hasattr(self.selected_obj, 'scale_y'):
+            allowed['scale'] = {'sx', 'sy'}
+        allowed = allowed.get(self._transform_mode, set())
         if result not in allowed:
             return None
         return result

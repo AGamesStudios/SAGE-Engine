@@ -264,7 +264,7 @@ class OpenGLRenderer:
         glPushMatrix()
         glTranslatef(obj.x * scale, obj.y * scale * sign, 0)
         if local or mode == 'scale':
-            glRotatef(obj.angle, 0, 0, 1)
+            glRotatef(getattr(obj, 'angle', 0.0), 0, 0, 1)
         base_w = 6 * ratio
         glLineWidth(base_w)
         if mode == 'move':
