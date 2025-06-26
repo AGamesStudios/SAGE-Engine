@@ -399,7 +399,7 @@ class Viewport(GLWidget):
         handle = 12.0 * ratio
         ring = arrow * 1.2
         ring_tol = 12.0 * ratio
-        sign = 1.0 if units.Y_UP else -1.0
+        sign = -1.0 if units.Y_UP else 1.0
         # rotate into local coordinates when needed
         if self._transform_mode == 'scale' or self._local_coords:
             ang = math.radians(getattr(self.selected_obj, 'angle', 0.0))
