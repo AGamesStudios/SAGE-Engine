@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (
     QDialogButtonBox, QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox, QCompleter,
     QTextEdit, QDockWidget, QGroupBox, QCheckBox, QMessageBox, QMenu, QColorDialog,
     QTreeView, QInputDialog, QTreeWidget, QTreeWidgetItem,
-    QHeaderView, QAbstractItemView, QProgressDialog
+    QHeaderView, QAbstractItemView, QProgressDialog, QScrollArea
 )
 try:
     from PyQt6.QtWidgets import QFileSystemModel
@@ -1493,24 +1493,41 @@ class Editor(QMainWindow):
             def __init__(self, parent: 'Editor'):
                 super().__init__(parent)
                 self.setWindowTitle(parent.t('project_settings'))
+                self.setFixedSize(480, 360)
+
                 self.tabs = QTabWidget(self)
                 self.tabs.setTabPosition(QTabWidget.TabPosition.West)
 
-                gen_page = QWidget()
-                gen_form = QFormLayout(gen_page)
+                gen_widget = QWidget()
+                gen_form = QFormLayout()
+                gen_form.setLabelAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+                gen_form.setFormAlignment(Qt.AlignmentFlag.AlignTop)
                 self.title_edit = QLineEdit(parent.project_title)
                 self.ver_edit = QLineEdit(parent.project_version)
                 self.desc_edit = QTextEdit(parent.project_description)
+                self.desc_edit.setFixedHeight(80)
                 gen_form.addRow(parent.t('title_label'), self.title_edit)
                 gen_form.addRow(parent.t('version_label'), self.ver_edit)
                 gen_form.addRow(parent.t('description_label'), self.desc_edit)
+                gen_widget.setLayout(gen_form)
 
-                win_page = QWidget()
-                win_form = QFormLayout(win_page)
+                gen_page = QScrollArea()
+                gen_page.setWidgetResizable(True)
+                gen_page.setWidget(gen_widget)
+
+                win_widget = QWidget()
+                win_form = QFormLayout()
+                win_form.setLabelAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+                win_form.setFormAlignment(Qt.AlignmentFlag.AlignTop)
                 self.w_spin = QSpinBox(); self.w_spin.setRange(100, 4096); self.w_spin.setValue(parent.window_width)
                 self.h_spin = QSpinBox(); self.h_spin.setRange(100, 4096); self.h_spin.setValue(parent.window_height)
                 win_form.addRow(parent.t('width'), self.w_spin)
                 win_form.addRow(parent.t('height'), self.h_spin)
+                win_widget.setLayout(win_form)
+
+                win_page = QScrollArea()
+                win_page.setWidgetResizable(True)
+                win_page.setWidget(win_widget)
 
                 self.tabs.addTab(gen_page, parent.t('info_tab'))
                 self.tabs.addTab(win_page, parent.t('window_tab'))

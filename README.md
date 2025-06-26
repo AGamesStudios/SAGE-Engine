@@ -154,7 +154,8 @@ A **Project Settings** dialog under **Settings** groups options into side tabs.
 The **Info** tab edits the game title, version (default `0.1.0`) and
 description.  A **Window** tab contains width and height fields.  The game
 title defaults to the name chosen when creating a project so you only set it
-once.
+once.  The dialog uses a fixed size with scrollable pages so labels line up
+neatly.
 When defining variables, boolean values are edited with a convenient check box
 instead of typing "true" or "false".
 When comparing variables, the name is selected from a drop-down list so typos
