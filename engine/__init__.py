@@ -3,7 +3,6 @@ ENGINE_VERSION = '2D prototype v0.0.01a'
 from .core import GameObject, Scene, Engine, Project, Camera
 from .renderers import (
     OpenGLRenderer,
-    QtPainterRenderer,
     Renderer,
 )
 from .game_window import GameWindow
@@ -50,7 +49,7 @@ __all__ = [
     'Move', 'SetPosition', 'Destroy', 'Print', 'PlaySound', 'Spawn',
     'OnStart', 'EveryFrame', 'VariableCompare', 'ZoomAbove',
     'SetVariable', 'ModifyVariable', 'SetZoom', 'Project', 'Camera',
-    'clear_image_cache', 'Renderer', 'OpenGLRenderer', 'QtPainterRenderer', 'main',
+    'clear_image_cache', 'Renderer', 'OpenGLRenderer', 'main',
     'ENGINE_VERSION', 'logger', 'ResourceManager', 'set_resource_root', 'get_resource_path',
     'load_project', 'save_project', 'run_project', 'create_engine',
     'load_scene', 'save_scene', 'run_scene',

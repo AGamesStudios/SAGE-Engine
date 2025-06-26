@@ -9,7 +9,6 @@ from .input_qt import QtInput
 from .camera import Camera
 from ..renderers import (
     OpenGLRenderer,
-    QtPainterRenderer,
     Renderer,
     get_renderer,
 )
@@ -106,7 +105,7 @@ def main(argv=None):
     parser.add_argument("--title", help="Window title")
     parser.add_argument(
         "--renderer",
-        choices=["opengl", "qt"],
+        choices=["opengl"],
         default="opengl",
         help="Rendering backend (default opengl)",
     )

@@ -24,7 +24,7 @@ utilities like the plugin loader used by both components.
 The editor code is split into ``sage_editor.editor`` for the main window and
 ``sage_editor.app`` which contains the startup logic and project manager.
 Dock widgets live under ``sage_editor.docks`` while reusable widgets live in
-``sage_editor.widgets``. The viewport now uses a QWidget with ``QPainter`` so the
+``sage_editor.widgets``. The viewport now uses a ``QOpenGLWidget`` so the
 scene you edit is visible inside the editor as well as when running the game.
 Embedding the editor in other tools only requires importing these modules.
 

@@ -1,7 +1,6 @@
 """Renderer interface and registry."""
 
 from .opengl_renderer import OpenGLRenderer
-from .qt_painter_renderer import QtPainterRenderer
 
 RENDERER_REGISTRY: dict[str, type] = {}
 
@@ -17,7 +16,6 @@ def get_renderer(name: str) -> type | None:
 
 
 register_renderer("opengl", OpenGLRenderer)
-register_renderer("qt", QtPainterRenderer)
 
 
 class Renderer:
@@ -42,7 +40,6 @@ class Renderer:
 __all__ = [
     "Renderer",
     "OpenGLRenderer",
-    "QtPainterRenderer",
     "register_renderer",
     "get_renderer",
     "RENDERER_REGISTRY",
