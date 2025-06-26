@@ -255,12 +255,12 @@ class OpenGLRenderer:
         glTranslatef(obj.x * scale, obj.y * scale * sign, 0)
         glLineWidth(6)
         if mode == 'move':
-            # translation arrows
+            # translation arrows - draw the line up to the base of the arrow head
             color_x = 1.0 if not (hover in ("x", "xy") or dragging in ("x", "xy")) else 0.5
             glColor4f(color_x, 0.0, 0.0, 1.0)
             glBegin(GL_LINES)
             glVertex2f(0.0, 0.0)
-            glVertex2f(size, 0.0)
+            glVertex2f(size - head, 0.0)
             glEnd()
             glBegin(GL_TRIANGLES)
             glVertex2f(size, 0.0)
@@ -272,7 +272,7 @@ class OpenGLRenderer:
             glColor4f(0.0, color_y, 0.0, 1.0)
             glBegin(GL_LINES)
             glVertex2f(0.0, 0.0)
-            glVertex2f(0.0, size * sign)
+            glVertex2f(0.0, sign * (size - head))
             glEnd()
             glBegin(GL_TRIANGLES)
             if units.Y_UP:
