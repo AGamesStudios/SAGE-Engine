@@ -1,12 +1,13 @@
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QObject
 
 
-class QtInput:
+class QtInput(QObject):
     """Keyboard and mouse input using Qt events."""
 
     __slots__ = ("widget", "_keys", "_buttons")
 
     def __init__(self, widget):
+        super().__init__(widget)
         self.widget = widget
         self._keys = set()
         self._buttons = set()
