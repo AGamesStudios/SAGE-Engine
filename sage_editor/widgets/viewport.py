@@ -17,11 +17,22 @@ class Viewport(GLWidget):
         if not scene.objects:
             square = GameObject(color=(0, 255, 0, 255))
             scene.add_object(square)
-        self.camera = scene.camera or Camera(
-            x=0,
-            y=0,
-            width=self.width(), height=self.height(),
-        )
+        cam = scene.get_active_camera()
+        if cam is not None:
+            self.camera = Camera(
+                x=cam.x,
+                y=cam.y,
+                width=cam.width,
+                height=cam.height,
+                zoom=cam.zoom,
+            )
+        else:
+            self.camera = Camera(
+                x=0,
+                y=0,
+                width=self.width(),
+                height=self.height(),
+            )
         self._center_camera()
         self.renderer = OpenGLRenderer(self.width(), self.height(), widget=self)
         self.timer = QTimer(self)
@@ -59,11 +70,22 @@ class Viewport(GLWidget):
         if not scene.objects:
             square = GameObject(color=(0, 255, 0, 255))
             scene.add_object(square)
-        self.camera = scene.camera or Camera(
-            x=0,
-            y=0,
-            width=self.width(), height=self.height(),
-        )
+        cam = scene.get_active_camera()
+        if cam is not None:
+            self.camera = Camera(
+                x=cam.x,
+                y=cam.y,
+                width=cam.width,
+                height=cam.height,
+                zoom=cam.zoom,
+            )
+        else:
+            self.camera = Camera(
+                x=0,
+                y=0,
+                width=self.width(),
+                height=self.height(),
+            )
         self._center_camera()
 
     def _tick(self) -> None:

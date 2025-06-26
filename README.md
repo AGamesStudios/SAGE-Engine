@@ -37,6 +37,8 @@ objects and a green square appears when the scene is empty so the viewport never
 shows a blank screen. The viewport has its own camera which can be panned by
 dragging with the left mouse button; the cursor is hidden and captured during
 the drag so movement feels smooth and the game camera stays untouched.
+The game window instead uses the active camera object from the scene so you can
+inspect levels from any angle without affecting gameplay.
 
 ### Units and Coordinates
 
