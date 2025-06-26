@@ -47,6 +47,7 @@ The transform gizmo keeps a constant screen size even on high‑DPI displays and
 continues to track the grabbed point while zooming. Its arrows darken when
 hovered so you know they can be dragged. A yellow ring allows rotation around
 the Z axis and square handles at the ends let you scale objects. The game window instead uses
+the Z axis and square handles at the ends let you scale objects. The game window instead uses
 the active camera object from the scene so you can inspect levels from any angle
 without affecting gameplay.
 

@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import QWidget
 from PyQt6.QtCore import QTimer, Qt, QPointF
 import math
+import math
 
 from engine.renderers.opengl_renderer import OpenGLRenderer, GLWidget
 from engine.core.scene import Scene
@@ -107,15 +108,49 @@ class Viewport(GLWidget):
             cursor=self._cursor_world,
         )
 
-    def showEvent(self, event):  # pragma: no cover
-        self.timer.start()
-        super().showEvent(event)
-
-    def hideEvent(self, event):  # pragma: no cover
-        self.timer.stop()
-        super().hideEvent(event)
-
-    def leaveEvent(self, event):  # pragma: no cover - cursor left widget
+                    if hit == 'rot':
+                        ang = math.degrees(math.atan2(
+                            world[1] - self.selected_obj.y,
+                            world[0] - self.selected_obj.x,
+                        ))
+                        self._drag_offset = self.selected_obj.angle - ang
+                    elif hit == 'sx':
+                        self._drag_offset = (
+                            world[0] - self.selected_obj.x,
+                            self.selected_obj.scale_x,
+                        )
+                    elif hit == 'sy':
+                        self._drag_offset = (
+                            world[1] - self.selected_obj.y,
+                            self.selected_obj.scale_y,
+                        )
+                    else:
+                        self._drag_offset = (
+                            self.selected_obj.x - world[0],
+                            self.selected_obj.y - world[1],
+                        )
+            if self._gizmo_drag == 'rot':
+                ang = math.degrees(math.atan2(
+                    world[1] - self.selected_obj.y,
+                    world[0] - self.selected_obj.x,
+                ))
+                self.selected_obj.angle = ang + self._drag_offset
+            elif self._gizmo_drag == 'sx':
+                start_dx, base = self._drag_offset
+                dx = world[0] - self.selected_obj.x
+                if start_dx:
+                    self.selected_obj.scale_x = max(0.01, base * (dx / start_dx))
+            elif self._gizmo_drag == 'sy':
+                start_dy, base = self._drag_offset
+                dy = world[1] - self.selected_obj.y
+                if start_dy:
+                    self.selected_obj.scale_y = max(0.01, base * (dy / start_dy))
+            else:
+                if 'x' in self._gizmo_drag:
+                    self.selected_obj.x = world[0] + self._drag_offset[0]
+                if 'y' in self._gizmo_drag:
+                    self.selected_obj.y = world[1] + self._drag_offset[1]
+            if self._gizmo_drag in ('x', 'y', 'xy'):
         self._gizmo_hover = None
         self._cursor_world = None
         self.update()
@@ -227,6 +262,15 @@ class Viewport(GLWidget):
                 self._drag_offset = (
                     self._drag_offset[0] + before[0] - after[0],
                     self._drag_offset[1] + before[1] - after[1],
+        ring = arrow * 1.2
+        ring_tol = 6.0 * ratio
+        if abs(dx - arrow) <= handle and abs(dy) <= handle:
+            return 'sx'
+        if abs(dx) <= handle and abs(sign*dy - arrow) <= handle:
+            return 'sy'
+        dist = (dx**2 + dy**2) ** 0.5
+        if ring - ring_tol <= dist <= ring + ring_tol:
+            return 'rot'
                 )
             self._gizmo_hover = self._hit_gizmo(pos)
             self._cursor_world = self._screen_to_world(pos)
