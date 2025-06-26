@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional
 import math
         # store a reference to the renderer once assigned
         self.renderer = None
@@ -17,11 +16,11 @@ import math
         self.background = tuple(background)
 
 
+
     def create_widget(self) -> GLWidget:
         """Return the :class:`GLWidget` used for rendering."""
         return GLWidget()
 
-from pathlib import Path
 
 
 class GLWidget(QOpenGLWidget):
