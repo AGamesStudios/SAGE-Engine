@@ -48,6 +48,8 @@ class Viewport(GLWidget):
         self._gizmo_drag = None
         self._gizmo_hover = None
         self._drag_offset = (0.0, 0.0)
+        self._drag_start_world = (0.0, 0.0)
+        self._drag_start_obj = (0.0, 0.0)
         self.selected_obj: GameObject | None = None
         self._cursor_world: tuple[float, float] | None = None
 
@@ -192,20 +194,28 @@ class Viewport(GLWidget):
                         ))
                         self._drag_offset = getattr(self.selected_obj, 'angle', 0.0) - ang
                     elif hit == 'sx':
-                        self._drag_offset = (
-                            world[0] - self.selected_obj.x,
-                            getattr(self.selected_obj, 'scale_x', 1.0),
-                        )
+                        ang = math.radians(getattr(self.selected_obj, 'angle', 0.0))
+                        cos_a = math.cos(ang)
+                        sin_a = math.sin(ang)
+                        start = (world[0] - self.selected_obj.x) * cos_a + (
+                            world[1] - self.selected_obj.y
+                        ) * sin_a
+                        self._drag_offset = (start, getattr(self.selected_obj, 'scale_x', 1.0))
                     elif hit == 'sy':
-                        self._drag_offset = (
-                            world[1] - self.selected_obj.y,
-                            getattr(self.selected_obj, 'scale_y', 1.0),
-                        )
+                        ang = math.radians(getattr(self.selected_obj, 'angle', 0.0))
+                        cos_a = math.cos(ang)
+                        sin_a = math.sin(ang)
+                        start = (world[0] - self.selected_obj.x) * (-sin_a) + (
+                            world[1] - self.selected_obj.y
+                        ) * cos_a
+                        self._drag_offset = (start, getattr(self.selected_obj, 'scale_y', 1.0))
                     else:
                         self._drag_offset = (
                             self.selected_obj.x - world[0],
                             self.selected_obj.y - world[1],
                         )
+                    self._drag_start_world = world
+                    self._drag_start_obj = (self.selected_obj.x, self.selected_obj.y)
             else:
                 obj = self._pick_object(event.position())
                 if obj is not None:
@@ -237,19 +247,42 @@ class Viewport(GLWidget):
                 self.selected_obj.angle = ang + self._drag_offset
             elif self._gizmo_drag == 'sx':
                 start_dx, base = self._drag_offset
-                dx = world[0] - self.selected_obj.x
+                ang = math.radians(getattr(self.selected_obj, 'angle', 0.0))
+                cos_a = math.cos(ang)
+                sin_a = math.sin(ang)
+                dx_local = (world[0] - self.selected_obj.x) * cos_a + (
+                    world[1] - self.selected_obj.y
+                ) * sin_a
                 if start_dx:
-                    self.selected_obj.scale_x = max(0.01, base * (dx / start_dx))
+                    self.selected_obj.scale_x = max(0.01, base * (dx_local / start_dx))
             elif self._gizmo_drag == 'sy':
                 start_dy, base = self._drag_offset
-                dy = world[1] - self.selected_obj.y
+                ang = math.radians(getattr(self.selected_obj, 'angle', 0.0))
+                cos_a = math.cos(ang)
+                sin_a = math.sin(ang)
+                dy_local = (world[0] - self.selected_obj.x) * (-sin_a) + (
+                    world[1] - self.selected_obj.y
+                ) * cos_a
                 if start_dy:
-                    self.selected_obj.scale_y = max(0.01, base * (dy / start_dy))
+                    self.selected_obj.scale_y = max(0.01, base * (dy_local / start_dy))
             else:
-                if 'x' in self._gizmo_drag:
-                    self.selected_obj.x = world[0] + self._drag_offset[0]
-                if 'y' in self._gizmo_drag:
-                    self.selected_obj.y = world[1] + self._drag_offset[1]
+                dx = world[0] - self._drag_start_world[0]
+                dy = world[1] - self._drag_start_world[1]
+                if self._local_coords:
+                    ang = math.radians(getattr(self.selected_obj, 'angle', 0.0))
+                    cos_a = math.cos(ang)
+                    sin_a = math.sin(ang)
+                    proj_x = dx * cos_a + dy * sin_a
+                    proj_y = dx * -sin_a + dy * cos_a
+                    move_x = proj_x if 'x' in self._gizmo_drag else 0.0
+                    move_y = proj_y if 'y' in self._gizmo_drag else 0.0
+                    world_dx = move_x * cos_a - move_y * sin_a
+                    world_dy = move_x * sin_a + move_y * cos_a
+                else:
+                    world_dx = dx if 'x' in self._gizmo_drag else 0.0
+                    world_dy = dy if 'y' in self._gizmo_drag else 0.0
+                self.selected_obj.x = self._drag_start_obj[0] + world_dx
+                self.selected_obj.y = self._drag_start_obj[1] + world_dy
             if self.editor:
                 self.editor._update_transform_panel()
                 self.editor._mark_dirty()
@@ -289,9 +322,9 @@ class Viewport(GLWidget):
             self.camera.zoom = max(0.1, min(10.0, self.camera.zoom))
             if self._gizmo_drag in ('x', 'y', 'xy'):
                 after = self._screen_to_world(pos)
-                self._drag_offset = (
-                    self._drag_offset[0] + before[0] - after[0],
-                    self._drag_offset[1] + before[1] - after[1],
+                self._drag_start_world = (
+                    self._drag_start_world[0] + before[0] - after[0],
+                    self._drag_start_world[1] + before[1] - after[1],
                 )
             self._gizmo_hover = self._hit_gizmo(pos)
             self._cursor_world = self._screen_to_world(pos)
@@ -369,7 +402,7 @@ class Viewport(GLWidget):
         sign = 1.0 if units.Y_UP else -1.0
         # rotate into local coordinates when needed
         if self._transform_mode == 'scale' or self._local_coords:
-            ang = math.radians(self.selected_obj.angle)
+            ang = math.radians(getattr(self.selected_obj, 'angle', 0.0))
             cos_a = math.cos(-ang)
             sin_a = math.sin(-ang)
             rdx = cos_a * dx - sin_a * dy
@@ -378,16 +411,15 @@ class Viewport(GLWidget):
         result = None
         if abs(dx) < handle and abs(dy) < handle:
             result = 'xy'
+        elif self._transform_mode == 'scale':
+            if abs(dy) <= handle and 0 <= dx <= arrow + handle:
+                result = 'sx'
+            elif abs(dx) <= handle and 0 <= sign * dy <= arrow + handle:
+                result = 'sy'
         elif abs(dy) <= handle and 0 <= dx <= arrow + handle:
             result = 'x'
-        elif abs(dx) <= handle and 0 <= sign*dy <= arrow + handle:
-            result = 'y'
-        elif abs(dy) <= handle and 0 <= dx <= arrow + handle:
-            # scale along X axis - allow dragging anywhere on the arrow
-            result = 'sx'
         elif abs(dx) <= handle and 0 <= sign * dy <= arrow + handle:
-            # scale along Y axis - allow dragging anywhere on the arrow
-            result = 'sy'
+            result = 'y'
         else:
             dist = (dx**2 + dy**2) ** 0.5
             if ring - ring_tol <= dist <= ring + ring_tol:
