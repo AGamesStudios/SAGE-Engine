@@ -286,7 +286,7 @@ class OpenGLRenderer:
             glEnd()
 
         elif mode == 'scale':
-            # scale arrows using squares instead of triangles
+            # scale arrows using squares with tips extended beyond the line
             color_sx = 1.0 if not (hover == 'sx' or dragging == 'sx') else 0.5
             glColor4f(color_sx, 0.0, 0.0, 1.0)
             glBegin(GL_LINES)
@@ -294,10 +294,10 @@ class OpenGLRenderer:
             glVertex2f(size, 0.0)
             glEnd()
             glBegin(GL_QUADS)
-            glVertex2f(size - sq, -sq)
-            glVertex2f(size + sq, -sq)
-            glVertex2f(size + sq, sq)
-            glVertex2f(size - sq, sq)
+            glVertex2f(size, -sq)
+            glVertex2f(size + 2 * sq, -sq)
+            glVertex2f(size + 2 * sq, sq)
+            glVertex2f(size, sq)
             glEnd()
 
             color_sy = 1.0 if not (hover == 'sy' or dragging == 'sy') else 0.5
@@ -308,21 +308,21 @@ class OpenGLRenderer:
             glEnd()
             glBegin(GL_QUADS)
             if units.Y_UP:
-                glVertex2f(-sq, size - sq)
-                glVertex2f(sq, size - sq)
-                glVertex2f(sq, size + sq)
-                glVertex2f(-sq, size + sq)
+                glVertex2f(-sq, size)
+                glVertex2f(sq, size)
+                glVertex2f(sq, size + 2 * sq)
+                glVertex2f(-sq, size + 2 * sq)
             else:
-                glVertex2f(-sq, -size - sq)
-                glVertex2f(sq, -size - sq)
-                glVertex2f(sq, -size + sq)
-                glVertex2f(-sq, -size + sq)
+                glVertex2f(-sq, -size - 2 * sq)
+                glVertex2f(sq, -size - 2 * sq)
+                glVertex2f(sq, -size)
+                glVertex2f(-sq, -size)
             glEnd()
 
         elif mode == 'rotate':
-            # rotation ring
+            # rotation ring colored like the Z axis
             color_rot = 1.0 if not (hover == 'rot' or dragging == 'rot') else 0.5
-            glColor4f(color_rot, color_rot, 0.0, 1.0)
+            glColor4f(0.0, 0.0, color_rot, 1.0)
             glLineWidth(ring_w)
             glBegin(GL_LINE_LOOP)
             for i in range(32):

@@ -367,9 +367,11 @@ class Viewport(GLWidget):
             result = 'x'
         elif abs(dx) < handle and 0 <= sign*dy <= arrow:
             result = 'y'
-        elif abs(dx - arrow) <= handle and abs(dy) <= handle:
+        elif abs(dy) <= handle and 0 <= dx <= arrow + handle:
+            # scale along X axis - allow dragging anywhere on the arrow
             result = 'sx'
-        elif abs(dx) <= handle and abs(sign*dy - arrow) <= handle:
+        elif abs(dx) <= handle and 0 <= sign * dy <= arrow + handle:
+            # scale along Y axis - allow dragging anywhere on the arrow
             result = 'sy'
         else:
             dist = (dx**2 + dy**2) ** 0.5
