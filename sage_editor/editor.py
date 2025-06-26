@@ -976,7 +976,7 @@ class Editor(QMainWindow):
         self.scene_path: str | None = None
         self.project_metadata: dict = {}
         self.project_title: str = 'SAGE 2D'
-        self.project_version: str = ENGINE_VERSION
+        self.project_version: str = '0.1.0'
         self.project_description: str = ''
         self._game_window = None
         self._game_engine = None
@@ -1346,8 +1346,8 @@ class Editor(QMainWindow):
         self.scene = Scene()
         self.scene_path = os.path.join(scenes_dir, 'Scene1.sagescene')
         self.project_metadata = {'name': name, 'description': ''}
-        self.project_title = 'SAGE 2D'
-        self.project_version = ENGINE_VERSION
+        self.project_title = name
+        self.project_version = '0.1.0'
         self.project_description = ''
         try:
             Project(
@@ -1489,32 +1489,47 @@ class Editor(QMainWindow):
     def show_project_settings(self):
         if not self._check_project():
             return
-        dlg = QDialog(self)
-        dlg.setWindowTitle(self.t('project_settings'))
-        name_edit = QLineEdit(self.project_metadata.get('name', ''))
-        title_edit = QLineEdit(self.project_title)
-        ver_edit = QLineEdit(self.project_version)
-        desc_edit = QTextEdit(self.project_description)
-        w_spin = QSpinBox(); w_spin.setRange(100, 4096); w_spin.setValue(self.window_width)
-        h_spin = QSpinBox(); h_spin.setRange(100, 4096); h_spin.setValue(self.window_height)
-        form = QFormLayout(dlg)
-        form.addRow(self.t('project_name'), name_edit)
-        form.addRow(self.t('title_label'), title_edit)
-        form.addRow(self.t('version_label'), ver_edit)
-        form.addRow(self.t('description_label'), desc_edit)
-        form.addRow(self.t('width'), w_spin)
-        form.addRow(self.t('height'), h_spin)
-        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
-        buttons.accepted.connect(dlg.accept)
-        buttons.rejected.connect(dlg.reject)
-        form.addRow(buttons)
+        class ProjectSettingsDialog(QDialog):
+            def __init__(self, parent: 'Editor'):
+                super().__init__(parent)
+                self.setWindowTitle(parent.t('project_settings'))
+                self.tabs = QTabWidget(self)
+                self.tabs.setTabPosition(QTabWidget.TabPosition.West)
+
+                gen_page = QWidget()
+                gen_form = QFormLayout(gen_page)
+                self.title_edit = QLineEdit(parent.project_title)
+                self.ver_edit = QLineEdit(parent.project_version)
+                self.desc_edit = QTextEdit(parent.project_description)
+                gen_form.addRow(parent.t('title_label'), self.title_edit)
+                gen_form.addRow(parent.t('version_label'), self.ver_edit)
+                gen_form.addRow(parent.t('description_label'), self.desc_edit)
+
+                win_page = QWidget()
+                win_form = QFormLayout(win_page)
+                self.w_spin = QSpinBox(); self.w_spin.setRange(100, 4096); self.w_spin.setValue(parent.window_width)
+                self.h_spin = QSpinBox(); self.h_spin.setRange(100, 4096); self.h_spin.setValue(parent.window_height)
+                win_form.addRow(parent.t('width'), self.w_spin)
+                win_form.addRow(parent.t('height'), self.h_spin)
+
+                self.tabs.addTab(gen_page, parent.t('info_tab'))
+                self.tabs.addTab(win_page, parent.t('window_tab'))
+
+                buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+                buttons.accepted.connect(self.accept)
+                buttons.rejected.connect(self.reject)
+
+                layout = QVBoxLayout(self)
+                layout.addWidget(self.tabs)
+                layout.addWidget(buttons)
+
+        dlg = ProjectSettingsDialog(self)
         if dlg.exec() == QDialog.DialogCode.Accepted:
-            self.project_metadata['name'] = name_edit.text().strip()
-            self.project_title = title_edit.text().strip() or 'SAGE 2D'
-            self.project_version = ver_edit.text().strip() or ENGINE_VERSION
-            self.project_description = desc_edit.toPlainText().strip()
-            self.window_width = w_spin.value()
-            self.window_height = h_spin.value()
+            self.project_title = dlg.title_edit.text().strip() or self.project_metadata.get('name', '')
+            self.project_version = dlg.ver_edit.text().strip() or '0.1.0'
+            self.project_description = dlg.desc_edit.toPlainText().strip()
+            self.window_width = dlg.w_spin.value()
+            self.window_height = dlg.h_spin.value()
             self._update_camera_rect()
 
     def show_camera_settings(self):

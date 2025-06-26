@@ -150,8 +150,11 @@ keeps its own resolution. The window can be resized at runtime and the camera
 follows the new dimensions while unused space is letterboxed so
 the scene maintains its aspect ratio. Running a project from the editor uses the
 same dimensions so what you see matches the final game.
-A **Project Settings** dialog under **Settings** lets you edit the project
-title, version, description and window size in one place.
+A **Project Settings** dialog under **Settings** groups options into side tabs.
+The **Info** tab edits the game title, version (default `0.1.0`) and
+description.  A **Window** tab contains width and height fields.  The game
+title defaults to the name chosen when creating a project so you only set it
+once.
 When defining variables, boolean values are edited with a convenient check box
 instead of typing "true" or "false".
 When comparing variables, the name is selected from a drop-down list so typos
