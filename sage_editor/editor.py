@@ -1531,9 +1531,29 @@ class Editor(QMainWindow):
         if not self.project_path:
             return
         try:
-            project = Project.load(self.project_path)
-            from engine.api import create_engine
-            engine = create_engine(project)
+            from engine.core.engine import Engine
+            from engine.renderers.opengl_renderer import OpenGLRenderer
+            from engine.core.camera import Camera
+            from engine import set_resource_root
+
+            if self.resource_dir:
+                set_resource_root(self.resource_dir)
+
+            scene = Scene.from_dict(self.scene.to_dict())
+            cam = scene.camera or Camera(
+                x=self.window_width / 2,
+                y=self.window_height / 2,
+                width=self.window_width,
+                height=self.window_height,
+            )
+            engine = Engine(
+                width=self.window_width,
+                height=self.window_height,
+                scene=scene,
+                events=scene.build_event_system(),
+                renderer=OpenGLRenderer(self.window_width, self.window_height, "SAGE 2D"),
+                camera=cam,
+            )
             engine.run()  # opens a GameWindow using the existing QApplication
         except Exception as exc:  # pragma: no cover - runtime errors
             logger.exception('Failed to start engine')
