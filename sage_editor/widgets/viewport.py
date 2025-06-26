@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QWidget
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QToolButton
 from PyQt6.QtCore import QTimer, Qt, QPointF
 import math
 
@@ -48,6 +48,21 @@ class Viewport(GLWidget):
         self._drag_offset = (0.0, 0.0)
         self.selected_obj: GameObject | None = None
         self._cursor_world: tuple[float, float] | None = None
+
+        # small toolbar with transform mode buttons
+        self.transform_bar = QWidget(self)
+        layout = QVBoxLayout(self.transform_bar)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(2)
+        self.transform_buttons: list[QToolButton] = []
+        for _ in range(4):
+            btn = QToolButton(self.transform_bar)
+            btn.setFixedSize(24, 24)
+            layout.addWidget(btn)
+            self.transform_buttons.append(btn)
+        self.transform_bar.move(4, 4)
+        self.transform_bar.show()
+        self.transform_bar.raise_()
 
     def _center_camera(self) -> None:
         """Center the camera on existing objects."""
