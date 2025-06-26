@@ -173,18 +173,42 @@ class Viewport(GLWidget):
         self.update()
 
     # coordinate helpers ------------------------------------------------
+    def _viewport_rect(self) -> tuple[int, int, int, int]:
+        """Return the active viewport in widget coordinates."""
+        if not self.renderer.keep_aspect or self.camera is None:
+            return 0, 0, self.width(), self.height()
+        w = self.width()
+        h = self.height()
+        cam_ratio = self.camera.width / self.camera.height if self.camera.height else 1.0
+        win_ratio = w / h if h else cam_ratio
+        if cam_ratio > win_ratio:
+            vp_w = w
+            vp_h = int(w / cam_ratio)
+            x = 0
+            y = (h - vp_h) // 2
+        else:
+            vp_h = h
+            vp_w = int(h * cam_ratio)
+            x = (w - vp_w) // 2
+            y = 0
+        return x, y, vp_w, vp_h
+
     def _world_to_screen(self, x: float, y: float) -> tuple[float, float]:
+        off_x, off_y, vp_w, vp_h = self._viewport_rect()
         scale = units.UNITS_PER_METER * self.camera.zoom
-        sx = (x - self.camera.x) * scale + self.width() / 2
+        sx = (x - self.camera.x) * scale + vp_w / 2 + off_x
         sign = 1.0 if units.Y_UP else -1.0
-        sy = self.height() / 2 - (y - self.camera.y) * scale * sign
+        sy = off_y + vp_h / 2 - (y - self.camera.y) * scale * sign
         return sx, sy
 
     def _screen_to_world(self, pos: QPointF) -> tuple[float, float]:
+        off_x, off_y, vp_w, vp_h = self._viewport_rect()
         scale = units.UNITS_PER_METER * self.camera.zoom
         sign = 1.0 if units.Y_UP else -1.0
-        x = self.camera.x + (pos.x() - self.width() / 2) / scale
-        y = self.camera.y + sign * (self.height() / 2 - pos.y()) / scale
+        sx = pos.x() - off_x
+        sy = pos.y() - off_y
+        x = self.camera.x + (sx - vp_w / 2) / scale
+        y = self.camera.y + sign * (vp_h / 2 - sy) / scale
         return x, y
 
     def _hit_gizmo(self, pos: QPointF) -> str | None:
