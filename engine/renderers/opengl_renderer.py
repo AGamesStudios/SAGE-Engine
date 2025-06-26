@@ -27,8 +27,8 @@ class GLWidget(QOpenGLWidget):
     def __init__(self, parent=None):
         fmt = QSurfaceFormat()
         fmt.setSamples(4)
-        self.setFormat(fmt)
         super().__init__(parent)
+        self.setFormat(fmt)
         self.renderer: Optional['OpenGLRenderer'] = None
 
     def initializeGL(self):
@@ -253,10 +253,10 @@ class OpenGLRenderer:
         zoom = camera.zoom if camera else 1.0
         inv = 1.0 / zoom if zoom else 1.0
         ratio = self.widget.devicePixelRatioF() if self.widget else 1.0
-        size = 50 * inv * ratio
-        head = 10 * inv * ratio
-        rad = 4 * inv * ratio
-        sq = 6 * inv * ratio
+        size = 50 * inv
+        head = 10 * inv
+        rad = 4 * inv
+        sq = 6 * inv
         ring_r = size * 1.2
         ring_w = 4 * ratio
         glBindTexture(GL_TEXTURE_2D, 0)
