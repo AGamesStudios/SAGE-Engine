@@ -35,7 +35,7 @@ class GameWindow(QMainWindow):
             self.engine.events.update(self.engine, self.engine.scene, dt)
             self.engine.scene.update(dt)
             cam = self.engine.camera or self.engine.scene.get_active_camera()
-            self.engine.renderer.draw_scene(self.engine.scene, cam)
+            self.engine.renderer.draw_scene(self.engine.scene, cam, gizmos=False)
             self.engine.renderer.present()
         except Exception:
             logger.exception("Runtime error")

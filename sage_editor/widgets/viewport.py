@@ -89,7 +89,7 @@ class Viewport(GLWidget):
         self._center_camera()
 
     def _tick(self) -> None:
-        self.renderer.draw_scene(self.scene, self.camera)
+        self.renderer.draw_scene(self.scene, self.camera, gizmos=True)
 
     def showEvent(self, event):  # pragma: no cover
         self.timer.start()

@@ -10,7 +10,7 @@ from OpenGL.GL import (
     glTexCoord2f, glBindTexture, glTexParameteri, glTexImage2D, glGenTextures,
     GL_BLEND, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_COLOR_BUFFER_BIT,
     GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_TEXTURE_MAG_FILTER, GL_LINEAR,
-    GL_QUADS, GL_LINES, GL_RGBA, GL_UNSIGNED_BYTE
+    GL_QUADS, GL_LINES, GL_LINE_LOOP, GL_RGBA, GL_UNSIGNED_BYTE
 )
 from PIL import Image
 
@@ -64,6 +64,7 @@ class OpenGLRenderer:
         self._icon_cache: dict[str, int] = {}
         self._scene = None
         self._camera = None
+        self._draw_gizmos = True
 
     def set_window_size(self, width: int, height: int):
         if self.widget:
@@ -199,10 +200,11 @@ class OpenGLRenderer:
         if self._scene:
             self._render_scene(self._scene, self._camera)
 
-    def draw_scene(self, scene, camera: Camera | None = None):
+    def draw_scene(self, scene, camera: Camera | None = None, gizmos: bool = True):
         """Store the scene and camera then schedule a repaint."""
         self._scene = scene
         self._camera = camera
+        self._draw_gizmos = gizmos
         self.widget.update()
 
     def _render_scene(self, scene, camera: Camera | None):
@@ -217,9 +219,12 @@ class OpenGLRenderer:
         scene.sort_objects()
         for obj in scene.objects:
             if isinstance(obj, Camera):
-                self._draw_frustum(obj)
-                tex = self._get_icon_texture('camera.png')
-                self._draw_icon(obj.x, obj.y, tex, camera.zoom if camera else 1.0)
+                if self._draw_gizmos:
+                    self._draw_frustum(obj)
+                    tex = self._get_icon_texture('camera.png')
+                    self._draw_icon(
+                        obj.x, obj.y, tex, camera.zoom if camera else 1.0
+                    )
                 continue
             tex = self._get_texture(obj)
             glBindTexture(GL_TEXTURE_2D, tex)
@@ -237,9 +242,13 @@ class OpenGLRenderer:
             glTexCoord2f(0.0, 1.0); glVertex2f(-w/2,  h/2)
             glEnd()
             glPopMatrix()
-            tex_icon = self._get_icon_texture('object.png')
-            self._draw_icon(obj.x, obj.y, tex_icon, camera.zoom if camera else 1.0)
-        self._draw_origin(50 * scale)
+            if self._draw_gizmos:
+                tex_icon = self._get_icon_texture('object.png')
+                self._draw_icon(
+                    obj.x, obj.y, tex_icon, camera.zoom if camera else 1.0
+                )
+        if self._draw_gizmos:
+            self._draw_origin(50 * scale)
         glPopMatrix()
 
     def present(self):
