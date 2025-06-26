@@ -344,10 +344,10 @@ class OpenGLRenderer:
         scale = units.UNITS_PER_METER
         sign = 1.0 if units.Y_UP else -1.0
         if camera:
+            glScalef(camera.zoom, camera.zoom, 1.0)
             glTranslatef(-camera.x * scale,
                          -camera.y * scale * sign,
                          0)
-            glScalef(camera.zoom, camera.zoom, 1.0)
         scene.sort_objects()
         for obj in scene.objects:
             if isinstance(obj, Camera):
