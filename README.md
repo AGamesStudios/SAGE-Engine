@@ -151,11 +151,12 @@ follows the new dimensions while unused space is letterboxed so
 the scene maintains its aspect ratio. Running a project from the editor uses the
 same dimensions so what you see matches the final game.
 A **Project Settings** dialog under **Settings** groups options into side tabs.
-The **Info** tab edits the game title, version (default `0.1.0`) and
-description.  A **Window** tab contains width and height fields.  The game
-title defaults to the name chosen when creating a project so you only set it
-once.  The dialog uses a fixed size with scrollable pages so labels line up
-neatly.
+The dialog uses the Qt *Fusion* style and keeps the tab labels horizontal even
+though they sit vertically on the left. The **Info** tab edits the game title,
+version (default `0.1.0`) and description while a **Window** tab contains width
+and height fields. The game title defaults to the name chosen when creating a
+project so you only set it once.  The pages scroll inside a fixed-size window so
+labels line up neatly.
 When defining variables, boolean values are edited with a convenient check box
 instead of typing "true" or "false".
 When comparing variables, the name is selected from a drop-down list so typos

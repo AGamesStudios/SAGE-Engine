@@ -5,8 +5,8 @@ from PyQt6.QtWidgets import (
     QListWidget, QListWidgetItem, QTableWidget, QTableWidgetItem, QPushButton, QDialog, QFormLayout, QGridLayout,
     QDialogButtonBox, QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox, QCompleter,
     QTextEdit, QDockWidget, QGroupBox, QCheckBox, QMessageBox, QMenu, QColorDialog,
-    QTreeView, QInputDialog, QTreeWidget, QTreeWidgetItem,
-    QHeaderView, QAbstractItemView, QProgressDialog, QScrollArea
+    QTreeView, QInputDialog, QTreeWidget, QTreeWidgetItem, QStackedWidget,
+    QHeaderView, QAbstractItemView, QProgressDialog, QScrollArea, QStyleFactory
 )
 try:
     from PyQt6.QtWidgets import QFileSystemModel
@@ -1490,14 +1490,22 @@ class Editor(QMainWindow):
         if not self._check_project():
             return
         class ProjectSettingsDialog(QDialog):
+            """Dialog with side tabs using the Fusion style."""
             def __init__(self, parent: 'Editor'):
                 super().__init__(parent)
                 self.setWindowTitle(parent.t('project_settings'))
                 self.setFixedSize(480, 360)
+                self.setStyle(QStyleFactory.create('Fusion'))
 
-                self.tabs = QTabWidget(self)
-                self.tabs.setTabPosition(QTabWidget.TabPosition.West)
+                # left list acting as tabs
+                self.list = QListWidget()
+                self.list.setFixedWidth(110)
+                self.list.addItem(parent.t('info_tab'))
+                self.list.addItem(parent.t('window_tab'))
 
+                self.stack = QStackedWidget()
+
+                # Info page
                 gen_widget = QWidget()
                 gen_form = QFormLayout()
                 gen_form.setLabelAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
@@ -1510,11 +1518,12 @@ class Editor(QMainWindow):
                 gen_form.addRow(parent.t('version_label'), self.ver_edit)
                 gen_form.addRow(parent.t('description_label'), self.desc_edit)
                 gen_widget.setLayout(gen_form)
-
                 gen_page = QScrollArea()
                 gen_page.setWidgetResizable(True)
                 gen_page.setWidget(gen_widget)
+                self.stack.addWidget(gen_page)
 
+                # Window page
                 win_widget = QWidget()
                 win_form = QFormLayout()
                 win_form.setLabelAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
@@ -1524,21 +1533,27 @@ class Editor(QMainWindow):
                 win_form.addRow(parent.t('width'), self.w_spin)
                 win_form.addRow(parent.t('height'), self.h_spin)
                 win_widget.setLayout(win_form)
-
                 win_page = QScrollArea()
                 win_page.setWidgetResizable(True)
                 win_page.setWidget(win_widget)
+                self.stack.addWidget(win_page)
 
-                self.tabs.addTab(gen_page, parent.t('info_tab'))
-                self.tabs.addTab(win_page, parent.t('window_tab'))
+                self.list.currentRowChanged.connect(self.stack.setCurrentIndex)
+                self.list.setCurrentRow(0)
 
                 buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
                 buttons.accepted.connect(self.accept)
                 buttons.rejected.connect(self.reject)
 
-                layout = QVBoxLayout(self)
-                layout.addWidget(self.tabs)
-                layout.addWidget(buttons)
+                layout = QHBoxLayout()
+                layout.addWidget(self.list)
+                layout.addWidget(self.stack, 1)
+                bottom = QHBoxLayout()
+                bottom.addStretch(1)
+                bottom.addWidget(buttons)
+                outer = QVBoxLayout(self)
+                outer.addLayout(layout)
+                outer.addLayout(bottom)
 
         dlg = ProjectSettingsDialog(self)
         if dlg.exec() == QDialog.DialogCode.Accepted:
