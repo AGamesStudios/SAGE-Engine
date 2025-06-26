@@ -35,6 +35,11 @@ class GLWidget(QOpenGLWidget):
         fmt.setSamples(4)
         super().__init__(parent)
         self.setFormat(fmt)
+        try:
+            from PyQt6.QtCore import Qt
+            self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        except Exception:
+            pass
         self.renderer: Optional['OpenGLRenderer'] = None
 
     def initializeGL(self):

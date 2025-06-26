@@ -26,6 +26,12 @@ class GameWindow(QMainWindow):
         self.timer.setInterval(max(1, interval))
         self.timer.timeout.connect(self._step)
         self.engine.last_time = time.perf_counter()
+        # run one update immediately so OnStart events trigger
+        try:
+            self.engine.events.update(self.engine, self.engine.scene, 0.0)
+            self.engine.scene.update_events(self.engine, 0.0)
+        except Exception:
+            logger.exception("Startup error")
         self.timer.start()
 
     def _step(self):

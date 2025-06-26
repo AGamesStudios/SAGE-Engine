@@ -14,13 +14,77 @@ for name, mod in [('PyQt6', pyqt),
                   ('PyQt6.QtWidgets', qtwidgets)]:
     sys.modules.setdefault(name, mod)
 qtcore.Qt = type('Qt', (), {})()
-qtcore.QObject = type('QObject', (), {})
+class QObject:
+    def __init__(self, *a, **k):
+        pass
+
+qtcore.QObject = QObject
 qtgui.QSurfaceFormat = type('QSurfaceFormat', (), {})
-qtopengl.QOpenGLWidget = type('QOpenGLWidget', (), {})
-qtwidgets.QWidget = type('QWidget', (), {})
-qtwidgets.QMainWindow = type('QMainWindow', (), {})
-qtwidgets.QVBoxLayout = type('QVBoxLayout', (), {})
-qtcore.QTimer = type('QTimer', (), {})
+
+class QOpenGLWidget:
+    def __init__(self, *a, **k):
+        pass
+
+qtopengl.QOpenGLWidget = QOpenGLWidget
+
+class DummyWidget:
+    def __init__(self, *a, **k):
+        pass
+
+    def installEventFilter(self, obj):
+        self._filter = obj
+
+    def removeEventFilter(self, obj):
+        pass
+
+qtwidgets.QWidget = DummyWidget
+class QMainWindow:
+    def __init__(self, *a, **k):
+        self._central = None
+
+    def setWindowTitle(self, t):
+        self._title = t
+
+    def resize(self, w, h):
+        self._size = (w, h)
+
+    def setCentralWidget(self, w):
+        self._central = w
+
+qtwidgets.QMainWindow = QMainWindow
+
+class QVBoxLayout:
+    def __init__(self, *a, **k):
+        pass
+
+    def addWidget(self, w):
+        pass
+
+    def setContentsMargins(self, *args):
+        pass
+
+qtwidgets.QVBoxLayout = QVBoxLayout
+
+class _Signal:
+    def __init__(self):
+        self.func = None
+    def connect(self, f):
+        self.func = f
+    def emit(self):
+        if self.func:
+            self.func()
+
+class DummyTimer:
+    def __init__(self, parent=None):
+        self.timeout = _Signal()
+    def setInterval(self, val):
+        self.interval = val
+    def start(self):
+        pass
+    def stop(self):
+        pass
+
+qtcore.QTimer = DummyTimer
 
 from engine.core.scene import Scene
 
