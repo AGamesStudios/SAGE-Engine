@@ -70,6 +70,8 @@ class OpenGLRenderer:
         self._camera = None
         self._draw_gizmos = True
         self._selected_obj = None
+        self._hover_axis: str | None = None
+        self._drag_axis: str | None = None
         self.keep_aspect = bool(self.keep_aspect)
         self.background = tuple(self.background)
 
@@ -204,7 +206,8 @@ class OpenGLRenderer:
         glVertex2f(0.0, size)
         glEnd()
 
-    def _draw_gizmo(self, obj: "GameObject", camera: Camera | None):
+    def _draw_gizmo(self, obj: "GameObject", camera: Camera | None,
+                    hover: str | None = None, dragging: str | None = None):
         if obj is None:
             return
         scale = units.UNITS_PER_METER
@@ -219,7 +222,8 @@ class OpenGLRenderer:
         glTranslatef(obj.x * scale, obj.y * scale * sign, 0)
         glLineWidth(4)
         # X axis
-        glColor4f(1.0, 0.0, 0.0, 1.0)
+        color_x = 1.0 if not (hover in ("x", "xy") or dragging in ("x", "xy")) else 0.5
+        glColor4f(color_x, 0.0, 0.0, 1.0)
         glBegin(GL_LINES)
         glVertex2f(0.0, 0.0)
         glVertex2f(size, 0.0)
@@ -230,7 +234,8 @@ class OpenGLRenderer:
         glVertex2f(size - head, -head / 2)
         glEnd()
         # Y axis
-        glColor4f(0.0, 1.0, 0.0, 1.0)
+        color_y = 1.0 if not (hover in ("y", "xy") or dragging in ("y", "xy")) else 0.5
+        glColor4f(0.0, color_y, 0.0, 1.0)
         glBegin(GL_LINES)
         glVertex2f(0.0, 0.0)
         glVertex2f(0.0, size * sign)
@@ -246,7 +251,8 @@ class OpenGLRenderer:
             glVertex2f(head / 2, -size + head)
         glEnd()
         # pivot point
-        glColor4f(0.5, 0.5, 0.5, 1.0)
+        center_col = 0.5 if not (hover == 'xy' or dragging == 'xy') else 0.25
+        glColor4f(center_col, center_col, center_col, 1.0)
         glBegin(GL_QUADS)
         glVertex2f(-rad, -rad)
         glVertex2f(rad, -rad)
@@ -296,12 +302,15 @@ class OpenGLRenderer:
             self._render_scene(self._scene, self._camera)
 
     def draw_scene(self, scene, camera: Camera | None = None, gizmos: bool = True,
-                   selected: GameObject | None = None):
+                   selected: GameObject | None = None,
+                   hover: str | None = None, dragging: str | None = None):
         """Store the scene and camera then schedule a repaint."""
         self._scene = scene
         self._camera = camera
         self._draw_gizmos = gizmos
         self._selected_obj = selected
+        self._hover_axis = hover
+        self._drag_axis = dragging
         self.widget.update()
 
     def _render_scene(self, scene, camera: Camera | None):
@@ -348,7 +357,8 @@ class OpenGLRenderer:
                 )
         if self._draw_gizmos:
             if self._selected_obj:
-                self._draw_gizmo(self._selected_obj, camera)
+                self._draw_gizmo(self._selected_obj, camera,
+                                 self._hover_axis, self._drag_axis)
             self._draw_origin(50 * scale)
         glPopMatrix()
 

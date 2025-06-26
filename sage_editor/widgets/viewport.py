@@ -43,6 +43,7 @@ class Viewport(GLWidget):
         self.setMinimumSize(200, 150)
         self._drag_pos = None
         self._gizmo_drag = None
+        self._gizmo_hover = None
         self._drag_offset = (0.0, 0.0)
         self.selected_obj: GameObject | None = None
 
@@ -93,8 +94,14 @@ class Viewport(GLWidget):
         self._center_camera()
 
     def _tick(self) -> None:
-        self.renderer.draw_scene(self.scene, self.camera, gizmos=True,
-                                 selected=self.selected_obj)
+        self.renderer.draw_scene(
+            self.scene,
+            self.camera,
+            gizmos=True,
+            selected=self.selected_obj,
+            hover=self._gizmo_hover,
+            dragging=self._gizmo_drag,
+        )
 
     def showEvent(self, event):  # pragma: no cover
         self.timer.start()
@@ -104,6 +111,11 @@ class Viewport(GLWidget):
         self.timer.stop()
         super().hideEvent(event)
 
+    def leaveEvent(self, event):  # pragma: no cover - cursor left widget
+        self._gizmo_hover = None
+        self.update()
+        super().leaveEvent(event)
+
     # mouse drag for panning -------------------------------------------------
 
     def mousePressEvent(self, event):  # pragma: no cover - UI interaction
@@ -111,6 +123,7 @@ class Viewport(GLWidget):
             hit = self._hit_gizmo(event.position())
             if hit:
                 self._gizmo_drag = hit
+                self._gizmo_hover = hit
                 world = self._screen_to_world(event.position())
                 if self.selected_obj:
                     self._drag_offset = (
@@ -119,6 +132,7 @@ class Viewport(GLWidget):
                     )
             else:
                 self._drag_pos = event.position()
+                self._gizmo_hover = None
             self.setCursor(Qt.CursorShape.BlankCursor)
             self.grabMouse()
         super().mousePressEvent(event)
@@ -142,6 +156,10 @@ class Viewport(GLWidget):
             self.camera.y += (1 if units.Y_UP else -1) * dy / scale
             self._drag_pos = event.position()
             self.update()
+            self._gizmo_hover = None
+        else:
+            self._gizmo_hover = self._hit_gizmo(event.position())
+        self.update()
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):  # pragma: no cover - UI interaction
@@ -149,6 +167,7 @@ class Viewport(GLWidget):
         self._gizmo_drag = None
         self.releaseMouse()
         self.setCursor(Qt.CursorShape.ArrowCursor)
+        self._gizmo_hover = self._hit_gizmo(event.position())
         super().mouseReleaseEvent(event)
 
     def wheelEvent(self, event):  # pragma: no cover - zoom control
@@ -164,6 +183,7 @@ class Viewport(GLWidget):
                     self._drag_offset[0] + before[0] - after[0],
                     self._drag_offset[1] + before[1] - after[1],
                 )
+            self._gizmo_hover = self._hit_gizmo(pos)
             self.update()
         super().wheelEvent(event)
 
