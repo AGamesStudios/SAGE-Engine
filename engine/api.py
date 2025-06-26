@@ -50,6 +50,7 @@ def create_engine(project: Project, fps: int = 30) -> Engine:
         title=project.title,
         renderer=renderer,
         camera=camera,
+        keep_aspect=getattr(project, 'keep_aspect', True),
     )
 
 
@@ -70,7 +71,8 @@ def save_scene(scene: Scene, path: str) -> None:
 
 
 def run_scene(path: str, width: int = 640, height: int = 480,
-              title: str | None = None, fps: int = 30) -> None:
+              title: str | None = None, fps: int = 30,
+              keep_aspect: bool = True) -> None:
     """Run a single scene file directly."""
     scene = load_scene(path)
     camera = scene.camera or Camera(width / 2, height / 2, width, height)
@@ -86,4 +88,5 @@ def run_scene(path: str, width: int = 640, height: int = 480,
         renderer=renderer,
         camera=camera,
         fps=fps,
+        keep_aspect=keep_aspect,
     ).run()

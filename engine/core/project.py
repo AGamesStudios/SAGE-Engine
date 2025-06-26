@@ -9,6 +9,7 @@ class Project:
     renderer: str = "opengl"
     width: int = 640
     height: int = 480
+    keep_aspect: bool = True
     title: str = 'SAGE 2D'
     version: str = '0.1.0'
     resources: str = 'resources'
@@ -37,13 +38,14 @@ class Project:
                 scene = {}
         width = data.get('width', 640)
         height = data.get('height', 480)
+        keep_aspect = data.get('keep_aspect', True)
         title = data.get('title', 'SAGE 2D')
         version = data.get('version', '0.1.0')
         resources = data.get('resources', 'resources')
         metadata = data.get('metadata', {})
-        return cls(scene or {}, renderer, width, height, title, version,
-                   resources, scenes_dir, scene_file or 'Scenes/Scene1.sagescene',
-                   metadata)
+        return cls(scene or {}, renderer, width, height, keep_aspect, title,
+                   version, resources, scenes_dir,
+                   scene_file or 'Scenes/Scene1.sagescene', metadata)
 
     def save(self, path: str):
         """Write the project file and associated scene."""
@@ -62,6 +64,7 @@ class Project:
                 'scene': scene_entry,
                 'width': self.width,
                 'height': self.height,
+                'keep_aspect': self.keep_aspect,
                 'title': self.title,
                 'version': self.version,
                 'resources': self.resources,

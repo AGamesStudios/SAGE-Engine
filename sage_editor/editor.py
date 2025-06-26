@@ -970,6 +970,7 @@ class Editor(QMainWindow):
         self.lang = DEFAULT_LANGUAGE
         self.window_width = 640
         self.window_height = 480
+        self.keep_aspect = True
         self.resource_dir: str | None = None
         self.resource_manager = None
         self.scene = Scene()
@@ -1354,6 +1355,7 @@ class Editor(QMainWindow):
                 self.scene.to_dict(),
                 width=self.window_width,
                 height=self.window_height,
+                keep_aspect=self.keep_aspect,
                 title=self.project_title,
                 version=self.project_version,
                 resources='resources',
@@ -1407,6 +1409,7 @@ class Editor(QMainWindow):
             self.project_description = self.project_metadata.get('description', '')
             self.window_width = proj.width
             self.window_height = proj.height
+            self.keep_aspect = getattr(proj, 'keep_aspect', True)
             self.scene_path = os.path.join(os.path.dirname(path), proj.scene_file)
             self.load_scene(Scene.from_dict(proj.scene))
             self._update_camera_rect()
@@ -1530,8 +1533,11 @@ class Editor(QMainWindow):
                 win_form.setFormAlignment(Qt.AlignmentFlag.AlignTop)
                 self.w_spin = QSpinBox(); self.w_spin.setRange(100, 4096); self.w_spin.setValue(parent.window_width)
                 self.h_spin = QSpinBox(); self.h_spin.setRange(100, 4096); self.h_spin.setValue(parent.window_height)
+                self.aspect_check = QCheckBox()
+                self.aspect_check.setChecked(parent.keep_aspect)
                 win_form.addRow(parent.t('width'), self.w_spin)
                 win_form.addRow(parent.t('height'), self.h_spin)
+                win_form.addRow(parent.t('keep_aspect'), self.aspect_check)
                 win_widget.setLayout(win_form)
                 win_page = QScrollArea()
                 win_page.setWidgetResizable(True)
@@ -1562,6 +1568,7 @@ class Editor(QMainWindow):
             self.project_description = dlg.desc_edit.toPlainText().strip()
             self.window_width = dlg.w_spin.value()
             self.window_height = dlg.h_spin.value()
+            self.keep_aspect = dlg.aspect_check.isChecked()
             self._update_camera_rect()
 
     def show_camera_settings(self):
@@ -1636,9 +1643,11 @@ class Editor(QMainWindow):
                 scene=scene,
                 events=scene.build_event_system(),
                 renderer=OpenGLRenderer(
-                    self.window_width, self.window_height, "SAGE 2D"
+                    self.window_width, self.window_height, "SAGE 2D",
+                    keep_aspect=self.keep_aspect,
                 ),
                 camera=cam,
+                keep_aspect=self.keep_aspect,
             )
             window = engine.run()
             self._game_engine = engine

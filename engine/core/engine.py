@@ -34,7 +34,7 @@ class Engine:
 
     def __init__(self, width=640, height=480, scene=None, events=None, fps=30,
                  title="SAGE 2D", renderer: Renderer | str | None = None,
-                 camera: Camera | None = None):
+                 camera: Camera | None = None, keep_aspect: bool = True):
         self.fps = fps
         self._frame_interval = 1.0 / fps if fps else 0
         self.scene = scene or Scene()
@@ -58,6 +58,7 @@ class Engine:
             self.renderer = cls(width, height, title)
         else:
             self.renderer = renderer
+        self.renderer.keep_aspect = keep_aspect
         self.input = QtInput(self.renderer.widget)
         self.last_time = time.perf_counter()
         try:

@@ -148,8 +148,9 @@ A project's file records the window `width`, `height` and `title`. When loading 
 project the engine creates its window using these values. The active camera
 keeps its own resolution. The window can be resized at runtime and the camera
 follows the new dimensions while unused space is letterboxed so
-the scene maintains its aspect ratio. Running a project from the editor uses the
-same dimensions so what you see matches the final game.
+the scene maintains its aspect ratio. This behavior can be disabled in the
+Project Settings if you prefer the view to stretch. Running a project from the
+editor uses the same dimensions so what you see matches the final game.
 A **Project Settings** dialog under **Settings** groups options into side tabs.
 The dialog uses the Qt *Fusion* style and keeps the tab labels horizontal even
 though they sit vertically on the left. The **Info** tab edits the game title,

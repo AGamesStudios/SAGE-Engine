@@ -48,6 +48,7 @@ class OpenGLRenderer:
     height: int = 480
     title: str = "SAGE 2D"
     widget: Optional[GLWidget] = None
+    keep_aspect: bool = True
 
     def create_widget(self) -> GLWidget:
         """Return the :class:`GLWidget` used for rendering."""
@@ -65,6 +66,7 @@ class OpenGLRenderer:
         self._scene = None
         self._camera = None
         self._draw_gizmos = True
+        self.keep_aspect = bool(self.keep_aspect)
 
     def set_window_size(self, width: int, height: int):
         if self.widget:
@@ -194,6 +196,39 @@ class OpenGLRenderer:
         glVertex2f(0.0, size)
         glEnd()
 
+    def _apply_viewport(self, camera: Camera | None) -> None:
+        """Set GL viewport respecting the camera aspect ratio."""
+        from OpenGL.GL import glViewport
+        w = self.widget.width() if self.widget else self.width
+        h = self.widget.height() if self.widget else self.height
+        if not self.keep_aspect or camera is None:
+            glViewport(0, 0, w, h)
+            return
+        cam_ratio = camera.width / camera.height if camera.height else 1.0
+        win_ratio = w / h if h else cam_ratio
+        if cam_ratio > win_ratio:
+            vp_w = w
+            vp_h = int(w / cam_ratio)
+            x = 0
+            y = int((h - vp_h) / 2)
+        else:
+            vp_h = h
+            vp_w = int(h * cam_ratio)
+            x = int((w - vp_w) / 2)
+            y = 0
+        glViewport(x, y, vp_w, vp_h)
+
+    def _apply_projection(self, camera: Camera | None) -> None:
+        from OpenGL.GL import glMatrixMode, glLoadIdentity, glOrtho, GL_PROJECTION, GL_MODELVIEW
+        w = (camera.width if (self.keep_aspect and camera) else self.width)
+        h = (camera.height if (self.keep_aspect and camera) else self.height)
+        sign = 1.0 if units.Y_UP else -1.0
+        glMatrixMode(GL_PROJECTION)
+        glLoadIdentity()
+        glOrtho(-w / 2, w / 2, -h / 2 * sign, h / 2 * sign, -1, 1)
+        glMatrixMode(GL_MODELVIEW)
+        glLoadIdentity()
+
     def paint(self):
         # called from GLWidget.paintGL
         self.clear()
@@ -208,6 +243,8 @@ class OpenGLRenderer:
         self.widget.update()
 
     def _render_scene(self, scene, camera: Camera | None):
+        self._apply_viewport(camera)
+        self._apply_projection(camera)
         glPushMatrix()
         scale = units.UNITS_PER_METER
         sign = 1.0 if units.Y_UP else -1.0
