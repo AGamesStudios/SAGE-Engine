@@ -39,7 +39,7 @@ class GameWindow(QMainWindow):
             self.engine.renderer.present()
         except Exception:
             logger.exception("Runtime error")
-            self.close()
+            self.timer.stop()
 
     def closeEvent(self, event):  # pragma: no cover - GUI cleanup
         self.timer.stop()

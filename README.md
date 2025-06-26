@@ -356,6 +356,8 @@ memory becomes tight. The `Engine` class accepts an `fps` argument (default 30)
 to control the frame rate. `Engine.run()` now launches a Qt **GameWindow** that
 updates via a `QTimer` instead of a tight loop, keeping CPU usage low. Object
 lists are sorted only when modified and heavy math dependencies were removed.
+Runtime errors no longer close the game window automatically; they are logged so
+the scene remains visible for inspection.
 Expensive transform calculations are accelerated with **Numba** when installed
 by decorating them with ``@njit``. The editor delays resource searches slightly
 so typing does not rebuild the tree on every keystroke. These optimizations
