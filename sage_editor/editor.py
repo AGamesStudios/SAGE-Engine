@@ -1,4 +1,5 @@
 import sys
+import os
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QFileDialog,
     QTabWidget, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
@@ -24,8 +25,6 @@ import atexit
 import traceback
 import inspect
 from .lang import LANGUAGES, DEFAULT_LANGUAGE
-import os
-from PyQt6.QtCore import Qt
 from engine import Scene, GameObject, Project, Camera, ENGINE_VERSION, get_resource_path
 from . import plugins
 from .widgets import Viewport

@@ -9,6 +9,14 @@ The current release is **SAGE Engine: 2D prototype v0.0.01a**. The engine
 stores its version inside every `.sageproject` file so you can safely upgrade
 without losing progress.
 
+## Setup
+Install dependencies with:
+```bash
+pip install -r requirements.txt
+```
+Or run `scripts/setup.sh` to install them automatically.
+
+
 ## Architecture
 The core engine code resides under `engine/core` which defines the
 generic `GameObject`, `Scene`, `Engine` and `Project` classes. 2D helpers are

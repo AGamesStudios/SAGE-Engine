@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 import math
+import ctypes
 
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
 from PyQt6.QtGui import QSurfaceFormat
@@ -10,17 +11,22 @@ from OpenGL.GL import (
     glEnable, glBlendFunc, glClearColor, glClear, glPushMatrix, glPopMatrix,
     glTranslatef, glRotatef, glScalef, glBegin, glEnd, glVertex2f, glColor4f,
     glTexCoord2f, glBindTexture, glTexParameteri, glTexImage2D, glGenTextures,
-    glLineWidth,
+    glLineWidth, glBufferSubData,
+    glGetUniformLocation, glUniform4f, glUseProgram, glBindBuffer,
+    glBindVertexArray, glDrawArrays,
     GL_BLEND, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_COLOR_BUFFER_BIT,
     GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_TEXTURE_MAG_FILTER, GL_LINEAR,
     GL_QUADS, GL_LINES, GL_LINE_LOOP, GL_TRIANGLES, GL_RGBA, GL_UNSIGNED_BYTE,
-    GL_MULTISAMPLE, GL_LINE_SMOOTH
+    GL_MULTISAMPLE, GL_LINE_SMOOTH, GL_ARRAY_BUFFER, GL_STATIC_DRAW,
+    GL_FLOAT, GL_TRIANGLE_FAN, GL_VERTEX_SHADER, GL_FRAGMENT_SHADER
 )
+from OpenGL.GL.shaders import compileProgram, compileShader
 from PIL import Image
 
 from engine.core.camera import Camera
 from engine.core.game_object import GameObject
 from engine import units
+from engine.log import logger
 
 
 class GLWidget(QOpenGLWidget):
@@ -38,7 +44,7 @@ class GLWidget(QOpenGLWidget):
         glEnable(GL_LINE_SMOOTH)
         glEnable(GL_TEXTURE_2D)
         if self.renderer:
-            self.renderer.setup_view()
+            self.renderer.init_gl()
 
     def paintGL(self):
         if self.renderer:
@@ -64,6 +70,61 @@ class OpenGLRenderer:
         """Return the :class:`GLWidget` used for rendering."""
         return GLWidget()
 
+    def init_gl(self) -> None:
+        """Initialize OpenGL resources and set up the viewport."""
+        self.setup_view()
+        if self._program is not None:
+            return
+        vert = """
+            #version 120
+            attribute vec2 pos;
+            attribute vec2 uv;
+            varying vec2 v_uv;
+            void main() {
+                gl_Position = vec4(pos, 0.0, 1.0);
+                v_uv = uv;
+            }
+        """
+        frag = """
+            #version 120
+            varying vec2 v_uv;
+            uniform sampler2D tex;
+            uniform vec4 color;
+            void main() {
+                gl_FragColor = texture2D(tex, v_uv) * color;
+            }
+        """
+        self._program = compileProgram(
+            compileShader(vert, GL_VERTEX_SHADER),
+            compileShader(frag, GL_FRAGMENT_SHADER),
+        )
+        from OpenGL.GL import (
+            glGenVertexArrays, glBindVertexArray, glGenBuffers, glBindBuffer,
+            glBufferData, GL_ARRAY_BUFFER, GL_STATIC_DRAW, glGetAttribLocation,
+            glEnableVertexAttribArray, glVertexAttribPointer, GL_FLOAT,
+        )
+        self._vao = glGenVertexArrays(1)
+        glBindVertexArray(self._vao)
+        self._vbo = glGenBuffers(1)
+        glBindBuffer(GL_ARRAY_BUFFER, self._vbo)
+        data = (
+            ctypes.c_float * 16
+        )(
+            -0.5, -0.5, 0.0, 0.0,
+            0.5, -0.5, 1.0, 0.0,
+            0.5, 0.5, 1.0, 1.0,
+            -0.5, 0.5, 0.0, 1.0,
+        )
+        glBufferData(GL_ARRAY_BUFFER, ctypes.sizeof(data), data, GL_STATIC_DRAW)
+        loc_pos = glGetAttribLocation(self._program, "pos")
+        loc_uv = glGetAttribLocation(self._program, "uv")
+        glEnableVertexAttribArray(loc_pos)
+        glVertexAttribPointer(loc_pos, 2, GL_FLOAT, False, 16, ctypes.c_void_p(0))
+        glEnableVertexAttribArray(loc_uv)
+        glVertexAttribPointer(loc_uv, 2, GL_FLOAT, False, 16, ctypes.c_void_p(8))
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
+        glBindVertexArray(0)
+
     def __post_init__(self):
         if self.widget is None:
             self.widget = self.create_widget()
@@ -84,6 +145,9 @@ class OpenGLRenderer:
         self._local_coords: bool = False
         self.keep_aspect = bool(self.keep_aspect)
         self.background = tuple(self.background)
+        self._program = None
+        self._vao = None
+        self._vbo = None
 
     def set_window_size(self, width: int, height: int):
         if self.widget:
@@ -160,8 +224,13 @@ class OpenGLRenderer:
         from sage_editor.icons import ICON_DIR
         path = ICON_DIR / name
         if not path.is_file():
+            logger.warning('Icon %s not found at %s', name, path)
             return self._get_blank_texture()
-        img = Image.open(path).convert('RGBA')
+        try:
+            img = Image.open(path).convert('RGBA')
+        except Exception:
+            logger.exception('Failed to load icon %s', path)
+            return self._get_blank_texture()
         img = img.transpose(Image.Transpose.FLIP_TOP_BOTTOM)
         data = img.tobytes()
         tex = glGenTextures(1)
@@ -192,6 +261,54 @@ class OpenGLRenderer:
         glTexCoord2f(0.0, 1.0); glVertex2f(-half,  half)
         glEnd()
         glPopMatrix()
+
+    def _draw_object(self, obj: GameObject, camera: Camera | None) -> None:
+        if self._program is None:
+            return
+        from OpenGL.GL import (
+            glUseProgram, glGetUniformLocation, glUniform4f, glBindBuffer,
+            glBufferSubData, GL_ARRAY_BUFFER, glBindVertexArray, glDrawArrays,
+            GL_TRIANGLE_FAN, glBindTexture
+        )
+        glUseProgram(self._program)
+        loc_color = glGetUniformLocation(self._program, 'color')
+        glUniform4f(loc_color, *(c / 255.0 for c in (obj.color or (255, 255, 255, 255))))
+        scale = units.UNITS_PER_METER
+        sign = 1.0 if units.Y_UP else -1.0
+        zoom = camera.zoom if camera else 1.0
+        cam_x = camera.x if camera else 0.0
+        cam_y = camera.y if camera else 0.0
+        w_size = camera.width if (self.keep_aspect and camera) else self.width
+        h_size = camera.height if (self.keep_aspect and camera) else self.height
+        ang = math.radians(getattr(obj, 'angle', 0.0))
+        cos_a = math.cos(ang)
+        sin_a = math.sin(ang)
+        w = obj.width * obj.scale_x
+        h = obj.height * obj.scale_y
+        verts = [(-w/2, -h/2), (w/2, -h/2), (w/2, h/2), (-w/2, h/2)]
+        data = []
+        for vx, vy in verts:
+            rx = vx * cos_a - vy * sin_a
+            ry = vx * sin_a + vy * cos_a
+            world_x = (rx + obj.x - cam_x) * scale * zoom
+            world_y = (ry + obj.y - cam_y) * scale * zoom * sign
+            ndc_x = (2.0 * world_x) / w_size
+            ndc_y = (2.0 * world_y) / h_size
+            data.extend([ndc_x, ndc_y])
+        arr = (ctypes.c_float * 16)(
+            data[0], data[1], 0.0, 0.0,
+            data[2], data[3], 1.0, 0.0,
+            data[4], data[5], 1.0, 1.0,
+            data[6], data[7], 0.0, 1.0,
+        )
+        glBindBuffer(GL_ARRAY_BUFFER, self._vbo)
+        glBufferSubData(GL_ARRAY_BUFFER, 0, ctypes.sizeof(arr), arr)
+        glBindTexture(GL_TEXTURE_2D, self._get_texture(obj))
+        glBindVertexArray(self._vao)
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4)
+        glBindVertexArray(0)
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
+        glUseProgram(0)
 
     def _draw_frustum(self, cam: Camera):
         """Draw a rectangle representing the camera's view."""
@@ -492,22 +609,7 @@ class OpenGLRenderer:
                         obj.x, obj.y, tex, camera.zoom if camera else 1.0
                     )
                 continue
-            tex = self._get_texture(obj)
-            glBindTexture(GL_TEXTURE_2D, tex)
-            glPushMatrix()
-            glTranslatef(obj.x * scale, obj.y * scale, 0)
-            glRotatef(obj.angle, 0, 0, 1)
-            glScalef(obj.scale_x * scale, obj.scale_y * scale, 1)
-            w = obj.width
-            h = obj.height
-            glColor4f(*(c/255.0 for c in (obj.color or (255, 255, 255, 255))))
-            glBegin(GL_QUADS)
-            glTexCoord2f(0.0, 0.0); glVertex2f(-w/2, -h/2)
-            glTexCoord2f(1.0, 0.0); glVertex2f( w/2, -h/2)
-            glTexCoord2f(1.0, 1.0); glVertex2f( w/2,  h/2)
-            glTexCoord2f(0.0, 1.0); glVertex2f(-w/2,  h/2)
-            glEnd()
-            glPopMatrix()
+            self._draw_object(obj, camera)
             if self._draw_gizmos:
                 tex_icon = self._get_icon_texture('object.png')
                 self._draw_icon(

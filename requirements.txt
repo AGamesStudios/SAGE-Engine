@@ -1,0 +1,4 @@
+PyQt6>=6.5
+PyOpenGL>=3.1
+Pillow
+pytest

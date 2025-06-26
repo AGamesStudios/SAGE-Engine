@@ -107,6 +107,7 @@ def load_plugins(target: str, instance, paths=None):
         if os.path.isdir(path) and path not in sys.path:
             sys.path.append(path)
         if not os.path.isdir(path):
+            logger.warning('Plugin directory %s does not exist', path)
             continue
         for name in os.listdir(path):
             if name.startswith('_') or not name.endswith('.py'):
@@ -118,5 +119,5 @@ def load_plugins(target: str, instance, paths=None):
                 module = importlib.import_module(mod_name)
                 _call_init(module, target, instance)
             except Exception:
-                logger.exception('Failed to load plugin %s', name)
+                logger.exception('Failed to load plugin %s at %s', mod_name, os.path.join(path, name))
 
