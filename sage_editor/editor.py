@@ -1504,6 +1504,7 @@ class Editor(QMainWindow):
             """Dialog with side tabs using the Fusion style."""
             def __init__(self, parent: 'Editor'):
                 super().__init__(parent)
+                self.parent = parent
                 self.setWindowTitle(parent.t('project_settings'))
                 self.setFixedSize(480, 360)
                 self.setStyle(QStyleFactory.create('Fusion'))
@@ -1576,14 +1577,14 @@ class Editor(QMainWindow):
                 outer.addLayout(bottom)
 
             def _choose_bg(self):
-                color = QColorDialog.getColor(QColor(*parent.background_color), self)
+                color = QColorDialog.getColor(QColor(*self.parent.background_color), self)
                 if color.isValid():
                     self.bg_btn.setStyleSheet(
                         f"background: rgb({color.red()}, {color.green()}, {color.blue()});"
                     )
                     self._bg = (color.red(), color.green(), color.blue())
                 else:
-                    self._bg = parent.background_color
+                    self._bg = self.parent.background_color
 
         dlg = ProjectSettingsDialog(self)
         if dlg.exec() == QDialog.DialogCode.Accepted:
@@ -1872,9 +1873,10 @@ class Editor(QMainWindow):
 
     def _update_camera_rect(self):
         if hasattr(self, 'view'):
-            self.view.renderer.keep_aspect = self.keep_aspect
-            self.view.camera.width = self.window_width
-            self.view.camera.height = self.window_height
+            # allow the viewport camera to use its own dimensions
+            self.view.renderer.keep_aspect = False
+            self.view.camera.width = self.view.width()
+            self.view.camera.height = self.view.height()
             self.view.renderer.set_window_size(self.view.width(), self.view.height())
             self.view.update()
 
