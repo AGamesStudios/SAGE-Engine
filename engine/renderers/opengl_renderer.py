@@ -75,7 +75,10 @@ class OpenGLRenderer:
             self.widget.resize(width, height)
         self.width = width
         self.height = height
-        self.setup_view()
+        # only update the GL projection if a valid context exists
+        ctx = self.widget.context() if self.widget else None
+        if ctx and ctx.isValid():
+            self.setup_view()
 
     def should_close(self) -> bool:
         return self._should_close
