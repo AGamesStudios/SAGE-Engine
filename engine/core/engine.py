@@ -77,12 +77,18 @@ class Engine:
     def run(self):
         """Start the engine in a Qt :class:`GameWindow`."""
         _log(f"Starting engine version {ENGINE_VERSION}")
-        app = QApplication.instance() or QApplication([])
+        app = QApplication.instance()
+        owns_app = False
+        if app is None:
+            app = QApplication([])
+            owns_app = True
         from ..game_window import GameWindow
         win = GameWindow(self)
         win.show()
-        app.exec()
-        _log("Engine shutdown")
+        if owns_app:
+            app.exec()
+            _log("Engine shutdown")
+        return win
 
 
 def main(argv=None):

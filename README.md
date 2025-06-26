@@ -201,7 +201,8 @@ python -m engine path/to/project.sageproject
 ```
 
 The editor toolbar provides a **Run** button with the same effect. It saves the
-current project and launches it in a separate OpenGL window.
+current project and opens a new OpenGL game window using the existing Qt
+session so the scene appears exactly as in the viewport.
 
 
 Project files store the entire scene data so you can share a single file. Use

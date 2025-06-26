@@ -1530,15 +1530,12 @@ class Editor(QMainWindow):
         self.save_project()
         if not self.project_path:
             return
-        import subprocess, os
         try:
-            workdir = os.path.dirname(self.project_path)
-            subprocess.Popen([
-                sys.executable,
-                '-m', 'engine',
-                self.project_path,
-            ], cwd=workdir, close_fds=True)
-        except Exception as exc:  # pragma: no cover - subprocess errors
+            project = Project.load(self.project_path)
+            from engine.api import create_engine
+            engine = create_engine(project)
+            engine.run()  # opens a GameWindow using the existing QApplication
+        except Exception as exc:  # pragma: no cover - runtime errors
             logger.exception('Failed to start engine')
             QMessageBox.warning(self, self.t('error'), str(exc))
 
