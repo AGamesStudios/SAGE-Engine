@@ -27,11 +27,12 @@ class GLWidget(QOpenGLWidget):
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glEnable(GL_TEXTURE_2D)
-        self.renderer and self.renderer._setup_view()
+        if self.renderer:
+            self.renderer.setup_view()
 
     def paintGL(self):
         if self.renderer:
-            self.renderer._paint()
+            self.renderer.paint()
 
     def resizeGL(self, width: int, height: int):
         if self.renderer:
@@ -67,7 +68,7 @@ class OpenGLRenderer:
             self.widget.resize(width, height)
         self.width = width
         self.height = height
-        self._setup_view()
+        self.setup_view()
 
     def should_close(self) -> bool:
         return self._should_close
@@ -76,7 +77,7 @@ class OpenGLRenderer:
         glClearColor(color[0]/255.0, color[1]/255.0, color[2]/255.0, 1.0)
         glClear(GL_COLOR_BUFFER_BIT)
 
-    def _setup_view(self):
+    def setup_view(self):
         from OpenGL.GL import glMatrixMode, glLoadIdentity, glOrtho, GL_PROJECTION, GL_MODELVIEW
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
@@ -137,7 +138,7 @@ class OpenGLRenderer:
         glVertex2f(0.0, size)
         glEnd()
 
-    def _paint(self):
+    def paint(self):
         # called from GLWidget.paintGL
         self.clear()
         if self._scene:
@@ -158,7 +159,7 @@ class OpenGLRenderer:
                          -camera.y * scale * sign,
                          0)
             glScalef(camera.zoom, camera.zoom, 1.0)
-        scene._sort_objects()
+        scene.sort_objects()
         for obj in scene.objects:
             if isinstance(obj, Camera):
                 continue

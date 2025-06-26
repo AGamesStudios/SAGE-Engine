@@ -56,7 +56,7 @@ class Engine:
         else:
             self.renderer = renderer
         self.input = QtInput(self.renderer.widget)
-        self._last = time.perf_counter()
+        self.last_time = time.perf_counter()
         try:
             from .. import load_engine_plugins
             load_engine_plugins(self)

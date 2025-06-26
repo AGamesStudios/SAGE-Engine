@@ -23,13 +23,13 @@ class GameWindow(QMainWindow):
         self.timer = QTimer(self)
         self.timer.setInterval(max(1, interval))
         self.timer.timeout.connect(self._step)
-        self.engine._last = time.perf_counter()
+        self.engine.last_time = time.perf_counter()
         self.timer.start()
 
     def _step(self):
         now = time.perf_counter()
-        dt = now - self.engine._last
-        self.engine._last = now
+        dt = now - self.engine.last_time
+        self.engine.last_time = now
         self.engine.input.poll()
         try:
             self.engine.events.update(self.engine, self.engine.scene, dt)

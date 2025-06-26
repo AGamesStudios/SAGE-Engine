@@ -30,6 +30,10 @@ class Scene:
             self.objects.sort(key=lambda o: getattr(o, 'z', 0))
             self._sorted = True
 
+    def sort_objects(self) -> None:
+        """Public wrapper to sort objects by their z order."""
+        self._sort_objects()
+
     def add_object(self, obj: GameObject | Camera):
         existing = {o.name for o in self.objects}
         base = obj.name

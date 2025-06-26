@@ -46,10 +46,10 @@ class Viewport(QOpenGLWidget):
     # QOpenGLWidget overrides -------------------------------------------------
 
     def initializeGL(self) -> None:  # pragma: no cover - GUI callback
-        self.renderer._setup_view()
+        self.renderer.setup_view()
 
     def paintGL(self) -> None:  # pragma: no cover - GUI callback
-        self.renderer._paint()
+        self.renderer.paint()
 
     def resizeEvent(self, event):  # pragma: no cover - handle resize
         super().resizeEvent(event)

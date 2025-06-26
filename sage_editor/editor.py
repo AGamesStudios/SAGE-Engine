@@ -2,7 +2,7 @@ import sys
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QFileDialog,
     QTabWidget, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-    QListWidget, QListWidgetItem, QTableWidget, QTableWidgetItem, QPushButton, QDialog, QFormLayout,
+    QListWidget, QListWidgetItem, QTableWidget, QTableWidgetItem, QPushButton, QDialog, QFormLayout, QGridLayout,
     QDialogButtonBox, QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox, QCompleter,
     QTextEdit, QDockWidget, QGroupBox, QCheckBox, QMessageBox, QMenu, QColorDialog,
     QTreeView, QInputDialog, QTreeWidget, QTreeWidgetItem,
