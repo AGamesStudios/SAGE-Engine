@@ -1539,7 +1539,7 @@ class Editor(QMainWindow):
             if self.resource_dir:
                 set_resource_root(self.resource_dir)
 
-            scene = Scene.from_dict(self.scene.to_dict())
+            scene = self.scene
             cam = scene.camera or Camera(
                 x=self.window_width / 2,
                 y=self.window_height / 2,
