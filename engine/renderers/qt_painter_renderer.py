@@ -18,6 +18,8 @@ class PainterWidget(QWidget):
         super().__init__(parent)
         # painter renderer instance will be set by the parent
         self.renderer = None
+        # cache loaded pixmaps by image id
+        self._pixmaps = {}
 
     def paintEvent(self, event):  # pragma: no cover - GUI callback
         if self.renderer:

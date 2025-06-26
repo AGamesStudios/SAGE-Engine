@@ -24,6 +24,7 @@ class Scene:
         self.camera = None
         self.active_camera = None
         self.metadata = {}
+        self.metadata = {}
         self._sorted = False
 
     def _sort_objects(self):
