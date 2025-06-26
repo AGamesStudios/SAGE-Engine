@@ -50,6 +50,7 @@ class OpenGLRenderer:
 
     width: int = 640
         self._gizmo_mode: str = 'move'
+        self._gizmo_mode: str = 'move'
     height: int = 480
     title: str = "SAGE 2D"
     widget: Optional[GLWidget] = None
@@ -205,11 +206,6 @@ class OpenGLRenderer:
         glColor4f(1.0, 0.0, 0.0, 1.0)
         glVertex2f(-size, 0.0)
         glVertex2f(size, 0.0)
-        glColor4f(0.0, 1.0, 0.0, 1.0)
-        glVertex2f(0.0, -size)
-        glVertex2f(0.0, size)
-        glEnd()
-
                     mode: str = 'move',
         if mode == 'move':
             color_x = 1.0 if not (hover in ("x", "xy") or dragging in ("x", "xy")) else 0.5
@@ -268,6 +264,12 @@ class OpenGLRenderer:
             color_rot = 1.0 if not (hover == 'rot' or dragging == 'rot') else 0.5
             glColor4f(color_rot, color_rot, 0.0, 1.0)
             glLineWidth(ring_w)
+            glBegin(GL_LINE_LOOP)
+            for i in range(32):
+                ang = (i / 32.0) * math.tau
+                glVertex2f(math.cos(ang) * ring_r, math.sin(ang) * ring_r * sign)
+            glEnd()
+            glLineWidth(4)
             glBegin(GL_LINE_LOOP)
             for i in range(32):
                 ang = (i / 32.0) * math.tau
@@ -342,9 +344,13 @@ class OpenGLRenderer:
             glVertex2f(-sq, -size - sq)
             glVertex2f(sq, -size - sq)
             glVertex2f(sq, -size + sq)
-            glVertex2f(-sq, -size + sq)
-        glEnd()
-
+                   cursor: tuple[float, float] | None = None,
+                   mode: str = 'move'):
+        self._gizmo_mode = mode
+                self._draw_gizmo(
+                    self._selected_obj, camera, self._gizmo_mode,
+                    self._hover_axis, self._drag_axis
+                )
                    cursor: tuple[float, float] | None = None,
                    mode: str = 'move'):
         self._gizmo_mode = mode

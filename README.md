@@ -49,6 +49,8 @@ hovered so you know they can be dragged. A yellow ring allows rotation around
 the Z axis and square handles at the ends let you scale objects. A small
 toolbar in the viewport corner lets you switch between Move, Rotate and
 Scale modes. The game window instead uses
+toolbar in the viewport corner lets you switch between Move, Rotate and
+Scale modes. The game window instead uses
 the Z axis and square handles at the ends let you scale objects. The game window instead uses
 the active camera object from the scene so you can inspect levels from any angle
 without affecting gameplay.
