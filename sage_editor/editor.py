@@ -990,7 +990,7 @@ class Editor(QMainWindow):
         self.setCentralWidget(self.tabs)
 
         # viewport tab renders the scene
-        self.view = Viewport(self.scene)
+        self.view = Viewport(self.scene, editor=self)
         self.view.renderer.background = self.background_color
         self.tabs.addTab(self.view, self.t('viewport'))
 
@@ -1716,6 +1716,8 @@ class Editor(QMainWindow):
                 self.object_combo.setCurrentIndex(0)
                 self.object_list.setCurrentRow(0)
                 self._update_transform_panel()
+                self._update_gizmo()
+                self._update_gizmo()
             self._mark_dirty()
         except Exception as exc:
             self.console.append(f'Failed to add sprite: {exc}')
@@ -1766,6 +1768,7 @@ class Editor(QMainWindow):
             self.object_combo.setCurrentIndex(0)
             self.object_list.setCurrentRow(0)
             self._update_transform_panel()
+            self._update_gizmo()
         self._mark_dirty()
         self._update_camera_rect()
         self._refresh_object_labels()
@@ -1846,8 +1849,12 @@ class Editor(QMainWindow):
             self.var_table.setItem(row, 1, QTableWidgetItem(str(value)))
 
     def _update_gizmo(self):
-        """Placeholder until a new viewport is implemented."""
-        return
+        idx = self.object_combo.currentIndex()
+        obj = None
+        if 0 <= idx < len(self.items):
+            _, obj = self.items[idx]
+        if hasattr(self, 'view'):
+            self.view.set_selected(obj)
 
     def _on_selection_changed(self):
         """Placeholder until a new viewport is implemented."""

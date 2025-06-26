@@ -8,13 +8,15 @@ from OpenGL.GL import (
     glEnable, glBlendFunc, glClearColor, glClear, glPushMatrix, glPopMatrix,
     glTranslatef, glRotatef, glScalef, glBegin, glEnd, glVertex2f, glColor4f,
     glTexCoord2f, glBindTexture, glTexParameteri, glTexImage2D, glGenTextures,
+    glLineWidth,
     GL_BLEND, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_COLOR_BUFFER_BIT,
     GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_TEXTURE_MAG_FILTER, GL_LINEAR,
-    GL_QUADS, GL_LINES, GL_LINE_LOOP, GL_RGBA, GL_UNSIGNED_BYTE
+    GL_QUADS, GL_LINES, GL_LINE_LOOP, GL_TRIANGLES, GL_RGBA, GL_UNSIGNED_BYTE
 )
 from PIL import Image
 
 from engine.core.camera import Camera
+from engine.core.game_object import GameObject
 from engine import units
 from pathlib import Path
 
@@ -67,6 +69,7 @@ class OpenGLRenderer:
         self._scene = None
         self._camera = None
         self._draw_gizmos = True
+        self._selected_obj = None
         self.keep_aspect = bool(self.keep_aspect)
         self.background = tuple(self.background)
 
@@ -201,6 +204,58 @@ class OpenGLRenderer:
         glVertex2f(0.0, size)
         glEnd()
 
+    def _draw_gizmo(self, obj: "GameObject", camera: Camera | None):
+        if obj is None:
+            return
+        scale = units.UNITS_PER_METER
+        sign = 1.0 if units.Y_UP else -1.0
+        zoom = camera.zoom if camera else 1.0
+        inv = 1.0 / zoom if zoom else 1.0
+        size = 50 * inv
+        head = 10 * inv
+        rad = 4 * inv
+        glBindTexture(GL_TEXTURE_2D, 0)
+        glPushMatrix()
+        glTranslatef(obj.x * scale, obj.y * scale * sign, 0)
+        glLineWidth(4)
+        # X axis
+        glColor4f(1.0, 0.0, 0.0, 1.0)
+        glBegin(GL_LINES)
+        glVertex2f(0.0, 0.0)
+        glVertex2f(size, 0.0)
+        glEnd()
+        glBegin(GL_TRIANGLES)
+        glVertex2f(size, 0.0)
+        glVertex2f(size - head, head / 2)
+        glVertex2f(size - head, -head / 2)
+        glEnd()
+        # Y axis
+        glColor4f(0.0, 1.0, 0.0, 1.0)
+        glBegin(GL_LINES)
+        glVertex2f(0.0, 0.0)
+        glVertex2f(0.0, size * sign)
+        glEnd()
+        glBegin(GL_TRIANGLES)
+        if units.Y_UP:
+            glVertex2f(0.0, size)
+            glVertex2f(-head / 2, size - head)
+            glVertex2f(head / 2, size - head)
+        else:
+            glVertex2f(0.0, -size)
+            glVertex2f(-head / 2, -size + head)
+            glVertex2f(head / 2, -size + head)
+        glEnd()
+        # pivot point
+        glColor4f(0.5, 0.5, 0.5, 1.0)
+        glBegin(GL_QUADS)
+        glVertex2f(-rad, -rad)
+        glVertex2f(rad, -rad)
+        glVertex2f(rad, rad)
+        glVertex2f(-rad, rad)
+        glEnd()
+        glLineWidth(1)
+        glPopMatrix()
+
     def _apply_viewport(self, camera: Camera | None) -> None:
         """Set GL viewport respecting the camera aspect ratio."""
         from OpenGL.GL import glViewport
@@ -240,11 +295,13 @@ class OpenGLRenderer:
         if self._scene:
             self._render_scene(self._scene, self._camera)
 
-    def draw_scene(self, scene, camera: Camera | None = None, gizmos: bool = True):
+    def draw_scene(self, scene, camera: Camera | None = None, gizmos: bool = True,
+                   selected: GameObject | None = None):
         """Store the scene and camera then schedule a repaint."""
         self._scene = scene
         self._camera = camera
         self._draw_gizmos = gizmos
+        self._selected_obj = selected
         self.widget.update()
 
     def _render_scene(self, scene, camera: Camera | None):
@@ -290,6 +347,8 @@ class OpenGLRenderer:
                     obj.x, obj.y, tex_icon, camera.zoom if camera else 1.0
                 )
         if self._draw_gizmos:
+            if self._selected_obj:
+                self._draw_gizmo(self._selected_obj, camera)
             self._draw_origin(50 * scale)
         glPopMatrix()
 
