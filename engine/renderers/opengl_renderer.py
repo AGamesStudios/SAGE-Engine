@@ -5,6 +5,7 @@ from typing import Optional
 import math
 
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
+from PyQt6.QtGui import QSurfaceFormat
 from OpenGL.GL import (
     glEnable, glBlendFunc, glClearColor, glClear, glPushMatrix, glPopMatrix,
     glTranslatef, glRotatef, glScalef, glBegin, glEnd, glVertex2f, glColor4f,
@@ -24,12 +25,17 @@ from pathlib import Path
 
 class GLWidget(QOpenGLWidget):
     def __init__(self, parent=None):
+        fmt = QSurfaceFormat()
+        fmt.setSamples(4)
+        self.setFormat(fmt)
         super().__init__(parent)
         self.renderer: Optional['OpenGLRenderer'] = None
 
     def initializeGL(self):
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glEnable(GL_MULTISAMPLE)
+        glEnable(GL_LINE_SMOOTH)
         glEnable(GL_TEXTURE_2D)
         if self.renderer:
             self.renderer.setup_view()
