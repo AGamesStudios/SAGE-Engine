@@ -971,6 +971,7 @@ class Editor(QMainWindow):
         self.window_width = 640
         self.window_height = 480
         self.keep_aspect = True
+        self.background_color = (0, 0, 0)
         self.resource_dir: str | None = None
         self.resource_manager = None
         self.scene = Scene()
@@ -990,6 +991,7 @@ class Editor(QMainWindow):
 
         # viewport tab renders the scene
         self.view = Viewport(self.scene)
+        self.view.renderer.background = self.background_color
         self.tabs.addTab(self.view, self.t('viewport'))
 
         # object list and transform inspector dock
@@ -1356,6 +1358,7 @@ class Editor(QMainWindow):
                 width=self.window_width,
                 height=self.window_height,
                 keep_aspect=self.keep_aspect,
+                background=self.background_color,
                 title=self.project_title,
                 version=self.project_version,
                 resources='resources',
@@ -1388,6 +1391,7 @@ class Editor(QMainWindow):
             QMessageBox.warning(self, 'Error', f'Failed to load scene: {exc}')
             self.project_path = None
             return
+        self._update_camera_rect()
         self._update_project_state()
         self._add_recent(proj_path)
         self.dirty = False
@@ -1410,6 +1414,8 @@ class Editor(QMainWindow):
             self.window_width = proj.width
             self.window_height = proj.height
             self.keep_aspect = getattr(proj, 'keep_aspect', True)
+            self.background_color = getattr(proj, 'background', (0, 0, 0))
+            self.view.renderer.background = self.background_color
             self.scene_path = os.path.join(os.path.dirname(path), proj.scene_file)
             self.load_scene(Scene.from_dict(proj.scene))
             self._update_camera_rect()
@@ -1461,6 +1467,8 @@ class Editor(QMainWindow):
                 self.scene.to_dict(),
                 width=self.window_width,
                 height=self.window_height,
+                keep_aspect=self.keep_aspect,
+                background=self.background_color,
                 title=self.project_title,
                 version=self.project_version,
                 resources=os.path.relpath(self.resource_dir, os.path.dirname(self.project_path)) if self.resource_dir else 'resources',
@@ -1535,9 +1543,15 @@ class Editor(QMainWindow):
                 self.h_spin = QSpinBox(); self.h_spin.setRange(100, 4096); self.h_spin.setValue(parent.window_height)
                 self.aspect_check = QCheckBox()
                 self.aspect_check.setChecked(parent.keep_aspect)
+                self.bg_btn = QPushButton()
+                self.bg_btn.setStyleSheet(
+                    f"background: rgb({parent.background_color[0]}, {parent.background_color[1]}, {parent.background_color[2]});"
+                )
+                self.bg_btn.clicked.connect(self._choose_bg)
                 win_form.addRow(parent.t('width'), self.w_spin)
                 win_form.addRow(parent.t('height'), self.h_spin)
                 win_form.addRow(parent.t('keep_aspect'), self.aspect_check)
+                win_form.addRow(parent.t('background'), self.bg_btn)
                 win_widget.setLayout(win_form)
                 win_page = QScrollArea()
                 win_page.setWidgetResizable(True)
@@ -1561,6 +1575,16 @@ class Editor(QMainWindow):
                 outer.addLayout(layout)
                 outer.addLayout(bottom)
 
+            def _choose_bg(self):
+                color = QColorDialog.getColor(QColor(*parent.background_color), self)
+                if color.isValid():
+                    self.bg_btn.setStyleSheet(
+                        f"background: rgb({color.red()}, {color.green()}, {color.blue()});"
+                    )
+                    self._bg = (color.red(), color.green(), color.blue())
+                else:
+                    self._bg = parent.background_color
+
         dlg = ProjectSettingsDialog(self)
         if dlg.exec() == QDialog.DialogCode.Accepted:
             self.project_title = dlg.title_edit.text().strip() or self.project_metadata.get('name', '')
@@ -1569,6 +1593,8 @@ class Editor(QMainWindow):
             self.window_width = dlg.w_spin.value()
             self.window_height = dlg.h_spin.value()
             self.keep_aspect = dlg.aspect_check.isChecked()
+            self.background_color = getattr(dlg, '_bg', self.background_color)
+            self.view.renderer.background = self.background_color
             self._update_camera_rect()
 
     def show_camera_settings(self):
@@ -1645,9 +1671,11 @@ class Editor(QMainWindow):
                 renderer=OpenGLRenderer(
                     self.window_width, self.window_height, "SAGE 2D",
                     keep_aspect=self.keep_aspect,
+                    background=self.background_color,
                 ),
                 camera=cam,
                 keep_aspect=self.keep_aspect,
+                background=self.background_color,
             )
             window = engine.run()
             self._game_engine = engine
@@ -1843,8 +1871,12 @@ class Editor(QMainWindow):
         return
 
     def _update_camera_rect(self):
-        """Placeholder until a new viewport is implemented."""
-        return
+        if hasattr(self, 'view'):
+            self.view.renderer.keep_aspect = self.keep_aspect
+            self.view.camera.width = self.window_width
+            self.view.camera.height = self.window_height
+            self.view.renderer.set_window_size(self.view.width(), self.view.height())
+            self.view.update()
 
     def _object_icon(self, obj):
         """Return an icon representing *obj* type."""

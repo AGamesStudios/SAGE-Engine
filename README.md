@@ -39,7 +39,8 @@ billboard icon pinned to its pivot so items remain visible even without
 textures. These gizmos are shown only in the viewport; the game window draws
 just the scene objects. The viewport has its own camera which can be panned by
 dragging with the left mouse button; the cursor is hidden and captured during
-the drag so movement feels smooth and the game camera stays untouched.
+the drag so movement feels smooth and the game camera stays untouched. Use the
+mouse wheel to zoom the editor camera in or out.
 The game window instead uses the active camera object from the scene so you can
 inspect levels from any angle without affecting gameplay.
 
@@ -63,8 +64,8 @@ Once a project is chosen the editor opens maximized in a dark Fusion
 theme and provides two
 tabs: **Viewport** and **Logic**. The viewport and runtime windows both use an
 OpenGL widget so they display the same scene. The viewport refreshes about
-thirty times per second and only
-updates on resize, keeping CPU usage low even on slower machines.
+sixty times per second and only resizes the renderer when necessary,
+keeping CPU usage low even on slower machines.
 An **Add Object** button beneath the list places a blank object with a default
  name like `New Object`. Every toolbar action and list item loads its icon from
  the `sage_editor/icons` folder, so you can replace these images with your own
@@ -151,13 +152,15 @@ follows the new dimensions while unused space is letterboxed so
 the scene maintains its aspect ratio. This behavior can be disabled in the
 Project Settings if you prefer the view to stretch. Running a project from the
 editor uses the same dimensions so what you see matches the final game.
+The viewport camera also uses these dimensions so the aspect ratio is identical
+while editing.
 A **Project Settings** dialog under **Settings** groups options into side tabs.
 The dialog uses the Qt *Fusion* style and keeps the tab labels horizontal even
 though they sit vertically on the left. The **Info** tab edits the game title,
 version (default `0.1.0`) and description while a **Window** tab contains width
-and height fields. The game title defaults to the name chosen when creating a
-project so you only set it once.  The pages scroll inside a fixed-size window so
-labels line up neatly.
+and height fields plus the background color. The game title defaults to the name
+chosen when creating a project so you only set it once.  The pages scroll inside
+a fixed-size window so labels line up neatly.
 When defining variables, boolean values are edited with a convenient check box
 instead of typing "true" or "false".
 When comparing variables, the name is selected from a drop-down list so typos

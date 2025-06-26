@@ -39,7 +39,8 @@ def create_engine(project: Project, fps: int = 30) -> Engine:
         height=project.height,
     )
     rcls = get_renderer(getattr(project, "renderer", "opengl")) or OpenGLRenderer
-    renderer = rcls(project.width, project.height, project.title)
+    renderer = rcls(project.width, project.height, project.title,
+                    background=getattr(project, 'background', (0, 0, 0)))
     events = scene.build_event_system()
     return Engine(
         width=project.width,
@@ -51,6 +52,7 @@ def create_engine(project: Project, fps: int = 30) -> Engine:
         renderer=renderer,
         camera=camera,
         keep_aspect=getattr(project, 'keep_aspect', True),
+        background=getattr(project, 'background', (0, 0, 0)),
     )
 
 
@@ -72,12 +74,14 @@ def save_scene(scene: Scene, path: str) -> None:
 
 def run_scene(path: str, width: int = 640, height: int = 480,
               title: str | None = None, fps: int = 30,
-              keep_aspect: bool = True) -> None:
+              keep_aspect: bool = True,
+              background: tuple[int, int, int] = (0, 0, 0)) -> None:
     """Run a single scene file directly."""
     scene = load_scene(path)
     camera = scene.camera or Camera(width / 2, height / 2, width, height)
     rcls = get_renderer("opengl") or OpenGLRenderer
-    renderer = rcls(width, height, title or "SAGE 2D")
+    renderer = rcls(width, height, title or "SAGE 2D",
+                    background=background)
     events = scene.build_event_system()
     Engine(
         width=width,
@@ -89,4 +93,5 @@ def run_scene(path: str, width: int = 640, height: int = 480,
         camera=camera,
         fps=fps,
         keep_aspect=keep_aspect,
+        background=background,
     ).run()

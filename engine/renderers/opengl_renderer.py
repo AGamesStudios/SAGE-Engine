@@ -49,6 +49,7 @@ class OpenGLRenderer:
     title: str = "SAGE 2D"
     widget: Optional[GLWidget] = None
     keep_aspect: bool = True
+    background: tuple[int, int, int] = (0, 0, 0)
 
     def create_widget(self) -> GLWidget:
         """Return the :class:`GLWidget` used for rendering."""
@@ -67,6 +68,7 @@ class OpenGLRenderer:
         self._camera = None
         self._draw_gizmos = True
         self.keep_aspect = bool(self.keep_aspect)
+        self.background = tuple(self.background)
 
     def set_window_size(self, width: int, height: int):
         if self.widget:
@@ -231,7 +233,7 @@ class OpenGLRenderer:
 
     def paint(self):
         # called from GLWidget.paintGL
-        self.clear()
+        self.clear(self.background)
         if self._scene:
             self._render_scene(self._scene, self._camera)
 

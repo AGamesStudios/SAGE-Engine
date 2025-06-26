@@ -124,3 +124,11 @@ class Viewport(GLWidget):
         self.releaseMouse()
         self.setCursor(Qt.CursorShape.ArrowCursor)
         super().mouseReleaseEvent(event)
+
+    def wheelEvent(self, event):  # pragma: no cover - zoom control
+        delta = event.angleDelta().y() / 120
+        if delta:
+            self.camera.zoom *= 1.0 + (0.1 * delta)
+            self.camera.zoom = max(0.1, min(10.0, self.camera.zoom))
+            self.update()
+        super().wheelEvent(event)

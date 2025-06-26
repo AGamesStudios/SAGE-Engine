@@ -10,6 +10,7 @@ class Project:
     width: int = 640
     height: int = 480
     keep_aspect: bool = True
+    background: tuple[int, int, int] = (0, 0, 0)
     title: str = 'SAGE 2D'
     version: str = '0.1.0'
     resources: str = 'resources'
@@ -39,12 +40,13 @@ class Project:
         width = data.get('width', 640)
         height = data.get('height', 480)
         keep_aspect = data.get('keep_aspect', True)
+        background = tuple(data.get('background', (0, 0, 0)))
         title = data.get('title', 'SAGE 2D')
         version = data.get('version', '0.1.0')
         resources = data.get('resources', 'resources')
         metadata = data.get('metadata', {})
-        return cls(scene or {}, renderer, width, height, keep_aspect, title,
-                   version, resources, scenes_dir,
+        return cls(scene or {}, renderer, width, height, keep_aspect,
+                   background, title, version, resources, scenes_dir,
                    scene_file or 'Scenes/Scene1.sagescene', metadata)
 
     def save(self, path: str):
@@ -65,6 +67,7 @@ class Project:
                 'width': self.width,
                 'height': self.height,
                 'keep_aspect': self.keep_aspect,
+                'background': list(self.background),
                 'title': self.title,
                 'version': self.version,
                 'resources': self.resources,
