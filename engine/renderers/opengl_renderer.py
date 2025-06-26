@@ -39,13 +39,13 @@ class GLWidget(QOpenGLWidget):
         if self.renderer:
             self.renderer.paint()
 
-    def resizeGL(self, width: int, height: int):
-        if self.renderer:
-            self.renderer.set_window_size(width, height)
-
-
-@dataclass
-class OpenGLRenderer:
+        self.textures = {}
+        self._blank_texture = None
+        self._icon_cache = {}
+        self._hover_axis = None
+        self._drag_axis = None
+        self._cursor_pos = None
+        self._gizmo_mode = 'move'
     """Renderer using PyOpenGL and QOpenGLWidget."""
 
     width: int = 640
