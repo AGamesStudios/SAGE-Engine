@@ -143,6 +143,8 @@ project the engine creates its window using these values. The active camera
 keeps its own resolution. The window can be resized at runtime and the camera
 follows the new dimensions while unused space is letterboxed so
 the scene maintains its aspect ratio.
+A **Project Settings** dialog under **Settings** lets you edit the project
+title, version, description and window size in one place.
 When defining variables, boolean values are edited with a convenient check box
 instead of typing "true" or "false".
 When comparing variables, the name is selected from a drop-down list so typos

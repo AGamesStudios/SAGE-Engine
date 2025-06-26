@@ -974,6 +974,10 @@ class Editor(QMainWindow):
         self.resource_manager = None
         self.scene = Scene()
         self.scene_path: str | None = None
+        self.project_metadata: dict = {}
+        self.project_title: str = 'SAGE 2D'
+        self.project_version: str = ENGINE_VERSION
+        self.project_description: str = ''
         self._game_window = None
         self._game_engine = None
         self.setWindowTitle(f'SAGE Editor ({ENGINE_VERSION})')
@@ -1154,6 +1158,7 @@ class Editor(QMainWindow):
         self.recent_menu.setIcon(load_icon('recent.png'))
         self.settings_menu.setTitle(self.t('settings'))
         self.window_settings_act.setText(self.t('window_settings'))
+        self.project_settings_act.setText(self.t('project_settings'))
         self.plugins_act.setText(self.t('manage_plugins'))
         self.coord_combo.setItemText(0, self.t('global'))
         self.coord_combo.setItemText(1, self.t('local'))
@@ -1171,6 +1176,7 @@ class Editor(QMainWindow):
         self.add_cam_btn.setEnabled(enabled)
         self.add_var_btn.setEnabled(enabled)
         self.run_act.setEnabled(enabled)
+        self.project_settings_act.setEnabled(enabled)
         self.objects_dock.setEnabled(enabled)
         self.resources_dock.setEnabled(enabled)
         self._update_title()
@@ -1257,6 +1263,9 @@ class Editor(QMainWindow):
         self.window_settings_act = QAction(self.t('window_settings'), self)
         self.window_settings_act.triggered.connect(self.show_window_settings)
         self.settings_menu.addAction(self.window_settings_act)
+        self.project_settings_act = QAction(self.t('project_settings'), self)
+        self.project_settings_act.triggered.connect(self.show_project_settings)
+        self.settings_menu.addAction(self.project_settings_act)
         self.plugins_act = QAction(load_icon('plugin.png'), self.t('manage_plugins'), self)
         self.plugins_act.triggered.connect(self.show_plugin_manager)
         self.settings_menu.addAction(self.plugins_act)
@@ -1338,16 +1347,21 @@ class Editor(QMainWindow):
         proj_path = os.path.join(proj_dir, f'{name}.sageproject')
         self.scene = Scene()
         self.scene_path = os.path.join(scenes_dir, 'Scene1.sagescene')
+        self.project_metadata = {'name': name, 'description': ''}
+        self.project_title = 'SAGE 2D'
+        self.project_version = ENGINE_VERSION
+        self.project_description = ''
         try:
             Project(
                 self.scene.to_dict(),
                 width=self.window_width,
                 height=self.window_height,
-                title=f'SAGE 2D',
-                version=ENGINE_VERSION,
+                title=self.project_title,
+                version=self.project_version,
                 resources='resources',
                 scenes='Scenes',
-                scene_file='Scenes/Scene1.sagescene'
+                scene_file='Scenes/Scene1.sagescene',
+                metadata=self.project_metadata,
             ).save(proj_path)
         except Exception as exc:
             QMessageBox.warning(self, 'Error', f'Failed to create project: {exc}')
@@ -1389,6 +1403,10 @@ class Editor(QMainWindow):
         try:
             proj = Project.load(path)
             self.project_path = path
+            self.project_metadata = proj.metadata or {}
+            self.project_title = proj.title
+            self.project_version = proj.version
+            self.project_description = self.project_metadata.get('description', '')
             self.window_width = proj.width
             self.window_height = proj.height
             self.scene_path = os.path.join(os.path.dirname(path), proj.scene_file)
@@ -1442,11 +1460,12 @@ class Editor(QMainWindow):
                 self.scene.to_dict(),
                 width=self.window_width,
                 height=self.window_height,
-                title=f'SAGE 2D',
-                version=ENGINE_VERSION,
+                title=self.project_title,
+                version=self.project_version,
                 resources=os.path.relpath(self.resource_dir, os.path.dirname(self.project_path)) if self.resource_dir else 'resources',
                 scenes='Scenes',
-                scene_file=os.path.relpath(self.scene_path, os.path.dirname(self.project_path)) if self.scene_path else 'Scenes/Scene1.sagescene'
+                scene_file=os.path.relpath(self.scene_path, os.path.dirname(self.project_path)) if self.scene_path else 'Scenes/Scene1.sagescene',
+                metadata=self.project_metadata | {'description': self.project_description}
             ).save(self.project_path)
             self._add_recent(self.project_path)
             self.dirty = False
@@ -1483,6 +1502,37 @@ class Editor(QMainWindow):
         buttons.rejected.connect(dlg.reject)
         form.addRow(buttons)
         if dlg.exec() == QDialog.DialogCode.Accepted:
+            self.window_width = w_spin.value()
+            self.window_height = h_spin.value()
+            self._update_camera_rect()
+
+    def show_project_settings(self):
+        if not self._check_project():
+            return
+        dlg = QDialog(self)
+        dlg.setWindowTitle(self.t('project_settings'))
+        name_edit = QLineEdit(self.project_metadata.get('name', ''))
+        title_edit = QLineEdit(self.project_title)
+        ver_edit = QLineEdit(self.project_version)
+        desc_edit = QTextEdit(self.project_description)
+        w_spin = QSpinBox(); w_spin.setRange(100, 4096); w_spin.setValue(self.window_width)
+        h_spin = QSpinBox(); h_spin.setRange(100, 4096); h_spin.setValue(self.window_height)
+        form = QFormLayout(dlg)
+        form.addRow(self.t('project_name'), name_edit)
+        form.addRow(self.t('title_label'), title_edit)
+        form.addRow(self.t('version_label'), ver_edit)
+        form.addRow(self.t('description_label'), desc_edit)
+        form.addRow(self.t('width'), w_spin)
+        form.addRow(self.t('height'), h_spin)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        buttons.accepted.connect(dlg.accept)
+        buttons.rejected.connect(dlg.reject)
+        form.addRow(buttons)
+        if dlg.exec() == QDialog.DialogCode.Accepted:
+            self.project_metadata['name'] = name_edit.text().strip()
+            self.project_title = title_edit.text().strip() or 'SAGE 2D'
+            self.project_version = ver_edit.text().strip() or ENGINE_VERSION
+            self.project_description = desc_edit.toPlainText().strip()
             self.window_width = w_spin.value()
             self.window_height = h_spin.value()
             self._update_camera_rect()
