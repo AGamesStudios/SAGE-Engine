@@ -46,6 +46,7 @@ class Viewport(GLWidget):
         self._gizmo_hover = None
         self._drag_offset = (0.0, 0.0)
         self.selected_obj: GameObject | None = None
+        self._cursor_world: tuple[float, float] | None = None
 
     def _center_camera(self) -> None:
         """Center the camera on existing objects."""
@@ -92,6 +93,7 @@ class Viewport(GLWidget):
                 height=self.height(),
             )
         self._center_camera()
+        self._cursor_world = None
 
     def _tick(self) -> None:
         self.renderer.draw_scene(
@@ -101,6 +103,7 @@ class Viewport(GLWidget):
             selected=self.selected_obj,
             hover=self._gizmo_hover,
             dragging=self._gizmo_drag,
+            cursor=self._cursor_world,
         )
 
     def showEvent(self, event):  # pragma: no cover
@@ -113,6 +116,7 @@ class Viewport(GLWidget):
 
     def leaveEvent(self, event):  # pragma: no cover - cursor left widget
         self._gizmo_hover = None
+        self._cursor_world = None
         self.update()
         super().leaveEvent(event)
 
@@ -125,6 +129,7 @@ class Viewport(GLWidget):
                 self._gizmo_drag = hit
                 self._gizmo_hover = hit
                 world = self._screen_to_world(event.position())
+                self._cursor_world = world
                 if self.selected_obj:
                     self._drag_offset = (
                         self.selected_obj.x - world[0],
@@ -133,6 +138,7 @@ class Viewport(GLWidget):
             else:
                 self._drag_pos = event.position()
                 self._gizmo_hover = None
+                self._cursor_world = self._screen_to_world(event.position())
             self.setCursor(Qt.CursorShape.BlankCursor)
             self.grabMouse()
         super().mousePressEvent(event)
@@ -148,6 +154,7 @@ class Viewport(GLWidget):
                 self.editor._update_transform_panel()
                 self.editor._mark_dirty()
             self.update()
+            self._cursor_world = world
         elif self._drag_pos is not None and event.buttons() & Qt.MouseButton.LeftButton:
             dx = event.position().x() - self._drag_pos.x()
             dy = event.position().y() - self._drag_pos.y()
@@ -157,8 +164,10 @@ class Viewport(GLWidget):
             self._drag_pos = event.position()
             self.update()
             self._gizmo_hover = None
+            self._cursor_world = self._screen_to_world(event.position())
         else:
             self._gizmo_hover = self._hit_gizmo(event.position())
+        self._cursor_world = self._screen_to_world(event.position())
         self.update()
         super().mouseMoveEvent(event)
 
@@ -168,6 +177,7 @@ class Viewport(GLWidget):
         self.releaseMouse()
         self.setCursor(Qt.CursorShape.ArrowCursor)
         self._gizmo_hover = self._hit_gizmo(event.position())
+        self._cursor_world = self._screen_to_world(event.position())
         super().mouseReleaseEvent(event)
 
     def wheelEvent(self, event):  # pragma: no cover - zoom control
@@ -184,6 +194,7 @@ class Viewport(GLWidget):
                     self._drag_offset[1] + before[1] - after[1],
                 )
             self._gizmo_hover = self._hit_gizmo(pos)
+            self._cursor_world = self._screen_to_world(pos)
             self.update()
         super().wheelEvent(event)
 

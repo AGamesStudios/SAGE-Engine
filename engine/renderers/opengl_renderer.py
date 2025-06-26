@@ -72,6 +72,7 @@ class OpenGLRenderer:
         self._selected_obj = None
         self._hover_axis: str | None = None
         self._drag_axis: str | None = None
+        self._cursor_pos: tuple[float, float] | None = None
         self.keep_aspect = bool(self.keep_aspect)
         self.background = tuple(self.background)
 
@@ -206,6 +207,27 @@ class OpenGLRenderer:
         glVertex2f(0.0, size)
         glEnd()
 
+    def _draw_cursor(self, x: float, y: float, camera: Camera | None):
+        """Draw a small cross at the cursor position in world units."""
+        if camera is None:
+            zoom = 1.0
+        else:
+            zoom = camera.zoom
+        size = 5.0 / zoom
+        scale = units.UNITS_PER_METER
+        sign = 1.0 if units.Y_UP else -1.0
+        glBindTexture(GL_TEXTURE_2D, 0)
+        glPushMatrix()
+        glTranslatef(x * scale, y * scale * sign, 0)
+        glColor4f(1.0, 1.0, 1.0, 1.0)
+        glBegin(GL_LINES)
+        glVertex2f(-size, 0.0)
+        glVertex2f(size, 0.0)
+        glVertex2f(0.0, -size)
+        glVertex2f(0.0, size)
+        glEnd()
+        glPopMatrix()
+
     def _draw_gizmo(self, obj: "GameObject", camera: Camera | None,
                     hover: str | None = None, dragging: str | None = None):
         if obj is None:
@@ -303,7 +325,8 @@ class OpenGLRenderer:
 
     def draw_scene(self, scene, camera: Camera | None = None, gizmos: bool = True,
                    selected: GameObject | None = None,
-                   hover: str | None = None, dragging: str | None = None):
+                   hover: str | None = None, dragging: str | None = None,
+                   cursor: tuple[float, float] | None = None):
         """Store the scene and camera then schedule a repaint."""
         self._scene = scene
         self._camera = camera
@@ -311,6 +334,7 @@ class OpenGLRenderer:
         self._selected_obj = selected
         self._hover_axis = hover
         self._drag_axis = dragging
+        self._cursor_pos = cursor
         self.widget.update()
 
     def _render_scene(self, scene, camera: Camera | None):
@@ -360,6 +384,9 @@ class OpenGLRenderer:
                 self._draw_gizmo(self._selected_obj, camera,
                                  self._hover_axis, self._drag_axis)
             self._draw_origin(50 * scale)
+            if self._cursor_pos is not None:
+                self._draw_cursor(self._cursor_pos[0], self._cursor_pos[1],
+                                   camera)
         glPopMatrix()
 
     def present(self):

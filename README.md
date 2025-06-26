@@ -36,7 +36,8 @@ running game. A small cross at the origin helps orient
 objects and a green square appears when the scene is empty so the viewport never
 shows a blank screen. Camera frustums are drawn in yellow and each object gets a
 billboard icon pinned to its pivot so items remain visible even without
-textures. These gizmos are shown only in the viewport; the game window draws
+textures. A white cross follows the mouse so you can see its world position.
+These gizmos are shown only in the viewport; the game window draws
 just the scene objects. The viewport has its own camera which can be panned by
 dragging with the left mouse button; the cursor is hidden and captured during
 the drag so movement feels smooth and the game camera stays untouched. Use the
