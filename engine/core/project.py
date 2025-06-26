@@ -1,7 +1,6 @@
 import json
 from dataclasses import dataclass, field
 import os
-from .. import ENGINE_VERSION
 
 @dataclass(slots=True)
 class Project:
@@ -11,7 +10,7 @@ class Project:
     width: int = 640
     height: int = 480
     title: str = 'SAGE 2D'
-    version: str = ENGINE_VERSION
+    version: str = '0.1.0'
     resources: str = 'resources'
     scenes: str = 'Scenes'
     scene_file: str = 'Scenes/Scene1.sagescene'
@@ -39,7 +38,7 @@ class Project:
         width = data.get('width', 640)
         height = data.get('height', 480)
         title = data.get('title', 'SAGE 2D')
-        version = data.get('version', ENGINE_VERSION)
+        version = data.get('version', '0.1.0')
         resources = data.get('resources', 'resources')
         metadata = data.get('metadata', {})
         return cls(scene or {}, renderer, width, height, title, version,

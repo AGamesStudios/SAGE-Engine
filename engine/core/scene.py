@@ -46,9 +46,10 @@ class Scene:
             obj.name = new_name
         self.objects.append(obj)
         if isinstance(obj, Camera):
-            if self.camera is None:
-                self.camera = obj
-                self.active_camera = obj.name
+            if obj.active:
+                self.set_active_camera(obj)
+            elif self.camera is None:
+                self.set_active_camera(obj)
         self._sorted = False
 
     def remove_object(self, obj: GameObject):
@@ -57,6 +58,8 @@ class Scene:
             if obj is self.camera:
                 self.camera = None
                 self.active_camera = None
+            if isinstance(obj, Camera):
+                obj.active = False
             self._sorted = False
 
     def set_active_camera(self, camera: Camera | str | None):
@@ -67,9 +70,15 @@ class Scene:
         if camera is None or camera not in self.objects:
             self.camera = None
             self.active_camera = None
+            for obj in self.objects:
+                if isinstance(obj, Camera):
+                    obj.active = False
         else:
             self.camera = camera
             self.active_camera = camera.name
+            for obj in self.objects:
+                if isinstance(obj, Camera):
+                    obj.active = obj is camera
 
     def get_active_camera(self) -> Camera | None:
         """Return the currently active camera."""
@@ -108,10 +117,12 @@ class Scene:
                 logger.debug('Object %s does not support settings', type(obj).__name__)
             scene.add_object(obj)
             if isinstance(obj, Camera):
-                if scene.camera is None:
-                    scene.camera = obj
-                if scene.active_camera and obj.name == scene.active_camera:
-                    scene.camera = obj
+                if obj.active:
+                    scene.set_active_camera(obj)
+                elif scene.camera is None:
+                    scene.set_active_camera(obj)
+                elif scene.active_camera and obj.name == scene.active_camera:
+                    scene.set_active_camera(obj)
         has_cam = scene.camera is not None
         cam = data.get("camera")
         if not has_cam and isinstance(cam, dict):

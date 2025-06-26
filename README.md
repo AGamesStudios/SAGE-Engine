@@ -73,9 +73,10 @@ An **Add Object** button beneath the list places a blank object with a default
  is no visual manipulation until rendering support returns.
 Projects store a window ``width`` and ``height`` separately from the active
 camera size. Scenes can contain multiple cameras. Select a camera in the object
-list (or use its context menu) and choose **Set Active Camera** to decide which
-one is used. Camera objects now include a **Z** position so they can be layered
-with sprites. Projects are saved in a single `.sageproject` file
+list and check **Main Camera** in the properties panel (or use the context menu
+action **Set Active Camera**) to decide which one is used. Camera objects now
+include a **Z** position so they can be layered with sprites. Projects are saved
+in a single `.sageproject` file
 The object list sits on the right above the Properties panel. Selecting one shows a **Transform**
 panel on the right with X, Y, Z, separate Scale X/Y and Rotation fields. A *Link XY* checkbox
 lets you keep both scales in sync. When no object is selected the Properties
@@ -344,9 +345,10 @@ not download code from the internet.
 
 ### Versioning
 
-Each project stores the engine version string so upgrades are painless. Older
-projects load without issue, and the editor shows the version in its window
-title so you always know which release you are using.
+Each project records its own **game version** string along with the engine
+version used to create it.  Older projects load without issue, and the editor
+shows the version in its window title so you always know which release you are
+using.
 
 ### Performance
 

@@ -1059,6 +1059,7 @@ class Editor(QMainWindow):
         self.cam_w_spin = prop_dock.cam_w_spin
         self.cam_h_spin = prop_dock.cam_h_spin
         self.cam_zoom_spin = prop_dock.cam_zoom_spin
+        self.cam_active = prop_dock.cam_active
 
         # resources dock on the left
         res_dock = ResourceDock(self)
@@ -1148,6 +1149,7 @@ class Editor(QMainWindow):
         self.name_edit.setPlaceholderText(self.t('name'))
         self.type_combo.setItemText(0, self.t('sprite'))
         self.type_combo.setItemText(1, self.t('camera'))
+        self.cam_active.setText(self.t('primary_camera'))
         self.x_spin.setPrefix(''); self.y_spin.setPrefix(''); self.z_spin.setPrefix('')
         self.scale_x_spin.setPrefix(''); self.scale_y_spin.setPrefix(''); self.angle_spin.setPrefix('')
         self.add_obj_btn.setText(self.t('add_object'))
@@ -1836,6 +1838,20 @@ class Editor(QMainWindow):
         self._update_camera_rect()
         self._refresh_object_labels()
 
+    def _active_camera_changed(self):
+        idx = self.object_combo.currentIndex()
+        if idx < 0 or idx >= len(self.items):
+            return
+        _, obj = self.items[idx]
+        from engine import Camera
+        if not isinstance(obj, Camera):
+            return
+        if self.cam_active.isChecked():
+            self.scene.set_active_camera(obj)
+        elif obj is self.scene.camera:
+            self.scene.set_active_camera(None)
+        self._refresh_object_labels()
+
     def toggle_grid(self, checked: bool):
         pass
 
@@ -1871,6 +1887,10 @@ class Editor(QMainWindow):
             spin.blockSignals(True)
             spin.setValue(0)
             spin.blockSignals(False)
+        if hasattr(self, 'cam_active'):
+            self.cam_active.blockSignals(True)
+            self.cam_active.setChecked(False)
+            self.cam_active.blockSignals(False)
         self.name_edit.blockSignals(True)
         self.name_edit.clear()
         self.name_edit.blockSignals(False)
@@ -1911,6 +1931,7 @@ class Editor(QMainWindow):
             self.cam_w_spin.blockSignals(True); self.cam_w_spin.setValue(obj.width); self.cam_w_spin.blockSignals(False)
             self.cam_h_spin.blockSignals(True); self.cam_h_spin.setValue(obj.height); self.cam_h_spin.blockSignals(False)
             self.cam_zoom_spin.blockSignals(True); self.cam_zoom_spin.setValue(obj.zoom); self.cam_zoom_spin.blockSignals(False)
+            self.cam_active.blockSignals(True); self.cam_active.setChecked(obj is self.scene.camera); self.cam_active.blockSignals(False)
         else:
             self.camera_group.setVisible(False)
             self.scale_x_spin.setEnabled(True)
@@ -1975,16 +1996,15 @@ class Editor(QMainWindow):
             new_obj.name = obj.name
             self.scene.objects[self.scene.objects.index(obj)] = new_obj
             if self.scene.camera is None:
-                self.scene.camera = new_obj
-                self.scene.active_camera = new_obj.name
+                new_obj.active = True
+                self.scene.set_active_camera(new_obj)
             self.items[idx] = (item, new_obj)
         elif target == 'sprite' and isinstance(obj, Camera):
             new_obj = GameObject('', obj.x, obj.y, obj.z, None, 1.0, 1.0, 0.0, 0.5, 0.5)
             new_obj.name = obj.name
             self.scene.objects[self.scene.objects.index(obj)] = new_obj
             if obj is self.scene.camera:
-                self.scene.camera = None
-                self.scene.active_camera = None
+                self.scene.set_active_camera(None)
             self.items[idx] = (item, new_obj)
         else:
             return

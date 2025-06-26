@@ -14,6 +14,7 @@ from .. import units
         ('height', None),
         ('zoom', None),
         ('name', None),
+        ('active', 'active'),
         ('metadata', 'metadata'),
     ],
 )
@@ -28,6 +29,7 @@ class Camera:
     height: int = 480
     zoom: float = 1.0
     name: str = "Camera"
+    active: bool = False
     type: str = "camera"
     metadata: dict = field(default_factory=dict)
     events: list = field(default_factory=list)
