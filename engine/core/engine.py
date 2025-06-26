@@ -43,7 +43,16 @@ class Engine:
             cam = getattr(self.scene, "get_active_camera", None)
             camera = cam() if callable(cam) else getattr(self.scene, "camera", None)
             if camera is None:
-                camera = Camera(width / 2, height / 2, width, height)
+                camera = next(
+                    (o for o in getattr(self.scene, "objects", []) if isinstance(o, Camera)),
+                    None,
+                )
+            if camera is None:
+                camera = Camera(width / 2, height / 2, width, height, active=True)
+                if hasattr(self.scene, "add_object"):
+                    self.scene.add_object(camera)
+            else:
+                self.scene.set_active_camera(camera)
         elif camera not in getattr(self.scene, "objects", []):
             if hasattr(self.scene, "add_object"):
                 self.scene.add_object(camera)
