@@ -53,9 +53,11 @@ class Engine:
                     self.scene.add_object(camera)
             else:
                 self.scene.set_active_camera(camera)
-        elif camera not in getattr(self.scene, "objects", []):
-            if hasattr(self.scene, "add_object"):
-                self.scene.add_object(camera)
+        else:
+            if camera not in getattr(self.scene, "objects", []):
+                if hasattr(self.scene, "add_object"):
+                    self.scene.add_object(camera)
+            self.scene.set_active_camera(camera)
         self.camera = camera
         self.events = events if events is not None else self.scene.build_event_system()
         if renderer is None:
