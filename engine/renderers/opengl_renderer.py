@@ -16,6 +16,7 @@ from PIL import Image
 
 from engine.core.camera import Camera
 from engine import units
+from pathlib import Path
 
 
 class GLWidget(QOpenGLWidget):
@@ -60,6 +61,7 @@ class OpenGLRenderer:
         self._should_close = False
         self.textures: dict[int, int] = {}
         self._blank_texture: int | None = None
+        self._icon_cache: dict[str, int] = {}
         self._scene = None
         self._camera = None
 
@@ -127,6 +129,59 @@ class OpenGLRenderer:
         self.textures[id(obj.image)] = tex_id
         return tex_id
 
+    def _get_icon_texture(self, name: str) -> int:
+        """Load an icon image from ``sage_editor/icons`` and cache it."""
+        tex = self._icon_cache.get(name)
+        if tex:
+            return tex
+        path = Path(__file__).resolve().parent.parent.parent / 'sage_editor' / 'icons' / name
+        if not path.is_file():
+            return self._get_blank_texture()
+        img = Image.open(path).convert('RGBA')
+        img = img.transpose(Image.Transpose.FLIP_TOP_BOTTOM)
+        data = img.tobytes()
+        tex = glGenTextures(1)
+        glBindTexture(GL_TEXTURE_2D, tex)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+        glTexImage2D(
+            GL_TEXTURE_2D, 0, GL_RGBA, img.width, img.height, 0,
+            GL_RGBA, GL_UNSIGNED_BYTE, data
+        )
+        self._icon_cache[name] = tex
+        return tex
+
+    def _draw_icon(self, x: float, y: float, tex: int, zoom: float, size: float = 32.0):
+        """Render a billboard icon at ``(x, y)`` in world units."""
+        scale = units.UNITS_PER_METER
+        sign = 1.0 if units.Y_UP else -1.0
+        glBindTexture(GL_TEXTURE_2D, tex)
+        glColor4f(1.0, 1.0, 1.0, 1.0)
+        glPushMatrix()
+        glTranslatef(x * scale, y * scale * sign, 0)
+        inv_zoom = 1.0 / zoom if zoom else 1.0
+        half = size / 2.0 * inv_zoom
+        glBegin(GL_QUADS)
+        glTexCoord2f(0.0, 0.0); glVertex2f(-half, -half)
+        glTexCoord2f(1.0, 0.0); glVertex2f( half, -half)
+        glTexCoord2f(1.0, 1.0); glVertex2f( half,  half)
+        glTexCoord2f(0.0, 1.0); glVertex2f(-half,  half)
+        glEnd()
+        glPopMatrix()
+
+    def _draw_frustum(self, cam: Camera):
+        """Draw a rectangle representing the camera's view."""
+        left, bottom, w, h = cam.view_rect()
+        sign = 1.0 if units.Y_UP else -1.0
+        glBindTexture(GL_TEXTURE_2D, 0)
+        glColor4f(1.0, 1.0, 0.0, 1.0)
+        glBegin(GL_LINE_LOOP)
+        glVertex2f(left, bottom * sign)
+        glVertex2f(left + w, bottom * sign)
+        glVertex2f(left + w, (bottom + h) * sign)
+        glVertex2f(left, (bottom + h) * sign)
+        glEnd()
+
     def _draw_origin(self, size: float = 1.0):
         glBindTexture(GL_TEXTURE_2D, 0)
         glBegin(GL_LINES)
@@ -162,6 +217,9 @@ class OpenGLRenderer:
         scene.sort_objects()
         for obj in scene.objects:
             if isinstance(obj, Camera):
+                self._draw_frustum(obj)
+                tex = self._get_icon_texture('camera.png')
+                self._draw_icon(obj.x, obj.y, tex, camera.zoom if camera else 1.0)
                 continue
             tex = self._get_texture(obj)
             glBindTexture(GL_TEXTURE_2D, tex)
@@ -179,6 +237,8 @@ class OpenGLRenderer:
             glTexCoord2f(0.0, 1.0); glVertex2f(-w/2,  h/2)
             glEnd()
             glPopMatrix()
+            tex_icon = self._get_icon_texture('object.png')
+            self._draw_icon(obj.x, obj.y, tex_icon, camera.zoom if camera else 1.0)
         self._draw_origin(50 * scale)
         glPopMatrix()
 

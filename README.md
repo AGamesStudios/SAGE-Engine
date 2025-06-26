@@ -34,7 +34,9 @@ Rendering now uses an **OpenGLRenderer**. Both the editor viewport and the game
 window share a Qt ``QOpenGLWidget`` so what you see while editing matches the
 running game. A small cross at the origin helps orient
 objects and a green square appears when the scene is empty so the viewport never
-shows a blank screen. The viewport has its own camera which can be panned by
+shows a blank screen. Camera frustums are drawn in yellow and each object gets a
+billboard icon pinned to its pivot so items remain visible even without
+textures. The viewport has its own camera which can be panned by
 dragging with the left mouse button; the cursor is hidden and captured during
 the drag so movement feels smooth and the game camera stays untouched.
 The game window instead uses the active camera object from the scene so you can
