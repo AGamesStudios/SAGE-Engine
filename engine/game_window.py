@@ -19,6 +19,8 @@ class GameWindow(QMainWindow):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(engine.renderer.widget)
         self.setCentralWidget(central)
+        # match the project settings
+        self.resize(engine.renderer.width, engine.renderer.height)
         interval = int(1000 / engine.fps) if engine.fps else 0
         self.timer = QTimer(self)
         self.timer.setInterval(max(1, interval))

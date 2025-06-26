@@ -144,11 +144,12 @@ game start or every frame. Fonts are slightly larger for readability.
 Window dimensions can be changed under **Settings → Project Settings**. The
 game window title matches the editor, e.g. `SAGE Editor: MyGame - Scene1`.
 When you edit the scene the title gains an `(unsaved)` suffix until you save.
-Project files record the window `width`, `height` and `title`. When loading a
+A project's file records the window `width`, `height` and `title`. When loading a
 project the engine creates its window using these values. The active camera
 keeps its own resolution. The window can be resized at runtime and the camera
 follows the new dimensions while unused space is letterboxed so
-the scene maintains its aspect ratio.
+the scene maintains its aspect ratio. Running a project from the editor uses the
+same dimensions so what you see matches the final game.
 A **Project Settings** dialog under **Settings** lets you edit the project
 title, version, description and window size in one place.
 When defining variables, boolean values are edited with a convenient check box
