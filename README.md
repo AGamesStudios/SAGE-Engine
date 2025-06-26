@@ -41,8 +41,10 @@ just the scene objects. The viewport has its own camera which can be panned by
 dragging with the left mouse button; the cursor is hidden and captured during
 the drag so movement feels smooth and the game camera stays untouched. Use the
 mouse wheel to zoom the editor camera in or out.
-The game window instead uses the active camera object from the scene so you can
-inspect levels from any angle without affecting gameplay.
+The transform gizmo keeps a constant screen size even on high‑DPI displays and
+continues to track the grabbed point while zooming. The game window instead uses
+the active camera object from the scene so you can inspect levels from any angle
+without affecting gameplay.
 
 ### Units and Coordinates
 

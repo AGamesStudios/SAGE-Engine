@@ -154,8 +154,16 @@ class Viewport(GLWidget):
     def wheelEvent(self, event):  # pragma: no cover - zoom control
         delta = event.angleDelta().y() / 120
         if delta:
+            pos = event.position()
+            before = self._screen_to_world(pos)
             self.camera.zoom *= 1.0 + (0.1 * delta)
             self.camera.zoom = max(0.1, min(10.0, self.camera.zoom))
+            if self._gizmo_drag:
+                after = self._screen_to_world(pos)
+                self._drag_offset = (
+                    self._drag_offset[0] + before[0] - after[0],
+                    self._drag_offset[1] + before[1] - after[1],
+                )
             self.update()
         super().wheelEvent(event)
 
@@ -185,8 +193,9 @@ class Viewport(GLWidget):
         sx, sy = self._world_to_screen(self.selected_obj.x, self.selected_obj.y)
         dx = pos.x() - sx
         dy = pos.y() - sy
-        arrow = 50.0
-        handle = 8.0
+        pixel = self.devicePixelRatioF() if hasattr(self, 'devicePixelRatioF') else 1.0
+        arrow = 50.0 * pixel
+        handle = 8.0 * pixel
         sign = -1.0 if units.Y_UP else 1.0
         if abs(dx) < handle and abs(dy) < handle:
             return 'xy'
