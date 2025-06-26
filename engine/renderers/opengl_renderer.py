@@ -253,11 +253,14 @@ class OpenGLRenderer:
         glBindTexture(GL_TEXTURE_2D, 0)
         glPushMatrix()
         glTranslatef(obj.x * scale, obj.y * scale * sign, 0)
-        glLineWidth(6)
+        base_w = 6 * inv
+        glLineWidth(base_w)
         if mode == 'move':
-            # translation arrows - draw the line up to the base of the arrow head
-            color_x = 1.0 if not (hover in ("x", "xy") or dragging in ("x", "xy")) else 0.5
+            # translation arrows - highlight hovered or dragged axes
+            hx = hover in ("x", "xy") or dragging in ("x", "xy")
+            color_x = 1.0 if hx else 0.7
             glColor4f(color_x, 0.0, 0.0, 1.0)
+            glLineWidth(base_w * (1.5 if hx else 1.0))
             glBegin(GL_LINES)
             glVertex2f(0.0, 0.0)
             glVertex2f(size - head, 0.0)
@@ -268,8 +271,10 @@ class OpenGLRenderer:
             glVertex2f(size - head, -head / 2)
             glEnd()
 
-            color_y = 1.0 if not (hover in ("y", "xy") or dragging in ("y", "xy")) else 0.5
+            hy = hover in ("y", "xy") or dragging in ("y", "xy")
+            color_y = 1.0 if hy else 0.7
             glColor4f(0.0, color_y, 0.0, 1.0)
+            glLineWidth(base_w * (1.5 if hy else 1.0))
             glBegin(GL_LINES)
             glVertex2f(0.0, 0.0)
             glVertex2f(0.0, sign * (size - head))
@@ -287,58 +292,67 @@ class OpenGLRenderer:
 
         elif mode == 'scale':
             # scale arrows using squares with tips extended beyond the line
-            color_sx = 1.0 if not (hover == 'sx' or dragging == 'sx') else 0.5
+            sx_hover = hover == 'sx' or dragging == 'sx'
+            color_sx = 1.0 if sx_hover else 0.7
             glColor4f(color_sx, 0.0, 0.0, 1.0)
+            glLineWidth(base_w * (1.5 if sx_hover else 1.0))
             glBegin(GL_LINES)
             glVertex2f(0.0, 0.0)
             glVertex2f(size, 0.0)
             glEnd()
+            sq_size = sq * (1.5 if sx_hover else 1.0)
             glBegin(GL_QUADS)
-            glVertex2f(size, -sq)
-            glVertex2f(size + 2 * sq, -sq)
-            glVertex2f(size + 2 * sq, sq)
-            glVertex2f(size, sq)
+            glVertex2f(size, -sq_size)
+            glVertex2f(size + 2 * sq_size, -sq_size)
+            glVertex2f(size + 2 * sq_size, sq_size)
+            glVertex2f(size, sq_size)
             glEnd()
 
-            color_sy = 1.0 if not (hover == 'sy' or dragging == 'sy') else 0.5
+            sy_hover = hover == 'sy' or dragging == 'sy'
+            color_sy = 1.0 if sy_hover else 0.7
             glColor4f(0.0, color_sy, 0.0, 1.0)
+            glLineWidth(base_w * (1.5 if sy_hover else 1.0))
             glBegin(GL_LINES)
             glVertex2f(0.0, 0.0)
             glVertex2f(0.0, size * sign)
             glEnd()
+            sq_size = sq * (1.5 if sy_hover else 1.0)
             glBegin(GL_QUADS)
             if units.Y_UP:
-                glVertex2f(-sq, size)
-                glVertex2f(sq, size)
-                glVertex2f(sq, size + 2 * sq)
-                glVertex2f(-sq, size + 2 * sq)
+                glVertex2f(-sq_size, size)
+                glVertex2f(sq_size, size)
+                glVertex2f(sq_size, size + 2 * sq_size)
+                glVertex2f(-sq_size, size + 2 * sq_size)
             else:
-                glVertex2f(-sq, -size - 2 * sq)
-                glVertex2f(sq, -size - 2 * sq)
-                glVertex2f(sq, -size)
-                glVertex2f(-sq, -size)
+                glVertex2f(-sq_size, -size - 2 * sq_size)
+                glVertex2f(sq_size, -size - 2 * sq_size)
+                glVertex2f(sq_size, -size)
+                glVertex2f(-sq_size, -size)
             glEnd()
 
         elif mode == 'rotate':
             # rotation ring colored like the Z axis
-            color_rot = 1.0 if not (hover == 'rot' or dragging == 'rot') else 0.5
+            rot_hover = hover == 'rot' or dragging == 'rot'
+            color_rot = 1.0 if rot_hover else 0.7
             glColor4f(0.0, 0.0, color_rot, 1.0)
-            glLineWidth(ring_w)
+            glLineWidth(ring_w * (1.5 if rot_hover else 1.0))
             glBegin(GL_LINE_LOOP)
             for i in range(32):
                 ang = (i / 32.0) * math.tau
                 glVertex2f(math.cos(ang) * ring_r, math.sin(ang) * ring_r * sign)
             glEnd()
-            glLineWidth(6)
+            glLineWidth(base_w)
 
         # pivot point
-        center_col = 0.5 if not (hover == 'xy' or dragging == 'xy') else 0.25
+        center_hover = hover == 'xy' or dragging == 'xy'
+        center_col = 1.0 if center_hover else 0.7
+        size = rad * (1.5 if center_hover else 1.0)
         glColor4f(center_col, center_col, center_col, 1.0)
         glBegin(GL_QUADS)
-        glVertex2f(-rad, -rad)
-        glVertex2f(rad, -rad)
-        glVertex2f(rad, rad)
-        glVertex2f(-rad, rad)
+        glVertex2f(-size, -size)
+        glVertex2f(size, -size)
+        glVertex2f(size, size)
+        glVertex2f(-size, size)
         glEnd()
         glLineWidth(1)
         glPopMatrix()

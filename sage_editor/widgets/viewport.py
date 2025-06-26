@@ -358,7 +358,7 @@ class Viewport(GLWidget):
         arrow = 50.0 * ratio
         handle = 12.0 * ratio
         ring = arrow * 1.2
-        ring_tol = 8.0 * ratio
+        ring_tol = 12.0 * ratio
         sign = -1.0 if units.Y_UP else 1.0
         result = None
         if abs(dx) < handle and abs(dy) < handle:
