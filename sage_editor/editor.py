@@ -1664,15 +1664,19 @@ class Editor(QMainWindow):
             scene = self.scene
             cam = scene.get_active_camera()
             if cam is None:
-                cam = Camera(
-                    x=self.window_width / 2,
-                    y=self.window_height / 2,
-                    width=self.window_width,
-                    height=self.window_height,
-                    active=True,
-                )
-                if hasattr(scene, "add_object"):
-                    scene.add_object(cam)
+                cam = next((o for o in scene.objects if isinstance(o, Camera)), None)
+                if cam is None:
+                    cam = Camera(
+                        x=self.window_width / 2,
+                        y=self.window_height / 2,
+                        width=self.window_width,
+                        height=self.window_height,
+                        active=True,
+                    )
+                    self._register_object_ui(cam)
+                else:
+                    scene.set_active_camera(cam)
+                    self._refresh_object_labels()
             engine = Engine(
                 width=self.window_width,
                 height=self.window_height,
@@ -2658,6 +2662,26 @@ class Editor(QMainWindow):
         except Exception as exc:
             self.console.append(f'Failed to paste object: {exc}')
         self.refresh_events()
+
+    def _register_object_ui(self, obj):
+        """Add *obj* to the scene and update the editor lists."""
+        self.scene.add_object(obj)
+        self.items.append((None, obj))
+        index = len(self.items) - 1
+        self.object_combo.addItem(obj.name, index)
+        item = QListWidgetItem(obj.name)
+        item.setIcon(self._object_icon(obj))
+        self.object_list.addItem(item)
+        if self.object_combo.currentIndex() == -1:
+            self.object_combo.setCurrentIndex(0)
+            self.object_list.setCurrentRow(0)
+            self._update_transform_panel()
+            self._update_gizmo()
+        self._mark_dirty()
+        from engine import Camera
+        if isinstance(obj, Camera):
+            self._update_camera_rect()
+        self._refresh_object_labels()
 
     def _delete_object(self, index):
         if index < 0 or index >= len(self.items):
