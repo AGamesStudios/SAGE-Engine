@@ -246,18 +246,19 @@ class OpenGLRenderer:
         sign = 1.0 if units.Y_UP else -1.0
         zoom = camera.zoom if camera else 1.0
         inv = 1.0 / zoom if zoom else 1.0
-        size = 50 * inv
-        head = 10 * inv
-        rad = 4 * inv
-        sq = 6 * inv
+        ratio = self.widget.devicePixelRatioF() if self.widget else 1.0
+        size = 50 * inv * ratio
+        head = 10 * inv * ratio
+        rad = 4 * inv * ratio
+        sq = 6 * inv * ratio
         ring_r = size * 1.2
-        ring_w = 4 * inv
+        ring_w = 4 * ratio
         glBindTexture(GL_TEXTURE_2D, 0)
         glPushMatrix()
         glTranslatef(obj.x * scale, obj.y * scale * sign, 0)
         if local or mode == 'scale':
             glRotatef(obj.angle, 0, 0, 1)
-        base_w = 6 * inv
+        base_w = 6 * ratio
         glLineWidth(base_w)
         if mode == 'move':
             # translation arrows - highlight hovered or dragged axes
