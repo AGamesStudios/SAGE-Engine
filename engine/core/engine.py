@@ -5,12 +5,11 @@ import os
 from datetime import datetime
 from .scene import Scene
 from .project import Project
-from .input_sdl2 import SDL2Input
+from .input_qt import QtInput
 from .camera import Camera
 from ..renderers import (
     OpenGLRenderer,
     QtPainterRenderer,
-    SDL2Renderer,
     Renderer,
     get_renderer,
 )
@@ -51,7 +50,7 @@ class Engine:
         self.camera = camera
         self.events = events if events is not None else self.scene.build_event_system()
         if renderer is None:
-            cls = get_renderer("sdl2") or SDL2Renderer
+            cls = get_renderer("opengl") or OpenGLRenderer
             self.renderer = cls(width, height, title)
         elif isinstance(renderer, str):
             cls = get_renderer(renderer)
@@ -60,7 +59,7 @@ class Engine:
             self.renderer = cls(width, height, title)
         else:
             self.renderer = renderer
-        self.input = SDL2Input(self.renderer)
+        self.input = QtInput(self.renderer.widget)
         self.last_time = time.perf_counter()
         try:
             from .. import load_engine_plugins
@@ -80,31 +79,21 @@ class Engine:
         self.camera = camera
 
     def run(self):
-        """Run the engine using a simple SDL2 loop."""
+        """Run the engine using a Qt window."""
+        from PyQt6.QtWidgets import QApplication
+        from ..game_window import GameWindow
+
         _log(f"Starting engine version {ENGINE_VERSION}")
-        running = True
-        while running and not self.renderer.should_close():
-            now = time.perf_counter()
-            dt = now - self.last_time
-            self.last_time = now
-            self.input.poll()
-            try:
-                self.events.update(self, self.scene, dt)
-                self.scene.update(dt)
-                cam = self.camera or getattr(self.scene, "get_active_camera", lambda: None)()
-                self.renderer.draw_scene(self.scene, cam)
-                self.renderer.paint()
-                self.renderer.present()
-            except Exception:
-                logger.exception("Runtime error")
-                running = False
-            if self.fps:
-                delay = self._frame_interval - (time.perf_counter() - now)
-                if delay > 0:
-                    time.sleep(delay)
-        self.input.shutdown()
-        self.renderer.close()
-        _log("Engine shutdown")
+        app = QApplication.instance()
+        created = False
+        if app is None:
+            app = QApplication(sys.argv)
+            created = True
+        window = GameWindow(self)
+        window.show()
+        if created:
+            app.exec()
+        return window
 
 
 def main(argv=None):
@@ -117,9 +106,9 @@ def main(argv=None):
     parser.add_argument("--title", help="Window title")
     parser.add_argument(
         "--renderer",
-        choices=["sdl2", "opengl", "qt"],
-        default="sdl2",
-        help="Rendering backend (default sdl2)",
+        choices=["opengl", "qt"],
+        default="opengl",
+        help="Rendering backend (default opengl)",
     )
     args = parser.parse_args(argv)
 
@@ -141,7 +130,7 @@ def main(argv=None):
             set_resource_root(os.path.join(os.path.dirname(path), proj.resources))
         else:
             scene = Scene.load(path)
-    cls = get_renderer(renderer_name) or SDL2Renderer
+    cls = get_renderer(renderer_name) or OpenGLRenderer
     renderer = cls(width, height, title)
     camera = scene.camera or Camera(width / 2, height / 2, width, height)
     Engine(width=width, height=height, title=title,

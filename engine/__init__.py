@@ -4,7 +4,6 @@ from .core import GameObject, Scene, Engine, Project, Camera
 from .renderers import (
     OpenGLRenderer,
     QtPainterRenderer,
-    SDL2Renderer,
     Renderer,
 )
 from .game_window import GameWindow
@@ -51,7 +50,7 @@ __all__ = [
     'Move', 'SetPosition', 'Destroy', 'Print', 'PlaySound', 'Spawn',
     'OnStart', 'EveryFrame', 'VariableCompare', 'ZoomAbove',
     'SetVariable', 'ModifyVariable', 'SetZoom', 'Project', 'Camera',
-    'clear_image_cache', 'Renderer', 'OpenGLRenderer', 'QtPainterRenderer', 'SDL2Renderer', 'main',
+    'clear_image_cache', 'Renderer', 'OpenGLRenderer', 'QtPainterRenderer', 'main',
     'ENGINE_VERSION', 'logger', 'ResourceManager', 'set_resource_root', 'get_resource_path',
     'load_project', 'save_project', 'run_project', 'create_engine',
     'load_scene', 'save_scene', 'run_scene',
