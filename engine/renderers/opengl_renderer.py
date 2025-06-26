@@ -249,11 +249,11 @@ class OpenGLRenderer:
         rad = 4 * inv
         sq = 6 * inv
         ring_r = size * 1.2
-        ring_w = 3 * inv
+        ring_w = 4 * inv
         glBindTexture(GL_TEXTURE_2D, 0)
         glPushMatrix()
         glTranslatef(obj.x * scale, obj.y * scale * sign, 0)
-        glLineWidth(4)
+        glLineWidth(6)
         if mode == 'move':
             # translation arrows
             color_x = 1.0 if not (hover in ("x", "xy") or dragging in ("x", "xy")) else 0.5
@@ -286,9 +286,13 @@ class OpenGLRenderer:
             glEnd()
 
         elif mode == 'scale':
-            # scale squares
+            # scale arrows using squares instead of triangles
             color_sx = 1.0 if not (hover == 'sx' or dragging == 'sx') else 0.5
             glColor4f(color_sx, 0.0, 0.0, 1.0)
+            glBegin(GL_LINES)
+            glVertex2f(0.0, 0.0)
+            glVertex2f(size, 0.0)
+            glEnd()
             glBegin(GL_QUADS)
             glVertex2f(size - sq, -sq)
             glVertex2f(size + sq, -sq)
@@ -298,6 +302,10 @@ class OpenGLRenderer:
 
             color_sy = 1.0 if not (hover == 'sy' or dragging == 'sy') else 0.5
             glColor4f(0.0, color_sy, 0.0, 1.0)
+            glBegin(GL_LINES)
+            glVertex2f(0.0, 0.0)
+            glVertex2f(0.0, size * sign)
+            glEnd()
             glBegin(GL_QUADS)
             if units.Y_UP:
                 glVertex2f(-sq, size - sq)
@@ -321,7 +329,7 @@ class OpenGLRenderer:
                 ang = (i / 32.0) * math.tau
                 glVertex2f(math.cos(ang) * ring_r, math.sin(ang) * ring_r * sign)
             glEnd()
-            glLineWidth(4)
+            glLineWidth(6)
 
         # pivot point
         center_col = 0.5 if not (hover == 'xy' or dragging == 'xy') else 0.25

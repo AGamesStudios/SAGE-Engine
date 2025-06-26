@@ -200,11 +200,23 @@ class Viewport(GLWidget):
                             self.selected_obj.y - world[1],
                         )
             else:
-                self._drag_pos = event.position()
-                self._gizmo_hover = None
-                self._cursor_world = self._screen_to_world(event.position())
-            self.setCursor(Qt.CursorShape.BlankCursor)
-            self.grabMouse()
+                obj = self._pick_object(event.position())
+                if obj is not None:
+                    self.selected_obj = obj
+                    if self.editor:
+                        for i, (_, o) in enumerate(self.editor.items):
+                            if o is obj:
+                                self.editor.object_combo.setCurrentIndex(i)
+                                self.editor.object_list.setCurrentRow(i)
+                                break
+                    self._gizmo_hover = self._hit_gizmo(event.position())
+                    self._cursor_world = self._screen_to_world(event.position())
+                else:
+                    self._drag_pos = event.position()
+                    self._gizmo_hover = None
+                    self._cursor_world = self._screen_to_world(event.position())
+                    self.setCursor(Qt.CursorShape.BlankCursor)
+                    self.grabMouse()
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):  # pragma: no cover - UI interaction
@@ -323,6 +335,18 @@ class Viewport(GLWidget):
         y = self.camera.y + sign * (vp_h / 2 - sy) / scale
         return x, y
 
+    def _pick_object(self, pos: QPointF) -> GameObject | None:
+        """Return the topmost object under the cursor in world space."""
+        world = self._screen_to_world(pos)
+        self.scene.sort_objects()
+        for obj in reversed(self.scene.objects):
+            if isinstance(obj, Camera):
+                continue
+            left, bottom, w, h = obj.rect()
+            if left <= world[0] <= left + w and bottom <= world[1] <= bottom + h:
+                return obj
+        return None
+
     def _hit_gizmo(self, pos: QPointF) -> str | None:
         if self.selected_obj is None or self._transform_mode == 'pan':
             return None
@@ -332,9 +356,9 @@ class Viewport(GLWidget):
         # Use world unit scale so hit testing matches the drawn gizmo
         ratio = self.devicePixelRatioF()
         arrow = 50.0 * ratio
-        handle = 8.0 * ratio
+        handle = 12.0 * ratio
         ring = arrow * 1.2
-        ring_tol = 6.0 * ratio
+        ring_tol = 8.0 * ratio
         sign = -1.0 if units.Y_UP else 1.0
         result = None
         if abs(dx) < handle and abs(dy) < handle:
