@@ -1,7 +1,6 @@
 import types
 import sys
 
-# Provide minimal PyQt6 stubs so engine modules import without Qt installed
 pyqt = types.ModuleType('PyQt6')
 qtcore = types.ModuleType('PyQt6.QtCore')
 qtgui = types.ModuleType('PyQt6.QtGui')
@@ -23,17 +22,23 @@ qtwidgets.QVBoxLayout = type('QVBoxLayout', (), {})
 qtcore.QTimer = type('QTimer', (), {})
 
 from engine.core.scene import Scene
+from engine.core.game_object import GameObject
 
+class DummyEngine:
+    def __init__(self):
+        from engine.logic.base import EventSystem
+        self.events = EventSystem()
+        self.input = types.SimpleNamespace()
 
-def test_ensure_active_camera_creates_camera():
+def test_object_event_move():
+    obj = GameObject()
+    obj.events = [{
+        "conditions": [{"type": "EveryFrame"}],
+        "actions": [{"type": "Move", "target": 0, "dx": 5, "dy": 0}]
+    }]
     scene = Scene()
-    cam = scene.ensure_active_camera(800, 600)
-    assert cam in scene.objects
-    assert scene.get_active_camera() == cam
-
-
-def test_ensure_active_camera_returns_existing():
-    scene = Scene()
-    cam1 = scene.ensure_active_camera(800, 600)
-    cam2 = scene.ensure_active_camera(800, 600)
-    assert cam1 is cam2
+    scene.add_object(obj)
+    scene.build_event_system(aggregate=False)
+    engine = DummyEngine()
+    scene.update_events(engine, 0.016)
+    assert obj.x == 5

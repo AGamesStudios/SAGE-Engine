@@ -35,6 +35,7 @@ class GameWindow(QMainWindow):
         self.engine.input.poll()
         try:
             self.engine.events.update(self.engine, self.engine.scene, dt)
+            self.engine.scene.update_events(self.engine, dt)
             self.engine.scene.update(dt)
             cam = self.engine.camera or self.engine.scene.get_active_camera()
             self.engine.renderer.draw_scene(self.engine.scene, cam, gizmos=False)

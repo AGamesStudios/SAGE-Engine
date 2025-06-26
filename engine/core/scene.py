@@ -188,10 +188,19 @@ class Scene:
         with open(path, "w") as f:
             json.dump(self.to_dict(), f, indent=2)
 
-    def build_event_system(self) -> EventSystem:
+    def build_event_system(self, aggregate: bool = True) -> EventSystem:
+        """Create event systems for objects and optionally aggregate them."""
         es = EventSystem(variables=self.variables)
         for obj in self.objects:
             if hasattr(obj, "build_event_system"):
                 obj_es = obj.build_event_system(self.objects, self.variables)
-                es.events.extend(obj_es.events)
+                if aggregate:
+                    es.events.extend(obj_es.events)
         return es
+
+    def update_events(self, engine, dt: float) -> None:
+        """Update all object event systems."""
+        for obj in self.objects:
+            es = getattr(obj, "event_system", None)
+            if es is not None:
+                es.update(engine, self, dt)

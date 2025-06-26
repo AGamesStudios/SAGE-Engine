@@ -35,7 +35,7 @@ def create_engine(project: Project, fps: int = 30) -> Engine:
     rcls = get_renderer(getattr(project, "renderer", "opengl")) or OpenGLRenderer
     renderer = rcls(project.width, project.height, project.title,
                     background=getattr(project, 'background', (0, 0, 0)))
-    events = scene.build_event_system()
+    events = scene.build_event_system(aggregate=False)
     return Engine(
         width=project.width,
         height=project.height,
@@ -76,7 +76,7 @@ def run_scene(path: str, width: int = 640, height: int = 480,
     rcls = get_renderer("opengl") or OpenGLRenderer
     renderer = rcls(width, height, title or "SAGE 2D",
                     background=background)
-    events = scene.build_event_system()
+    events = scene.build_event_system(aggregate=False)
     Engine(
         width=width,
         height=height,

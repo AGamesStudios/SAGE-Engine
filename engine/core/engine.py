@@ -47,7 +47,7 @@ class Engine:
                     self.scene.add_object(camera)
             self.scene.set_active_camera(camera)
         self.camera = camera
-        self.events = events if events is not None else self.scene.build_event_system()
+        self.events = events if events is not None else self.scene.build_event_system(aggregate=False)
         if renderer is None:
             cls = get_renderer("opengl") or OpenGLRenderer
             self.renderer = cls(width, height, title)
@@ -140,7 +140,7 @@ def main(argv=None):
         height=height,
         title=title,
         scene=scene,
-        events=scene.build_event_system(),
+        events=scene.build_event_system(aggregate=False),
         renderer=renderer,
         camera=camera,
     ).run()

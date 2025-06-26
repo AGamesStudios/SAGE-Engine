@@ -1670,7 +1670,7 @@ class Editor(QMainWindow):
                 width=self.window_width,
                 height=self.window_height,
                 scene=scene,
-                events=scene.build_event_system(),
+                events=scene.build_event_system(aggregate=False),
                 renderer=OpenGLRenderer(
                     self.window_width, self.window_height, "SAGE 2D",
                     keep_aspect=self.keep_aspect,
