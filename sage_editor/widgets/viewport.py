@@ -1,5 +1,6 @@
 from PyQt6.QtWidgets import QWidget
 from PyQt6.QtCore import QTimer, Qt, QPointF
+import math
 
 from engine.renderers.opengl_renderer import OpenGLRenderer, GLWidget
 from engine.core.scene import Scene
@@ -131,10 +132,27 @@ class Viewport(GLWidget):
                 world = self._screen_to_world(event.position())
                 self._cursor_world = world
                 if self.selected_obj:
-                    self._drag_offset = (
-                        self.selected_obj.x - world[0],
-                        self.selected_obj.y - world[1],
-                    )
+                    if hit == 'rot':
+                        ang = math.degrees(math.atan2(
+                            world[1] - self.selected_obj.y,
+                            world[0] - self.selected_obj.x,
+                        ))
+                        self._drag_offset = self.selected_obj.angle - ang
+                    elif hit == 'sx':
+                        self._drag_offset = (
+                            world[0] - self.selected_obj.x,
+                            self.selected_obj.scale_x,
+                        )
+                    elif hit == 'sy':
+                        self._drag_offset = (
+                            world[1] - self.selected_obj.y,
+                            self.selected_obj.scale_y,
+                        )
+                    else:
+                        self._drag_offset = (
+                            self.selected_obj.x - world[0],
+                            self.selected_obj.y - world[1],
+                        )
             else:
                 self._drag_pos = event.position()
                 self._gizmo_hover = None
@@ -146,10 +164,27 @@ class Viewport(GLWidget):
     def mouseMoveEvent(self, event):  # pragma: no cover - UI interaction
         if self._gizmo_drag and self.selected_obj is not None:
             world = self._screen_to_world(event.position())
-            if 'x' in self._gizmo_drag:
-                self.selected_obj.x = world[0] + self._drag_offset[0]
-            if 'y' in self._gizmo_drag:
-                self.selected_obj.y = world[1] + self._drag_offset[1]
+            if self._gizmo_drag == 'rot':
+                ang = math.degrees(math.atan2(
+                    world[1] - self.selected_obj.y,
+                    world[0] - self.selected_obj.x,
+                ))
+                self.selected_obj.angle = ang + self._drag_offset
+            elif self._gizmo_drag == 'sx':
+                start_dx, base = self._drag_offset
+                dx = world[0] - self.selected_obj.x
+                if start_dx:
+                    self.selected_obj.scale_x = max(0.01, base * (dx / start_dx))
+            elif self._gizmo_drag == 'sy':
+                start_dy, base = self._drag_offset
+                dy = world[1] - self.selected_obj.y
+                if start_dy:
+                    self.selected_obj.scale_y = max(0.01, base * (dy / start_dy))
+            else:
+                if 'x' in self._gizmo_drag:
+                    self.selected_obj.x = world[0] + self._drag_offset[0]
+                if 'y' in self._gizmo_drag:
+                    self.selected_obj.y = world[1] + self._drag_offset[1]
             if self.editor:
                 self.editor._update_transform_panel()
                 self.editor._mark_dirty()
@@ -187,7 +222,7 @@ class Viewport(GLWidget):
             before = self._screen_to_world(pos)
             self.camera.zoom *= 1.0 + (0.1 * delta)
             self.camera.zoom = max(0.1, min(10.0, self.camera.zoom))
-            if self._gizmo_drag:
+            if self._gizmo_drag in ('x', 'y', 'xy'):
                 after = self._screen_to_world(pos)
                 self._drag_offset = (
                     self._drag_offset[0] + before[0] - after[0],
@@ -252,6 +287,8 @@ class Viewport(GLWidget):
         ratio = self.devicePixelRatioF()
         arrow = 50.0 * ratio
         handle = 8.0 * ratio
+        ring = arrow * 1.2
+        ring_tol = 6.0 * ratio
         sign = -1.0 if units.Y_UP else 1.0
         if abs(dx) < handle and abs(dy) < handle:
             return 'xy'
@@ -259,4 +296,11 @@ class Viewport(GLWidget):
             return 'x'
         if abs(dx) < handle and 0 <= sign*dy <= arrow:
             return 'y'
+        if abs(dx - arrow) <= handle and abs(dy) <= handle:
+            return 'sx'
+        if abs(dx) <= handle and abs(sign*dy - arrow) <= handle:
+            return 'sy'
+        dist = (dx**2 + dy**2) ** 0.5
+        if ring - ring_tol <= dist <= ring + ring_tol:
+            return 'rot'
         return None

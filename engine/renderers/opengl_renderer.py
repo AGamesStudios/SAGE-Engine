@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Optional
+import math
 
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
 from OpenGL.GL import (
@@ -239,11 +240,14 @@ class OpenGLRenderer:
         size = 50 * inv
         head = 10 * inv
         rad = 4 * inv
+        sq = 6 * inv
+        ring_r = size * 1.2
+        ring_w = 3 * inv
         glBindTexture(GL_TEXTURE_2D, 0)
         glPushMatrix()
         glTranslatef(obj.x * scale, obj.y * scale * sign, 0)
         glLineWidth(4)
-        # X axis
+        # X axis translation
         color_x = 1.0 if not (hover in ("x", "xy") or dragging in ("x", "xy")) else 0.5
         glColor4f(color_x, 0.0, 0.0, 1.0)
         glBegin(GL_LINES)
@@ -255,7 +259,17 @@ class OpenGLRenderer:
         glVertex2f(size - head, head / 2)
         glVertex2f(size - head, -head / 2)
         glEnd()
-        # Y axis
+        # X axis scale square
+        color_sx = 1.0 if not (hover == 'sx' or dragging == 'sx') else 0.5
+        glColor4f(color_sx, 0.0, 0.0, 1.0)
+        glBegin(GL_QUADS)
+        glVertex2f(size - sq, -sq)
+        glVertex2f(size + sq, -sq)
+        glVertex2f(size + sq, sq)
+        glVertex2f(size - sq, sq)
+        glEnd()
+
+        # Y axis translation
         color_y = 1.0 if not (hover in ("y", "xy") or dragging in ("y", "xy")) else 0.5
         glColor4f(0.0, color_y, 0.0, 1.0)
         glBegin(GL_LINES)
@@ -272,6 +286,33 @@ class OpenGLRenderer:
             glVertex2f(-head / 2, -size + head)
             glVertex2f(head / 2, -size + head)
         glEnd()
+        # Y axis scale square
+        color_sy = 1.0 if not (hover == 'sy' or dragging == 'sy') else 0.5
+        glColor4f(0.0, color_sy, 0.0, 1.0)
+        glBegin(GL_QUADS)
+        if units.Y_UP:
+            glVertex2f(-sq, size - sq)
+            glVertex2f(sq, size - sq)
+            glVertex2f(sq, size + sq)
+            glVertex2f(-sq, size + sq)
+        else:
+            glVertex2f(-sq, -size - sq)
+            glVertex2f(sq, -size - sq)
+            glVertex2f(sq, -size + sq)
+            glVertex2f(-sq, -size + sq)
+        glEnd()
+
+        # rotation ring
+        color_rot = 1.0 if not (hover == 'rot' or dragging == 'rot') else 0.5
+        glColor4f(color_rot, color_rot, 0.0, 1.0)
+        glLineWidth(ring_w)
+        glBegin(GL_LINE_LOOP)
+        for i in range(32):
+            ang = (i / 32.0) * math.tau
+            glVertex2f(math.cos(ang) * ring_r, math.sin(ang) * ring_r * sign)
+        glEnd()
+        glLineWidth(4)
+
         # pivot point
         center_col = 0.5 if not (hover == 'xy' or dragging == 'xy') else 0.25
         glColor4f(center_col, center_col, center_col, 1.0)
