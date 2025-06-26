@@ -1,27 +1,26 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Optional
 import math
         # store a reference to the renderer once assigned
         self.renderer = None
-        self.renderer = None
 
-from PyQt6.QtOpenGLWidgets import QOpenGLWidget
-from OpenGL.GL import (
-    glEnable, glBlendFunc, glClearColor, glClear, glPushMatrix, glPopMatrix,
-    glTranslatef, glRotatef, glScalef, glBegin, glEnd, glVertex2f, glColor4f,
-    glTexCoord2f, glBindTexture, glTexParameteri, glTexImage2D, glGenTextures,
-    glLineWidth,
-    GL_BLEND, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_COLOR_BUFFER_BIT,
-    GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_TEXTURE_MAG_FILTER, GL_LINEAR,
-    GL_QUADS, GL_LINES, GL_LINE_LOOP, GL_TRIANGLES, GL_RGBA, GL_UNSIGNED_BYTE
-)
-from PIL import Image
+    def __init__(self, width: int = 640, height: int = 480,
+                 title: str = "SAGE 2D", widget: Optional[GLWidget] = None,
+                 keep_aspect: bool = True,
+                 background: tuple[int, int, int] = (0, 0, 0)):
+        self.width = width
+        self.height = height
+        self.title = title
+        self.widget = widget if widget is not None else self.create_widget()
+        self.keep_aspect = bool(keep_aspect)
+        self.background = tuple(background)
 
-from engine.core.camera import Camera
-from engine.core.game_object import GameObject
-from engine import units
+
+    def create_widget(self) -> GLWidget:
+        """Return the :class:`GLWidget` used for rendering."""
+        return GLWidget()
+
 from pathlib import Path
 
 
