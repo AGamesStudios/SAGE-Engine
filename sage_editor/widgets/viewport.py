@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QToolButton
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QToolButton, QButtonGroup
 from PyQt6.QtCore import QTimer, Qt, QPointF
 import math
 
@@ -49,20 +49,42 @@ class Viewport(GLWidget):
         self.selected_obj: GameObject | None = None
         self._cursor_world: tuple[float, float] | None = None
 
+        # active transform mode: 'pan', 'move', 'rotate', or 'scale'
+        self._transform_mode = 'pan'
+
         # small toolbar with transform mode buttons
         self.transform_bar = QWidget(self)
         layout = QVBoxLayout(self.transform_bar)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(2)
+
+        modes = ['pan', 'move', 'rotate', 'scale']
         self.transform_buttons: list[QToolButton] = []
-        for _ in range(4):
+        self.button_group = QButtonGroup(self.transform_bar)
+        self.button_group.setExclusive(True)
+        for i, mode in enumerate(modes):
             btn = QToolButton(self.transform_bar)
             btn.setFixedSize(24, 24)
+            btn.setCheckable(True)
+            if i == 0:
+                btn.setChecked(True)
+            btn.clicked.connect(lambda _, m=mode: self.set_transform_mode(m))
             layout.addWidget(btn)
+            self.button_group.addButton(btn)
             self.transform_buttons.append(btn)
         self.transform_bar.move(4, 4)
         self.transform_bar.show()
         self.transform_bar.raise_()
+
+    def set_transform_mode(self, mode: str) -> None:
+        """Set the active transform interaction mode."""
+        if mode not in {'pan', 'move', 'rotate', 'scale'}:
+            return
+        self._transform_mode = mode
+        # ensure only the matching button is checked
+        idx = {'pan': 0, 'move': 1, 'rotate': 2, 'scale': 3}[mode]
+        if 0 <= idx < len(self.transform_buttons):
+            self.transform_buttons[idx].setChecked(True)
 
     def _center_camera(self) -> None:
         """Center the camera on existing objects."""
@@ -293,7 +315,7 @@ class Viewport(GLWidget):
         return x, y
 
     def _hit_gizmo(self, pos: QPointF) -> str | None:
-        if self.selected_obj is None:
+        if self.selected_obj is None or self._transform_mode == 'pan':
             return None
         sx, sy = self._world_to_screen(self.selected_obj.x, self.selected_obj.y)
         dx = pos.x() - sx
@@ -305,17 +327,27 @@ class Viewport(GLWidget):
         ring = arrow * 1.2
         ring_tol = 6.0 * ratio
         sign = -1.0 if units.Y_UP else 1.0
+        result = None
         if abs(dx) < handle and abs(dy) < handle:
-            return 'xy'
-        if abs(dy) < handle and 0 <= dx <= arrow:
-            return 'x'
-        if abs(dx) < handle and 0 <= sign*dy <= arrow:
-            return 'y'
-        if abs(dx - arrow) <= handle and abs(dy) <= handle:
-            return 'sx'
-        if abs(dx) <= handle and abs(sign*dy - arrow) <= handle:
-            return 'sy'
-        dist = (dx**2 + dy**2) ** 0.5
-        if ring - ring_tol <= dist <= ring + ring_tol:
-            return 'rot'
-        return None
+            result = 'xy'
+        elif abs(dy) < handle and 0 <= dx <= arrow:
+            result = 'x'
+        elif abs(dx) < handle and 0 <= sign*dy <= arrow:
+            result = 'y'
+        elif abs(dx - arrow) <= handle and abs(dy) <= handle:
+            result = 'sx'
+        elif abs(dx) <= handle and abs(sign*dy - arrow) <= handle:
+            result = 'sy'
+        else:
+            dist = (dx**2 + dy**2) ** 0.5
+            if ring - ring_tol <= dist <= ring + ring_tol:
+                result = 'rot'
+
+        allowed = {
+            'move': {'x', 'y', 'xy'},
+            'rotate': {'rot'},
+            'scale': {'sx', 'sy'},
+        }.get(self._transform_mode, set())
+        if result not in allowed:
+            return None
+        return result
