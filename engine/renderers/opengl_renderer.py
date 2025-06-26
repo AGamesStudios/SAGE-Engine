@@ -13,14 +13,14 @@ from OpenGL.GL import (
     glLineWidth,
     GL_BLEND, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_COLOR_BUFFER_BIT,
     GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_TEXTURE_MAG_FILTER, GL_LINEAR,
-    GL_QUADS, GL_LINES, GL_LINE_LOOP, GL_TRIANGLES, GL_RGBA, GL_UNSIGNED_BYTE
+    GL_QUADS, GL_LINES, GL_LINE_LOOP, GL_TRIANGLES, GL_RGBA, GL_UNSIGNED_BYTE,
+    GL_MULTISAMPLE, GL_LINE_SMOOTH
 )
 from PIL import Image
 
 from engine.core.camera import Camera
 from engine.core.game_object import GameObject
 from engine import units
-from pathlib import Path
 
 
 class GLWidget(QOpenGLWidget):
@@ -157,7 +157,8 @@ class OpenGLRenderer:
         tex = self._icon_cache.get(name)
         if tex:
             return tex
-        path = Path(__file__).resolve().parent.parent.parent / 'sage_editor' / 'icons' / name
+        from sage_editor.icons import ICON_DIR
+        path = ICON_DIR / name
         if not path.is_file():
             return self._get_blank_texture()
         img = Image.open(path).convert('RGBA')
