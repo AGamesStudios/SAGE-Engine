@@ -300,6 +300,9 @@ runtime engine logs to `logs/engine.log` so you can review issues later.
 Set the environment variable `SAGE_LOG_LEVEL` to `DEBUG`, `INFO`, `WARNING` or
 `ERROR` to control how much detail is recorded. Unknown objects, conditions and
 actions generate warnings so issues show up in the log instead of failing silently.
+When set to `DEBUG`, additional messages report when scene objects are added or
+removed and when events are enabled, disabled or triggered. This output appears
+both in the editor's console and the IDE terminal.
 The engine also checks its exported names at import time and warns if a symbol
 listed in ``__all__`` does not exist. This helps catch mistakes like missing
 imports.

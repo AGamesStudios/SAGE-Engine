@@ -46,6 +46,7 @@ class Scene:
                 new_name = f"{base} ({i})"
             obj.name = new_name
         self.objects.append(obj)
+        logger.debug('Added object %s', obj.name)
         if isinstance(obj, Camera):
             if obj.active:
                 self.set_active_camera(obj)
@@ -56,6 +57,7 @@ class Scene:
     def remove_object(self, obj: GameObject):
         if obj in self.objects:
             self.objects.remove(obj)
+            logger.debug('Removed object %s', obj.name)
             if obj is self.camera:
                 self.camera = None
                 self.active_camera = None
@@ -74,12 +76,14 @@ class Scene:
             for obj in self.objects:
                 if isinstance(obj, Camera):
                     obj.active = False
+            logger.debug('Active camera cleared')
         else:
             self.camera = camera
             self.active_camera = camera.name
             for obj in self.objects:
                 if isinstance(obj, Camera):
                     obj.active = obj is camera
+            logger.debug('Active camera set to %s', camera.name)
 
     def get_active_camera(self) -> Camera | None:
         """Return the currently active camera."""

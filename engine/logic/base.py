@@ -190,14 +190,20 @@ class Event:
 
     def enable(self):
         self.enabled = True
+        if self.name:
+            logger.debug('Enabled event %s', self.name)
 
     def disable(self):
         self.enabled = False
+        if self.name:
+            logger.debug('Disabled event %s', self.name)
 
     def reset(self):
         """Clear the triggered flag and enable the event."""
         self.triggered = False
         self.enabled = True
+        if self.name:
+            logger.debug('Reset event %s', self.name)
 
     def update(self, engine, scene, dt):
         if not self.enabled or (self.once and self.triggered):
@@ -210,6 +216,8 @@ class Event:
                     except Exception:
                         logger.exception('Action error')
                 self.triggered = True
+                if self.name:
+                    logger.debug('Event %s triggered', self.name)
         except Exception:
             logger.exception('Condition error')
 
@@ -227,28 +235,34 @@ class EventSystem:
 
     def remove_event(self, name):
         self.events = [e for e in self.events if e.name != name]
+        logger.debug('Removed event %s', name)
 
     def add_event(self, event):
         self.events.append(event)
+        logger.debug('Added event %s', event.name)
 
     def enable_event(self, name):
         evt = self.get_event(name)
         if evt is not None:
             evt.enable()
+            logger.debug('Enabled event %s', name)
 
     def disable_event(self, name):
         evt = self.get_event(name)
         if evt is not None:
             evt.disable()
+            logger.debug('Disabled event %s', name)
 
     def reset_event(self, name):
         evt = self.get_event(name)
         if evt is not None:
             evt.reset()
+            logger.debug('Reset event %s', name)
 
     def reset_all(self):
         for evt in self.events:
             evt.reset()
+        logger.debug('Reset all events')
 
     def update(self, engine, scene, dt):
         for evt in list(self.events):
