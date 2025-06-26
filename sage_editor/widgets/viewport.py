@@ -217,9 +217,10 @@ class Viewport(GLWidget):
         sx, sy = self._world_to_screen(self.selected_obj.x, self.selected_obj.y)
         dx = pos.x() - sx
         dy = pos.y() - sy
-        pixel = self.devicePixelRatioF() if hasattr(self, 'devicePixelRatioF') else 1.0
-        arrow = 50.0 * pixel
-        handle = 8.0 * pixel
+        # Use world unit scale so hit testing matches the drawn gizmo
+        scale = units.UNITS_PER_METER
+        arrow = 50.0 * scale
+        handle = 8.0 * scale
         sign = -1.0 if units.Y_UP else 1.0
         if abs(dx) < handle and abs(dy) < handle:
             return 'xy'
