@@ -1655,28 +1655,18 @@ class Editor(QMainWindow):
         try:
             from engine.core.engine import Engine
             from engine.renderers.opengl_renderer import OpenGLRenderer
-            from engine.core.camera import Camera
             from engine import set_resource_root
 
             if self.resource_dir:
                 set_resource_root(self.resource_dir)
 
             scene = self.scene
-            cam = scene.get_active_camera()
-            if cam is None:
-                cam = next((o for o in scene.objects if isinstance(o, Camera)), None)
-                if cam is None:
-                    cam = Camera(
-                        x=self.window_width / 2,
-                        y=self.window_height / 2,
-                        width=self.window_width,
-                        height=self.window_height,
-                        active=True,
-                    )
-                    self._register_object_ui(cam)
-                else:
-                    scene.set_active_camera(cam)
-                    self._refresh_object_labels()
+            before = len(scene.objects)
+            cam = scene.ensure_active_camera(self.window_width, self.window_height)
+            if len(scene.objects) > before:
+                self._register_object_ui(cam)
+            else:
+                self._refresh_object_labels()
             engine = Engine(
                 width=self.window_width,
                 height=self.window_height,

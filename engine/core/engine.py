@@ -40,19 +40,7 @@ class Engine:
         self._frame_interval = 1.0 / fps if fps else 0
         self.scene = scene or Scene()
         if camera is None:
-            cam = getattr(self.scene, "get_active_camera", None)
-            camera = cam() if callable(cam) else getattr(self.scene, "camera", None)
-            if camera is None:
-                camera = next(
-                    (o for o in getattr(self.scene, "objects", []) if isinstance(o, Camera)),
-                    None,
-                )
-            if camera is None:
-                camera = Camera(width / 2, height / 2, width, height, active=True)
-                if hasattr(self.scene, "add_object"):
-                    self.scene.add_object(camera)
-            else:
-                self.scene.set_active_camera(camera)
+            camera = self.scene.ensure_active_camera(width, height)
         else:
             if camera not in getattr(self.scene, "objects", []):
                 if hasattr(self.scene, "add_object"):
@@ -146,11 +134,7 @@ def main(argv=None):
             scene = Scene.load(path)
     cls = get_renderer(renderer_name) or OpenGLRenderer
     renderer = cls(width, height, title)
-    camera = scene.get_active_camera()
-    if camera is None:
-        camera = Camera(width / 2, height / 2, width, height, active=True)
-        if hasattr(scene, "add_object"):
-            scene.add_object(camera)
+    camera = scene.ensure_active_camera(width, height)
     Engine(
         width=width,
         height=height,

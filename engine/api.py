@@ -1,7 +1,6 @@
 from .core.scene import Scene
 from .core.project import Project
 from .renderers import get_renderer, OpenGLRenderer
-from .core.camera import Camera
 from .core.engine import Engine
 from .core.objects import register_object, object_from_dict, object_to_dict
 
@@ -32,20 +31,7 @@ def save_project(project: Project, path: str) -> None:
 def create_engine(project: Project, fps: int = 30) -> Engine:
     """Create an :class:`Engine` for the given project."""
     scene = Scene.from_dict(project.scene)
-    camera = scene.camera
-    if camera is None:
-        camera = next((o for o in scene.objects if isinstance(o, Camera)), None)
-        if camera is None:
-            camera = Camera(
-                x=project.width / 2,
-                y=project.height / 2,
-                width=project.width,
-                height=project.height,
-                active=True,
-            )
-            scene.add_object(camera)
-        else:
-            scene.set_active_camera(camera)
+    camera = scene.ensure_active_camera(project.width, project.height)
     rcls = get_renderer(getattr(project, "renderer", "opengl")) or OpenGLRenderer
     renderer = rcls(project.width, project.height, project.title,
                     background=getattr(project, 'background', (0, 0, 0)))
@@ -86,14 +72,7 @@ def run_scene(path: str, width: int = 640, height: int = 480,
               background: tuple[int, int, int] = (0, 0, 0)) -> None:
     """Run a single scene file directly."""
     scene = load_scene(path)
-    camera = scene.camera
-    if camera is None:
-        camera = next((o for o in scene.objects if isinstance(o, Camera)), None)
-        if camera is None:
-            camera = Camera(width / 2, height / 2, width, height, active=True)
-            scene.add_object(camera)
-        else:
-            scene.set_active_camera(camera)
+    camera = scene.ensure_active_camera(width, height)
     rcls = get_renderer("opengl") or OpenGLRenderer
     renderer = rcls(width, height, title or "SAGE 2D",
                     background=background)

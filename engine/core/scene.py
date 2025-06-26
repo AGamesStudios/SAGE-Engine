@@ -24,7 +24,6 @@ class Scene:
         self.camera = None
         self.active_camera = None
         self.metadata = {}
-        self.metadata = {}
         self._sorted = False
 
     def _sort_objects(self):
@@ -87,6 +86,19 @@ class Scene:
         if self.camera is None and self.active_camera:
             self.set_active_camera(self.active_camera)
         return self.camera
+
+    def ensure_active_camera(self, width: int = 640, height: int = 480) -> Camera:
+        """Return an active camera, creating one if necessary."""
+        cam = self.get_active_camera()
+        if cam is not None:
+            return cam
+        cam = next((o for o in self.objects if isinstance(o, Camera)), None)
+        if cam is None:
+            cam = Camera(width / 2, height / 2, width, height, active=True)
+            self.add_object(cam)
+        else:
+            self.set_active_camera(cam)
+        return cam
 
     def update(self, dt: float):
         self._sort_objects()
