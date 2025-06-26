@@ -26,4 +26,10 @@ def _setup_logger() -> logging.Logger:
 logger = _setup_logger()
 atexit.register(logging.shutdown)
 
-__all__ = ['logger', 'LOG_FILE']
+def set_stream(stream) -> None:
+    """Update all stream handlers to use a new output stream."""
+    for handler in logger.handlers:
+        if isinstance(handler, logging.StreamHandler):
+            handler.setStream(stream)
+
+__all__ = ['logger', 'LOG_FILE', 'set_stream']

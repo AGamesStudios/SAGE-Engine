@@ -59,6 +59,12 @@ def _setup_logger() -> logging.Logger:
 logger = _setup_logger()
 atexit.register(logging.shutdown)
 
+def set_stream(stream) -> None:
+    """Update stream handlers to use the provided stream."""
+    for handler in logger.handlers:
+        if isinstance(handler, logging.StreamHandler):
+            handler.setStream(stream)
+
 def _log(text: str) -> None:
     """Write a line to the log file and console."""
     logger.info(text)
