@@ -131,7 +131,17 @@ def main(argv=None):
             scene = Scene.load(path)
     cls = get_renderer(renderer_name) or OpenGLRenderer
     renderer = cls(width, height, title)
-    camera = scene.camera or Camera(width / 2, height / 2, width, height)
-    Engine(width=width, height=height, title=title,
-           scene=scene, events=scene.build_event_system(),
-           renderer=renderer, camera=camera).run()
+    camera = scene.get_active_camera()
+    if camera is None:
+        camera = Camera(width / 2, height / 2, width, height, active=True)
+        if hasattr(scene, "add_object"):
+            scene.add_object(camera)
+    Engine(
+        width=width,
+        height=height,
+        title=title,
+        scene=scene,
+        events=scene.build_event_system(),
+        renderer=renderer,
+        camera=camera,
+    ).run()

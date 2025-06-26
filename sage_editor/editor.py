@@ -1159,7 +1159,6 @@ class Editor(QMainWindow):
         self.recent_menu.setTitle(self.t('recent_projects'))
         self.recent_menu.setIcon(load_icon('recent.png'))
         self.settings_menu.setTitle(self.t('settings'))
-        self.window_settings_act.setText(self.t('window_settings'))
         self.project_settings_act.setText(self.t('project_settings'))
         self.plugins_act.setText(self.t('manage_plugins'))
         self.coord_combo.setItemText(0, self.t('global'))
@@ -1262,9 +1261,6 @@ class Editor(QMainWindow):
         self.recent_menu = self.file_menu.addMenu(load_icon('recent.png'), self.t('recent_projects'))
 
         self.settings_menu = menubar.addMenu(self.t('settings'))
-        self.window_settings_act = QAction(self.t('window_settings'), self)
-        self.window_settings_act.triggered.connect(self.show_window_settings)
-        self.settings_menu.addAction(self.window_settings_act)
         self.project_settings_act = QAction(self.t('project_settings'), self)
         self.project_settings_act.triggered.connect(self.show_project_settings)
         self.settings_menu.addAction(self.project_settings_act)
@@ -1489,24 +1485,6 @@ class Editor(QMainWindow):
             self.scene_path = path
             self.scene.save(path)
 
-    def show_window_settings(self):
-        dlg = QDialog(self)
-        dlg.setWindowTitle(self.t('window_settings'))
-        w_spin = QSpinBox(); w_spin.setRange(100, 4096); w_spin.setValue(self.window_width)
-        h_spin = QSpinBox(); h_spin.setRange(100, 4096); h_spin.setValue(self.window_height)
-        form = QFormLayout(dlg)
-        form.addRow(self.t('width'), w_spin)
-        form.addRow(self.t('height'), h_spin)
-        buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
-        )
-        buttons.accepted.connect(dlg.accept)
-        buttons.rejected.connect(dlg.reject)
-        form.addRow(buttons)
-        if dlg.exec() == QDialog.DialogCode.Accepted:
-            self.window_width = w_spin.value()
-            self.window_height = h_spin.value()
-            self._update_camera_rect()
 
     def show_project_settings(self):
         if not self._check_project():
@@ -1594,12 +1572,17 @@ class Editor(QMainWindow):
                 set_resource_root(self.resource_dir)
 
             scene = self.scene
-            cam = scene.camera or Camera(
-                x=self.window_width / 2,
-                y=self.window_height / 2,
-                width=self.window_width,
-                height=self.window_height,
-            )
+            cam = scene.get_active_camera()
+            if cam is None:
+                cam = Camera(
+                    x=self.window_width / 2,
+                    y=self.window_height / 2,
+                    width=self.window_width,
+                    height=self.window_height,
+                    active=True,
+                )
+                if hasattr(scene, "add_object"):
+                    scene.add_object(cam)
             engine = Engine(
                 width=self.window_width,
                 height=self.window_height,
