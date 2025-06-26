@@ -974,6 +974,8 @@ class Editor(QMainWindow):
         self.resource_manager = None
         self.scene = Scene()
         self.scene_path: str | None = None
+        self._game_window = None
+        self._game_engine = None
         self.setWindowTitle(f'SAGE Editor ({ENGINE_VERSION})')
         self.engine_completer = QCompleter(_engine_completions(), self)
         self.engine_completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
@@ -1551,10 +1553,14 @@ class Editor(QMainWindow):
                 height=self.window_height,
                 scene=scene,
                 events=scene.build_event_system(),
-                renderer=OpenGLRenderer(self.window_width, self.window_height, "SAGE 2D"),
+                renderer=OpenGLRenderer(
+                    self.window_width, self.window_height, "SAGE 2D"
+                ),
                 camera=cam,
             )
-            engine.run()
+            window = engine.run()
+            self._game_engine = engine
+            self._game_window = window
         except Exception as exc:  # pragma: no cover - runtime errors
             logger.exception('Failed to start engine')
             QMessageBox.warning(self, self.t('error'), str(exc))
