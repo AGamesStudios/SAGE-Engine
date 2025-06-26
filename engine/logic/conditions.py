@@ -177,8 +177,30 @@ class ZoomAbove(Condition):
         except Exception:
             return False
 
+
+@register_condition('EventTriggered', [('name', 'value')])
+class EventTriggered(Condition):
+    """True when the named event has already executed."""
+
+    def __init__(self, name):
+        self.name = name
+
+    def check(self, engine, scene, dt):
+        target = resolve_value(self.name, engine)
+        evt = None
+        if engine.events:
+            evt = engine.events.get_event(target)
+        if evt is None:
+            for obj in getattr(scene, 'objects', []):
+                es = getattr(obj, 'event_system', None)
+                if es:
+                    evt = es.get_event(target)
+                    if evt is not None:
+                        break
+        return evt.triggered if evt else False
+
 __all__ = [
     'KeyPressed', 'KeyReleased', 'MouseButton', 'InputState',
     'Collision', 'AfterTime', 'OnStart', 'EveryFrame',
-    'VariableCompare', 'ZoomAbove'
+    'VariableCompare', 'ZoomAbove', 'EventTriggered'
 ]

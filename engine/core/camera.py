@@ -76,6 +76,12 @@ class Camera:
                     actions.append(aobj)
                 else:
                     logger.warning('Skipped invalid action %s', act)
-            es.add_event(Event(conditions, actions, evt.get("once", False)))
+            es.add_event(Event(
+                conditions,
+                actions,
+                evt.get("once", False),
+                evt.get("name"),
+                evt.get("enabled", True),
+            ))
         self.event_system = es
         return es

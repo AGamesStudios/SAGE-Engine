@@ -194,6 +194,11 @@ class Event:
     def disable(self):
         self.enabled = False
 
+    def reset(self):
+        """Clear the triggered flag and enable the event."""
+        self.triggered = False
+        self.enabled = True
+
     def update(self, engine, scene, dt):
         if not self.enabled or (self.once and self.triggered):
             return
@@ -225,6 +230,25 @@ class EventSystem:
 
     def add_event(self, event):
         self.events.append(event)
+
+    def enable_event(self, name):
+        evt = self.get_event(name)
+        if evt is not None:
+            evt.enable()
+
+    def disable_event(self, name):
+        evt = self.get_event(name)
+        if evt is not None:
+            evt.disable()
+
+    def reset_event(self, name):
+        evt = self.get_event(name)
+        if evt is not None:
+            evt.reset()
+
+    def reset_all(self):
+        for evt in self.events:
+            evt.reset()
 
     def update(self, engine, scene, dt):
         for evt in list(self.events):

@@ -171,4 +171,62 @@ class SetZoom(Action):
     def execute(self, engine, scene, dt):
         self.camera.zoom = resolve_value(self.zoom, engine)
 
-__all__ = ['Move','SetPosition','Destroy','Print','PlaySound','Spawn','SetVariable','ModifyVariable','SetZoom']
+
+def _find_event(engine, scene, name):
+    if engine.events:
+        evt = engine.events.get_event(name)
+        if evt is not None:
+            return evt
+    if scene:
+        for obj in getattr(scene, 'objects', []):
+            es = getattr(obj, 'event_system', None)
+            if es:
+                evt = es.get_event(name)
+                if evt is not None:
+                    return evt
+    return None
+
+
+@register_action('EnableEvent', [('name', 'value')])
+class EnableEvent(Action):
+    """Enable an event by name."""
+
+    def __init__(self, name):
+        self.name = name
+
+    def execute(self, engine, scene, dt):
+        evt = _find_event(engine, scene, resolve_value(self.name, engine))
+        if evt:
+            evt.enable()
+
+
+@register_action('DisableEvent', [('name', 'value')])
+class DisableEvent(Action):
+    """Disable an event by name."""
+
+    def __init__(self, name):
+        self.name = name
+
+    def execute(self, engine, scene, dt):
+        evt = _find_event(engine, scene, resolve_value(self.name, engine))
+        if evt:
+            evt.disable()
+
+
+@register_action('ResetEvent', [('name', 'value')])
+class ResetEvent(Action):
+    """Reset an event so it can trigger again."""
+
+    def __init__(self, name):
+        self.name = name
+
+    def execute(self, engine, scene, dt):
+        evt = _find_event(engine, scene, resolve_value(self.name, engine))
+        if evt:
+            evt.reset()
+
+__all__ = [
+    'Move','SetPosition','Destroy','Print','PlaySound','Spawn',
+    'SetVariable','ModifyVariable','SetZoom',
+    'EnableEvent','DisableEvent','ResetEvent'
+]

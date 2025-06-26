@@ -328,6 +328,12 @@ The `Print` action is handy for debugging. The text is formatted with the
 current variables so using `Score: {score}` will display the latest value of a
 variable named `score` when the action runs.
 
+Events themselves can now be controlled at runtime. Use `EnableEvent`,
+`DisableEvent` or `ResetEvent` with the event's name to toggle behaviour on and
+off or to allow a one‑shot event to run again. The `EventTriggered` condition
+checks whether another event has already fired so you can chain logic without
+custom variables.
+
 Numeric fields in conditions and actions may reference engine data at runtime.
 Values like ``engine.variable("speed")`` call that method when the event runs so
 the latest value is used. Any engine attribute can be accessed using dotted
