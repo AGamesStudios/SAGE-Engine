@@ -366,6 +366,52 @@ class OpenGLRenderer:
         glVertex2f(size, size)
         glVertex2f(-size, size)
         glEnd()
+
+        # visualize the hit area for the active or hovered handle
+        active = dragging or hover
+        if active:
+            glColor4f(1.0, 1.0, 1.0, 0.25)
+            handle = 12 * inv
+            if active in ('x', 'sx'):
+                end_x = size if active == 'x' else size + 2 * sq
+                glBegin(GL_LINE_LOOP)
+                glVertex2f(0.0, handle)
+                glVertex2f(end_x, handle)
+                glVertex2f(end_x, -handle)
+                glVertex2f(0.0, -handle)
+                glEnd()
+            elif active in ('y', 'sy'):
+                end_y = size if active == 'y' else size + 2 * sq
+                if active == 'sy' and not units.Y_UP:
+                    end_y = -end_y
+                glBegin(GL_LINE_LOOP)
+                glVertex2f(-handle, 0.0)
+                glVertex2f(-handle, sign * end_y)
+                glVertex2f(handle, sign * end_y)
+                glVertex2f(handle, 0.0)
+                glEnd()
+            elif active == 'rot':
+                inner = ring_r - ring_w
+                outer = ring_r + ring_w
+                glBegin(GL_LINE_LOOP)
+                for i in range(32):
+                    ang = (i / 32.0) * math.tau
+                    glVertex2f(math.cos(ang) * inner,
+                               math.sin(ang) * inner * sign)
+                glEnd()
+                glBegin(GL_LINE_LOOP)
+                for i in range(32):
+                    ang = (i / 32.0) * math.tau
+                    glVertex2f(math.cos(ang) * outer,
+                               math.sin(ang) * outer * sign)
+                glEnd()
+            elif active == 'xy':
+                glBegin(GL_LINE_LOOP)
+                glVertex2f(-handle, -handle)
+                glVertex2f(handle, -handle)
+                glVertex2f(handle, handle)
+                glVertex2f(-handle, handle)
+                glEnd()
         glLineWidth(1)
         glPopMatrix()
 
