@@ -2,6 +2,7 @@
 
 from .opengl_renderer import OpenGLRenderer
 from .qt_painter_renderer import QtPainterRenderer
+from .sdl2_renderer import SDL2Renderer
 
 RENDERER_REGISTRY: dict[str, type] = {}
 
@@ -18,6 +19,7 @@ def get_renderer(name: str) -> type | None:
 
 register_renderer("opengl", OpenGLRenderer)
 register_renderer("qt", QtPainterRenderer)
+register_renderer("sdl2", SDL2Renderer)
 
 
 class Renderer:
@@ -43,6 +45,7 @@ __all__ = [
     "Renderer",
     "OpenGLRenderer",
     "QtPainterRenderer",
+    "SDL2Renderer",
     "register_renderer",
     "get_renderer",
     "RENDERER_REGISTRY",

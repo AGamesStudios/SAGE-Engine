@@ -1,15 +1,15 @@
 from PyQt6.QtWidgets import QWidget
 from PyQt6.QtCore import QTimer, Qt
 
-from engine.renderers.qt_painter_renderer import QtPainterRenderer, PainterWidget
+from engine.renderers.opengl_renderer import OpenGLRenderer, GLWidget
 from engine.core.scene import Scene
 from engine.core.camera import Camera
 from engine.core.game_object import GameObject
 from engine import units
 
 
-class Viewport(PainterWidget):
-    """Viewport widget that renders the current scene using Qt's painter."""
+class Viewport(GLWidget):
+    """Viewport widget that renders the current scene using OpenGL."""
 
     def __init__(self, scene: Scene, parent=None):
         super().__init__(parent)
@@ -23,7 +23,7 @@ class Viewport(PainterWidget):
             width=self.width(), height=self.height(),
         )
         self._center_camera()
-        self.renderer = QtPainterRenderer(self.width(), self.height(), widget=self)
+        self.renderer = OpenGLRenderer(self.width(), self.height(), widget=self)
         self.timer = QTimer(self)
         self.timer.setInterval(33)  # ~30 FPS to reduce CPU load
         self.timer.timeout.connect(self._tick)

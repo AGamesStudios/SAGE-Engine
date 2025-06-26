@@ -1532,7 +1532,7 @@ class Editor(QMainWindow):
             return
         try:
             from engine.core.engine import Engine
-            from engine.renderers.qt_painter_renderer import QtPainterRenderer
+            from engine.renderers.sdl2_renderer import SDL2Renderer
             from engine.core.camera import Camera
             from engine import set_resource_root
 
@@ -1551,10 +1551,10 @@ class Editor(QMainWindow):
                 height=self.window_height,
                 scene=scene,
                 events=scene.build_event_system(),
-                renderer=QtPainterRenderer(self.window_width, self.window_height, "SAGE 2D"),
+                renderer=SDL2Renderer(self.window_width, self.window_height, "SAGE 2D"),
                 camera=cam,
             )
-            engine.run()  # opens a GameWindow using the existing QApplication
+            engine.run()
         except Exception as exc:  # pragma: no cover - runtime errors
             logger.exception('Failed to start engine')
             QMessageBox.warning(self, self.t('error'), str(exc))

@@ -1,6 +1,6 @@
 from .core.scene import Scene
 from .core.project import Project
-from .renderers import get_renderer, OpenGLRenderer, QtPainterRenderer
+from .renderers import get_renderer, OpenGLRenderer, SDL2Renderer
 from .core.camera import Camera
 from .core.engine import Engine
 from .core.objects import register_object, object_from_dict, object_to_dict
@@ -38,7 +38,7 @@ def create_engine(project: Project, fps: int = 30) -> Engine:
         width=project.width,
         height=project.height,
     )
-    rcls = get_renderer(getattr(project, "renderer", "qt")) or QtPainterRenderer
+    rcls = get_renderer(getattr(project, "renderer", "sdl2")) or SDL2Renderer
     renderer = rcls(project.width, project.height, project.title)
     events = scene.build_event_system()
     return Engine(
@@ -74,7 +74,7 @@ def run_scene(path: str, width: int = 640, height: int = 480,
     """Run a single scene file directly."""
     scene = load_scene(path)
     camera = scene.camera or Camera(width / 2, height / 2, width, height)
-    rcls = get_renderer("qt") or QtPainterRenderer
+    rcls = get_renderer("sdl2") or SDL2Renderer
     renderer = rcls(width, height, title or "SAGE 2D")
     events = scene.build_event_system()
     Engine(

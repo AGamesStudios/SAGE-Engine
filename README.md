@@ -30,14 +30,13 @@ Embedding the editor in other tools only requires importing these modules.
 
 ### Renderer
 
-Rendering now uses a lightweight **QtPainterRenderer**. The same renderer draws
-the scene in the editor viewport and when running a project so what you see
-while editing matches the game window. A small cross at the scene origin helps
-orient objects. When a scene has no objects a small green square is rendered at
-the origin so the viewport no longer appears empty. The editor viewport uses its
-own camera which can be panned by dragging with the left mouse button. The
-cursor is hidden and captured while dragging so the view responds smoothly and
-the runtime camera remains unchanged.
+Rendering now uses an **OpenGLRenderer**. The editor viewport embeds this
+renderer in a Qt ``QOpenGLWidget`` while the runtime launches a separate SDL2
+window that displays the same scene. A small cross at the origin helps orient
+objects and a green square appears when the scene is empty so the viewport never
+shows a blank screen. The viewport has its own camera which can be panned by
+dragging with the left mouse button; the cursor is hidden and captured during
+the drag so movement feels smooth and the game camera stays untouched.
 
 ### Units and Coordinates
 
@@ -57,9 +56,9 @@ immediately or remove it from the list. Choosing **Delete** now asks for
 confirmation and then removes the entire project folder along with its files.
 Once a project is chosen the editor opens maximized in a dark Fusion
 theme and provides two
-tabs: **Viewport** and **Logic**. The viewport now uses the same
-**QtPainterRenderer** as the runtime so what you see while editing
-matches the game window. It refreshes about thirty times per second and only
+tabs: **Viewport** and **Logic**. The viewport uses an OpenGL widget while the
+runtime window relies on SDL2, so what you see while editing matches the game
+window. It refreshes about thirty times per second and only
 updates on resize, keeping CPU usage low even on slower machines.
 An **Add Object** button beneath the list places a blank object with a default
  name like `New Object`. Every toolbar action and list item loads its icon from
@@ -353,8 +352,8 @@ SAGE Engine aims to run smoothly even on older hardware. Images and sounds
 are cached after the first load and only the most recent 32 images are kept in
 memory.  A helper `engine.clear_image_cache()` empties this LRU cache if
 memory becomes tight. The `Engine` class accepts an `fps` argument (default 30)
-to control the frame rate. `Engine.run()` now launches a Qt **GameWindow** that
-updates via a `QTimer` instead of a tight loop, keeping CPU usage low. Object
+to control the frame rate. `Engine.run()` now opens an SDL2 window and manages
+the loop itself, keeping CPU usage low. Object
 lists are sorted only when modified and heavy math dependencies were removed.
 Runtime errors no longer close the game window automatically; they are logged so
 the scene remains visible for inspection.
