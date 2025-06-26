@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 import math
-import math
 
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
 from OpenGL.GL import (
@@ -215,48 +214,8 @@ class OpenGLRenderer:
             zoom = 1.0
         else:
             zoom = camera.zoom
-        sq = 6 * inv
-        ring_r = size * 1.2
-        ring_w = 3 * inv
-        # X axis translation
-        # X axis scale square
-        color_sx = 1.0 if not (hover == 'sx' or dragging == 'sx') else 0.5
-        glColor4f(color_sx, 0.0, 0.0, 1.0)
-        glBegin(GL_QUADS)
-        glVertex2f(size - sq, -sq)
-        glVertex2f(size + sq, -sq)
-        glVertex2f(size + sq, sq)
-        glVertex2f(size - sq, sq)
-        glEnd()
-
-        # Y axis translation
-        # Y axis scale square
-        color_sy = 1.0 if not (hover == 'sy' or dragging == 'sy') else 0.5
-        glColor4f(0.0, color_sy, 0.0, 1.0)
-        glBegin(GL_QUADS)
-        if units.Y_UP:
-            glVertex2f(-sq, size - sq)
-            glVertex2f(sq, size - sq)
-            glVertex2f(sq, size + sq)
-            glVertex2f(-sq, size + sq)
-        else:
-            glVertex2f(-sq, -size - sq)
-            glVertex2f(sq, -size - sq)
-            glVertex2f(sq, -size + sq)
-            glVertex2f(-sq, -size + sq)
-        glEnd()
-
-        # rotation ring
-        color_rot = 1.0 if not (hover == 'rot' or dragging == 'rot') else 0.5
-        glColor4f(color_rot, color_rot, 0.0, 1.0)
-        glLineWidth(ring_w)
-        glBegin(GL_LINE_LOOP)
-        for i in range(32):
-            ang = (i / 32.0) * math.tau
-            glVertex2f(math.cos(ang) * ring_r, math.sin(ang) * ring_r * sign)
-        glEnd()
-        glLineWidth(4)
-
+        size = 5.0 / zoom
+        scale = units.UNITS_PER_METER
         sign = 1.0 if units.Y_UP else -1.0
         glBindTexture(GL_TEXTURE_2D, 0)
         glPushMatrix()

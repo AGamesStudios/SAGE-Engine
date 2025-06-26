@@ -1,74 +1,5 @@
-from PyQt6.QtWidgets import QWidget, QToolButton, QFrame, QVBoxLayout
+from PyQt6.QtWidgets import QWidget
 from PyQt6.QtCore import QTimer, Qt, QPointF
-import math
-        self._gizmo_mode = 'move'
-        # toolbar for selecting gizmo mode
-        self.bar = QFrame(self)
-        layout = QVBoxLayout(self.bar)
-        layout.setContentsMargins(2, 2, 2, 2)
-        layout.setSpacing(2)
-        self.move_btn = QToolButton(self.bar)
-        self.move_btn.setText('M')
-        self.move_btn.setCheckable(True)
-        self.move_btn.setChecked(True)
-        self.move_btn.clicked.connect(lambda: self.set_gizmo_mode('move'))
-        if self.editor:
-            self.move_btn.setToolTip(self.editor.t('mode_move'))
-        layout.addWidget(self.move_btn)
-        self.rot_btn = QToolButton(self.bar)
-        self.rot_btn.setText('R')
-        self.rot_btn.setCheckable(True)
-        self.rot_btn.clicked.connect(lambda: self.set_gizmo_mode('rotate'))
-        if self.editor:
-            self.rot_btn.setToolTip(self.editor.t('mode_rotate'))
-        layout.addWidget(self.rot_btn)
-        self.scale_btn = QToolButton(self.bar)
-        self.scale_btn.setText('S')
-        self.scale_btn.setCheckable(True)
-        self.scale_btn.clicked.connect(lambda: self.set_gizmo_mode('scale'))
-        if self.editor:
-            self.scale_btn.setToolTip(self.editor.t('mode_scale'))
-        layout.addWidget(self.scale_btn)
-        self.bar.setFrameShape(QFrame.Shape.StyledPanel)
-        self.bar.show()
-        self.bar.move(8, 8)
-
-        self.bar.move(8, 8)
-            mode=self._gizmo_mode,
-        self._gizmo_mode = 'move'
-        # toolbar for selecting gizmo mode
-        self.bar = QFrame(self)
-        layout = QVBoxLayout(self.bar)
-        layout.setContentsMargins(2, 2, 2, 2)
-        layout.setSpacing(2)
-        self.move_btn = QToolButton(self.bar)
-        self.move_btn.setText('M')
-        self.move_btn.setCheckable(True)
-        self.move_btn.setChecked(True)
-        self.move_btn.clicked.connect(lambda: self.set_gizmo_mode('move'))
-        if self.editor:
-            self.move_btn.setToolTip(self.editor.t('mode_move'))
-        layout.addWidget(self.move_btn)
-        self.rot_btn = QToolButton(self.bar)
-        self.rot_btn.setText('R')
-        self.rot_btn.setCheckable(True)
-        self.rot_btn.clicked.connect(lambda: self.set_gizmo_mode('rotate'))
-        if self.editor:
-            self.rot_btn.setToolTip(self.editor.t('mode_rotate'))
-        layout.addWidget(self.rot_btn)
-        self.scale_btn = QToolButton(self.bar)
-        self.scale_btn.setText('S')
-        self.scale_btn.setCheckable(True)
-        self.scale_btn.clicked.connect(lambda: self.set_gizmo_mode('scale'))
-        if self.editor:
-            self.scale_btn.setToolTip(self.editor.t('mode_scale'))
-        layout.addWidget(self.scale_btn)
-        self.bar.setFrameShape(QFrame.Shape.StyledPanel)
-        self.bar.show()
-        self.bar.move(8, 8)
-
-        self.bar.move(8, 8)
-            mode=self._gizmo_mode,
 import math
 
 from engine.renderers.opengl_renderer import OpenGLRenderer, GLWidget
@@ -176,49 +107,15 @@ class Viewport(GLWidget):
             cursor=self._cursor_world,
         )
 
-                    if hit == 'rot':
-                        ang = math.degrees(math.atan2(
-                            world[1] - self.selected_obj.y,
-                            world[0] - self.selected_obj.x,
-                        ))
-                        self._drag_offset = self.selected_obj.angle - ang
-                    elif hit == 'sx':
-                        self._drag_offset = (
-                            world[0] - self.selected_obj.x,
-                            self.selected_obj.scale_x,
-                        )
-                    elif hit == 'sy':
-                        self._drag_offset = (
-                            world[1] - self.selected_obj.y,
-                            self.selected_obj.scale_y,
-                        )
-                    else:
-                        self._drag_offset = (
-                            self.selected_obj.x - world[0],
-                            self.selected_obj.y - world[1],
-                        )
-            if self._gizmo_drag == 'rot':
-                ang = math.degrees(math.atan2(
-                    world[1] - self.selected_obj.y,
-                    world[0] - self.selected_obj.x,
-                ))
-                self.selected_obj.angle = ang + self._drag_offset
-            elif self._gizmo_drag == 'sx':
-                start_dx, base = self._drag_offset
-                dx = world[0] - self.selected_obj.x
-                if start_dx:
-                    self.selected_obj.scale_x = max(0.01, base * (dx / start_dx))
-            elif self._gizmo_drag == 'sy':
-                start_dy, base = self._drag_offset
-                dy = world[1] - self.selected_obj.y
-                if start_dy:
-                    self.selected_obj.scale_y = max(0.01, base * (dy / start_dy))
-            else:
-                if 'x' in self._gizmo_drag:
-                    self.selected_obj.x = world[0] + self._drag_offset[0]
-                if 'y' in self._gizmo_drag:
-                    self.selected_obj.y = world[1] + self._drag_offset[1]
-            if self._gizmo_drag in ('x', 'y', 'xy'):
+    def showEvent(self, event):  # pragma: no cover
+        self.timer.start()
+        super().showEvent(event)
+
+    def hideEvent(self, event):  # pragma: no cover
+        self.timer.stop()
+        super().hideEvent(event)
+
+    def leaveEvent(self, event):  # pragma: no cover - cursor left widget
         self._gizmo_hover = None
         self._cursor_world = None
         self.update()
@@ -243,14 +140,6 @@ class Viewport(GLWidget):
                         self._drag_offset = self.selected_obj.angle - ang
                     elif hit == 'sx':
                         self._drag_offset = (
-    def set_gizmo_mode(self, mode: str) -> None:
-        """Switch the transform gizmo mode."""
-        self._gizmo_mode = mode
-        self.move_btn.setChecked(mode == 'move')
-        self.rot_btn.setChecked(mode == 'rotate')
-        self.scale_btn.setChecked(mode == 'scale')
-        self.update()
-
                             world[0] - self.selected_obj.x,
                             self.selected_obj.scale_x,
                         )
@@ -285,14 +174,6 @@ class Viewport(GLWidget):
                 start_dx, base = self._drag_offset
                 dx = world[0] - self.selected_obj.x
                 if start_dx:
-    def set_gizmo_mode(self, mode: str) -> None:
-        """Switch the transform gizmo mode."""
-        self._gizmo_mode = mode
-        self.move_btn.setChecked(mode == 'move')
-        self.rot_btn.setChecked(mode == 'rotate')
-        self.scale_btn.setChecked(mode == 'scale')
-        self.update()
-
                     self.selected_obj.scale_x = max(0.01, base * (dx / start_dx))
             elif self._gizmo_drag == 'sy':
                 start_dy, base = self._drag_offset
@@ -309,20 +190,17 @@ class Viewport(GLWidget):
                 self.editor._mark_dirty()
             self.update()
             self._cursor_world = world
-        if self._gizmo_mode == 'move':
-            if abs(dy) < handle and 0 <= dx <= arrow:
-                return 'x'
-            if abs(dx) < handle and 0 <= sign*dy <= arrow:
-                return 'y'
-        elif self._gizmo_mode == 'scale':
-            if abs(dx - arrow) <= handle and abs(dy) <= handle:
-                return 'sx'
-            if abs(dx) <= handle and abs(sign*dy - arrow) <= handle:
-                return 'sy'
-        elif self._gizmo_mode == 'rotate':
-            dist = (dx**2 + dy**2) ** 0.5
-            if ring - ring_tol <= dist <= ring + ring_tol:
-                return 'rot'
+        elif self._drag_pos is not None and event.buttons() & Qt.MouseButton.LeftButton:
+            dx = event.position().x() - self._drag_pos.x()
+            dy = event.position().y() - self._drag_pos.y()
+            scale = units.UNITS_PER_METER
+            self.camera.x -= dx / scale
+            self.camera.y += (1 if units.Y_UP else -1) * dy / scale
+            self._drag_pos = event.position()
+            self.update()
+            self._gizmo_hover = None
+            self._cursor_world = self._screen_to_world(event.position())
+        else:
             self._gizmo_hover = self._hit_gizmo(event.position())
         self._cursor_world = self._screen_to_world(event.position())
         self.update()
@@ -349,25 +227,13 @@ class Viewport(GLWidget):
                 self._drag_offset = (
                     self._drag_offset[0] + before[0] - after[0],
                     self._drag_offset[1] + before[1] - after[1],
-        ring = arrow * 1.2
-        ring_tol = 6.0 * ratio
-        if abs(dx - arrow) <= handle and abs(dy) <= handle:
-            return 'sx'
-        if abs(dx) <= handle and abs(sign*dy - arrow) <= handle:
-        if self._gizmo_mode == 'move':
-            if abs(dy) < handle and 0 <= dx <= arrow:
-                return 'x'
-            if abs(dx) < handle and 0 <= sign*dy <= arrow:
-                return 'y'
-        elif self._gizmo_mode == 'scale':
-            if abs(dx - arrow) <= handle and abs(dy) <= handle:
-                return 'sx'
-            if abs(dx) <= handle and abs(sign*dy - arrow) <= handle:
-                return 'sy'
-        elif self._gizmo_mode == 'rotate':
-            dist = (dx**2 + dy**2) ** 0.5
-            if ring - ring_tol <= dist <= ring + ring_tol:
-                return 'rot'
+                )
+            self._gizmo_hover = self._hit_gizmo(pos)
+            self._cursor_world = self._screen_to_world(pos)
+            self.update()
+        super().wheelEvent(event)
+
+    # ------------------------------------------------------------------
     def set_selected(self, obj: GameObject | None) -> None:
         self.selected_obj = obj
         self.update()
