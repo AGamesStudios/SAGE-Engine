@@ -403,8 +403,8 @@ class Viewport(GLWidget):
         # rotate into local coordinates when needed
         if self._transform_mode == 'scale' or self._local_coords:
             ang = math.radians(getattr(self.selected_obj, 'angle', 0.0))
-            cos_a = math.cos(-ang)
-            sin_a = math.sin(-ang)
+            cos_a = math.cos(ang)
+            sin_a = math.sin(ang)
             rdx = cos_a * dx - sin_a * dy
             rdy = sin_a * dx + cos_a * dy
             dx, dy = rdx, rdy
