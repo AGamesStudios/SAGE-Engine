@@ -8,7 +8,12 @@ from .scene import Scene
 from .project import Project
 from .input_qt import QtInput
 from .camera import Camera
-from ..renderers import OpenGLRenderer, Renderer, get_renderer
+from ..renderers import (
+    OpenGLRenderer,
+    QtPainterRenderer,
+    Renderer,
+    get_renderer,
+)
 from .. import ENGINE_VERSION
 from ..log import logger
 
@@ -46,7 +51,7 @@ class Engine:
         self.camera = camera
         self.events = events if events is not None else self.scene.build_event_system()
         if renderer is None:
-            cls = get_renderer("opengl") or OpenGLRenderer
+            cls = get_renderer("qt") or QtPainterRenderer
             self.renderer = cls(width, height, title)
         elif isinstance(renderer, str):
             cls = get_renderer(renderer)
@@ -99,8 +104,12 @@ def main(argv=None):
     parser.add_argument("--width", type=int, help="Window width")
     parser.add_argument("--height", type=int, help="Window height")
     parser.add_argument("--title", help="Window title")
-    parser.add_argument("--renderer", choices=["opengl"], default="opengl",
-                        help="Rendering backend (default opengl)")
+    parser.add_argument(
+        "--renderer",
+        choices=["qt", "opengl"],
+        default="qt",
+        help="Rendering backend (default qt)",
+    )
     args = parser.parse_args(argv)
 
     scene = Scene()
@@ -121,7 +130,7 @@ def main(argv=None):
             set_resource_root(os.path.join(os.path.dirname(path), proj.resources))
         else:
             scene = Scene.load(path)
-    cls = get_renderer(renderer_name) or OpenGLRenderer
+    cls = get_renderer(renderer_name) or QtPainterRenderer
     renderer = cls(width, height, title)
     camera = scene.camera or Camera(width / 2, height / 2, width, height)
     Engine(width=width, height=height, title=title,

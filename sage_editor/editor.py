@@ -1532,7 +1532,7 @@ class Editor(QMainWindow):
             return
         try:
             from engine.core.engine import Engine
-            from engine.renderers.opengl_renderer import OpenGLRenderer
+            from engine.renderers.qt_painter_renderer import QtPainterRenderer
             from engine.core.camera import Camera
             from engine import set_resource_root
 
@@ -1551,7 +1551,7 @@ class Editor(QMainWindow):
                 height=self.window_height,
                 scene=scene,
                 events=scene.build_event_system(),
-                renderer=OpenGLRenderer(self.window_width, self.window_height, "SAGE 2D"),
+                renderer=QtPainterRenderer(self.window_width, self.window_height, "SAGE 2D"),
                 camera=cam,
             )
             engine.run()  # opens a GameWindow using the existing QApplication

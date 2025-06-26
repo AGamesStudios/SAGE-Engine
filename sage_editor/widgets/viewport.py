@@ -1,15 +1,15 @@
-from PyQt6.QtOpenGLWidgets import QOpenGLWidget
+from PyQt6.QtWidgets import QWidget
 from PyQt6.QtCore import QTimer, Qt
 
-from engine.renderers.opengl_renderer import OpenGLRenderer
+from engine.renderers.qt_painter_renderer import QtPainterRenderer, PainterWidget
 from engine.core.scene import Scene
 from engine.core.camera import Camera
 from engine.core.game_object import GameObject
 from engine import units
 
 
-class Viewport(QOpenGLWidget):
-    """Viewport widget that renders the current scene using OpenGL."""
+class Viewport(PainterWidget):
+    """Viewport widget that renders the current scene using Qt's painter."""
 
     def __init__(self, scene: Scene, parent=None):
         super().__init__(parent)
@@ -23,7 +23,7 @@ class Viewport(QOpenGLWidget):
             width=self.width(), height=self.height(),
         )
         self._center_camera()
-        self.renderer = OpenGLRenderer(self.width(), self.height(), widget=self)
+        self.renderer = QtPainterRenderer(self.width(), self.height(), widget=self)
         self.timer = QTimer(self)
         self.timer.setInterval(33)  # ~30 FPS to reduce CPU load
         self.timer.timeout.connect(self._tick)
@@ -43,13 +43,7 @@ class Viewport(QOpenGLWidget):
         self.camera.x = sum(xs) / len(xs)
         self.camera.y = sum(ys) / len(ys)
 
-    # QOpenGLWidget overrides -------------------------------------------------
-
-    def initializeGL(self) -> None:  # pragma: no cover - GUI callback
-        self.renderer.setup_view()
-
-    def paintGL(self) -> None:  # pragma: no cover - GUI callback
-        self.renderer.paint()
+    # QWidget overrides -------------------------------------------------------
 
     def resizeEvent(self, event):  # pragma: no cover - handle resize
         super().resizeEvent(event)
