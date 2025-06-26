@@ -18,11 +18,12 @@ from ..logic import (
 class Scene:
     """Collection of objects and events."""
     def __init__(self):
-        self.objects: List[GameObject | Camera] = []
-        self.variables: dict = {}
-        self.camera: Camera | None = None
-        self.active_camera: str | None = None
-        self.metadata: dict = {}
+        # collections of scene objects and metadata
+        self.objects = []
+        self.variables = {}
+        self.camera = None
+        self.active_camera = None
+        self.metadata = {}
         self._sorted = False
 
     def _sort_objects(self):

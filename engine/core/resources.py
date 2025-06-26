@@ -25,7 +25,8 @@ class ResourceManager:
 
     def __init__(self, root: str):
         self.root = root
-        self._cache: dict[str, bytes] = {}
+        # cache already loaded files
+        self._cache = {}
         os.makedirs(self._win_path(self.root), exist_ok=True)
         logger.info("Resource manager initialized at %s", self.root)
 

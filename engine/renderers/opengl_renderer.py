@@ -3,7 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 import math
-import math
+        # store a reference to the renderer once assigned
+        self.renderer = None
 
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
 from OpenGL.GL import (

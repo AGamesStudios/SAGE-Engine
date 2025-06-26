@@ -16,7 +16,8 @@ class PainterWidget(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.renderer: Optional[QtPainterRenderer] = None
+        # painter renderer instance will be set by the parent
+        self.renderer = None
 
     def paintEvent(self, event):  # pragma: no cover - GUI callback
         if self.renderer:
@@ -43,7 +44,8 @@ class QtPainterRenderer:
         self._should_close = False
         self._scene = None
         self._camera = None
-        self._pixmaps: dict[int, QPixmap] = {}
+        # cache loaded pixmaps by image id
+        self._pixmaps = {}
 
     def should_close(self) -> bool:
         return self._should_close
