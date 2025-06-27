@@ -315,6 +315,44 @@ class OpenGLRenderer:
         glBindBuffer(GL_ARRAY_BUFFER, 0)
         glUseProgram(0)
 
+    def _draw_outline(self, obj: GameObject, camera: Camera | None,
+                      color: tuple[float, float, float, float] = (1.0, 0.55, 0.0, 1.0),
+                      width: float = 2.0) -> None:
+        """Draw an outline around ``obj`` using world coordinates."""
+        from OpenGL.GL import (
+            glBindTexture, glColor4f, glLineWidth, glBegin, glEnd, glVertex2f,
+            GL_LINE_LOOP, GL_TEXTURE_2D
+        )
+        if obj is None:
+            return
+        scale = units.UNITS_PER_METER
+        sign = 1.0 if units.Y_UP else -1.0
+        zoom = camera.zoom if camera else 1.0
+        cam_x = camera.x if camera else 0.0
+        cam_y = camera.y if camera else 0.0
+        w_size = camera.width if (self.keep_aspect and camera) else self.width
+        h_size = camera.height if (self.keep_aspect and camera) else self.height
+        ang = math.radians(getattr(obj, 'angle', 0.0))
+        cos_a = math.cos(ang)
+        sin_a = math.sin(ang)
+        w = obj.width * obj.scale_x
+        h = obj.height * obj.scale_y
+        verts = [(-w/2, -h/2), (w/2, -h/2), (w/2, h/2), (-w/2, h/2)]
+        glBindTexture(GL_TEXTURE_2D, 0)
+        glColor4f(*color)
+        glLineWidth(width)
+        glBegin(GL_LINE_LOOP)
+        for vx, vy in verts:
+            rx = vx * cos_a - vy * sin_a
+            ry = vx * sin_a + vy * cos_a
+            world_x = (rx + obj.x - cam_x) * scale * zoom
+            world_y = (ry + obj.y - cam_y) * scale * zoom * sign
+            ndc_x = (2.0 * world_x) / w_size
+            ndc_y = (2.0 * world_y) / h_size
+            glVertex2f(ndc_x, ndc_y)
+        glEnd()
+        glLineWidth(1.0)
+
     def _draw_frustum(self, cam: Camera):
         """Draw a rectangle representing the camera's view."""
         left, bottom, w, h = cam.view_rect()
@@ -615,6 +653,8 @@ class OpenGLRenderer:
                     )
                 continue
             self._draw_object(obj, camera)
+            if obj is self._selected_obj:
+                self._draw_outline(obj, camera)
             if self._draw_gizmos:
                 tex_icon = self._get_icon_texture('object.png')
                 self._draw_icon(

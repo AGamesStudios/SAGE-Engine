@@ -1,5 +1,7 @@
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QToolButton, QButtonGroup
-from PyQt6.QtGui import QIcon
+from PyQt6.QtWidgets import (
+    QWidget, QVBoxLayout, QToolButton, QButtonGroup, QShortcut
+)
+from PyQt6.QtGui import QIcon, QKeySequence
 from PyQt6.QtCore import QTimer, Qt, QPointF
 import math
 
@@ -88,6 +90,19 @@ class Viewport(GLWidget):
         self.transform_bar.show()
         self.transform_bar.raise_()
 
+        # keyboard shortcuts for viewport controls
+        from PyQt6.QtGui import QShortcut, QKeySequence
+        self.shortcut_focus = QShortcut(QKeySequence('F'), self)
+        self.shortcut_focus.activated.connect(self._focus_selected)
+        self.shortcut_pan = QShortcut(QKeySequence('Q'), self)
+        self.shortcut_pan.activated.connect(lambda: self.set_transform_mode('pan'))
+        self.shortcut_move = QShortcut(QKeySequence('W'), self)
+        self.shortcut_move.activated.connect(lambda: self.set_transform_mode('move'))
+        self.shortcut_rot = QShortcut(QKeySequence('E'), self)
+        self.shortcut_rot.activated.connect(lambda: self.set_transform_mode('rotate'))
+        self.shortcut_scale = QShortcut(QKeySequence('R'), self)
+        self.shortcut_scale.activated.connect(lambda: self.set_transform_mode('scale'))
+
     def set_coord_mode(self, local: bool) -> None:
         """Set whether gizmos follow the object's rotation."""
         self._local_coords = bool(local)
@@ -113,6 +128,14 @@ class Viewport(GLWidget):
         ys = [o.y for o in objs]
         self.camera.x = sum(xs) / len(xs)
         self.camera.y = sum(ys) / len(ys)
+
+    def _focus_selected(self) -> None:
+        """Center the viewport camera on the selected object."""
+        if self.selected_obj is None:
+            return
+        self.camera.x = self.selected_obj.x
+        self.camera.y = self.selected_obj.y
+        self.update()
 
     # QWidget overrides -------------------------------------------------------
 
