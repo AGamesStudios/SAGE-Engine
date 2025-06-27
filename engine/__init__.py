@@ -36,7 +36,7 @@ def load_engine_plugins(engine, paths=None):
 from .logic.base import Event, EventSystem
 from .logic.conditions import (
     KeyPressed, KeyReleased, MouseButton, InputState, Collision,
-    AfterTime, OnStart, EveryFrame, VariableCompare, ZoomAbove,
+    AfterTime, EveryFrame, VariableCompare, ZoomAbove,
 )
 from .logic.actions import (
     Move, SetPosition, Destroy, Print, PlaySound, Spawn,
@@ -47,7 +47,7 @@ __all__ = [
     'GameObject', 'Scene', 'Engine', 'EventSystem',
     'Event', 'KeyPressed', 'KeyReleased', 'MouseButton', 'InputState', 'Collision', 'AfterTime',
     'Move', 'SetPosition', 'Destroy', 'Print', 'PlaySound', 'Spawn',
-    'OnStart', 'EveryFrame', 'VariableCompare', 'ZoomAbove',
+    'EveryFrame', 'VariableCompare', 'ZoomAbove',
     'SetVariable', 'ModifyVariable', 'SetZoom', 'Project', 'Camera',
     'clear_image_cache', 'Renderer', 'OpenGLRenderer', 'main',
     'ENGINE_VERSION', 'logger', 'ResourceManager', 'set_resource_root', 'get_resource_path',

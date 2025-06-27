@@ -101,18 +101,6 @@ class MouseButton(InputState):
         super().__init__('mouse', button, state)
 
 
-@register_condition('OnStart', [])
-class OnStart(Condition):
-    """True only on the first frame."""
-    def __init__(self):
-        self.triggered = False
-
-    def check(self, engine, scene, dt):
-        if not self.triggered:
-            self.triggered = True
-            return True
-        return False
-
 @register_condition('EveryFrame', [])
 class EveryFrame(Condition):
     """True on every engine tick."""
@@ -201,6 +189,6 @@ class EventTriggered(Condition):
 
 __all__ = [
     'KeyPressed', 'KeyReleased', 'MouseButton', 'InputState',
-    'Collision', 'AfterTime', 'OnStart', 'EveryFrame',
+    'Collision', 'AfterTime', 'EveryFrame',
     'VariableCompare', 'ZoomAbove', 'EventTriggered'
 ]

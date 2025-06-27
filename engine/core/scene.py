@@ -9,7 +9,7 @@ from ..logic import (
     EventSystem, Event,
     condition_from_dict, action_from_dict,
     KeyPressed, KeyReleased, MouseButton, Collision, AfterTime,
-    OnStart, EveryFrame, VariableCompare,
+    EveryFrame, VariableCompare,
     Move, SetPosition, Destroy, Print, PlaySound, Spawn,
     SetVariable, ModifyVariable,
 )
