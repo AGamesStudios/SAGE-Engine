@@ -33,7 +33,7 @@ import json
 from .docks.console import ConsoleDock
 from .docks.properties import PropertiesDock
 from .docks.resources import ResourceDock
-from .docks.logic import LogicTab
+from .docks.logic import LogicTab, ObjectLogicTab
 from .docks.profiler import ProfilerDock
 
 RECENT_FILE = os.path.join(os.path.expanduser('~'), '.sage_recent.json')
@@ -1963,7 +1963,6 @@ class Editor(QMainWindow):
             obj.events.append({"conditions": [], "actions": []})
         tab = self.object_tabs.get(id(obj))
         if tab is None:
-            from .docks.logic import ObjectLogicTab
             tab = ObjectLogicTab(self, obj, index)
             self.object_tabs[id(obj)] = tab
             self.tabs.addTab(tab, f"{self.t('object_logic')} {obj.name}")
