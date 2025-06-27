@@ -16,6 +16,15 @@ pip install -r requirements.txt
 ```
 Or run `scripts/setup.sh` to install them automatically.
 
+## Building an executable
+Install PyInstaller and run the build script to create a standalone **SAGE Engine** executable:
+
+```bash
+pip install pyinstaller
+scripts/build_exe.sh
+```
+The resulting file `dist/SAGE-Engine.exe` can be distributed without needing Python installed.
+
 
 ## Architecture
 The core engine code resides under `engine/core` which defines the
