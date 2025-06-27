@@ -51,3 +51,15 @@ class LogicTab(QWidget):
         mid_layout.addLayout(var_layout, 1)
         main_layout.addLayout(mid_layout)
 
+
+class ObjectLogicTab(LogicTab):
+    """Logic tab bound to a single object."""
+
+    def __init__(self, editor, obj, index: int):
+        super().__init__(editor)
+        self.object_id = id(obj)
+        self.object_combo.addItem(obj.name, index)
+        self.object_combo.setCurrentIndex(0)
+        self.object_combo.setVisible(False)
+        self.object_label.setText(obj.name)
+

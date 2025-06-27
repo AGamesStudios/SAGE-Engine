@@ -1083,7 +1083,7 @@ class Editor(QMainWindow):
         self._pending_filter = ""
         self.splitDockWidget(self.objects_dock, self.properties_dock, Qt.Orientation.Vertical)
 
-        # logic tab with object-specific events and variables
+        # logic tab for scene events
         self.logic_widget = LogicTab(self)
         self.event_list = self.logic_widget.event_list
         self.var_table = self.logic_widget.var_table
@@ -1094,6 +1094,10 @@ class Editor(QMainWindow):
         self.object_combo.currentIndexChanged.connect(self._update_transform_panel)
         self.name_edit.editingFinished.connect(self._object_name_changed)
         self.type_combo.currentIndexChanged.connect(self._object_type_changed)
+        self.tabs.setTabsClosable(True)
+        self.tabs.currentChanged.connect(self._tab_changed)
+        self.tabs.tabCloseRequested.connect(self._close_tab)
+        self.object_tabs: dict[int, QWidget] = {}
         self._update_transform_panel()
 
         # console dock
@@ -1916,16 +1920,36 @@ class Editor(QMainWindow):
                 item.setText(text)
                 item.setIcon(self._object_icon(obj))
 
+    def _update_object_tabs(self):
+        """Keep object logic tabs in sync with object order and names."""
+        for i, (_, obj) in enumerate(self.items):
+            tab = self.object_tabs.get(id(obj))
+            if tab is None:
+                continue
+            tab.object_combo.setItemData(0, i)
+            tab.object_combo.setItemText(0, obj.name)
+            tab.object_label.setText(obj.name)
+            idx = self.tabs.indexOf(tab)
+            if idx >= 0:
+                self.tabs.setTabText(idx, obj.name)
+
     def open_object_logic(self, index: int) -> None:
-        """Switch to the Logic tab for the object at *index*."""
+        """Open or focus a logic tab for the object at *index*."""
         if index < 0 or index >= len(self.items):
             return
-        self.tabs.setCurrentWidget(self.logic_widget)
-        self.object_combo.setCurrentIndex(index)
         obj = self.items[index][1]
         if hasattr(obj, "events") and not obj.events:
             obj.events.append({"conditions": [], "actions": []})
-        self.refresh_events()
+        tab = self.object_tabs.get(id(obj))
+        if tab is None:
+            from .docks.logic import ObjectLogicTab
+            tab = ObjectLogicTab(self, obj, index)
+            self.object_tabs[id(obj)] = tab
+            self.tabs.addTab(tab, obj.name)
+        else:
+            # update index in case object order changed
+            tab.object_combo.setItemData(0, index)
+        self.tabs.setCurrentWidget(tab)
 
     def open_selected_object_logic(self) -> None:
         """Open logic for the currently selected object."""
@@ -1933,6 +1957,28 @@ class Editor(QMainWindow):
         if row < 0:
             row = self.object_combo.currentIndex()
         self.open_object_logic(row)
+
+    def _tab_changed(self, index: int) -> None:
+        """Update widget references when the current tab changes."""
+        widget = self.tabs.widget(index)
+        if hasattr(widget, "object_combo"):
+            self.event_list = widget.event_list
+            self.var_table = widget.var_table
+            self.object_combo = widget.object_combo
+            self.object_label = widget.object_label
+            self.add_var_btn = widget.add_var_btn
+            self.refresh_events()
+
+    def _close_tab(self, index: int) -> None:
+        """Close an object logic tab."""
+        widget = self.tabs.widget(index)
+        if widget in (self.view, self.logic_widget):
+            return
+        obj_id = getattr(widget, "object_id", None)
+        if obj_id and obj_id in self.object_tabs:
+            del self.object_tabs[obj_id]
+        self.tabs.removeTab(index)
+        widget.deleteLater()
 
     def _set_active_camera(self, index: int):
         """Make the selected camera the scene's active camera."""
@@ -2105,6 +2151,13 @@ class Editor(QMainWindow):
         if item is not None:
             item.setText(new_name)
         self._refresh_object_labels()
+        tab = self.object_tabs.get(id(obj))
+        if tab is not None:
+            tab.object_label.setText(new_name)
+            tab.object_combo.setItemText(0, new_name)
+            tab_idx = self.tabs.indexOf(tab)
+            if tab_idx >= 0:
+                self.tabs.setTabText(tab_idx, new_name)
         self._mark_dirty()
 
     def _object_type_changed(self):
@@ -2649,6 +2702,7 @@ class Editor(QMainWindow):
                 self._mark_dirty()
                 self._update_camera_rect()
                 self._refresh_object_labels()
+                self._update_object_tabs()
             else:
                 img_path = data.get('image', '')
                 if img_path:
@@ -2678,6 +2732,7 @@ class Editor(QMainWindow):
                 self.object_list.addItem(item)
                 self._mark_dirty()
                 self._refresh_object_labels()
+                self._update_object_tabs()
         except Exception as exc:
             self.console.append(f'Failed to paste object: {exc}')
         self.refresh_events()
@@ -2701,6 +2756,7 @@ class Editor(QMainWindow):
         if isinstance(obj, Camera):
             self._update_camera_rect()
         self._refresh_object_labels()
+        self._update_object_tabs()
 
     def _delete_object(self, index):
         if index < 0 or index >= len(self.items):
@@ -2712,6 +2768,7 @@ class Editor(QMainWindow):
         # update indexes
         for i, (_, _) in enumerate(self.items):
             self.object_combo.setItemData(i, i)
+        self._update_object_tabs()
         if self.items:
             if index == self.object_combo.currentIndex():
                 self.object_combo.setCurrentIndex(0)
@@ -2723,6 +2780,12 @@ class Editor(QMainWindow):
         self.refresh_events()
         self._mark_dirty()
         self._refresh_object_labels()
+        tab = self.object_tabs.pop(id(obj), None)
+        if tab:
+            idx_tab = self.tabs.indexOf(tab)
+            if idx_tab >= 0:
+                self.tabs.removeTab(idx_tab)
+            tab.deleteLater()
 
     def add_condition(self, row):
         if not self._check_project():
@@ -2820,6 +2883,13 @@ class Editor(QMainWindow):
             self.scene = scene_or_path
         else:
             self.scene = Scene.load(scene_or_path)
+        # close existing object tabs
+        for tab in list(self.object_tabs.values()):
+            idx = self.tabs.indexOf(tab)
+            if idx >= 0:
+                self.tabs.removeTab(idx)
+            tab.deleteLater()
+        self.object_tabs.clear()
         self.items.clear()
         self.object_combo.clear()
         self.object_list.clear()
@@ -2845,6 +2915,7 @@ class Editor(QMainWindow):
         self.refresh_events()
         self.refresh_variables()
         self._refresh_object_labels()
+        self._update_object_tabs()
         self.view.set_scene(self.scene)
         if self.items:
             self.object_combo.setCurrentIndex(0)
