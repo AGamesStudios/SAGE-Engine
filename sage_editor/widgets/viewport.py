@@ -284,7 +284,8 @@ class Viewport(GLWidget):
                 self.selected_obj.x = self._drag_start_obj[0] + world_dx
                 self.selected_obj.y = self._drag_start_obj[1] + world_dy
             if self.editor:
-                self.editor._update_transform_panel()
+                # update fields without rebuilding the variable panel
+                self.editor._update_transform_panel(False)
                 self.editor._mark_dirty()
             self.update()
             self._cursor_world = world

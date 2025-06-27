@@ -1200,7 +1200,7 @@ class Editor(QMainWindow):
         self.object_label = self.logic_widget.object_label
         self.add_var_btn = self.logic_widget.add_var_btn
         self.tabs.addTab(self.logic_widget, self.t('scene_logic'))
-        self.object_combo.currentIndexChanged.connect(self._update_transform_panel)
+        self.object_combo.currentIndexChanged.connect(lambda _=None: self._update_transform_panel())
         self.name_edit.editingFinished.connect(self._object_name_changed)
         self.type_combo.currentIndexChanged.connect(self._object_type_changed)
         self.tabs.setTabsClosable(True)
@@ -2295,7 +2295,16 @@ class Editor(QMainWindow):
             while self.var_layout.rowCount():
                 self.var_layout.removeRow(0)
 
-    def _update_transform_panel(self):
+    def _update_transform_panel(self, update_vars: bool = True):
+        """Refresh the transform inputs for the selected object.
+
+        Parameters
+        ----------
+        update_vars: bool, optional
+            If True (default), also rebuild the public variables section.
+            Dragging objects with the gizmo passes ``False`` to avoid
+            expensive UI rebuilds that caused the dock to jitter.
+        """
         idx = self.object_combo.currentIndex()
         if idx < 0 or idx >= len(self.items):
             self._clear_transform_panel()
@@ -2340,7 +2349,8 @@ class Editor(QMainWindow):
             self.link_scale.blockSignals(True); self.link_scale.setChecked(obj.scale_x == obj.scale_y); self.link_scale.blockSignals(False)
             self.angle_spin.blockSignals(True); self.angle_spin.setValue(obj.angle); self.angle_spin.blockSignals(False)
 
-        self._update_variable_panel()
+        if update_vars:
+            self._update_variable_panel()
 
     def _apply_transform(self):
         idx = self.object_combo.currentIndex()
