@@ -30,6 +30,17 @@ class Scene:
         self.metadata = {}
         self._sorted = False
 
+        # default camera and sprite for new scenes
+        try:
+            cam = Camera(0.0, 0.0, 640, 480, active=True)
+            self.add_object(cam)
+            obj = GameObject('', 0, 0, 0, None, 1.0, 1.0, 0.0,
+                             0.5, 0.5, color=(255, 255, 255, 255))
+            obj.name = 'Sprite'
+            self.add_object(obj)
+        except Exception:
+            logger.exception('Failed to create default objects')
+
     def _sort_objects(self):
         if not self._sorted:
             self.objects.sort(key=lambda o: getattr(o, 'z', 0))

@@ -993,6 +993,8 @@ class Editor(QMainWindow):
         self.engine_completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         # set up tabs
         self.tabs = QTabWidget()
+        self.tabs.tabBar().setExpanding(False)
+        self.tabs.setStyleSheet("QTabBar::tab { width: 120px; }")
         self.setCentralWidget(self.tabs)
 
         # viewport tab renders the scene
