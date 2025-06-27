@@ -170,7 +170,9 @@ drop-down lists for keys and shows only parameters relevant to the chosen
 action. Variables of type int, float, string and bool can be defined and used
 in conditions or actions. Each object stores its own variables so values are not
 shared across objects. Public variables appear in the
-**Properties** dock where their values can be edited directly. Mathematical actions
+**Properties** dock where their values can be edited directly. Integers use a spin
+box, floats a double spin box, booleans a check box and strings a text field.
+Mathematical actions
 only apply to int or float variables, ensuring booleans and strings remain
 unchanged. When setting a variable in an action the name is
 chosen from a drop-down list and booleans use a check box. Events attach to specific objects and can trigger on

@@ -2201,15 +2201,42 @@ class Editor(QMainWindow):
         shown = False
         for name in getattr(obj, 'public_vars', set()):
             value = obj.variables.get(name, '')
-            edit = QLineEdit(str(value))
-            edit.editingFinished.connect(
-                lambda n=name, w=edit: self._public_var_changed(n, w))
+            if isinstance(value, bool):
+                edit = QCheckBox()
+                edit.setChecked(value)
+                edit.stateChanged.connect(
+                    lambda _=None, n=name, w=edit: self._public_var_changed(n, w)
+                )
+            elif isinstance(value, int):
+                edit = QSpinBox()
+                edit.setRange(-9999999, 9999999)
+                edit.setValue(value)
+                edit.valueChanged.connect(
+                    lambda _=None, n=name, w=edit: self._public_var_changed(n, w)
+                )
+            elif isinstance(value, float):
+                edit = QDoubleSpinBox()
+                edit.setRange(-9999999.0, 9999999.0)
+                edit.setDecimals(3)
+                edit.setValue(value)
+                edit.valueChanged.connect(
+                    lambda _=None, n=name, w=edit: self._public_var_changed(n, w)
+                )
+            else:
+                edit = QLineEdit(str(value))
+                edit.editingFinished.connect(
+                    lambda n=name, w=edit: self._public_var_changed(n, w))
             self.var_layout.addRow(name + ':', edit)
             shown = True
         self.var_group.setVisible(shown)
 
-    def _public_var_changed(self, name: str, widget: QLineEdit):
-        text = widget.text()
+    def _public_var_changed(self, name: str, widget):
+        if isinstance(widget, QCheckBox):
+            new_value = widget.isChecked()
+        elif hasattr(widget, 'value'):  # QSpinBox/QDoubleSpinBox
+            new_value = widget.value()
+        else:
+            new_value = widget.text()
         idx = self.object_combo.currentIndex()
         target_vars = None
         if 0 <= idx < len(self.items):
@@ -2221,15 +2248,15 @@ class Editor(QMainWindow):
         value = target_vars.get(name)
         try:
             if isinstance(value, bool):
-                target_vars[name] = text.lower() in ('1', 'true', 'yes', 'on')
+                target_vars[name] = bool(new_value) if isinstance(new_value, bool) else str(new_value).lower() in ('1', 'true', 'yes', 'on')
             elif isinstance(value, int):
-                target_vars[name] = int(text)
+                target_vars[name] = int(new_value)
             elif isinstance(value, float):
-                target_vars[name] = float(text)
+                target_vars[name] = float(new_value)
             else:
-                target_vars[name] = text
+                target_vars[name] = str(new_value)
         except Exception:
-            target_vars[name] = text
+            target_vars[name] = new_value
         self.refresh_variables()
         self._mark_dirty()
 
