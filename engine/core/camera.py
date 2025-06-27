@@ -17,6 +17,7 @@ from .. import units
         ('active', 'active'),
         ('metadata', 'metadata'),
         ('variables', 'variables'),
+        ('public_vars', 'public_vars'),
     ],
 )
 @dataclass(slots=True)
@@ -34,6 +35,7 @@ class Camera:
     type: str = "camera"
     metadata: dict = field(default_factory=dict)
     variables: dict = field(default_factory=dict)
+    public_vars: set[str] = field(default_factory=set)
     events: list = field(default_factory=list)
     event_system: EventSystem | None = field(init=False, default=None)
 
@@ -54,11 +56,12 @@ class Camera:
         """Camera objects are not drawn with sprites."""
         pass
 
-    def build_event_system(self, objects, variables) -> EventSystem:
+    def build_event_system(self, objects, variables=None) -> EventSystem:
         """Build and store an EventSystem from the attached events."""
-        es = EventSystem(variables=variables)
+        vars_dict = self.variables if variables is None else variables
+        es = EventSystem(variables=vars_dict)
         for evt in getattr(self, "events", []):
             if isinstance(evt, dict):
-                es.add_event(event_from_dict(evt, objects, variables))
+                es.add_event(event_from_dict(evt, objects, vars_dict))
         self.event_system = es
         return es

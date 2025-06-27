@@ -168,8 +168,9 @@ The **Logic** tab lists object events with
 conditions on the left and actions on the right. The event dialog now provides
 drop-down lists for keys and shows only parameters relevant to the chosen
 action. Variables of type int, float, string and bool can be defined and used
-in conditions or actions. Object variables marked as public appear in the
-**Properties** dock so their values can be edited directly. Mathematical actions
+in conditions or actions. Each object stores its own variables so values are not
+shared across objects. Public variables appear in the
+**Properties** dock where their values can be edited directly. Mathematical actions
 only apply to int or float variables, ensuring booleans and strings remain
 unchanged. When setting a variable in an action the name is
 chosen from a drop-down list and booleans use a check box. Events attach to specific objects and can trigger on

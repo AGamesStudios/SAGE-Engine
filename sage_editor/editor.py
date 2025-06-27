@@ -1871,13 +1871,16 @@ class Editor(QMainWindow):
                     value = float(text)
                 else:
                     value = text
-            self.scene.variables[name] = value
             tab = self.tabs.currentWidget()
             if isinstance(tab, ObjectLogicTab):
                 idx = tab.object_combo.itemData(0)
                 if idx is not None and 0 <= idx < len(self.items):
                     obj = self.items[idx][1]
-                    obj.variables[name] = dlg.public_check.isChecked()
+                    obj.variables[name] = value
+                    if dlg.public_check.isChecked():
+                        obj.public_vars.add(name)
+            else:
+                self.scene.variables[name] = value
             self.refresh_variables()
             self._mark_dirty()
         except Exception as exc:
@@ -1886,16 +1889,14 @@ class Editor(QMainWindow):
     def refresh_variables(self):
         self.var_table.setRowCount(0)
         tab = self.tabs.currentWidget()
-        var_names = None
+        items = None
         if isinstance(tab, ObjectLogicTab):
             idx = tab.object_combo.itemData(0)
             if idx is not None and 0 <= idx < len(self.items):
                 obj = self.items[idx][1]
-                var_names = obj.variables.keys()
-        if var_names is None:
+                items = obj.variables.items()
+        if items is None:
             items = self.scene.variables.items()
-        else:
-            items = [(name, self.scene.variables.get(name)) for name in var_names]
         for name, value in items:
             row = self.var_table.rowCount()
             self.var_table.insertRow(row)
@@ -2197,10 +2198,8 @@ class Editor(QMainWindow):
             return
         obj = self.items[idx][1]
         shown = False
-        for name, public in getattr(obj, 'variables', {}).items():
-            if not public:
-                continue
-            value = self.scene.variables.get(name, '')
+        for name in getattr(obj, 'public_vars', set()):
+            value = obj.variables.get(name, '')
             edit = QLineEdit(str(value))
             edit.editingFinished.connect(
                 lambda n=name, w=edit: self._public_var_changed(n, w))
@@ -2210,18 +2209,26 @@ class Editor(QMainWindow):
 
     def _public_var_changed(self, name: str, widget: QLineEdit):
         text = widget.text()
-        value = self.scene.variables.get(name)
+        idx = self.object_combo.currentIndex()
+        target_vars = None
+        if 0 <= idx < len(self.items):
+            obj = self.items[idx][1]
+            if name in getattr(obj, 'variables', {}):
+                target_vars = obj.variables
+        if target_vars is None:
+            target_vars = self.scene.variables
+        value = target_vars.get(name)
         try:
             if isinstance(value, bool):
-                self.scene.variables[name] = text.lower() in ('1', 'true', 'yes', 'on')
+                target_vars[name] = text.lower() in ('1', 'true', 'yes', 'on')
             elif isinstance(value, int):
-                self.scene.variables[name] = int(text)
+                target_vars[name] = int(text)
             elif isinstance(value, float):
-                self.scene.variables[name] = float(text)
+                target_vars[name] = float(text)
             else:
-                self.scene.variables[name] = text
+                target_vars[name] = text
         except Exception:
-            self.scene.variables[name] = text
+            target_vars[name] = text
         self.refresh_variables()
         self._mark_dirty()
 

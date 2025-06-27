@@ -159,7 +159,8 @@ class Scene:
                 logger.debug('Object %s does not support settings', type(obj).__name__)
             if hasattr(obj, 'variables'):
                 obj.variables = entry.get('variables', {})
-            elif 'variables' in entry:
+                obj.public_vars = set(entry.get('public_vars', []))
+            elif 'variables' in entry or 'public_vars' in entry:
                 logger.debug('Object %s does not support variables', type(obj).__name__)
             scene.add_object(obj)
             if isinstance(obj, Camera):
@@ -201,6 +202,8 @@ class Scene:
                 data["settings"] = getattr(o, "settings", {})
             if hasattr(o, "variables") and getattr(o, "variables", {}):
                 data["variables"] = getattr(o, "variables")
+            if hasattr(o, "public_vars") and getattr(o, "public_vars", None):
+                data["public_vars"] = list(o.public_vars)
             if hasattr(o, "rotation"):
                 data["quaternion"] = list(o.rotation)
             obj_list.append(data)
@@ -226,7 +229,13 @@ class Scene:
 
     def build_event_system(self, aggregate: bool = True) -> EventSystem:
         """Create event systems for the scene and its objects."""
-        es = EventSystem(variables=self.variables)
+        vars_dict = dict(self.variables)
+        for obj in self.objects:
+            if hasattr(obj, 'variables'):
+                for k, v in getattr(obj, 'variables', {}).items():
+                    if k not in vars_dict:
+                        vars_dict[k] = v
+        es = EventSystem(variables=vars_dict)
         for evt in getattr(self, "events", []):
             if isinstance(evt, dict):
                 obj = event_from_dict(evt, self.objects, self.variables)
@@ -235,7 +244,7 @@ class Scene:
         self.event_system = es
         for obj in self.objects:
             if hasattr(obj, "build_event_system"):
-                obj_es = obj.build_event_system(self.objects, self.variables)
+                obj_es = obj.build_event_system(self.objects, obj.variables)
                 if aggregate:
                     es.events.extend(obj_es.events)
         return es
