@@ -162,6 +162,11 @@ LANGUAGES = {
         , 'edit_logic': 'Edit Logic'
         , 'about_menu': 'About'
         , 'about_us': 'About SAGE Engine'
+        , 'editor_menu': 'Editor'
+        , 'interface_menu': 'Interface'
+        , 'save_layout': 'Save Layout'
+        , 'restore_default': 'Restore Default'
+        , 'layout_name': 'Layout Name:'
         , 'object_var_only': 'Add variables to objects instead'
     },
     'Русский': {
@@ -321,6 +326,11 @@ LANGUAGES = {
         , 'edit_logic': 'Редактировать логику'
         , 'about_menu': 'О нас'
         , 'about_us': 'О движке SAGE'
+        , 'editor_menu': 'Редактор'
+        , 'interface_menu': 'Интерфейс'
+        , 'save_layout': 'Сохранить макет'
+        , 'restore_default': 'Восстановить по умолчанию'
+        , 'layout_name': 'Имя макета:'
         , 'object_var_only': 'Переменные можно добавлять только объектам'
     }
 }

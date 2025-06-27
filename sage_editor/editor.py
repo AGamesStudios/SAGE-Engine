@@ -13,7 +13,7 @@ try:
     from PyQt6.QtWidgets import QFileSystemModel
 except Exception:  # pragma: no cover - handle older PyQt versions
     QFileSystemModel = None
-from PyQt6.QtGui import QPixmap, QColor, QAction, QDesktopServices
+from PyQt6.QtGui import QPixmap, QColor, QAction, QActionGroup, QDesktopServices
 from .icons import load_icon
 from PyQt6.QtCore import (
     QRectF, Qt, QPointF, QSortFilterProxyModel, QSize, QUrl, QTimer
@@ -37,6 +37,7 @@ from .docks.logic import LogicTab, ObjectLogicTab
 from .docks.profiler import ProfilerDock
 
 RECENT_FILE = os.path.join(os.path.expanduser('~'), '.sage_recent.json')
+LAYOUT_FILE = os.path.join(os.path.expanduser('~'), '.sage_layouts.json')
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 LOG_DIR = os.path.join(BASE_DIR, 'logs')
 LOG_FILE = os.path.join(LOG_DIR, 'editor.log')
@@ -99,6 +100,24 @@ def save_recent(lst):
     try:
         with open(RECENT_FILE, 'w') as f:
             json.dump(lst, f)
+    except Exception:
+        pass
+
+def load_layouts() -> dict:
+    """Return saved layout data or defaults."""
+    try:
+        with open(LAYOUT_FILE, 'r') as f:
+            data = json.load(f)
+            if 'layouts' in data:
+                return data
+    except Exception:
+        pass
+    return {'layouts': {}, 'default': None}
+
+def save_layouts(data: dict) -> None:
+    try:
+        with open(LAYOUT_FILE, 'w') as f:
+            json.dump(data, f)
     except Exception:
         pass
 
@@ -1118,15 +1137,19 @@ class Editor(QMainWindow):
         self.items = []
         self.dirty = False
         self.recent_projects = load_recent()
+        self.layouts = load_layouts()
         self._clip_object = None
         self._clip_event = None
         self._init_actions()
+        self._default_state = self.saveState().toBase64().data().decode()
         if autoshow:
             self.showMaximized()
         self._apply_language()
         self._update_project_state()
         self._update_recent_menu()
         self._on_coord_mode()
+        self._build_layout_menu()
+        self._load_default_layout()
         # load optional editor plugins
         plugins.load_plugins(self)
 
@@ -1185,6 +1208,10 @@ class Editor(QMainWindow):
         self.plugins_act.setText(self.t('manage_plugins'))
         self.about_menu.setTitle(self.t('about_menu'))
         self.about_act.setText(self.t('about_us'))
+        self.editor_menu.setTitle(self.t('editor_menu'))
+        self.layout_menu.setTitle(self.t('interface_menu'))
+        self.save_layout_act.setText(self.t('save_layout'))
+        self.restore_layout_act.setText(self.t('restore_default'))
         self.coord_combo.setItemText(0, self.t('global'))
         self.coord_combo.setItemText(1, self.t('local'))
         self.link_scale.setText(self.t('link_scale'))
@@ -1299,6 +1326,18 @@ class Editor(QMainWindow):
         self.about_act = QAction(self.t('about_us'), self)
         self.about_act.triggered.connect(self.show_about)
         self.about_menu.addAction(self.about_act)
+
+        self.editor_menu = menubar.addMenu(self.t('editor_menu'))
+        self.layout_menu = self.editor_menu.addMenu(self.t('interface_menu'))
+        self.save_layout_act = QAction(self.t('save_layout'), self)
+        self.save_layout_act.triggered.connect(self.save_layout_dialog)
+        self.restore_layout_act = QAction(self.t('restore_default'), self)
+        self.restore_layout_act.triggered.connect(self.restore_default_layout)
+        self.layout_menu.addAction(self.save_layout_act)
+        self.layout_menu.addAction(self.restore_layout_act)
+        self.layout_menu.addSeparator()
+        self.layout_group = QActionGroup(self)
+        self.layout_actions = []
 
         toolbar = self.addToolBar('main')
         from PyQt6.QtWidgets import QWidget, QSizePolicy
@@ -1666,6 +1705,62 @@ class Editor(QMainWindow):
     def show_plugin_manager(self):
         from .dialogs.plugin_manager import PluginManager
         PluginManager(self).exec()
+
+    def save_layout_dialog(self):
+        name, ok = QInputDialog.getText(self, self.t('save_layout'), self.t('layout_name'))
+        if not ok or not name:
+            return
+        self._save_layout(name)
+
+    def _save_layout(self, name: str):
+        state = self.saveState().toBase64().data().decode()
+        tabs = [tab.object_combo.itemText(0) for tab in self.object_tabs.values()]
+        self.layouts['layouts'][name] = {'state': state, 'tabs': tabs}
+        self.layouts['default'] = name
+        save_layouts(self.layouts)
+        self._build_layout_menu()
+
+    def set_startup_layout(self, name: str):
+        if name not in self.layouts.get('layouts', {}):
+            return
+        self.layouts['default'] = name
+        save_layouts(self.layouts)
+        self.apply_layout(name)
+        self._build_layout_menu()
+
+    def apply_layout(self, name: str):
+        data = self.layouts.get('layouts', {}).get(name)
+        if not data:
+            return
+        from PyQt6.QtCore import QByteArray
+        self.restoreState(QByteArray.fromBase64(data.get('state', '').encode()))
+        for obj_name in data.get('tabs', []):
+            idx = next((i for i, (_, o) in enumerate(self.items) if o.name == obj_name), -1)
+            if idx >= 0:
+                self.open_object_logic(idx)
+
+    def restore_default_layout(self):
+        from PyQt6.QtCore import QByteArray
+        self.restoreState(QByteArray.fromBase64(self._default_state.encode()))
+        self._build_layout_menu()
+
+    def _build_layout_menu(self):
+        for act in getattr(self, 'layout_actions', []):
+            self.layout_menu.removeAction(act)
+        self.layout_actions = []
+        for name in self.layouts.get('layouts', {}):
+            act = QAction(name, self, checkable=True)
+            act.triggered.connect(lambda checked, n=name: self.set_startup_layout(n))
+            if name == self.layouts.get('default'):
+                act.setChecked(True)
+            self.layout_group.addAction(act)
+            self.layout_menu.addAction(act)
+            self.layout_actions.append(act)
+
+    def _load_default_layout(self):
+        name = self.layouts.get('default')
+        if name:
+            self.apply_layout(name)
 
     def show_about(self):
         QMessageBox.information(
