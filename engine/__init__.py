@@ -34,10 +34,26 @@ def load_engine_plugins(engine, paths=None):
     """Load plugins targeting the engine."""
     _load_engine_plugins('engine', engine, paths)
 from .logic.base import Event, EventSystem
+from .logic.conditions import (
+    KeyPressed, KeyReleased, MouseButton, InputState, Collision,
+    AfterTime, EveryFrame, VariableCompare, ZoomAbove,
+    EventTriggered, InView,
+)
+from .logic.actions import (
+    Move, SetPosition, Destroy, Print, PlaySound, Spawn,
+    SetVariable, ModifyVariable, SetZoom, PanCamera, CenterCamera,
+    EnableEvent, DisableEvent, ResetEvent,
+)
 
 __all__ = [
-    'GameObject', 'Scene', 'Engine', 'EventSystem', 'Event', 'Project', 'Camera',
-    'clear_image_cache', 'Renderer', 'OpenGLRenderer', 'main',
+    'GameObject', 'Scene', 'Engine', 'EventSystem', 'Event',
+    'KeyPressed', 'KeyReleased', 'MouseButton', 'InputState', 'Collision',
+    'AfterTime', 'EveryFrame', 'VariableCompare', 'ZoomAbove',
+    'EventTriggered', 'InView',
+    'Move', 'SetPosition', 'Destroy', 'Print', 'PlaySound', 'Spawn',
+    'SetVariable', 'ModifyVariable', 'SetZoom', 'PanCamera', 'CenterCamera',
+    'EnableEvent', 'DisableEvent', 'ResetEvent',
+    'Project', 'Camera', 'clear_image_cache', 'Renderer', 'OpenGLRenderer', 'main',
     'ENGINE_VERSION', 'logger', 'ResourceManager', 'set_resource_root', 'get_resource_path',
     'load_project', 'save_project', 'run_project', 'create_engine',
     'load_scene', 'save_scene', 'run_scene',

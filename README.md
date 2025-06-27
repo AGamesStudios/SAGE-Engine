@@ -265,12 +265,12 @@ you created in the editor.
 
 ### SAGE Logic Events
 
-The engine still includes **SAGE Logic**, a lightweight event system combining
-*conditions* and *actions*. All built-in conditions and actions have been
-removed for now as the system is being reworked. You can register custom blocks
-using `register_condition` and `register_action` and load them through
-plugins. The helper functions `condition_from_dict` and `action_from_dict`
-remain available for editor integration.
+The engine includes **SAGE Logic**, a lightweight event system combining
+*conditions* and *actions*. Built-in blocks cover common tasks such as input
+checks, variable math and camera control. You can register additional blocks
+with `register_condition` and `register_action` so plugins can extend the
+system. The helper functions `condition_from_dict` and `action_from_dict` are
+used by the editor to construct events from dictionaries.
 
 The editor now includes a **Console** dock at the bottom. All output from the
 game process and the editor itself appears here so you can easily debug your
@@ -284,7 +284,10 @@ removed and when events are enabled, disabled or triggered. This output appears
 both in the editor's console and the IDE terminal.
 The engine also checks its exported names at import time and warns if a symbol
 listed in ``__all__`` does not exist. This helps catch mistakes like missing
-imports.
+imports. Built-in conditions include ``KeyPressed``, ``MouseButton``,
+``Collision``, ``AfterTime`` and ``VariableCompare`` while actions like
+``Move``, ``SetPosition``, ``PanCamera`` and ``SetVariable`` provide common
+behaviour out of the box.
 Events can be toggled or reset at runtime using actions such as
 `EnableEvent`, `DisableEvent` and `ResetEvent`. The `EventTriggered`
 condition lets one event react to another. Fields may reference engine data at
