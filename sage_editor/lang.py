@@ -167,6 +167,11 @@ LANGUAGES = {
         , 'save_layout': 'Save Layout'
         , 'restore_default': 'Restore Default'
         , 'layout_name': 'Layout Name:'
+        , 'editor_menu': 'Editor'
+        , 'interface_menu': 'Interface'
+        , 'save_layout': 'Save Layout'
+        , 'restore_default': 'Restore Default'
+        , 'layout_name': 'Layout Name:'
         , 'object_var_only': 'Add variables to objects instead'
     },
     'Русский': {
@@ -296,6 +301,11 @@ LANGUAGES = {
         , 'active_camera': '(активная)'
         , 'mode_move': 'Перемещение'
         , 'mode_rotate': 'Поворот'
+        , 'editor_menu': 'Редактор'
+        , 'interface_menu': 'Интерфейс'
+        , 'save_layout': 'Сохранить макет'
+        , 'restore_default': 'Восстановить по умолчанию'
+        , 'layout_name': 'Имя макета:'
         , 'mode_scale': 'Масштаб'
         , 'close': 'Закрыть'
         , 'new_object': 'Новый объект'

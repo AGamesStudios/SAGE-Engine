@@ -214,6 +214,8 @@ Log **Messages**, **Warnings** or **Errors** can be toggled on and off with the
 checkboxes provided.
 Custom window arrangements can be saved from **Editor → Interface → Save Layout**.
 Saved layouts appear in the same menu and selecting one makes it the startup layout. Use **Restore Default** to return to the factory arrangement.
+Custom window arrangements can be saved from **Editor → Interface → Save Layout**.
+Saved layouts appear in the same menu and selecting one makes it the startup layout. Use **Restore Default** to return to the factory arrangement.
 
 The editor also provides a **Profiler** dock with graphs for overall CPU,
 RAM usage of the editor process, GPU load and the editor process CPU. Frame time in milliseconds is also
