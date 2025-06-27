@@ -342,6 +342,13 @@ Settings menu which copies Python files into ``~/.sage_plugins`` and lets you
 enable or disable them. Plugin installation is entirely local; the editor does
 not download code from the internet.
 
+Engine plugins may also define ``register_logic(register_condition, register_action)``
+to add custom event blocks. This hook receives the engine's registration
+functions so plugins can contribute new conditions and actions without touching
+the core logic modules. Any classes registered this way become instantly
+available in the editor and ``condition_from_dict`` can instantiate them from
+scene files.
+
 ### Versioning
 
 Each project records its own **game version** string along with the engine

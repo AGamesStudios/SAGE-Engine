@@ -75,6 +75,14 @@ def _call_init(module, target, instance):
         generic = getattr(module, 'init', None)
         if callable(generic):
             generic(instance)
+    if target == 'engine':
+        reg = getattr(module, 'register_logic', None)
+        if callable(reg):
+            try:
+                from engine.logic import register_condition, register_action
+                reg(register_condition, register_action)
+            except Exception:
+                logger.exception('register_logic failed in %s', module.__name__)
 
 
 def load_plugins(target: str, instance, paths=None):
