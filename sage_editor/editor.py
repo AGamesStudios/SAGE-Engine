@@ -1069,6 +1069,7 @@ class Editor(QMainWindow):
         self.cam_h_spin = prop_dock.cam_h_spin
         self.cam_zoom_spin = prop_dock.cam_zoom_spin
         self.cam_active = prop_dock.cam_active
+        self.logic_btn = prop_dock.logic_btn
 
         # resources dock on the left
         res_dock = ResourceDock(self)
@@ -1146,6 +1147,7 @@ class Editor(QMainWindow):
         self.event_list.setHorizontalHeaderLabels([self.t('conditions'), self.t('actions')])
         self.var_table.setHorizontalHeaderLabels([self.t('name'), self.t('value')])
         self.add_var_btn.setText(self.t('add_variable'))
+        self.logic_btn.setText(self.t('edit_logic'))
         self.console_dock.setWindowTitle(self.t('console'))
         self.objects_dock.setWindowTitle(self.t('objects'))
         self.resources_dock.setWindowTitle(self.t('resources'))
@@ -1914,6 +1916,24 @@ class Editor(QMainWindow):
                 item.setText(text)
                 item.setIcon(self._object_icon(obj))
 
+    def open_object_logic(self, index: int) -> None:
+        """Switch to the Logic tab for the object at *index*."""
+        if index < 0 or index >= len(self.items):
+            return
+        self.tabs.setCurrentWidget(self.logic_widget)
+        self.object_combo.setCurrentIndex(index)
+        obj = self.items[index][1]
+        if hasattr(obj, "events") and not obj.events:
+            obj.events.append({"conditions": [], "actions": []})
+        self.refresh_events()
+
+    def open_selected_object_logic(self) -> None:
+        """Open logic for the currently selected object."""
+        row = self.object_list.currentRow()
+        if row < 0:
+            row = self.object_combo.currentIndex()
+        self.open_object_logic(row)
+
     def _set_active_camera(self, index: int):
         """Make the selected camera the scene's active camera."""
         if index < 0 or index >= len(self.items):
@@ -2120,6 +2140,7 @@ class Editor(QMainWindow):
         menu = QMenu(self)
         paste_act = menu.addAction(load_icon('paste.png'), self.t('paste')) if self._clip_object else None
         active_act = None
+        logic_act = None
         if item:
             cut_act = menu.addAction(load_icon('cut.png'), self.t('cut'))
             copy_act = menu.addAction(load_icon('copy.png'), self.t('copy'))
@@ -2129,6 +2150,7 @@ class Editor(QMainWindow):
             from engine import Camera
             if isinstance(obj, Camera) and obj is not self.scene.camera:
                 active_act = menu.addAction(self.t('set_active_camera'))
+            logic_act = menu.addAction(self.t('edit_logic'))
         action = menu.exec(self.object_list.mapToGlobal(pos))
         if action == paste_act and self._clip_object:
             self._paste_object()
@@ -2142,6 +2164,8 @@ class Editor(QMainWindow):
                 self._delete_object(row)
             elif action == active_act:
                 self._set_active_camera(row)
+            elif action == logic_act:
+                self.open_object_logic(row)
 
     def _resource_menu(self, pos):
         """Show a context menu for the item at *pos* in the resources view."""

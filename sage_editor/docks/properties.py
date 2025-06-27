@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import (
     QDockWidget, QWidget, QVBoxLayout, QGroupBox, QFormLayout,
     QDoubleSpinBox, QCheckBox, QComboBox, QSpinBox, QLineEdit,
-    QScrollArea
+    QScrollArea, QPushButton
 )
 from PyQt6.QtCore import Qt
 
@@ -80,6 +80,9 @@ class PropertiesDock(QDockWidget):
         cam_form.addRow(self.cam_active)
         prop_layout.addWidget(self.camera_group)
         self.camera_group.setVisible(False)
+        self.logic_btn = QPushButton(editor.t('edit_logic'))
+        self.logic_btn.clicked.connect(editor.open_selected_object_logic)
+        prop_layout.addWidget(self.logic_btn)
         prop_layout.addStretch(1)
 
         self.setWidget(scroll)

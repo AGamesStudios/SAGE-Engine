@@ -151,6 +151,7 @@ LANGUAGES = {
         , 'py_files': 'Python Files (*.py)'
         , 'resource_only': 'Please choose a file inside Resources'
         , 'unsaved_short': 'unsaved'
+        , 'edit_logic': 'Edit Logic'
     },
     'Русский': {
         'file': 'Файл',
@@ -298,6 +299,7 @@ LANGUAGES = {
         , 'py_files': 'Файлы Python (*.py)'
         , 'resource_only': 'Выберите файл только из папки Resources'
         , 'unsaved_short': 'несохранено'
+        , 'edit_logic': 'Править логику'
     }
 }
 import locale
