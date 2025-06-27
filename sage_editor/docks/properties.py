@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import (
     QDockWidget, QWidget, QVBoxLayout, QGroupBox, QFormLayout,
     QDoubleSpinBox, QCheckBox, QComboBox, QSpinBox, QLineEdit,
-    QScrollArea, QPushButton
+    QScrollArea, QPushButton, QHBoxLayout
 )
 from PyQt6.QtCore import Qt
 from ..icons import load_icon
@@ -34,6 +34,18 @@ class PropertiesDock(QDockWidget):
         self.type_combo.addItem(editor.t('camera'), 'camera')
         obj_form.addRow(editor.t('name_label'), self.name_edit)
         obj_form.addRow(editor.t('type_label'), self.type_combo)
+        self.image_edit = QLineEdit()
+        self.image_btn = QPushButton()
+        self.image_btn.setIcon(load_icon('open.png'))
+        img_row = QWidget()
+        img_layout = QHBoxLayout(img_row)
+        img_layout.setContentsMargins(0, 0, 0, 0)
+        img_layout.addWidget(self.image_edit, 1)
+        img_layout.addWidget(self.image_btn)
+        obj_form.addRow(editor.t('image_label'), img_row)
+        self.color_btn = QPushButton()
+        self.color_btn.setFixedWidth(60)
+        obj_form.addRow(editor.t('color'), self.color_btn)
         prop_layout.addWidget(self.object_group)
         self.transform_group = QGroupBox(editor.t('transform'))
         form = QFormLayout(self.transform_group)

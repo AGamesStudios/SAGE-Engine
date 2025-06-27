@@ -1201,6 +1201,13 @@ class Editor(QMainWindow):
         self.logic_btn = prop_dock.logic_btn
         self.var_group = prop_dock.var_group
         self.var_layout = prop_dock.var_layout
+        self.image_edit = prop_dock.image_edit
+        self.image_btn = prop_dock.image_btn
+        self.color_btn = prop_dock.color_btn
+        self.image_edit.setPlaceholderText(self.t('path_label'))
+        self.color_btn.setText('')
+        self.color_btn.setStyleSheet('background: rgb(255, 255, 255);')
+        self.color_btn.setText('')
 
         # resources dock on the left
         res_dock = ResourceDock(self)
@@ -1226,6 +1233,9 @@ class Editor(QMainWindow):
         self.object_combo.currentIndexChanged.connect(lambda _=None: self._update_transform_panel())
         self.name_edit.editingFinished.connect(self._object_name_changed)
         self.type_combo.currentIndexChanged.connect(self._object_type_changed)
+        self.image_btn.clicked.connect(self._choose_object_image)
+        self.image_edit.editingFinished.connect(self._image_path_edited)
+        self.color_btn.clicked.connect(self._choose_object_color)
         self.tabs.setTabsClosable(True)
         self.tabs.currentChanged.connect(self._tab_changed)
         self.tabs.tabCloseRequested.connect(self._close_tab)
@@ -1307,6 +1317,7 @@ class Editor(QMainWindow):
         self.name_edit.setPlaceholderText(self.t('name'))
         self.type_combo.setItemText(0, self.t('sprite'))
         self.type_combo.setItemText(1, self.t('camera'))
+        self.image_edit.setPlaceholderText(self.t('path_label'))
         self.cam_active.setText(self.t('primary_camera'))
         self.x_spin.setPrefix(''); self.y_spin.setPrefix(''); self.z_spin.setPrefix('')
         self.scale_x_spin.setPrefix(''); self.scale_y_spin.setPrefix(''); self.angle_spin.setPrefix('')
@@ -2326,6 +2337,13 @@ class Editor(QMainWindow):
         self.type_combo.blockSignals(True)
         self.type_combo.setCurrentIndex(-1)
         self.type_combo.blockSignals(False)
+        self.image_edit.blockSignals(True)
+        self.image_edit.clear()
+        self.image_edit.blockSignals(False)
+        self.image_edit.setEnabled(False)
+        self.image_btn.setEnabled(False)
+        self.color_btn.setEnabled(False)
+        self.color_btn.setStyleSheet('')
         if hasattr(self, 'var_group'):
             self.var_group.setVisible(False)
             while self.var_layout.rowCount():
@@ -2361,6 +2379,12 @@ class Editor(QMainWindow):
             self.type_combo.setCurrentIndex(i)
             self.type_combo.blockSignals(False)
         self.transform_group.setEnabled(True)
+        if isinstance(obj, Camera):
+            self.image_edit.blockSignals(True); self.image_edit.clear(); self.image_edit.blockSignals(False)
+            self.image_edit.setEnabled(False)
+            self.image_btn.setEnabled(False)
+            self.color_btn.setEnabled(False)
+            self.color_btn.setStyleSheet('')
         self.x_spin.blockSignals(True); self.x_spin.setValue(obj.x); self.x_spin.blockSignals(False)
         self.y_spin.blockSignals(True); self.y_spin.setValue(obj.y); self.y_spin.blockSignals(False)
         self.z_spin.blockSignals(True); self.z_spin.setValue(getattr(obj, 'z', 0)); self.z_spin.blockSignals(False)
@@ -2384,6 +2408,12 @@ class Editor(QMainWindow):
             self.scale_y_spin.blockSignals(True); self.scale_y_spin.setValue(obj.scale_y); self.scale_y_spin.blockSignals(False)
             self.link_scale.blockSignals(True); self.link_scale.setChecked(obj.scale_x == obj.scale_y); self.link_scale.blockSignals(False)
             self.angle_spin.blockSignals(True); self.angle_spin.setValue(obj.angle); self.angle_spin.blockSignals(False)
+            self.image_edit.blockSignals(True); self.image_edit.setText(obj.image_path); self.image_edit.blockSignals(False)
+            self.image_edit.setEnabled(True)
+            self.image_btn.setEnabled(True)
+            c = obj.color or (255, 255, 255)
+            self.color_btn.setEnabled(True)
+            self.color_btn.setStyleSheet(f"background: rgb({c[0]}, {c[1]}, {c[2]});")
 
         if update_vars:
             self._update_variable_panel()
@@ -2535,6 +2565,68 @@ class Editor(QMainWindow):
         self._refresh_object_labels()
         self._update_transform_panel()
         self._update_gizmo()
+        self._mark_dirty()
+
+    def _choose_object_image(self) -> None:
+        """Select a sprite image for the current object."""
+        idx = self.object_combo.currentIndex()
+        if idx < 0 or idx >= len(self.items):
+            return
+        if not self._check_project():
+            return
+        path, _ = QFileDialog.getOpenFileName(
+            self, self.t('select_file'), '', self.t('image_files')
+        )
+        if not path:
+            return
+        try:
+            abs_path, rel_path = self._copy_to_resources(path)
+            obj = self.items[idx][1]
+            obj.image_path = rel_path
+            obj._load_image()
+            self.image_edit.setText(rel_path)
+            if hasattr(self, 'view'):
+                self.view.update()
+            self._mark_dirty()
+        except Exception as exc:
+            QMessageBox.warning(self, self.t('error'), str(exc))
+
+    def _image_path_edited(self) -> None:
+        """Update the image path when the line edit changes."""
+        idx = self.object_combo.currentIndex()
+        if idx < 0 or idx >= len(self.items):
+            return
+        obj = self.items[idx][1]
+        path = self.image_edit.text().strip()
+        if path == obj.image_path:
+            return
+        obj.image_path = path
+        try:
+            obj._load_image()
+            if hasattr(self, 'view'):
+                self.view.update()
+            self._mark_dirty()
+        except Exception as exc:
+            QMessageBox.warning(self, self.t('error'), str(exc))
+
+    def _choose_object_color(self) -> None:
+        """Pick a tint color for the current object."""
+        idx = self.object_combo.currentIndex()
+        if idx < 0 or idx >= len(self.items):
+            return
+        obj = self.items[idx][1]
+        current = obj.color or (255, 255, 255, 255)
+        color = QColorDialog.getColor(QColor(*current), self)
+        if not color.isValid():
+            return
+        obj.color = (color.red(), color.green(), color.blue(), color.alpha())
+        if not obj.image_path:
+            obj._load_image()
+        self.color_btn.setStyleSheet(
+            f"background: rgb({color.red()}, {color.green()}, {color.blue()});"
+        )
+        if hasattr(self, 'view'):
+            self.view.update()
         self._mark_dirty()
 
     def _object_menu(self, pos):
