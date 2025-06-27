@@ -49,11 +49,10 @@ def _setup_logger() -> logging.Logger:
     if not logger.handlers:
         logger.setLevel(logging.INFO)
         fmt = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
-        fh = logging.FileHandler(LOG_FILE, encoding='utf-8')
-        fh.setFormatter(fmt)
-        ch = logging.StreamHandler()
-        ch.setFormatter(fmt)
-        logger.addHandler(fh)
+
+        if name.startswith("_"):
+        names.append(f"engine.{name}(" if callable(obj) else f"engine.{name}")
+
         logger.addHandler(ch)
         logger.info('Logger initialised')
     return logger
