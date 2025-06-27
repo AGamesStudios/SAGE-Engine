@@ -37,5 +37,15 @@ class TestDebugLogging(unittest.TestCase):
         self.assertIn('Reset event', log_output)
         self.assertIn('Removed event', log_output)
 
+    def test_set_stream_console_only(self):
+        from engine.log import set_stream
+        original_files = [h.baseFilename for h in logger.handlers if isinstance(h, logging.FileHandler)]
+        stream = StringIO()
+        set_stream(stream)
+        logger.info('redirect check')
+        self.assertIn('redirect check', stream.getvalue())
+        new_files = [h.baseFilename for h in logger.handlers if isinstance(h, logging.FileHandler)]
+        self.assertEqual(original_files, new_files)
+
 if __name__ == '__main__':
     unittest.main()

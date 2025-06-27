@@ -60,9 +60,9 @@ logger = _setup_logger()
 atexit.register(logging.shutdown)
 
 def set_stream(stream) -> None:
-    """Update stream handlers to use the provided stream."""
+    """Redirect the editor console handler without touching the log file."""
     for handler in logger.handlers:
-        if isinstance(handler, logging.StreamHandler):
+        if isinstance(handler, logging.StreamHandler) and not isinstance(handler, logging.FileHandler):
             handler.setStream(stream)
 
 def _log(text: str) -> None:

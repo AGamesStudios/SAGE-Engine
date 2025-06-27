@@ -27,9 +27,10 @@ logger = _setup_logger()
 atexit.register(logging.shutdown)
 
 def set_stream(stream) -> None:
-    """Update all stream handlers to use a new output stream."""
+    """Redirect console output to the given stream without affecting the log file."""
     for handler in logger.handlers:
-        if isinstance(handler, logging.StreamHandler):
+        # Skip FileHandler so logs continue to write to disk
+        if isinstance(handler, logging.StreamHandler) and not isinstance(handler, logging.FileHandler):
             handler.setStream(stream)
 
 __all__ = ['logger', 'LOG_FILE', 'set_stream']
