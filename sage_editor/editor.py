@@ -1180,10 +1180,6 @@ class Editor(QMainWindow):
         self.var_group = prop_dock.var_group
         self.var_layout = prop_dock.var_layout
 
-        self.layouts = load_layouts()
-        self._default_state = self.saveState().toBase64().data().decode()
-        self._build_layout_menu()
-        self._load_default_layout()
         # resources dock on the left
         res_dock = ResourceDock(self)
         self.resources_dock = res_dock
