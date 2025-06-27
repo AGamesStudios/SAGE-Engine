@@ -16,7 +16,7 @@ except Exception:  # pragma: no cover - handle older PyQt versions
 from PyQt6.QtGui import QPixmap, QColor, QAction, QActionGroup, QDesktopServices
 from .icons import load_icon
 from PyQt6.QtCore import (
-    QRectF, Qt, QPointF, QSortFilterProxyModel, QSize, QUrl, QTimer
+    QRectF, Qt, QPointF, QSortFilterProxyModel, QSize, QUrl, QTimer, QEvent, QObject
 )
 import logging
 from typing import Callable
@@ -35,6 +35,16 @@ from .docks.properties import PropertiesDock
 from .docks.resources import ResourceDock
 from .docks.logic import LogicTab, ObjectLogicTab
 from .docks.profiler import ProfilerDock
+
+
+class NoWheelFilter(QObject):
+    """Event filter to block mouse wheel events."""
+
+    def eventFilter(self, obj, event):  # pragma: no cover - UI behavior
+        if event.type() == QEvent.Type.Wheel:
+            event.ignore()
+            return True
+        return False
 
 RECENT_FILE = os.path.join(os.path.expanduser('~'), '.sage_recent.json')
 LAYOUT_FILE = os.path.join(os.path.expanduser('~'), '.sage_layouts.json')
@@ -332,6 +342,8 @@ class ConditionDialog(QDialog):
         self._update_fields()
         if data:
             self.set_condition(data)
+        if parent:
+            parent.apply_no_wheel(self)
 
     def _update_key_list(self, force_device=None):
         """Populate the key combo based on device choice."""
@@ -631,6 +643,8 @@ class ActionDialog(QDialog):
         self._update_fields()
         if data:
             self.set_action(data)
+        if parent:
+            parent.apply_no_wheel(self)
 
     def _browse_path(self):
         parent = self.parent()
@@ -883,6 +897,8 @@ class AddEventDialog(QDialog):
 
         self._clip_cond = None
         self._clip_act = None
+        if parent:
+            parent.apply_no_wheel(self)
 
     def add_condition(self):
         dlg = ConditionDialog(self.objects, self.variables, self)
@@ -1042,6 +1058,8 @@ class VariableDialog(QDialog):
                 self.value_edit.setText(str(value))
         self.public_check.setChecked(public)
         self.update_fields()
+        if parent:
+            parent.apply_no_wheel(self)
 
     def update_fields(self):
         if self.type_box.currentText() == "bool":
@@ -1096,6 +1114,7 @@ class Editor(QMainWindow):
         self.setWindowTitle(f'SAGE Editor ({ENGINE_VERSION})')
         self.engine_completer = QCompleter(_engine_completions(), self)
         self.engine_completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self._wheel_filter = NoWheelFilter(self)
         # set up tabs
         self.tabs = QTabWidget()
         self.tabs.tabBar().setExpanding(False)
@@ -1236,6 +1255,7 @@ class Editor(QMainWindow):
         self._on_coord_mode()
         self._build_layout_menu()
         self._load_default_layout()
+        self.apply_no_wheel(self)
         # load optional editor plugins
         plugins.load_plugins(self)
 
@@ -1308,6 +1328,12 @@ class Editor(QMainWindow):
     def apply_engine_completer(self, widget: QLineEdit):
         """Attach the engine method completer to a line edit."""
         widget.setCompleter(self.engine_completer)
+
+    def apply_no_wheel(self, widget: QWidget) -> None:
+        """Disable mouse wheel value changes for spin boxes and combos."""
+        for cls in (QSpinBox, QDoubleSpinBox, QComboBox):
+            for child in widget.findChildren(cls):
+                child.installEventFilter(self._wheel_filter)
         
     def _update_project_state(self):
         """Enable or disable project-dependent actions."""
@@ -1481,6 +1507,8 @@ class Editor(QMainWindow):
                 buttons.accepted.connect(self.accept)
                 buttons.rejected.connect(self.reject)
                 form.addRow(buttons)
+                if parent:
+                    parent.apply_no_wheel(self)
 
             def browse(self):
                 path = QFileDialog.getExistingDirectory(self, self.parent.t('project_path'), '')
@@ -1732,6 +1760,7 @@ class Editor(QMainWindow):
                 outer = QVBoxLayout(self)
                 outer.addLayout(layout)
                 outer.addLayout(bottom)
+                parent.apply_no_wheel(self)
 
             def _choose_bg(self):
                 color = QColorDialog.getColor(QColor(*self.parent.background_color), self)
@@ -2498,6 +2527,7 @@ class Editor(QMainWindow):
             return
         self._refresh_object_labels()
         self._update_transform_panel()
+        self._update_gizmo()
         self._mark_dirty()
 
     def _object_menu(self, pos):
