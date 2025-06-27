@@ -14,32 +14,46 @@ from ..logic import (
 class Scene:
     """Collection of objects and events."""
 
-    def __init__(self):
+    def __init__(self, with_defaults: bool = True):
+        """Create a new scene.
+
+        Parameters
+        ----------
+        with_defaults:
+            When ``True`` (the default) a camera and a blank sprite are added
+            automatically so new scenes start with something visible.  Loading
+            a scene from disk sets this to ``False`` to avoid duplicating these
+            objects every time the scene is opened.
+        """
         # collections of scene objects and metadata
         self.objects = []
         self.variables = {}
-        self.events = [
-            {
-                "conditions": [{"type": "OnStart"}],
-                "actions": [{"type": "Print", "text": "Hello, SAGE!"}],
-            }
-        ]
+        if with_defaults:
+            self.events = [
+                {
+                    "conditions": [{"type": "OnStart"}],
+                    "actions": [{"type": "Print", "text": "Hello, SAGE!"}],
+                }
+            ]
+        else:
+            self.events = []
         self.event_system = None
         self.camera = None
         self.active_camera = None
         self.metadata = {}
         self._sorted = False
 
-        # default camera and sprite for new scenes
-        try:
-            cam = Camera(0.0, 0.0, 640, 480, active=True)
-            self.add_object(cam)
-            obj = GameObject('', 0, 0, 0, None, 1.0, 1.0, 0.0,
-                             0.5, 0.5, color=(255, 255, 255, 255))
-            obj.name = 'Sprite'
-            self.add_object(obj)
-        except Exception:
-            logger.exception('Failed to create default objects')
+        if with_defaults:
+            # default camera and sprite for new scenes
+            try:
+                cam = Camera(0.0, 0.0, 640, 480, active=True)
+                self.add_object(cam)
+                obj = GameObject('', 0, 0, 0, None, 1.0, 1.0, 0.0,
+                                 0.5, 0.5, color=(255, 255, 255, 255))
+                obj.name = 'Sprite'
+                self.add_object(obj)
+            except Exception:
+                logger.exception('Failed to create default objects')
 
     def _sort_objects(self):
         if not self._sorted:
@@ -132,10 +146,10 @@ class Scene:
     @classmethod
     def from_dict(cls, data: dict) -> "Scene":
         """Construct a Scene from a plain dictionary."""
-        scene = cls()
+        scene = cls(with_defaults=False)
         scene.variables = data.get("variables", {})
         scene.metadata = data.get("metadata", {})
-        scene.events = data.get("events", scene.events)
+        scene.events = data.get("events", [])
         scene.active_camera = data.get("active_camera")
         for entry in data.get("objects", []):
             obj = object_from_dict(entry)
