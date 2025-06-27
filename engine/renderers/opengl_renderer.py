@@ -319,10 +319,10 @@ class OpenGLRenderer:
         self,
         obj: GameObject,
         camera: Camera | None,
-        color: tuple[float, float, float, float] = (1.0, 0.6, 0.0, 1.0),
-        width: float = 2.5,
+        color: tuple[float, float, float, float] = (1.0, 0.5, 0.0, 1.0),
+        width: float = 3.0,
     ) -> None:
-        """Draw an outline around ``obj`` using world coordinates."""
+        """Draw a bright outline around ``obj`` in world coordinates."""
         from OpenGL.GL import (
             glBindTexture, glColor4f, glLineWidth, glBegin, glEnd, glVertex2f,
             GL_LINE_LOOP, GL_TEXTURE_2D
@@ -331,17 +331,12 @@ class OpenGLRenderer:
             return
         scale = units.UNITS_PER_METER
         sign = 1.0 if units.Y_UP else -1.0
-        zoom = camera.zoom if camera else 1.0
-        cam_x = camera.x if camera else 0.0
-        cam_y = camera.y if camera else 0.0
-        w_size = camera.width if (self.keep_aspect and camera) else self.width
-        h_size = camera.height if (self.keep_aspect and camera) else self.height
-        ang = math.radians(getattr(obj, 'angle', 0.0))
+        ang = math.radians(getattr(obj, "angle", 0.0))
         cos_a = math.cos(ang)
         sin_a = math.sin(ang)
         w = obj.width * obj.scale_x
         h = obj.height * obj.scale_y
-        verts = [(-w/2, -h/2), (w/2, -h/2), (w/2, h/2), (-w/2, h/2)]
+        verts = [(-w / 2, -h / 2), (w / 2, -h / 2), (w / 2, h / 2), (-w / 2, h / 2)]
         glBindTexture(GL_TEXTURE_2D, 0)
         glColor4f(*color)
         glLineWidth(width)
@@ -349,11 +344,9 @@ class OpenGLRenderer:
         for vx, vy in verts:
             rx = vx * cos_a - vy * sin_a
             ry = vx * sin_a + vy * cos_a
-            world_x = (rx + obj.x - cam_x) * scale * zoom
-            world_y = (ry + obj.y - cam_y) * scale * zoom * sign
-            ndc_x = (2.0 * world_x) / w_size
-            ndc_y = (2.0 * world_y) / h_size
-            glVertex2f(ndc_x, ndc_y)
+            world_x = (rx + obj.x) * scale
+            world_y = (ry + obj.y) * scale * sign
+            glVertex2f(world_x, world_y)
         glEnd()
         glLineWidth(1.0)
 
