@@ -315,9 +315,13 @@ class OpenGLRenderer:
         glBindBuffer(GL_ARRAY_BUFFER, 0)
         glUseProgram(0)
 
-    def _draw_outline(self, obj: GameObject, camera: Camera | None,
-                      color: tuple[float, float, float, float] = (1.0, 0.55, 0.0, 1.0),
-                      width: float = 2.0) -> None:
+    def _draw_outline(
+        self,
+        obj: GameObject,
+        camera: Camera | None,
+        color: tuple[float, float, float, float] = (1.0, 0.6, 0.0, 1.0),
+        width: float = 2.5,
+    ) -> None:
         """Draw an outline around ``obj`` using world coordinates."""
         from OpenGL.GL import (
             glBindTexture, glColor4f, glLineWidth, glBegin, glEnd, glVertex2f,

@@ -248,6 +248,9 @@ class Viewport(GLWidget):
                                 self.editor.object_combo.setCurrentIndex(i)
                                 self.editor.object_list.setCurrentRow(i)
                                 break
+                    # automatically enable move mode when selecting via the hand tool
+                    if self._transform_mode == 'pan':
+                        self.set_transform_mode('move')
                     self._gizmo_hover = self._hit_gizmo(event.position())
                     self._cursor_world = self._screen_to_world(event.position())
                 else:
