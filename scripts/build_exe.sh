@@ -1,2 +1,8 @@
 #!/bin/sh
-python -m PyInstaller --name SAGE-Engine --onefile --windowed main.py
+# Bundle the editor with all its icons so the executable runs standalone.
+python -m PyInstaller \
+    --name SAGE-Engine \
+    --onefile \
+    --windowed \
+    --add-data "sage_editor/icons:sage_editor/icons" \
+    main.py
