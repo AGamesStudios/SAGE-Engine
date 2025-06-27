@@ -1,4 +1,5 @@
 import json
+from ..utils import load_json
 from dataclasses import dataclass, field
 import os
 
@@ -20,8 +21,7 @@ class Project:
 
     @classmethod
     def load(cls, path: str) -> "Project":
-        with open(path, "r") as f:
-            data = json.load(f)
+        data = load_json(path)
         renderer = data.get("renderer", "opengl")
         scene = data.get('scene')
         scene_file = data.get('scene_file')
@@ -33,8 +33,7 @@ class Project:
             if not os.path.isabs(p):
                 p = os.path.join(os.path.dirname(path), p)
             if os.path.exists(p):
-                with open(p, 'r') as sf:
-                    scene = json.load(sf)
+                scene = load_json(p)
             else:
                 scene = {}
         width = data.get('width', 640)

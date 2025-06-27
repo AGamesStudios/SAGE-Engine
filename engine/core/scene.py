@@ -1,4 +1,5 @@
 import json
+from ..utils import load_json
 from typing import List
 
 from .game_object import GameObject
@@ -185,8 +186,7 @@ class Scene:
 
     @classmethod
     def load(cls, path: str) -> "Scene":
-        with open(path, "r") as f:
-            data = json.load(f)
+        data = load_json(path)
         return cls.from_dict(data)
 
     def to_dict(self) -> dict:
