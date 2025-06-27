@@ -41,7 +41,6 @@ class Scene:
         self.camera = None
         self.active_camera = None
         self.metadata = {}
-        self._sorted = False
 
         if with_defaults:
             # default camera and sprite for new scenes
@@ -55,14 +54,9 @@ class Scene:
             except Exception:
                 logger.exception('Failed to create default objects')
 
-    def _sort_objects(self):
-        if not self._sorted:
-            self.objects.sort(key=lambda o: getattr(o, 'z', 0))
-            self._sorted = True
-
     def sort_objects(self) -> None:
-        """Public wrapper to sort objects by their z order."""
-        self._sort_objects()
+        """Sort objects by their z order."""
+        self.objects.sort(key=lambda o: getattr(o, 'z', 0))
 
     def add_object(self, obj: GameObject | Camera):
         existing = {o.name for o in self.objects}
@@ -81,7 +75,7 @@ class Scene:
                 self.set_active_camera(obj)
             elif self.camera is None:
                 self.set_active_camera(obj)
-        self._sorted = False
+        self.sort_objects()
 
     def remove_object(self, obj: GameObject):
         if obj in self.objects:
@@ -92,7 +86,7 @@ class Scene:
                 self.active_camera = None
             if isinstance(obj, Camera):
                 obj.active = False
-            self._sorted = False
+            self.sort_objects()
 
     def set_active_camera(self, camera: Camera | str | None):
         """Select which camera is used for rendering."""
@@ -134,12 +128,12 @@ class Scene:
         return cam
 
     def update(self, dt: float):
-        self._sort_objects()
+        self.sort_objects()
         for obj in self.objects:
             obj.update(dt)
 
     def draw(self, surface):
-        self._sort_objects()
+        self.sort_objects()
         for obj in self.objects:
             obj.draw(surface)
 
