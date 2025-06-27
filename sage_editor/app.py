@@ -211,6 +211,8 @@ def main(argv=None):
     orig_err = sys.stderr
 
     class _Stream:
+        """Mirror writes to the editor console and an optional original stream."""
+
         def __init__(self, edit, orig):
             self.edit = edit
             self.orig = orig
@@ -218,10 +220,12 @@ def main(argv=None):
         def write(self, text):
             if text.strip():
                 self.edit.append(text.rstrip())
-            self.orig.write(text)
+            if self.orig is not None:
+                self.orig.write(text)
 
         def flush(self):
-            self.orig.flush()
+            if self.orig is not None:
+                self.orig.flush()
 
     sys.stdout = _Stream(editor.console, orig_out)
     sys.stderr = _Stream(editor.console, orig_err)
@@ -234,8 +238,9 @@ def main(argv=None):
     def handle_exception(exc_type, exc, tb):
         text = ''.join(traceback.format_exception(exc_type, exc, tb))
         editor.console.append(text)
-        orig_err.write(text)
-        orig_err.flush()
+        if orig_err is not None:
+            orig_err.write(text)
+            orig_err.flush()
         logger.error('Unhandled exception', exc_info=(exc_type, exc, tb))
         QMessageBox.critical(editor, editor.t('error'), text)
 
