@@ -50,13 +50,11 @@ def _setup_logger() -> logging.Logger:
         logger.setLevel(logging.INFO)
         fmt = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
 
-        if name.startswith("_"):
-        names.append(f"engine.{name}(" if callable(obj) else f"engine.{name}")
-
-        logger.addHandler(ch)
-        logger.info('Logger initialised')
-    return logger
-
+    return sorted(
+        f"engine.{name}(" if callable(obj) else f"engine.{name}"
+        for name, obj in inspect.getmembers(Engine)
+        if not name.startswith("_")
+    )
 logger = _setup_logger()
 atexit.register(logging.shutdown)
 
