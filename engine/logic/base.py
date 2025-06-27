@@ -180,12 +180,23 @@ class Action:
 class Event:
     """Combination of conditions and actions."""
 
-    def __init__(self, conditions, actions, once=False, name=None, enabled=True):
+    def __init__(
+        self,
+        conditions,
+        actions,
+        once: bool = False,
+        name: str | None = None,
+        enabled: bool = True,
+        priority: int = 0,
+        groups: list[str] | None = None,
+    ):
         self.conditions = conditions
         self.actions = actions
         self.once = once
         self.name = name
         self.enabled = enabled
+        self.priority = priority
+        self.groups = set(groups or [])
         self.triggered = False
 
     def enable(self):
@@ -223,9 +234,11 @@ class Event:
 
 class EventSystem:
     """Container for events."""
+
     def __init__(self, variables=None):
-        self.events = []
+        self.events: list[Event] = []
         self.variables = variables if variables is not None else {}
+        self.groups: dict[str, list[Event]] = {}
 
     def get_event(self, name):
         for evt in self.events:
@@ -238,11 +251,25 @@ class EventSystem:
         return [e.name for e in self.events if e.name]
 
     def remove_event(self, name):
-        self.events = [e for e in self.events if e.name != name]
+        evt = self.get_event(name)
+        if evt is None:
+            return
+        self.events.remove(evt)
+        for g in list(evt.groups):
+            if g in self.groups:
+                try:
+                    self.groups[g].remove(evt)
+                    if not self.groups[g]:
+                        del self.groups[g]
+                except ValueError:
+                    pass
         logger.debug('Removed event %s', name)
 
-    def add_event(self, event):
+    def add_event(self, event: Event):
         self.events.append(event)
+        for g in event.groups:
+            self.groups.setdefault(g, []).append(event)
+        self.events.sort(key=lambda e: e.priority)
         logger.debug('Added event %s', event.name)
 
     def enable_event(self, name):
@@ -267,6 +294,34 @@ class EventSystem:
         for evt in self.events:
             evt.reset()
         logger.debug('Reset all events')
+
+    # group helpers -----------------------------------------------------
+
+    def get_group_names(self) -> list[str]:
+        """Return the names of all registered groups."""
+        return list(self.groups.keys())
+
+    def get_group_events(self, name: str) -> list[Event]:
+        """Return the list of events in the given group."""
+        return list(self.groups.get(name, []))
+
+    def enable_group(self, name: str):
+        for evt in self.groups.get(name, []):
+            evt.enable()
+        if name in self.groups:
+            logger.debug('Enabled group %s', name)
+
+    def disable_group(self, name: str):
+        for evt in self.groups.get(name, []):
+            evt.disable()
+        if name in self.groups:
+            logger.debug('Disabled group %s', name)
+
+    def reset_group(self, name: str):
+        for evt in self.groups.get(name, []):
+            evt.reset()
+        if name in self.groups:
+            logger.debug('Reset group %s', name)
 
     def update(self, engine, scene, dt):
         for evt in list(self.events):
@@ -398,5 +453,7 @@ def event_from_dict(data, objects, variables):
         data.get('once', False),
         data.get('name'),
         data.get('enabled', True),
+        data.get('priority', 0),
+        data.get('groups', []),
     )
 

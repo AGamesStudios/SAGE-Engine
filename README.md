@@ -271,9 +271,12 @@ plugins are expected to register their own using `register_condition` and
 `register_action`.  Events can be constructed from dictionaries via
 `condition_from_dict`, `action_from_dict` and the `event_from_dict` helper
 which the editor uses when loading scenes.
-`EventSystem.get_event_names()` lists the currently registered events and
-methods like `enable_event()` or `reset_event()` allow scripts to control them
-at runtime.
+`EventSystem.get_event_names()` lists the currently registered events while
+methods such as `enable_event()` or `reset_event()` allow scripts to toggle
+them at runtime.  Events may belong to *groups* so entire categories can be
+enabled, disabled or reset with `enable_group()` and friends.  Each event also
+accepts a *priority* number which controls update order; lower numbers run
+first so critical logic executes before less important rules.
 
 The editor now includes a **Console** dock at the bottom. All output from the
 game process and the editor itself appears here so you can easily debug your
