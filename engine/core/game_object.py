@@ -40,6 +40,7 @@ def clear_image_cache():
         ('pivot_y', None),
         ('color', None),
         ('metadata', 'metadata'),
+        ('variables', 'variables'),
     ],
 )
 @dataclass(slots=True)
@@ -59,6 +60,7 @@ class GameObject:
     metadata: dict = field(default_factory=dict)
     events: list = field(default_factory=list)
     settings: dict = field(default_factory=dict)
+    variables: dict = field(default_factory=dict)  # name -> public flag
     event_system: EventSystem | None = field(init=False, default=None)
     rotation: tuple[float, float, float, float] = field(init=False)
     image: Image.Image | None = field(init=False, default=None)

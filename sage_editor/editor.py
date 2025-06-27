@@ -1070,6 +1070,8 @@ class Editor(QMainWindow):
         self.cam_zoom_spin = prop_dock.cam_zoom_spin
         self.cam_active = prop_dock.cam_active
         self.logic_btn = prop_dock.logic_btn
+        self.var_group = prop_dock.var_group
+        self.var_layout = prop_dock.var_layout
 
         # resources dock on the left
         res_dock = ResourceDock(self)
@@ -1090,7 +1092,7 @@ class Editor(QMainWindow):
         self.object_combo = self.logic_widget.object_combo
         self.object_label = self.logic_widget.object_label
         self.add_var_btn = self.logic_widget.add_var_btn
-        self.tabs.addTab(self.logic_widget, self.t('logic'))
+        self.tabs.addTab(self.logic_widget, self.t('scene_logic'))
         self.object_combo.currentIndexChanged.connect(self._update_transform_panel)
         self.name_edit.editingFinished.connect(self._object_name_changed)
         self.type_combo.currentIndexChanged.connect(self._object_type_changed)
@@ -1804,11 +1806,13 @@ class Editor(QMainWindow):
                     parent.apply_engine_completer(self.value_edit)
                 self.bool_check = QCheckBox()
                 self.bool_label = QLabel(parent.t('value_label') if parent else 'Value:')
+                self.public_check = QCheckBox()
                 form = QFormLayout(self)
                 form.addRow(parent.t('name_label') if parent else 'Name:', self.name_edit)
                 form.addRow(parent.t('type_label') if parent else 'Type:', self.type_box)
                 form.addRow(self.value_label, self.value_edit)
                 form.addRow(self.bool_label, self.bool_check)
+                form.addRow(parent.t('public'), self.public_check)
                 buttons = QDialogButtonBox(
                     QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
                 )
@@ -1849,6 +1853,12 @@ class Editor(QMainWindow):
                 else:
                     value = text
             self.scene.variables[name] = value
+            tab = self.tabs.currentWidget()
+            if isinstance(tab, ObjectLogicTab):
+                idx = tab.object_combo.itemData(0)
+                if idx is not None and 0 <= idx < len(self.items):
+                    obj = self.items[idx][1]
+                    obj.variables[name] = dlg.public_check.isChecked()
             self.refresh_variables()
             self._mark_dirty()
         except Exception as exc:
@@ -1856,7 +1866,18 @@ class Editor(QMainWindow):
 
     def refresh_variables(self):
         self.var_table.setRowCount(0)
-        for name, value in self.scene.variables.items():
+        tab = self.tabs.currentWidget()
+        var_names = None
+        if isinstance(tab, ObjectLogicTab):
+            idx = tab.object_combo.itemData(0)
+            if idx is not None and 0 <= idx < len(self.items):
+                obj = self.items[idx][1]
+                var_names = obj.variables.keys()
+        if var_names is None:
+            items = self.scene.variables.items()
+        else:
+            items = [(name, self.scene.variables.get(name)) for name in var_names]
+        for name, value in items:
             row = self.var_table.rowCount()
             self.var_table.insertRow(row)
             self.var_table.setItem(row, 0, QTableWidgetItem(name))
@@ -1945,7 +1966,7 @@ class Editor(QMainWindow):
             from .docks.logic import ObjectLogicTab
             tab = ObjectLogicTab(self, obj, index)
             self.object_tabs[id(obj)] = tab
-            self.tabs.addTab(tab, obj.name)
+            self.tabs.addTab(tab, f"{self.t('object_logic')} {obj.name}")
         else:
             # update index in case object order changed
             tab.object_combo.setItemData(0, index)
@@ -1968,6 +1989,7 @@ class Editor(QMainWindow):
             self.object_label = widget.object_label
             self.add_var_btn = widget.add_var_btn
             self.refresh_events()
+            self.refresh_variables()
 
     def _close_tab(self, index: int) -> None:
         """Close an object logic tab."""
@@ -2066,6 +2088,10 @@ class Editor(QMainWindow):
         self.type_combo.blockSignals(True)
         self.type_combo.setCurrentIndex(-1)
         self.type_combo.blockSignals(False)
+        if hasattr(self, 'var_group'):
+            self.var_group.setVisible(False)
+            while self.var_layout.rowCount():
+                self.var_layout.removeRow(0)
 
     def _update_transform_panel(self):
         idx = self.object_combo.currentIndex()
@@ -2112,6 +2138,8 @@ class Editor(QMainWindow):
             self.link_scale.blockSignals(True); self.link_scale.setChecked(obj.scale_x == obj.scale_y); self.link_scale.blockSignals(False)
             self.angle_spin.blockSignals(True); self.angle_spin.setValue(obj.angle); self.angle_spin.blockSignals(False)
 
+        self._update_variable_panel()
+
     def _apply_transform(self):
         idx = self.object_combo.currentIndex()
         if idx < 0 or idx >= len(self.items):
@@ -2137,6 +2165,45 @@ class Editor(QMainWindow):
         self._mark_dirty()
         self._update_gizmo()
 
+    def _update_variable_panel(self):
+        if not hasattr(self, 'var_group'):
+            return
+        while self.var_layout.rowCount():
+            self.var_layout.removeRow(0)
+        idx = self.object_combo.currentIndex()
+        if idx < 0 or idx >= len(self.items):
+            self.var_group.setVisible(False)
+            return
+        obj = self.items[idx][1]
+        shown = False
+        for name, public in getattr(obj, 'variables', {}).items():
+            if not public:
+                continue
+            value = self.scene.variables.get(name, '')
+            edit = QLineEdit(str(value))
+            edit.editingFinished.connect(
+                lambda n=name, w=edit: self._public_var_changed(n, w))
+            self.var_layout.addRow(name + ':', edit)
+            shown = True
+        self.var_group.setVisible(shown)
+
+    def _public_var_changed(self, name: str, widget: QLineEdit):
+        text = widget.text()
+        value = self.scene.variables.get(name)
+        try:
+            if isinstance(value, bool):
+                self.scene.variables[name] = text.lower() in ('1', 'true', 'yes', 'on')
+            elif isinstance(value, int):
+                self.scene.variables[name] = int(text)
+            elif isinstance(value, float):
+                self.scene.variables[name] = float(text)
+            else:
+                self.scene.variables[name] = text
+        except Exception:
+            self.scene.variables[name] = text
+        self.refresh_variables()
+        self._mark_dirty()
+
     def _object_name_changed(self):
         idx = self.object_combo.currentIndex()
         if idx < 0 or idx >= len(self.items):
@@ -2157,7 +2224,7 @@ class Editor(QMainWindow):
             tab.object_combo.setItemText(0, new_name)
             tab_idx = self.tabs.indexOf(tab)
             if tab_idx >= 0:
-                self.tabs.setTabText(tab_idx, new_name)
+                self.tabs.setTabText(tab_idx, f"{self.t('object_logic')} {new_name}")
         self._mark_dirty()
 
     def _object_type_changed(self):

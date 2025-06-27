@@ -138,6 +138,10 @@ class Scene:
                 obj.settings = entry.get('settings', {})
             elif 'settings' in entry:
                 logger.debug('Object %s does not support settings', type(obj).__name__)
+            if hasattr(obj, 'variables'):
+                obj.variables = entry.get('variables', {})
+            elif 'variables' in entry:
+                logger.debug('Object %s does not support variables', type(obj).__name__)
             scene.add_object(obj)
             if isinstance(obj, Camera):
                 if obj.active:
@@ -176,6 +180,8 @@ class Scene:
                 data["events"] = getattr(o, "events", [])
             if hasattr(o, "settings"):
                 data["settings"] = getattr(o, "settings", {})
+            if hasattr(o, "variables") and getattr(o, "variables", {}):
+                data["variables"] = getattr(o, "variables")
             if hasattr(o, "rotation"):
                 data["quaternion"] = list(o.rotation)
             obj_list.append(data)

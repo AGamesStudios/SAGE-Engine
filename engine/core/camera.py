@@ -16,6 +16,7 @@ from .. import units
         ('name', None),
         ('active', 'active'),
         ('metadata', 'metadata'),
+        ('variables', 'variables'),
     ],
 )
 @dataclass(slots=True)
@@ -32,6 +33,7 @@ class Camera:
     active: bool = False
     type: str = "camera"
     metadata: dict = field(default_factory=dict)
+    variables: dict = field(default_factory=dict)
     events: list = field(default_factory=list)
     event_system: EventSystem | None = field(init=False, default=None)
 
