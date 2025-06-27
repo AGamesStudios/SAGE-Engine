@@ -1084,7 +1084,7 @@ class Editor(QMainWindow):
         self.splitDockWidget(self.objects_dock, self.properties_dock, Qt.Orientation.Vertical)
 
         # logic tab for scene events
-        self.logic_widget = LogicTab(self)
+        self.logic_widget = LogicTab(self, label=self.t('scene'), hide_combo=True)
         self.event_list = self.logic_widget.event_list
         self.var_table = self.logic_widget.var_table
         self.object_combo = self.logic_widget.object_combo
@@ -1147,7 +1147,7 @@ class Editor(QMainWindow):
         self.save_proj_act.setText(self.t('save_project'))
         self.tabs.setTabText(0, self.t('viewport'))
         self.tabs.setTabText(1, self.t('logic'))
-        self.object_label.setText(self.t('object'))
+        self.object_label.setText(self.t('scene'))
         self.event_list.setHorizontalHeaderLabels([self.t('conditions'), self.t('actions')])
         self.var_table.setHorizontalHeaderLabels([self.t('name'), self.t('value')])
         self.add_var_btn.setText(self.t('add_variable'))

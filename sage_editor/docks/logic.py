@@ -6,19 +6,21 @@ from PyQt6.QtCore import Qt
 
 
 class LogicTab(QWidget):
-    """Tab showing events and variables for the selected object."""
+    """Tab showing events and variables for an object or the scene."""
 
-    def __init__(self, editor):
+    def __init__(self, editor, label: str | None = None, hide_combo: bool = False):
         super().__init__()
         self.editor = editor
         main_layout = QVBoxLayout(self)
         top_bar = QHBoxLayout()
-        self.object_label = QLabel(editor.t('object'))
+        self.object_label = QLabel(label or editor.t('object'))
         self.object_combo = QComboBox()
         self.object_combo.currentIndexChanged.connect(editor.refresh_events)
         self.object_combo.currentIndexChanged.connect(editor._update_gizmo)
         top_bar.addWidget(self.object_label)
         top_bar.addWidget(self.object_combo)
+        if hide_combo:
+            self.object_combo.setVisible(False)
         main_layout.addLayout(top_bar)
 
         self.event_list = QTableWidget(0, 2)
@@ -56,10 +58,8 @@ class ObjectLogicTab(LogicTab):
     """Logic tab bound to a single object."""
 
     def __init__(self, editor, obj, index: int):
-        super().__init__(editor)
+        super().__init__(editor, label=obj.name, hide_combo=True)
         self.object_id = id(obj)
         self.object_combo.addItem(obj.name, index)
         self.object_combo.setCurrentIndex(0)
-        self.object_combo.setVisible(False)
-        self.object_label.setText(obj.name)
 
