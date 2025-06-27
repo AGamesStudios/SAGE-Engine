@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QToolButton, QButtonGroup, QShortcut
+    QWidget, QVBoxLayout, QToolButton, QButtonGroup
 )
-from PyQt6.QtGui import QIcon, QKeySequence
+from PyQt6.QtGui import QIcon, QKeySequence, QShortcut
 from PyQt6.QtCore import QTimer, Qt, QPointF
 import math
 
@@ -91,7 +91,6 @@ class Viewport(GLWidget):
         self.transform_bar.raise_()
 
         # keyboard shortcuts for viewport controls
-        from PyQt6.QtGui import QShortcut, QKeySequence
         self.shortcut_focus = QShortcut(QKeySequence('F'), self)
         self.shortcut_focus.activated.connect(self._focus_selected)
         self.shortcut_pan = QShortcut(QKeySequence('Q'), self)
