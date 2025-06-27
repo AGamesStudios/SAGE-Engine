@@ -261,7 +261,9 @@ python -c "import sage_editor as ed; ed.main()"
 Sprite positions are stored when you save so the runtime engine can render them
 exactly as placed in the editor.
 Event definitions are saved as well, so running the scene will include any logic
-you created in the editor.
+you created in the editor. Each scene maintains its own events in addition to
+per-object logic and new projects start with a simple "Hello, SAGE!" message
+printed to the console when the game launches.
 
 ### SAGE Logic Events
 

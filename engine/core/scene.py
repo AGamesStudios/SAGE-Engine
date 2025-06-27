@@ -13,10 +13,18 @@ from ..logic import (
 
 class Scene:
     """Collection of objects and events."""
+
     def __init__(self):
         # collections of scene objects and metadata
         self.objects = []
         self.variables = {}
+        self.events = [
+            {
+                "conditions": [{"type": "OnStart"}],
+                "actions": [{"type": "Print", "text": "Hello, SAGE!"}],
+            }
+        ]
+        self.event_system = None
         self.camera = None
         self.active_camera = None
         self.metadata = {}
@@ -116,6 +124,7 @@ class Scene:
         scene = cls()
         scene.variables = data.get("variables", {})
         scene.metadata = data.get("metadata", {})
+        scene.events = data.get("events", scene.events)
         scene.active_camera = data.get("active_camera")
         for entry in data.get("objects", []):
             obj = object_from_dict(entry)
@@ -174,6 +183,8 @@ class Scene:
             "variables": self.variables,
             "objects": obj_list,
         }
+        if getattr(self, "events", None):
+            data["events"] = self.events
         if self.metadata:
             data["metadata"] = self.metadata
         if self.camera:
@@ -189,8 +200,14 @@ class Scene:
             json.dump(self.to_dict(), f, indent=2)
 
     def build_event_system(self, aggregate: bool = True) -> EventSystem:
-        """Create event systems for objects and optionally aggregate them."""
+        """Create event systems for the scene and its objects."""
         es = EventSystem(variables=self.variables)
+        for evt in getattr(self, "events", []):
+            if isinstance(evt, dict):
+                obj = event_from_dict(evt, self.objects, self.variables)
+                if obj is not None:
+                    es.add_event(obj)
+        self.event_system = es
         for obj in self.objects:
             if hasattr(obj, "build_event_system"):
                 obj_es = obj.build_event_system(self.objects, self.variables)
