@@ -266,11 +266,14 @@ you created in the editor.
 ### SAGE Logic Events
 
 The engine includes **SAGE Logic**, a lightweight event system combining
-*conditions* and *actions*. Built-in blocks cover common tasks such as input
-checks, variable math and camera control. You can register additional blocks
-with `register_condition` and `register_action` so plugins can extend the
-system. The helper functions `condition_from_dict` and `action_from_dict` are
-used by the editor to construct events from dictionaries.
+*conditions* and *actions*. No built‑in blocks are provided so games and
+plugins are expected to register their own using `register_condition` and
+`register_action`.  Events can be constructed from dictionaries via
+`condition_from_dict`, `action_from_dict` and the `event_from_dict` helper
+which the editor uses when loading scenes.
+`EventSystem.get_event_names()` lists the currently registered events and
+methods like `enable_event()` or `reset_event()` allow scripts to control them
+at runtime.
 
 The editor now includes a **Console** dock at the bottom. All output from the
 game process and the editor itself appears here so you can easily debug your
@@ -284,14 +287,11 @@ removed and when events are enabled, disabled or triggered. This output appears
 both in the editor's console and the IDE terminal.
 The engine also checks its exported names at import time and warns if a symbol
 listed in ``__all__`` does not exist. This helps catch mistakes like missing
-imports. Built-in conditions include ``KeyPressed``, ``MouseButton``,
-``Collision``, ``AfterTime`` and ``VariableCompare`` while actions like
-``Move``, ``SetPosition``, ``PanCamera`` and ``SetVariable`` provide common
-behaviour out of the box.
-Events can be toggled or reset at runtime using actions such as
-`EnableEvent`, `DisableEvent` and `ResetEvent`. The `EventTriggered`
-condition lets one event react to another. Fields may reference engine data at
-runtime so values like ``engine.camera.zoom`` are resolved when the event runs.
+imports.
+
+Events can be enabled, disabled or reset at runtime using methods on
+``EventSystem``. Fields in custom blocks may reference engine data so values
+like ``engine.camera.zoom`` are resolved when the event runs.
 
 Numeric fields in conditions and actions may reference engine data at runtime.
 Values like ``engine.variable("speed")`` call that method when the event runs so

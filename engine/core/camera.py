@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from .objects import register_object
-from ..logic import EventSystem, Event, condition_from_dict, action_from_dict
+from ..logic import EventSystem, event_from_dict
 from ..log import logger
 from .. import units
 
@@ -56,32 +56,7 @@ class Camera:
         """Build and store an EventSystem from the attached events."""
         es = EventSystem(variables=variables)
         for evt in getattr(self, "events", []):
-            if not isinstance(evt, dict):
-                continue
-            conditions = []
-            for cond in evt.get("conditions", []):
-                if not isinstance(cond, dict):
-                    continue
-                cobj = condition_from_dict(cond, objects, variables)
-                if cobj is not None:
-                    conditions.append(cobj)
-                else:
-                    logger.warning('Skipped invalid condition %s', cond)
-            actions = []
-            for act in evt.get("actions", []):
-                if not isinstance(act, dict):
-                    continue
-                aobj = action_from_dict(act, objects)
-                if aobj is not None:
-                    actions.append(aobj)
-                else:
-                    logger.warning('Skipped invalid action %s', act)
-            es.add_event(Event(
-                conditions,
-                actions,
-                evt.get("once", False),
-                evt.get("name"),
-                evt.get("enabled", True),
-            ))
+            if isinstance(evt, dict):
+                es.add_event(event_from_dict(evt, objects, variables))
         self.event_system = es
         return es

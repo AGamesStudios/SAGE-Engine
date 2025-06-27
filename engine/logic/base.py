@@ -233,6 +233,10 @@ class EventSystem:
                 return evt
         return None
 
+    def get_event_names(self):
+        """Return the list of names for all registered events."""
+        return [e.name for e in self.events if e.name]
+
     def remove_event(self, name):
         self.events = [e for e in self.events if e.name != name]
         logger.debug('Removed event %s', name)
@@ -366,4 +370,33 @@ def action_from_dict(data, objects):
     except Exception:
         logger.exception('Failed to construct action %s', typ)
         return None
+
+
+def event_from_dict(data, objects, variables):
+    """Instantiate an :class:`Event` from a dictionary."""
+    conditions = []
+    for cond in data.get('conditions', []):
+        if not isinstance(cond, dict):
+            continue
+        obj = condition_from_dict(cond, objects, variables)
+        if obj is not None:
+            conditions.append(obj)
+        else:
+            logger.warning('Skipped invalid condition %s', cond)
+    actions = []
+    for act in data.get('actions', []):
+        if not isinstance(act, dict):
+            continue
+        obj = action_from_dict(act, objects)
+        if obj is not None:
+            actions.append(obj)
+        else:
+            logger.warning('Skipped invalid action %s', act)
+    return Event(
+        conditions,
+        actions,
+        data.get('once', False),
+        data.get('name'),
+        data.get('enabled', True),
+    )
 

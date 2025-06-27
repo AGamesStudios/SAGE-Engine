@@ -33,26 +33,17 @@ from sage_sdk.plugins import register_plugin as register_engine_plugin, load_plu
 def load_engine_plugins(engine, paths=None):
     """Load plugins targeting the engine."""
     _load_engine_plugins('engine', engine, paths)
-from .logic.base import Event, EventSystem
-from .logic.conditions import (
-    KeyPressed, KeyReleased, MouseButton, InputState, Collision,
-    AfterTime, EveryFrame, VariableCompare, ZoomAbove,
-    EventTriggered, InView,
-)
-from .logic.actions import (
-    Move, SetPosition, Destroy, Print, PlaySound, Spawn,
-    SetVariable, ModifyVariable, SetZoom, PanCamera, CenterCamera,
-    EnableEvent, DisableEvent, ResetEvent,
+from .logic.base import (
+    Event, EventSystem, register_condition, register_action,
+    get_registered_conditions, get_registered_actions,
+    condition_from_dict, action_from_dict, event_from_dict,
 )
 
 __all__ = [
     'GameObject', 'Scene', 'Engine', 'EventSystem', 'Event',
-    'KeyPressed', 'KeyReleased', 'MouseButton', 'InputState', 'Collision',
-    'AfterTime', 'EveryFrame', 'VariableCompare', 'ZoomAbove',
-    'EventTriggered', 'InView',
-    'Move', 'SetPosition', 'Destroy', 'Print', 'PlaySound', 'Spawn',
-    'SetVariable', 'ModifyVariable', 'SetZoom', 'PanCamera', 'CenterCamera',
-    'EnableEvent', 'DisableEvent', 'ResetEvent',
+    'register_condition', 'register_action',
+    'get_registered_conditions', 'get_registered_actions',
+    'condition_from_dict', 'action_from_dict', 'event_from_dict',
     'Project', 'Camera', 'clear_image_cache', 'Renderer', 'OpenGLRenderer', 'main',
     'ENGINE_VERSION', 'logger', 'ResourceManager', 'set_resource_root', 'get_resource_path',
     'load_project', 'save_project', 'run_project', 'create_engine',
