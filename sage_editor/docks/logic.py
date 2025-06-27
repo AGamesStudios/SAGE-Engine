@@ -42,6 +42,8 @@ class LogicTab(QWidget):
             editor.t('name'), editor.t('value')
         ])
         self.var_table.horizontalHeader().setStretchLastSection(True)
+        self.var_table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.var_table.customContextMenuRequested.connect(editor._variable_menu)
         self.add_var_btn = QPushButton(editor.t('add_variable'))
         self.add_var_btn.clicked.connect(editor.add_variable)
 

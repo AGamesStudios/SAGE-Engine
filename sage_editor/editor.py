@@ -990,6 +990,90 @@ class AddEventDialog(QDialog):
                 self.act_list.addItem(desc)
 
 
+class VariableDialog(QDialog):
+    """Dialog for adding or editing a variable."""
+
+    def __init__(self, parent=None, name="", value=None, public=False, editing=False):
+        super().__init__(parent)
+        title = parent.t("edit") if editing else parent.t("add_variable")
+        if editing:
+            title = f"{parent.t('edit')} {parent.t('variable')}"
+        self.setWindowTitle(title)
+        self.name_edit = QLineEdit(name)
+        self.type_box = QComboBox()
+        self.type_box.addItems(["int", "float", "string", "bool"])
+        self.value_label = QLabel(parent.t("value_label") if parent else "Value:")
+        self.value_edit = QLineEdit()
+        if parent:
+            parent.apply_engine_completer(self.value_edit)
+        self.bool_check = QCheckBox()
+        self.bool_label = QLabel(parent.t("value_label") if parent else "Value:")
+        self.public_check = QCheckBox()
+        form = QFormLayout(self)
+        form.addRow(parent.t("name_label") if parent else "Name:", self.name_edit)
+        form.addRow(parent.t("type_label") if parent else "Type:", self.type_box)
+        form.addRow(self.value_label, self.value_edit)
+        form.addRow(self.bool_label, self.bool_check)
+        form.addRow(parent.t("public"), self.public_check)
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        form.addRow(buttons)
+        self.type_box.currentTextChanged.connect(self.update_fields)
+
+        # Pre-fill when editing
+        if value is not None:
+            if isinstance(value, bool):
+                v_type = "bool"
+            elif isinstance(value, int):
+                v_type = "int"
+            elif isinstance(value, float):
+                v_type = "float"
+            else:
+                v_type = "string"
+            i = self.type_box.findText(v_type)
+            if i >= 0:
+                self.type_box.setCurrentIndex(i)
+            if v_type == "bool":
+                self.bool_check.setChecked(bool(value))
+            else:
+                self.value_edit.setText(str(value))
+        self.public_check.setChecked(public)
+        self.update_fields()
+
+    def update_fields(self):
+        if self.type_box.currentText() == "bool":
+            self.value_label.hide()
+            self.value_edit.hide()
+            self.bool_check.show()
+            self.bool_label.show()
+        else:
+            self.value_label.show()
+            self.value_edit.show()
+            self.bool_check.hide()
+            self.bool_label.hide()
+
+    def get_data(self):
+        name = self.name_edit.text().strip()
+        typ = self.type_box.currentText()
+        if typ == "bool":
+            value = self.bool_check.isChecked()
+        else:
+            text = self.value_edit.text()
+            try:
+                if typ == "int":
+                    value = int(text)
+                elif typ == "float":
+                    value = float(text)
+                else:
+                    value = text
+            except Exception:
+                value = text
+        return name, value, self.public_check.isChecked()
+
+
 class Editor(QMainWindow):
     def __init__(self, autoshow: bool = True):
         super().__init__()
@@ -1914,72 +1998,20 @@ class Editor(QMainWindow):
         if not isinstance(self.tabs.currentWidget(), ObjectLogicTab):
             QMessageBox.warning(self, self.t('error'), self.t('object_var_only'))
             return
-        class VariableDialog(QDialog):
-            def __init__(self, parent=None):
-                super().__init__(parent)
-                self.setWindowTitle(parent.t('add_variable'))
-                self.name_edit = QLineEdit()
-                self.type_box = QComboBox()
-                self.type_box.addItems(['int', 'float', 'string', 'bool'])
-                self.value_label = QLabel(parent.t('value_label') if parent else 'Value:')
-                self.value_edit = QLineEdit()
-                if parent:
-                    parent.apply_engine_completer(self.value_edit)
-                self.bool_check = QCheckBox()
-                self.bool_label = QLabel(parent.t('value_label') if parent else 'Value:')
-                self.public_check = QCheckBox()
-                form = QFormLayout(self)
-                form.addRow(parent.t('name_label') if parent else 'Name:', self.name_edit)
-                form.addRow(parent.t('type_label') if parent else 'Type:', self.type_box)
-                form.addRow(self.value_label, self.value_edit)
-                form.addRow(self.bool_label, self.bool_check)
-                form.addRow(parent.t('public'), self.public_check)
-                buttons = QDialogButtonBox(
-                    QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
-                )
-                buttons.accepted.connect(self.accept)
-                buttons.rejected.connect(self.reject)
-                form.addRow(buttons)
-                self.type_box.currentTextChanged.connect(self.update_fields)
-                self.update_fields()
-
-            def update_fields(self):
-                if self.type_box.currentText() == 'bool':
-                    self.value_label.hide()
-                    self.value_edit.hide()
-                    self.bool_check.show()
-                    self.bool_label.show()
-                else:
-                    self.value_label.show()
-                    self.value_edit.show()
-                    self.bool_check.hide()
-                    self.bool_label.hide()
-
         dlg = VariableDialog(self)
         if dlg.exec() != QDialog.DialogCode.Accepted:
             return
         try:
-            name = dlg.name_edit.text().strip()
+            name, value, public = dlg.get_data()
             if not name:
                 raise ValueError('name required')
-            typ = dlg.type_box.currentText()
-            if typ == 'bool':
-                value = dlg.bool_check.isChecked()
-            else:
-                text = dlg.value_edit.text()
-                if typ == 'int':
-                    value = int(text)
-                elif typ == 'float':
-                    value = float(text)
-                else:
-                    value = text
             tab = self.tabs.currentWidget()
             if isinstance(tab, ObjectLogicTab):
                 idx = tab.object_combo.itemData(0)
                 if idx is not None and 0 <= idx < len(self.items):
                     obj = self.items[idx][1]
                     obj.variables[name] = value
-                    if dlg.public_check.isChecked():
+                    if public:
                         obj.public_vars.add(name)
             else:
                 self.scene.variables[name] = value
@@ -1988,6 +2020,55 @@ class Editor(QMainWindow):
             self._mark_dirty()
         except Exception as exc:
             QMessageBox.warning(self, 'Error', f'Failed to add variable: {exc}')
+
+    def _variable_dicts(self):
+        """Return the variable dictionary and public set for the current tab."""
+        tab = self.tabs.currentWidget()
+        if isinstance(tab, ObjectLogicTab):
+            idx = tab.object_combo.itemData(0)
+            if idx is not None and 0 <= idx < len(self.items):
+                obj = self.items[idx][1]
+                return obj.variables, getattr(obj, "public_vars", set())
+        return self.scene.variables, set()
+
+    def _edit_variable(self, row: int) -> None:
+        vars_dict, pub = self._variable_dicts()
+        if row < 0 or row >= len(vars_dict):
+            return
+        name_item = self.var_table.item(row, 0)
+        if name_item is None:
+            return
+        name = name_item.text()
+        value = vars_dict.get(name)
+        dlg = VariableDialog(self, name=name, value=value, public=name in pub, editing=True)
+        if dlg.exec() != QDialog.DialogCode.Accepted:
+            return
+        new_name, new_value, new_public = dlg.get_data()
+        if not new_name:
+            return
+        if new_name != name:
+            vars_dict.pop(name, None)
+            pub.discard(name)
+        vars_dict[new_name] = new_value
+        if new_public:
+            pub.add(new_name)
+        else:
+            pub.discard(new_name)
+        self.refresh_variables()
+        self._update_variable_panel()
+        self._mark_dirty()
+
+    def _delete_variable(self, row: int) -> None:
+        vars_dict, pub = self._variable_dicts()
+        item = self.var_table.item(row, 0)
+        if item is None:
+            return
+        name = item.text()
+        vars_dict.pop(name, None)
+        pub.discard(name)
+        self.refresh_variables()
+        self._update_variable_panel()
+        self._mark_dirty()
 
     def refresh_variables(self):
         self.var_table.setRowCount(0)
@@ -2513,6 +2594,25 @@ class Editor(QMainWindow):
                 events.append(copy.deepcopy(self._clip_event))
                 self._mark_dirty()
         self.refresh_events()
+
+    def _variable_menu(self, pos):
+        """Show context actions for the variables table."""
+        item = self.var_table.itemAt(pos)
+        menu = QMenu(self)
+        if item:
+            edit_act = menu.addAction(self.t('edit'))
+            del_act = menu.addAction(load_icon('delete.png'), self.t('delete'))
+            action = menu.exec(self.var_table.viewport().mapToGlobal(pos))
+            row = self.var_table.row(item)
+            if action == edit_act:
+                self._edit_variable(row)
+            elif action == del_act:
+                self._delete_variable(row)
+        else:
+            add_act = menu.addAction(load_icon('add.png'), self.t('add_variable'))
+            action = menu.exec(self.var_table.viewport().mapToGlobal(pos))
+            if action == add_act:
+                self.add_variable()
 
     def _new_folder(self, base: str | None = None) -> None:
         """Create a subfolder inside the resources directory."""
