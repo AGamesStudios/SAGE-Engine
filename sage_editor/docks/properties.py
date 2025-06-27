@@ -4,6 +4,7 @@ from PyQt6.QtWidgets import (
     QScrollArea, QPushButton
 )
 from PyQt6.QtCore import Qt
+from ..icons import load_icon
 
 
 class PropertiesDock(QDockWidget):
@@ -85,6 +86,7 @@ class PropertiesDock(QDockWidget):
         prop_layout.addWidget(self.var_group)
         self.var_group.setVisible(False)
         self.logic_btn = QPushButton(editor.t('edit_logic'))
+        self.logic_btn.setIcon(load_icon('edit.png'))
         self.logic_btn.clicked.connect(editor.open_selected_object_logic)
         prop_layout.addWidget(self.logic_btn)
         prop_layout.addStretch(1)

@@ -8,6 +8,8 @@ small so it runs well even on older computers.
 The current release is **SAGE Engine: 2D prototype v0.0.01a**. The engine
 stores its version inside every `.sageproject` file so you can safely upgrade
 without losing progress.
+An **About** entry in the menu shows this version so players know which build
+they are running.
 
 ## Setup
 Install dependencies with:
@@ -166,8 +168,10 @@ The **Logic** tab lists object events with
 conditions on the left and actions on the right. The event dialog now provides
 drop-down lists for keys and shows only parameters relevant to the chosen
 action. Variables of type int, float, string and bool can be defined and used
-in conditions or actions. Mathematical actions only apply to int or float
-variables, ensuring booleans and strings remain unchanged. When setting a variable in an action the name is
+in conditions or actions. Object variables marked as public appear in the
+**Properties** dock so their values can be edited directly. Mathematical actions
+only apply to int or float variables, ensuring booleans and strings remain
+unchanged. When setting a variable in an action the name is
 chosen from a drop-down list and booleans use a check box. Events attach to specific objects and can trigger on
 game start or every frame. Fonts are slightly larger for readability.
 Window dimensions can be changed under **Settings → Project Settings**. The
@@ -203,7 +207,7 @@ printed to the console instead of closing the editor.
 If something goes wrong during gameplay, the console shows the full
 Python traceback so you can identify exactly where the problem occurred.
 Use the **Clear Log** button in the console to empty it at any time.
-You can also filter log **Messages**, **Warnings** or **Errors** with the
+Log **Messages**, **Warnings** or **Errors** can be toggled on and off with the
 checkboxes provided.
 
 The editor also provides a **Profiler** dock with graphs for overall CPU,

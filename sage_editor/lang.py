@@ -146,7 +146,6 @@ LANGUAGES = {
         , 'messages': 'Messages'
         , 'warnings': 'Warnings'
         , 'errors': 'Errors'
-        , 'all_logs': 'All'
         , 'confirm_delete_project': 'Delete project and all files?'
         , 'delete_project': 'Delete Project'
         , 'resources': 'Resources'
@@ -161,6 +160,9 @@ LANGUAGES = {
         , 'resource_only': 'Please choose a file inside Resources'
         , 'unsaved_short': 'unsaved'
         , 'edit_logic': 'Edit Logic'
+        , 'about_menu': 'About'
+        , 'about_us': 'About SAGE Engine'
+        , 'object_var_only': 'Add variables to objects instead'
     },
     'Русский': {
         'file': 'Файл',
@@ -303,7 +305,6 @@ LANGUAGES = {
         , 'messages': 'Сообщения'
         , 'warnings': 'Предупреждения'
         , 'errors': 'Ошибки'
-        , 'all_logs': 'Все'
         , 'confirm_delete_project': 'Удалить проект и все файлы?'
         , 'delete_project': 'Удаление проекта'
         , 'resources': 'Ресурсы'
@@ -317,7 +318,10 @@ LANGUAGES = {
         , 'py_files': 'Файлы Python (*.py)'
         , 'resource_only': 'Выберите файл только из папки Resources'
         , 'unsaved_short': 'несохранено'
-        , 'edit_logic': 'Править логику'
+        , 'edit_logic': 'Редактировать логику'
+        , 'about_menu': 'О нас'
+        , 'about_us': 'О движке SAGE'
+        , 'object_var_only': 'Переменные можно добавлять только объектам'
     }
 }
 import locale

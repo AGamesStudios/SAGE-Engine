@@ -1157,7 +1157,6 @@ class Editor(QMainWindow):
         self.logic_btn.setText(self.t('edit_logic'))
         self.console_dock.setWindowTitle(self.t('console'))
         self.console_dock.clear_btn.setToolTip(self.t('clear_log'))
-        self.console_dock.all_chk.setText(self.t('all_logs'))
         self.console_dock.info_chk.setText(self.t('messages'))
         self.console_dock.warn_chk.setText(self.t('warnings'))
         self.console_dock.err_chk.setText(self.t('errors'))
@@ -1184,6 +1183,8 @@ class Editor(QMainWindow):
         self.settings_menu.setTitle(self.t('settings'))
         self.project_settings_act.setText(self.t('project_settings'))
         self.plugins_act.setText(self.t('manage_plugins'))
+        self.about_menu.setTitle(self.t('about_menu'))
+        self.about_act.setText(self.t('about_us'))
         self.coord_combo.setItemText(0, self.t('global'))
         self.coord_combo.setItemText(1, self.t('local'))
         self.link_scale.setText(self.t('link_scale'))
@@ -1206,6 +1207,7 @@ class Editor(QMainWindow):
         self.objects_dock.setEnabled(enabled)
         self.resources_dock.setEnabled(enabled)
         self._update_title()
+        self._tab_changed(self.tabs.currentIndex())
 
     def _update_title(self):
         title = f'SAGE Editor ({ENGINE_VERSION})'
@@ -1292,6 +1294,11 @@ class Editor(QMainWindow):
         self.plugins_act = QAction(load_icon('plugin.png'), self.t('manage_plugins'), self)
         self.plugins_act.triggered.connect(self.show_plugin_manager)
         self.settings_menu.addAction(self.plugins_act)
+
+        self.about_menu = menubar.addMenu(self.t('about_menu'))
+        self.about_act = QAction(self.t('about_us'), self)
+        self.about_act.triggered.connect(self.show_about)
+        self.about_menu.addAction(self.about_act)
 
         toolbar = self.addToolBar('main')
         from PyQt6.QtWidgets import QWidget, QSizePolicy
@@ -1660,6 +1667,13 @@ class Editor(QMainWindow):
         from .dialogs.plugin_manager import PluginManager
         PluginManager(self).exec()
 
+    def show_about(self):
+        QMessageBox.information(
+            self,
+            self.t('about_us'),
+            f'SAGE Engine {ENGINE_VERSION}'
+        )
+
     def run_project(self):
         """Save and run the current project in a separate window."""
         if not self._check_project():
@@ -1794,6 +1808,9 @@ class Editor(QMainWindow):
 
     def add_variable(self):
         if not self._check_project():
+            return
+        if not isinstance(self.tabs.currentWidget(), ObjectLogicTab):
+            QMessageBox.warning(self, self.t('error'), self.t('object_var_only'))
             return
         class VariableDialog(QDialog):
             def __init__(self, parent=None):
@@ -1991,6 +2008,9 @@ class Editor(QMainWindow):
             self.add_var_btn = widget.add_var_btn
             self.refresh_events()
             self.refresh_variables()
+            self.add_var_btn.setEnabled(
+                isinstance(widget, ObjectLogicTab) and self.project_path is not None
+            )
 
     def _close_tab(self, index: int) -> None:
         """Close an object logic tab."""

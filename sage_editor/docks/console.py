@@ -26,17 +26,13 @@ class ConsoleDock(QDockWidget):
         self.clear_btn.setIcon(load_icon('delete.png'))
         self.clear_btn.setToolTip(editor.t('clear_log'))
         self.clear_btn.clicked.connect(self.clear)
-        self.all_chk = QCheckBox(editor.t('all_logs'))
         self.info_chk = QCheckBox(editor.t('messages'))
         self.warn_chk = QCheckBox(editor.t('warnings'))
         self.err_chk = QCheckBox(editor.t('errors'))
-        for chk in (self.all_chk, self.info_chk, self.warn_chk, self.err_chk):
-            chk.setChecked(True)
-        self.all_chk.toggled.connect(self._toggle_all)
         for chk in (self.info_chk, self.warn_chk, self.err_chk):
+            chk.setChecked(True)
             chk.toggled.connect(self.update_display)
         bar.addWidget(self.clear_btn)
-        bar.addWidget(self.all_chk)
         bar.addWidget(self.info_chk)
         bar.addWidget(self.warn_chk)
         bar.addWidget(self.err_chk)
@@ -51,12 +47,6 @@ class ConsoleDock(QDockWidget):
         editor.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self)
         self.write(f'Engine path: {os.getcwd()}')
 
-    def _toggle_all(self, state: bool) -> None:
-        for chk in (self.info_chk, self.warn_chk, self.err_chk):
-            chk.blockSignals(True)
-            chk.setChecked(state)
-            chk.blockSignals(False)
-        self.update_display()
 
     def clear(self) -> None:
         self.lines.clear()
