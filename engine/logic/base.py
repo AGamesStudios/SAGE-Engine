@@ -168,14 +168,32 @@ def get_action_params(name: str) -> list[tuple]:
     return ACTION_META.get(name, [])
 
 class Condition:
-    """Base condition interface."""
+    """Base condition interface.
+
+    Subclasses may override :meth:`reset` to clear any internal state when an
+    event is reset.  This keeps conditions reusable and ensures predictable
+    behaviour when events are toggled on or off at runtime.
+    """
+
     def check(self, engine, scene, dt):
         raise NotImplementedError
 
+    def reset(self):  # pragma: no cover - optional
+        """Reset internal state."""
+        pass
+
 class Action:
-    """Base action interface."""
+    """Base action interface.
+
+    Actions may also override :meth:`reset` in case they maintain temporary
+    state that should be cleared when the owning event is reset.
+    """
+
     def execute(self, engine, scene, dt):
         raise NotImplementedError
+
+    def reset(self):  # pragma: no cover - optional
+        pass
 
 class Event:
     """Combination of conditions and actions."""
@@ -213,6 +231,18 @@ class Event:
         """Clear the triggered flag and enable the event."""
         self.triggered = False
         self.enabled = True
+        for cond in self.conditions:
+            if hasattr(cond, 'reset'):
+                try:
+                    cond.reset()
+                except Exception:
+                    logger.exception('Condition reset error')
+        for act in self.actions:
+            if hasattr(act, 'reset'):
+                try:
+                    act.reset()
+                except Exception:
+                    logger.exception('Action reset error')
         if self.name:
             logger.debug('Reset event %s', self.name)
 

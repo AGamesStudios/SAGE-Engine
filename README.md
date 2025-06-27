@@ -266,9 +266,9 @@ you created in the editor.
 ### SAGE Logic Events
 
 The engine includes **SAGE Logic**, a lightweight event system combining
-*conditions* and *actions*. No built‑in blocks are provided so games and
-plugins are expected to register their own using `register_condition` and
-`register_action`.  Events can be constructed from dictionaries via
+*conditions* and *actions*. Only a few basic blocks are built in such as
+`OnStart` and `Print`, leaving most logic to games and plugins which can
+register their own using `register_condition` and `register_action`.  Events can be constructed from dictionaries via
 `condition_from_dict`, `action_from_dict` and the `event_from_dict` helper
 which the editor uses when loading scenes.
 `EventSystem.get_event_names()` lists the currently registered events while
@@ -295,6 +295,8 @@ imports.
 Events can be enabled, disabled or reset at runtime using methods on
 ``EventSystem``. Fields in custom blocks may reference engine data so values
 like ``engine.camera.zoom`` are resolved when the event runs.
+Conditions and actions can provide a ``reset()`` method which the
+engine calls whenever an event is reset to clear any internal state.
 
 Numeric fields in conditions and actions may reference engine data at runtime.
 Values like ``engine.variable("speed")`` call that method when the event runs so
