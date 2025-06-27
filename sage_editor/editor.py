@@ -38,23 +38,26 @@ from .docks.profiler import ProfilerDock
 
 RECENT_FILE = os.path.join(os.path.expanduser('~'), '.sage_recent.json')
 LAYOUT_FILE = os.path.join(os.path.expanduser('~'), '.sage_layouts.json')
-LAYOUT_FILE = os.path.join(os.path.expanduser('~'), '.sage_layouts.json')
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 LOG_DIR = os.path.join(BASE_DIR, 'logs')
 LOG_FILE = os.path.join(LOG_DIR, 'editor.log')
 
 def _setup_logger() -> logging.Logger:
+    """Configure and return the editor logger."""
     os.makedirs(LOG_DIR, exist_ok=True)
     logger = logging.getLogger('sage_editor')
     if not logger.handlers:
-        logger.setLevel(logging.INFO)
+        level = os.environ.get('SAGE_LOG_LEVEL', 'INFO').upper()
+        logger.setLevel(getattr(logging, level, logging.INFO))
         fmt = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
-
-    return sorted(
-        f"engine.{name}(" if callable(obj) else f"engine.{name}"
-        for name, obj in inspect.getmembers(Engine)
-        if not name.startswith("_")
-    )
+        fh = logging.FileHandler(LOG_FILE, encoding='utf-8')
+        fh.setFormatter(fmt)
+        ch = logging.StreamHandler()
+        ch.setFormatter(fmt)
+        logger.addHandler(fh)
+        logger.addHandler(ch)
+        logger.info('Logger initialised')
+    return logger
 logger = _setup_logger()
 atexit.register(logging.shutdown)
 
@@ -75,30 +78,13 @@ def _engine_completions() -> list[str]:
     names: list[str] = []
     for name, obj in inspect.getmembers(Engine):
         if name.startswith('_'):
-def load_layouts() -> dict:
-    """Return saved layout data or defaults."""
-    try:
-        with open(LAYOUT_FILE, 'r') as f:
-            data = json.load(f)
-            if 'layouts' in data:
-                return data
-    except Exception:
-        pass
-    return {'layouts': {}, 'default': None}
-
-def save_layouts(data: dict) -> None:
-    try:
-        with open(LAYOUT_FILE, 'w') as f:
-            json.dump(data, f)
-    except Exception:
-        pass
-
             continue
         if callable(obj):
             names.append(f'engine.{name}(')
         else:
             names.append(f'engine.{name}')
     return sorted(names)
+
 
 def load_recent():
     """Return a list of recent project files that still exist."""
@@ -1180,10 +1166,6 @@ class Editor(QMainWindow):
     def set_language(self, lang: str):
         """Switch UI language."""
         if lang not in LANGUAGES:
-        self.editor_menu.setTitle(self.t('editor_menu'))
-        self.layout_menu.setTitle(self.t('interface_menu'))
-        self.save_layout_act.setText(self.t('save_layout'))
-        self.restore_layout_act.setText(self.t('restore_default'))
             return
         self.lang = lang
         self.lang_box.setCurrentText(lang)
@@ -1299,18 +1281,6 @@ class Editor(QMainWindow):
             act.triggered.connect(lambda _, path=p: self.open_project(path))
         if self.recent_projects:
             self.recent_menu.addSeparator()
-        self.editor_menu = menubar.addMenu(self.t('editor_menu'))
-        self.layout_menu = self.editor_menu.addMenu(self.t('interface_menu'))
-        self.save_layout_act = QAction(self.t('save_layout'), self)
-        self.save_layout_act.triggered.connect(self.save_layout_dialog)
-        self.restore_layout_act = QAction(self.t('restore_default'), self)
-        self.restore_layout_act.triggered.connect(self.restore_default_layout)
-        self.layout_menu.addAction(self.save_layout_act)
-        self.layout_menu.addAction(self.restore_layout_act)
-        self.layout_menu.addSeparator()
-        self.layout_group = QActionGroup(self)
-        self.layout_actions = []
-
             clear_act = self.recent_menu.addAction(self.t('clear_recent'))
             clear_act.triggered.connect(self.clear_recent)
 
@@ -1606,16 +1576,17 @@ class Editor(QMainWindow):
     def show_project_settings(self):
         if not self._check_project():
             return
+
         class ProjectSettingsDialog(QDialog):
             """Dialog with side tabs using the Fusion style."""
-            def __init__(self, parent: 'Editor'):
+
+            def __init__(self, parent: "Editor"):
                 super().__init__(parent)
                 self.parent = parent
                 self.setWindowTitle(parent.t('project_settings'))
                 self.setFixedSize(480, 360)
                 self.setStyle(QStyleFactory.create('Fusion'))
 
-                # left list acting as tabs
                 self.list = QListWidget()
                 self.list.setFixedWidth(110)
                 self.list.addItem(parent.t('info_tab'))
@@ -1623,7 +1594,6 @@ class Editor(QMainWindow):
 
                 self.stack = QStackedWidget()
 
-                # Info page
                 gen_widget = QWidget()
                 gen_form = QFormLayout()
                 gen_form.setLabelAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
@@ -1641,15 +1611,13 @@ class Editor(QMainWindow):
                 gen_page.setWidget(gen_widget)
                 self.stack.addWidget(gen_page)
 
-                # Window page
                 win_widget = QWidget()
                 win_form = QFormLayout()
                 win_form.setLabelAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
                 win_form.setFormAlignment(Qt.AlignmentFlag.AlignTop)
                 self.w_spin = QSpinBox(); self.w_spin.setRange(100, 4096); self.w_spin.setValue(parent.window_width)
                 self.h_spin = QSpinBox(); self.h_spin.setRange(100, 4096); self.h_spin.setValue(parent.window_height)
-                self.aspect_check = QCheckBox()
-                self.aspect_check.setChecked(parent.keep_aspect)
+                self.aspect_check = QCheckBox(); self.aspect_check.setChecked(parent.keep_aspect)
                 self.bg_btn = QPushButton()
                 self.bg_btn.setStyleSheet(
                     f"background: rgb({parent.background_color[0]}, {parent.background_color[1]}, {parent.background_color[2]});"
@@ -1668,7 +1636,9 @@ class Editor(QMainWindow):
                 self.list.currentRowChanged.connect(self.stack.setCurrentIndex)
                 self.list.setCurrentRow(0)
 
-                buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+                buttons = QDialogButtonBox(
+                    QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+                )
                 buttons.accepted.connect(self.accept)
                 buttons.rejected.connect(self.reject)
 
@@ -1678,61 +1648,6 @@ class Editor(QMainWindow):
                 bottom = QHBoxLayout()
                 bottom.addStretch(1)
                 bottom.addWidget(buttons)
-    def save_layout_dialog(self):
-        name, ok = QInputDialog.getText(self, self.t('save_layout'), self.t('layout_name'))
-        if not ok or not name:
-            return
-        self._save_layout(name)
-
-    def _save_layout(self, name: str):
-        state = self.saveState().toBase64().data().decode()
-        tabs = [tab.object_combo.itemText(0) for tab in self.object_tabs.values()]
-        self.layouts['layouts'][name] = {'state': state, 'tabs': tabs}
-        self.layouts['default'] = name
-        save_layouts(self.layouts)
-        self._build_layout_menu()
-
-    def set_startup_layout(self, name: str):
-        if name not in self.layouts.get('layouts', {}):
-            return
-        self.layouts['default'] = name
-        save_layouts(self.layouts)
-        self.apply_layout(name)
-        self._build_layout_menu()
-
-    def apply_layout(self, name: str):
-        data = self.layouts.get('layouts', {}).get(name)
-        if not data:
-            return
-        from PyQt6.QtCore import QByteArray
-        self.restoreState(QByteArray.fromBase64(data.get('state', '').encode()))
-        for obj_name in data.get('tabs', []):
-            idx = next((i for i, (_, o) in enumerate(self.items) if o.name == obj_name), -1)
-            if idx >= 0:
-                self.open_object_logic(idx)
-
-    def restore_default_layout(self):
-        from PyQt6.QtCore import QByteArray
-        self.restoreState(QByteArray.fromBase64(self._default_state.encode()))
-        self._build_layout_menu()
-
-    def _build_layout_menu(self):
-        for act in getattr(self, 'layout_actions', []):
-            self.layout_menu.removeAction(act)
-        self.layout_actions = []
-        for name in self.layouts.get('layouts', {}):
-            act = QAction(name, self, checkable=True)
-            act.triggered.connect(lambda checked, n=name: self.set_startup_layout(n))
-            if name == self.layouts.get('default'):
-                act.setChecked(True)
-            self.layout_group.addAction(act)
-            self.layout_menu.addAction(act)
-            self.layout_actions.append(act)
-
-    def _load_default_layout(self):
-        name = self.layouts.get('default')
-        if name:
-            self.apply_layout(name)
 
                 outer = QVBoxLayout(self)
                 outer.addLayout(layout)
