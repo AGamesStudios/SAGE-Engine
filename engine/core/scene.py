@@ -202,8 +202,11 @@ class Scene:
                 data["settings"] = getattr(o, "settings", {})
             if hasattr(o, "variables") and getattr(o, "variables", {}):
                 data["variables"] = getattr(o, "variables")
-            if hasattr(o, "public_vars") and getattr(o, "public_vars", None):
-                data["public_vars"] = list(o.public_vars)
+            if hasattr(o, "public_vars"):
+                if getattr(o, "public_vars", None):
+                    data["public_vars"] = list(o.public_vars)
+                else:
+                    data.pop("public_vars", None)
             if hasattr(o, "rotation"):
                 data["quaternion"] = list(o.rotation)
             obj_list.append(data)
