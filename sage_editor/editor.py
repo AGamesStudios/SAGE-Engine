@@ -2902,13 +2902,17 @@ class Editor(QMainWindow):
 
     def refresh_events(self):
         self.event_list.setRowCount(0)
-        idx = self.object_combo.currentData()
-        if idx is None and self.items:
-            idx = 0
-        if idx is None or idx < 0 or idx >= len(self.items):
-            return
-        obj = self.items[idx][1]
-        events = getattr(obj, 'events', [])
+        tab = self.tabs.currentWidget()
+        if tab is self.logic_widget:
+            events = getattr(self.scene, 'events', [])
+        else:
+            idx = self.object_combo.currentData()
+            if idx is None and self.items:
+                idx = 0
+            if idx is None or idx < 0 or idx >= len(self.items):
+                return
+            obj = self.items[idx][1]
+            events = getattr(obj, 'events', [])
         if not isinstance(events, list):
             events = []
         for i, evt in enumerate(events):
