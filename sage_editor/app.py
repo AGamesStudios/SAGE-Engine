@@ -213,13 +213,13 @@ def main(argv=None):
     class _Stream:
         """Mirror writes to the editor console and an optional original stream."""
 
-        def __init__(self, edit, orig):
-            self.edit = edit
+        def __init__(self, dock, orig):
+            self.dock = dock
             self.orig = orig
 
         def write(self, text):
             if text.strip():
-                self.edit.append(text.rstrip())
+                self.dock.write(text.rstrip())
             if self.orig is not None:
                 self.orig.write(text)
 
@@ -227,8 +227,8 @@ def main(argv=None):
             if self.orig is not None:
                 self.orig.flush()
 
-    sys.stdout = _Stream(editor.console, orig_out)
-    sys.stderr = _Stream(editor.console, orig_err)
+    sys.stdout = _Stream(editor.console_dock, orig_out)
+    sys.stderr = _Stream(editor.console_dock, orig_err)
     # ensure loggers send output to the editor console
     from engine.log import set_stream as set_engine_stream
     from .editor import set_stream as set_editor_stream
@@ -237,7 +237,7 @@ def main(argv=None):
 
     def handle_exception(exc_type, exc, tb):
         text = ''.join(traceback.format_exception(exc_type, exc, tb))
-        editor.console.append(text)
+        editor.console_dock.write(text)
         if orig_err is not None:
             orig_err.write(text)
             orig_err.flush()

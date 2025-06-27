@@ -1107,7 +1107,6 @@ class Editor(QMainWindow):
         # console dock
         cons = ConsoleDock(self)
         self.console_dock = cons
-        self.console = cons.text
         # profiler dock
         self.profiler_dock = ProfilerDock(self)
         self._tmp_project = None
@@ -1157,6 +1156,11 @@ class Editor(QMainWindow):
         self.add_var_btn.setText(self.t('add_variable'))
         self.logic_btn.setText(self.t('edit_logic'))
         self.console_dock.setWindowTitle(self.t('console'))
+        self.console_dock.clear_btn.setToolTip(self.t('clear_log'))
+        self.console_dock.all_chk.setText(self.t('all_logs'))
+        self.console_dock.info_chk.setText(self.t('messages'))
+        self.console_dock.warn_chk.setText(self.t('warnings'))
+        self.console_dock.err_chk.setText(self.t('errors'))
         self.objects_dock.setWindowTitle(self.t('objects'))
         self.resources_dock.setWindowTitle(self.t('resources'))
         self.import_btn.setText(self.t('import'))
@@ -1175,7 +1179,6 @@ class Editor(QMainWindow):
         self.add_obj_btn.setText(self.t('add_object'))
         self.add_cam_btn.setText(self.t('add_camera'))
         self.run_act.setText(self.t('run'))
-        self.clear_log_act.setText(self.t('clear_log'))
         self.recent_menu.setTitle(self.t('recent_projects'))
         self.recent_menu.setIcon(load_icon('recent.png'))
         self.settings_menu.setTitle(self.t('settings'))
@@ -1306,9 +1309,6 @@ class Editor(QMainWindow):
         right_spacer = QWidget()
         right_spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         toolbar.addWidget(right_spacer)
-        self.clear_log_act = QAction(load_icon('clear.png'), self.t('clear_log'), self)
-        self.clear_log_act.triggered.connect(self.console.clear)
-        toolbar.addAction(self.clear_log_act)
         self.lang_box = QComboBox()
         self.lang_box.addItems(list(LANGUAGES.keys()))
         self.lang_box.setCurrentText(self.lang)
@@ -1738,7 +1738,7 @@ class Editor(QMainWindow):
                 self._update_gizmo()
             self._mark_dirty()
         except Exception as exc:
-            self.console.append(f'Failed to add sprite: {exc}')
+            self.console_dock.write(f'Failed to add sprite: {exc}')
         self.refresh_events()
 
     def add_object(self):
@@ -1765,7 +1765,7 @@ class Editor(QMainWindow):
                 self._update_transform_panel()
             self._mark_dirty()
         except Exception as exc:
-            self.console.append(f'Failed to add object: {exc}')
+            self.console_dock.write(f'Failed to add object: {exc}')
         self.refresh_events()
 
     def add_camera(self):
@@ -2802,7 +2802,7 @@ class Editor(QMainWindow):
                 self._refresh_object_labels()
                 self._update_object_tabs()
         except Exception as exc:
-            self.console.append(f'Failed to paste object: {exc}')
+            self.console_dock.write(f'Failed to paste object: {exc}')
         self.refresh_events()
 
     def _register_object_ui(self, obj):
@@ -2864,7 +2864,7 @@ class Editor(QMainWindow):
                 return
             obj = self.items[idx][1]
             if not hasattr(obj, 'events'):
-                self.console.append('Object has no events list')
+                self.console_dock.write('Object has no events list')
                 return
             if row < 0:
                 return
@@ -2878,7 +2878,7 @@ class Editor(QMainWindow):
                 self._mark_dirty()
             self.refresh_events()
         except Exception as exc:
-            self.console.append(f'Failed to add condition: {exc}')
+            self.console_dock.write(f'Failed to add condition: {exc}')
 
     def add_action(self, row):
         if not self._check_project():
@@ -2889,7 +2889,7 @@ class Editor(QMainWindow):
                 return
             obj = self.items[idx][1]
             if not hasattr(obj, 'events'):
-                self.console.append('Object has no events list')
+                self.console_dock.write('Object has no events list')
                 return
             if row < 0 or row >= len(obj.events):
                 return
@@ -2900,7 +2900,7 @@ class Editor(QMainWindow):
                 self._mark_dirty()
             self.refresh_events()
         except Exception as exc:
-            self.console.append(f'Failed to add action: {exc}')
+            self.console_dock.write(f'Failed to add action: {exc}')
 
     def refresh_events(self):
         self.event_list.setRowCount(0)
@@ -2983,7 +2983,7 @@ class Editor(QMainWindow):
                 item.setIcon(self._object_icon(obj))
                 self.object_list.addItem(item)
             except Exception as exc:
-                self.console.append(f'Failed to load sprite {obj.image_path}: {exc}')
+                self.console_dock.write(f'Failed to load sprite {obj.image_path}: {exc}')
         self.refresh_events()
         self.refresh_variables()
         self._refresh_object_labels()

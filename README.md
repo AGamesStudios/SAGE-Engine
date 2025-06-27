@@ -202,7 +202,9 @@ Any errors when creating conditions, actions, or variables are caught and
 printed to the console instead of closing the editor.
 If something goes wrong during gameplay, the console shows the full
 Python traceback so you can identify exactly where the problem occurred.
-Use the **Clear Log** toolbar button to empty the console at any time.
+Use the **Clear Log** button in the console to empty it at any time.
+You can also filter log **Messages**, **Warnings** or **Errors** with the
+checkboxes provided.
 
 The editor also provides a **Profiler** dock with graphs for overall CPU,
 RAM usage of the editor process, GPU load and the editor process CPU. Frame time in milliseconds is also
