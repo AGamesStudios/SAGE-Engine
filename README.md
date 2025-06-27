@@ -265,33 +265,12 @@ you created in the editor.
 
 ### SAGE Logic Events
 
-The engine ships with **SAGE Logic**, a small condition/action system inspired
-by Clickteam. Events consist of *conditions* and *actions*. When all conditions
-pass, the actions run. Built-in blocks include `KeyPressed`, `Collision`,
-`AfterTime`, `Move`, `SetPosition`, `Destroy` and `Print`. `AfterTime` accepts
-hours, minutes and seconds so you can delay events precisely. You can subclass
-`Condition` or `Action` to create your own.  Conditions and actions live in
-separate modules and register themselves automatically so new types can be
-added without touching the core loader.  The `logic` package automatically
-imports all of its submodules on startup so any plugin that registers new
-conditions or actions becomes available immediately.  Use
-`get_registered_conditions()` or `get_registered_actions()` to list them.
-
-```python
-import glfw
-from engine import Engine, Scene, GameObject
-from engine.logic import EventSystem, Event, KeyPressed, AfterTime, Move
-
-player = GameObject('player.png')
-scene = Scene()
-scene.add_object(player)
-
-events = EventSystem()
-events.add_event(Event([KeyPressed(glfw.KEY_RIGHT)], [Move(player, 5, 0)]))
-events.add_event(Event([AfterTime(seconds=5)], [Move(player, -5, 0)]))
-
-Engine(scene=scene, events=events).run()
-```
+The engine still includes **SAGE Logic**, a lightweight event system combining
+*conditions* and *actions*. All built-in conditions and actions have been
+removed for now as the system is being reworked. You can register custom blocks
+using `register_condition` and `register_action` and load them through
+plugins. The helper functions `condition_from_dict` and `action_from_dict`
+remain available for editor integration.
 
 The editor now includes a **Console** dock at the bottom. All output from the
 game process and the editor itself appears here so you can easily debug your
@@ -306,36 +285,10 @@ both in the editor's console and the IDE terminal.
 The engine also checks its exported names at import time and warns if a symbol
 listed in ``__all__`` does not exist. This helps catch mistakes like missing
 imports.
-Events can combine many more conditions and actions such as
-`KeyReleased`, `MouseButton`, `InputState`, `PlaySound`, `Spawn`,
-`ZoomAbove` and `SetZoom`. The *Logic* tab lists
-each event with its conditions on the left and actions on the right. The add
-event dialog now uses a cleaner grid layout, aligning the condition and action
-lists side by side with the Ok/Cancel buttons underneath.
-
-`KeyPressed` and `KeyReleased` also accept a `device` field so the same block
-works for keyboard keys or mouse buttons. The improved condition editor lets you
-pick the device and specific key from drop‑down lists so you are always in
-control of which input triggers the event.
-
-Additional math-friendly blocks make it easy to build counters or timers.
-`VariableCompare` tests a variable against a value using operators like `>`,
-`<`, or `==`. `ModifyVariable` adjusts a variable with `+`, `-`, `*`, or `/` so
-you can implement score systems without custom scripting. Comparisons accept
-numeric or boolean variables; strings cannot be compared. Boolean variables
-only support `==` and `!=`. When a variable is not numeric the operator box
-adapts or disappears with a warning. `PlaySound` now caches each sound after
-the first use and reports any errors instead of crashing.
-
-The `Print` action is handy for debugging. The text is formatted with the
-current variables so using `Score: {score}` will display the latest value of a
-variable named `score` when the action runs.
-
-Events themselves can now be controlled at runtime. Use `EnableEvent`,
-`DisableEvent` or `ResetEvent` with the event's name to toggle behaviour on and
-off or to allow a one‑shot event to run again. The `EventTriggered` condition
-checks whether another event has already fired so you can chain logic without
-custom variables.
+Events can be toggled or reset at runtime using actions such as
+`EnableEvent`, `DisableEvent` and `ResetEvent`. The `EventTriggered`
+condition lets one event react to another. Fields may reference engine data at
+runtime so values like ``engine.camera.zoom`` are resolved when the event runs.
 
 Numeric fields in conditions and actions may reference engine data at runtime.
 Values like ``engine.variable("speed")`` call that method when the event runs so
