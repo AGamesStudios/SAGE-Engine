@@ -407,8 +407,12 @@ class Viewport(GLWidget):
         self.scene.sort_objects()
         for obj in reversed(self.scene.objects):
             if isinstance(obj, Camera):
-                continue
-            left, bottom, w, h = obj.rect()
+                icon_half = 16.0 / (obj.zoom if obj.zoom else 1.0)
+                left = obj.x - icon_half
+                bottom = obj.y - icon_half
+                w = h = icon_half * 2
+            else:
+                left, bottom, w, h = obj.rect()
             if left <= world[0] <= left + w and bottom <= world[1] <= bottom + h:
                 return obj
         return None

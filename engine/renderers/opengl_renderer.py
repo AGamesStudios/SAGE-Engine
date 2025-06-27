@@ -350,18 +350,25 @@ class OpenGLRenderer:
         glEnd()
         glLineWidth(1.0)
 
-    def _draw_frustum(self, cam: Camera):
+    def _draw_frustum(
+        self,
+        cam: Camera,
+        color: tuple[float, float, float, float] = (1.0, 1.0, 0.0, 1.0),
+        width: float = 1.0,
+    ) -> None:
         """Draw a rectangle representing the camera's view."""
         left, bottom, w, h = cam.view_rect()
         sign = 1.0 if units.Y_UP else -1.0
         glBindTexture(GL_TEXTURE_2D, 0)
-        glColor4f(1.0, 1.0, 0.0, 1.0)
+        glColor4f(*color)
+        glLineWidth(width)
         glBegin(GL_LINE_LOOP)
         glVertex2f(left, bottom * sign)
         glVertex2f(left + w, bottom * sign)
         glVertex2f(left + w, (bottom + h) * sign)
         glVertex2f(left, (bottom + h) * sign)
         glEnd()
+        glLineWidth(1.0)
 
     def _draw_origin(self, size: float = 1.0):
         glBindTexture(GL_TEXTURE_2D, 0)
@@ -643,10 +650,21 @@ class OpenGLRenderer:
         for obj in scene.objects:
             if isinstance(obj, Camera):
                 if self._draw_gizmos:
-                    self._draw_frustum(obj)
+                    color = (1.0, 0.5, 0.0, 1.0) if obj is self._selected_obj else (1.0, 1.0, 0.0, 1.0)
+                    width = 3.0 if obj is self._selected_obj else 1.0
+                    self._draw_frustum(obj, color=color, width=width)
                     tex = self._get_icon_texture('camera.png')
                     self._draw_icon(
                         obj.x, obj.y, tex, camera.zoom if camera else 1.0
+                    )
+                if obj is self._selected_obj:
+                    self._draw_gizmo(
+                        obj,
+                        camera,
+                        self._hover_axis,
+                        self._drag_axis,
+                        mode=self._transform_mode,
+                        local=self._local_coords,
                     )
                 continue
             self._draw_object(obj, camera)
@@ -657,7 +675,7 @@ class OpenGLRenderer:
                 self._draw_icon(
                     obj.x, obj.y, tex_icon, camera.zoom if camera else 1.0
                 )
-        if self._draw_gizmos and self._selected_obj:
+        if self._draw_gizmos and self._selected_obj and not isinstance(self._selected_obj, Camera):
             self._draw_gizmo(
                 self._selected_obj,
                 camera,
