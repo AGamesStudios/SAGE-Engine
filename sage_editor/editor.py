@@ -1882,6 +1882,7 @@ class Editor(QMainWindow):
             else:
                 self.scene.variables[name] = value
             self.refresh_variables()
+            self._update_variable_panel()
             self._mark_dirty()
         except Exception as exc:
             QMessageBox.warning(self, 'Error', f'Failed to add variable: {exc}')
