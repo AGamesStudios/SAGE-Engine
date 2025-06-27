@@ -1095,6 +1095,7 @@ class VariableDialog(QDialog):
 class Editor(QMainWindow):
     def __init__(self, autoshow: bool = True):
         super().__init__()
+        self.resize(1200, 800)
         self.lang = DEFAULT_LANGUAGE
         self.window_width = 640
         self.window_height = 480
@@ -1171,12 +1172,14 @@ class Editor(QMainWindow):
         form.addRow(self.t('coord_mode'), self.coord_combo)
         form.addRow(self.t('rotation'), self.angle_spin)
         obj_dock = QDockWidget(self.t('objects'), self)
+        obj_dock.setObjectName('ObjectsDock')
         obj_dock.setWidget(obj_widget)
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, obj_dock)
         self.objects_dock = obj_dock
 
         # properties dock
         prop_dock = PropertiesDock(self)
+        prop_dock.setObjectName('PropertiesDock')
         self.properties_dock = prop_dock
         self.transform_group = prop_dock.transform_group
         self.camera_group = prop_dock.camera_group
@@ -1201,6 +1204,7 @@ class Editor(QMainWindow):
 
         # resources dock on the left
         res_dock = ResourceDock(self)
+        res_dock.setObjectName('ResourcesDock')
         self.resources_dock = res_dock
         self.import_btn = res_dock.import_btn
         self.new_folder_btn = res_dock.new_folder_btn
@@ -1230,9 +1234,11 @@ class Editor(QMainWindow):
 
         # console dock
         cons = ConsoleDock(self)
+        cons.setObjectName('ConsoleDock')
         self.console_dock = cons
         # profiler dock
         self.profiler_dock = ProfilerDock(self)
+        self.profiler_dock.setObjectName('ProfilerDock')
         self._tmp_project = None
 
         # camera rectangle showing the visible area
@@ -1452,6 +1458,7 @@ class Editor(QMainWindow):
         self.layout_actions = []
 
         toolbar = self.addToolBar('main')
+        toolbar.setObjectName('MainToolbar')
         from PyQt6.QtWidgets import QWidget, QSizePolicy
         left_spacer = QWidget()
         left_spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
