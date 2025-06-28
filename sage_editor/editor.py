@@ -2074,7 +2074,11 @@ class Editor(QMainWindow):
         QMessageBox.information(
             self,
             self.t('about_us'),
-            f'SAGE Engine {ENGINE_VERSION}'
+            (
+                f"SAGE Engine {ENGINE_VERSION}\n"
+                "Developed by AGStudios\n"
+                "https://github.com/AGStudios"
+            ),
         )
 
     def run_project(self):
