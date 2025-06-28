@@ -1560,11 +1560,6 @@ class Editor(QMainWindow):
         self.plugins_act.triggered.connect(self.show_plugin_manager)
         self.settings_menu.addAction(self.plugins_act)
 
-        self.about_menu = menubar.addMenu(self.t('about_menu'))
-        self.about_act = QAction(self.t('about_us'), self)
-        self.about_act.triggered.connect(self.show_about)
-        self.about_menu.addAction(self.about_act)
-
         self.editor_menu = menubar.addMenu(self.t('editor_menu'))
         self.layout_menu = self.editor_menu.addMenu(self.t('interface_menu'))
         self.save_layout_act = QAction(self.t('save_layout'), self)
@@ -1600,6 +1595,11 @@ class Editor(QMainWindow):
         self.grid_act.setChecked(self.view.show_grid)
         self.axes_act.setChecked(self.view.show_axes)
         self.snap_act.setChecked(self.snap_to_grid)
+
+        self.about_menu = menubar.addMenu(self.t('about_menu'))
+        self.about_act = QAction(self.t('about_us'), self)
+        self.about_act.triggered.connect(self.show_about)
+        self.about_menu.addAction(self.about_act)
 
         toolbar = self.addToolBar('main')
         toolbar.setObjectName('MainToolbar')

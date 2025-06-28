@@ -660,7 +660,11 @@ class OpenGLRenderer:
 
     def paint(self):
         # called from GLWidget.paintGL
-        self.clear(self.background)
+        if not self.widget:
+            return
+        from OpenGL.GL import glViewport
+        glViewport(0, 0, self.widget.width(), self.widget.height())
+        self.clear((0, 0, 0))
         if self._scene:
             self._render_scene(self._scene, self._camera)
 
@@ -683,6 +687,7 @@ class OpenGLRenderer:
 
     def _render_scene(self, scene, camera: Camera | None):
         self._apply_viewport(camera)
+        self.clear(self.background)
         self._apply_projection(camera)
         glPushMatrix()
         try:

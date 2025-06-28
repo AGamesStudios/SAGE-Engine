@@ -68,6 +68,7 @@ class Engine:
         self.bg_color = tuple(background)
         self.input = QtInput(self.renderer.widget)
         self.last_time = time.perf_counter()
+        self.delta_time = 0.0
         try:
             from .. import load_engine_plugins
             load_engine_plugins(self)
