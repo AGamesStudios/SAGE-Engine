@@ -398,7 +398,7 @@ class Viewport(GLWidget):
         elif self._drag_pos is not None and event.buttons() & Qt.MouseButton.LeftButton:
             dx = event.position().x() - self._drag_pos.x()
             dy = event.position().y() - self._drag_pos.y()
-            scale = units.UNITS_PER_METER
+            scale = units.UNITS_PER_METER * self.camera.zoom
             self.camera.x -= dx / scale
             self.camera.y += (1 if units.Y_UP else -1) * dy / scale
             self._drag_pos = event.position()
