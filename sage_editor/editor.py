@@ -3053,11 +3053,9 @@ class Editor(QMainWindow):
             elif action == cut_act or action == copy_act:
                 self._clip_event = copy.deepcopy(events[row])
                 if action == cut_act:
-                    events.pop(row)
-                    self._mark_dirty()
+                    self._delete_event(row)
             elif action == del_act:
-                events.pop(row)
-                self._mark_dirty()
+                self._delete_event(row)
         else:
             add_act = menu.addAction(load_icon('add.png'), self.t('add_event'))
             action = menu.exec(self.event_list.viewport().mapToGlobal(pos))
@@ -3585,6 +3583,23 @@ class Editor(QMainWindow):
                 self.tabs.removeTab(idx_tab)
             tab.deleteLater()
 
+    def _delete_event(self, index: int) -> None:
+        """Remove an event from the current object or scene."""
+        tab = self.tabs.currentWidget()
+        if tab is self.logic_widget:
+            events = getattr(self.scene, 'events', [])
+        else:
+            idx = self.object_combo.currentData()
+            if idx is None or idx < 0 or idx >= len(self.items):
+                return
+            obj = self.items[idx][1]
+            events = getattr(obj, 'events', [])
+        if index < 0 or index >= len(events):
+            return
+        events.pop(index)
+        self._mark_dirty()
+        self.refresh_events()
+
     def add_condition(self, row):
         if not self._check_project():
             return
@@ -3658,26 +3673,38 @@ class Editor(QMainWindow):
                 self.event_list.setCellWidget(row, 0, btn_cond)
             else:
                 try:
-                    desc = ', '.join(describe_condition(c, [o for _, o in self.items], self.t) for c in evt.get('conditions', []))
+                    desc = ', '.join(
+                        describe_condition(c, [o for _, o in self.items], self.t)
+                        for c in evt.get('conditions', [])
+                    )
                     self.event_list.setItem(row, 0, QTableWidgetItem(desc))
                 except Exception:
                     self.event_list.setItem(row, 0, QTableWidgetItem(''))
-                if evt.get('actions'):
-                    try:
-                        desc = ', '.join(describe_action(a, [o for _, o in self.items], self.t) for a in evt.get('actions', []))
-                        self.event_list.setItem(row, 1, QTableWidgetItem(desc))
-                    except Exception:
-                        self.event_list.setItem(row, 1, QTableWidgetItem(''))
-                else:
-                    btn_act = QPushButton(self.t('add_action'))
-                    btn_act.clicked.connect(lambda _, r=i: self.add_action(r))
-                    self.event_list.setCellWidget(row, 1, btn_act)
+            if evt.get('actions'):
+                try:
+                    desc = ', '.join(
+                        describe_action(a, [o for _, o in self.items], self.t)
+                        for a in evt.get('actions', [])
+                    )
+                    self.event_list.setItem(row, 1, QTableWidgetItem(desc))
+                except Exception:
+                    self.event_list.setItem(row, 1, QTableWidgetItem(''))
+            else:
+                btn_act = QPushButton(self.t('add_action'))
+                btn_act.clicked.connect(lambda _, r=i: self.add_action(r))
+                self.event_list.setCellWidget(row, 1, btn_act)
+            del_btn = QPushButton()
+            del_btn.setIcon(load_icon('delete.png'))
+            del_btn.clicked.connect(lambda _, r=i: self._delete_event(r))
+            self.event_list.setCellWidget(row, 2, del_btn)
         # extra row for new event
         row = self.event_list.rowCount()
         self.event_list.insertRow(row)
         btn_new = QPushButton(self.t('add_condition'))
         btn_new.clicked.connect(lambda _, r=row: self.add_condition(r))
         self.event_list.setCellWidget(row, 0, btn_new)
+        self.event_list.setItem(row, 1, QTableWidgetItem(''))
+        self.event_list.setItem(row, 2, QTableWidgetItem(''))
         self.event_list.resizeRowsToContents()
 
     def load_scene(self, scene_or_path):

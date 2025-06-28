@@ -23,14 +23,15 @@ class LogicTab(QWidget):
             self.object_combo.setVisible(False)
         main_layout.addLayout(top_bar)
 
-        self.event_list = QTableWidget(0, 2)
+        self.event_list = QTableWidget(0, 3)
         self.event_list.setHorizontalHeaderLabels([
-            editor.t('conditions'), editor.t('actions')
+            editor.t('conditions'), editor.t('actions'), ''
         ])
         header = self.event_list.horizontalHeader()
-        header.setStretchLastSection(True)
+        header.setStretchLastSection(False)
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.Interactive)
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Interactive)
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
         self.event_list.setColumnWidth(0, 250)
         self.event_list.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         self.event_list.setWordWrap(True)
