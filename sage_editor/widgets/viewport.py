@@ -328,9 +328,12 @@ class Viewport(GLWidget):
                     world[1] - self.selected_obj.y
                 ) * sin_a
                 if start_dx:
-                    value = max(0.01, base * (dx_local / start_dx))
                     if self.snap_to_grid and self.grid_size > 0:
-                        value = round(value / self.grid_size) * self.grid_size
+                        delta = dx_local - start_dx
+                        steps = round(delta / self.grid_size)
+                        value = max(0.01, base + steps * self.grid_size)
+                    else:
+                        value = max(0.01, base * (dx_local / start_dx))
                     self.selected_obj.scale_x = value
             elif self._gizmo_drag == 'sy':
                 start_dy, base = self._drag_offset
@@ -341,9 +344,12 @@ class Viewport(GLWidget):
                     world[1] - self.selected_obj.y
                 ) * cos_a
                 if start_dy:
-                    value = max(0.01, base * (dy_local / start_dy))
                     if self.snap_to_grid and self.grid_size > 0:
-                        value = round(value / self.grid_size) * self.grid_size
+                        delta = dy_local - start_dy
+                        steps = round(delta / self.grid_size)
+                        value = max(0.01, base + steps * self.grid_size)
+                    else:
+                        value = max(0.01, base * (dy_local / start_dy))
                     self.selected_obj.scale_y = value
             else:
                 dx = world[0] - self._drag_start_world[0]

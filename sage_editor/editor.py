@@ -602,7 +602,11 @@ class ActionDialog(QDialog):
         path_row.addWidget(self.path_edit)
         self.browse_btn = QPushButton(parent.t('browse') if parent else 'Browse')
         self.browse_btn.clicked.connect(self._browse_path)
+        self.clear_path_btn = QPushButton()
+        self.clear_path_btn.setIcon(load_icon('clear.png'))
+        self.clear_path_btn.clicked.connect(self.path_edit.clear)
         path_row.addWidget(self.browse_btn)
+        path_row.addWidget(self.clear_path_btn)
         layout.addRow(self.path_label, path_row)
 
         self.var_name_label = QLabel(parent.t('variable') if parent else 'Variable:')
@@ -1222,6 +1226,7 @@ class Editor(QMainWindow):
         self.var_layout = prop_dock.var_layout
         self.image_edit = prop_dock.image_edit
         self.image_btn = prop_dock.image_btn
+        self.clear_img_btn = prop_dock.clear_img_btn
         self.color_btn = prop_dock.color_btn
         self.smooth_check = prop_dock.smooth_check
         self.image_edit.setPlaceholderText(self.t('path_label'))
@@ -1255,6 +1260,7 @@ class Editor(QMainWindow):
         self.name_edit.editingFinished.connect(self._object_name_changed)
         self.type_combo.currentIndexChanged.connect(self._object_type_changed)
         self.image_btn.clicked.connect(self._choose_object_image)
+        self.clear_img_btn.clicked.connect(self._clear_object_image)
         self.image_edit.editingFinished.connect(self._image_path_edited)
         self.color_btn.clicked.connect(self._choose_object_color)
         self.smooth_check.stateChanged.connect(self._smooth_changed)
@@ -2475,6 +2481,7 @@ class Editor(QMainWindow):
         self.image_edit.blockSignals(False)
         self.image_edit.setEnabled(False)
         self.image_btn.setEnabled(False)
+        self.clear_img_btn.setEnabled(False)
         self.color_btn.setEnabled(False)
         self.color_btn.setStyleSheet('')
         self.smooth_check.blockSignals(True)
@@ -2520,6 +2527,7 @@ class Editor(QMainWindow):
             self.image_edit.blockSignals(True); self.image_edit.clear(); self.image_edit.blockSignals(False)
             self.image_edit.setEnabled(False)
             self.image_btn.setEnabled(False)
+            self.clear_img_btn.setEnabled(False)
             self.color_btn.setEnabled(False)
             self.color_btn.setStyleSheet('')
             self.smooth_check.setEnabled(False)
@@ -2552,6 +2560,7 @@ class Editor(QMainWindow):
             self.image_edit.blockSignals(True); self.image_edit.setText(obj.image_path); self.image_edit.blockSignals(False)
             self.image_edit.setEnabled(True)
             self.image_btn.setEnabled(True)
+            self.clear_img_btn.setEnabled(True)
             c = obj.color or (255, 255, 255)
             self.color_btn.setEnabled(True)
             self.color_btn.setStyleSheet(f"background: rgb({c[0]}, {c[1]}, {c[2]});")
@@ -2733,6 +2742,19 @@ class Editor(QMainWindow):
             self._mark_dirty()
         except Exception as exc:
             QMessageBox.warning(self, self.t('error'), str(exc))
+
+    def _clear_object_image(self) -> None:
+        """Remove the sprite image from the current object."""
+        idx = self.object_combo.currentIndex()
+        if idx < 0 or idx >= len(self.items):
+            return
+        obj = self.items[idx][1]
+        obj.image_path = ''
+        obj._load_image()
+        self.image_edit.clear()
+        if hasattr(self, 'view'):
+            self.view.update()
+        self._mark_dirty()
 
     def _image_path_edited(self) -> None:
         """Update the image path when the line edit changes."""
