@@ -650,7 +650,13 @@ class ActionDialog(QDialog):
         parent = self.parent()
         if not parent:
             return
-        path = parent._resource_file_dialog(parent.t('select_file'))
+        typ = self.type_box.currentData()
+        filters = ''
+        if typ == 'PlaySound':
+            filters = parent.t('audio_files')
+        elif typ == 'Spawn':
+            filters = parent.t('image_files')
+        path = parent._resource_file_dialog(parent.t('select_file'), filters)
         if path:
             self.path_edit.setText(os.path.relpath(path, parent.resource_dir))
 
@@ -701,6 +707,13 @@ class ActionDialog(QDialog):
         else:
             for i, obj in enumerate(self.all_objects):
                 self.target_box.addItem(f'{i}: {obj.name}', i)
+        # update path extensions for drag/drop
+        if typ == 'PlaySound':
+            self.path_edit.set_extensions({'.wav', '.mp3', '.ogg'})
+        elif typ == 'Spawn':
+            self.path_edit.set_extensions({'.png', '.jpg', '.jpeg', '.bmp', '.gif'})
+        else:
+            self.path_edit.set_extensions(None)
         widgets = [
             (self.target_label, self.target_box),
             (self.dx_label, self.dx_spin),
@@ -1953,9 +1966,7 @@ class Editor(QMainWindow):
     def add_sprite(self):
         if not self._check_project():
             return
-        path, _ = QFileDialog.getOpenFileName(
-            self, self.t('add_sprite'), '', self.t('image_files')
-        )
+        path = self._resource_file_dialog(self.t('add_sprite'), self.t('image_files'))
         if not path:
             return
         try:
@@ -2589,9 +2600,7 @@ class Editor(QMainWindow):
             return
         if not self._check_project():
             return
-        path, _ = QFileDialog.getOpenFileName(
-            self, self.t('select_file'), '', self.t('image_files')
-        )
+        path = self._resource_file_dialog(self.t('select_file'), self.t('image_files'))
         if not path:
             return
         try:

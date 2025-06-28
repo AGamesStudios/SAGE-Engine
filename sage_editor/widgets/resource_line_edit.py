@@ -12,6 +12,11 @@ class ResourceLineEdit(QLineEdit):
         self.exts = set(exts or [])
         self.setAcceptDrops(True)
 
+    # ------------------------------------------------------------------
+    def set_extensions(self, exts=None) -> None:
+        """Update the accepted file extensions for drops."""
+        self.exts = set(exts or [])
+
     def _path_from_mime(self, mime):
         if self.editor is None or not self.editor.resource_dir:
             return None
