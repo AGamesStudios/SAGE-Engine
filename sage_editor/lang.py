@@ -33,6 +33,7 @@ LANGUAGES = {
         'name': 'Name',
         'value': 'Value',
         'add_event': 'Add Event',
+        'edit_event': 'Edit Event',
         'open_scene': 'Open Scene',
         'save_scene': 'Save Scene',
         'scene': 'Scene',
@@ -103,6 +104,7 @@ LANGUAGES = {
         , 'redo': 'Redo'
         , 'copy': 'Copy'
         , 'delete': 'Delete'
+        , 'duplicate': 'Duplicate'
         , 'paste': 'Paste'
         , 'name_path_required': 'Name and path required'
         , 'show_grid': 'Show Grid'
@@ -126,6 +128,7 @@ LANGUAGES = {
         , 'manage_plugins': 'Manage Plugins'
         , 'plugin': 'Plugin'
         , 'enabled': 'Enabled'
+        , 'trigger_once': 'Trigger Once'
         , 'add_plugin': 'Add Plugin'
         , 'set_active_camera': 'Set Active Camera'
         , 'primary_camera': 'Main Camera'
@@ -213,6 +216,7 @@ LANGUAGES = {
         'name': 'Имя',
         'value': 'Значение',
         'add_event': 'Добавить событие',
+        'edit_event': 'Редактировать событие',
         'open_scene': 'Открыть сцену',
         'save_scene': 'Сохранить сцену',
         'scene': 'Сцена',
@@ -283,6 +287,7 @@ LANGUAGES = {
         , 'redo': 'Повторить'
         , 'copy': 'Копировать'
         , 'delete': 'Удалить'
+        , 'duplicate': 'Дублировать'
         , 'paste': 'Вставить'
         , 'name_path_required': 'Необходимо указать имя и папку'
         , 'show_grid': 'Показать сетку'
@@ -306,6 +311,7 @@ LANGUAGES = {
         , 'manage_plugins': 'Плагины'
         , 'plugin': 'Плагин'
         , 'enabled': 'Включен'
+        , 'trigger_once': 'Однократно'
         , 'add_plugin': 'Добавить плагин'
         , 'set_active_camera': 'Сделать активной'
         , 'primary_camera': 'Основная камера'

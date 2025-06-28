@@ -44,6 +44,14 @@ for entries in LANGUAGES.values():
         if eng != local:
             TRANSLATION_LOOKUP[local] = eng
 
+def load_logic_plugins(*modules) -> None:
+    """Import modules that register additional logic blocks."""
+    for name in modules:
+        try:
+            __import__(name)
+        except Exception:
+            logger.exception('Failed to load logic plugin %s', name)
+
 import re
 
 class EngineRef:

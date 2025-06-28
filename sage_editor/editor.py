@@ -892,19 +892,32 @@ class ActionDialog(QDialog):
 
 
 class AddEventDialog(QDialog):
-    """Dialog to create an event from arbitrary conditions and actions."""
+    """Dialog to create or edit an event."""
 
-    def __init__(self, objects, variables, parent=None):
+    def __init__(self, objects, variables, parent=None, data=None):
         super().__init__(parent)
         self.objects = objects
         self.variables = variables
-        self.setWindowTitle(parent.t('add_event') if parent else 'Add Event')
+        title = parent.t('add_event') if parent else 'Add Event'
+        if data:
+            title = parent.t('edit_event') if parent else 'Edit Event'
+        self.setWindowTitle(title)
         self.conditions = []
         self.actions = []
         layout = QGridLayout(self)
         layout.setContentsMargins(8, 8, 8, 8)
         layout.setHorizontalSpacing(12)
         layout.setVerticalSpacing(6)
+
+        self.name_edit = QLineEdit()
+        self.once_check = QCheckBox(parent.t('trigger_once') if parent else 'Trigger Once')
+        self.enabled_check = QCheckBox(parent.t('enabled') if parent else 'Enabled')
+        self.enabled_check.setChecked(True)
+        form = QFormLayout()
+        form.addRow(parent.t('name_label') if parent else 'Name:', self.name_edit)
+        form.addRow(self.once_check)
+        form.addRow(self.enabled_check)
+        layout.addLayout(form, 0, 0, 1, 2)
 
         left_box = QGroupBox(parent.t('conditions') if parent else 'Conditions')
         left = QVBoxLayout(left_box)
@@ -920,20 +933,33 @@ class AddEventDialog(QDialog):
         add_act = QPushButton(parent.t('add_action') if parent else 'Add Action'); right.addWidget(add_act)
         add_cond.clicked.connect(self.add_condition)
         add_act.clicked.connect(self.add_action)
-        layout.addWidget(left_box, 0, 0)
-        layout.addWidget(right_box, 0, 1)
+        layout.addWidget(left_box, 1, 0)
+        layout.addWidget(right_box, 1, 1)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
-        layout.addWidget(buttons, 1, 0, 1, 2, Qt.AlignmentFlag.AlignRight)
+        layout.addWidget(buttons, 2, 0, 1, 2, Qt.AlignmentFlag.AlignRight)
 
         self._clip_cond = None
         self._clip_act = None
         if parent:
             parent.apply_no_wheel(self)
+
+        if data:
+            self.name_edit.setText(data.get('name', ''))
+            self.once_check.setChecked(data.get('once', False))
+            self.enabled_check.setChecked(data.get('enabled', True))
+            for c in data.get('conditions', []):
+                self.conditions.append(c)
+                desc = describe_condition(c, self.objects, parent.t if parent else self.t)
+                self.cond_list.addItem(desc)
+            for a in data.get('actions', []):
+                self.actions.append(a)
+                desc = describe_action(a, self.objects, parent.t if parent else self.t)
+                self.act_list.addItem(desc)
 
     def add_condition(self):
         dlg = ConditionDialog(self.objects, self.variables, self)
@@ -952,7 +978,13 @@ class AddEventDialog(QDialog):
             self.act_list.addItem(desc)
 
     def get_event(self):
-        return {'conditions': self.conditions, 'actions': self.actions}
+        return {
+            'name': self.name_edit.text().strip() or None,
+            'once': self.once_check.isChecked(),
+            'enabled': self.enabled_check.isChecked(),
+            'conditions': self.conditions,
+            'actions': self.actions,
+        }
 
     def _cond_menu(self, pos):
         menu = QMenu(self)
@@ -3001,11 +3033,21 @@ class Editor(QMainWindow):
         paste_act = menu.addAction(load_icon('paste.png'), self.t('paste')) if self._clip_event else None
         if item and self.event_list.row(item) < len(events):
             row = self.event_list.row(item)
+            edit_act = menu.addAction(self.t('edit'))
+            dup_act = menu.addAction(self.t('duplicate'))
             cut_act = menu.addAction(load_icon('cut.png'), self.t('cut'))
             copy_act = menu.addAction(load_icon('copy.png'), self.t('copy'))
             del_act = menu.addAction(load_icon('delete.png'), self.t('delete'))
             action = menu.exec(self.event_list.viewport().mapToGlobal(pos))
-            if action == paste_act and self._clip_event:
+            if action == edit_act:
+                dlg = AddEventDialog([o for _, o in self.items], self.scene.variables, self, events[row])
+                if dlg.exec() == QDialog.DialogCode.Accepted:
+                    events[row] = dlg.get_event()
+                    self._mark_dirty()
+            elif action == dup_act:
+                events.insert(row + 1, copy.deepcopy(events[row]))
+                self._mark_dirty()
+            elif action == paste_act and self._clip_event:
                 events.insert(row + 1, copy.deepcopy(self._clip_event))
                 self._mark_dirty()
             elif action == cut_act or action == copy_act:
