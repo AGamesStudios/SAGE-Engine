@@ -40,6 +40,9 @@ class Viewport(GLWidget):
                 height=self.height(),
             )
         self._center_camera()
+        # default rendering options
+        self.show_grid = False
+        self.show_axes = True
         self.renderer = OpenGLRenderer(self.width(), self.height(), widget=self)
         self.renderer.show_grid = self.show_grid
         self.renderer.show_axes = self.show_axes
@@ -61,9 +64,6 @@ class Viewport(GLWidget):
         self._transform_mode = 'pan'
         # use local or world coordinates for gizmo orientation
         self._local_coords = False
-
-        self.show_grid = False
-        self.show_axes = True
 
         # small toolbar with transform mode buttons
         self.transform_bar = QWidget(self)
