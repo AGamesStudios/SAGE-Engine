@@ -56,7 +56,7 @@ class PropertiesDock(QDockWidget):
         obj_form.addRow(editor.t('color'), self.color_btn)
         self.color_label = obj_form.labelForField(self.color_btn)
         self.smooth_check = QCheckBox(editor.t('filtering'))
-        obj_form.addRow(self.smooth_check)
+        obj_form.addRow('', self.smooth_check)
         self.smooth_label = obj_form.labelForField(self.smooth_check)
         prop_layout.addWidget(self.object_group)
         self.transform_group = QGroupBox(editor.t('transform'))
