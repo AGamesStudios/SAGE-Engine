@@ -41,6 +41,8 @@ class Viewport(GLWidget):
             )
         self._center_camera()
         self.renderer = OpenGLRenderer(self.width(), self.height(), widget=self)
+        self.renderer.show_grid = self.show_grid
+        self.renderer.show_axes = self.show_axes
         self.timer = QTimer(self)
         self.timer.setInterval(33)  # ~30 FPS to reduce CPU load
         self.timer.timeout.connect(self._tick)
@@ -59,6 +61,9 @@ class Viewport(GLWidget):
         self._transform_mode = 'pan'
         # use local or world coordinates for gizmo orientation
         self._local_coords = False
+
+        self.show_grid = False
+        self.show_axes = True
 
         # small toolbar with transform mode buttons
         self.transform_bar = QWidget(self)
@@ -105,6 +110,20 @@ class Viewport(GLWidget):
     def set_coord_mode(self, local: bool) -> None:
         """Set whether gizmos follow the object's rotation."""
         self._local_coords = bool(local)
+
+    def set_show_grid(self, enabled: bool) -> None:
+        """Toggle the background grid."""
+        self.show_grid = bool(enabled)
+        if self.renderer:
+            self.renderer.show_grid = self.show_grid
+        self.update()
+
+    def set_show_axes(self, enabled: bool) -> None:
+        """Toggle the coordinate axes gizmo."""
+        self.show_axes = bool(enabled)
+        if self.renderer:
+            self.renderer.show_axes = self.show_axes
+        self.update()
 
     def set_transform_mode(self, mode: str) -> None:
         """Set the active transform interaction mode."""

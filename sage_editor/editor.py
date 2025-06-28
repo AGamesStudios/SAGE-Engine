@@ -1351,6 +1351,8 @@ class Editor(QMainWindow):
         self.layout_menu.setTitle(self.t('interface_menu'))
         self.save_layout_act.setText(self.t('save_layout'))
         self.restore_layout_act.setText(self.t('restore_default'))
+        self.grid_act.setText(self.t('show_grid'))
+        self.axes_act.setText(self.t('show_gizmo'))
         self.coord_combo.setItemText(0, self.t('global'))
         self.coord_combo.setItemText(1, self.t('local'))
         self.link_scale.setText(self.t('link_scale'))
@@ -1483,6 +1485,19 @@ class Editor(QMainWindow):
         self.layout_menu.addSeparator()
         self.layout_group = QActionGroup(self)
         self.layout_actions = []
+
+        self.view_menu = self.editor_menu.addMenu('View')
+        self.grid_act = QAction(self.t('show_grid'), self)
+        self.grid_act.setCheckable(True)
+        self.grid_act.triggered.connect(self.toggle_grid)
+        self.view_menu.addAction(self.grid_act)
+        self.axes_act = QAction(self.t('show_gizmo'), self)
+        self.axes_act.setCheckable(True)
+        self.axes_act.setChecked(True)
+        self.axes_act.triggered.connect(self.toggle_gizmo)
+        self.view_menu.addAction(self.axes_act)
+        self.grid_act.setChecked(self.view.show_grid)
+        self.axes_act.setChecked(self.view.show_axes)
 
         toolbar = self.addToolBar('main')
         toolbar.setObjectName('MainToolbar')
@@ -2311,10 +2326,12 @@ class Editor(QMainWindow):
         self._refresh_object_labels()
 
     def toggle_grid(self, checked: bool):
-        pass
+        if hasattr(self, 'view'):
+            self.view.set_show_grid(checked)
 
     def toggle_gizmo(self, checked: bool):
-        pass
+        if hasattr(self, 'view'):
+            self.view.set_show_axes(checked)
 
     def toggle_snap(self, checked: bool):
         pass

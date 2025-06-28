@@ -60,6 +60,11 @@ class Engine:
             self.renderer = renderer
         self.renderer.keep_aspect = keep_aspect
         self.renderer.background = tuple(background)
+        # hide editor-only gizmos in the game window
+        if hasattr(self.renderer, 'show_axes'):
+            self.renderer.show_axes = False
+        if hasattr(self.renderer, 'show_grid'):
+            self.renderer.show_grid = False
         self.bg_color = tuple(background)
         self.input = QtInput(self.renderer.widget)
         self.last_time = time.perf_counter()

@@ -149,6 +149,10 @@ class OpenGLRenderer:
         self._cursor_pos: tuple[float, float] | None = None
         self._transform_mode: str = 'pan'
         self._local_coords: bool = False
+        self.show_axes = True
+        self.show_grid = False
+        self.grid_size = 1.0
+        self.grid_color = (0.3, 0.3, 0.3, 1.0)
         self.keep_aspect = bool(self.keep_aspect)
         self.background = tuple(self.background)
         self._program = None
@@ -386,6 +390,41 @@ class OpenGLRenderer:
         glColor4f(0.0, 1.0, 0.0, 1.0)
         glVertex2f(0.0, -size)
         glVertex2f(0.0, size)
+        glEnd()
+
+    def _draw_grid(self, camera: Camera | None):
+        """Draw a simple grid relative to the camera."""
+        if not camera:
+            zoom = 1.0
+            cam_x = cam_y = 0.0
+        else:
+            zoom = camera.zoom
+            cam_x = camera.x
+            cam_y = camera.y
+        spacing = self.grid_size
+        if spacing <= 0:
+            return
+        scale = units.UNITS_PER_METER
+        sign = 1.0 if units.Y_UP else -1.0
+        half_w = self.width / 2 / (scale * zoom)
+        half_h = self.height / 2 / (scale * zoom)
+        start_x = math.floor((cam_x - half_w) / spacing) * spacing
+        end_x = math.ceil((cam_x + half_w) / spacing) * spacing
+        start_y = math.floor((cam_y - half_h) / spacing) * spacing
+        end_y = math.ceil((cam_y + half_h) / spacing) * spacing
+        glBindTexture(GL_TEXTURE_2D, 0)
+        glColor4f(*self.grid_color)
+        glBegin(GL_LINES)
+        x = start_x
+        while x <= end_x:
+            glVertex2f(x * scale, start_y * scale * sign)
+            glVertex2f(x * scale, end_y * scale * sign)
+            x += spacing
+        y = start_y
+        while y <= end_y:
+            glVertex2f(start_x * scale, y * scale * sign)
+            glVertex2f(end_x * scale, y * scale * sign)
+            y += spacing
         glEnd()
 
     def _draw_cursor(self, x: float, y: float, camera: Camera | None):
@@ -701,7 +740,10 @@ class OpenGLRenderer:
                     mode=self._transform_mode,
                     local=self._local_coords,
                 )
-            self._draw_origin(50 * scale)
+            if self.show_grid:
+                self._draw_grid(camera)
+            if self.show_axes:
+                self._draw_origin(50 * scale)
             if self._cursor_pos is not None:
                 self._draw_cursor(
                     self._cursor_pos[0], self._cursor_pos[1], camera
