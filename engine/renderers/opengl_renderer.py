@@ -96,7 +96,12 @@ class OpenGLRenderer:
             uniform sampler2D tex;
             uniform vec4 color;
             void main() {
-                gl_FragColor = texture2D(tex, v_uv) * color;
+                vec4 c = color;
+                float m = max(max(c.r, c.g), max(c.b, c.a));
+                if (m > 1.0) {
+                    c /= 255.0;
+                }
+                gl_FragColor = texture2D(tex, v_uv) * c;
             }
         """
         self._program = compileProgram(
