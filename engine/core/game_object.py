@@ -107,7 +107,13 @@ class GameObject:
     def _load_image(self):
         """Load the object's image with Pillow."""
         if not self.image_path:
-            img = Image.new('RGBA', (32, 32), self.color or (255, 255, 255, 255))
+            # Use a blank texture and keep dimensions so color tint applies once
+            self.image = None
+            self.width, self.height = 32, 32
+            self._dirty = True
+            self._cached_rect = None
+            self._cached_matrix = None
+            return
         else:
             from .resources import get_resource_path
             path = get_resource_path(self.image_path)
