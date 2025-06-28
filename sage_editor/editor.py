@@ -411,9 +411,15 @@ class ConditionDialog(QDialog):
 
     def _update_fields(self):
         typ = self.type_box.currentData()
+        # disable key detection when switching to a type that doesn't use it
+        if getattr(self, 'detecting', False) and typ not in (
+            'KeyPressed', 'KeyReleased', 'InputState', 'MouseButton'
+        ):
+            self._toggle_detect()
         widgets = [
             (self.device_label, self.device_box),
             (self.key_label, self.key_combo),
+            (self.key_label, self.detect_btn),
             (self.duration_label, self.hour_spin),
             (self.duration_label, self.min_spin),
             (self.duration_label, self.sec_spin),
@@ -436,10 +442,12 @@ class ConditionDialog(QDialog):
             self.device_box.setVisible(True)
             self.key_label.setVisible(True)
             self.key_combo.setVisible(True)
+            self.detect_btn.setVisible(True)
             self._update_key_list()
         elif typ == 'MouseButton':
             self.key_label.setVisible(True)
             self.key_combo.setVisible(True)
+            self.detect_btn.setVisible(True)
             self.state_label.setVisible(True)
             self.state_box.setVisible(True)
             self._update_key_list('mouse')
@@ -448,6 +456,7 @@ class ConditionDialog(QDialog):
             self.device_box.setVisible(True)
             self.key_label.setVisible(True)
             self.key_combo.setVisible(True)
+            self.detect_btn.setVisible(True)
             self.state_label.setVisible(True)
             self.state_box.setVisible(True)
             self._update_key_list()
