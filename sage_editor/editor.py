@@ -271,7 +271,9 @@ def describe_action(act, objects, t=lambda x: x):
             270: t('dir_down'),
         }
         ang = float(act.get('direction', 0))
-        label = dir_map.get(int(ang) % 360, str(ang))
+        label = dir_map.get(int(ang) % 360)
+        if label is None:
+            label = f'{ang:g}'
         return f"{t('MoveDirection')} {name} {t('direction_label')} {label} {t('speed_label')} {act.get('speed')}"
     if typ == 'SetPosition':
         t = act.get('target')
@@ -358,7 +360,7 @@ class ConditionDialog(QDialog):
         self.b_box = QComboBox()
         from engine import Camera
         for i, obj in enumerate(objects):
-            label = f'{i}: {obj.name}'
+            label = obj.name
             self.a_box.addItem(label, i)
             if isinstance(obj, Camera):
                 self.cam_box.addItem(label, i)
@@ -652,11 +654,12 @@ class ConditionDialog(QDialog):
 class ActionDialog(QDialog):
     """Dialog for creating a single action."""
 
-    def __init__(self, objects, variables, parent=None, data=None):
+    def __init__(self, objects, variables, parent=None, data=None, owner_index=None):
         super().__init__(parent)
         self.setWindowTitle(parent.t('add_action') if parent else 'Add Action')
         self.objects = objects
         self.variables = variables
+        self.owner_index = owner_index
         layout = QFormLayout(self)
 
         from engine.logic.base import get_registered_actions
@@ -670,8 +673,10 @@ class ActionDialog(QDialog):
         from engine import Camera
         self.all_objects = objects
         self.camera_indices = [i for i, o in enumerate(objects) if isinstance(o, Camera)]
+        if self.owner_index is not None:
+            self.target_box.addItem(parent.t('self_option') if parent else 'Self', self.owner_index)
         for i, obj in enumerate(objects):
-            self.target_box.addItem(f'{i}: {obj.name}', i)
+            self.target_box.addItem(obj.name, i)
         layout.addRow(self.target_label, self.target_box)
 
         self.dx_label = QLabel(parent.t('dx') if parent else 'dx:')
@@ -682,19 +687,12 @@ class ActionDialog(QDialog):
         layout.addRow(self.dy_label, self.dy_spin)
 
         self.dir_label = QLabel(parent.t('direction_label') if parent else 'Direction:')
-        self.dir_box = QComboBox()
-        self.dir_options = [
-            (parent.t('dir_right') if parent else 'Right', 0),
-            (parent.t('dir_up') if parent else 'Up', 90),
-            (parent.t('dir_left') if parent else 'Left', 180),
-            (parent.t('dir_down') if parent else 'Down', 270),
-        ]
-        for text, val in self.dir_options:
-            self.dir_box.addItem(text, val)
+        self.dir_spin = QDoubleSpinBox(); self.dir_spin.setRange(0.0, 359.9)
+        self.dir_spin.setSingleStep(1.0)
         self.speed_label = QLabel(parent.t('speed_label') if parent else 'Speed:')
         self.speed_spin = QDoubleSpinBox(); self.speed_spin.setRange(-1000.0, 1000.0)
         self.speed_spin.setValue(100.0)
-        layout.addRow(self.dir_label, self.dir_box)
+        layout.addRow(self.dir_label, self.dir_spin)
         layout.addRow(self.speed_label, self.speed_spin)
 
         self.x_label = QLabel(parent.t('x') if parent else 'x:')
@@ -797,7 +795,7 @@ class ActionDialog(QDialog):
             return {
                 'type': typ,
                 'target': self.target_box.currentData(),
-                'direction': self.dir_box.currentData(),
+                'direction': self.dir_spin.value(),
                 'speed': self.speed_spin.value(),
             }
         if typ == 'SetPosition':
@@ -837,12 +835,16 @@ class ActionDialog(QDialog):
         typ = self.type_box.currentData()
         self.target_box.clear()
         if typ == 'SetZoom':
+            if self.owner_index is not None and self.owner_index in self.camera_indices:
+                self.target_box.addItem(self.parent().t('self_option') if self.parent() else 'Self', self.owner_index)
             for i in self.camera_indices:
                 obj = self.all_objects[i]
-                self.target_box.addItem(f'{i}: {obj.name}', i)
+                self.target_box.addItem(obj.name, i)
         else:
+            if self.owner_index is not None:
+                self.target_box.addItem(self.parent().t('self_option') if self.parent() else 'Self', self.owner_index)
             for i, obj in enumerate(self.all_objects):
-                self.target_box.addItem(f'{i}: {obj.name}', i)
+                self.target_box.addItem(obj.name, i)
         # update path extensions for drag/drop
         if typ == 'PlaySound':
             self.path_edit.set_extensions({'.wav', '.mp3', '.ogg'})
@@ -854,7 +856,7 @@ class ActionDialog(QDialog):
             (self.target_label, self.target_box),
             (self.dx_label, self.dx_spin),
             (self.dy_label, self.dy_spin),
-            (self.dir_label, self.dir_box),
+            (self.dir_label, self.dir_spin),
             (self.speed_label, self.speed_spin),
             (self.x_label, self.x_spin),
             (self.y_label, self.y_spin),
@@ -883,7 +885,7 @@ class ActionDialog(QDialog):
         elif typ == 'MoveDirection':
             for pair in [
                 (self.target_label, self.target_box),
-                (self.dir_label, self.dir_box),
+                (self.dir_label, self.dir_spin),
                 (self.speed_label, self.speed_spin),
             ]:
                 pair[0].setVisible(True)
@@ -913,9 +915,11 @@ class ActionDialog(QDialog):
             self.zoom_label.setVisible(True)
             self.zoom_spin.setVisible(True)
             self.target_box.clear()
+            if self.owner_index is not None and self.owner_index in self.camera_indices:
+                self.target_box.addItem(self.parent().t('self_option') if self.parent() else 'Self', self.owner_index)
             for i in self.camera_indices:
                 obj = self.all_objects[i]
-                self.target_box.addItem(f'{i}: {obj.name}', i)
+                self.target_box.addItem(obj.name, i)
         elif typ == 'SetVariable':
             for pair in [
                 (self.var_name_label, self.var_name_box),
@@ -984,14 +988,7 @@ class ActionDialog(QDialog):
                 self.dy_spin.setValue(int(data.get('dy', 0)))
             elif typ == 'MoveDirection':
                 ang = float(data.get('direction', 0))
-                found = False
-                for i in range(self.dir_box.count()):
-                    if int(self.dir_box.itemData(i)) == int(ang) % 360:
-                        self.dir_box.setCurrentIndex(i)
-                        found = True
-                        break
-                if not found:
-                    self.dir_box.setCurrentIndex(0)
+                self.dir_spin.setValue(ang % 360)
                 self.speed_spin.setValue(float(data.get('speed', 0)))
             elif typ == 'SetPosition':
                 self.x_spin.setValue(int(data.get('x', 0)))
@@ -1033,10 +1030,13 @@ class ActionDialog(QDialog):
 class AddEventDialog(QDialog):
     """Dialog to create or edit an event."""
 
-    def __init__(self, objects, variables, parent=None, data=None):
+    def __init__(self, objects, variables, parent=None, data=None, owner=None):
         super().__init__(parent)
         self.objects = objects
         self.variables = variables
+        self.owner_index = None
+        if owner is not None and owner in objects:
+            self.owner_index = objects.index(owner)
         title = parent.t('add_event') if parent else 'Add Event'
         if data:
             title = parent.t('edit_event') if parent else 'Edit Event'
@@ -1108,7 +1108,8 @@ class AddEventDialog(QDialog):
 
     def add_action(self):
         parent = self.parent() if self.parent() else self
-        dlg = ActionDialog(self.objects, self.variables, parent)
+        dlg = ActionDialog(self.objects, self.variables, parent,
+                           owner_index=self.owner_index)
         if dlg.exec() == QDialog.DialogCode.Accepted:
             act = dlg.get_action()
             self.actions.append(act)
@@ -1180,7 +1181,13 @@ class AddEventDialog(QDialog):
             row = self.act_list.row(item)
             if action == edit_act:
                 parent = self.parent() if self.parent() else self
-                dlg = ActionDialog(self.objects, self.variables, parent, self.actions[row])
+                dlg = ActionDialog(
+                    self.objects,
+                    self.variables,
+                    parent,
+                    self.actions[row],
+                    owner_index=self.owner_index,
+                )
                 if dlg.exec() == QDialog.DialogCode.Accepted:
                     self.actions[row] = dlg.get_action()
                     desc = describe_action(
@@ -3188,7 +3195,14 @@ class Editor(QMainWindow):
             del_act = menu.addAction(load_icon('delete.png'), self.t('delete'))
             action = menu.exec(self.event_list.viewport().mapToGlobal(pos))
             if action == edit_act:
-                dlg = AddEventDialog([o for _, o in self.items], self.scene.variables, self, events[row])
+                holder = self._event_holder()
+                dlg = AddEventDialog(
+                    [o for _, o in self.items],
+                    self.scene.variables,
+                    self,
+                    events[row],
+                    owner=holder if holder is not self.scene else None,
+                )
                 if dlg.exec() == QDialog.DialogCode.Accepted:
                     events[row] = dlg.get_event()
                     self._mark_dirty()
@@ -3751,7 +3765,13 @@ class Editor(QMainWindow):
         if holder is None or not hasattr(holder, 'events'):
             self.console_dock.write('Object has no events list')
             return
-        dlg = AddEventDialog([o for _, o in self.items], self.scene.variables, self)
+        owner = holder if holder is not self.scene else None
+        dlg = AddEventDialog(
+            [o for _, o in self.items],
+            self.scene.variables,
+            self,
+            owner=owner,
+        )
         if dlg.exec() == QDialog.DialogCode.Accepted:
             holder.events.append(dlg.get_event())
             self._mark_dirty()
@@ -3792,7 +3812,18 @@ class Editor(QMainWindow):
             if row < 0 or row >= len(events):
                 return
             evt = events[row]
-            dlg = ActionDialog([o for _, o in self.items], self.scene.variables, self)
+            owner_idx = None
+            if holder is not self.scene:
+                for i, (_, obj) in enumerate(self.items):
+                    if obj is holder:
+                        owner_idx = i
+                        break
+            dlg = ActionDialog(
+                [o for _, o in self.items],
+                self.scene.variables,
+                self,
+                owner_index=owner_idx,
+            )
             if dlg.exec() == QDialog.DialogCode.Accepted:
                 evt['actions'].append(dlg.get_action())
                 self._mark_dirty()
