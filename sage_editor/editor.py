@@ -1250,6 +1250,10 @@ class Editor(QMainWindow):
         self.clear_img_btn = prop_dock.clear_img_btn
         self.color_btn = prop_dock.color_btn
         self.smooth_check = prop_dock.smooth_check
+        self.img_row = prop_dock.img_row
+        self.image_label = prop_dock.image_label
+        self.color_label = prop_dock.color_label
+        self.smooth_label = prop_dock.smooth_label
         self.image_edit.setPlaceholderText(self.t('path_label'))
         self.color_btn.setText('')
         self.color_btn.setStyleSheet('background: rgb(255, 255, 255);')
