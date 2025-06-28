@@ -1634,14 +1634,27 @@ class Editor(QMainWindow):
             self.keep_aspect = getattr(proj, 'keep_aspect', True)
             self.background_color = getattr(proj, 'background', (0, 0, 0))
             self.view.renderer.background = self.background_color
-            self.scene_path = os.path.join(os.path.dirname(path), proj.scene_file)
-            self.load_scene(Scene.from_dict(proj.scene))
-            self._update_camera_rect()
             self.resource_dir = os.path.join(os.path.dirname(path), proj.resources)
             from engine import set_resource_root, ResourceManager
             set_resource_root(self.resource_dir)
             self.resource_manager = ResourceManager(self.resource_dir)
             _log(f'Resource manager ready at {self.resource_dir}')
+            self.scene_path = os.path.join(os.path.dirname(path), proj.scene_file)
+            self.load_scene(Scene.from_dict(proj.scene))
+            self._update_camera_rect()
+            state = self.project_metadata.get('editor_state', {})
+            if state:
+                self.view.camera.x = state.get('cam_x', self.view.camera.x)
+                self.view.camera.y = state.get('cam_y', self.view.camera.y)
+                self.view.camera.zoom = state.get('cam_zoom', self.view.camera.zoom)
+                sel_name = state.get('selected')
+                if sel_name:
+                    for i, (_, o) in enumerate(self.items):
+                        if o.name == sel_name:
+                            self.object_combo.setCurrentIndex(i)
+                            self.object_list.setCurrentRow(i)
+                            self.view.set_selected(o)
+                            break
             if self.resource_model is not None:
                 self.resource_model.setRootPath(self.resource_dir)
                 if self.proxy_model is not None:
@@ -1680,6 +1693,12 @@ class Editor(QMainWindow):
             obj.angle = item.rotation()
         if self.scene_path:
             os.makedirs(os.path.dirname(self.scene_path), exist_ok=True)
+        self.project_metadata['editor_state'] = {
+            'cam_x': self.view.camera.x,
+            'cam_y': self.view.camera.y,
+            'cam_zoom': self.view.camera.zoom,
+            'selected': self.view.selected_obj.name if self.view.selected_obj else None,
+        }
         try:
             Project(
                 self.scene.to_dict(),
