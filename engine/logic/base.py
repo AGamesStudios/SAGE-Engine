@@ -228,7 +228,6 @@ class Event:
         self,
         conditions,
         actions,
-        once: bool = False,
         name: str | None = None,
         enabled: bool = True,
         priority: int = 0,
@@ -237,17 +236,14 @@ class Event:
         """Create a new event instance.
 
         When ``conditions`` is empty the ``actions`` will execute every frame
-        until the event is disabled. Setting ``once`` will still limit
-        execution to a single frame in that case.
+        until the event is disabled.
         """
         self.conditions = conditions
         self.actions = actions
-        self.once = once
         self.name = name
         self.enabled = enabled
         self.priority = priority
         self.groups = set(groups or [])
-        self.triggered = False
 
     def enable(self):
         self.enabled = True
@@ -260,8 +256,7 @@ class Event:
             logger.debug('Disabled event %s', self.name)
 
     def reset(self):
-        """Clear the triggered flag and enable the event."""
-        self.triggered = False
+        """Enable the event and reset all conditions and actions."""
         self.enabled = True
         for cond in self.conditions:
             if hasattr(cond, 'reset'):
@@ -279,7 +274,7 @@ class Event:
             logger.debug('Reset event %s', self.name)
 
     def update(self, engine, scene, dt):
-        if not self.enabled or (self.once and self.triggered):
+        if not self.enabled:
             return
         if self.conditions:
             try:
@@ -289,8 +284,6 @@ class Event:
                             action.execute(engine, scene, dt)
                         except Exception:
                             logger.exception('Action error')
-                    if self.once:
-                        self.triggered = True
                     if self.name:
                         logger.debug('Event %s triggered', self.name)
             except Exception:
@@ -301,8 +294,6 @@ class Event:
                     action.execute(engine, scene, dt)
                 except Exception:
                     logger.exception('Action error')
-            if self.once:
-                self.triggered = True
             if self.name:
                 logger.debug('Event %s triggered', self.name)
 
@@ -528,7 +519,6 @@ def event_from_dict(data, objects, variables):
     return Event(
         conditions,
         actions,
-        data.get('once', False),
         data.get('name'),
         data.get('enabled', True),
         data.get('priority', 0),

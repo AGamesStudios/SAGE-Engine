@@ -910,12 +910,10 @@ class AddEventDialog(QDialog):
         layout.setVerticalSpacing(6)
 
         self.name_edit = QLineEdit()
-        self.once_check = QCheckBox(parent.t('trigger_once') if parent else 'Trigger Once')
         self.enabled_check = QCheckBox(parent.t('enabled') if parent else 'Enabled')
         self.enabled_check.setChecked(True)
         form = QFormLayout()
         form.addRow(parent.t('name_label') if parent else 'Name:', self.name_edit)
-        form.addRow(self.once_check)
         form.addRow(self.enabled_check)
         layout.addLayout(form, 0, 0, 1, 2)
 
@@ -950,7 +948,6 @@ class AddEventDialog(QDialog):
 
         if data:
             self.name_edit.setText(data.get('name', ''))
-            self.once_check.setChecked(data.get('once', False))
             self.enabled_check.setChecked(data.get('enabled', True))
             for c in data.get('conditions', []):
                 self.conditions.append(c)
@@ -982,7 +979,6 @@ class AddEventDialog(QDialog):
     def get_event(self):
         return {
             'name': self.name_edit.text().strip() or None,
-            'once': self.once_check.isChecked(),
             'enabled': self.enabled_check.isChecked(),
             'conditions': self.conditions,
             'actions': self.actions,
