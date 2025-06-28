@@ -625,14 +625,19 @@ class OpenGLRenderer:
         glLineWidth(1)
         glPopMatrix()
 
-    def _apply_viewport(self, camera: Camera | None) -> None:
-        """Set GL viewport respecting the camera aspect ratio."""
+    def _apply_viewport(self, camera: Camera | None) -> tuple[int, int, int, int]:
+        """Set GL viewport respecting the camera aspect ratio.
+
+        Returns the viewport rectangle ``(x, y, width, height)`` so the caller
+        can optionally restrict further operations to this area using scissor
+        tests.
+        """
         from OpenGL.GL import glViewport
         w = self.widget.width() if self.widget else self.width
         h = self.widget.height() if self.widget else self.height
         if not self.keep_aspect or camera is None:
             glViewport(0, 0, w, h)
-            return
+            return 0, 0, w, h
         cam_ratio = camera.width / camera.height if camera.height else 1.0
         win_ratio = w / h if h else cam_ratio
         if cam_ratio > win_ratio:
@@ -646,6 +651,7 @@ class OpenGLRenderer:
             x = int((w - vp_w) / 2)
             y = 0
         glViewport(x, y, vp_w, vp_h)
+        return x, y, vp_w, vp_h
 
     def _apply_projection(self, camera: Camera | None) -> None:
         from OpenGL.GL import glMatrixMode, glLoadIdentity, glOrtho, GL_PROJECTION, GL_MODELVIEW
@@ -686,8 +692,12 @@ class OpenGLRenderer:
         self.widget.update()
 
     def _render_scene(self, scene, camera: Camera | None):
-        self._apply_viewport(camera)
+        x, y, vp_w, vp_h = self._apply_viewport(camera)
+        from OpenGL.GL import glEnable, glDisable, glScissor, GL_SCISSOR_TEST
+        glEnable(GL_SCISSOR_TEST)
+        glScissor(x, y, vp_w, vp_h)
         self.clear(self.background)
+        glDisable(GL_SCISSOR_TEST)
         self._apply_projection(camera)
         glPushMatrix()
         try:
