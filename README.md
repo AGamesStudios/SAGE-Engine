@@ -412,6 +412,13 @@ significantly speed up large scenes:
 pip install numba
 ```
 
+### Input Backends
+
+The engine defaults to Qt input handling but also supports PySDL2. Pass
+`input_backend='sdl'` to :class:`~engine.core.engine.Engine` to use SDL for
+keyboard and mouse events. This allows easy detection of any SDL key and
+works without a Qt window. The editor continues to use Qt input.
+
 ### SAGE API
 
 For small scripts or rapid prototyping the `engine.api` module exposes

@@ -159,9 +159,41 @@ KEY_OPTIONS = [
     ('Space', Qt.Key.Key_Space),
     ('Enter', Qt.Key.Key_Return),
     ('A', Qt.Key.Key_A),
-    ('S', Qt.Key.Key_S),
+    ('B', Qt.Key.Key_B),
+    ('C', Qt.Key.Key_C),
     ('D', Qt.Key.Key_D),
+    ('E', Qt.Key.Key_E),
+    ('F', Qt.Key.Key_F),
+    ('G', Qt.Key.Key_G),
+    ('H', Qt.Key.Key_H),
+    ('I', Qt.Key.Key_I),
+    ('J', Qt.Key.Key_J),
+    ('K', Qt.Key.Key_K),
+    ('L', Qt.Key.Key_L),
+    ('M', Qt.Key.Key_M),
+    ('N', Qt.Key.Key_N),
+    ('O', Qt.Key.Key_O),
+    ('P', Qt.Key.Key_P),
+    ('Q', Qt.Key.Key_Q),
+    ('R', Qt.Key.Key_R),
+    ('S', Qt.Key.Key_S),
+    ('T', Qt.Key.Key_T),
+    ('U', Qt.Key.Key_U),
+    ('V', Qt.Key.Key_V),
     ('W', Qt.Key.Key_W),
+    ('X', Qt.Key.Key_X),
+    ('Y', Qt.Key.Key_Y),
+    ('Z', Qt.Key.Key_Z),
+    ('0', Qt.Key.Key_0),
+    ('1', Qt.Key.Key_1),
+    ('2', Qt.Key.Key_2),
+    ('3', Qt.Key.Key_3),
+    ('4', Qt.Key.Key_4),
+    ('5', Qt.Key.Key_5),
+    ('6', Qt.Key.Key_6),
+    ('7', Qt.Key.Key_7),
+    ('8', Qt.Key.Key_8),
+    ('9', Qt.Key.Key_9),
 ]
 MOUSE_OPTIONS = [
     ('Left', Qt.MouseButton.LeftButton),
@@ -273,9 +305,15 @@ class ConditionDialog(QDialog):
 
         self.key_label = QLabel(parent.t('key_button') if parent else 'Key/Button:')
         self.key_combo = QComboBox()
+        self.key_combo.setEditable(True)
         for name, val in KEY_OPTIONS:
             self.key_combo.addItem(name, val)
-        layout.addRow(self.key_label, self.key_combo)
+        self.detect_btn = QPushButton(parent.t('detect_key') if parent else 'Auto Detect')
+        self.detect_btn.clicked.connect(self._toggle_detect)
+        key_row = QHBoxLayout()
+        key_row.addWidget(self.key_combo)
+        key_row.addWidget(self.detect_btn)
+        layout.addRow(self.key_label, key_row)
 
         self.duration_label = QLabel(parent.t('time') if parent else 'Time:')
         self.hour_spin = QSpinBox(); self.hour_spin.setRange(0, 23)
@@ -458,6 +496,33 @@ class ConditionDialog(QDialog):
             if self.parent():
                 self.var_warn_text.setText(self.parent().t('text_not_comparable'))
             self.var_warn_text.show()
+
+    def _toggle_detect(self):
+        """Enable or disable key detection mode."""
+        self.detecting = not getattr(self, 'detecting', False)
+        if self.detecting:
+            text = self.parent().t('press_key') if self.parent() else 'Press a key...'
+            self.detect_btn.setText(text)
+            self.grabKeyboard()
+        else:
+            text = self.parent().t('detect_key') if self.parent() else 'Auto Detect'
+            self.detect_btn.setText(text)
+            self.releaseKeyboard()
+
+    def keyPressEvent(self, event):
+        if getattr(self, 'detecting', False):
+            code = event.key()
+            name = KEY_NAME_LOOKUP.get(code)
+            if name is None:
+                name = event.text().upper() or str(code)
+                self.key_combo.addItem(name, code)
+                KEY_NAME_LOOKUP[code] = name
+            idx = self.key_combo.findData(code)
+            if idx >= 0:
+                self.key_combo.setCurrentIndex(idx)
+            self._toggle_detect()
+            return
+        super().keyPressEvent(event)
 
     def get_condition(self):
         typ = self.type_box.currentData()
