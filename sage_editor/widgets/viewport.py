@@ -60,6 +60,7 @@ class Viewport(GLWidget):
         self._drag_offset = (0.0, 0.0)
         self._drag_start_world = (0.0, 0.0)
         self._drag_start_obj = (0.0, 0.0)
+        self._drag_start_angle = 0.0
         self.selected_obj: GameObject | None = None
         self._cursor_world: tuple[float, float] | None = None
 
@@ -260,7 +261,8 @@ class Viewport(GLWidget):
                             world[1] - self.selected_obj.y,
                             world[0] - self.selected_obj.x,
                         ))
-                        self._drag_offset = getattr(self.selected_obj, 'angle', 0.0) - ang
+                        self._drag_start_angle = ang
+                        self._drag_offset = getattr(self.selected_obj, 'angle', 0.0)
                     elif hit == 'sx':
                         ang = math.radians(getattr(self.selected_obj, 'angle', 0.0))
                         cos_a = math.cos(ang)
@@ -311,11 +313,18 @@ class Viewport(GLWidget):
         if self._gizmo_drag and self.selected_obj is not None:
             world = self._screen_to_world(event.position())
             if self._gizmo_drag == 'rot':
-                ang = math.degrees(math.atan2(
-                    world[1] - self.selected_obj.y,
-                    world[0] - self.selected_obj.x,
-                )) + self._drag_offset
-                self.selected_obj.angle = ang
+                ang = math.degrees(
+                    math.atan2(
+                        world[1] - self.selected_obj.y,
+                        world[0] - self.selected_obj.x,
+                    )
+                )
+                delta = ang - self._drag_start_angle
+                if delta > 180:
+                    delta -= 360
+                elif delta < -180:
+                    delta += 360
+                self.selected_obj.angle = self._drag_offset + delta
             elif self._gizmo_drag == 'sx':
                 start_dx, base = self._drag_offset
                 ang = math.radians(getattr(self.selected_obj, 'angle', 0.0))
