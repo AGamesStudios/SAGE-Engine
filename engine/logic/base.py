@@ -114,6 +114,21 @@ def resolve_value(val, engine):
     return val
 
 
+def _auto_params(cls):
+    """Return parameter metadata from ``cls.__init__`` if available."""
+    from inspect import signature, Parameter
+    meta = []
+    try:
+        sig = signature(cls.__init__)
+    except (TypeError, ValueError):
+        return meta
+    for p in list(sig.parameters.values())[1:]:  # skip ``self``
+        if p.kind in (Parameter.VAR_POSITIONAL, Parameter.VAR_KEYWORD):
+            continue
+        meta.append((p.name, 'value'))
+    return meta
+
+
 def register_condition(name: str, params: list[tuple] | None = None):
     """Decorator to register a Condition subclass.
 
@@ -122,12 +137,14 @@ def register_condition(name: str, params: list[tuple] | None = None):
     ``'value'`` for plain values, ``'object'`` to look up a scene object by
     index and ``'variable'`` for variables. ``key`` is the dictionary key when
     loading, defaulting to ``arg_name``. ``types`` optionally lists allowed
-    object types when ``kind`` is ``'object'``.
+    object types when ``kind`` is ``'object'``. When ``params`` is omitted the
+    ``__init__`` signature is inspected and each argument defaults to a
+    ``'value'`` entry, allowing quick creation of simple logic blocks.
     """
 
     def decorator(cls):
         CONDITION_REGISTRY[name] = cls
-        CONDITION_META[name] = params or []
+        CONDITION_META[name] = params or _auto_params(cls)
         return cls
 
     return decorator
@@ -136,13 +153,14 @@ def register_condition(name: str, params: list[tuple] | None = None):
 def register_action(name: str, params: list[tuple] | None = None):
     """Decorator to register an Action subclass with optional metadata.
 
-    ``params`` follows the same format as :func:`register_condition` and may
-    include a list of allowed object types for ``'object'`` parameters.
+    ``params`` follows the same format as :func:`register_condition`. If omitted
+    the ``__init__`` signature is inspected to build simple ``'value'``
+    parameters automatically.
     """
 
     def decorator(cls):
         ACTION_REGISTRY[name] = cls
-        ACTION_META[name] = params or []
+        ACTION_META[name] = params or _auto_params(cls)
         return cls
 
     return decorator
@@ -265,10 +283,12 @@ class Event:
 class EventSystem:
     """Container for events."""
 
-    def __init__(self, variables=None):
+    def __init__(self, variables=None, engine_version: str | None = None):
+        from .. import ENGINE_VERSION
         self.events: list[Event] = []
         self.variables = variables if variables is not None else {}
         self.groups: dict[str, list[Event]] = {}
+        self.engine_version = engine_version or ENGINE_VERSION
 
     def get_event(self, name):
         for evt in self.events:
