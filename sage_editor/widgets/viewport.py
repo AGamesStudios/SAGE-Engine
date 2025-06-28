@@ -45,7 +45,6 @@ class Viewport(GLWidget):
         self.show_axes = True
         self.snap_to_grid = False
         self.grid_size = 1.0
-        self.snap_angle = 15.0
         self.renderer = OpenGLRenderer(self.width(), self.height(), widget=self)
         self.renderer.show_grid = self.show_grid
         self.renderer.show_axes = self.show_axes
@@ -316,8 +315,6 @@ class Viewport(GLWidget):
                     world[1] - self.selected_obj.y,
                     world[0] - self.selected_obj.x,
                 )) + self._drag_offset
-                if self.snap_to_grid:
-                    ang = round(ang / self.snap_angle) * self.snap_angle
                 self.selected_obj.angle = ang
             elif self._gizmo_drag == 'sx':
                 start_dx, base = self._drag_offset
@@ -328,12 +325,15 @@ class Viewport(GLWidget):
                     world[1] - self.selected_obj.y
                 ) * sin_a
                 if start_dx:
+                    value = base * (dx_local / start_dx)
                     if self.snap_to_grid and self.grid_size > 0:
-                        delta = dx_local - start_dx
-                        steps = round(delta / self.grid_size)
-                        value = max(0.01, base + steps * self.grid_size)
+                        world_w = self.selected_obj.width * value
+                        world_w = (
+                            round(world_w / self.grid_size) * self.grid_size
+                        )
+                        value = max(0.01, world_w / self.selected_obj.width)
                     else:
-                        value = max(0.01, base * (dx_local / start_dx))
+                        value = max(0.01, value)
                     self.selected_obj.scale_x = value
             elif self._gizmo_drag == 'sy':
                 start_dy, base = self._drag_offset
@@ -344,12 +344,15 @@ class Viewport(GLWidget):
                     world[1] - self.selected_obj.y
                 ) * cos_a
                 if start_dy:
+                    value = base * (dy_local / start_dy)
                     if self.snap_to_grid and self.grid_size > 0:
-                        delta = dy_local - start_dy
-                        steps = round(delta / self.grid_size)
-                        value = max(0.01, base + steps * self.grid_size)
+                        world_h = self.selected_obj.height * value
+                        world_h = (
+                            round(world_h / self.grid_size) * self.grid_size
+                        )
+                        value = max(0.01, world_h / self.selected_obj.height)
                     else:
-                        value = max(0.01, base * (dy_local / start_dy))
+                        value = max(0.01, value)
                     self.selected_obj.scale_y = value
             else:
                 dx = world[0] - self._drag_start_world[0]
