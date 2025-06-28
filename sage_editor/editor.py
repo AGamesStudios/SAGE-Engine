@@ -1256,7 +1256,7 @@ class Editor(QMainWindow):
         self.smooth_label = prop_dock.smooth_label
         self.image_edit.setPlaceholderText(self.t('path_label'))
         self.color_btn.setText('')
-        self.color_btn.setStyleSheet('background: rgb(255, 255, 255);')
+        self.color_btn.setStyleSheet('background-color: rgb(255, 255, 255);')
         self.color_btn.setText('')
         self.smooth_check.setChecked(True)
 
@@ -1920,7 +1920,7 @@ class Editor(QMainWindow):
                 self.aspect_check = QCheckBox(); self.aspect_check.setChecked(parent.keep_aspect)
                 self.bg_btn = QPushButton()
                 self.bg_btn.setStyleSheet(
-                    f"background: rgb({parent.background_color[0]}, {parent.background_color[1]}, {parent.background_color[2]});"
+                    f"background-color: rgb({parent.background_color[0]}, {parent.background_color[1]}, {parent.background_color[2]});"
                 )
                 self.bg_btn.clicked.connect(self._choose_bg)
                 win_form.addRow(parent.t('width'), self.w_spin)
@@ -1958,7 +1958,7 @@ class Editor(QMainWindow):
                 color = QColorDialog.getColor(QColor(*self.parent.background_color), self)
                 if color.isValid():
                     self.bg_btn.setStyleSheet(
-                        f"background: rgb({color.red()}, {color.green()}, {color.blue()});"
+                        f"background-color: rgb({color.red()}, {color.green()}, {color.blue()});"
                     )
                     self._bg = (color.red(), color.green(), color.blue())
                 else:
@@ -2669,7 +2669,7 @@ class Editor(QMainWindow):
             self.color_label.setVisible(True)
             self.color_btn.setVisible(True)
             self.color_btn.setEnabled(True)
-            self.color_btn.setStyleSheet(f"background: rgb({c[0]}, {c[1]}, {c[2]});")
+            self.color_btn.setStyleSheet(f"background-color: rgb({c[0]}, {c[1]}, {c[2]});")
             self.smooth_label.setVisible(True)
             self.smooth_check.setVisible(True)
             self.smooth_check.setEnabled(True)
@@ -2898,7 +2898,7 @@ class Editor(QMainWindow):
         if not obj.image_path:
             obj._load_image()
         self.color_btn.setStyleSheet(
-            f"background: rgb({color.red()}, {color.green()}, {color.blue()});"
+            f"background-color: rgb({color.red()}, {color.green()}, {color.blue()});"
         )
         if hasattr(self, 'view'):
             self.view.update()

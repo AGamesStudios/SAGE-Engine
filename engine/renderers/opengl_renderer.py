@@ -288,7 +288,10 @@ class OpenGLRenderer:
         )
         glUseProgram(self._program)
         loc_color = glGetUniformLocation(self._program, 'color')
-        glUniform4f(loc_color, *(c / 255.0 for c in (obj.color or (255, 255, 255, 255))))
+        rgba = obj.color or (255, 255, 255, 255)
+        # Colors may be stored either in 0-255 range or already normalized
+        norm = tuple(c if c <= 1.0 else c / 255.0 for c in rgba)
+        glUniform4f(loc_color, *norm)
         scale = units.UNITS_PER_METER
         sign = 1.0 if units.Y_UP else -1.0
         zoom = camera.zoom if camera else 1.0
@@ -349,7 +352,8 @@ class OpenGLRenderer:
         h = obj.height * obj.scale_y
         verts = [(-w / 2, -h / 2), (w / 2, -h / 2), (w / 2, h / 2), (-w / 2, h / 2)]
         glBindTexture(GL_TEXTURE_2D, 0)
-        glColor4f(*color)
+        norm = tuple(c if c <= 1.0 else c / 255.0 for c in color)
+        glColor4f(*norm)
         glLineWidth(width)
         glBegin(GL_LINE_LOOP)
         for vx, vy in verts:
