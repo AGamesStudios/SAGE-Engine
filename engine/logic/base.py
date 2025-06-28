@@ -400,6 +400,8 @@ class EventSystem:
             logger.debug('Reset group %s', name)
 
     def update(self, engine, scene, dt):
+        if not self.events:
+            return
         for evt in list(self.events):
             evt.update(engine, scene, dt)
 

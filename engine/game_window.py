@@ -29,6 +29,7 @@ class GameWindow(QMainWindow):
         self.timer.timeout.connect(self._step)
         self.engine.last_time = time.perf_counter()
         self.engine.delta_time = 0.0
+        self.engine.logic_active = True
         self.timer.start()
 
     def _step(self):
@@ -38,8 +39,9 @@ class GameWindow(QMainWindow):
         self.engine.delta_time = dt
         self.engine.input.poll()
         try:
-            self.engine.events.update(self.engine, self.engine.scene, dt)
-            self.engine.scene.update_events(self.engine, dt)
+            if self.engine.logic_active:
+                self.engine.events.update(self.engine, self.engine.scene, dt)
+                self.engine.scene.update_events(self.engine, dt)
             self.engine.scene.update(dt)
             cam = self.engine.camera or self.engine.scene.get_active_camera()
             self.engine.renderer.draw_scene(self.engine.scene, cam, gizmos=False)
@@ -50,6 +52,7 @@ class GameWindow(QMainWindow):
 
     def closeEvent(self, event):  # pragma: no cover - GUI cleanup
         self.timer.stop()
+        self.engine.logic_active = False
         self.engine.input.shutdown()
         self.engine.renderer.close()
         event.accept()

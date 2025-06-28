@@ -302,6 +302,10 @@ enabled, disabled or reset with `enable_group()` and friends.  Each event also
 accepts a *priority* number which controls update order; lower numbers run
 first so critical logic executes before less important rules.
 
+Event processing only occurs while a :class:`GameWindow` is running so editing a
+scene does not trigger logic. The engine updates all events every frame during
+gameplay and pauses them automatically when the window closes.
+
 The editor now includes a **Console** dock at the bottom. All output from the
 game process and the editor itself appears here so you can easily debug your
 scripts. All messages are also written to `logs/editor.log` while the
