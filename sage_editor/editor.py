@@ -2536,6 +2536,19 @@ class Editor(QMainWindow):
         self.transform_group.setEnabled(False)
         if hasattr(self, 'camera_group'):
             self.camera_group.setVisible(False)
+        # hide sprite-specific fields
+        if hasattr(self, 'img_row'):
+            self.img_row.setVisible(False)
+        if hasattr(self, 'image_label'):
+            self.image_label.setVisible(False)
+        if hasattr(self, 'color_label'):
+            self.color_label.setVisible(False)
+        if hasattr(self, 'color_btn'):
+            self.color_btn.setVisible(False)
+        if hasattr(self, 'smooth_label'):
+            self.smooth_label.setVisible(False)
+        if hasattr(self, 'smooth_check'):
+            self.smooth_check.setVisible(False)
         # clear values so stale data never shows
         for spin in (
             self.x_spin, self.y_spin, self.z_spin,
@@ -2603,12 +2616,18 @@ class Editor(QMainWindow):
             self.type_combo.blockSignals(False)
         self.transform_group.setEnabled(True)
         if isinstance(obj, Camera):
+            self.img_row.setVisible(False)
+            self.image_label.setVisible(False)
             self.image_edit.blockSignals(True); self.image_edit.clear(); self.image_edit.blockSignals(False)
             self.image_edit.setEnabled(False)
             self.image_btn.setEnabled(False)
             self.clear_img_btn.setEnabled(False)
+            self.color_label.setVisible(False)
+            self.color_btn.setVisible(False)
             self.color_btn.setEnabled(False)
             self.color_btn.setStyleSheet('')
+            self.smooth_label.setVisible(False)
+            self.smooth_check.setVisible(False)
             self.smooth_check.setEnabled(False)
             self.smooth_check.blockSignals(True)
             self.smooth_check.setChecked(False)
@@ -2636,13 +2655,19 @@ class Editor(QMainWindow):
             self.scale_y_spin.blockSignals(True); self.scale_y_spin.setValue(obj.scale_y); self.scale_y_spin.blockSignals(False)
             self.link_scale.blockSignals(True); self.link_scale.setChecked(obj.scale_x == obj.scale_y); self.link_scale.blockSignals(False)
             self.angle_spin.blockSignals(True); self.angle_spin.setValue(obj.angle); self.angle_spin.blockSignals(False)
+            self.img_row.setVisible(True)
+            self.image_label.setVisible(True)
             self.image_edit.blockSignals(True); self.image_edit.setText(obj.image_path); self.image_edit.blockSignals(False)
             self.image_edit.setEnabled(True)
             self.image_btn.setEnabled(True)
             self.clear_img_btn.setEnabled(True)
             c = obj.color or (255, 255, 255)
+            self.color_label.setVisible(True)
+            self.color_btn.setVisible(True)
             self.color_btn.setEnabled(True)
             self.color_btn.setStyleSheet(f"background: rgb({c[0]}, {c[1]}, {c[2]});")
+            self.smooth_label.setVisible(True)
+            self.smooth_check.setVisible(True)
             self.smooth_check.setEnabled(True)
             self.smooth_check.blockSignals(True)
             self.smooth_check.setChecked(getattr(obj, 'smooth', True))
