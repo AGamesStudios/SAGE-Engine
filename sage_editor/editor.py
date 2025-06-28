@@ -962,7 +962,8 @@ class AddEventDialog(QDialog):
                 self.act_list.addItem(desc)
 
     def add_condition(self):
-        dlg = ConditionDialog(self.objects, self.variables, self)
+        parent = self.parent() if self.parent() else self
+        dlg = ConditionDialog(self.objects, self.variables, parent)
         if dlg.exec() == QDialog.DialogCode.Accepted:
             cond = dlg.get_condition()
             self.conditions.append(cond)
@@ -970,7 +971,8 @@ class AddEventDialog(QDialog):
             self.cond_list.addItem(desc)
 
     def add_action(self):
-        dlg = ActionDialog(self.objects, self.variables, self)
+        parent = self.parent() if self.parent() else self
+        dlg = ActionDialog(self.objects, self.variables, parent)
         if dlg.exec() == QDialog.DialogCode.Accepted:
             act = dlg.get_action()
             self.actions.append(act)
@@ -998,7 +1000,8 @@ class AddEventDialog(QDialog):
             action = menu.exec(self.cond_list.mapToGlobal(pos))
             row = self.cond_list.row(item)
             if action == edit_act:
-                dlg = ConditionDialog(self.objects, self.variables, self, self.conditions[row])
+                parent = self.parent() if self.parent() else self
+                dlg = ConditionDialog(self.objects, self.variables, parent, self.conditions[row])
                 if dlg.exec() == QDialog.DialogCode.Accepted:
                     self.conditions[row] = dlg.get_condition()
                     desc = describe_condition(
@@ -1041,7 +1044,8 @@ class AddEventDialog(QDialog):
             action = menu.exec(self.act_list.mapToGlobal(pos))
             row = self.act_list.row(item)
             if action == edit_act:
-                dlg = ActionDialog(self.objects, self.variables, self, self.actions[row])
+                parent = self.parent() if self.parent() else self
+                dlg = ActionDialog(self.objects, self.variables, parent, self.actions[row])
                 if dlg.exec() == QDialog.DialogCode.Accepted:
                     self.actions[row] = dlg.get_action()
                     desc = describe_action(
