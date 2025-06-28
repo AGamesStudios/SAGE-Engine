@@ -18,6 +18,7 @@ from .icons import load_icon
 from PyQt6.QtCore import (
     QRectF, Qt, QPointF, QSortFilterProxyModel, QSize, QUrl, QTimer, QEvent, QObject
 )
+from dataclasses import dataclass
 import logging
 from typing import Callable
 import copy
@@ -45,6 +46,23 @@ class NoWheelFilter(QObject):
             event.ignore()
             return True
         return False
+
+
+@dataclass
+class UndoAction:
+    """Record a single object transform change for undo/redo."""
+
+    obj: GameObject
+    old: dict
+    new: dict
+
+    def undo(self) -> None:
+        for k, v in self.old.items():
+            setattr(self.obj, k, v)
+
+    def redo(self) -> None:
+        for k, v in self.new.items():
+            setattr(self.obj, k, v)
 
 RECENT_FILE = os.path.join(os.path.expanduser('~'), '.sage_recent.json')
 LAYOUT_FILE = os.path.join(os.path.expanduser('~'), '.sage_layouts.json')
@@ -1132,6 +1150,9 @@ class Editor(QMainWindow):
         self.project_description: str = ''
         self._game_window = None
         self._game_engine = None
+        # undo/redo stacks
+        self._undo_stack: list[UndoAction] = []
+        self._redo_stack: list[UndoAction] = []
         self.setWindowTitle(f'SAGE Editor ({ENGINE_VERSION})')
         self.engine_completer = QCompleter(_engine_completions(), self)
         self.engine_completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
@@ -1410,6 +1431,52 @@ class Editor(QMainWindow):
             self.dirty = True
             self._update_title()
 
+    # ------------------------------------------------------------------
+    def _capture_state(self, obj: GameObject) -> dict:
+        """Return a dictionary of transform properties for *obj*."""
+        props = {}
+        for name in (
+            'x', 'y', 'z', 'scale_x', 'scale_y', 'angle',
+            'width', 'height', 'zoom',
+        ):
+            if hasattr(obj, name):
+                props[name] = getattr(obj, name)
+        return props
+
+    def _record_undo(self, obj: GameObject, old: dict) -> None:
+        """Push an undo action if the object changed."""
+        new = self._capture_state(obj)
+        if old != new:
+            self._undo_stack.append(UndoAction(obj, old, new))
+            self._redo_stack.clear()
+            if hasattr(self, 'undo_act'):
+                self.undo_act.setEnabled(True)
+                self.redo_act.setEnabled(False)
+
+    def undo(self) -> None:
+        """Revert the last action."""
+        if not self._undo_stack:
+            return
+        action = self._undo_stack.pop()
+        action.undo()
+        self._redo_stack.append(action)
+        self._update_transform_panel(False)
+        self.view.update()
+        self.undo_act.setEnabled(bool(self._undo_stack))
+        self.redo_act.setEnabled(True)
+
+    def redo(self) -> None:
+        """Reapply the last undone action."""
+        if not self._redo_stack:
+            return
+        action = self._redo_stack.pop()
+        action.redo()
+        self._undo_stack.append(action)
+        self._update_transform_panel(False)
+        self.view.update()
+        self.undo_act.setEnabled(True)
+        self.redo_act.setEnabled(bool(self._redo_stack))
+
     def _check_project(self) -> bool:
         """Return True if a project is open; otherwise warn the user."""
         if self.project_path:
@@ -1472,6 +1539,18 @@ class Editor(QMainWindow):
         self.file_menu.addAction(self.open_proj_act)
         self.file_menu.addAction(self.save_proj_act)
         self.recent_menu = self.file_menu.addMenu(load_icon('recent.png'), self.t('recent_projects'))
+
+        self.edit_menu = menubar.addMenu(self.t('edit'))
+        self.undo_act = QAction(self.t('undo'), self)
+        self.undo_act.setShortcut('Ctrl+Z')
+        self.undo_act.setEnabled(False)
+        self.undo_act.triggered.connect(self.undo)
+        self.redo_act = QAction(self.t('redo'), self)
+        self.redo_act.setShortcut('Ctrl+Y')
+        self.redo_act.setEnabled(False)
+        self.redo_act.triggered.connect(self.redo)
+        self.edit_menu.addAction(self.undo_act)
+        self.edit_menu.addAction(self.redo_act)
 
         self.settings_menu = menubar.addMenu(self.t('settings'))
         self.project_settings_act = QAction(self.t('project_settings'), self)
@@ -2577,6 +2656,7 @@ class Editor(QMainWindow):
         if idx < 0 or idx >= len(self.items):
             return
         item, obj = self.items[idx]
+        prev = self._capture_state(obj)
         obj.x = self.x_spin.value(); obj.y = self.y_spin.value(); obj.z = self.z_spin.value()
         if isinstance(obj, Camera):
             obj.width = self.cam_w_spin.value()
@@ -2596,6 +2676,7 @@ class Editor(QMainWindow):
                 item.apply_object_transform()
         self._mark_dirty()
         self._update_gizmo()
+        self._record_undo(obj, prev)
 
     def _update_variable_panel(self):
         if not hasattr(self, 'var_group'):

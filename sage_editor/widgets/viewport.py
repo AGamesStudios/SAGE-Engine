@@ -61,6 +61,7 @@ class Viewport(GLWidget):
         self._drag_start_world = (0.0, 0.0)
         self._drag_start_obj = (0.0, 0.0)
         self._drag_start_angle = 0.0
+        self._drag_prev_state = None
         self.selected_obj: GameObject | None = None
         self._cursor_world: tuple[float, float] | None = None
 
@@ -256,6 +257,8 @@ class Viewport(GLWidget):
                 world = self._screen_to_world(event.position())
                 self._cursor_world = world
                 if self.selected_obj:
+                    if self.editor:
+                        self._drag_prev_state = self.editor._capture_state(self.selected_obj)
                     if hit == 'rot':
                         ang = math.degrees(math.atan2(
                             world[1] - self.selected_obj.y,
@@ -410,9 +413,13 @@ class Viewport(GLWidget):
 
     def mouseReleaseEvent(self, event):  # pragma: no cover - UI interaction
         self._drag_pos = None
+        dragged = self._gizmo_drag
         self._gizmo_drag = None
         self.releaseMouse()
         self.setCursor(Qt.CursorShape.ArrowCursor)
+        if dragged and self.editor and self.selected_obj and self._drag_prev_state:
+            self.editor._record_undo(self.selected_obj, self._drag_prev_state)
+        self._drag_prev_state = None
         self._gizmo_hover = self._hit_gizmo(event.position())
         self._cursor_world = self._screen_to_world(event.position())
         super().mouseReleaseEvent(event)
