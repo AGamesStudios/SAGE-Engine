@@ -3060,7 +3060,7 @@ class Editor(QMainWindow):
             add_act = menu.addAction(load_icon('add.png'), self.t('add_event'))
             action = menu.exec(self.event_list.viewport().mapToGlobal(pos))
             if action == add_act:
-                self.add_condition(len(events))
+                self.add_event()
             elif action == paste_act and self._clip_event:
                 events.append(copy.deepcopy(self._clip_event))
                 self._mark_dirty()
@@ -3600,6 +3600,23 @@ class Editor(QMainWindow):
         self._mark_dirty()
         self.refresh_events()
 
+    def add_event(self) -> None:
+        """Create a new event using the full event editor."""
+        if not self._check_project():
+            return
+        idx = self.object_combo.currentData()
+        if idx is None or idx < 0 or idx >= len(self.items):
+            return
+        obj = self.items[idx][1]
+        if not hasattr(obj, 'events'):
+            self.console_dock.write('Object has no events list')
+            return
+        dlg = AddEventDialog([o for _, o in self.items], self.scene.variables, self)
+        if dlg.exec() == QDialog.DialogCode.Accepted:
+            obj.events.append(dlg.get_event())
+            self._mark_dirty()
+        self.refresh_events()
+
     def add_condition(self, row):
         if not self._check_project():
             return
@@ -3700,8 +3717,8 @@ class Editor(QMainWindow):
         # extra row for new event
         row = self.event_list.rowCount()
         self.event_list.insertRow(row)
-        btn_new = QPushButton(self.t('add_condition'))
-        btn_new.clicked.connect(lambda _, r=row: self.add_condition(r))
+        btn_new = QPushButton(self.t('add_event'))
+        btn_new.clicked.connect(self.add_event)
         self.event_list.setCellWidget(row, 0, btn_new)
         self.event_list.setItem(row, 1, QTableWidgetItem(''))
         self.event_list.setItem(row, 2, QTableWidgetItem(''))

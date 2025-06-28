@@ -279,11 +279,23 @@ class Event:
             logger.debug('Reset event %s', self.name)
 
     def update(self, engine, scene, dt):
-        if not self.enabled:
+        if not self.enabled or (self.once and self.triggered):
             return
-        if not self.conditions:
-            if self.once and self.triggered:
-                return
+        if self.conditions:
+            try:
+                if all(cond.check(engine, scene, dt) for cond in self.conditions):
+                    for action in self.actions:
+                        try:
+                            action.execute(engine, scene, dt)
+                        except Exception:
+                            logger.exception('Action error')
+                    if self.once:
+                        self.triggered = True
+                    if self.name:
+                        logger.debug('Event %s triggered', self.name)
+            except Exception:
+                logger.exception('Condition error')
+        else:
             for action in self.actions:
                 try:
                     action.execute(engine, scene, dt)
@@ -293,21 +305,6 @@ class Event:
                 self.triggered = True
             if self.name:
                 logger.debug('Event %s triggered', self.name)
-            return
-        if self.once and self.triggered:
-            return
-        try:
-            if all(cond.check(engine, scene, dt) for cond in self.conditions):
-                for action in self.actions:
-                    try:
-                        action.execute(engine, scene, dt)
-                    except Exception:
-                        logger.exception('Action error')
-                self.triggered = True
-                if self.name:
-                    logger.debug('Event %s triggered', self.name)
-        except Exception:
-            logger.exception('Condition error')
 
 class EventSystem:
     """Container for events."""
