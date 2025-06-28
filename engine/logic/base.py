@@ -226,6 +226,12 @@ class Event:
         priority: int = 0,
         groups: list[str] | None = None,
     ):
+        """Create a new event instance.
+
+        When ``conditions`` is empty the ``actions`` will execute every frame
+        until the event is disabled. Setting ``once`` will still limit
+        execution to a single frame in that case.
+        """
         self.conditions = conditions
         self.actions = actions
         self.once = once
@@ -265,7 +271,22 @@ class Event:
             logger.debug('Reset event %s', self.name)
 
     def update(self, engine, scene, dt):
-        if not self.enabled or (self.once and self.triggered):
+        if not self.enabled:
+            return
+        if not self.conditions:
+            if self.once and self.triggered:
+                return
+            for action in self.actions:
+                try:
+                    action.execute(engine, scene, dt)
+                except Exception:
+                    logger.exception('Action error')
+            if self.once:
+                self.triggered = True
+            if self.name:
+                logger.debug('Event %s triggered', self.name)
+            return
+        if self.once and self.triggered:
             return
         try:
             if all(cond.check(engine, scene, dt) for cond in self.conditions):
