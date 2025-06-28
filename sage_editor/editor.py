@@ -1115,6 +1115,9 @@ class Editor(QMainWindow):
         self.keep_aspect = True
         self.background_color = (0, 0, 0)
         self.local_coords = False
+        self.snap_to_grid = False
+        self.grid_size = 1.0
+        self.grid_color = (77, 77, 77)
         self.resource_dir: str | None = None
         self.resource_manager = None
         self.scene = Scene()
@@ -1138,6 +1141,9 @@ class Editor(QMainWindow):
         # viewport tab renders the scene
         self.view = Viewport(self.scene, editor=self)
         self.view.renderer.background = self.background_color
+        self.view.set_snap(self.snap_to_grid)
+        self.view.set_grid_size(self.grid_size)
+        self.view.set_grid_color(self.grid_color)
         self.tabs.addTab(self.view, self.t('viewport'))
 
         # object list and transform inspector dock
@@ -1496,8 +1502,19 @@ class Editor(QMainWindow):
         self.axes_act.setChecked(True)
         self.axes_act.triggered.connect(self.toggle_gizmo)
         self.view_menu.addAction(self.axes_act)
+        self.snap_act = QAction(self.t('snap_to_grid'), self)
+        self.snap_act.setCheckable(True)
+        self.snap_act.triggered.connect(self.toggle_snap)
+        self.view_menu.addAction(self.snap_act)
+        self.size_act = QAction(self.t('grid_size'), self)
+        self.size_act.triggered.connect(self.grid_size_dialog)
+        self.view_menu.addAction(self.size_act)
+        self.color_act = QAction(self.t('grid_color'), self)
+        self.color_act.triggered.connect(self.choose_grid_color)
+        self.view_menu.addAction(self.color_act)
         self.grid_act.setChecked(self.view.show_grid)
         self.axes_act.setChecked(self.view.show_axes)
+        self.snap_act.setChecked(self.snap_to_grid)
 
         toolbar = self.addToolBar('main')
         toolbar.setObjectName('MainToolbar')
@@ -1508,6 +1525,24 @@ class Editor(QMainWindow):
         self.run_act = QAction(load_icon('start.png'), self.t('run'), self)
         self.run_act.triggered.connect(self.run_project)
         toolbar.addAction(self.run_act)
+        self.grid_btn = QToolButton()
+        self.grid_btn.setCheckable(True)
+        self.grid_btn.setText(self.t('show_grid'))
+        self.grid_btn.setChecked(self.view.show_grid)
+        self.grid_btn.toggled.connect(self.toggle_grid)
+        toolbar.addWidget(self.grid_btn)
+        self.axes_btn = QToolButton()
+        self.axes_btn.setCheckable(True)
+        self.axes_btn.setText(self.t('show_gizmo'))
+        self.axes_btn.setChecked(self.view.show_axes)
+        self.axes_btn.toggled.connect(self.toggle_gizmo)
+        toolbar.addWidget(self.axes_btn)
+        self.snap_btn = QToolButton()
+        self.snap_btn.setCheckable(True)
+        self.snap_btn.setText(self.t('snap_to_grid'))
+        self.snap_btn.setChecked(self.snap_to_grid)
+        self.snap_btn.toggled.connect(self.toggle_snap)
+        toolbar.addWidget(self.snap_btn)
         self.coord_mode_btn = QToolButton()
         self.coord_mode_btn.setCheckable(True)
         self.coord_mode_btn.setIcon(load_icon('world.png'))
@@ -2326,18 +2361,52 @@ class Editor(QMainWindow):
         self._refresh_object_labels()
 
     def toggle_grid(self, checked: bool):
+        if hasattr(self, 'grid_act'):
+            self.grid_act.blockSignals(True)
+            self.grid_act.setChecked(checked)
+            self.grid_act.blockSignals(False)
+        if hasattr(self, 'grid_btn'):
+            self.grid_btn.blockSignals(True)
+            self.grid_btn.setChecked(checked)
+            self.grid_btn.blockSignals(False)
         if hasattr(self, 'view'):
             self.view.set_show_grid(checked)
 
     def toggle_gizmo(self, checked: bool):
+        if hasattr(self, 'axes_act'):
+            self.axes_act.blockSignals(True)
+            self.axes_act.setChecked(checked)
+            self.axes_act.blockSignals(False)
+        if hasattr(self, 'axes_btn'):
+            self.axes_btn.blockSignals(True)
+            self.axes_btn.setChecked(checked)
+            self.axes_btn.blockSignals(False)
         if hasattr(self, 'view'):
             self.view.set_show_axes(checked)
 
     def toggle_snap(self, checked: bool):
-        pass
+        self.snap_to_grid = bool(checked)
+        if hasattr(self, 'snap_act'):
+            self.snap_act.blockSignals(True)
+            self.snap_act.setChecked(checked)
+            self.snap_act.blockSignals(False)
+        if hasattr(self, 'snap_btn'):
+            self.snap_btn.blockSignals(True)
+            self.snap_btn.setChecked(checked)
+            self.snap_btn.blockSignals(False)
+        if hasattr(self, 'view'):
+            self.view.set_snap(self.snap_to_grid)
 
     def set_grid_size(self, size: int):
-        pass
+        try:
+            size = float(size)
+        except Exception:
+            return
+        if size <= 0:
+            return
+        self.grid_size = size
+        if hasattr(self, 'view'):
+            self.view.set_grid_size(size)
 
     def _on_coord_mode(self):
         self.local_coords = self.coord_combo.currentIndex() == 1
@@ -2358,7 +2427,21 @@ class Editor(QMainWindow):
             self.view.set_coord_mode(self.local_coords)
 
     def choose_grid_color(self):
-        pass
+        current = self.grid_color
+        color = QColorDialog.getColor(QColor(*current), self)
+        if not color.isValid():
+            return
+        self.grid_color = (color.red(), color.green(), color.blue())
+        if hasattr(self, 'view'):
+            self.view.set_grid_color(self.grid_color)
+
+    def grid_size_dialog(self) -> None:
+        """Prompt the user for a new grid size."""
+        size, ok = QInputDialog.getDouble(
+            self, self.t('grid_size'), self.t('grid_size'), self.grid_size, 0.1, 1000.0, 2
+        )
+        if ok:
+            self.set_grid_size(size)
 
     def _clear_transform_panel(self):
         """Hide property groups and reset their values."""

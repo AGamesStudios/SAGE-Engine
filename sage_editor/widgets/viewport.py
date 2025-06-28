@@ -43,9 +43,13 @@ class Viewport(GLWidget):
         # default rendering options
         self.show_grid = False
         self.show_axes = True
+        self.snap_to_grid = False
+        self.grid_size = 1.0
+        self.snap_angle = 15.0
         self.renderer = OpenGLRenderer(self.width(), self.height(), widget=self)
         self.renderer.show_grid = self.show_grid
         self.renderer.show_axes = self.show_axes
+        self.renderer.grid_size = self.grid_size
         self.timer = QTimer(self)
         self.timer.setInterval(33)  # ~30 FPS to reduce CPU load
         self.timer.timeout.connect(self._tick)
@@ -123,6 +127,30 @@ class Viewport(GLWidget):
         self.show_axes = bool(enabled)
         if self.renderer:
             self.renderer.show_axes = self.show_axes
+        self.update()
+
+    def set_snap(self, enabled: bool) -> None:
+        """Enable or disable snapping to the grid."""
+        self.snap_to_grid = bool(enabled)
+
+    def set_grid_size(self, size: float) -> None:
+        """Set the spacing of the background grid and snapping."""
+        if size <= 0:
+            return
+        self.grid_size = float(size)
+        if self.renderer:
+            self.renderer.grid_size = self.grid_size
+        self.update()
+
+    def set_grid_color(self, color: tuple[int, int, int]) -> None:
+        """Set the display color of the grid."""
+        if self.renderer:
+            self.renderer.grid_color = (
+                color[0] / 255.0,
+                color[1] / 255.0,
+                color[2] / 255.0,
+                1.0,
+            )
         self.update()
 
     def set_transform_mode(self, mode: str) -> None:
@@ -287,8 +315,10 @@ class Viewport(GLWidget):
                 ang = math.degrees(math.atan2(
                     world[1] - self.selected_obj.y,
                     world[0] - self.selected_obj.x,
-                ))
-                self.selected_obj.angle = ang + self._drag_offset
+                )) + self._drag_offset
+                if self.snap_to_grid:
+                    ang = round(ang / self.snap_angle) * self.snap_angle
+                self.selected_obj.angle = ang
             elif self._gizmo_drag == 'sx':
                 start_dx, base = self._drag_offset
                 ang = math.radians(getattr(self.selected_obj, 'angle', 0.0))
@@ -298,7 +328,10 @@ class Viewport(GLWidget):
                     world[1] - self.selected_obj.y
                 ) * sin_a
                 if start_dx:
-                    self.selected_obj.scale_x = max(0.01, base * (dx_local / start_dx))
+                    value = max(0.01, base * (dx_local / start_dx))
+                    if self.snap_to_grid and self.grid_size > 0:
+                        value = round(value / self.grid_size) * self.grid_size
+                    self.selected_obj.scale_x = value
             elif self._gizmo_drag == 'sy':
                 start_dy, base = self._drag_offset
                 ang = math.radians(getattr(self.selected_obj, 'angle', 0.0))
@@ -308,7 +341,10 @@ class Viewport(GLWidget):
                     world[1] - self.selected_obj.y
                 ) * cos_a
                 if start_dy:
-                    self.selected_obj.scale_y = max(0.01, base * (dy_local / start_dy))
+                    value = max(0.01, base * (dy_local / start_dy))
+                    if self.snap_to_grid and self.grid_size > 0:
+                        value = round(value / self.grid_size) * self.grid_size
+                    self.selected_obj.scale_y = value
             else:
                 dx = world[0] - self._drag_start_world[0]
                 dy = world[1] - self._drag_start_world[1]
@@ -325,8 +361,13 @@ class Viewport(GLWidget):
                 else:
                     world_dx = dx if 'x' in self._gizmo_drag else 0.0
                     world_dy = dy if 'y' in self._gizmo_drag else 0.0
-                self.selected_obj.x = self._drag_start_obj[0] + world_dx
-                self.selected_obj.y = self._drag_start_obj[1] + world_dy
+                new_x = self._drag_start_obj[0] + world_dx
+                new_y = self._drag_start_obj[1] + world_dy
+                if self.snap_to_grid and self.grid_size > 0:
+                    new_x = round(new_x / self.grid_size) * self.grid_size
+                    new_y = round(new_y / self.grid_size) * self.grid_size
+                self.selected_obj.x = new_x
+                self.selected_obj.y = new_y
             if self.editor:
                 # update fields without rebuilding the variable panel
                 self.editor._update_transform_panel(False)
