@@ -19,7 +19,7 @@ pip install -r requirements.txt
 Or run `scripts/setup.sh` to install them automatically.
 
 ## Building an executable
-Install PyInstaller and run the build script to create a standalone **SAGE Engine** executable. The script packages the editor icons so the program has a complete UI when run on another machine:
+Install PyInstaller and run the build script to create a standalone **SAGE Engine** executable. Place an ``icon.png`` (256×256 is recommended) in ``sage_editor/icons`` to brand the window. If building for Windows also provide ``icon.ico`` converted from that image. The script packages the editor icons so the program has a complete UI when run on another machine:
 
 ```bash
 pip install pyinstaller

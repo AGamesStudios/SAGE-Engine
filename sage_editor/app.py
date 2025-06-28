@@ -13,7 +13,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPalette, QColor, QFont
-from .icons import load_icon
+from .icons import load_icon, app_icon
 
 STYLE_SHEET = """
 QToolBar { icon-size: 24px; spacing: 6px; }
@@ -181,6 +181,7 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv
     app = QApplication(argv)
+    app.setWindowIcon(app_icon())
     app.setStyle('Fusion')
     palette = QPalette()
     palette.setColor(QPalette.ColorRole.Window, QColor(53, 53, 53))

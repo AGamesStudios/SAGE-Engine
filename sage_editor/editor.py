@@ -14,7 +14,7 @@ try:
 except Exception:  # pragma: no cover - handle older PyQt versions
     QFileSystemModel = None
 from PyQt6.QtGui import QPixmap, QColor, QAction, QActionGroup, QDesktopServices
-from .icons import load_icon
+from .icons import load_icon, app_icon
 from PyQt6.QtCore import (
     QRectF, Qt, QPointF, QSortFilterProxyModel, QSize, QUrl, QTimer, QEvent, QObject
 )
@@ -1317,6 +1317,7 @@ class VariableDialog(QDialog):
 class Editor(QMainWindow):
     def __init__(self, autoshow: bool = True):
         super().__init__()
+        self.setWindowIcon(app_icon())
         self.resize(1200, 800)
         self.lang = DEFAULT_LANGUAGE
         self.window_width = 640
