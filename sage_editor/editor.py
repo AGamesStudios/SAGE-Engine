@@ -687,12 +687,15 @@ class ActionDialog(QDialog):
         layout.addRow(self.dy_label, self.dy_spin)
 
         self.dir_label = QLabel(parent.t('direction_label') if parent else 'Direction:')
-        self.dir_spin = QDoubleSpinBox(); self.dir_spin.setRange(0.0, 359.9)
-        self.dir_spin.setSingleStep(1.0)
+        self.dir_box = QComboBox()
+        self.dir_box.addItem(parent.t('dir_right') if parent else 'Right', 0.0)
+        self.dir_box.addItem(parent.t('dir_left') if parent else 'Left', 180.0)
+        self.dir_box.addItem(parent.t('dir_up') if parent else 'Up', 90.0)
+        self.dir_box.addItem(parent.t('dir_down') if parent else 'Down', 270.0)
         self.speed_label = QLabel(parent.t('speed_label') if parent else 'Speed:')
         self.speed_spin = QDoubleSpinBox(); self.speed_spin.setRange(-1000.0, 1000.0)
         self.speed_spin.setValue(100.0)
-        layout.addRow(self.dir_label, self.dir_spin)
+        layout.addRow(self.dir_label, self.dir_box)
         layout.addRow(self.speed_label, self.speed_spin)
 
         self.x_label = QLabel(parent.t('x') if parent else 'x:')
@@ -795,7 +798,7 @@ class ActionDialog(QDialog):
             return {
                 'type': typ,
                 'target': self.target_box.currentData(),
-                'direction': self.dir_spin.value(),
+                'direction': self.dir_box.currentData(),
                 'speed': self.speed_spin.value(),
             }
         if typ == 'SetPosition':
@@ -856,7 +859,7 @@ class ActionDialog(QDialog):
             (self.target_label, self.target_box),
             (self.dx_label, self.dx_spin),
             (self.dy_label, self.dy_spin),
-            (self.dir_label, self.dir_spin),
+            (self.dir_label, self.dir_box),
             (self.speed_label, self.speed_spin),
             (self.x_label, self.x_spin),
             (self.y_label, self.y_spin),
@@ -885,7 +888,7 @@ class ActionDialog(QDialog):
         elif typ == 'MoveDirection':
             for pair in [
                 (self.target_label, self.target_box),
-                (self.dir_label, self.dir_spin),
+                (self.dir_label, self.dir_box),
                 (self.speed_label, self.speed_spin),
             ]:
                 pair[0].setVisible(True)
@@ -987,8 +990,14 @@ class ActionDialog(QDialog):
                 self.dx_spin.setValue(int(data.get('dx', 0)))
                 self.dy_spin.setValue(int(data.get('dy', 0)))
             elif typ == 'MoveDirection':
-                ang = float(data.get('direction', 0))
-                self.dir_spin.setValue(ang % 360)
+                ang = float(data.get('direction', 0)) % 360
+                idx = -1
+                for i in range(self.dir_box.count()):
+                    if int(self.dir_box.itemData(i)) == int(ang):
+                        idx = i
+                        break
+                if idx >= 0:
+                    self.dir_box.setCurrentIndex(idx)
                 self.speed_spin.setValue(float(data.get('speed', 0)))
             elif typ == 'SetPosition':
                 self.x_spin.setValue(int(data.get('x', 0)))
