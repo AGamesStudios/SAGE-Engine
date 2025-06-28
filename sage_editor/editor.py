@@ -261,6 +261,10 @@ def describe_action(act, objects, t=lambda x: x):
         t = act.get('target')
         name = objects[t].name if t is not None and 0 <= t < len(objects) else 'N/A'
         return f"{t('Move')} {name} {t('dx')} {act.get('dx')},{t('dy')} {act.get('dy')}"
+    if typ == 'MoveDirection':
+        t_idx = act.get('target')
+        name = objects[t_idx].name if t_idx is not None and 0 <= t_idx < len(objects) else 'N/A'
+        return f"{t('MoveDirection')} {name} {t('direction_label')} {act.get('direction')} {t('speed_label')} {act.get('speed')}"
     if typ == 'SetPosition':
         t = act.get('target')
         name = objects[t].name if t is not None and 0 <= t < len(objects) else 'N/A'
@@ -669,6 +673,14 @@ class ActionDialog(QDialog):
         layout.addRow(self.dx_label, self.dx_spin)
         layout.addRow(self.dy_label, self.dy_spin)
 
+        self.dir_label = QLabel(parent.t('direction_label') if parent else 'Direction:')
+        self.dir_spin = QDoubleSpinBox(); self.dir_spin.setRange(-360.0, 360.0)
+        self.speed_label = QLabel(parent.t('speed_label') if parent else 'Speed:')
+        self.speed_spin = QDoubleSpinBox(); self.speed_spin.setRange(-1000.0, 1000.0)
+        self.speed_spin.setValue(100.0)
+        layout.addRow(self.dir_label, self.dir_spin)
+        layout.addRow(self.speed_label, self.speed_spin)
+
         self.x_label = QLabel(parent.t('x') if parent else 'x:')
         self.x_spin = QSpinBox(); self.x_spin.setRange(-10000, 10000)
         self.y_label = QLabel(parent.t('y') if parent else 'y:')
@@ -759,7 +771,19 @@ class ActionDialog(QDialog):
     def get_action(self):
         typ = self.type_box.currentData()
         if typ == 'Move':
-            return {'type': typ, 'target': self.target_box.currentData(), 'dx': self.dx_spin.value(), 'dy': self.dy_spin.value()}
+            return {
+                'type': typ,
+                'target': self.target_box.currentData(),
+                'dx': self.dx_spin.value(),
+                'dy': self.dy_spin.value(),
+            }
+        if typ == 'MoveDirection':
+            return {
+                'type': typ,
+                'target': self.target_box.currentData(),
+                'direction': self.dir_spin.value(),
+                'speed': self.speed_spin.value(),
+            }
         if typ == 'SetPosition':
             return {'type': typ, 'target': self.target_box.currentData(), 'x': self.x_spin.value(), 'y': self.y_spin.value()}
         if typ == 'Destroy':
@@ -814,6 +838,8 @@ class ActionDialog(QDialog):
             (self.target_label, self.target_box),
             (self.dx_label, self.dx_spin),
             (self.dy_label, self.dy_spin),
+            (self.dir_label, self.dir_spin),
+            (self.speed_label, self.speed_spin),
             (self.x_label, self.x_spin),
             (self.y_label, self.y_spin),
             (self.text_label, self.text_edit),
@@ -831,7 +857,19 @@ class ActionDialog(QDialog):
             label.setVisible(False)
             w.setVisible(False)
         if typ == 'Move':
-            for pair in [(self.target_label, self.target_box), (self.dx_label, self.dx_spin), (self.dy_label, self.dy_spin)]:
+            for pair in [
+                (self.target_label, self.target_box),
+                (self.dx_label, self.dx_spin),
+                (self.dy_label, self.dy_spin),
+            ]:
+                pair[0].setVisible(True)
+                pair[1].setVisible(True)
+        elif typ == 'MoveDirection':
+            for pair in [
+                (self.target_label, self.target_box),
+                (self.dir_label, self.dir_spin),
+                (self.speed_label, self.speed_spin),
+            ]:
                 pair[0].setVisible(True)
                 pair[1].setVisible(True)
         elif typ == 'SetPosition':
@@ -923,11 +961,14 @@ class ActionDialog(QDialog):
         if idx >= 0:
             self.type_box.setCurrentIndex(idx)
             typ = self.type_box.itemData(idx)
-        if typ in ('Move', 'SetPosition', 'Destroy'):
+        if typ in ('Move', 'MoveDirection', 'SetPosition', 'Destroy'):
             self.target_box.setCurrentIndex(int(data.get('target', 0)))
             if typ == 'Move':
                 self.dx_spin.setValue(int(data.get('dx', 0)))
                 self.dy_spin.setValue(int(data.get('dy', 0)))
+            elif typ == 'MoveDirection':
+                self.dir_spin.setValue(float(data.get('direction', 0)))
+                self.speed_spin.setValue(float(data.get('speed', 0)))
             elif typ == 'SetPosition':
                 self.x_spin.setValue(int(data.get('x', 0)))
                 self.y_spin.setValue(int(data.get('y', 0)))
