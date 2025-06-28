@@ -27,7 +27,7 @@ import inspect
 from .lang import LANGUAGES, DEFAULT_LANGUAGE
 from engine import Scene, GameObject, Project, Camera, ENGINE_VERSION, get_resource_path
 from . import plugins
-from .widgets import Viewport
+from .widgets import Viewport, ResourceLineEdit
 register_plugin = plugins.register_plugin
 import json
 from .docks.console import ConsoleDock
@@ -595,7 +595,7 @@ class ActionDialog(QDialog):
         layout.addRow(self.text_label, self.text_edit)
 
         self.path_label = QLabel(parent.t('path_label') if parent else 'Path:')
-        self.path_edit = QLineEdit()
+        self.path_edit = ResourceLineEdit(parent)
         if parent:
             parent.apply_engine_completer(self.path_edit)
         path_row = QHBoxLayout()

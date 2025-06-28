@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt
 from ..icons import load_icon
+from ..widgets import ResourceLineEdit
 
 
 class PropertiesDock(QDockWidget):
@@ -34,7 +35,10 @@ class PropertiesDock(QDockWidget):
         self.type_combo.addItem(editor.t('camera'), 'camera')
         obj_form.addRow(editor.t('name_label'), self.name_edit)
         obj_form.addRow(editor.t('type_label'), self.type_combo)
-        self.image_edit = QLineEdit()
+        self.image_edit = ResourceLineEdit(
+            editor,
+            {'.png', '.jpg', '.jpeg', '.bmp', '.gif'}
+        )
         self.image_btn = QPushButton()
         self.image_btn.setIcon(load_icon('open.png'))
         img_row = QWidget()
