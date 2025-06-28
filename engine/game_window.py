@@ -19,11 +19,10 @@ class GameWindow(QMainWindow):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(engine.renderer.widget)
         self.setCentralWidget(central)
-        # match the project settings and fill the window without letterboxing
+        # match the project settings and keep aspect ratio like the editor
         self.resize(engine.renderer.width, engine.renderer.height)
-        # the editor viewport enforces aspect ratio, but the game window should
-        # stretch to the user size so disable it here
-        self.engine.renderer.keep_aspect = False
+        # ensure the renderer preserves the project aspect when resizing so
+        # unused regions are letterboxed in black
         interval = int(1000 / engine.fps) if engine.fps else 0
         self.timer = QTimer(self)
         self.timer.setInterval(max(1, interval))
