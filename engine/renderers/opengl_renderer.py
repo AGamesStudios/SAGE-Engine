@@ -136,8 +136,9 @@ class OpenGLRenderer:
         self.widget.renderer = self
         self.widget.resize(self.width, self.height)
         self._should_close = False
-        self.textures: dict[int, int] = {}
+        self.textures: dict[tuple[int, bool], int] = {}
         self._blank_texture: int | None = None
+        self._blank_nearest_texture: int | None = None
         self._icon_cache: dict[str, int] = {}
         self._scene = None
         self._camera = None
@@ -187,24 +188,29 @@ class OpenGLRenderer:
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
 
-    def _get_blank_texture(self) -> int:
+    def _get_blank_texture(self, smooth: bool = True) -> int:
         """Return a 1x1 white texture used for colored objects."""
-        if self._blank_texture is None:
+        attr = '_blank_texture' if smooth else '_blank_nearest_texture'
+        tex = getattr(self, attr, None)
+        if tex is None:
             data = b"\xff\xff\xff\xff"
-            self._blank_texture = glGenTextures(1)
-            glBindTexture(GL_TEXTURE_2D, self._blank_texture)
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+            tex = glGenTextures(1)
+            glBindTexture(GL_TEXTURE_2D, tex)
+            filt = GL_LINEAR if smooth else GL_NEAREST
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filt)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filt)
             glTexImage2D(
                 GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0,
                 GL_RGBA, GL_UNSIGNED_BYTE, data
             )
-        return self._blank_texture
+            setattr(self, attr, tex)
+        return tex
 
     def _get_texture(self, obj) -> int:
         if obj.image is None:
-            return self._get_blank_texture()
-        tex = self.textures.get(id(obj.image))
+            return self._get_blank_texture(obj.smooth)
+        key = (id(obj.image), bool(getattr(obj, 'smooth', True)))
+        tex = self.textures.get(key)
         if tex:
             return tex
         img = obj.image
@@ -212,13 +218,14 @@ class OpenGLRenderer:
         data = img.tobytes()
         tex_id = glGenTextures(1)
         glBindTexture(GL_TEXTURE_2D, tex_id)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+        filt = GL_LINEAR if getattr(obj, 'smooth', True) else GL_NEAREST
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filt)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filt)
         glTexImage2D(
             GL_TEXTURE_2D, 0, GL_RGBA, img.width, img.height, 0,
             GL_RGBA, GL_UNSIGNED_BYTE, data
         )
-        self.textures[id(obj.image)] = tex_id
+        self.textures[key] = tex_id
         return tex_id
 
     def _get_icon_texture(self, name: str) -> int:

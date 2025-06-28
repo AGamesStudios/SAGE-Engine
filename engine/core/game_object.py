@@ -38,6 +38,7 @@ def clear_image_cache():
         ('angle', None),
         ('pivot_x', None),
         ('pivot_y', None),
+        ('smooth', None),
         ('color', None),
         ('metadata', 'metadata'),
         ('variables', 'variables'),
@@ -57,6 +58,7 @@ class GameObject:
     angle: float = 0.0
     pivot_x: float = 0.5
     pivot_y: float = 0.5
+    smooth: bool = True
     color: tuple[int, int, int, int] | None = None
     metadata: dict = field(default_factory=dict)
     events: list = field(default_factory=list)

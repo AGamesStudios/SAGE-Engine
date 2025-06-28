@@ -14,6 +14,7 @@ LANGUAGES = {
         'zoom': 'Zoom:',
         'edit_object': 'Edit Object',
         'color': 'Color:',
+        'filtering': 'Filtering',
         'new_object': 'New Object',
         'object': 'Object:',
         'add_variable': 'Add Variable',
@@ -141,6 +142,7 @@ LANGUAGES = {
         , 'zoom': 'Zoom:'
         , 'edit_object': 'Edit Object'
         , 'color': 'Color:'
+        , 'filtering': 'Filtering'
         , 'unsaved_changes': 'Unsaved Changes'
         , 'save_before_exit': 'Save changes before exiting?'
         , 'clear_log': 'Clear Log'
@@ -190,6 +192,7 @@ LANGUAGES = {
         'zoom': 'Зум:',
         'edit_object': 'Редактировать объект',
         'color': 'Цвет:',
+        'filtering': 'Фильтрация',
         'object': 'Объект:',
         'add_variable': 'Добавить переменную',
         'public': 'Публичная',

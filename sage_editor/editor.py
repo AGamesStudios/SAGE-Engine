@@ -1204,10 +1204,12 @@ class Editor(QMainWindow):
         self.image_edit = prop_dock.image_edit
         self.image_btn = prop_dock.image_btn
         self.color_btn = prop_dock.color_btn
+        self.smooth_check = prop_dock.smooth_check
         self.image_edit.setPlaceholderText(self.t('path_label'))
         self.color_btn.setText('')
         self.color_btn.setStyleSheet('background: rgb(255, 255, 255);')
         self.color_btn.setText('')
+        self.smooth_check.setChecked(True)
 
         # resources dock on the left
         res_dock = ResourceDock(self)
@@ -1236,6 +1238,7 @@ class Editor(QMainWindow):
         self.image_btn.clicked.connect(self._choose_object_image)
         self.image_edit.editingFinished.connect(self._image_path_edited)
         self.color_btn.clicked.connect(self._choose_object_color)
+        self.smooth_check.stateChanged.connect(self._smooth_changed)
         self.tabs.setTabsClosable(True)
         self.tabs.currentChanged.connect(self._tab_changed)
         self.tabs.tabCloseRequested.connect(self._close_tab)
@@ -2344,6 +2347,10 @@ class Editor(QMainWindow):
         self.image_btn.setEnabled(False)
         self.color_btn.setEnabled(False)
         self.color_btn.setStyleSheet('')
+        self.smooth_check.blockSignals(True)
+        self.smooth_check.setChecked(False)
+        self.smooth_check.setEnabled(False)
+        self.smooth_check.blockSignals(False)
         if hasattr(self, 'var_group'):
             self.var_group.setVisible(False)
             while self.var_layout.rowCount():
@@ -2385,6 +2392,10 @@ class Editor(QMainWindow):
             self.image_btn.setEnabled(False)
             self.color_btn.setEnabled(False)
             self.color_btn.setStyleSheet('')
+            self.smooth_check.setEnabled(False)
+            self.smooth_check.blockSignals(True)
+            self.smooth_check.setChecked(False)
+            self.smooth_check.blockSignals(False)
         self.x_spin.blockSignals(True); self.x_spin.setValue(obj.x); self.x_spin.blockSignals(False)
         self.y_spin.blockSignals(True); self.y_spin.setValue(obj.y); self.y_spin.blockSignals(False)
         self.z_spin.blockSignals(True); self.z_spin.setValue(getattr(obj, 'z', 0)); self.z_spin.blockSignals(False)
@@ -2414,6 +2425,10 @@ class Editor(QMainWindow):
             c = obj.color or (255, 255, 255)
             self.color_btn.setEnabled(True)
             self.color_btn.setStyleSheet(f"background: rgb({c[0]}, {c[1]}, {c[2]});")
+            self.smooth_check.setEnabled(True)
+            self.smooth_check.blockSignals(True)
+            self.smooth_check.setChecked(getattr(obj, 'smooth', True))
+            self.smooth_check.blockSignals(False)
 
         if update_vars:
             self._update_variable_panel()
@@ -2626,6 +2641,23 @@ class Editor(QMainWindow):
             f"background: rgb({color.red()}, {color.green()}, {color.blue()});"
         )
         if hasattr(self, 'view'):
+            self.view.update()
+        self._mark_dirty()
+
+    def _smooth_changed(self) -> None:
+        """Toggle texture filtering for the current object."""
+        idx = self.object_combo.currentIndex()
+        if idx < 0 or idx >= len(self.items):
+            return
+        obj = self.items[idx][1]
+        if not hasattr(obj, 'smooth'):
+            return
+        obj.smooth = self.smooth_check.isChecked()
+        if hasattr(self.view, 'renderer'):
+            key1 = (id(obj.image), True)
+            key2 = (id(obj.image), False)
+            self.view.renderer.textures.pop(key1, None)
+            self.view.renderer.textures.pop(key2, None)
             self.view.update()
         self._mark_dirty()
 

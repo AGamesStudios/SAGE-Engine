@@ -50,6 +50,8 @@ class PropertiesDock(QDockWidget):
         self.color_btn = QPushButton()
         self.color_btn.setFixedWidth(60)
         obj_form.addRow(editor.t('color'), self.color_btn)
+        self.smooth_check = QCheckBox(editor.t('filtering'))
+        obj_form.addRow(self.smooth_check)
         prop_layout.addWidget(self.object_group)
         self.transform_group = QGroupBox(editor.t('transform'))
         form = QFormLayout(self.transform_group)
