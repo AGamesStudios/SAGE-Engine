@@ -241,7 +241,7 @@ class Scene:
         es = EventSystem(variables=vars_dict)
         for evt in getattr(self, "events", []):
             if isinstance(evt, dict):
-                obj = event_from_dict(evt, self.objects, self.variables)
+                obj = event_from_dict(evt, self.objects, vars_dict)
                 if obj is not None:
                     es.add_event(obj)
         self.event_system = es

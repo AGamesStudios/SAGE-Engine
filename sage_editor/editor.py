@@ -2282,6 +2282,16 @@ class Editor(QMainWindow):
                 return obj.variables, getattr(obj, "public_vars", set())
         return self.scene.variables, set()
 
+    def _event_holder(self):
+        """Return the object or scene whose events are being edited."""
+        tab = self.tabs.currentWidget()
+        if isinstance(tab, ObjectLogicTab):
+            idx = tab.object_combo.itemData(0)
+            if idx is not None and 0 <= idx < len(self.items):
+                return self.items[idx][1]
+            return None
+        return self.scene
+
     def _edit_variable(self, row: int) -> None:
         vars_dict, pub = self._variable_dicts()
         if row < 0 or row >= len(vars_dict):
@@ -3023,11 +3033,10 @@ class Editor(QMainWindow):
 
     def _event_menu(self, pos):
         """Show context actions for the event list."""
-        idx = self.object_combo.currentData()
-        if idx is None or idx < 0 or idx >= len(self.items):
+        holder = self._event_holder()
+        if holder is None or not hasattr(holder, 'events'):
             return
-        obj = self.items[idx][1]
-        events = getattr(obj, 'events', [])
+        events = holder.events
         item = self.event_list.itemAt(pos)
         menu = QMenu(self)
         paste_act = menu.addAction(load_icon('paste.png'), self.t('paste')) if self._clip_event else None
@@ -3585,15 +3594,10 @@ class Editor(QMainWindow):
 
     def _delete_event(self, index: int) -> None:
         """Remove an event from the current object or scene."""
-        tab = self.tabs.currentWidget()
-        if tab is self.logic_widget:
-            events = getattr(self.scene, 'events', [])
-        else:
-            idx = self.object_combo.currentData()
-            if idx is None or idx < 0 or idx >= len(self.items):
-                return
-            obj = self.items[idx][1]
-            events = getattr(obj, 'events', [])
+        holder = self._event_holder()
+        if holder is None:
+            return
+        events = getattr(holder, 'events', [])
         if index < 0 or index >= len(events):
             return
         events.pop(index)
@@ -3604,16 +3608,13 @@ class Editor(QMainWindow):
         """Create a new event using the full event editor."""
         if not self._check_project():
             return
-        idx = self.object_combo.currentData()
-        if idx is None or idx < 0 or idx >= len(self.items):
-            return
-        obj = self.items[idx][1]
-        if not hasattr(obj, 'events'):
+        holder = self._event_holder()
+        if holder is None or not hasattr(holder, 'events'):
             self.console_dock.write('Object has no events list')
             return
         dlg = AddEventDialog([o for _, o in self.items], self.scene.variables, self)
         if dlg.exec() == QDialog.DialogCode.Accepted:
-            obj.events.append(dlg.get_event())
+            holder.events.append(dlg.get_event())
             self._mark_dirty()
         self.refresh_events()
 
@@ -3621,22 +3622,20 @@ class Editor(QMainWindow):
         if not self._check_project():
             return
         try:
-            idx = self.object_combo.currentData()
-            if idx is None or idx < 0 or idx >= len(self.items):
-                return
-            obj = self.items[idx][1]
-            if not hasattr(obj, 'events'):
+            holder = self._event_holder()
+            if holder is None or not hasattr(holder, 'events'):
                 self.console_dock.write('Object has no events list')
                 return
+            events = holder.events
             if row < 0:
                 return
-            creating_new = row >= len(obj.events)
-            evt = {'conditions': [], 'actions': []} if creating_new else obj.events[row]
+            creating_new = row >= len(events)
+            evt = {'conditions': [], 'actions': []} if creating_new else events[row]
             dlg = ConditionDialog([o for _, o in self.items], self.scene.variables, self)
             if dlg.exec() == QDialog.DialogCode.Accepted:
                 evt['conditions'].append(dlg.get_condition())
                 if creating_new:
-                    obj.events.append(evt)
+                    events.append(evt)
                 self._mark_dirty()
             self.refresh_events()
         except Exception as exc:
@@ -3646,16 +3645,14 @@ class Editor(QMainWindow):
         if not self._check_project():
             return
         try:
-            idx = self.object_combo.currentData()
-            if idx is None or idx < 0 or idx >= len(self.items):
-                return
-            obj = self.items[idx][1]
-            if not hasattr(obj, 'events'):
+            holder = self._event_holder()
+            if holder is None or not hasattr(holder, 'events'):
                 self.console_dock.write('Object has no events list')
                 return
-            if row < 0 or row >= len(obj.events):
+            events = holder.events
+            if row < 0 or row >= len(events):
                 return
-            evt = obj.events[row]
+            evt = events[row]
             dlg = ActionDialog([o for _, o in self.items], self.scene.variables, self)
             if dlg.exec() == QDialog.DialogCode.Accepted:
                 evt['actions'].append(dlg.get_action())
@@ -3666,17 +3663,10 @@ class Editor(QMainWindow):
 
     def refresh_events(self):
         self.event_list.setRowCount(0)
-        tab = self.tabs.currentWidget()
-        if tab is self.logic_widget:
-            events = getattr(self.scene, 'events', [])
-        else:
-            idx = self.object_combo.currentData()
-            if idx is None and self.items:
-                idx = 0
-            if idx is None or idx < 0 or idx >= len(self.items):
-                return
-            obj = self.items[idx][1]
-            events = getattr(obj, 'events', [])
+        holder = self._event_holder()
+        if holder is None:
+            return
+        events = getattr(holder, 'events', [])
         if not isinstance(events, list):
             events = []
         for i, evt in enumerate(events):
