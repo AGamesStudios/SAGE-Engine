@@ -15,7 +15,7 @@ from OpenGL.GL import (
     glGetUniformLocation, glUniform4f, glUseProgram, glBindBuffer,
     glBindVertexArray, glDrawArrays,
     GL_BLEND, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_COLOR_BUFFER_BIT,
-    GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_TEXTURE_MAG_FILTER, GL_LINEAR,
+    GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_TEXTURE_MAG_FILTER, GL_LINEAR, GL_NEAREST,
     GL_QUADS, GL_LINES, GL_LINE_LOOP, GL_TRIANGLES, GL_RGBA, GL_UNSIGNED_BYTE,
     GL_MULTISAMPLE, GL_LINE_SMOOTH, GL_ARRAY_BUFFER, GL_STATIC_DRAW,
     GL_FLOAT, GL_TRIANGLE_FAN, GL_VERTEX_SHADER, GL_FRAGMENT_SHADER
@@ -646,56 +646,68 @@ class OpenGLRenderer:
         self._apply_viewport(camera)
         self._apply_projection(camera)
         glPushMatrix()
-        scale = units.UNITS_PER_METER
-        sign = 1.0 if units.Y_UP else -1.0
-        if camera:
-            glScalef(camera.zoom, camera.zoom, 1.0)
-            glTranslatef(-camera.x * scale,
-                         -camera.y * scale * sign,
-                         0)
-        scene.sort_objects()
-        for obj in scene.objects:
-            if isinstance(obj, Camera):
-                if self._draw_gizmos:
-                    color = (1.0, 0.5, 0.0, 1.0) if obj is self._selected_obj else (1.0, 1.0, 0.0, 1.0)
-                    width = 3.0 if obj is self._selected_obj else 1.0
-                    self._draw_frustum(obj, color=color, width=width)
-                    tex = self._get_icon_texture('camera.png')
-                    self._draw_icon(
-                        obj.x, obj.y, tex, camera.zoom if camera else 1.0
-                    )
+        try:
+            scale = units.UNITS_PER_METER
+            sign = 1.0 if units.Y_UP else -1.0
+            if camera:
+                glScalef(camera.zoom, camera.zoom, 1.0)
+                glTranslatef(-camera.x * scale,
+                             -camera.y * scale * sign,
+                             0)
+            scene.sort_objects()
+            for obj in scene.objects:
+                if isinstance(obj, Camera):
+                    if self._draw_gizmos:
+                        color = (
+                            1.0,
+                            0.5,
+                            0.0,
+                            1.0,
+                        ) if obj is self._selected_obj else (1.0, 1.0, 0.0, 1.0)
+                        width = 3.0 if obj is self._selected_obj else 1.0
+                        self._draw_frustum(obj, color=color, width=width)
+                        tex = self._get_icon_texture('camera.png')
+                        self._draw_icon(
+                            obj.x, obj.y, tex, camera.zoom if camera else 1.0
+                        )
+                    if obj is self._selected_obj:
+                        self._draw_gizmo(
+                            obj,
+                            camera,
+                            self._hover_axis,
+                            self._drag_axis,
+                            mode=self._transform_mode,
+                            local=self._local_coords,
+                        )
+                    continue
+                self._draw_object(obj, camera)
                 if obj is self._selected_obj:
-                    self._draw_gizmo(
-                        obj,
-                        camera,
-                        self._hover_axis,
-                        self._drag_axis,
-                        mode=self._transform_mode,
-                        local=self._local_coords,
+                    self._draw_outline(obj, camera)
+                if self._draw_gizmos:
+                    tex_icon = self._get_icon_texture('object.png')
+                    self._draw_icon(
+                        obj.x, obj.y, tex_icon, camera.zoom if camera else 1.0
                     )
-                continue
-            self._draw_object(obj, camera)
-            if obj is self._selected_obj:
-                self._draw_outline(obj, camera)
-            if self._draw_gizmos:
-                tex_icon = self._get_icon_texture('object.png')
-                self._draw_icon(
-                    obj.x, obj.y, tex_icon, camera.zoom if camera else 1.0
+            if (
+                self._draw_gizmos
+                and self._selected_obj
+                and not isinstance(self._selected_obj, Camera)
+            ):
+                self._draw_gizmo(
+                    self._selected_obj,
+                    camera,
+                    self._hover_axis,
+                    self._drag_axis,
+                    mode=self._transform_mode,
+                    local=self._local_coords,
                 )
-        if self._draw_gizmos and self._selected_obj and not isinstance(self._selected_obj, Camera):
-            self._draw_gizmo(
-                self._selected_obj,
-                camera,
-                self._hover_axis,
-                self._drag_axis,
-                mode=self._transform_mode,
-                local=self._local_coords,
-            )
-        self._draw_origin(50 * scale)
-        if self._cursor_pos is not None:
-            self._draw_cursor(self._cursor_pos[0], self._cursor_pos[1],
-                               camera)
-        glPopMatrix()
+            self._draw_origin(50 * scale)
+            if self._cursor_pos is not None:
+                self._draw_cursor(
+                    self._cursor_pos[0], self._cursor_pos[1], camera
+                )
+        finally:
+            glPopMatrix()
 
     def present(self):
         self.widget.update()
