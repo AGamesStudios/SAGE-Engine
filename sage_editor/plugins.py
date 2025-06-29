@@ -1,11 +1,13 @@
-from sage_sdk.plugins import register_plugin as _reg, load_plugins as _load
+from sage_sdk.plugins import PluginManager
+
+EDITOR_PLUGINS = PluginManager('editor')
 
 def register_plugin(func):
     """Register an editor plugin programmatically."""
-    _reg('editor', func)
+    EDITOR_PLUGINS.register(func)
 
 
 def load_plugins(editor, paths=None):
     """Load editor plugins and call them with the editor instance."""
-    _load('editor', editor, paths)
+    EDITOR_PLUGINS.load(editor, paths)
 

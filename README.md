@@ -363,24 +363,27 @@ tools can store extra information without affecting the runtime.
 
 ### SAGE SDK and Plugins
 
-The ``sage_sdk`` package ships with a small plugin loader used by both the
-engine and editor.  Directories listed in ``SAGE_PLUGINS`` are scanned for
-Python files.  Each module may define ``init_editor(editor)`` and/or
+The ``sage_sdk`` package ships with a flexible plugin system used by both the
+engine and editor.  A :class:`PluginManager` instance handles discovery and
+initialization. Directories listed in ``SAGE_PLUGINS`` are scanned for Python
+files.  Each module may define ``init_editor(editor)`` and/or
 ``init_engine(engine)`` functions which are called when the respective
 component starts.  Plugins can also be registered programmatically via
-``sage_sdk.register_plugin('editor', func)`` or ``'engine'`` for runtime hooks.
-This keeps the core lightweight while allowing advanced features to be
-packaged separately and installed by simply dropping a file into the plugins
-folder.  ``SAGE_ENGINE_PLUGINS`` and ``SAGE_EDITOR_PLUGINS`` provide
-component-specific search paths. The editor exposes **Manage Plugins** under the
-Settings menu which copies Python files into ``~/.sage_plugins`` and lets you
-enable or disable them. Plugin installation is entirely local; the editor does
-not download code from the internet.
+``register_plugin`` or by calling ``PluginManager.register()``. This keeps the
+core lightweight while allowing advanced features to be packaged separately and
+installed by simply dropping a file into the plugins folder.
+``SAGE_ENGINE_PLUGINS`` and ``SAGE_EDITOR_PLUGINS`` provide component-specific
+search paths. The editor exposes **Manage Plugins** under the Settings menu
+which copies Python files into ``~/.sage_plugins`` and lets you enable or
+disable them. Plugin installation is entirely local; the editor never downloads
+code automatically.
 
 Plugins can also be distributed as standard Python packages. Any entry points
 registered under ``sage_engine.plugins`` or ``sage_editor.plugins`` will be
 loaded automatically when the engine or editor starts, allowing third-party
-packages to extend the engine without touching the plugin folders.
+packages to extend the engine without touching the plugin folders. Entry points
+may return a function, a module providing ``init_engine``/``init_editor`` or a
+``PluginBase`` subclass which will be instantiated automatically.
 
 Engine plugins may also define ``register_logic(register_condition, register_action)``
 to add custom event blocks. This hook receives the engine's registration
