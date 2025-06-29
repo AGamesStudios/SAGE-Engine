@@ -448,27 +448,18 @@ class OpenGLRenderer:
         obj_x, obj_y = obj.render_position(
             camera, apply_effects=self.apply_effects
         )
-        from engine.core.fastmath import calc_matrix
-        sx = obj.scale_x * (-1.0 if getattr(obj, "flip_x", False) else 1.0)
-        sy = obj.scale_y * (-1.0 if getattr(obj, "flip_y", False) else 1.0)
-        m = calc_matrix(
-            obj_x,
-            obj_y,
-            obj.width,
-            obj.height,
-            obj.pivot_x,
-            obj.pivot_y,
-            sx * scale_mul,
-            sy * scale_mul,
-            getattr(obj, "angle", 0.0),
-            unit_scale,
-            units.Y_UP,
-        )
+        ang = math.radians(getattr(obj, "angle", 0.0))
+        cos_a = math.cos(ang)
+        sin_a = math.sin(ang)
+        sx = -1.0 if getattr(obj, "flip_x", False) else 1.0
+        sy = -1.0 if getattr(obj, "flip_y", False) else 1.0
+        w = obj.width * obj.scale_x * scale_mul
+        h = obj.height * obj.scale_y * scale_mul
         corners = [
-            (0.0, 0.0),
-            (obj.width, 0.0),
-            (obj.width, obj.height),
-            (0.0, obj.height),
+            (-w / 2, -h / 2),
+            (w / 2, -h / 2),
+            (w / 2, h / 2),
+            (-w / 2, h / 2),
         ]
         glUseProgram(0)
         glBindTexture(GL_TEXTURE_2D, 0)
@@ -484,8 +475,10 @@ class OpenGLRenderer:
         w_size = camera.width if (self.keep_aspect and camera) else self.width
         h_size = camera.height if (self.keep_aspect and camera) else self.height
         for cx, cy in corners:
-            world_x = m[0] * cx + m[4] * cy + m[12]
-            world_y = m[1] * cx + m[5] * cy + m[13]
+            rx = cx * cos_a - cy * sin_a
+            ry = cx * sin_a + cy * cos_a
+            world_x = (rx + obj_x) * unit_scale
+            world_y = (ry + obj_y) * unit_scale * sign
             ndc_x = (2.0 * (world_x - cam_x * unit_scale) * zoom) / w_size
             ndc_y = (2.0 * (world_y - cam_y * unit_scale * sign) * zoom) / h_size
             glVertex2f(ndc_x, ndc_y)
@@ -500,10 +493,19 @@ class OpenGLRenderer:
         shape: str,
     ) -> None:
         from OpenGL.GL import (
-            glBindTexture, glColor4f, glBegin, glEnd, glVertex2f,
-            glUseProgram, glDisable, glEnable,
-            GL_TRIANGLE_FAN, GL_TRIANGLES, GL_TEXTURE_2D
+            glBindTexture,
+            glColor4f,
+            glBegin,
+            glEnd,
+            glVertex2f,
+            glUseProgram,
+            glDisable,
+            glEnable,
+            GL_TRIANGLE_FAN,
+            GL_TRIANGLES,
+            GL_TEXTURE_2D,
         )
+
         unit_scale = units.UNITS_PER_METER
         sign = 1.0 if units.Y_UP else -1.0
         scale_mul = obj.render_scale(camera, apply_effects=self.apply_effects)
@@ -512,52 +514,54 @@ class OpenGLRenderer:
         zoom = camera.zoom if camera else 1.0
         w_size = camera.width if (self.keep_aspect and camera) else self.width
         h_size = camera.height if (self.keep_aspect and camera) else self.height
+
         glUseProgram(0)
         glBindTexture(GL_TEXTURE_2D, 0)
         glDisable(GL_TEXTURE_2D)
+
         rgba = obj.color or (255, 255, 255, 255)
         scale = 1 / 255.0 if max(rgba) > 1.0 else 1.0
-        glColor4f(rgba[0]*scale, rgba[1]*scale, rgba[2]*scale, rgba[3]*scale)
-        from engine.core.fastmath import calc_matrix
-        sx = obj.scale_x * (-1.0 if getattr(obj, "flip_x", False) else 1.0)
-        sy = obj.scale_y * (-1.0 if getattr(obj, "flip_y", False) else 1.0)
-        m = calc_matrix(
-            obj.x, obj.y, obj.width, obj.height,
-            obj.pivot_x, obj.pivot_y,
-            sx * scale_mul, sy * scale_mul,
-            getattr(obj, "angle", 0.0), unit_scale, units.Y_UP,
-        )
+        glColor4f(rgba[0] * scale, rgba[1] * scale, rgba[2] * scale, rgba[3] * scale)
+
+        ang = math.radians(getattr(obj, "angle", 0.0))
+        cos_a = math.cos(ang)
+        sin_a = math.sin(ang)
+        sx = -1.0 if getattr(obj, "flip_x", False) else 1.0
+        sy = -1.0 if getattr(obj, "flip_y", False) else 1.0
+        w = obj.width * obj.scale_x * scale_mul
+        h = obj.height * obj.scale_y * scale_mul
+
         if shape == "triangle":
-            verts = [(0.0, obj.height), (obj.width, 0.0), (0.0, 0.0)]
+            verts = [(-w / 2, -h / 2), (w / 2, -h / 2), (0.0, h / 2)]
             mode = GL_TRIANGLES
         elif shape == "square":
             verts = [
-                (0.0, 0.0),
-                (obj.width, 0.0),
-                (obj.width, obj.height),
-                (0.0, obj.height),
+                (-w / 2, -h / 2),
+                (w / 2, -h / 2),
+                (w / 2, h / 2),
+                (-w / 2, h / 2),
             ]
             mode = GL_TRIANGLE_FAN
         else:
-            # circle approximation
-            verts = [(obj.width/2, obj.height/2)]
-            r = max(obj.width, obj.height)
+            verts = []
+            r = max(w, h) / 2
             steps = 32
             for i in range(steps + 1):
-                ang = 2 * math.pi * i / steps
-                verts.append(
-                    (
-                        obj.width / 2 + math.cos(ang) * r / 2,
-                        obj.height / 2 + math.sin(ang) * r / 2,
-                    )
-                )
+                ang2 = 2 * math.pi * i / steps
+                verts.append((math.cos(ang2) * r, math.sin(ang2) * r))
             mode = GL_TRIANGLE_FAN
+
+        obj_x, obj_y = obj.render_position(camera, apply_effects=self.apply_effects)
         glBegin(mode)
         for vx, vy in verts:
-            world_x = m[0]*vx + m[4]*vy + m[12]
-            world_y = m[1]*vx + m[5]*vy + m[13]
-            ndc_x = (2.0 * (world_x - cam_x*unit_scale) * zoom) / w_size
-            ndc_y = (2.0 * (world_y - cam_y*unit_scale*sign) * zoom) / h_size
+            vx *= sx
+            vy *= sy
+            rx = vx * cos_a - vy * sin_a
+            ry = vx * sin_a + vy * cos_a
+            world_x = (rx + obj_x) * unit_scale
+            world_y = (ry + obj_y) * unit_scale * sign
+            ndc_x = (2.0 * (world_x - cam_x * unit_scale) * zoom) / w_size
+            ndc_y = (2.0 * (world_y - cam_y * unit_scale * sign) * zoom) / h_size
             glVertex2f(ndc_x, ndc_y)
         glEnd()
         glEnable(GL_TEXTURE_2D)
