@@ -388,10 +388,10 @@ class OpenGLRenderer:
         for vx, vy in verts:
             rx = vx * cos_a - vy * sin_a
             ry = vx * sin_a + vy * cos_a
-            world_x = (rx + obj_x - cam_x) * scale * zoom
-            world_y = (ry + obj_y - cam_y) * scale * zoom * sign
-            ndc_x = (2.0 * world_x) / w_size
-            ndc_y = (2.0 * world_y) / h_size
+            world_x = (rx + obj_x) * scale
+            world_y = (ry + obj_y) * scale * sign
+            ndc_x = (2.0 * (world_x - cam_x * scale) * zoom) / w_size
+            ndc_y = (2.0 * (world_y - cam_y * scale * sign) * zoom) / h_size
             data.extend([ndc_x, ndc_y])
         uvs = obj.texture_coords(camera, apply_effects=self.apply_effects)
         arr = (ctypes.c_float * 16)(
@@ -441,13 +441,16 @@ class OpenGLRenderer:
         glColor4f(*norm)
         glLineWidth(width)
         glBegin(GL_LINE_LOOP)
+        cam_x = camera.x if camera else 0.0
+        cam_y = camera.y if camera else 0.0
+        zoom = camera.zoom if camera else 1.0
         obj_x, obj_y = obj.render_position(camera, apply_effects=self.apply_effects)
         for vx, vy in verts:
             rx = vx * cos_a - vy * sin_a
             ry = vx * sin_a + vy * cos_a
-            world_x = (rx + obj_x) * scale
-            world_y = (ry + obj_y) * scale * sign
-            glVertex2f(world_x, world_y)
+            world_x = (rx + obj_x) * scale - cam_x * scale
+            world_y = (ry + obj_y) * scale * sign - cam_y * scale * sign
+            glVertex2f(world_x * zoom, world_y * zoom)
         glEnd()
         glLineWidth(1.0)
 

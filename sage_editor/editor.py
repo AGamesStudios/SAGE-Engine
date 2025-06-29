@@ -1334,10 +1334,10 @@ class EffectDialog(QDialog):
         self.params_widget.setLayout(self.params_form)
         layout.addRow(self.params_widget)
 
-        self.fx_spin = QDoubleSpinBox(); self.fx_spin.setRange(-1000.0, 1000.0); self.fx_spin.setValue(0.0)
-        self.fy_spin = QDoubleSpinBox(); self.fy_spin.setRange(-1000.0, 1000.0); self.fy_spin.setValue(0.0)
-        self.outline_width = QDoubleSpinBox(); self.outline_width.setRange(1.0, 50.0); self.outline_width.setValue(3.0)
-        self.color_edit = QLineEdit('255,128,0,255')
+        self.fx_spin = QDoubleSpinBox(self); self.fx_spin.setRange(-1000.0, 1000.0); self.fx_spin.setValue(0.0)
+        self.fy_spin = QDoubleSpinBox(self); self.fy_spin.setRange(-1000.0, 1000.0); self.fy_spin.setValue(0.0)
+        self.outline_width = QDoubleSpinBox(self); self.outline_width.setRange(1.0, 50.0); self.outline_width.setValue(3.0)
+        self.color_edit = QLineEdit('255,128,0,255', self)
 
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         buttons.accepted.connect(self.accept)
