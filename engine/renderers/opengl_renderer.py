@@ -358,7 +358,12 @@ class OpenGLRenderer:
         glEnd()
         glPopMatrix()
 
-    def _draw_object(self, obj: GameObject, camera: Camera | None) -> None:
+    def _draw_object(
+        self,
+        obj: GameObject,
+        camera: Camera | None,
+        cam_shader: Shader | None = None,
+    ) -> None:
         if self._program is None:
             return
         from OpenGL.GL import (
@@ -368,8 +373,17 @@ class OpenGLRenderer:
         )
         custom_shader = obj.get_shader() if hasattr(obj, "get_shader") else None
         if custom_shader:
-            custom_shader.use(obj.shader_uniforms)
-            program = custom_shader.program
+            shader = custom_shader
+            uniforms = obj.shader_uniforms
+        elif cam_shader:
+            shader = cam_shader
+            uniforms = getattr(camera, "shader_uniforms", {})
+        else:
+            shader = None
+
+        if shader:
+            shader.use(uniforms)
+            program = shader.program
         else:
             program = self._program
             glUseProgram(program)
@@ -416,7 +430,7 @@ class OpenGLRenderer:
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4)
         glBindVertexArray(0)
         glBindBuffer(GL_ARRAY_BUFFER, 0)
-        if custom_shader:
+        if shader:
             Shader.stop()
         else:
             glUseProgram(0)
@@ -825,6 +839,7 @@ class OpenGLRenderer:
         self.clear(self.background)
         glDisable(GL_SCISSOR_TEST)
         self._apply_projection(camera)
+        cam_shader = camera.get_shader() if hasattr(camera, "get_shader") else None
         if camera:
             self._draw_panorama(camera)
         glPushMatrix()
@@ -836,6 +851,8 @@ class OpenGLRenderer:
                 glTranslatef(-camera.x * scale,
                              -camera.y * scale * sign,
                              0)
+            if cam_shader:
+                cam_shader.use(getattr(camera, "shader_uniforms", {}))
             scene.sort_objects()
             for obj in scene.objects:
                 if isinstance(obj, Camera):
@@ -862,7 +879,7 @@ class OpenGLRenderer:
                             local=self._local_coords,
                         )
                     continue
-                self._draw_object(obj, camera)
+                self._draw_object(obj, camera, cam_shader)
                 if obj is self._selected_obj:
                     self._draw_outline(obj, camera)
                 if self._draw_gizmos:
@@ -892,6 +909,8 @@ class OpenGLRenderer:
                     self._cursor_pos[0], self._cursor_pos[1], camera
                 )
         finally:
+            if cam_shader:
+                Shader.stop()
             glPopMatrix()
 
     def present(self):

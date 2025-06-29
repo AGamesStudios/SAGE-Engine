@@ -3,6 +3,7 @@ from .objects import register_object
 from ..logic import EventSystem, event_from_dict
 from ..log import logger
 from .. import units
+from engine.renderers import Shader
 
 @register_object(
     'camera',
@@ -21,6 +22,8 @@ from .. import units
         ('metadata', 'metadata'),
         ('variables', 'variables'),
         ('public_vars', 'public_vars'),
+        ('shader', 'shader'),
+        ('shader_uniforms', 'shader_uniforms'),
     ],
 )
 @dataclass(slots=True)
@@ -39,11 +42,24 @@ class Camera:
     panorama: str | None = None
     pano_fx: float = 0.005
     pano_fy: float = 0.005
+    shader: dict | None = None
+    shader_uniforms: dict = field(default_factory=dict)
     metadata: dict = field(default_factory=dict)
     variables: dict = field(default_factory=dict)
     public_vars: set[str] = field(default_factory=set)
     events: list = field(default_factory=list)
     event_system: EventSystem | None = field(init=False, default=None)
+    _compiled_shader: "Shader | None" = field(init=False, default=None)
+
+    def __post_init__(self):
+        if isinstance(self.shader, dict):
+            vert = self.shader.get("vertex")
+            frag = self.shader.get("fragment")
+            if vert and frag:
+                try:
+                    self._compiled_shader = Shader.from_files(vert, frag)
+                except Exception:
+                    logger.exception("Failed to load shader %s/%s", vert, frag)
 
     def view_rect(self) -> tuple[float, float, float, float]:
         """Return the visible world rectangle with the camera centered."""
@@ -61,6 +77,18 @@ class Camera:
     def draw(self, surface) -> None:
         """Camera objects are not drawn with sprites."""
         pass
+
+    def get_shader(self) -> "Shader | None":
+        """Return the compiled shader for this camera."""
+        if self._compiled_shader is None and isinstance(self.shader, dict):
+            vert = self.shader.get("vertex")
+            frag = self.shader.get("fragment")
+            if vert and frag:
+                try:
+                    self._compiled_shader = Shader.from_files(vert, frag)
+                except Exception:
+                    logger.exception("Failed to load shader %s/%s", vert, frag)
+        return self._compiled_shader
 
     def build_event_system(self, objects, variables=None) -> EventSystem:
         """Build and store an EventSystem from the attached events."""

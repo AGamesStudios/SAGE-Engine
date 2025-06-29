@@ -86,6 +86,11 @@ instances may reference a shader via ``obj.shader = {'vertex': 'v.glsl',
 uploaded whenever the object draws. If no custom shader is set the renderer
 falls back to its default textured program.
 
+Camera objects support the same dictionary on ``camera.shader``. When a camera
+has a shader assigned, all objects render through that program unless they
+specify one of their own. The editor viewport ignores camera shaders so scenes
+remain editable.
+
 ### Units and Coordinates
 
 All positions in the engine use **world units** which can be mapped to real
