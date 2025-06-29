@@ -111,11 +111,11 @@ class GameObject:
         y = self.y
         if camera:
             for eff in getattr(self, 'effects', []):
-                if eff.get('type') == 'parallax':
+                if eff.get('type') == 'panorama':
                     fx = eff.get('factor_x', eff.get('factor', 0.0))
                     fy = eff.get('factor_y', eff.get('factor', 0.0))
-                    x += camera.x * fx
-                    y += camera.y * fy
+                    x -= camera.x * fx
+                    y -= camera.y * fy
         return x, y
 
 

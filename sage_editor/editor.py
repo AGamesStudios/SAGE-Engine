@@ -1322,7 +1322,7 @@ class EffectDialog(QDialog):
         self.setWindowTitle(parent.t('add_effect') if parent else 'Add Effect')
         layout = QFormLayout(self)
         self.type_box = QComboBox()
-        self.type_box.addItem(parent.t('parallax') if parent else 'Parallax', 'parallax')
+        self.type_box.addItem(parent.t('panorama') if parent else 'Panorama', 'panorama')
         layout.addRow(parent.t('type_label') if parent else 'Type:', self.type_box)
         self.fx_spin = QDoubleSpinBox(); self.fx_spin.setRange(-5.0, 5.0); self.fx_spin.setValue(0.1)
         self.fy_spin = QDoubleSpinBox(); self.fy_spin.setRange(-5.0, 5.0); self.fy_spin.setValue(0.1)
