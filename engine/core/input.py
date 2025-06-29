@@ -1,4 +1,7 @@
-class Input:
+from ..inputs import InputBackend, register_input
+
+
+class Input(InputBackend):
     __slots__ = ("_glfw", "window", "_keys", "_buttons")
 
     def __init__(self, window):
@@ -34,3 +37,6 @@ class Input:
     def shutdown(self):
         self._glfw.set_key_callback(self.window, None)
         self._glfw.set_mouse_button_callback(self.window, None)
+
+
+register_input("glfw", Input)

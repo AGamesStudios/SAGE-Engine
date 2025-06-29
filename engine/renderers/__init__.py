@@ -1,7 +1,5 @@
 """Renderer interface and registry."""
 
-from .opengl_renderer import OpenGLRenderer
-
 RENDERER_REGISTRY: dict[str, type] = {}
 
 
@@ -10,12 +8,18 @@ def register_renderer(name: str, cls: type) -> None:
     RENDERER_REGISTRY[name] = cls
 
 
+def _ensure_default() -> None:
+    if "opengl" not in RENDERER_REGISTRY:
+        from .opengl_renderer import OpenGLRenderer
+        register_renderer("opengl", OpenGLRenderer)
+
+
 def get_renderer(name: str) -> type | None:
     """Return the renderer class associated with ``name``."""
+    _ensure_default()
     return RENDERER_REGISTRY.get(name)
 
 
-register_renderer("opengl", OpenGLRenderer)
 
 
 class Renderer:
@@ -44,3 +48,10 @@ __all__ = [
     "get_renderer",
     "RENDERER_REGISTRY",
 ]
+
+
+def __getattr__(name):
+    if name == "OpenGLRenderer":
+        _ensure_default()
+        return RENDERER_REGISTRY["opengl"]
+    raise AttributeError(name)

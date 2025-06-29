@@ -1,6 +1,6 @@
 from .core.scene import Scene
 from .core.project import Project
-from .renderers import get_renderer, OpenGLRenderer
+from .renderers import get_renderer
 from .core.engine import Engine
 from .core.objects import register_object, object_from_dict, object_to_dict
 
@@ -32,7 +32,10 @@ def create_engine(project: Project, fps: int = 30) -> Engine:
     """Create an :class:`Engine` for the given project."""
     scene = Scene.from_dict(project.scene)
     camera = scene.ensure_active_camera(project.width, project.height)
-    rcls = get_renderer(getattr(project, "renderer", "opengl")) or OpenGLRenderer
+    rcls = get_renderer(getattr(project, "renderer", "opengl"))
+    if rcls is None:
+        from .renderers.opengl_renderer import OpenGLRenderer
+        rcls = OpenGLRenderer
     renderer = rcls(project.width, project.height, project.title,
                     background=getattr(project, 'background', (0, 0, 0)))
     events = scene.build_event_system(aggregate=False)
@@ -73,7 +76,10 @@ def run_scene(path: str, width: int = 640, height: int = 480,
     """Run a single scene file directly."""
     scene = load_scene(path)
     camera = scene.ensure_active_camera(width, height)
-    rcls = get_renderer("opengl") or OpenGLRenderer
+    rcls = get_renderer("opengl")
+    if rcls is None:
+        from .renderers.opengl_renderer import OpenGLRenderer
+        rcls = OpenGLRenderer
     renderer = rcls(width, height, title or "SAGE 2D",
                     background=background)
     events = scene.build_event_system(aggregate=False)
