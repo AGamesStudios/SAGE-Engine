@@ -216,6 +216,8 @@ class OpenGLRenderer:
         self._vbo = None
         self._pano_vao = None
         self._pano_vbo = None
+        self._post_tex = None
+        self._post_fbo = None
 
     def set_window_size(self, width: int, height: int):
         if self.widget:
@@ -233,6 +235,23 @@ class OpenGLRenderer:
     def clear(self, color=(0, 0, 0)):
         glClearColor(color[0]/255.0, color[1]/255.0, color[2]/255.0, 1.0)
         glClear(GL_COLOR_BUFFER_BIT)
+
+    def units_y_up(self) -> bool:
+        """Return the engine's current Y-axis orientation."""
+        return units.Y_UP
+
+    def _capture_screen(self) -> int:
+        """Copy the current frame buffer to ``_post_tex`` and return the texture id."""
+        from OpenGL.GL import (
+            glBindTexture, glCopyTexImage2D, glGenTextures,
+            GL_TEXTURE_2D, GL_RGBA
+        )
+        if self._post_tex is None:
+            self._post_tex = glGenTextures(1)
+        glBindTexture(GL_TEXTURE_2D, self._post_tex)
+        glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 0, 0, self.width, self.height, 0)
+        glBindTexture(GL_TEXTURE_2D, 0)
+        return self._post_tex
 
     def setup_view(self):
         from OpenGL.GL import glMatrixMode, glLoadIdentity, glOrtho, GL_PROJECTION, GL_MODELVIEW
@@ -912,6 +931,15 @@ class OpenGLRenderer:
             if cam_shader:
                 Shader.stop()
             glPopMatrix()
+
+        if camera and getattr(camera, "post_effects", None):
+            tex = self._capture_screen()
+            self.clear(self.background)
+            from engine.core.post_effects import get_post_effect
+            for eff in camera.post_effects:
+                handler = get_post_effect(eff.get("type"))
+                if handler:
+                    handler.apply(self, tex, self.width, self.height, camera, eff)
 
     def present(self):
         self.widget.update()

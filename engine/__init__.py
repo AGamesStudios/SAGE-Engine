@@ -9,6 +9,9 @@ from .core import (
     register_effect,
     get_effect,
     EFFECT_REGISTRY,
+    register_post_effect,
+    get_post_effect,
+    POST_EFFECT_REGISTRY,
 )
 from .core.game_object import clear_image_cache
 from .api import (
@@ -66,7 +69,8 @@ __all__ = [
     'register_engine_plugin', 'load_engine_plugins',
     'units', 'set_units_per_meter', 'meters', 'kilometers', 'to_units', 'from_units',
     'set_y_up', 'Y_UP', 'GameWindow', 'EngineSettings',
-    'register_effect', 'get_effect', 'EFFECT_REGISTRY'
+    'register_effect', 'get_effect', 'EFFECT_REGISTRY',
+    'register_post_effect', 'get_post_effect', 'POST_EFFECT_REGISTRY'
 ]
 
 

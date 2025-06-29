@@ -521,3 +521,23 @@ view so the panorama scrolls smoothly when the camera moves. The sprite
 ``panorama`` effect also accepts a ``depth`` value which scales the object based
 on the camera zoom. Combining parallax with depth creates a "perspective
 panorama" effect that responds smoothly to camera movement.
+
+### Post-processing Effects
+
+Cameras can apply post-processing after rendering the scene.  Use
+``engine.core.register_post_effect`` to register handlers and list them in
+``Camera.post_effects``.  A built-in ``perspective_panorama`` effect blends an
+equirectangular texture with the rendered frame:
+
+```python
+camera.post_effects.append({
+    "type": "perspective_panorama",
+    "texture": "sky.png",
+    "factor_x": 0.01,
+    "factor_y": 0.01,
+    "blend": 1.0,
+})
+```
+
+The panorama wraps around the camera view and mixes with the frame according to
+the ``blend`` value.

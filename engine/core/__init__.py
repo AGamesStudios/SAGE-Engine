@@ -8,6 +8,11 @@ from .objects import (
     object_to_dict,
 )
 from .effects import register_effect, get_effect, EFFECT_REGISTRY
+from .post_effects import (
+    register_post_effect,
+    get_post_effect,
+    POST_EFFECT_REGISTRY,
+)
 
 __all__ = [
     'GameObject',
@@ -23,6 +28,9 @@ __all__ = [
     'register_effect',
     'get_effect',
     'EFFECT_REGISTRY',
+    'register_post_effect',
+    'get_post_effect',
+    'POST_EFFECT_REGISTRY',
 ]
 
 

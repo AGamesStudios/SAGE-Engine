@@ -19,6 +19,7 @@ from engine.renderers import Shader
         ('panorama', 'panorama'),
         ('pano_fx', 'pano_fx'),
         ('pano_fy', 'pano_fy'),
+        ('post_effects', 'post_effects'),
         ('metadata', 'metadata'),
         ('variables', 'variables'),
         ('public_vars', 'public_vars'),
@@ -44,6 +45,7 @@ class Camera:
     pano_fy: float = 0.005
     shader: dict | None = None
     shader_uniforms: dict = field(default_factory=dict)
+    post_effects: list = field(default_factory=list)
     metadata: dict = field(default_factory=dict)
     variables: dict = field(default_factory=dict)
     public_vars: set[str] = field(default_factory=set)
