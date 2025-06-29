@@ -1501,6 +1501,8 @@ class Editor(QMainWindow):
         self.link_scale = prop_dock.link_scale
         self.coord_combo = prop_dock.coord_combo
         self.angle_spin = prop_dock.angle_spin
+        self.flip_x_check = prop_dock.flip_x_check
+        self.flip_y_check = prop_dock.flip_y_check
         self.cam_w_spin = prop_dock.cam_w_spin
         self.cam_h_spin = prop_dock.cam_h_spin
         self.cam_zoom_spin = prop_dock.cam_zoom_spin
@@ -1559,6 +1561,8 @@ class Editor(QMainWindow):
         self.image_edit.editingFinished.connect(self._image_path_edited)
         self.color_btn.clicked.connect(self._choose_object_color)
         self.shape_combo.currentIndexChanged.connect(self._shape_changed)
+        self.flip_x_check.stateChanged.connect(self._flip_changed)
+        self.flip_y_check.stateChanged.connect(self._flip_changed)
         self.smooth_check.stateChanged.connect(self._smooth_changed)
         self.add_effect_btn.clicked.connect(self._add_effect)
         self.tabs.setTabsClosable(True)
@@ -2894,7 +2898,9 @@ class Editor(QMainWindow):
             self.font_size = size
             font = QApplication.font()
             font.setPointSize(size)
-            QApplication.instance().setFont(font)
+            app = QApplication.instance()
+            app.setFont(font)
+            self.setFont(font)
 
     def _clear_transform_panel(self):
         """Hide property groups and reset their values."""
@@ -2921,6 +2927,10 @@ class Editor(QMainWindow):
             self.smooth_label.setVisible(False)
         if hasattr(self, 'smooth_check'):
             self.smooth_check.setVisible(False)
+        if hasattr(self, 'flip_x_check'):
+            self.flip_x_check.setVisible(False)
+        if hasattr(self, 'flip_y_check'):
+            self.flip_y_check.setVisible(False)
         if hasattr(self, 'paint_btn'):
             self.paint_btn.setVisible(False)
         # clear values so stale data never shows
@@ -2955,6 +2965,16 @@ class Editor(QMainWindow):
             self.shape_combo.setCurrentIndex(0)
             self.shape_combo.setEnabled(False)
             self.shape_combo.blockSignals(False)
+        if hasattr(self, 'flip_x_check'):
+            self.flip_x_check.blockSignals(True)
+            self.flip_x_check.setChecked(False)
+            self.flip_x_check.setEnabled(False)
+            self.flip_x_check.blockSignals(False)
+        if hasattr(self, 'flip_y_check'):
+            self.flip_y_check.blockSignals(True)
+            self.flip_y_check.setChecked(False)
+            self.flip_y_check.setEnabled(False)
+            self.flip_y_check.blockSignals(False)
         self.smooth_check.blockSignals(True)
         self.smooth_check.setChecked(False)
         self.smooth_check.setEnabled(False)
@@ -3014,6 +3034,12 @@ class Editor(QMainWindow):
             self.shape_label.setVisible(False)
             self.shape_combo.setVisible(False)
             self.shape_combo.setEnabled(False)
+            if hasattr(self, 'flip_x_check'):
+                self.flip_x_check.setVisible(False)
+                self.flip_x_check.setEnabled(False)
+            if hasattr(self, 'flip_y_check'):
+                self.flip_y_check.setVisible(False)
+                self.flip_y_check.setEnabled(False)
             self.smooth_label.setVisible(False)
             self.smooth_check.setVisible(False)
             self.smooth_check.setEnabled(False)
@@ -3066,6 +3092,16 @@ class Editor(QMainWindow):
             else:
                 self.shape_combo.setCurrentIndex(0)
             self.shape_combo.blockSignals(False)
+            self.flip_x_check.setVisible(True)
+            self.flip_x_check.setEnabled(True)
+            self.flip_x_check.blockSignals(True)
+            self.flip_x_check.setChecked(getattr(obj, 'flip_x', False))
+            self.flip_x_check.blockSignals(False)
+            self.flip_y_check.setVisible(True)
+            self.flip_y_check.setEnabled(True)
+            self.flip_y_check.blockSignals(True)
+            self.flip_y_check.setChecked(getattr(obj, 'flip_y', False))
+            self.flip_y_check.blockSignals(False)
             self.smooth_label.setVisible(True)
             self.smooth_check.setVisible(True)
             self.smooth_check.setEnabled(True)
@@ -3095,8 +3131,10 @@ class Editor(QMainWindow):
                 obj.scale_y = obj.scale_x
                 self.scale_y_spin.blockSignals(True); self.scale_y_spin.setValue(obj.scale_y); self.scale_y_spin.blockSignals(False)
             else:
-                obj.scale_y = self.scale_y_spin.value()
+            obj.scale_y = self.scale_y_spin.value()
             obj.angle = self.angle_spin.value()
+            obj.flip_x = self.flip_x_check.isChecked()
+            obj.flip_y = self.flip_y_check.isChecked()
             if item is not None:
                 item.setZValue(obj.z)
                 item.apply_object_transform()
@@ -3430,6 +3468,20 @@ class Editor(QMainWindow):
         if not hasattr(obj, 'shape'):
             return
         obj.shape = self.shape_combo.currentData()
+        if hasattr(self.view, 'renderer'):
+            self.view.update()
+        self._mark_dirty()
+
+    def _flip_changed(self) -> None:
+        """Update flip settings for the selected object."""
+        idx = self.object_combo.currentIndex()
+        if idx < 0 or idx >= len(self.items):
+            return
+        obj = self.items[idx][1]
+        if not hasattr(obj, 'flip_x'):
+            return
+        obj.flip_x = self.flip_x_check.isChecked()
+        obj.flip_y = self.flip_y_check.isChecked()
         if hasattr(self.view, 'renderer'):
             self.view.update()
         self._mark_dirty()

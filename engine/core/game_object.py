@@ -41,6 +41,8 @@ def clear_image_cache():
         ('angle', None),
         ('pivot_x', None),
         ('pivot_y', None),
+        ('flip_x', None),
+        ('flip_y', None),
         ('smooth', None),
         ('color', None),
         ('metadata', 'metadata'),
@@ -65,6 +67,8 @@ class GameObject:
     angle: float = 0.0
     pivot_x: float = 0.5
     pivot_y: float = 0.5
+    flip_x: bool = False
+    flip_y: bool = False
     smooth: bool = True
     color: tuple[int, int, int, int] | None = None
     metadata: dict = field(default_factory=dict)
@@ -86,7 +90,8 @@ class GameObject:
     _compiled_shader: "Shader | None" = field(init=False, default=None)
 
     _DIRTY_FIELDS = {
-        'x', 'y', 'z', 'scale_x', 'scale_y', 'angle', 'pivot_x', 'pivot_y'
+        'x', 'y', 'z', 'scale_x', 'scale_y', 'angle', 'pivot_x', 'pivot_y',
+        'flip_x', 'flip_y'
     }
 
     def __setattr__(self, name, value):

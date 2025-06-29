@@ -98,6 +98,10 @@ class PropertiesDock(QDockWidget):
         form.addRow('', self.link_scale)
         form.addRow(editor.t('coord_mode'), self.coord_combo)
         form.addRow(editor.t('rotation'), self.angle_spin)
+        self.flip_x_check = QCheckBox(editor.t('flip_x'))
+        self.flip_y_check = QCheckBox(editor.t('flip_y'))
+        form.addRow('', self.flip_x_check)
+        form.addRow('', self.flip_y_check)
         prop_layout.addWidget(self.transform_group)
 
         self.camera_group = QGroupBox(editor.t('camera'))

@@ -389,9 +389,16 @@ class OpenGLRenderer:
         cos_a = math.cos(ang)
         sin_a = math.sin(ang)
         scale_mul = obj.render_scale(camera, apply_effects=self.apply_effects)
+        sx = -1.0 if getattr(obj, "flip_x", False) else 1.0
+        sy = -1.0 if getattr(obj, "flip_y", False) else 1.0
         w = obj.width * obj.scale_x * scale_mul
         h = obj.height * obj.scale_y * scale_mul
-        verts = [(-w/2, -h/2), (w/2, -h/2), (w/2, h/2), (-w/2, h/2)]
+        verts = [
+            (-w/2 * sx, -h/2 * sy),
+            (w/2 * sx, -h/2 * sy),
+            (w/2 * sx, h/2 * sy),
+            (-w/2 * sx, h/2 * sy),
+        ]
         data = []
         obj_x, obj_y = obj.render_position(camera, apply_effects=self.apply_effects)
         for vx, vy in verts:
@@ -431,7 +438,7 @@ class OpenGLRenderer:
         """Draw a bright outline around ``obj`` in world coordinates."""
         from OpenGL.GL import (
             glBindTexture, glColor4f, glLineWidth, glBegin, glEnd, glVertex2f,
-            glUseProgram, GL_LINE_LOOP, GL_TEXTURE_2D
+            glUseProgram, glDisable, glEnable, GL_LINE_LOOP, GL_TEXTURE_2D
         )
         if obj is None:
             return
@@ -442,6 +449,8 @@ class OpenGLRenderer:
             camera, apply_effects=self.apply_effects
         )
         from engine.core.fastmath import calc_matrix
+        sx = obj.scale_x * (-1.0 if getattr(obj, "flip_x", False) else 1.0)
+        sy = obj.scale_y * (-1.0 if getattr(obj, "flip_y", False) else 1.0)
         m = calc_matrix(
             obj_x,
             obj_y,
@@ -449,8 +458,8 @@ class OpenGLRenderer:
             obj.height,
             obj.pivot_x,
             obj.pivot_y,
-            obj.scale_x * scale_mul,
-            obj.scale_y * scale_mul,
+            sx * scale_mul,
+            sy * scale_mul,
             getattr(obj, "angle", 0.0),
             unit_scale,
             units.Y_UP,
@@ -463,6 +472,7 @@ class OpenGLRenderer:
         ]
         glUseProgram(0)
         glBindTexture(GL_TEXTURE_2D, 0)
+        glDisable(GL_TEXTURE_2D)
         color_scale = 1 / 255.0 if max(color) > 1.0 else 1.0
         norm = tuple(c * color_scale for c in color)
         glColor4f(*norm)
@@ -481,6 +491,7 @@ class OpenGLRenderer:
             glVertex2f(ndc_x, ndc_y)
         glEnd()
         glLineWidth(1.0)
+        glEnable(GL_TEXTURE_2D)
 
     def _draw_shape(
         self,
@@ -490,7 +501,8 @@ class OpenGLRenderer:
     ) -> None:
         from OpenGL.GL import (
             glBindTexture, glColor4f, glBegin, glEnd, glVertex2f,
-            glUseProgram, GL_TRIANGLE_FAN, GL_TRIANGLES, GL_TEXTURE_2D
+            glUseProgram, glDisable, glEnable,
+            GL_TRIANGLE_FAN, GL_TRIANGLES, GL_TEXTURE_2D
         )
         unit_scale = units.UNITS_PER_METER
         sign = 1.0 if units.Y_UP else -1.0
@@ -502,14 +514,17 @@ class OpenGLRenderer:
         h_size = camera.height if (self.keep_aspect and camera) else self.height
         glUseProgram(0)
         glBindTexture(GL_TEXTURE_2D, 0)
+        glDisable(GL_TEXTURE_2D)
         rgba = obj.color or (255, 255, 255, 255)
         scale = 1 / 255.0 if max(rgba) > 1.0 else 1.0
         glColor4f(rgba[0]*scale, rgba[1]*scale, rgba[2]*scale, rgba[3]*scale)
         from engine.core.fastmath import calc_matrix
+        sx = obj.scale_x * (-1.0 if getattr(obj, "flip_x", False) else 1.0)
+        sy = obj.scale_y * (-1.0 if getattr(obj, "flip_y", False) else 1.0)
         m = calc_matrix(
             obj.x, obj.y, obj.width, obj.height,
             obj.pivot_x, obj.pivot_y,
-            obj.scale_x * scale_mul, obj.scale_y * scale_mul,
+            sx * scale_mul, sy * scale_mul,
             getattr(obj, "angle", 0.0), unit_scale, units.Y_UP,
         )
         if shape == "triangle":
@@ -545,6 +560,7 @@ class OpenGLRenderer:
             ndc_y = (2.0 * (world_y - cam_y*unit_scale*sign) * zoom) / h_size
             glVertex2f(ndc_x, ndc_y)
         glEnd()
+        glEnable(GL_TEXTURE_2D)
 
     def _draw_frustum(
         self,
