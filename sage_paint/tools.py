@@ -38,6 +38,7 @@ class BrushTool(Tool):
         self.shape = shape
         self._last = QPoint()
         self._drawing = False
+        self._start = QPoint()
 
     def set_shape(self, shape: str) -> None:
         self.shape = shape
@@ -51,6 +52,7 @@ class BrushTool(Tool):
         return QPen(self.canvas.pen_color, self.canvas.pen_width, join=join, cap=cap)
 
     def press(self, pos: QPoint) -> None:
+        self._start = pos
         self._last = pos
         self._drawing = True
 
@@ -74,7 +76,21 @@ class BrushTool(Tool):
 
     def release(self, pos: QPoint) -> None:
         if self._drawing:
-            self.move(pos)
+            if pos == self._start:
+                painter = QPainter(self.canvas.image)
+                painter.setRenderHint(QPainter.RenderHint.Antialiasing, self.canvas.smooth_pen)
+                hqa = getattr(QPainter.RenderHint, 'HighQualityAntialiasing', None)
+                if hqa is not None:
+                    painter.setRenderHint(hqa, self.canvas.smooth_pen)
+                painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, self.canvas.smooth_pen)
+                painter.setPen(self.pen())
+                painter.drawPoint(pos)
+                painter.end()
+                w = self.canvas.pen_width
+                dirty = QRectF(pos.x() - w, pos.y() - w, w * 2, w * 2)
+                self.canvas.update(self.canvas.image_to_view_rect(dirty))
+            else:
+                self.move(pos)
             self._drawing = False
 
     def draw_gizmo(self, painter: QPainter, pos: QPoint) -> None:

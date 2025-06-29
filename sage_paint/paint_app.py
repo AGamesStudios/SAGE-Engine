@@ -7,7 +7,7 @@ from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QColorDialog,
     QToolBar, QLabel, QMessageBox, QSpinBox, QFileDialog
 )
-from PyQt6.QtGui import QAction, QActionGroup
+from PyQt6.QtGui import QAction, QActionGroup, QImage, QColor
 from PyQt6.QtCore import Qt, QTimer, QPointF
 
 from .canvas import Canvas
@@ -39,7 +39,7 @@ class PaintWindow(QMainWindow):
     def _init_menu(self) -> None:
         bar = self.menuBar()
         file_menu = bar.addMenu("File")
-        new_act = QAction(load_icon('add.png'), "New", self)
+        new_act = QAction(load_icon('file.png'), "New", self)
         new_act.triggered.connect(self.new_project)
         file_menu.addAction(new_act)
         open_act = QAction(load_icon('open.png'), "Open...", self)
@@ -69,7 +69,32 @@ class PaintWindow(QMainWindow):
     # Project management -------------------------------------------------
 
     def new_project(self) -> None:
-        self.canvas.image.fill(QColor('white'))
+        from PyQt6.QtWidgets import QInputDialog
+
+        templates = [
+            "White Background",
+            "Dark Background",
+            "Transparent",
+        ]
+        choice, ok = QInputDialog.getItem(self, "New Project", "Template", templates, 0, False)
+        if not ok:
+            return
+
+        width = self.canvas.image.width()
+        height = self.canvas.image.height()
+
+        if choice == "Dark Background":
+            fmt = QImage.Format.Format_RGB32
+            color = QColor(32, 32, 32)
+        elif choice == "Transparent":
+            fmt = QImage.Format.Format_ARGB32
+            color = Qt.GlobalColor.transparent
+        else:
+            fmt = QImage.Format.Format_RGB32
+            color = QColor("white")
+
+        self.canvas.image = QImage(width, height, fmt)
+        self.canvas.image.fill(color)
         self.canvas.undo_stack.clear()
         self.canvas.redo_stack.clear()
         self.canvas.center_on_image()
