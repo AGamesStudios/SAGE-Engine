@@ -2459,10 +2459,18 @@ class Editor(QMainWindow):
             if pix.isNull():
                 raise ValueError('failed to load image')
             obj = GameObject(
-                rel_path, 0, 0, 0, None, 1.0, 1.0, 0.0,
-                0.5, 0.5, color=None
+                image_path=rel_path,
+                x=0,
+                y=0,
+                z=0,
+                name=self.t('new_object'),
+                scale_x=1.0,
+                scale_y=1.0,
+                angle=0.0,
+                pivot_x=0.5,
+                pivot_y=0.5,
+                color=None,
             )
-            obj.name = self.t('new_object')
             obj.settings = {}
             self.scene.add_object(obj)
             self.items.append((None, obj))
@@ -2488,11 +2496,19 @@ class Editor(QMainWindow):
             return
         try:
             obj = GameObject(
-                '', 0, 0, 0, None, 1.0, 1.0, 0.0,
-                0.5, 0.5, color=(255, 255, 255, 255)
+                image_path='',
+                shape='square',
+                x=0,
+                y=0,
+                z=0,
+                name=self.t('new_object'),
+                scale_x=1.0,
+                scale_y=1.0,
+                angle=0.0,
+                pivot_x=0.5,
+                pivot_y=0.5,
+                color=(255, 255, 255, 255),
             )
-            obj.shape = 'square'
-            obj.name = self.t('new_object')
             obj.settings = {}
             self.scene.add_object(obj)
             self.items.append((None, obj))
@@ -3276,8 +3292,19 @@ class Editor(QMainWindow):
                 self.scene.set_active_camera(new_obj)
             self.items[idx] = (item, new_obj)
         elif target == 'sprite' and isinstance(obj, Camera):
-            new_obj = GameObject('', obj.x, obj.y, obj.z, None, 1.0, 1.0, 0.0, 0.5, 0.5)
-            new_obj.name = obj.name
+            new_obj = GameObject(
+                image_path='',
+                shape='square',
+                x=obj.x,
+                y=obj.y,
+                z=obj.z,
+                name=obj.name,
+                scale_x=1.0,
+                scale_y=1.0,
+                angle=0.0,
+                pivot_x=0.5,
+                pivot_y=0.5,
+            )
             self.scene.objects[self.scene.objects.index(obj)] = new_obj
             if obj is self.scene.camera:
                 self.scene.set_active_camera(None)
@@ -3961,16 +3988,17 @@ class Editor(QMainWindow):
                     abs_path, rel_path = self._copy_to_resources(img_path)
                     img_path = rel_path
                 obj = GameObject(
-                    img_path or '',
-                    data.get('x', 0),
-                    data.get('y', 0),
-                    data.get('z', 0),
-                    data.get('name'),
-                    data.get('scale_x', data.get('scale', 1.0)),
-                    data.get('scale_y', data.get('scale', 1.0)),
-                    data.get('angle', 0.0),
-                    0.5,
-                    0.5,
+                    image_path=img_path or '',
+                    shape=data.get('shape'),
+                    x=data.get('x', 0),
+                    y=data.get('y', 0),
+                    z=data.get('z', 0),
+                    name=data.get('name'),
+                    scale_x=data.get('scale_x', data.get('scale', 1.0)),
+                    scale_y=data.get('scale_y', data.get('scale', 1.0)),
+                    angle=data.get('angle', 0.0),
+                    pivot_x=0.5,
+                    pivot_y=0.5,
                     color=tuple(data['color']) if data.get('color') else None,
                 )
                 obj.events = list(data.get('events', []))

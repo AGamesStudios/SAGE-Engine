@@ -48,10 +48,20 @@ class Scene:
             try:
                 cam = Camera(0.0, 0.0, 640, 480, active=True)
                 self.add_object(cam)
-                obj = GameObject('', 0, 0, 0, None, 1.0, 1.0, 0.0,
-                                 0.5, 0.5, color=(255, 255, 255, 255))
-                obj.shape = 'square'
-                obj.name = 'Sprite'
+                obj = GameObject(
+                    image_path='',
+                    shape='square',
+                    x=0,
+                    y=0,
+                    z=0,
+                    name='Sprite',
+                    scale_x=1.0,
+                    scale_y=1.0,
+                    angle=0.0,
+                    pivot_x=0.5,
+                    pivot_y=0.5,
+                    color=(255, 255, 255, 255),
+                )
                 self.add_object(obj)
             except Exception:
                 logger.exception('Failed to create default objects')
