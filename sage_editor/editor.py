@@ -3129,9 +3129,11 @@ class Editor(QMainWindow):
             obj.scale_x = self.scale_x_spin.value()
             if self.link_scale.isChecked():
                 obj.scale_y = obj.scale_x
-                self.scale_y_spin.blockSignals(True); self.scale_y_spin.setValue(obj.scale_y); self.scale_y_spin.blockSignals(False)
+                self.scale_y_spin.blockSignals(True)
+                self.scale_y_spin.setValue(obj.scale_y)
+                self.scale_y_spin.blockSignals(False)
             else:
-            obj.scale_y = self.scale_y_spin.value()
+                obj.scale_y = self.scale_y_spin.value()
             obj.angle = self.angle_spin.value()
             obj.flip_x = self.flip_x_check.isChecked()
             obj.flip_y = self.flip_y_check.isChecked()
