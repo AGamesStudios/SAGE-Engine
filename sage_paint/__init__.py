@@ -2,7 +2,7 @@
 
 from .paint_app import main, PaintWindow, EXPERIMENTAL_NOTICE
 from .canvas import Canvas
-from .tools import BrushTool, EraserTool, FillTool, SelectTool
+from .tools import BrushTool, EraserTool, FillTool, SelectTool, ShapeTool
 
 __all__ = [
     'main',
@@ -13,4 +13,5 @@ __all__ = [
     'EraserTool',
     'FillTool',
     'SelectTool',
+    'ShapeTool',
 ]

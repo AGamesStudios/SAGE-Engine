@@ -164,10 +164,24 @@ class PaintWindow(QMainWindow):
         group.addAction(select_action)
         tools_bar.addAction(select_action)
 
+        line_action = QAction(load_icon('pen.png'), "Line", self)
+        line_action.setCheckable(True)
+        line_action.triggered.connect(lambda: self._select_tool('line'))
+        group.addAction(line_action)
+        tools_bar.addAction(line_action)
+
+        rect_action = QAction(load_icon('square.png'), "Rect", self)
+        rect_action.setCheckable(True)
+        rect_action.triggered.connect(lambda: self._select_tool('rect'))
+        group.addAction(rect_action)
+        tools_bar.addAction(rect_action)
+
         self.brush_action = brush_action
         self.eraser_action = eraser_action
         self.fill_action = fill_action
         self.select_action = select_action
+        self.line_action = line_action
+        self.rect_action = rect_action
 
         toolbar = QToolBar(self)
         self.addToolBar(toolbar)
@@ -254,6 +268,12 @@ class PaintWindow(QMainWindow):
             self.canvas.use_fill()
         elif name == 'select':
             self.canvas.use_select()
+        elif name == 'line':
+            self.canvas.use_line()
+            self.width_spin.setValue(self.canvas.brush_width)
+        elif name == 'rect':
+            self.canvas.use_rect()
+            self.width_spin.setValue(self.canvas.brush_width)
 
     def set_pen_color(self, color: QColor) -> None:
         self.canvas.pen_color = color

@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import QWidget
 from PyQt6.QtGui import QPainter, QImage, QColor, QPen
 from PyQt6.QtCore import Qt, QPoint, QPointF, QRect
 
-from .tools import BrushTool, EraserTool, FillTool, Tool, SelectTool
+from .tools import BrushTool, EraserTool, FillTool, Tool, SelectTool, ShapeTool
 
 
 class Canvas(QWidget):
@@ -67,6 +67,12 @@ class Canvas(QWidget):
 
     def use_select(self) -> None:
         self.set_tool(SelectTool(self))
+
+    def use_line(self) -> None:
+        self.set_tool(ShapeTool(self, 'line'))
+
+    def use_rect(self) -> None:
+        self.set_tool(ShapeTool(self, 'rect'))
 
     def set_brush_shape(self, shape: str) -> None:
         if isinstance(self._tool, BrushTool):

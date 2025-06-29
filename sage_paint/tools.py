@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from PyQt6.QtGui import QPainter, QPen, QColor
+from PyQt6.QtGui import QPainter, QPen, QColor, QImage
 from PyQt6.QtCore import Qt, QPoint, QRectF, QRect
 
 
@@ -102,12 +102,13 @@ class BrushTool(Tool):
         painter.setBrush(Qt.BrushStyle.NoBrush)
         r = self.canvas.pen_width / 2
         if self.canvas.pen_width <= 2:
-            painter.setPen(QPen(Qt.GlobalColor.black, 3))
-            painter.drawLine(pos.x() - 4, pos.y(), pos.x() + 4, pos.y())
-            painter.drawLine(pos.x(), pos.y() - 4, pos.x(), pos.y() + 4)
-            painter.setPen(QPen(Qt.GlobalColor.white, 1))
-            painter.drawLine(pos.x() - 4, pos.y(), pos.x() + 4, pos.y())
-            painter.drawLine(pos.x(), pos.y() - 4, pos.x(), pos.y() + 4)
+            size = int(self.canvas.pen_width)
+            x = int(pos.x() - size / 2)
+            y = int(pos.y() - size / 2)
+            painter.setPen(QPen(Qt.GlobalColor.black))
+            painter.drawRect(x - 1, y - 1, size + 2, size + 2)
+            painter.setPen(QPen(Qt.GlobalColor.white))
+            painter.drawRect(x, y, size, size)
         elif self.shape == 'square':
             painter.drawRect(int(pos.x() - r), int(pos.y() - r), int(self.canvas.pen_width), int(self.canvas.pen_width))
         else:
@@ -135,12 +136,13 @@ class EraserTool(BrushTool):
         painter.setBrush(Qt.BrushStyle.NoBrush)
         r = self.canvas.pen_width / 2
         if self.canvas.pen_width <= 2:
-            painter.setPen(QPen(Qt.GlobalColor.black, 3))
-            painter.drawLine(pos.x() - 4, pos.y(), pos.x() + 4, pos.y())
-            painter.drawLine(pos.x(), pos.y() - 4, pos.x(), pos.y() + 4)
-            painter.setPen(QPen(Qt.GlobalColor.white, 1))
-            painter.drawLine(pos.x() - 4, pos.y(), pos.x() + 4, pos.y())
-            painter.drawLine(pos.x(), pos.y() - 4, pos.x(), pos.y() + 4)
+            size = int(self.canvas.pen_width)
+            x = int(pos.x() - size / 2)
+            y = int(pos.y() - size / 2)
+            painter.setPen(QPen(Qt.GlobalColor.black))
+            painter.drawRect(x - 1, y - 1, size + 2, size + 2)
+            painter.setPen(QPen(Qt.GlobalColor.white))
+            painter.drawRect(x, y, size, size)
         else:
             painter.drawRect(int(pos.x() - r), int(pos.y() - r), int(self.canvas.pen_width), int(self.canvas.pen_width))
         painter.restore()
@@ -193,7 +195,12 @@ class SelectTool(Tool):
             self._base_image = self.canvas.image.copy()
             self._sel_image = self.canvas.image.copy(sel)
             painter = QPainter(self._base_image)
-            painter.fillRect(sel, QColor('white'))
+            bg = getattr(self.canvas, 'bg_color', QColor('white'))
+            if bg is None:
+                painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_Clear)
+                painter.fillRect(sel, QColor(0, 0, 0, 0))
+            else:
+                painter.fillRect(sel, bg)
             painter.end()
             self._orig_rect = QRect(sel)
         else:
@@ -237,4 +244,49 @@ class SelectTool(Tool):
                 self.canvas.selection = self._orig_rect.translated(delta)
             self._moving = False
             self.canvas.update()
+
+
+class ShapeTool(Tool):
+    """Draw geometric shapes like lines or rectangles."""
+
+    def __init__(self, canvas: 'Canvas', shape: str = 'line'):
+        super().__init__(canvas)
+        self.shape = shape
+        self._start = QPoint()
+        self._img_copy: QImage | None = None
+        self._drawing = False
+
+    def set_shape(self, shape: str) -> None:
+        self.shape = shape
+
+    def press(self, pos: QPoint) -> None:
+        self._start = pos
+        self._img_copy = self.canvas.image.copy()
+        self._drawing = True
+
+    def move(self, pos: QPoint) -> None:
+        if not self._drawing or self._img_copy is None:
+            return
+        self.canvas.image = self._img_copy.copy()
+        painter = QPainter(self.canvas.image)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, self.canvas.smooth_pen)
+        hqa = getattr(QPainter.RenderHint, 'HighQualityAntialiasing', None)
+        if hqa is not None:
+            painter.setRenderHint(hqa, self.canvas.smooth_pen)
+        painter.setPen(self.pen())
+        if self.shape == 'rect':
+            painter.drawRect(QRect(self._start, pos).normalized())
+        else:
+            painter.drawLine(self._start, pos)
+        painter.end()
+        dirty = QRectF(QRect(self._start, pos)).normalized()
+        w = self.canvas.pen_width
+        dirty = dirty.adjusted(-w, -w, w, w)
+        self.canvas.update(self.canvas.image_to_view_rect(dirty))
+
+    def release(self, pos: QPoint) -> None:
+        if self._drawing:
+            self.move(pos)
+            self._drawing = False
+            self._img_copy = None
 
