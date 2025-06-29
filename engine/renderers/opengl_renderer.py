@@ -455,10 +455,15 @@ class OpenGLRenderer:
         glColor4f(*norm)
         glLineWidth(width)
         glBegin(GL_LINE_LOOP)
+        cam_x = camera.x if camera else 0.0
+        cam_y = camera.y if camera else 0.0
+        zoom = camera.zoom if camera else 1.0
         for cx, cy in corners:
             world_x = m[0] * cx + m[4] * cy + m[12]
             world_y = (m[1] * cx + m[5] * cy + m[13]) * sign
-            glVertex2f(world_x, world_y)
+            screen_x = (world_x - cam_x * unit_scale) * zoom
+            screen_y = (world_y - cam_y * unit_scale * sign) * zoom
+            glVertex2f(screen_x, screen_y)
         glEnd()
         glLineWidth(1.0)
 
