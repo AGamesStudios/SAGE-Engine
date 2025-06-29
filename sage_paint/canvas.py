@@ -20,7 +20,7 @@ class Canvas(QWidget):
         self.pen_width = 2
         self._tool: Tool = BrushTool(self)
         self._panning = False
-        self._pan_start = QPoint()
+        self._pan_start = QPointF()
         self._cursor = QPointF()
         self.setMouseTracking(True)
 
@@ -68,14 +68,14 @@ class Canvas(QWidget):
             self._tool.press(img_pos)
         elif event.button() == Qt.MouseButton.RightButton:
             self._panning = True
-            self._pan_start = event.pos()
+            self._pan_start = event.position()
 
     def mouseMoveEvent(self, event) -> None:
         self._cursor = event.position()
         if self._panning:
-            delta = event.pos() - self._pan_start
+            delta = event.position() - self._pan_start
             self.offset += delta
-            self._pan_start = event.pos()
+            self._pan_start = event.position()
             self.update()
         else:
             if event.buttons() & Qt.MouseButton.LeftButton:
