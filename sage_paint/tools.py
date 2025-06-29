@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from PyQt6.QtGui import QPainter, QPen, QColor
-from PyQt6.QtCore import QPoint
+from PyQt6.QtCore import Qt, QPoint
 
 
 class Tool:
@@ -11,9 +11,12 @@ class Tool:
         self.canvas = canvas
 
     def pen(self) -> QPen:
-        return QPen(self.canvas.pen_color, self.canvas.pen_width,
-                    join=QPen.JoinStyle.RoundJoin,
-                    cap=QPen.CapStyle.RoundCap)
+        return QPen(
+            self.canvas.pen_color,
+            self.canvas.pen_width,
+            join=Qt.PenJoinStyle.RoundJoin,
+            cap=Qt.PenCapStyle.RoundCap,
+        )
 
     def press(self, pos: QPoint) -> None:
         pass
