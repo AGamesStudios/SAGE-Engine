@@ -429,10 +429,13 @@ class OpenGLRenderer:
         unit_scale = units.UNITS_PER_METER
         sign = 1.0 if units.Y_UP else -1.0
         scale_mul = obj.render_scale(camera, apply_effects=self.apply_effects)
+        obj_x, obj_y = obj.render_position(
+            camera, apply_effects=self.apply_effects
+        )
         from engine.core.fastmath import calc_matrix
         m = calc_matrix(
-            obj.x,
-            obj.y,
+            obj_x,
+            obj_y,
             obj.width,
             obj.height,
             obj.pivot_x,
@@ -460,7 +463,7 @@ class OpenGLRenderer:
         zoom = camera.zoom if camera else 1.0
         for cx, cy in corners:
             world_x = m[0] * cx + m[4] * cy + m[12]
-            world_y = (m[1] * cx + m[5] * cy + m[13]) * sign
+            world_y = m[1] * cx + m[5] * cy + m[13]
             screen_x = (world_x - cam_x * unit_scale) * zoom
             screen_y = (world_y - cam_y * unit_scale * sign) * zoom
             glVertex2f(screen_x, screen_y)
