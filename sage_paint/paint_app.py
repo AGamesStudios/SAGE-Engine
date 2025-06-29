@@ -24,7 +24,7 @@ EXPERIMENTAL_NOTICE = (
 class PaintWindow(QMainWindow):
     """Main window hosting a :class:`Canvas` and basic drawing tools."""
 
-    def __init__(self):
+    def __init__(self, *, on_export=None, template: str | None = None):
         super().__init__()
         self.lang = DEFAULT_LANGUAGE
         self.setWindowTitle(self.t("SAGE Paint (Experimental)"))
@@ -32,9 +32,12 @@ class PaintWindow(QMainWindow):
         self.setCentralWidget(self.canvas)
         self._first_show = True
         self.project_path: str | None = None
+        self.on_export = on_export
         self._init_menu()
         self._init_toolbar()
         self._show_disclaimer()
+        if template is not None:
+            self.create_project(template)
 
     # ------------------------------------------------------------------
     def t(self, text: str) -> str:
@@ -139,17 +142,24 @@ class PaintWindow(QMainWindow):
         )
         if not ok:
             return
+        if choice == self.t("Dark Background"):
+            template = "dark"
+        elif choice == self.t("Transparent"):
+            template = "transparent"
+        else:
+            template = "white"
+        self.create_project(template)
 
+    def create_project(self, template: str = "white") -> None:
+        """Create a project without prompting the user."""
         width = self.canvas.image.width()
         height = self.canvas.image.height()
-
-        if choice == self.t("Dark Background"):
+        if template == "dark":
             bg = QColor(32, 32, 32)
-        elif choice == self.t("Transparent"):
+        elif template == "transparent":
             bg = None
         else:
             bg = QColor("white")
-
         self.canvas.image = QImage(width, height, QImage.Format.Format_ARGB32)
         self.canvas.image.fill(Qt.GlobalColor.transparent)
         self.canvas.bg_color = bg
@@ -204,6 +214,8 @@ class PaintWindow(QMainWindow):
             if not path.endswith('.png'):
                 path += '.png'
             self.canvas.image.save(path, 'PNG')
+            if self.on_export:
+                self.on_export(path)
 
     # Toolbar ------------------------------------------------------------
 

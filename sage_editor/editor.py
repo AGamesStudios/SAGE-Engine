@@ -1552,7 +1552,7 @@ class Editor(QMainWindow):
         self.type_combo.currentIndexChanged.connect(self._object_type_changed)
         self.image_btn.clicked.connect(self._choose_object_image)
         self.clear_img_btn.clicked.connect(self._clear_object_image)
-        self.paint_btn.clicked.connect(self.open_paint_tool)
+        self.paint_btn.clicked.connect(lambda: self.open_paint_tool(self._current_object()))
         self.image_edit.editingFinished.connect(self._image_path_edited)
         self.color_btn.clicked.connect(self._choose_object_color)
         self.smooth_check.stateChanged.connect(self._smooth_changed)
@@ -1708,6 +1708,14 @@ class Editor(QMainWindow):
         if not self.dirty:
             self.dirty = True
             self._update_title()
+
+    # ------------------------------------------------------------------
+    def _current_object(self):
+        """Return the currently selected object or ``None``."""
+        idx = self.object_combo.currentIndex()
+        if 0 <= idx < len(self.items):
+            return self.items[idx][1]
+        return None
 
     # ------------------------------------------------------------------
     def _capture_state(self, obj: GameObject) -> dict:
@@ -2407,14 +2415,21 @@ class Editor(QMainWindow):
             logger.exception('Failed to start engine')
             QMessageBox.warning(self, self.t('error'), str(exc))
 
-    def open_paint_tool(self) -> None:
+    def open_paint_tool(self, obj=None) -> None:
         """Launch the SAGE Paint window."""
         try:
             from sage_paint import PaintWindow
         except Exception as exc:  # pragma: no cover - import issues
             QMessageBox.warning(self, self.t('error'), str(exc))
             return
-        win = PaintWindow()
+
+        def on_export(path: str, o=obj):
+            if o is not None:
+                self._assign_sprite_image(o, path)
+
+        tmpl = 'transparent' if obj is not None else None
+        win = PaintWindow(on_export=on_export if obj is not None else None,
+                          template=tmpl)
         win.show()
         self._paint_windows.append(win)
         win.destroyed.connect(lambda _: self._paint_windows.remove(win))
@@ -3261,6 +3276,21 @@ class Editor(QMainWindow):
         if hasattr(self, 'view'):
             self.view.update()
         self._mark_dirty()
+
+    def _assign_sprite_image(self, obj, path: str) -> None:
+        """Load ``path`` as the sprite for ``obj`` and update the UI."""
+        try:
+            abs_path, rel_path = self._copy_to_resources(path)
+            obj.image_path = rel_path
+            obj._load_image()
+            if obj is self._current_object():
+                self.image_edit.setText(rel_path)
+                self.paint_btn.setVisible(False)
+            if hasattr(self, 'view'):
+                self.view.update()
+            self._mark_dirty()
+        except Exception as exc:
+            QMessageBox.warning(self, self.t('error'), str(exc))
 
     def _image_path_edited(self) -> None:
         """Update the image path when the line edit changes."""
