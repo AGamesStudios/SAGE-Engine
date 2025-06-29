@@ -302,12 +302,12 @@ class OpenGLRenderer:
 
     def _draw_icon(self, x: float, y: float, tex: int, zoom: float, size: float = 32.0):
         """Render a billboard icon at ``(x, y)`` in world units."""
-        scale = units.UNITS_PER_METER
+        unit_scale = units.UNITS_PER_METER
         sign = 1.0 if units.Y_UP else -1.0
         glBindTexture(GL_TEXTURE_2D, tex)
         glColor4f(1.0, 1.0, 1.0, 1.0)
         glPushMatrix()
-        glTranslatef(x * scale, y * scale * sign, 0)
+        glTranslatef(x * unit_scale, y * unit_scale * sign, 0)
         inv_zoom = 1.0 / zoom if zoom else 1.0
         half = size / 2.0 * inv_zoom
         glBegin(GL_QUADS)
@@ -369,7 +369,7 @@ class OpenGLRenderer:
                     width = float(eff.get("width", 3.0))
                     self._draw_outline(obj, camera, color=color, width=width)
                     break
-        scale = units.UNITS_PER_METER
+        unit_scale = units.UNITS_PER_METER
         sign = 1.0 if units.Y_UP else -1.0
         zoom = camera.zoom if camera else 1.0
         cam_x = camera.x if camera else 0.0
@@ -388,10 +388,10 @@ class OpenGLRenderer:
         for vx, vy in verts:
             rx = vx * cos_a - vy * sin_a
             ry = vx * sin_a + vy * cos_a
-            world_x = (rx + obj_x) * scale
-            world_y = (ry + obj_y) * scale * sign
-            ndc_x = (2.0 * (world_x - cam_x * scale) * zoom) / w_size
-            ndc_y = (2.0 * (world_y - cam_y * scale * sign) * zoom) / h_size
+            world_x = (rx + obj_x) * unit_scale
+            world_y = (ry + obj_y) * unit_scale * sign
+            ndc_x = (2.0 * (world_x - cam_x * unit_scale) * zoom) / w_size
+            ndc_y = (2.0 * (world_y - cam_y * unit_scale * sign) * zoom) / h_size
             data.extend([ndc_x, ndc_y])
         uvs = obj.texture_coords(camera, apply_effects=self.apply_effects)
         arr = (ctypes.c_float * 16)(
@@ -426,7 +426,7 @@ class OpenGLRenderer:
         )
         if obj is None:
             return
-        scale = units.UNITS_PER_METER
+        unit_scale = units.UNITS_PER_METER
         sign = 1.0 if units.Y_UP else -1.0
         ang = math.radians(getattr(obj, "angle", 0.0))
         cos_a = math.cos(ang)
@@ -436,8 +436,8 @@ class OpenGLRenderer:
         h = obj.height * obj.scale_y * scale_mul
         verts = [(-w / 2, -h / 2), (w / 2, -h / 2), (w / 2, h / 2), (-w / 2, h / 2)]
         glBindTexture(GL_TEXTURE_2D, 0)
-        scale = 1 / 255.0 if max(color) > 1.0 else 1.0
-        norm = tuple(c * scale for c in color)
+        color_scale = 1 / 255.0 if max(color) > 1.0 else 1.0
+        norm = tuple(c * color_scale for c in color)
         glColor4f(*norm)
         glLineWidth(width)
         glBegin(GL_LINE_LOOP)
@@ -448,8 +448,8 @@ class OpenGLRenderer:
         for vx, vy in verts:
             rx = vx * cos_a - vy * sin_a
             ry = vx * sin_a + vy * cos_a
-            world_x = (rx + obj_x) * scale - cam_x * scale
-            world_y = (ry + obj_y) * scale * sign - cam_y * scale * sign
+            world_x = (rx + obj_x) * unit_scale - cam_x * unit_scale
+            world_y = (ry + obj_y) * unit_scale * sign - cam_y * unit_scale * sign
             glVertex2f(world_x * zoom, world_y * zoom)
         glEnd()
         glLineWidth(1.0)
