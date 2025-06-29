@@ -355,11 +355,11 @@ class OpenGLRenderer:
 
         shape = getattr(obj, "shape", None)
         if shape in ("triangle", "circle"):
-            self._draw_shape(obj, camera, shape)
             if shader:
                 Shader.stop()
             else:
                 glUseProgram(0)
+            self._draw_shape(obj, camera, shape)
             return
 
         if self.apply_effects:
@@ -431,7 +431,7 @@ class OpenGLRenderer:
         """Draw a bright outline around ``obj`` in world coordinates."""
         from OpenGL.GL import (
             glBindTexture, glColor4f, glLineWidth, glBegin, glEnd, glVertex2f,
-            GL_LINE_LOOP, GL_TEXTURE_2D
+            glUseProgram, GL_LINE_LOOP, GL_TEXTURE_2D
         )
         if obj is None:
             return
@@ -461,6 +461,7 @@ class OpenGLRenderer:
             (obj.width, obj.height),
             (0.0, obj.height),
         ]
+        glUseProgram(0)
         glBindTexture(GL_TEXTURE_2D, 0)
         color_scale = 1 / 255.0 if max(color) > 1.0 else 1.0
         norm = tuple(c * color_scale for c in color)
@@ -489,7 +490,7 @@ class OpenGLRenderer:
     ) -> None:
         from OpenGL.GL import (
             glBindTexture, glColor4f, glBegin, glEnd, glVertex2f,
-            GL_TRIANGLE_FAN, GL_TRIANGLES, GL_TEXTURE_2D
+            glUseProgram, GL_TRIANGLE_FAN, GL_TRIANGLES, GL_TEXTURE_2D
         )
         unit_scale = units.UNITS_PER_METER
         sign = 1.0 if units.Y_UP else -1.0
@@ -499,6 +500,7 @@ class OpenGLRenderer:
         zoom = camera.zoom if camera else 1.0
         w_size = camera.width if (self.keep_aspect and camera) else self.width
         h_size = camera.height if (self.keep_aspect and camera) else self.height
+        glUseProgram(0)
         glBindTexture(GL_TEXTURE_2D, 0)
         rgba = obj.color or (255, 255, 255, 255)
         scale = 1 / 255.0 if max(rgba) > 1.0 else 1.0
@@ -513,15 +515,27 @@ class OpenGLRenderer:
         if shape == "triangle":
             verts = [(0.0, obj.height), (obj.width, 0.0), (0.0, 0.0)]
             mode = GL_TRIANGLES
+        elif shape == "square":
+            verts = [
+                (0.0, 0.0),
+                (obj.width, 0.0),
+                (obj.width, obj.height),
+                (0.0, obj.height),
+            ]
+            mode = GL_TRIANGLE_FAN
         else:
             # circle approximation
-            verts = []
+            verts = [(obj.width/2, obj.height/2)]
             r = max(obj.width, obj.height)
-            steps = 16
-            for i in range(steps):
-                ang = 2*math.pi*i/steps
-                verts.append((obj.width/2 + math.cos(ang)*r/2,
-                              obj.height/2 + math.sin(ang)*r/2))
+            steps = 32
+            for i in range(steps + 1):
+                ang = 2 * math.pi * i / steps
+                verts.append(
+                    (
+                        obj.width / 2 + math.cos(ang) * r / 2,
+                        obj.height / 2 + math.sin(ang) * r / 2,
+                    )
+                )
             mode = GL_TRIANGLE_FAN
         glBegin(mode)
         for vx, vy in verts:
