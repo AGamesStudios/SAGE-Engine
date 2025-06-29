@@ -27,6 +27,7 @@ import traceback
 import inspect
 from .lang import LANGUAGES, DEFAULT_LANGUAGE
 from engine import Scene, GameObject, Project, Camera, ENGINE_VERSION, get_resource_path
+from engine.core.objects import get_object_type
 from . import plugins
 from .widgets import Viewport, ResourceLineEdit
 register_plugin = plugins.register_plugin
@@ -3068,6 +3069,12 @@ class Editor(QMainWindow):
         if idx < 0 or idx >= len(self.items):
             return
         obj = self.items[idx][1]
+        if get_object_type(obj) != 'sprite' or not hasattr(obj, 'effects'):
+            QMessageBox.warning(
+                self, self.t('error'),
+                self.t('effects_sprite_only')
+            )
+            return
         dlg = EffectDialog(self)
         if dlg.exec() == QDialog.DialogCode.Accepted:
             obj.effects.append(dlg.get_data())
@@ -3079,8 +3086,11 @@ class Editor(QMainWindow):
         if idx < 0 or idx >= len(self.items):
             return
         obj = self.items[idx][1]
-        if 0 <= index < len(obj.effects):
-            obj.effects.pop(index)
+        effs = getattr(obj, 'effects', None)
+        if effs is None:
+            return
+        if 0 <= index < len(effs):
+            effs.pop(index)
             self._update_effect_panel()
             self._mark_dirty()
 

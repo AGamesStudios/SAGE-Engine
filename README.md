@@ -479,6 +479,9 @@ sprite.effects.append({
     "depth": 0.05,
 })
 ```
+Effects are only supported on sprite objects. Retrieve a sprite from a
+scene using ``get_object_type`` and append the effect to its ``effects``
+list. Cameras ignore such data because they lack an ``effects`` field.
 
 An extended ``panorama`` effect supports an equirectangular projection for
 skybox-style textures. When ``projection='equirect'`` is specified, texture
