@@ -3,7 +3,24 @@
 This repository contains **SAGE Engine**, a lightweight core framework for
 games.  **SAGE 2D** extends the engine with sprite rendering while **SAGE
 Editor** lets you place objects visually and save projects.  The editor remains
-small so it runs well even on older computers.
+small so it runs well even on older computers.  An additional **SAGE Paint**
+tool provides an experimental sprite editor for drawing 2D graphics. The
+window shows an "EXPERIMENTAL" banner to highlight this status.  SAGE Paint
+supports zooming, right-click panning and an eraser tool so sprites can be
+drawn or touched up without leaving the engine.  A live gizmo shows the brush
+or eraser size so edits feel precise.  Zoom now follows the cursor position so
+the image stays centred on what you are working on.  A vertical toolbar on the
+left hosts brush, eraser and fill tools with optional circle or square brush
+tips and a smoothing toggle.  Each tool remembers its own width controlled by a
+spin box on the main toolbar which also shows the currently selected colour.
+Canvas updates are limited to the changed area so even low-end PCs can draw
+smoothly without dropping frames.
+Undo and redo shortcuts make it easy to revert mistakes.  The window opens
+maximised and centres the canvas in its viewport so drawing starts focused on
+the artwork.  The canvas sits on a dark gray background with a thin border while
+you work.  A new **File** menu can create blank documents, open or save
+``.sagepaint`` files and export the current image to PNG alongside the existing
+Settings menu for window size.
 
 The current release is **SAGE Engine: 2D prototype v0.0.01a**. The engine
 stores its version inside every `.sageproject` file so you can safely upgrade
@@ -116,7 +133,8 @@ keeping CPU usage low even on slower machines.
 An **Add Object** button beneath the list places a blank object with a default
  name like `New Object`. Every toolbar action and list item loads its icon from
  the `sage_editor/icons` folder, so you can replace these images with your own
- to completely theme the interface. The Import button loads `add.png`, the New
+ to completely theme the interface. SAGE Paint shares this same folder for its
+ toolbar icons, ensuring all tools draw from one location. The Import button loads `add.png`, the New
  Folder button uses `folder.png`, the Refresh button uses `refresh.png`, the Run
  action shows `start.png`, the New Project action shows `file.png`, Save Project
  uses `save.png`, the Recent Projects menu displays `recent.png`, the Manage
