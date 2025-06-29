@@ -1,57 +1,24 @@
-"""Simple sprite painting tool."""
+"""Simple yet extensible sprite painting application."""
 
 from __future__ import annotations
 
 import sys
 from PyQt6.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QColorDialog,
-    QToolBar, QLabel, QMessageBox,
+    QApplication, QMainWindow, QColorDialog,
+    QToolBar, QLabel, QMessageBox, QAction
 )
-from PyQt6.QtGui import QPainter, QImage, QPen, QColor, QAction
-from PyQt6.QtCore import Qt, QPoint
+from PyQt6.QtCore import Qt
+
+from .canvas import Canvas
 
 EXPERIMENTAL_NOTICE = (
     "SAGE Paint is experimental. Features may change and stability is not guaranteed."
 )
 
 
-class Canvas(QWidget):
-    def __init__(self, width: int = 256, height: int = 256, parent: QWidget | None = None):
-        super().__init__(parent)
-        self.image = QImage(width, height, QImage.Format.Format_ARGB32)
-        self.image.fill(QColor(0, 0, 0, 0))
-        self._drawing = False
-        self.pen_color = QColor("black")
-        self.pen_width = 1
-        self._last_pos = QPoint()
-
-    def mousePressEvent(self, event):
-        if event.button() == Qt.MouseButton.LeftButton:
-            self._drawing = True
-            self._last_pos = event.position().toPoint()
-
-    def mouseMoveEvent(self, event):
-        if self._drawing:
-            painter = QPainter(self.image)
-            pen = QPen(self.pen_color, self.pen_width, Qt.PenStyle.SolidLine,
-                       Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin)
-            painter.setPen(pen)
-            painter.drawLine(self._last_pos, event.position().toPoint())
-            painter.end()
-            self._last_pos = event.position().toPoint()
-            self.update()
-
-    def mouseReleaseEvent(self, event):
-        if event.button() == Qt.MouseButton.LeftButton:
-            self._drawing = False
-
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        painter.drawImage(0, 0, self.image)
-        painter.end()
-
-
 class PaintWindow(QMainWindow):
+    """Main window hosting a :class:`Canvas` and basic drawing tools."""
+
     def __init__(self):
         super().__init__()
         self.setWindowTitle("SAGE Paint (Experimental)")
@@ -60,7 +27,9 @@ class PaintWindow(QMainWindow):
         self._init_toolbar()
         self._show_disclaimer()
 
-    def _init_toolbar(self):
+    # Toolbar ------------------------------------------------------------
+
+    def _init_toolbar(self) -> None:
         toolbar = QToolBar(self)
         self.addToolBar(toolbar)
         color_action = QAction("Color", self)
@@ -75,23 +44,37 @@ class PaintWindow(QMainWindow):
         dec_action.triggered.connect(self.decrease_width)
         toolbar.addAction(dec_action)
 
+        eraser_action = QAction("Eraser", self)
+        eraser_action.setCheckable(True)
+        eraser_action.toggled.connect(self.toggle_eraser)
+        toolbar.addAction(eraser_action)
+        self.eraser_action = eraser_action
+
         label = QLabel("EXPERIMENTAL", self)
         label.setStyleSheet("color: red; font-weight: bold;")
         toolbar.addWidget(label)
 
-    def choose_color(self):
+    def choose_color(self) -> None:
         color = QColorDialog.getColor(self.canvas.pen_color, self)
         if color.isValid():
             self.canvas.pen_color = color
+            self.canvas.use_brush()
+            self.eraser_action.setChecked(False)
 
-    def increase_width(self):
+    def increase_width(self) -> None:
         self.canvas.pen_width += 1
 
-    def decrease_width(self):
+    def decrease_width(self) -> None:
         if self.canvas.pen_width > 1:
             self.canvas.pen_width -= 1
 
-    def _show_disclaimer(self):
+    def toggle_eraser(self, checked: bool) -> None:
+        if checked:
+            self.canvas.use_eraser()
+        else:
+            self.canvas.use_brush()
+
+    def _show_disclaimer(self) -> None:
         QMessageBox.information(self, "Experimental", EXPERIMENTAL_NOTICE)
 
 

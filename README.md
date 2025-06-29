@@ -5,7 +5,9 @@ games.  **SAGE 2D** extends the engine with sprite rendering while **SAGE
 Editor** lets you place objects visually and save projects.  The editor remains
 small so it runs well even on older computers.  An additional **SAGE Paint**
 tool provides an experimental sprite editor for drawing 2D graphics. The
-window shows an "EXPERIMENTAL" banner to highlight this status.
+window shows an "EXPERIMENTAL" banner to highlight this status.  SAGE Paint
+supports zooming, panning and an eraser tool so sprites can be drawn or touched
+up without leaving the engine.
 
 The current release is **SAGE Engine: 2D prototype v0.0.01a**. The engine
 stores its version inside every `.sageproject` file so you can safely upgrade
