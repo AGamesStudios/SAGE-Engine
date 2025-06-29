@@ -59,7 +59,9 @@ class BrushTool(Tool):
             return
         painter = QPainter(self.canvas.image)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, self.canvas.smooth_pen)
-        painter.setRenderHint(QPainter.RenderHint.HighQualityAntialiasing, self.canvas.smooth_pen)
+        hqa = getattr(QPainter.RenderHint, 'HighQualityAntialiasing', None)
+        if hqa is not None:
+            painter.setRenderHint(hqa, self.canvas.smooth_pen)
         painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, self.canvas.smooth_pen)
         painter.setPen(self.pen())
         painter.drawLine(self._last, pos)
