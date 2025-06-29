@@ -1,6 +1,6 @@
 from engine.core.game_object import GameObject
 from engine.core.camera import Camera
-from engine.core.effects import register_effect, Effect
+from engine.core.effects import register_effect, Effect, EFFECT_REGISTRY
 
 def test_offset_position():
     obj = GameObject(effects=[{"type": "offset", "dx": 5, "dy": -3}])
@@ -25,3 +25,7 @@ def test_custom_effect_registration():
     register_effect("dummy", DummyEffect())
     obj = GameObject(effects=[{"type": "dummy"}])
     assert obj.render_scale(Camera()) == 2.0
+
+
+def test_outline_registered():
+    assert "outline" in EFFECT_REGISTRY

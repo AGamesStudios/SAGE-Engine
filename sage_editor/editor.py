@@ -1322,35 +1322,69 @@ class EffectDialog(QDialog):
     def __init__(self, parent=None, data=None):
         super().__init__(parent)
         self.setWindowTitle(parent.t('add_effect') if parent else 'Add Effect')
+        t = parent.t if parent else lambda s: s
         layout = QFormLayout(self)
         self.type_box = QComboBox()
         for name in EFFECT_REGISTRY:
-            label = parent.t(name) if parent else name.title()
-            self.type_box.addItem(label, name)
-        layout.addRow(parent.t('type_label') if parent else 'Type:', self.type_box)
+            self.type_box.addItem(t(name), name)
+        layout.addRow(t('type_label'), self.type_box)
+
+        self.params_form = QFormLayout()
+        self.params_widget = QWidget()
+        self.params_widget.setLayout(self.params_form)
+        layout.addRow(self.params_widget)
+
         self.fx_spin = QDoubleSpinBox(); self.fx_spin.setRange(-1000.0, 1000.0); self.fx_spin.setValue(0.0)
         self.fy_spin = QDoubleSpinBox(); self.fy_spin.setRange(-1000.0, 1000.0); self.fy_spin.setValue(0.0)
-        layout.addRow(parent.t('offset_x') if parent else 'Offset X:', self.fx_spin)
-        layout.addRow(parent.t('offset_y') if parent else 'Offset Y:', self.fy_spin)
+        self.outline_width = QDoubleSpinBox(); self.outline_width.setRange(1.0, 50.0); self.outline_width.setValue(3.0)
+        self.color_edit = QLineEdit('255,128,0,255')
+
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
         layout.addRow(buttons)
+
+        self.type_box.currentIndexChanged.connect(self.update_fields)
+
         if data:
             i = self.type_box.findData(data.get('type'))
             if i >= 0:
                 self.type_box.setCurrentIndex(i)
             self.fx_spin.setValue(data.get('dx', 0.0))
             self.fy_spin.setValue(data.get('dy', 0.0))
+            self.outline_width.setValue(data.get('width', 3.0))
+            c = data.get('color')
+            if isinstance(c, (list, tuple)):
+                self.color_edit.setText(','.join(str(int(x)) for x in c))
+            elif isinstance(c, str):
+                self.color_edit.setText(c)
+
+        self.update_fields()
         if parent:
             parent.apply_no_wheel(self)
 
     def get_data(self):
-        return {
-            'type': self.type_box.currentData(),
-            'dx': self.fx_spin.value(),
-            'dy': self.fy_spin.value(),
-        }
+        typ = self.type_box.currentData()
+        data = {'type': typ}
+        if typ == 'offset':
+            data['dx'] = self.fx_spin.value()
+            data['dy'] = self.fy_spin.value()
+        elif typ == 'outline':
+            data['width'] = self.outline_width.value()
+            data['color'] = self.color_edit.text()
+        return data
+
+    def update_fields(self):
+        t = self.parent().t if hasattr(self.parent(), 't') else (lambda s: s)
+        while self.params_form.rowCount():
+            self.params_form.removeRow(0)
+        typ = self.type_box.currentData()
+        if typ == 'offset':
+            self.params_form.addRow(t('offset_x'), self.fx_spin)
+            self.params_form.addRow(t('offset_y'), self.fy_spin)
+        elif typ == 'outline':
+            self.params_form.addRow(t('outline_width'), self.outline_width)
+            self.params_form.addRow(t('outline_color'), self.color_edit)
 
 
 class Editor(QMainWindow):
@@ -3052,12 +3086,16 @@ class Editor(QMainWindow):
             lay = QHBoxLayout(row)
             lay.setContentsMargins(0, 0, 0, 0)
             lbl = QLabel(self.t(eff.get('type')))
-            btn = QPushButton()
-            btn.setIcon(load_icon('delete.png'))
-            btn.clicked.connect(lambda _=None, r=i: self._remove_effect(r))
+            btn_edit = QPushButton()
+            btn_edit.setIcon(load_icon('edit.png'))
+            btn_edit.clicked.connect(lambda _=None, r=i: self._edit_effect(r))
+            btn_del = QPushButton()
+            btn_del.setIcon(load_icon('delete.png'))
+            btn_del.clicked.connect(lambda _=None, r=i: self._remove_effect(r))
             lay.addWidget(lbl)
             lay.addStretch(1)
-            lay.addWidget(btn)
+            lay.addWidget(btn_edit)
+            lay.addWidget(btn_del)
             self.effects_list.addWidget(row)
 
     def _add_effect(self):
@@ -3074,6 +3112,20 @@ class Editor(QMainWindow):
         dlg = EffectDialog(self)
         if dlg.exec() == QDialog.DialogCode.Accepted:
             obj.effects.append(dlg.get_data())
+            self._update_effect_panel()
+            self._mark_dirty()
+
+    def _edit_effect(self, index: int):
+        idx = self.object_combo.currentIndex()
+        if idx < 0 or idx >= len(self.items):
+            return
+        obj = self.items[idx][1]
+        effs = getattr(obj, 'effects', None)
+        if effs is None or not (0 <= index < len(effs)):
+            return
+        dlg = EffectDialog(self, effs[index])
+        if dlg.exec() == QDialog.DialogCode.Accepted:
+            effs[index] = dlg.get_data()
             self._update_effect_panel()
             self._mark_dirty()
 

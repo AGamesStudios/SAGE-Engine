@@ -494,9 +494,20 @@ sprite.effects.append({
     "dy": -5,
 })
 ```
+Another built-in `outline` effect draws a border using the given width and color:
+
+```python
+sprite.effects.append({
+    "type": "outline",
+    "width": 4,
+    "color": "0,0,0,255",
+})
+```
 Effects are only supported on sprite objects. Retrieve a sprite from a
 scene using ``get_object_type`` and append the effect to its ``effects``
 list. Cameras ignore such data because they lack an ``effects`` field.
+The editor lists active effects in the **Properties** panel so you can edit or
+remove them with a single click.
 
 ### Post-processing Effects
 

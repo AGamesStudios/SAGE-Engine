@@ -52,4 +52,13 @@ class OffsetEffect(Effect):
 
 register_effect("offset", OffsetEffect())
 
+
+class OutlineEffect(Effect):
+    """Draw an outline around the object without modifying its transform."""
+
+    pass
+
+
+register_effect("outline", OutlineEffect())
+
 __all__ = ["Effect", "register_effect", "get_effect", "EFFECT_REGISTRY"]

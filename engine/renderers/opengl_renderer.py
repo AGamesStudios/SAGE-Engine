@@ -352,6 +352,23 @@ class OpenGLRenderer:
             scale = 1 / 255.0 if max(rgba) > 1.0 else 1.0
             norm = tuple(c * scale for c in rgba)
             glUniform4f(loc_color, *norm)
+
+        if self.apply_effects:
+            for eff in getattr(obj, "effects", []):
+                if eff.get("type") == "outline":
+                    color = eff.get("color", (255, 128, 0, 255))
+                    if isinstance(color, str):
+                        try:
+                            parts = [int(p) for p in color.split(",")]
+                            while len(parts) < 4:
+                                parts.append(255)
+                            color = tuple(parts[:4])
+                        except Exception:
+                            color = (255, 128, 0, 255)
+                    color = tuple(color)
+                    width = float(eff.get("width", 3.0))
+                    self._draw_outline(obj, camera, color=color, width=width)
+                    break
         scale = units.UNITS_PER_METER
         sign = 1.0 if units.Y_UP else -1.0
         zoom = camera.zoom if camera else 1.0
