@@ -38,22 +38,18 @@ def get_effect(name: str) -> Effect | None:
 
 # built-in effects -----------------------------------------------------------
 
-class PerspectiveEffect(Effect):
-    def apply_position(self, obj, camera, params: dict, pos: Tuple[float, float]) -> Tuple[float, float]:
-        if camera is None:
-            return pos
-        fx = params.get("factor_x", params.get("factor", 0.0))
-        fy = params.get("factor_y", params.get("factor", 0.0))
+class OffsetEffect(Effect):
+    """Translate an object by fixed x/y offsets."""
+
+    def apply_position(
+        self, obj, camera, params: dict, pos: Tuple[float, float]
+    ) -> Tuple[float, float]:
+        dx = params.get("dx", 0.0)
+        dy = params.get("dy", 0.0)
         x, y = pos
-        return x + camera.x * fx, y + camera.y * fy
-
-    def apply_scale(self, obj, camera, params: dict, scale: float) -> float:
-        if camera is None:
-            return scale
-        depth = params.get("depth", params.get("factor_z", params.get("factor", 0.0)))
-        return scale * (1.0 + (camera.zoom - 1.0) * depth)
+        return x + dx, y + dy
 
 
-register_effect("perspective", PerspectiveEffect())
+register_effect("offset", OffsetEffect())
 
 __all__ = ["Effect", "register_effect", "get_effect", "EFFECT_REGISTRY"]

@@ -484,16 +484,14 @@ scene files.
 
 Objects may include simple effects that react to camera movement.  Effects are
 looked up through a registry so new types can be added by calling
-``engine.core.register_effect``.  Built-in handlers provide a couple of common
-behaviours.  The ``perspective`` effect shifts an object based on the camera
-position and scales it with depth to create a basic parallax illusion:
+``engine.core.register_effect``.  A minimal built-in handler simply offsets a
+sprite from its original position:
 
 ```python
 sprite.effects.append({
-    "type": "perspective",
-    "factor_x": 0.1,
-    "factor_y": 0.1,
-    "depth": 0.05,
+    "type": "offset",
+    "dx": 10,
+    "dy": -5,
 })
 ```
 Effects are only supported on sprite objects. Retrieve a sprite from a

@@ -2,19 +2,17 @@ from engine.core.game_object import GameObject
 from engine.core.camera import Camera
 from engine.core.effects import register_effect, Effect
 
-def test_perspective_offset():
-    cam = Camera(x=10, y=5, width=640, height=480)
-    obj = GameObject(x=0, y=0, effects=[{"type": "perspective", "factor_x": 0.5, "factor_y": 0.5}])
-    x, y = obj.render_position(cam)
-    assert x - cam.x == -5
-    assert y - cam.y == -2.5
+def test_offset_position():
+    obj = GameObject(effects=[{"type": "offset", "dx": 5, "dy": -3}])
+    x, y = obj.render_position(Camera())
+    assert x == 5
+    assert y == -3
 
 
-def test_perspective_scale():
-    cam = Camera(zoom=2.0)
-    obj = GameObject(effects=[{"type": "perspective", "depth": 0.5}])
-    scale = obj.render_scale(cam)
-    assert scale == 1.5
+def test_default_scale():
+    obj = GameObject(effects=[{"type": "offset", "dx": 1}])
+    scale = obj.render_scale(Camera())
+    assert scale == 1.0
 
 
 

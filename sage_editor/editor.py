@@ -37,6 +37,7 @@ from .docks.properties import PropertiesDock
 from .docks.resources import ResourceDock
 from .docks.logic import LogicTab, ObjectLogicTab
 from .docks.profiler import ProfilerDock
+from engine.core.effects import EFFECT_REGISTRY
 
 
 class NoWheelFilter(QObject):
@@ -1323,17 +1324,14 @@ class EffectDialog(QDialog):
         self.setWindowTitle(parent.t('add_effect') if parent else 'Add Effect')
         layout = QFormLayout(self)
         self.type_box = QComboBox()
-        self.type_box.addItem(
-            parent.t('perspective') if parent else 'Perspective',
-            'perspective'
-        )
+        for name in EFFECT_REGISTRY:
+            label = parent.t(name) if parent else name.title()
+            self.type_box.addItem(label, name)
         layout.addRow(parent.t('type_label') if parent else 'Type:', self.type_box)
-        self.fx_spin = QDoubleSpinBox(); self.fx_spin.setRange(-5.0, 5.0); self.fx_spin.setValue(0.1)
-        self.fy_spin = QDoubleSpinBox(); self.fy_spin.setRange(-5.0, 5.0); self.fy_spin.setValue(0.1)
-        self.fz_spin = QDoubleSpinBox(); self.fz_spin.setRange(-5.0, 5.0); self.fz_spin.setValue(0.0)
-        layout.addRow(parent.t('factor_x') if parent else 'Factor X:', self.fx_spin)
-        layout.addRow(parent.t('factor_y') if parent else 'Factor Y:', self.fy_spin)
-        layout.addRow(parent.t('depth') if parent else 'Depth:', self.fz_spin)
+        self.fx_spin = QDoubleSpinBox(); self.fx_spin.setRange(-1000.0, 1000.0); self.fx_spin.setValue(0.0)
+        self.fy_spin = QDoubleSpinBox(); self.fy_spin.setRange(-1000.0, 1000.0); self.fy_spin.setValue(0.0)
+        layout.addRow(parent.t('offset_x') if parent else 'Offset X:', self.fx_spin)
+        layout.addRow(parent.t('offset_y') if parent else 'Offset Y:', self.fy_spin)
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
@@ -1342,18 +1340,16 @@ class EffectDialog(QDialog):
             i = self.type_box.findData(data.get('type'))
             if i >= 0:
                 self.type_box.setCurrentIndex(i)
-            self.fx_spin.setValue(data.get('factor_x', data.get('factor', 0.1)))
-            self.fy_spin.setValue(data.get('factor_y', data.get('factor', 0.1)))
-            self.fz_spin.setValue(data.get('depth', data.get('factor_z', 0.0)))
+            self.fx_spin.setValue(data.get('dx', 0.0))
+            self.fy_spin.setValue(data.get('dy', 0.0))
         if parent:
             parent.apply_no_wheel(self)
 
     def get_data(self):
         return {
             'type': self.type_box.currentData(),
-            'factor_x': self.fx_spin.value(),
-            'factor_y': self.fy_spin.value(),
-            'depth': self.fz_spin.value(),
+            'dx': self.fx_spin.value(),
+            'dy': self.fy_spin.value(),
         }
 
 
