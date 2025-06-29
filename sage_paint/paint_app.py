@@ -5,9 +5,9 @@ from __future__ import annotations
 import sys
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QColorDialog,
-    QToolBar, QAction, QLabel, QMessageBox,
+    QToolBar, QLabel, QMessageBox,
 )
-from PyQt6.QtGui import QPainter, QImage, QPen, QColor
+from PyQt6.QtGui import QPainter, QImage, QPen, QColor, QAction
 from PyQt6.QtCore import Qt, QPoint
 
 EXPERIMENTAL_NOTICE = (
