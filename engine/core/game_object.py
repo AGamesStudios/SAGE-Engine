@@ -15,6 +15,7 @@ from engine.renderers import Shader
 from .objects import register_object
 from ..logic import EventSystem, event_from_dict
 from .. import units
+from .effects import get_effect
 
 # LRU cache so repeated sprites don't reload files on low spec machines
 _IMAGE_CACHE: "OrderedDict[str, Image.Image]" = OrderedDict()
@@ -140,12 +141,9 @@ class GameObject:
         if apply_effects and camera:
             for eff in getattr(self, "effects", []):
                 etype = eff.get("type")
-                if etype in {"panorama", "perspective"}:
-                    fx = eff.get("factor_x", eff.get("factor", 0.0))
-                    fy = eff.get("factor_y", eff.get("factor", 0.0))
-                    # apply parallax relative to the camera movement
-                    x += camera.x * fx
-                    y += camera.y * fy
+                handler = get_effect(etype)
+                if handler:
+                    x, y = handler.apply_position(self, camera, eff, (x, y))
         return x, y
 
     def render_scale(self, camera, apply_effects: bool = True) -> float:
@@ -153,9 +151,9 @@ class GameObject:
         scale = 1.0
         if apply_effects and camera:
             for eff in getattr(self, "effects", []):
-                if eff.get("type") in {"perspective", "panorama"}:
-                    depth = eff.get("depth", eff.get("factor_z", eff.get("factor", 0.0)))
-                    scale *= 1.0 + (camera.zoom - 1.0) * depth
+                handler = get_effect(eff.get("type"))
+                if handler:
+                    scale = handler.apply_scale(self, camera, eff, scale)
         return scale
 
     def texture_coords(self, camera, apply_effects: bool = True) -> list[float]:
@@ -163,27 +161,10 @@ class GameObject:
         coords = [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0]
         if not (apply_effects and camera):
             return coords
-        proj = None
-        fx = fy = 1.0
         for eff in getattr(self, "effects", []):
-            if eff.get("type") == "panorama" and eff.get("projection") == "equirect":
-                proj = "equirect"
-                fx = eff.get("factor_x", eff.get("factor", 1.0))
-                fy = eff.get("factor_y", eff.get("factor", 1.0))
-                break
-        if proj == "equirect":
-            import math
-            half_w = self.width / 2
-            half_h = self.height / 2
-            verts = [(-half_w, -half_h), (half_w, -half_h), (half_w, half_h), (-half_w, half_h)]
-            result = []
-            for vx, vy in verts:
-                lon = (self.x + vx - camera.x) * fx
-                lat = (self.y + vy - camera.y) * fy
-                u = (lon / (2 * math.pi)) % 1.0
-                v = 0.5 - (lat / math.pi)
-                result.extend([u, v])
-            return result
+            handler = get_effect(eff.get("type"))
+            if handler:
+                coords = handler.apply_uvs(self, camera, eff, coords)
         return coords
 
 

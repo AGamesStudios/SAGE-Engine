@@ -1,6 +1,6 @@
 from engine.core.game_object import GameObject
 from engine.core.camera import Camera
-
+from engine.core.effects import register_effect, Effect
 
 def test_perspective_panorama_offset():
     cam = Camera(x=10, y=5, width=640, height=480)
@@ -34,3 +34,13 @@ def test_equirectangular_uv():
     import math
     expected = obj.width * fx / (2 * math.pi)
     assert abs(diff - expected) < 1e-6
+
+
+def test_custom_effect_registration():
+    class DummyEffect(Effect):
+        def apply_scale(self, obj, camera, params, scale):
+            return scale * 2
+
+    register_effect("dummy", DummyEffect())
+    obj = GameObject(effects=[{"type": "dummy"}])
+    assert obj.render_scale(Camera()) == 2.0

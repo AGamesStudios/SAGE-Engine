@@ -477,9 +477,11 @@ scene files.
 
 ### Sprite Effects
 
-Objects may include simple effects that react to camera movement. The
-``perspective`` effect shifts an object based on the camera position and scales
-it with depth to create a basic parallax illusion:
+Objects may include simple effects that react to camera movement.  Effects are
+looked up through a registry so new types can be added by calling
+``engine.core.register_effect``.  Built-in handlers provide a couple of common
+behaviours.  The ``perspective`` effect shifts an object based on the camera
+position and scales it with depth to create a basic parallax illusion:
 
 ```python
 sprite.effects.append({
@@ -512,4 +514,5 @@ The camera itself may display a panorama background. Set the image path on the
 ``pano_fy``. A dedicated shader maps the equirectangular texture around the
 view so the panorama scrolls smoothly when the camera moves. The sprite
 ``panorama`` effect also accepts a ``depth`` value which scales the object based
-on the camera zoom.
+on the camera zoom. Combining parallax with depth creates a "perspective
+panorama" effect that responds smoothly to camera movement.

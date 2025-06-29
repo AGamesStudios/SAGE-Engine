@@ -1,6 +1,15 @@
 ENGINE_VERSION = '2D prototype v0.0.01a'
 
-from .core import GameObject, Scene, Project, Camera, EngineSettings
+from .core import (
+    GameObject,
+    Scene,
+    Project,
+    Camera,
+    EngineSettings,
+    register_effect,
+    get_effect,
+    EFFECT_REGISTRY,
+)
 from .core.game_object import clear_image_cache
 from .api import (
     load_project,
@@ -56,7 +65,8 @@ __all__ = [
     'warn', 'error', 'exception',
     'register_engine_plugin', 'load_engine_plugins',
     'units', 'set_units_per_meter', 'meters', 'kilometers', 'to_units', 'from_units',
-    'set_y_up', 'Y_UP', 'GameWindow', 'EngineSettings'
+    'set_y_up', 'Y_UP', 'GameWindow', 'EngineSettings',
+    'register_effect', 'get_effect', 'EFFECT_REGISTRY'
 ]
 
 

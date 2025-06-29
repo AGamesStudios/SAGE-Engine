@@ -7,6 +7,7 @@ from .objects import (
     object_from_dict,
     object_to_dict,
 )
+from .effects import register_effect, get_effect, EFFECT_REGISTRY
 
 __all__ = [
     'GameObject',
@@ -19,6 +20,9 @@ __all__ = [
     'object_to_dict',
     'Engine',
     'EngineSettings',
+    'register_effect',
+    'get_effect',
+    'EFFECT_REGISTRY',
 ]
 
 
