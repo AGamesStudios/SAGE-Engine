@@ -201,6 +201,7 @@ def main(argv=None):
     font.setPointSize(font.pointSize() + 3)
     app.setFont(font)
     editor = Editor(autoshow=False)
+    editor.font_size = font.pointSize()
     pm = ProjectManager(editor)
     if pm.exec() != QDialog.DialogCode.Accepted:
         app.quit()

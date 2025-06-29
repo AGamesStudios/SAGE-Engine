@@ -1401,6 +1401,7 @@ class Editor(QMainWindow):
         self.snap_to_grid = False
         self.grid_size = 1.0
         self.grid_color = (77, 77, 77)
+        self.font_size = QApplication.font().pointSize()
         self.resource_dir: str | None = None
         self.resource_manager = None
         self.scene = Scene()
@@ -1515,10 +1516,12 @@ class Editor(QMainWindow):
         self.clear_img_btn = prop_dock.clear_img_btn
         self.paint_btn = prop_dock.paint_btn
         self.color_btn = prop_dock.color_btn
+        self.shape_combo = prop_dock.shape_combo
         self.smooth_check = prop_dock.smooth_check
         self.img_row = prop_dock.img_row
         self.image_label = prop_dock.image_label
         self.color_label = prop_dock.color_label
+        self.shape_label = prop_dock.shape_label
         self.smooth_label = prop_dock.smooth_label
         self.image_edit.setPlaceholderText(self.t('path_label'))
         self.color_btn.setText('')
@@ -1555,6 +1558,7 @@ class Editor(QMainWindow):
         self.paint_btn.clicked.connect(lambda: self.open_paint_tool(self._current_object()))
         self.image_edit.editingFinished.connect(self._image_path_edited)
         self.color_btn.clicked.connect(self._choose_object_color)
+        self.shape_combo.currentIndexChanged.connect(self._shape_changed)
         self.smooth_check.stateChanged.connect(self._smooth_changed)
         self.add_effect_btn.clicked.connect(self._add_effect)
         self.tabs.setTabsClosable(True)
@@ -1882,6 +1886,9 @@ class Editor(QMainWindow):
         self.color_act = QAction(self.t('grid_color'), self)
         self.color_act.triggered.connect(self.choose_grid_color)
         self.view_menu.addAction(self.color_act)
+        self.font_size_act = QAction(self.t('font_size'), self)
+        self.font_size_act.triggered.connect(self.font_size_dialog)
+        self.view_menu.addAction(self.font_size_act)
         self.grid_act.setChecked(self.view.show_grid)
         self.axes_act.setChecked(self.view.show_axes)
         self.snap_act.setChecked(self.snap_to_grid)
@@ -2484,6 +2491,7 @@ class Editor(QMainWindow):
                 '', 0, 0, 0, None, 1.0, 1.0, 0.0,
                 0.5, 0.5, color=(255, 255, 255, 255)
             )
+            obj.shape = 'square'
             obj.name = self.t('new_object')
             obj.settings = {}
             self.scene.add_object(obj)
@@ -2861,6 +2869,17 @@ class Editor(QMainWindow):
         if ok:
             self.set_grid_size(size)
 
+    def font_size_dialog(self) -> None:
+        """Prompt for a new editor font size."""
+        size, ok = QInputDialog.getInt(
+            self, self.t('font_size'), self.t('font_size'), self.font_size, 6, 72
+        )
+        if ok:
+            self.font_size = size
+            font = QApplication.font()
+            font.setPointSize(size)
+            QApplication.instance().setFont(font)
+
     def _clear_transform_panel(self):
         """Hide property groups and reset their values."""
         self.object_group.setVisible(False)
@@ -2876,8 +2895,12 @@ class Editor(QMainWindow):
             self.image_label.setVisible(False)
         if hasattr(self, 'color_label'):
             self.color_label.setVisible(False)
+        if hasattr(self, 'shape_label'):
+            self.shape_label.setVisible(False)
         if hasattr(self, 'color_btn'):
             self.color_btn.setVisible(False)
+        if hasattr(self, 'shape_combo'):
+            self.shape_combo.setVisible(False)
         if hasattr(self, 'smooth_label'):
             self.smooth_label.setVisible(False)
         if hasattr(self, 'smooth_check'):
@@ -2911,6 +2934,11 @@ class Editor(QMainWindow):
         self.clear_img_btn.setEnabled(False)
         self.color_btn.setEnabled(False)
         self.color_btn.setStyleSheet('')
+        if hasattr(self, 'shape_combo'):
+            self.shape_combo.blockSignals(True)
+            self.shape_combo.setCurrentIndex(0)
+            self.shape_combo.setEnabled(False)
+            self.shape_combo.blockSignals(False)
         self.smooth_check.blockSignals(True)
         self.smooth_check.setChecked(False)
         self.smooth_check.setEnabled(False)
@@ -2967,6 +2995,9 @@ class Editor(QMainWindow):
             self.color_btn.setVisible(False)
             self.color_btn.setEnabled(False)
             self.color_btn.setStyleSheet('')
+            self.shape_label.setVisible(False)
+            self.shape_combo.setVisible(False)
+            self.shape_combo.setEnabled(False)
             self.smooth_label.setVisible(False)
             self.smooth_check.setVisible(False)
             self.smooth_check.setEnabled(False)
@@ -3009,6 +3040,16 @@ class Editor(QMainWindow):
             self.color_btn.setVisible(True)
             self.color_btn.setEnabled(True)
             self.color_btn.setStyleSheet(f"background-color: rgb({c[0]}, {c[1]}, {c[2]});")
+            self.shape_label.setVisible(True)
+            self.shape_combo.setVisible(True)
+            self.shape_combo.setEnabled(True)
+            i = self.shape_combo.findData(obj.shape or 'square')
+            self.shape_combo.blockSignals(True)
+            if i >= 0:
+                self.shape_combo.setCurrentIndex(i)
+            else:
+                self.shape_combo.setCurrentIndex(0)
+            self.shape_combo.blockSignals(False)
             self.smooth_label.setVisible(True)
             self.smooth_check.setVisible(True)
             self.smooth_check.setEnabled(True)
@@ -3350,6 +3391,19 @@ class Editor(QMainWindow):
             key2 = (id(obj.image), False)
             self.view.renderer.textures.pop(key1, None)
             self.view.renderer.textures.pop(key2, None)
+            self.view.update()
+        self._mark_dirty()
+
+    def _shape_changed(self) -> None:
+        """Change the primitive shape for the current object."""
+        idx = self.object_combo.currentIndex()
+        if idx < 0 or idx >= len(self.items):
+            return
+        obj = self.items[idx][1]
+        if not hasattr(obj, 'shape'):
+            return
+        obj.shape = self.shape_combo.currentData()
+        if hasattr(self.view, 'renderer'):
             self.view.update()
         self._mark_dirty()
 

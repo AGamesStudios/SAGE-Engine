@@ -22,6 +22,7 @@ class Viewport(GLWidget):
         self.editor = editor
         if not scene.objects:
             square = GameObject(color=(0, 255, 0, 255))
+            square.shape = 'square'
             scene.add_object(square)
         cam = scene.get_active_camera()
         if cam is not None:
@@ -201,6 +202,7 @@ class Viewport(GLWidget):
         self.scene = scene
         if not scene.objects:
             square = GameObject(color=(0, 255, 0, 255))
+            square.shape = 'square'
             scene.add_object(square)
         cam = scene.get_active_camera()
         if cam is not None:

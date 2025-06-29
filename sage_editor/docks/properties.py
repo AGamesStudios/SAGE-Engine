@@ -59,6 +59,12 @@ class PropertiesDock(QDockWidget):
         self.color_btn.setFixedWidth(60)
         obj_form.addRow(editor.t('color'), self.color_btn)
         self.color_label = obj_form.labelForField(self.color_btn)
+        self.shape_combo = QComboBox()
+        self.shape_combo.addItem('Square', 'square')
+        self.shape_combo.addItem('Triangle', 'triangle')
+        self.shape_combo.addItem('Circle', 'circle')
+        obj_form.addRow(editor.t('shape'), self.shape_combo)
+        self.shape_label = obj_form.labelForField(self.shape_combo)
         self.smooth_check = QCheckBox(editor.t('filtering'))
         # QFormLayout does not create a label when given an empty string, so
         # provide an explicit QLabel so we can later show/hide it reliably.

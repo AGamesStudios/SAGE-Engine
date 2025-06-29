@@ -16,6 +16,7 @@ LANGUAGES = {
         'zoom': 'Zoom:',
         'edit_object': 'Edit Object',
         'color': 'Color:',
+        'shape': 'Shape:',
         'filtering': 'Filtering',
         'new_object': 'New Object',
         'object': 'Object:',
@@ -131,6 +132,7 @@ LANGUAGES = {
         , 'snap_to_grid': 'Snap to Grid'
         , 'grid_size': 'Grid Size:'
         , 'grid_color': 'Grid Color'
+        , 'font_size': 'Font Size'
         
         , 'show_gizmo': 'Show Gizmo'
         , 'camera_settings': 'Camera Settings'
@@ -219,6 +221,7 @@ LANGUAGES = {
         'zoom': 'Зум:',
         'edit_object': 'Редактировать объект',
         'color': 'Цвет:',
+        'shape': 'Форма:',
         'filtering': 'Фильтрация',
         'object': 'Объект:',
         'add_variable': 'Добавить переменную',
@@ -333,6 +336,7 @@ LANGUAGES = {
         , 'snap_to_grid': 'Привязка к сетке'
         , 'grid_size': 'Шаг сетки:'
         , 'grid_color': 'Цвет сетки'
+        , 'font_size': 'Размер шрифта'
         
         , 'show_gizmo': 'Показывать гизмo'
         , 'camera_settings': 'Параметры камеры'

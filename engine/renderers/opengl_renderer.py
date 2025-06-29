@@ -353,6 +353,15 @@ class OpenGLRenderer:
             norm = tuple(c * scale for c in rgba)
             glUniform4f(loc_color, *norm)
 
+        shape = getattr(obj, "shape", None)
+        if shape in ("triangle", "circle"):
+            self._draw_shape(obj, camera, shape)
+            if shader:
+                Shader.stop()
+            else:
+                glUseProgram(0)
+            return
+
         if self.apply_effects:
             for eff in getattr(obj, "effects", []):
                 if eff.get("type") == "outline":
@@ -461,14 +470,67 @@ class OpenGLRenderer:
         cam_x = camera.x if camera else 0.0
         cam_y = camera.y if camera else 0.0
         zoom = camera.zoom if camera else 1.0
+        w_size = camera.width if (self.keep_aspect and camera) else self.width
+        h_size = camera.height if (self.keep_aspect and camera) else self.height
         for cx, cy in corners:
             world_x = m[0] * cx + m[4] * cy + m[12]
             world_y = m[1] * cx + m[5] * cy + m[13]
-            screen_x = (world_x - cam_x * unit_scale) * zoom
-            screen_y = (world_y - cam_y * unit_scale * sign) * zoom
-            glVertex2f(screen_x, screen_y)
+            ndc_x = (2.0 * (world_x - cam_x * unit_scale) * zoom) / w_size
+            ndc_y = (2.0 * (world_y - cam_y * unit_scale * sign) * zoom) / h_size
+            glVertex2f(ndc_x, ndc_y)
         glEnd()
         glLineWidth(1.0)
+
+    def _draw_shape(
+        self,
+        obj: GameObject,
+        camera: Camera | None,
+        shape: str,
+    ) -> None:
+        from OpenGL.GL import (
+            glBindTexture, glColor4f, glBegin, glEnd, glVertex2f,
+            GL_TRIANGLE_FAN, GL_TRIANGLES, GL_TEXTURE_2D
+        )
+        unit_scale = units.UNITS_PER_METER
+        sign = 1.0 if units.Y_UP else -1.0
+        scale_mul = obj.render_scale(camera, apply_effects=self.apply_effects)
+        cam_x = camera.x if camera else 0.0
+        cam_y = camera.y if camera else 0.0
+        zoom = camera.zoom if camera else 1.0
+        w_size = camera.width if (self.keep_aspect and camera) else self.width
+        h_size = camera.height if (self.keep_aspect and camera) else self.height
+        glBindTexture(GL_TEXTURE_2D, 0)
+        rgba = obj.color or (255, 255, 255, 255)
+        scale = 1 / 255.0 if max(rgba) > 1.0 else 1.0
+        glColor4f(rgba[0]*scale, rgba[1]*scale, rgba[2]*scale, rgba[3]*scale)
+        from engine.core.fastmath import calc_matrix
+        m = calc_matrix(
+            obj.x, obj.y, obj.width, obj.height,
+            obj.pivot_x, obj.pivot_y,
+            obj.scale_x * scale_mul, obj.scale_y * scale_mul,
+            getattr(obj, "angle", 0.0), unit_scale, units.Y_UP,
+        )
+        if shape == "triangle":
+            verts = [(0.0, obj.height), (obj.width, 0.0), (0.0, 0.0)]
+            mode = GL_TRIANGLES
+        else:
+            # circle approximation
+            verts = []
+            r = max(obj.width, obj.height)
+            steps = 16
+            for i in range(steps):
+                ang = 2*math.pi*i/steps
+                verts.append((obj.width/2 + math.cos(ang)*r/2,
+                              obj.height/2 + math.sin(ang)*r/2))
+            mode = GL_TRIANGLE_FAN
+        glBegin(mode)
+        for vx, vy in verts:
+            world_x = m[0]*vx + m[4]*vy + m[12]
+            world_y = m[1]*vx + m[5]*vy + m[13]
+            ndc_x = (2.0 * (world_x - cam_x*unit_scale) * zoom) / w_size
+            ndc_y = (2.0 * (world_y - cam_y*unit_scale*sign) * zoom) / h_size
+            glVertex2f(ndc_x, ndc_y)
+        glEnd()
 
     def _draw_frustum(
         self,

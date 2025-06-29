@@ -31,6 +31,7 @@ def clear_image_cache():
     'sprite',
     [
         ('image_path', 'image'),
+        ('shape', None),
         ('x', None),
         ('y', None),
         ('z', None),
@@ -54,6 +55,7 @@ def clear_image_cache():
 class GameObject:
     """Sprite-based object used in scenes."""
     image_path: str = ""
+    shape: str | None = None
     x: float = 0
     y: float = 0
     z: float = 0
@@ -171,7 +173,7 @@ class GameObject:
     def _load_image(self):
         """Load the object's image with Pillow."""
         if not self.image_path:
-            # Use a blank texture and keep dimensions so color tint applies once
+            # No sprite image - default dimensions for shape rendering
             self.image = None
             self.width, self.height = 32, 32
             self._dirty = True

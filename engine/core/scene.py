@@ -50,6 +50,7 @@ class Scene:
                 self.add_object(cam)
                 obj = GameObject('', 0, 0, 0, None, 1.0, 1.0, 0.0,
                                  0.5, 0.5, color=(255, 255, 255, 255))
+                obj.shape = 'square'
                 obj.name = 'Sprite'
                 self.add_object(obj)
             except Exception:
