@@ -220,9 +220,15 @@ class PaintWindow(QMainWindow):
     # Toolbar ------------------------------------------------------------
 
     def _init_toolbar(self) -> None:
+        if hasattr(self, "tools_bar"):
+            self.removeToolBar(self.tools_bar)
+        if hasattr(self, "toolbar"):
+            self.removeToolBar(self.toolbar)
+
         tools_bar = QToolBar(self)
         tools_bar.setOrientation(Qt.Orientation.Vertical)
         self.addToolBar(Qt.ToolBarArea.LeftToolBarArea, tools_bar)
+        self.tools_bar = tools_bar
         group = QActionGroup(self)
 
         brush_action = QAction(load_icon('brush.png'), self.t("Brush"), self)
@@ -277,6 +283,7 @@ class PaintWindow(QMainWindow):
 
         toolbar = QToolBar(self)
         self.addToolBar(toolbar)
+        self.toolbar = toolbar
 
         color_action = QAction(load_icon('colorpicker.png'), self.t("Color"), self)
         color_action.setShortcut('C')
