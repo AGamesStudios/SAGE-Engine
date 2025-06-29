@@ -479,3 +479,17 @@ sprite.effects.append({
     "depth": 0.05,
 })
 ```
+
+An extended ``panorama`` effect supports an equirectangular projection for
+skybox-style textures. When ``projection='equirect'`` is specified, texture
+coordinates depend on the camera position so the image wraps seamlessly around
+the view:
+
+```python
+background.effects.append({
+    "type": "panorama",
+    "projection": "equirect",
+    "factor_x": 0.005,
+    "factor_y": 0.005,
+})
+```

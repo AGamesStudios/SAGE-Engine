@@ -132,6 +132,34 @@ class GameObject:
                     scale *= 1.0 + (camera.zoom - 1.0) * depth
         return scale
 
+    def texture_coords(self, camera, apply_effects: bool = True) -> list[float]:
+        """Return texture coordinates adjusted by active effects."""
+        coords = [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0]
+        if not (apply_effects and camera):
+            return coords
+        proj = None
+        fx = fy = 1.0
+        for eff in getattr(self, "effects", []):
+            if eff.get("type") == "panorama" and eff.get("projection") == "equirect":
+                proj = "equirect"
+                fx = eff.get("factor_x", eff.get("factor", 1.0))
+                fy = eff.get("factor_y", eff.get("factor", 1.0))
+                break
+        if proj == "equirect":
+            import math
+            half_w = self.width / 2
+            half_h = self.height / 2
+            verts = [(-half_w, -half_h), (half_w, -half_h), (half_w, half_h), (-half_w, half_h)]
+            result = []
+            for vx, vy in verts:
+                lon = (self.x + vx - camera.x) * fx
+                lat = (self.y + vy - camera.y) * fy
+                u = (lon / (2 * math.pi)) % 1.0
+                v = 0.5 - (lat / math.pi)
+                result.extend([u, v])
+            return result
+        return coords
+
 
     def _load_image(self):
         """Load the object's image with Pillow."""

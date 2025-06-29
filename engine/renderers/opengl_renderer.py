@@ -324,11 +324,12 @@ class OpenGLRenderer:
             ndc_x = (2.0 * world_x) / w_size
             ndc_y = (2.0 * world_y) / h_size
             data.extend([ndc_x, ndc_y])
+        uvs = obj.texture_coords(camera, apply_effects=self.apply_effects)
         arr = (ctypes.c_float * 16)(
-            data[0], data[1], 0.0, 0.0,
-            data[2], data[3], 1.0, 0.0,
-            data[4], data[5], 1.0, 1.0,
-            data[6], data[7], 0.0, 1.0,
+            data[0], data[1], uvs[0], uvs[1],
+            data[2], data[3], uvs[2], uvs[3],
+            data[4], data[5], uvs[4], uvs[5],
+            data[6], data[7], uvs[6], uvs[7],
         )
         glBindBuffer(GL_ARRAY_BUFFER, self._vbo)
         glBufferSubData(GL_ARRAY_BUFFER, 0, ctypes.sizeof(arr), arr)
