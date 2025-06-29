@@ -135,49 +135,13 @@ class OpenGLRenderer:
         glBindBuffer(GL_ARRAY_BUFFER, 0)
         glBindVertexArray(0)
 
-        # panorama shader for camera backgrounds
-        pano_vert = """
-            #version 120
-            attribute vec2 pos;
-            varying vec2 v_pos;
-            void main() {
-                gl_Position = vec4(pos, 0.0, 1.0);
-                v_pos = pos;
-            }
-        """
-        pano_frag = """
-            #version 120
-            varying vec2 v_pos;
-            uniform sampler2D tex;
-            uniform vec2 cam;
-            uniform vec2 factor;
-            uniform vec2 size;
-            uniform float y_sign;
-            const float PI = 3.14159265;
-            void main() {
-                float wx = cam.x - size.x / 2.0 + (v_pos.x + 1.0) * size.x / 2.0;
-                float wy = cam.y - size.y / 2.0 + (v_pos.y + 1.0) * size.y / 2.0;
-                wy *= y_sign;
-                float lon = wx * factor.x;
-                float lat = wy * factor.y;
-                float u = mod(lon / (2.0 * PI), 1.0);
-                float v = 0.5 - (lat / PI);
-                gl_FragColor = texture2D(tex, vec2(u, v));
-            }
-        """
-        self._pano_program = compileProgram(
-            compileShader(pano_vert, GL_VERTEX_SHADER),
-            compileShader(pano_frag, GL_FRAGMENT_SHADER),
-        )
-        self._pano_vao = glGenVertexArrays(1)
-        glBindVertexArray(self._pano_vao)
-        self._pano_vbo = glGenBuffers(1)
-        glBindBuffer(GL_ARRAY_BUFFER, self._pano_vbo)
-        pano_data = (ctypes.c_float * 8)(-1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0)
-        glBufferData(GL_ARRAY_BUFFER, ctypes.sizeof(pano_data), pano_data, GL_STATIC_DRAW)
-        loc = glGetAttribLocation(self._pano_program, "pos")
-        glEnableVertexAttribArray(loc)
-        glVertexAttribPointer(loc, 2, GL_FLOAT, False, 8, ctypes.c_void_p(0))
+        # full screen quad for post processing
+        self._quad_vao = glGenVertexArrays(1)
+        glBindVertexArray(self._quad_vao)
+        self._quad_vbo = glGenBuffers(1)
+        glBindBuffer(GL_ARRAY_BUFFER, self._quad_vbo)
+        quad_data = (ctypes.c_float * 8)(-1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0)
+        glBufferData(GL_ARRAY_BUFFER, ctypes.sizeof(quad_data), quad_data, GL_STATIC_DRAW)
         glBindBuffer(GL_ARRAY_BUFFER, 0)
         glBindVertexArray(0)
 
@@ -188,7 +152,6 @@ class OpenGLRenderer:
         self.widget.resize(self.width, self.height)
         self._should_close = False
         self.textures: dict[tuple[int, bool], int] = {}
-        self._pano_textures: dict[str, int] = {}
         self._blank_texture: int | None = None
         self._blank_nearest_texture: int | None = None
         self._icon_cache: dict[str, int] = {}
@@ -211,11 +174,10 @@ class OpenGLRenderer:
         self.background = tuple(self.background)
         self._program = None
         self._sprite_shader: Shader | None = None
-        self._pano_program = None
         self._vao = None
         self._vbo = None
-        self._pano_vao = None
-        self._pano_vbo = None
+        self._quad_vao = None
+        self._quad_vbo = None
         self._post_tex = None
         self._post_fbo = None
 
@@ -309,27 +271,6 @@ class OpenGLRenderer:
         self.textures[key] = tex_id
         return tex_id
 
-    def _get_panorama_texture(self, path: str) -> int:
-        tex = self._pano_textures.get(path)
-        if tex:
-            return tex
-        try:
-            img = Image.open(path).convert('RGBA')
-        except Exception:
-            logger.exception('Failed to load panorama %s', path)
-            return self._get_blank_texture()
-        img = img.transpose(Image.Transpose.FLIP_TOP_BOTTOM)
-        data = img.tobytes()
-        tex = glGenTextures(1)
-        glBindTexture(GL_TEXTURE_2D, tex)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-        glTexImage2D(
-            GL_TEXTURE_2D, 0, GL_RGBA, img.width, img.height, 0,
-            GL_RGBA, GL_UNSIGNED_BYTE, data
-        )
-        self._pano_textures[path] = tex
-        return tex
 
     def _get_icon_texture(self, name: str) -> int:
         """Load an icon image from ``sage_editor/icons`` and cache it."""
@@ -559,32 +500,6 @@ class OpenGLRenderer:
             y += spacing
         glEnd()
 
-    def _draw_panorama(self, camera: Camera) -> None:
-        if self._pano_program is None or not camera.panorama:
-            return
-        logger.debug(
-            "Drawing camera panorama %s fx=%s fy=%s",
-            camera.panorama,
-            camera.pano_fx,
-            camera.pano_fy,
-        )
-        from OpenGL.GL import glUseProgram, glGetUniformLocation, glUniform2f, glBindVertexArray, glBindTexture, glDrawArrays
-        glUseProgram(self._pano_program)
-        loc_cam = glGetUniformLocation(self._pano_program, "cam")
-        loc_fac = glGetUniformLocation(self._pano_program, "factor")
-        loc_size = glGetUniformLocation(self._pano_program, "size")
-        loc_sign = glGetUniformLocation(self._pano_program, "y_sign")
-        scale = units.UNITS_PER_METER
-        glUniform2f(loc_cam, camera.x * scale, camera.y * scale)
-        glUniform2f(loc_fac, camera.pano_fx, camera.pano_fy)
-        glUniform2f(loc_size, float(camera.width) * scale, float(camera.height) * scale)
-        glUniform1f(loc_sign, 1.0 if units.Y_UP else -1.0)
-        tex = self._get_panorama_texture(camera.panorama)
-        glBindTexture(GL_TEXTURE_2D, tex)
-        glBindVertexArray(self._pano_vao)
-        glDrawArrays(GL_TRIANGLE_FAN, 0, 4)
-        glBindVertexArray(0)
-        glUseProgram(0)
 
     def _draw_cursor(self, x: float, y: float, camera: Camera | None):
         """Draw a small cross at the cursor position in world units."""
@@ -859,8 +774,6 @@ class OpenGLRenderer:
         glDisable(GL_SCISSOR_TEST)
         self._apply_projection(camera)
         cam_shader = camera.get_shader() if hasattr(camera, "get_shader") else None
-        if camera:
-            self._draw_panorama(camera)
         glPushMatrix()
         try:
             scale = units.UNITS_PER_METER

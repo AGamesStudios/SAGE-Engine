@@ -54,31 +54,6 @@ class PerspectiveEffect(Effect):
         return scale * (1.0 + (camera.zoom - 1.0) * depth)
 
 
-class PanoramaEffect(PerspectiveEffect):
-    """Panorama effect extends perspective with optional equirectangular UVs."""
-
-    def apply_uvs(self, obj, camera, params: dict, uvs: List[float]) -> List[float]:
-        if camera is None:
-            return uvs
-        if params.get("projection") != "equirect":
-            return uvs
-        fx = params.get("factor_x", params.get("factor", 1.0))
-        fy = params.get("factor_y", params.get("factor", 1.0))
-        half_w = obj.width / 2
-        half_h = obj.height / 2
-        verts = [(-half_w, -half_h), (half_w, -half_h), (half_w, half_h), (-half_w, half_h)]
-        result: List[float] = []
-        import math
-        for vx, vy in verts:
-            lon = (obj.x + vx - camera.x) * fx
-            lat = (obj.y + vy - camera.y) * fy
-            u = (lon / (2 * math.pi)) % 1.0
-            v = 0.5 - (lat / math.pi)
-            result.extend([u, v])
-        return result
-
-
 register_effect("perspective", PerspectiveEffect())
-register_effect("panorama", PanoramaEffect())
 
 __all__ = ["Effect", "register_effect", "get_effect", "EFFECT_REGISTRY"]

@@ -16,9 +16,6 @@ from engine.renderers import Shader
         ('zoom', None),
         ('name', None),
         ('active', 'active'),
-        ('panorama', 'panorama'),
-        ('pano_fx', 'pano_fx'),
-        ('pano_fy', 'pano_fy'),
         ('post_effects', 'post_effects'),
         ('metadata', 'metadata'),
         ('variables', 'variables'),
@@ -40,9 +37,6 @@ class Camera:
     name: str = "Camera"
     active: bool = False
     type: str = "camera"
-    panorama: str | None = None
-    pano_fx: float = 0.005
-    pano_fy: float = 0.005
     shader: dict | None = None
     shader_uniforms: dict = field(default_factory=dict)
     post_effects: list = field(default_factory=list)

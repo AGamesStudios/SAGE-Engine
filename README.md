@@ -500,44 +500,15 @@ Effects are only supported on sprite objects. Retrieve a sprite from a
 scene using ``get_object_type`` and append the effect to its ``effects``
 list. Cameras ignore such data because they lack an ``effects`` field.
 
-An extended ``panorama`` effect supports an equirectangular projection for
-skybox-style textures. When ``projection='equirect'`` is specified, texture
-coordinates depend on the camera position so the image wraps seamlessly around
-the view:
-
-```python
-background.effects.append({
-    "type": "panorama",
-    "projection": "equirect",
-    "factor_x": 0.005,
-    "factor_y": 0.005,
-})
-```
-
-The camera itself may display a panorama background. Set the image path on the
-``Camera.panorama`` field and choose parallax factors ``pano_fx`` and
-``pano_fy``. A dedicated shader maps the equirectangular texture around the
-view so the panorama scrolls smoothly when the camera moves. The sprite
-``panorama`` effect also accepts a ``depth`` value which scales the object based
-on the camera zoom. Combining parallax with depth creates a "perspective
-panorama" effect that responds smoothly to camera movement.
-
 ### Post-processing Effects
 
 Cameras can apply post-processing after rendering the scene.  Use
 ``engine.core.register_post_effect`` to register handlers and list them in
-``Camera.post_effects``.  A built-in ``perspective_panorama`` effect blends an
-equirectangular texture with the rendered frame:
+``Camera.post_effects``.  A built-in ``grayscale`` effect converts the final
+frame to shades of grey:
 
 ```python
 camera.post_effects.append({
-    "type": "perspective_panorama",
-    "texture": "sky.png",
-    "factor_x": 0.01,
-    "factor_y": 0.01,
-    "blend": 1.0,
+    "type": "grayscale",
 })
 ```
-
-The panorama wraps around the camera view and mixes with the frame according to
-the ``blend`` value.

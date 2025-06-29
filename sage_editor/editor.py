@@ -1324,8 +1324,8 @@ class EffectDialog(QDialog):
         layout = QFormLayout(self)
         self.type_box = QComboBox()
         self.type_box.addItem(
-            parent.t('perspective_panorama') if parent else 'Perspective Panorama',
-            'panorama'
+            parent.t('perspective') if parent else 'Perspective',
+            'perspective'
         )
         layout.addRow(parent.t('type_label') if parent else 'Type:', self.type_box)
         self.fx_spin = QDoubleSpinBox(); self.fx_spin.setRange(-5.0, 5.0); self.fx_spin.setValue(0.1)
