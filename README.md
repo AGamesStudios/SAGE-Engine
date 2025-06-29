@@ -377,6 +377,11 @@ Settings menu which copies Python files into ``~/.sage_plugins`` and lets you
 enable or disable them. Plugin installation is entirely local; the editor does
 not download code from the internet.
 
+Plugins can also be distributed as standard Python packages. Any entry points
+registered under ``sage_engine.plugins`` or ``sage_editor.plugins`` will be
+loaded automatically when the engine or editor starts, allowing third-party
+packages to extend the engine without touching the plugin folders.
+
 Engine plugins may also define ``register_logic(register_condition, register_action)``
 to add custom event blocks. This hook receives the engine's registration
 functions so plugins can contribute new conditions and actions without touching

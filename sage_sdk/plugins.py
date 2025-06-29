@@ -1,4 +1,5 @@
 import importlib
+from importlib import metadata
 import logging
 import os
 import sys
@@ -128,4 +129,21 @@ def load_plugins(target: str, instance, paths=None):
                 _call_init(module, target, instance)
             except Exception:
                 logger.exception('Failed to load plugin %s at %s', mod_name, os.path.join(path, name))
+
+    # also load plugins provided via package entry points
+    group = f'sage_{target}.plugins'
+    try:
+        eps = metadata.entry_points()
+        if hasattr(eps, 'select'):
+            entries = eps.select(group=group)
+        else:
+            entries = eps.get(group, [])
+        for ep in entries:
+            try:
+                mod = ep.load()
+                _call_init(mod, target, instance) if not callable(mod) else mod(instance)
+            except Exception:
+                logger.exception('Failed to load entry point %s', ep.name)
+    except Exception:
+        logger.exception('Error loading entry points for %s', group)
 
