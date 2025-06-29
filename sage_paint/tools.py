@@ -154,6 +154,7 @@ class SelectTool(Tool):
         self._base_image: QImage | None = None
         self._sel_image: QImage | None = None
         self._offset = QPoint()
+        self._orig_rect: QRect | None = None
 
     def press(self, pos: QPoint) -> None:
         sel = self.canvas.selection
@@ -166,6 +167,7 @@ class SelectTool(Tool):
             painter = QPainter(self._base_image)
             painter.fillRect(sel, QColor('white'))
             painter.end()
+            self._orig_rect = QRect(sel)
         else:
             self.canvas.selection = None
             self._start = pos
@@ -182,8 +184,10 @@ class SelectTool(Tool):
             self._offset = delta
             self.canvas.image = self._base_image.copy()
             painter = QPainter(self.canvas.image)
-            painter.drawImage(self.canvas.selection.topLeft() + delta, self._sel_image)
+            painter.drawImage(self._orig_rect.topLeft() + delta, self._sel_image)
             painter.end()
+            if self._orig_rect:
+                self.canvas.selection = self._orig_rect.translated(delta)
             self.canvas.update()
 
     def release(self, pos: QPoint) -> None:
@@ -199,12 +203,10 @@ class SelectTool(Tool):
             delta = pos - self._start
             self.canvas.image = self._base_image
             painter = QPainter(self.canvas.image)
-            painter.drawImage(self.canvas.selection.topLeft() + delta, self._sel_image)
+            painter.drawImage(self._orig_rect.topLeft() + delta, self._sel_image)
             painter.end()
-            self.canvas.selection = QRect(
-                self.canvas.selection.topLeft() + delta,
-                self._sel_image.rect().size(),
-            )
+            if self._orig_rect:
+                self.canvas.selection = self._orig_rect.translated(delta)
             self._moving = False
             self.canvas.update()
 

@@ -128,8 +128,9 @@ class Canvas(QWidget):
 
     def paintEvent(self, event) -> None:  # pragma: no cover - Qt paint
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        # Draw without smoothing so zoomed pixels stay crisp
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, False)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)
         painter.fillRect(self.rect(), QColor(80, 80, 80))
         painter.translate(self.offset)
         painter.scale(self.zoom_level, self.zoom_level)
