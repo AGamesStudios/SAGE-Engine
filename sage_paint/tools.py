@@ -102,13 +102,11 @@ class BrushTool(Tool):
         painter.setBrush(Qt.BrushStyle.NoBrush)
         r = self.canvas.pen_width / 2
         if self.canvas.pen_width <= 2:
-            size = int(self.canvas.pen_width)
+            size = int(max(1, self.canvas.pen_width))
             x = int(pos.x() - size / 2)
             y = int(pos.y() - size / 2)
             painter.setPen(QPen(Qt.GlobalColor.black))
             painter.drawRect(x - 1, y - 1, size + 2, size + 2)
-            painter.setPen(QPen(Qt.GlobalColor.white))
-            painter.drawRect(x, y, size, size)
         elif self.shape == 'square':
             painter.drawRect(int(pos.x() - r), int(pos.y() - r), int(self.canvas.pen_width), int(self.canvas.pen_width))
         else:
@@ -136,13 +134,11 @@ class EraserTool(BrushTool):
         painter.setBrush(Qt.BrushStyle.NoBrush)
         r = self.canvas.pen_width / 2
         if self.canvas.pen_width <= 2:
-            size = int(self.canvas.pen_width)
+            size = int(max(1, self.canvas.pen_width))
             x = int(pos.x() - size / 2)
             y = int(pos.y() - size / 2)
             painter.setPen(QPen(Qt.GlobalColor.black))
             painter.drawRect(x - 1, y - 1, size + 2, size + 2)
-            painter.setPen(QPen(Qt.GlobalColor.white))
-            painter.drawRect(x, y, size, size)
         else:
             painter.drawRect(int(pos.x() - r), int(pos.y() - r), int(self.canvas.pen_width), int(self.canvas.pen_width))
         painter.restore()

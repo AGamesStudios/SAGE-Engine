@@ -40,15 +40,19 @@ class PaintWindow(QMainWindow):
         bar = self.menuBar()
         file_menu = bar.addMenu("File")
         new_act = QAction(load_icon('file.png'), "New", self)
+        new_act.setShortcut('Ctrl+N')
         new_act.triggered.connect(self.new_project)
         file_menu.addAction(new_act)
         open_act = QAction(load_icon('open.png'), "Open...", self)
+        open_act.setShortcut('Ctrl+O')
         open_act.triggered.connect(self.open_project)
         file_menu.addAction(open_act)
         save_act = QAction(load_icon('save.png'), "Save", self)
+        save_act.setShortcut('Ctrl+S')
         save_act.triggered.connect(self.save_project)
         file_menu.addAction(save_act)
         export_act = QAction(load_icon('folder.png'), "Export PNG...", self)
+        export_act.setShortcut('Ctrl+E')
         export_act.triggered.connect(self.export_png)
         file_menu.addAction(export_act)
 
@@ -66,9 +70,29 @@ class PaintWindow(QMainWindow):
         if ok:
             self.resize(w, h)
 
+    # Utility ------------------------------------------------------------
+
+    def _maybe_continue(self) -> bool:
+        if not self.canvas.is_dirty:
+            return True
+        resp = QMessageBox.question(
+            self,
+            "Unsaved Changes",
+            "Save changes before closing?",
+            QMessageBox.StandardButton.Save
+            | QMessageBox.StandardButton.Discard
+            | QMessageBox.StandardButton.Cancel,
+        )
+        if resp == QMessageBox.StandardButton.Save:
+            self.save_project()
+            return True
+        return resp == QMessageBox.StandardButton.Discard
+
     # Project management -------------------------------------------------
 
     def new_project(self) -> None:
+        if not self._maybe_continue():
+            return
         from PyQt6.QtWidgets import QInputDialog
 
         templates = [
@@ -103,8 +127,11 @@ class PaintWindow(QMainWindow):
         self.canvas.redo_stack.clear()
         self.canvas.center_on_image()
         self.project_path = None
+        self.canvas.mark_clean()
 
     def open_project(self) -> None:
+        if not self._maybe_continue():
+            return
         path, _ = QFileDialog.getOpenFileName(self, "Open", '', "SAGE Paint (*.sagepaint);;Images (*.png *.jpg)")
         if path:
             img = QImage(path)
@@ -113,6 +140,7 @@ class PaintWindow(QMainWindow):
                 self.canvas.bg_color = None
                 self.canvas.center_on_image()
                 self.project_path = path
+                self.canvas.mark_clean()
 
     def save_project(self) -> None:
         path = self.project_path
@@ -123,6 +151,7 @@ class PaintWindow(QMainWindow):
                 path += '.sagepaint'
             self.canvas.image.save(path)
             self.project_path = path
+            self.canvas.mark_clean()
 
     def export_png(self) -> None:
         path, _ = QFileDialog.getSaveFileName(self, "Export", '', "PNG Image (*.png)")
@@ -140,6 +169,7 @@ class PaintWindow(QMainWindow):
         group = QActionGroup(self)
 
         brush_action = QAction(load_icon('brush.png'), "Brush", self)
+        brush_action.setShortcut('B')
         brush_action.setCheckable(True)
         brush_action.setChecked(True)
         brush_action.triggered.connect(lambda: self._select_tool('brush'))
@@ -147,30 +177,35 @@ class PaintWindow(QMainWindow):
         tools_bar.addAction(brush_action)
 
         eraser_action = QAction(load_icon('eraser.png'), "Eraser", self)
+        eraser_action.setShortcut('E')
         eraser_action.setCheckable(True)
         eraser_action.triggered.connect(lambda: self._select_tool('eraser'))
         group.addAction(eraser_action)
         tools_bar.addAction(eraser_action)
 
         fill_action = QAction(load_icon('fill.png'), "Fill", self)
+        fill_action.setShortcut('F')
         fill_action.setCheckable(True)
         fill_action.triggered.connect(lambda: self._select_tool('fill'))
         group.addAction(fill_action)
         tools_bar.addAction(fill_action)
 
         select_action = QAction(load_icon('move.png'), "Select", self)
+        select_action.setShortcut('M')
         select_action.setCheckable(True)
         select_action.triggered.connect(lambda: self._select_tool('select'))
         group.addAction(select_action)
         tools_bar.addAction(select_action)
 
         line_action = QAction(load_icon('pen.png'), "Line", self)
+        line_action.setShortcut('L')
         line_action.setCheckable(True)
         line_action.triggered.connect(lambda: self._select_tool('line'))
         group.addAction(line_action)
         tools_bar.addAction(line_action)
 
         rect_action = QAction(load_icon('square.png'), "Rect", self)
+        rect_action.setShortcut('R')
         rect_action.setCheckable(True)
         rect_action.triggered.connect(lambda: self._select_tool('rect'))
         group.addAction(rect_action)
@@ -187,11 +222,14 @@ class PaintWindow(QMainWindow):
         self.addToolBar(toolbar)
 
         color_action = QAction(load_icon('colorpicker.png'), "Color", self)
+        color_action.setShortcut('C')
         color_action.triggered.connect(self.choose_color)
         toolbar.addAction(color_action)
 
-        self.color_label = QLabel()
+        from PyQt6.QtWidgets import QToolButton
+        self.color_label = QToolButton()
         self.color_label.setFixedSize(24, 24)
+        self.color_label.clicked.connect(self.choose_color)
         toolbar.addWidget(self.color_label)
 
         self.width_spin = QSpinBox(self)
@@ -222,20 +260,24 @@ class PaintWindow(QMainWindow):
         toolbar.addAction(square_act)
 
         undo_act = QAction(load_icon('undo.png'), "Undo", self)
+        undo_act.setShortcut('Ctrl+Z')
         undo_act.triggered.connect(self.canvas.undo)
         toolbar.addAction(undo_act)
         redo_act = QAction(load_icon('redo.png'), "Redo", self)
+        redo_act.setShortcut('Ctrl+Y')
         redo_act.triggered.connect(self.canvas.redo)
         toolbar.addAction(redo_act)
 
         toolbar.addSeparator()
         zoom_in = QAction(load_icon('zoomin.png'), "Zoom +", self)
+        zoom_in.setShortcut('=')
         zoom_in.triggered.connect(lambda: self.canvas.zoom_at(
             QPointF(self.canvas.rect().center()), 1.2
         ))
         toolbar.addAction(zoom_in)
 
         zoom_out = QAction(load_icon('zoomout.png'), "Zoom -", self)
+        zoom_out.setShortcut('-')
         zoom_out.triggered.connect(lambda: self.canvas.zoom_at(
             QPointF(self.canvas.rect().center()), 1/1.2
         ))
@@ -255,7 +297,8 @@ class PaintWindow(QMainWindow):
 
     def _update_color_label(self) -> None:
         c = self.canvas.pen_color
-        self.color_label.setStyleSheet(f"background-color: {c.name()}; border: 1px solid black;")
+        self.color_label.setStyleSheet(
+            f"background-color: {c.name()}; border: 1px solid black;")
 
     def _select_tool(self, name: str) -> None:
         if name == 'brush':
@@ -293,6 +336,12 @@ class PaintWindow(QMainWindow):
             self.showMaximized()
             QTimer.singleShot(0, self.canvas.center_on_image)
             self._first_show = False
+
+    def closeEvent(self, event) -> None:  # pragma: no cover - UI behavior
+        if self._maybe_continue():
+            event.accept()
+        else:
+            event.ignore()
 
 
 def main(argv: list[str] | None = None) -> int:

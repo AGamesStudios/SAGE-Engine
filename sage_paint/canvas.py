@@ -26,6 +26,7 @@ class Canvas(QWidget):
         self._tool: Tool = BrushTool(self)
         self.undo_stack: list[QImage] = []
         self.redo_stack: list[QImage] = []
+        self.dirty = False
         self._panning = False
         self._pan_start = QPointF()
         self._cursor = QPointF()
@@ -35,6 +36,11 @@ class Canvas(QWidget):
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.smooth_pen = True
         self.selection: QRect | None = None
+
+    # ------------------------------------------------------------------
+    @property
+    def is_dirty(self) -> bool:
+        return self.dirty
 
     def zoom(self, factor: float) -> None:
         """Scale the view by ``factor`` and refresh."""
@@ -93,6 +99,11 @@ class Canvas(QWidget):
     def _push_undo(self) -> None:
         self.undo_stack.append(self.image.copy())
         self.redo_stack.clear()
+        self.dirty = True
+
+    def mark_clean(self) -> None:
+        """Mark the canvas as saved."""
+        self.dirty = False
 
     def undo(self) -> None:
         if not self.undo_stack:
