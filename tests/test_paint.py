@@ -62,6 +62,20 @@ class TestPaintModule(unittest.TestCase):
         brush = BrushTool(canvas)
         self.assertFalse(canvas.smooth_pen)
 
+    def test_width_spin_updates_canvas(self):
+        win = PaintWindow()
+        win.width_spin.setValue(7)
+        self.assertEqual(win.canvas.pen_width, 7)
+        win._select_tool('eraser')
+        win.width_spin.setValue(4)
+        self.assertEqual(win.canvas.eraser_width, 4)
+
+    def test_color_label_updates(self):
+        win = PaintWindow()
+        blue = QColor('blue')
+        win.set_pen_color(blue)
+        self.assertIn(blue.name(), win.color_label.styleSheet())
+
 
 if __name__ == "__main__":
     unittest.main()

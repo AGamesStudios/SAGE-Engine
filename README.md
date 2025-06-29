@@ -11,10 +11,13 @@ drawn or touched up without leaving the engine.  A live gizmo shows the brush
 or eraser size so edits feel precise.  Zoom now follows the cursor position so
 the image stays centred on what you are working on.  A vertical toolbar on the
 left hosts brush, eraser and fill tools with optional circle or square brush
-tips and a smoothing toggle.  Undo and redo shortcuts make it easy to revert
-mistakes.  The canvas sits on a dark gray background so its white area stands
-out clearly, and a thin border is drawn around it while you work.  A menu bar
-offers basic settings including the ability to resize the window at runtime.
+tips and a smoothing toggle.  Each tool remembers its own width controlled by a
+spin box on the main toolbar which also shows the currently selected colour.
+Undo and redo shortcuts make it easy to revert mistakes.  The canvas sits on a
+dark gray background so its white area stands out clearly, and a thin border is
+drawn around it while you work.  A new **File** menu can create blank
+documents, open or save ``.sagepaint`` files and export the current image to
+PNG alongside the existing Settings menu for window size.
 
 The current release is **SAGE Engine: 2D prototype v0.0.01a**. The engine
 stores its version inside every `.sageproject` file so you can safely upgrade

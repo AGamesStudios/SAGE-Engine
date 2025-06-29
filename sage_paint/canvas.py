@@ -17,7 +17,9 @@ class Canvas(QWidget):
         self.zoom_level = 1.0
         self.offset = QPointF(0, 0)
         self.pen_color = QColor('black')
-        self.pen_width = 2
+        self.brush_width = 2
+        self.eraser_width = 8
+        self.pen_width = self.brush_width
         self._tool: Tool = BrushTool(self)
         self.undo_stack: list[QImage] = []
         self.redo_stack: list[QImage] = []
@@ -46,9 +48,11 @@ class Canvas(QWidget):
         self.update()
 
     def use_brush(self) -> None:
+        self.pen_width = self.brush_width
         self.set_tool(BrushTool(self))
 
     def use_eraser(self) -> None:
+        self.pen_width = self.eraser_width
         self.set_tool(EraserTool(self))
 
     def use_fill(self) -> None:
@@ -57,6 +61,16 @@ class Canvas(QWidget):
     def set_brush_shape(self, shape: str) -> None:
         if isinstance(self._tool, BrushTool):
             self._tool.set_shape(shape)
+
+    def set_pen_width(self, width: int) -> None:
+        """Update pen width and remember size per tool."""
+        if width < 1:
+            width = 1
+        self.pen_width = width
+        if isinstance(self._tool, EraserTool):
+            self.eraser_width = width
+        else:
+            self.brush_width = width
 
     # Undo/redo ---------------------------------------------------------
 
