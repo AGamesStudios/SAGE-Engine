@@ -5,10 +5,11 @@ import os
 from datetime import datetime
 from .scene import Scene
 from .project import Project
+from ..inputs import get_input, InputBackend
 from .input_qt import QtInput
+from .settings import EngineSettings
 from .camera import Camera
 from ..renderers import (
-    OpenGLRenderer,
     Renderer,
     get_renderer,
 )
@@ -36,7 +37,20 @@ class Engine:
                  title="SAGE 2D", renderer: Renderer | str | None = None,
                  camera: Camera | None = None, keep_aspect: bool = True,
                  background: tuple[int, int, int] = (0, 0, 0),
-                 input_backend: str = "qt"):
+                 input_backend: str | type | InputBackend = "qt",
+                 *, settings: "EngineSettings | None" = None):
+        if settings is not None:
+            width = settings.width
+            height = settings.height
+            scene = settings.scene
+            events = settings.events
+            fps = settings.fps
+            title = settings.title
+            renderer = settings.renderer
+            camera = settings.camera
+            keep_aspect = settings.keep_aspect
+            background = settings.background
+            input_backend = settings.input_backend
         self.fps = fps
         self._frame_interval = 1.0 / fps if fps else 0
         self.scene = scene or Scene()
@@ -50,13 +64,18 @@ class Engine:
         self.camera = camera
         self.events = events if events is not None else self.scene.build_event_system(aggregate=False)
         if renderer is None:
-            cls = get_renderer("opengl") or OpenGLRenderer
+            cls = get_renderer("opengl")
+            if cls is None:
+                from ..renderers.opengl_renderer import OpenGLRenderer
+                cls = OpenGLRenderer
             self.renderer = cls(width, height, title)
         elif isinstance(renderer, str):
             cls = get_renderer(renderer)
             if cls is None:
                 raise ValueError(f"Unknown renderer: {renderer}")
             self.renderer = cls(width, height, title)
+        elif isinstance(renderer, type):
+            self.renderer = renderer(width, height, title)
         else:
             self.renderer = renderer
         self.renderer.keep_aspect = keep_aspect
@@ -69,17 +88,20 @@ class Engine:
         if hasattr(self.renderer, 'apply_effects'):
             self.renderer.apply_effects = True
         self.bg_color = tuple(background)
-        if input_backend == "sdl":
-            try:
-                from .input_sdl import SDLInput
-                self.input = SDLInput()
-            except Exception:
-                logger.exception("Failed to initialise SDL input; falling back to Qt")
-                from .input_qt import QtInput
-                self.input = QtInput(self.renderer.widget)
+        # create the input backend using the registry
+        if isinstance(input_backend, InputBackend):
+            self.input = input_backend
         else:
-            from .input_qt import QtInput
-            self.input = QtInput(self.renderer.widget)
+            if isinstance(input_backend, str):
+                cls = get_input(input_backend)
+                if cls is None:
+                    raise ValueError(f"Unknown input backend: {input_backend}")
+            else:
+                cls = input_backend
+            try:
+                self.input = cls(self.renderer.widget)
+            except TypeError:
+                self.input = cls()
         self.last_time = time.perf_counter()
         self.delta_time = 0.0
         self.logic_active = False
@@ -88,6 +110,22 @@ class Engine:
             load_engine_plugins(self)
         except Exception:
             logger.exception("Failed to load engine plugins")
+
+    def to_settings(self) -> EngineSettings:
+        """Return the current configuration as :class:`EngineSettings`."""
+        return EngineSettings(
+            width=getattr(self.renderer, "width", 640),
+            height=getattr(self.renderer, "height", 480),
+            title=getattr(self.renderer, "title", "SAGE 2D"),
+            fps=self.fps,
+            renderer=type(self.renderer),
+            camera=self.camera,
+            scene=self.scene,
+            events=self.events,
+            keep_aspect=getattr(self.renderer, "keep_aspect", True),
+            background=getattr(self.renderer, "background", (0, 0, 0)),
+            input_backend=type(self.input),
+        )
 
     def variable(self, name):
         """Return the value of an event variable."""
@@ -152,7 +190,10 @@ def main(argv=None):
             set_resource_root(os.path.join(os.path.dirname(path), proj.resources))
         else:
             scene = Scene.load(path)
-    cls = get_renderer(renderer_name) or OpenGLRenderer
+    cls = get_renderer(renderer_name)
+    if cls is None:
+        from ..renderers.opengl_renderer import OpenGLRenderer
+        cls = OpenGLRenderer
     renderer = cls(width, height, title)
     camera = scene.ensure_active_camera(width, height)
     Engine(

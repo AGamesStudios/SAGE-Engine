@@ -1,6 +1,7 @@
 import sdl2
+from ..inputs import InputBackend, register_input
 
-class SDLInput:
+class SDLInput(InputBackend):
     """Keyboard and mouse input using PySDL2."""
     __slots__ = ("_keys", "_buttons")
 
@@ -30,4 +31,7 @@ class SDLInput:
 
     def shutdown(self):
         sdl2.SDL_Quit()
+
+
+register_input("sdl", SDLInput)
 

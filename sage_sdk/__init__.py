@@ -6,10 +6,13 @@ from .plugins import (
     list_plugins,
     read_config,
     write_config,
+    PluginManager,
+    PluginBase,
     PLUGIN_DIR,
 )
 
 __all__ = [
     'register_plugin', 'load_plugins', 'list_plugins',
-    'read_config', 'write_config', 'PLUGIN_DIR'
+    'read_config', 'write_config', 'PluginManager', 'PluginBase',
+    'PLUGIN_DIR'
 ]

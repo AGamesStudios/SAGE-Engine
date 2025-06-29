@@ -1,7 +1,8 @@
 from .core.scene import Scene
 from .core.project import Project
-from .renderers import get_renderer, OpenGLRenderer
+from .renderers import get_renderer
 from .core.engine import Engine
+from .core.settings import EngineSettings
 from .core.objects import register_object, object_from_dict, object_to_dict
 
 __all__ = [
@@ -32,11 +33,14 @@ def create_engine(project: Project, fps: int = 30) -> Engine:
     """Create an :class:`Engine` for the given project."""
     scene = Scene.from_dict(project.scene)
     camera = scene.ensure_active_camera(project.width, project.height)
-    rcls = get_renderer(getattr(project, "renderer", "opengl")) or OpenGLRenderer
+    rcls = get_renderer(getattr(project, "renderer", "opengl"))
+    if rcls is None:
+        from .renderers.opengl_renderer import OpenGLRenderer
+        rcls = OpenGLRenderer
     renderer = rcls(project.width, project.height, project.title,
                     background=getattr(project, 'background', (0, 0, 0)))
     events = scene.build_event_system(aggregate=False)
-    return Engine(
+    settings = EngineSettings(
         width=project.width,
         height=project.height,
         scene=scene,
@@ -48,6 +52,7 @@ def create_engine(project: Project, fps: int = 30) -> Engine:
         keep_aspect=getattr(project, 'keep_aspect', True),
         background=getattr(project, 'background', (0, 0, 0)),
     )
+    return Engine(settings=settings)
 
 
 def run_project(path: str, fps: int = 30):
@@ -73,11 +78,14 @@ def run_scene(path: str, width: int = 640, height: int = 480,
     """Run a single scene file directly."""
     scene = load_scene(path)
     camera = scene.ensure_active_camera(width, height)
-    rcls = get_renderer("opengl") or OpenGLRenderer
+    rcls = get_renderer("opengl")
+    if rcls is None:
+        from .renderers.opengl_renderer import OpenGLRenderer
+        rcls = OpenGLRenderer
     renderer = rcls(width, height, title or "SAGE 2D",
                     background=background)
     events = scene.build_event_system(aggregate=False)
-    Engine(
+    settings = EngineSettings(
         width=width,
         height=height,
         scene=scene,
@@ -88,4 +96,5 @@ def run_scene(path: str, width: int = 640, height: int = 480,
         fps=fps,
         keep_aspect=keep_aspect,
         background=background,
-    ).run()
+    )
+    Engine(settings=settings).run()

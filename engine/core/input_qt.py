@@ -1,7 +1,8 @@
 from PyQt6.QtCore import Qt, QObject
+from ..inputs import InputBackend, register_input
 
 
-class QtInput(QObject):
+class QtInput(QObject, InputBackend):
     """Keyboard and mouse input using Qt events."""
 
     __slots__ = ("widget", "_keys", "_buttons", "_pos", "_wheel")
@@ -56,3 +57,6 @@ class QtInput(QObject):
 
     def shutdown(self):
         self.widget.removeEventFilter(self)
+
+
+register_input("qt", QtInput)

@@ -1,11 +1,6 @@
 ENGINE_VERSION = '2D prototype v0.0.01a'
 
-from .core import GameObject, Scene, Engine, Project, Camera
-from .renderers import (
-    OpenGLRenderer,
-    Renderer,
-)
-from .game_window import GameWindow
+from .core import GameObject, Scene, Project, Camera, EngineSettings
 from .core.game_object import clear_image_cache
 from .api import (
     load_project,
@@ -28,11 +23,21 @@ to_units = units.to_units
 from_units = units.from_units
 set_y_up = units.set_y_up
 Y_UP = units.Y_UP
-from sage_sdk.plugins import register_plugin as register_engine_plugin, load_plugins as _load_engine_plugins
+from sage_sdk.plugins import (
+    PluginManager,
+)
+
+ENGINE_PLUGINS = PluginManager('engine')
+
+
+def register_engine_plugin(func):
+    """Register an engine plugin programmatically."""
+    ENGINE_PLUGINS.register(func)
+
 
 def load_engine_plugins(engine, paths=None):
     """Load plugins targeting the engine."""
-    _load_engine_plugins('engine', engine, paths)
+    ENGINE_PLUGINS.load(engine, paths)
 from .logic.base import (
     Event, EventSystem, register_condition, register_action,
     get_registered_conditions, get_registered_actions,
@@ -51,8 +56,27 @@ __all__ = [
     'warn', 'error', 'exception',
     'register_engine_plugin', 'load_engine_plugins',
     'units', 'set_units_per_meter', 'meters', 'kilometers', 'to_units', 'from_units',
-    'set_y_up', 'Y_UP', 'GameWindow'
+    'set_y_up', 'Y_UP', 'GameWindow', 'EngineSettings'
 ]
+
+
+def __getattr__(name):
+    if name == 'Engine':
+        from .core.engine import Engine
+        return Engine
+    if name == 'OpenGLRenderer':
+        from .renderers.opengl_renderer import OpenGLRenderer
+        return OpenGLRenderer
+    if name == 'Renderer':
+        from .renderers import Renderer
+        return Renderer
+    if name == 'EngineSettings':
+        from .core.settings import EngineSettings
+        return EngineSettings
+    if name == 'GameWindow':
+        from .game_window import GameWindow
+        return GameWindow
+    raise AttributeError(name)
 
 # validate that all exported names exist and warn if any are missing
 _missing = [name for name in __all__ if name not in globals()]
