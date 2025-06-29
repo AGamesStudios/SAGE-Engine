@@ -464,3 +464,18 @@ run_scene('level1.json')  # run a single scene file
 The function `create_engine()` builds an `Engine` from a `Project` while
 `load_scene`/`save_scene` and `run_scene` offer the same convenience for raw
 scene files.
+
+### Sprite Effects
+
+Objects may include simple effects that react to camera movement. The
+``perspective`` effect shifts an object based on the camera position and scales
+it with depth to create a basic parallax illusion:
+
+```python
+sprite.effects.append({
+    "type": "perspective",
+    "factor_x": 0.1,
+    "factor_y": 0.1,
+    "depth": 0.05,
+})
+```

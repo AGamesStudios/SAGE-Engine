@@ -117,11 +117,9 @@ class GameObject:
                 if etype in {"panorama", "perspective"}:
                     fx = eff.get("factor_x", eff.get("factor", 0.0))
                     fy = eff.get("factor_y", eff.get("factor", 0.0))
-                    # offset from the camera center so objects stay anchored
-                    cx = camera.x - camera.width / 2
-                    cy = camera.y - camera.height / 2
-                    x -= cx * fx
-                    y -= cy * fy
+                    # apply parallax relative to the camera position
+                    x -= camera.x * fx
+                    y -= camera.y * fy
         return x, y
 
     def render_scale(self, camera, apply_effects: bool = True) -> float:
