@@ -128,9 +128,16 @@ class PaintWindow(QMainWindow):
         group.addAction(fill_action)
         tools_bar.addAction(fill_action)
 
+        select_action = QAction(load_icon('move.png'), "Select", self)
+        select_action.setCheckable(True)
+        select_action.triggered.connect(lambda: self._select_tool('select'))
+        group.addAction(select_action)
+        tools_bar.addAction(select_action)
+
         self.brush_action = brush_action
         self.eraser_action = eraser_action
         self.fill_action = fill_action
+        self.select_action = select_action
 
         toolbar = QToolBar(self)
         self.addToolBar(toolbar)
@@ -215,6 +222,8 @@ class PaintWindow(QMainWindow):
             self.width_spin.setValue(self.canvas.eraser_width)
         elif name == 'fill':
             self.canvas.use_fill()
+        elif name == 'select':
+            self.canvas.use_select()
 
     def set_pen_color(self, color: QColor) -> None:
         self.canvas.pen_color = color

@@ -134,3 +134,63 @@ class FillTool(Tool):
                 continue
             image.setPixelColor(px, py, new)
             stack.extend([(px + 1, py), (px - 1, py), (px, py + 1), (px, py - 1)])
+
+
+class SelectTool(Tool):
+    """Rectangular selection and move tool."""
+
+    def __init__(self, canvas: 'Canvas'):
+        super().__init__(canvas)
+        self._start = QPoint()
+        self._dragging = False
+        self._moving = False
+        self._base_image: QImage | None = None
+        self._sel_image: QImage | None = None
+        self._offset = QPoint()
+
+    def press(self, pos: QPoint) -> None:
+        sel = self.canvas.selection
+        if sel is not None and sel.contains(pos):
+            self._moving = True
+            self._start = pos
+            self._offset = QPoint()
+            self._base_image = self.canvas.image.copy()
+            self._sel_image = self.canvas.image.copy(sel)
+        else:
+            self.canvas.selection = None
+            self._start = pos
+            self._dragging = True
+
+    def move(self, pos: QPoint) -> None:
+        if self._dragging:
+            self.canvas.selection = QRect(self._start, pos).normalized()
+            self.canvas.update()
+        elif self._moving and self._base_image and self._sel_image:
+            delta = pos - self._start
+            if delta == self._offset:
+                return
+            self._offset = delta
+            self.canvas.image = self._base_image.copy()
+            painter = QPainter(self.canvas.image)
+            painter.drawImage(self.canvas.selection.topLeft() + delta, self._sel_image)
+            painter.end()
+            self.canvas.update()
+
+    def release(self, pos: QPoint) -> None:
+        if self._dragging:
+            self.canvas.selection = QRect(self._start, pos).normalized()
+            self._dragging = False
+            self.canvas.update()
+        elif self._moving and self._base_image and self._sel_image:
+            delta = pos - self._start
+            self.canvas.image = self._base_image
+            painter = QPainter(self.canvas.image)
+            painter.drawImage(self.canvas.selection.topLeft() + delta, self._sel_image)
+            painter.end()
+            self.canvas.selection = QRect(
+                self.canvas.selection.topLeft() + delta,
+                self._sel_image.rect().size(),
+            )
+            self._moving = False
+            self.canvas.update()
+

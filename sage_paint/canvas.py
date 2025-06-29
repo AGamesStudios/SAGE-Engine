@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import QWidget
 from PyQt6.QtGui import QPainter, QImage, QColor, QPen
 from PyQt6.QtCore import Qt, QPoint, QPointF, QRect
 
-from .tools import BrushTool, EraserTool, FillTool, Tool
+from .tools import BrushTool, EraserTool, FillTool, Tool, SelectTool
 
 
 class Canvas(QWidget):
@@ -30,6 +30,7 @@ class Canvas(QWidget):
         self.setAttribute(Qt.WidgetAttribute.WA_StaticContents)
         self.setAttribute(Qt.WidgetAttribute.WA_OpaquePaintEvent)
         self.smooth_pen = True
+        self.selection: QRect | None = None
 
     def zoom(self, factor: float) -> None:
         """Scale the view by ``factor`` and refresh."""
@@ -59,6 +60,9 @@ class Canvas(QWidget):
 
     def use_fill(self) -> None:
         self.set_tool(FillTool(self))
+
+    def use_select(self) -> None:
+        self.set_tool(SelectTool(self))
 
     def set_brush_shape(self, shape: str) -> None:
         if isinstance(self._tool, BrushTool):
@@ -134,6 +138,11 @@ class Canvas(QWidget):
         painter.setPen(pen)
         painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.drawRect(0, 0, self.image.width(), self.image.height())
+        if self.selection is not None:
+            pen.setStyle(Qt.PenStyle.DashLine)
+            painter.setPen(pen)
+            painter.drawRect(self.selection)
+            pen.setStyle(Qt.PenStyle.SolidLine)
         # draw current tool gizmo
         img_pos = self.view_to_image(self._cursor)
         self._tool.draw_gizmo(painter, img_pos)
