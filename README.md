@@ -174,7 +174,7 @@ confined to the editor window and disappears when it loses focus. Thumbnails are
 cached in memory so browsing many files does not lag. Double-clicking a
 `.sagescene` file loads it in the editor so you can quickly switch between scenes.
 Use **File → New Project** to generate a folder for your game. The dialog asks
-for a project name and location. Projects always use the Qt painter renderer so
+for a project name and location. Projects use the OpenGL renderer so
 the editor viewport and runtime look the same.
 It then creates the folder with a `.sageproject` file and a `Scenes` subfolder
 containing `Scene1.sagescene`. Each new object
@@ -276,7 +276,7 @@ python -m engine path/to/project.sageproject
 ```
 
 The editor toolbar provides a **Run** button with the same effect. It saves the
-current project and opens a new game window using the same Qt painter renderer,
+current project and opens a new game window using the same OpenGL renderer,
 so the scene appears exactly as in the viewport.
 
 
