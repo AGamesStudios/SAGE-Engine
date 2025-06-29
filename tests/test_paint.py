@@ -1,5 +1,6 @@
 import unittest
 from PyQt6.QtWidgets import QApplication
+from PyQt6.QtCore import QPoint
 
 from sage_paint import PaintWindow, EXPERIMENTAL_NOTICE, Canvas
 
@@ -25,6 +26,13 @@ class TestPaintModule(unittest.TestCase):
         before = canvas.zoom_level
         canvas.zoom(2.0)
         self.assertAlmostEqual(canvas.zoom_level, before * 2.0)
+
+    def test_gizmo_draw(self):
+        canvas = Canvas(16, 16)
+        from PyQt6.QtGui import QPainter
+        painter = QPainter(canvas.image)
+        canvas._tool.draw_gizmo(painter, QPoint(0, 0))
+        painter.end()
 
 
 if __name__ == "__main__":

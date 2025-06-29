@@ -21,6 +21,7 @@ class Canvas(QWidget):
         self._tool: Tool = BrushTool(self)
         self._panning = False
         self._pan_start = QPoint()
+        self._cursor = QPointF()
         self.setMouseTracking(True)
 
     def zoom(self, factor: float) -> None:
@@ -55,17 +56,22 @@ class Canvas(QWidget):
         painter.translate(self.offset)
         painter.scale(self.zoom_level, self.zoom_level)
         painter.drawImage(0, 0, self.image)
+        # draw current tool gizmo
+        img_pos = self.view_to_image(self._cursor)
+        self._tool.draw_gizmo(painter, img_pos)
         painter.end()
 
     def mousePressEvent(self, event) -> None:
+        self._cursor = event.position()
         if event.button() == Qt.MouseButton.LeftButton:
             img_pos = self.view_to_image(event.position())
             self._tool.press(img_pos)
-        elif event.button() == Qt.MouseButton.MiddleButton:
+        elif event.button() == Qt.MouseButton.RightButton:
             self._panning = True
             self._pan_start = event.pos()
 
     def mouseMoveEvent(self, event) -> None:
+        self._cursor = event.position()
         if self._panning:
             delta = event.pos() - self._pan_start
             self.offset += delta
@@ -75,16 +81,18 @@ class Canvas(QWidget):
             if event.buttons() & Qt.MouseButton.LeftButton:
                 img_pos = self.view_to_image(event.position())
                 self._tool.move(img_pos)
-                self.update()
+        self.update()
 
     def mouseReleaseEvent(self, event) -> None:
+        self._cursor = event.position()
         if event.button() == Qt.MouseButton.LeftButton:
             img_pos = self.view_to_image(event.position())
             self._tool.release(img_pos)
-        elif event.button() == Qt.MouseButton.MiddleButton:
+        elif event.button() == Qt.MouseButton.RightButton:
             self._panning = False
 
     def wheelEvent(self, event) -> None:
+        self._cursor = event.position()
         if event.angleDelta().y() > 0:
             factor = 1.2
         else:

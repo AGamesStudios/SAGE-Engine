@@ -27,6 +27,10 @@ class Tool:
     def release(self, pos: QPoint) -> None:
         pass
 
+    def draw_gizmo(self, painter: QPainter, pos: QPoint) -> None:
+        """Optionally render a representation of the tool at ``pos``."""
+        del painter, pos
+
 
 class BrushTool(Tool):
     def __init__(self, canvas: 'Canvas'):
@@ -52,6 +56,17 @@ class BrushTool(Tool):
             self.move(pos)
             self._drawing = False
 
+    def draw_gizmo(self, painter: QPainter, pos: QPoint) -> None:
+        painter.save()
+        pen = QPen(Qt.GlobalColor.black)
+        pen.setStyle(Qt.PenStyle.DotLine)
+        pen.setWidth(1)
+        painter.setPen(pen)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        r = self.canvas.pen_width / 2
+        painter.drawEllipse(pos, r, r)
+        painter.restore()
+
 
 class EraserTool(BrushTool):
     def pen(self) -> QPen:
@@ -59,3 +74,14 @@ class EraserTool(BrushTool):
         pen = super().pen()
         pen.setColor(QColor('white'))
         return pen
+
+    def draw_gizmo(self, painter: QPainter, pos: QPoint) -> None:
+        painter.save()
+        pen = QPen(Qt.GlobalColor.black)
+        pen.setStyle(Qt.PenStyle.DotLine)
+        pen.setWidth(1)
+        painter.setPen(pen)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        r = self.canvas.pen_width / 2
+        painter.drawRect(pos.x() - r, pos.y() - r, self.canvas.pen_width, self.canvas.pen_width)
+        painter.restore()

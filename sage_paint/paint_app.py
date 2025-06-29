@@ -5,7 +5,7 @@ from __future__ import annotations
 import sys
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QColorDialog,
-    QToolBar, QLabel, QMessageBox
+    QToolBar, QLabel, QMessageBox, QActionGroup
 )
 from PyQt6.QtGui import QAction
 from PyQt6.QtCore import Qt
@@ -33,6 +33,22 @@ class PaintWindow(QMainWindow):
     def _init_toolbar(self) -> None:
         toolbar = QToolBar(self)
         self.addToolBar(toolbar)
+        group = QActionGroup(self)
+        brush_action = QAction("Brush", self)
+        brush_action.setCheckable(True)
+        brush_action.setChecked(True)
+        brush_action.triggered.connect(lambda: self.canvas.use_brush())
+        group.addAction(brush_action)
+        toolbar.addAction(brush_action)
+
+        eraser_action = QAction("Eraser", self)
+        eraser_action.setCheckable(True)
+        eraser_action.triggered.connect(lambda: self.canvas.use_eraser())
+        group.addAction(eraser_action)
+        toolbar.addAction(eraser_action)
+        self.brush_action = brush_action
+        self.eraser_action = eraser_action
+
         color_action = QAction("Color", self)
         color_action.triggered.connect(self.choose_color)
         toolbar.addAction(color_action)
@@ -45,11 +61,14 @@ class PaintWindow(QMainWindow):
         dec_action.triggered.connect(self.decrease_width)
         toolbar.addAction(dec_action)
 
-        eraser_action = QAction("Eraser", self)
-        eraser_action.setCheckable(True)
-        eraser_action.toggled.connect(self.toggle_eraser)
-        toolbar.addAction(eraser_action)
-        self.eraser_action = eraser_action
+        toolbar.addSeparator()
+        zoom_in = QAction("Zoom +", self)
+        zoom_in.triggered.connect(lambda: self.canvas.zoom(1.2))
+        toolbar.addAction(zoom_in)
+
+        zoom_out = QAction("Zoom -", self)
+        zoom_out.triggered.connect(lambda: self.canvas.zoom(1/1.2))
+        toolbar.addAction(zoom_out)
 
         label = QLabel("EXPERIMENTAL", self)
         label.setStyleSheet("color: red; font-weight: bold;")
@@ -59,8 +78,7 @@ class PaintWindow(QMainWindow):
         color = QColorDialog.getColor(self.canvas.pen_color, self)
         if color.isValid():
             self.canvas.pen_color = color
-            self.canvas.use_brush()
-            self.eraser_action.setChecked(False)
+            self.brush_action.setChecked(True)
 
     def increase_width(self) -> None:
         self.canvas.pen_width += 1
@@ -68,12 +86,6 @@ class PaintWindow(QMainWindow):
     def decrease_width(self) -> None:
         if self.canvas.pen_width > 1:
             self.canvas.pen_width -= 1
-
-    def toggle_eraser(self, checked: bool) -> None:
-        if checked:
-            self.canvas.use_eraser()
-        else:
-            self.canvas.use_brush()
 
     def _show_disclaimer(self) -> None:
         QMessageBox.information(self, "Experimental", EXPERIMENTAL_NOTICE)
