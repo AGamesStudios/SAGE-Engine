@@ -14,6 +14,9 @@ class Canvas(QWidget):
         super().__init__(parent)
         self.image = QImage(width, height, QImage.Format.Format_RGB32)
         self.image.fill(QColor('white'))
+        # remember the project background so eraser and selection know what
+        # "transparent" means
+        self.bg_color: QColor | None = QColor('white')
         self.zoom_level = 1.0
         self.offset = QPointF(0, 0)
         self.pen_color = QColor('black')
@@ -134,7 +137,8 @@ class Canvas(QWidget):
         painter.fillRect(self.rect(), QColor(80, 80, 80))
         painter.translate(self.offset)
         painter.scale(self.zoom_level, self.zoom_level)
-        painter.fillRect(0, 0, self.image.width(), self.image.height(), Qt.GlobalColor.white)
+        if self.bg_color is not None:
+            painter.fillRect(0, 0, self.image.width(), self.image.height(), self.bg_color)
         painter.drawImage(0, 0, self.image)
         # canvas border
         pen = QPen(Qt.GlobalColor.black)

@@ -102,8 +102,12 @@ class BrushTool(Tool):
         painter.setBrush(Qt.BrushStyle.NoBrush)
         r = self.canvas.pen_width / 2
         if self.canvas.pen_width <= 2:
-            painter.drawLine(pos.x() - 2, pos.y(), pos.x() + 2, pos.y())
-            painter.drawLine(pos.x(), pos.y() - 2, pos.x(), pos.y() + 2)
+            painter.setPen(QPen(Qt.GlobalColor.black, 3))
+            painter.drawLine(pos.x() - 4, pos.y(), pos.x() + 4, pos.y())
+            painter.drawLine(pos.x(), pos.y() - 4, pos.x(), pos.y() + 4)
+            painter.setPen(QPen(Qt.GlobalColor.white, 1))
+            painter.drawLine(pos.x() - 4, pos.y(), pos.x() + 4, pos.y())
+            painter.drawLine(pos.x(), pos.y() - 4, pos.x(), pos.y() + 4)
         elif self.shape == 'square':
             painter.drawRect(int(pos.x() - r), int(pos.y() - r), int(self.canvas.pen_width), int(self.canvas.pen_width))
         else:
@@ -113,9 +117,13 @@ class BrushTool(Tool):
 
 class EraserTool(BrushTool):
     def pen(self) -> QPen:
-        # Draw with background color to simulate erasing
+        # Draw with background color or transparent when available
         pen = super().pen()
-        pen.setColor(QColor('white'))
+        bg = getattr(self.canvas, 'bg_color', QColor('white'))
+        if bg is None:
+            pen.setColor(Qt.GlobalColor.transparent)
+        else:
+            pen.setColor(bg)
         return pen
 
     def draw_gizmo(self, painter: QPainter, pos: QPoint) -> None:
@@ -127,8 +135,12 @@ class EraserTool(BrushTool):
         painter.setBrush(Qt.BrushStyle.NoBrush)
         r = self.canvas.pen_width / 2
         if self.canvas.pen_width <= 2:
-            painter.drawLine(pos.x() - 2, pos.y(), pos.x() + 2, pos.y())
-            painter.drawLine(pos.x(), pos.y() - 2, pos.x(), pos.y() + 2)
+            painter.setPen(QPen(Qt.GlobalColor.black, 3))
+            painter.drawLine(pos.x() - 4, pos.y(), pos.x() + 4, pos.y())
+            painter.drawLine(pos.x(), pos.y() - 4, pos.x(), pos.y() + 4)
+            painter.setPen(QPen(Qt.GlobalColor.white, 1))
+            painter.drawLine(pos.x() - 4, pos.y(), pos.x() + 4, pos.y())
+            painter.drawLine(pos.x(), pos.y() - 4, pos.x(), pos.y() + 4)
         else:
             painter.drawRect(int(pos.x() - r), int(pos.y() - r), int(self.canvas.pen_width), int(self.canvas.pen_width))
         painter.restore()

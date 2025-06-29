@@ -86,15 +86,19 @@ class PaintWindow(QMainWindow):
         if choice == "Dark Background":
             fmt = QImage.Format.Format_RGB32
             color = QColor(32, 32, 32)
+            bg = color
         elif choice == "Transparent":
             fmt = QImage.Format.Format_ARGB32
             color = Qt.GlobalColor.transparent
+            bg = None
         else:
             fmt = QImage.Format.Format_RGB32
             color = QColor("white")
+            bg = color
 
         self.canvas.image = QImage(width, height, fmt)
         self.canvas.image.fill(color)
+        self.canvas.bg_color = bg
         self.canvas.undo_stack.clear()
         self.canvas.redo_stack.clear()
         self.canvas.center_on_image()
@@ -106,6 +110,7 @@ class PaintWindow(QMainWindow):
             img = QImage(path)
             if not img.isNull():
                 self.canvas.image = img
+                self.canvas.bg_color = None
                 self.canvas.center_on_image()
                 self.project_path = path
 
