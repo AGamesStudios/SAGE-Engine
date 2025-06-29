@@ -496,3 +496,8 @@ background.effects.append({
     "factor_y": 0.005,
 })
 ```
+
+The camera itself may display a panorama background. Set the image path on the
+``Camera.panorama`` field and choose parallax factors ``pano_fx`` and
+``pano_fy``. A dedicated shader maps the equirectangular texture around the
+view so the panorama scrolls smoothly when the camera moves.

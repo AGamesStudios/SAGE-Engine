@@ -15,6 +15,9 @@ from .. import units
         ('zoom', None),
         ('name', None),
         ('active', 'active'),
+        ('panorama', 'panorama'),
+        ('pano_fx', 'pano_fx'),
+        ('pano_fy', 'pano_fy'),
         ('metadata', 'metadata'),
         ('variables', 'variables'),
         ('public_vars', 'public_vars'),
@@ -33,6 +36,9 @@ class Camera:
     name: str = "Camera"
     active: bool = False
     type: str = "camera"
+    panorama: str | None = None
+    pano_fx: float = 0.005
+    pano_fy: float = 0.005
     metadata: dict = field(default_factory=dict)
     variables: dict = field(default_factory=dict)
     public_vars: set[str] = field(default_factory=set)
