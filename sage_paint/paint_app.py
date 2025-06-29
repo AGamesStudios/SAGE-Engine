@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sys
+import os
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QColorDialog,
     QToolBar, QLabel, QMessageBox, QSpinBox, QFileDialog
@@ -24,7 +25,8 @@ EXPERIMENTAL_NOTICE = (
 class PaintWindow(QMainWindow):
     """Main window hosting a :class:`Canvas` and basic drawing tools."""
 
-    def __init__(self, *, on_export=None, template: str | None = None):
+    def __init__(self, *, on_export=None, template: str | None = None,
+                 project_dir: str | None = None, resource_dir: str | None = None):
         super().__init__()
         self.lang = DEFAULT_LANGUAGE
         self.setWindowTitle(self.t("SAGE Paint (Experimental)"))
@@ -32,6 +34,8 @@ class PaintWindow(QMainWindow):
         self.setCentralWidget(self.canvas)
         self._first_show = True
         self.project_path: str | None = None
+        self.project_dir = project_dir
+        self.resource_dir = resource_dir
         self.on_export = on_export
         self._init_menu()
         self._init_toolbar()
@@ -190,10 +194,11 @@ class PaintWindow(QMainWindow):
     def save_project(self) -> None:
         path = self.project_path
         if not path:
+            start = self.resource_dir or self.project_dir or ''
             path, _ = QFileDialog.getSaveFileName(
                 self,
                 self.t("Save"),
-                '',
+                start,
                 "SAGE Paint (*.sagepaint)"
             )
         if path:
@@ -204,10 +209,13 @@ class PaintWindow(QMainWindow):
             self.canvas.mark_clean()
 
     def export_png(self) -> None:
+        start = self.project_dir or (
+            os.path.dirname(self.project_path) if self.project_path else ''
+        )
         path, _ = QFileDialog.getSaveFileName(
             self,
             self.t("Export"),
-            '',
+            start,
             "PNG Image (*.png)"
         )
         if path:

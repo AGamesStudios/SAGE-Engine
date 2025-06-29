@@ -2428,8 +2428,14 @@ class Editor(QMainWindow):
                 self._assign_sprite_image(o, path)
 
         tmpl = 'transparent' if obj is not None else None
-        win = PaintWindow(on_export=on_export if obj is not None else None,
-                          template=tmpl)
+        project_dir = os.path.dirname(self.project_path) if self.project_path else None
+        resource_dir = self.resource_dir if self.resource_dir else project_dir
+        win = PaintWindow(
+            on_export=on_export if obj is not None else None,
+            template=tmpl,
+            project_dir=project_dir,
+            resource_dir=resource_dir,
+        )
         win.show()
         self._paint_windows.append(win)
         win.destroyed.connect(lambda _: self._paint_windows.remove(win))
