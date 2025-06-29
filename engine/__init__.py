@@ -78,8 +78,15 @@ def __getattr__(name):
         return GameWindow
     raise AttributeError(name)
 
-# validate that all exported names exist and warn if any are missing
-_missing = [name for name in __all__ if name not in globals()]
+# validate that eagerly imported names exist and warn about others
+_LAZY = {
+    "Engine",
+    "Renderer",
+    "OpenGLRenderer",
+    "EngineSettings",
+    "GameWindow",
+}
+_missing = [name for name in __all__ if name not in globals() and name not in _LAZY]
 for _name in _missing:
     warn("Missing reference %s in __init__", _name)
-del _missing
+del _missing, _LAZY
