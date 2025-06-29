@@ -1,10 +1,11 @@
 from PyQt6.QtWidgets import (
     QDockWidget, QWidget, QVBoxLayout, QGroupBox, QFormLayout,
     QDoubleSpinBox, QCheckBox, QComboBox, QSpinBox, QLineEdit,
-    QScrollArea, QPushButton
+    QScrollArea, QPushButton, QHBoxLayout, QLabel
 )
 from PyQt6.QtCore import Qt
 from ..icons import load_icon
+from ..widgets import ResourceLineEdit
 
 
 class PropertiesDock(QDockWidget):
@@ -34,6 +35,31 @@ class PropertiesDock(QDockWidget):
         self.type_combo.addItem(editor.t('camera'), 'camera')
         obj_form.addRow(editor.t('name_label'), self.name_edit)
         obj_form.addRow(editor.t('type_label'), self.type_combo)
+        self.image_edit = ResourceLineEdit(
+            editor,
+            {'.png', '.jpg', '.jpeg', '.bmp', '.gif'}
+        )
+        self.image_btn = QPushButton()
+        self.image_btn.setIcon(load_icon('open.png'))
+        self.clear_img_btn = QPushButton()
+        self.clear_img_btn.setIcon(load_icon('clear.png'))
+        self.img_row = QWidget()
+        img_layout = QHBoxLayout(self.img_row)
+        img_layout.setContentsMargins(0, 0, 0, 0)
+        img_layout.addWidget(self.image_edit, 1)
+        img_layout.addWidget(self.image_btn)
+        img_layout.addWidget(self.clear_img_btn)
+        obj_form.addRow(editor.t('image_label'), self.img_row)
+        self.image_label = obj_form.labelForField(self.img_row)
+        self.color_btn = QPushButton()
+        self.color_btn.setFixedWidth(60)
+        obj_form.addRow(editor.t('color'), self.color_btn)
+        self.color_label = obj_form.labelForField(self.color_btn)
+        self.smooth_check = QCheckBox(editor.t('filtering'))
+        # QFormLayout does not create a label when given an empty string, so
+        # provide an explicit QLabel so we can later show/hide it reliably.
+        self.smooth_label = QLabel('')
+        obj_form.addRow(self.smooth_label, self.smooth_check)
         prop_layout.addWidget(self.object_group)
         self.transform_group = QGroupBox(editor.t('transform'))
         form = QFormLayout(self.transform_group)
@@ -85,6 +111,16 @@ class PropertiesDock(QDockWidget):
         self.var_layout = QFormLayout(self.var_group)
         prop_layout.addWidget(self.var_group)
         self.var_group.setVisible(False)
+
+        self.effects_group = QGroupBox(editor.t('effects'))
+        eff_layout = QVBoxLayout(self.effects_group)
+        self.effects_list = QVBoxLayout()
+        eff_layout.addLayout(self.effects_list)
+        self.add_effect_btn = QPushButton(editor.t('add_effect'))
+        self.add_effect_btn.setIcon(load_icon('add.png'))
+        eff_layout.addWidget(self.add_effect_btn)
+        prop_layout.addWidget(self.effects_group)
+        self.effects_group.setVisible(False)
         self.logic_btn = QPushButton(editor.t('edit_logic'))
         self.logic_btn.setIcon(load_icon('edit.png'))
         self.logic_btn.clicked.connect(editor.open_selected_object_logic)

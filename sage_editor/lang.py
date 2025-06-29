@@ -14,6 +14,7 @@ LANGUAGES = {
         'zoom': 'Zoom:',
         'edit_object': 'Edit Object',
         'color': 'Color:',
+        'filtering': 'Filtering',
         'new_object': 'New Object',
         'object': 'Object:',
         'add_variable': 'Add Variable',
@@ -32,6 +33,7 @@ LANGUAGES = {
         'name': 'Name',
         'value': 'Value',
         'add_event': 'Add Event',
+        'edit_event': 'Edit Event',
         'open_scene': 'Open Scene',
         'save_scene': 'Save Scene',
         'scene': 'Scene',
@@ -40,9 +42,12 @@ LANGUAGES = {
         'save_project': 'Save Project',
         'sage_files': 'SAGE Project (*.sageproject)',
         'browse': 'Browse',
+        'detect_key': 'Auto Detect',
+        'press_key': 'Press a key...',
         'recent_projects': 'Recent Projects',
         'clear_recent': 'Clear List',
         'image_files': 'Images (*.png *.jpg *.bmp)',
+        'audio_files': 'Audio (*.wav *.mp3 *.ogg)',
         'scene_files': 'Scene Files (*.sagescene)',
         'json_files': 'JSON Files (*.json)',
         'project_name': 'Project Name:',
@@ -67,12 +72,20 @@ LANGUAGES = {
         'variable': 'Variable:',
         'numeric_required': 'Operations require a numeric variable',
         'target': 'Target:',
+        'self_option': 'Self',
         'dx': 'dx:',
         'dy': 'dy:',
         'x': 'x:',
         'y': 'y:',
         'text_label': 'Text:',
         'path_label': 'Path:',
+        'image_label': 'Image:',
+        'direction_label': 'Direction:',
+        'speed_label': 'Speed:',
+        'dir_right': 'Right',
+        'dir_left': 'Left',
+        'dir_up': 'Up',
+        'dir_down': 'Down',
         'operation': 'Operation',
         'name_label': 'Name:',
         'type_label': 'Type:',
@@ -81,6 +94,11 @@ LANGUAGES = {
         'hours_short': 'h',
         'minutes_short': 'm',
         'seconds_short': 's'
+        , 'effects': 'Effects'
+        , 'add_effect': 'Add Effect'
+        , 'parallax': 'Parallax'
+        , 'factor_x': 'Factor X:'
+        , 'factor_y': 'Factor Y:'
         , 'settings': 'Settings'
         , 'window_settings': 'Window Settings'
         , 'project_settings': 'Project Settings'
@@ -96,8 +114,11 @@ LANGUAGES = {
         , 'ok': 'OK'
         , 'select_file': 'Select File'
         , 'edit': 'Edit'
+        , 'undo': 'Undo'
+        , 'redo': 'Redo'
         , 'copy': 'Copy'
         , 'delete': 'Delete'
+        , 'duplicate': 'Duplicate'
         , 'paste': 'Paste'
         , 'name_path_required': 'Name and path required'
         , 'show_grid': 'Show Grid'
@@ -140,6 +161,7 @@ LANGUAGES = {
         , 'zoom': 'Zoom:'
         , 'edit_object': 'Edit Object'
         , 'color': 'Color:'
+        , 'filtering': 'Filtering'
         , 'unsaved_changes': 'Unsaved Changes'
         , 'save_before_exit': 'Save changes before exiting?'
         , 'clear_log': 'Clear Log'
@@ -189,6 +211,7 @@ LANGUAGES = {
         'zoom': 'Зум:',
         'edit_object': 'Редактировать объект',
         'color': 'Цвет:',
+        'filtering': 'Фильтрация',
         'object': 'Объект:',
         'add_variable': 'Добавить переменную',
         'public': 'Публичная',
@@ -206,6 +229,7 @@ LANGUAGES = {
         'name': 'Имя',
         'value': 'Значение',
         'add_event': 'Добавить событие',
+        'edit_event': 'Редактировать событие',
         'open_scene': 'Открыть сцену',
         'save_scene': 'Сохранить сцену',
         'scene': 'Сцена',
@@ -214,9 +238,12 @@ LANGUAGES = {
         'save_project': 'Сохранить проект',
         'sage_files': 'Проекты SAGE (*.sageproject)',
         'browse': 'Обзор',
+        'detect_key': 'Автоопределение',
+        'press_key': 'Нажмите клавишу...',
         'recent_projects': 'Недавние проекты',
         'clear_recent': 'Очистить список',
         'image_files': 'Изображения (*.png *.jpg *.bmp)',
+        'audio_files': 'Аудио (*.wav *.mp3 *.ogg)',
         'scene_files': 'Файлы сцен (*.sagescene)',
         'json_files': 'Файлы JSON (*.json)',
         'project_name': 'Имя проекта:',
@@ -241,12 +268,20 @@ LANGUAGES = {
         'variable': 'Переменная:',
         'numeric_required': 'Операции доступны только для чисел',
         'target': 'Цель:',
+        'self_option': 'Себя',
         'dx': 'dx:',
         'dy': 'dy:',
         'x': 'x:',
         'y': 'y:',
         'text_label': 'Текст:',
         'path_label': 'Файл:',
+        'image_label': 'Изображение:',
+        'direction_label': 'Направление:',
+        'speed_label': 'Скорость:',
+        'dir_right': 'Вправо',
+        'dir_left': 'Влево',
+        'dir_up': 'Вверх',
+        'dir_down': 'Вниз',
         'operation': 'Операция',
         'name_label': 'Имя:',
         'type_label': 'Тип:',
@@ -255,6 +290,11 @@ LANGUAGES = {
         , 'hours_short': 'ч'
         , 'minutes_short': 'м'
         , 'seconds_short': 'с'
+        , 'effects': 'Эффекты'
+        , 'add_effect': 'Добавить эффект'
+        , 'parallax': 'Параллакс'
+        , 'factor_x': 'Коэф. X:'
+        , 'factor_y': 'Коэф. Y:'
         , 'settings': 'Настройки'
         , 'window_settings': 'Параметры окна'
         , 'project_settings': 'Параметры проекта'
@@ -270,8 +310,11 @@ LANGUAGES = {
         , 'ok': 'ОК'
         , 'select_file': 'Выбрать файл'
         , 'edit': 'Редактировать'
+        , 'undo': 'Отменить'
+        , 'redo': 'Повторить'
         , 'copy': 'Копировать'
         , 'delete': 'Удалить'
+        , 'duplicate': 'Дублировать'
         , 'paste': 'Вставить'
         , 'name_path_required': 'Необходимо указать имя и папку'
         , 'show_grid': 'Показать сетку'

@@ -35,7 +35,8 @@ class Engine:
     def __init__(self, width=640, height=480, scene=None, events=None, fps=30,
                  title="SAGE 2D", renderer: Renderer | str | None = None,
                  camera: Camera | None = None, keep_aspect: bool = True,
-                 background: tuple[int, int, int] = (0, 0, 0)):
+                 background: tuple[int, int, int] = (0, 0, 0),
+                 input_backend: str = "qt"):
         self.fps = fps
         self._frame_interval = 1.0 / fps if fps else 0
         self.scene = scene or Scene()
@@ -60,9 +61,26 @@ class Engine:
             self.renderer = renderer
         self.renderer.keep_aspect = keep_aspect
         self.renderer.background = tuple(background)
+        # hide editor-only gizmos in the game window
+        if hasattr(self.renderer, 'show_axes'):
+            self.renderer.show_axes = False
+        if hasattr(self.renderer, 'show_grid'):
+            self.renderer.show_grid = False
         self.bg_color = tuple(background)
-        self.input = QtInput(self.renderer.widget)
+        if input_backend == "sdl":
+            try:
+                from .input_sdl import SDLInput
+                self.input = SDLInput()
+            except Exception:
+                logger.exception("Failed to initialise SDL input; falling back to Qt")
+                from .input_qt import QtInput
+                self.input = QtInput(self.renderer.widget)
+        else:
+            from .input_qt import QtInput
+            self.input = QtInput(self.renderer.widget)
         self.last_time = time.perf_counter()
+        self.delta_time = 0.0
+        self.logic_active = False
         try:
             from .. import load_engine_plugins
             load_engine_plugins(self)

@@ -20,6 +20,11 @@ def _find_icon_dir() -> Path:
 
 
 ICON_DIR = _find_icon_dir()
+# Name of the icon representing the whole application. The actual
+# ``icon.png`` file should live inside :mod:`sage_editor.icons` but is
+# excluded from version control. Provide a 256x256 image to get good
+# results on high-DPI displays.
+APP_ICON_NAME = "icon.png"
 logger = logging.getLogger('sage_editor')
 
 def load_icon(name: str) -> QIcon:
@@ -35,3 +40,13 @@ def load_icon(name: str) -> QIcon:
         logger.warning("Icon %s not found at %s", name, path)
         return QIcon()
     return QIcon(str(path))
+
+
+def app_icon() -> QIcon:
+    """Return the default application icon.
+
+    The file itself is not tracked in version control. Place a 256x256
+    ``icon.png`` inside :mod:`sage_editor.icons` or bundle it with the
+    executable so the application window shows a custom logo.
+    """
+    return load_icon(APP_ICON_NAME)

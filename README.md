@@ -19,12 +19,14 @@ pip install -r requirements.txt
 Or run `scripts/setup.sh` to install them automatically.
 
 ## Building an executable
-Install PyInstaller and run the build script to create a standalone **SAGE Engine** executable. The script packages the editor icons so the program has a complete UI when run on another machine:
+Install PyInstaller and run the build script to create a standalone **SAGE Engine** executable. Place an ``icon.png`` (256×256 is recommended) in ``sage_editor/icons`` to brand the window. If building for Windows also provide ``icon.ico`` converted from that image. The script packages the editor icons so the program has a complete UI when run on another machine. The command below shows the full parameters on one line so it can be copied directly:
 
 ```bash
 pip install pyinstaller
-scripts/build_exe.sh
+python -m PyInstaller --name SAGE-Engine --onefile --windowed \
+  --icon sage_editor/icons/icon.ico --add-data "sage_editor/icons:sage_editor/icons" main.py
 ```
+Alternatively run `scripts/build_exe.sh` which uses the same command.
 The resulting file `dist/SAGE-Engine.exe` can be distributed without needing Python installed.
 
 
@@ -302,6 +304,10 @@ enabled, disabled or reset with `enable_group()` and friends.  Each event also
 accepts a *priority* number which controls update order; lower numbers run
 first so critical logic executes before less important rules.
 
+Event processing only occurs while a :class:`GameWindow` is running so editing a
+scene does not trigger logic. The engine updates all events every frame during
+gameplay and pauses them automatically when the window closes.
+
 The editor now includes a **Console** dock at the bottom. All output from the
 game process and the editor itself appears here so you can easily debug your
 scripts. All messages are also written to `logs/editor.log` while the
@@ -407,6 +413,13 @@ significantly speed up large scenes:
 ```bash
 pip install numba
 ```
+
+### Input Backends
+
+The engine defaults to Qt input handling but also supports PySDL2. Pass
+`input_backend='sdl'` to :class:`~engine.core.engine.Engine` to use SDL for
+keyboard and mouse events. This allows easy detection of any SDL key and
+works without a Qt window. The editor continues to use Qt input.
 
 ### SAGE API
 

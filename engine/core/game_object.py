@@ -38,10 +38,12 @@ def clear_image_cache():
         ('angle', None),
         ('pivot_x', None),
         ('pivot_y', None),
+        ('smooth', None),
         ('color', None),
         ('metadata', 'metadata'),
         ('variables', 'variables'),
         ('public_vars', 'public_vars'),
+        ('effects', 'effects'),
     ],
 )
 @dataclass(slots=True)
@@ -57,12 +59,14 @@ class GameObject:
     angle: float = 0.0
     pivot_x: float = 0.5
     pivot_y: float = 0.5
+    smooth: bool = True
     color: tuple[int, int, int, int] | None = None
     metadata: dict = field(default_factory=dict)
     events: list = field(default_factory=list)
     settings: dict = field(default_factory=dict)
     variables: dict = field(default_factory=dict)  # name -> value
     public_vars: set[str] = field(default_factory=set)
+    effects: list = field(default_factory=list)
     event_system: EventSystem | None = field(init=False, default=None)
     rotation: tuple[float, float, float, float] = field(init=False)
     image: Image.Image | None = field(init=False, default=None)
@@ -101,11 +105,30 @@ class GameObject:
     def update(self, dt: float):
         pass
 
+    def render_position(self, camera) -> tuple[float, float]:
+        """Return the on-screen position with effects applied."""
+        x = self.x
+        y = self.y
+        if camera:
+            for eff in getattr(self, 'effects', []):
+                if eff.get('type') == 'parallax':
+                    fx = eff.get('factor_x', eff.get('factor', 0.0))
+                    fy = eff.get('factor_y', eff.get('factor', 0.0))
+                    x += camera.x * fx
+                    y += camera.y * fy
+        return x, y
+
 
     def _load_image(self):
         """Load the object's image with Pillow."""
         if not self.image_path:
-            img = Image.new('RGBA', (32, 32), self.color or (255, 255, 255, 255))
+            # Use a blank texture and keep dimensions so color tint applies once
+            self.image = None
+            self.width, self.height = 32, 32
+            self._dirty = True
+            self._cached_rect = None
+            self._cached_matrix = None
+            return
         else:
             from .resources import get_resource_path
             path = get_resource_path(self.image_path)

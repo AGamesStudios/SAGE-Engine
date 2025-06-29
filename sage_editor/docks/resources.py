@@ -36,6 +36,12 @@ class ResourceTreeWidget(QTreeWidget):
         for fmt in mime.formats():
             if fmt != 'text/uri-list':
                 clean.setData(fmt, mime.data(fmt))
+        item = self.currentItem()
+        if item:
+            path = item.data(0, Qt.ItemDataRole.UserRole)
+            if path and os.path.isfile(path) and self.editor.resource_dir:
+                rel = os.path.relpath(path, self.editor.resource_dir)
+                clean.setText(rel)
         drag = QDrag(self)
         drag.setMimeData(clean)
         drag.exec(supportedActions)
@@ -162,6 +168,14 @@ class ResourceTreeView(QTreeView):
         for fmt in mime.formats():
             if fmt != 'text/uri-list':
                 clean.setData(fmt, mime.data(fmt))
+        if self.editor.resource_model is not None:
+            index = indexes[0]
+            if self.editor.proxy_model is not None:
+                index = self.editor.proxy_model.mapToSource(index)
+            path = self.editor.resource_model.filePath(index)
+            if path and os.path.isfile(path) and self.editor.resource_dir:
+                rel = os.path.relpath(path, self.editor.resource_dir)
+                clean.setText(rel)
         drag = QDrag(self)
         drag.setMimeData(clean)
         drag.exec(supportedActions)

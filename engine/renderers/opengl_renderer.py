@@ -15,7 +15,7 @@ from OpenGL.GL import (
     glGetUniformLocation, glUniform4f, glUseProgram, glBindBuffer,
     glBindVertexArray, glDrawArrays,
     GL_BLEND, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_COLOR_BUFFER_BIT,
-    GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_TEXTURE_MAG_FILTER, GL_LINEAR,
+    GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_TEXTURE_MAG_FILTER, GL_LINEAR, GL_NEAREST,
     GL_QUADS, GL_LINES, GL_LINE_LOOP, GL_TRIANGLES, GL_RGBA, GL_UNSIGNED_BYTE,
     GL_MULTISAMPLE, GL_LINE_SMOOTH, GL_ARRAY_BUFFER, GL_STATIC_DRAW,
     GL_FLOAT, GL_TRIANGLE_FAN, GL_VERTEX_SHADER, GL_FRAGMENT_SHADER
@@ -96,7 +96,12 @@ class OpenGLRenderer:
             uniform sampler2D tex;
             uniform vec4 color;
             void main() {
-                gl_FragColor = texture2D(tex, v_uv) * color;
+                vec4 c = color;
+                float m = max(max(c.r, c.g), max(c.b, c.a));
+                if (m > 1.0) {
+                    c /= 255.0;
+                }
+                gl_FragColor = texture2D(tex, v_uv) * c;
             }
         """
         self._program = compileProgram(
@@ -136,8 +141,9 @@ class OpenGLRenderer:
         self.widget.renderer = self
         self.widget.resize(self.width, self.height)
         self._should_close = False
-        self.textures: dict[int, int] = {}
+        self.textures: dict[tuple[int, bool], int] = {}
         self._blank_texture: int | None = None
+        self._blank_nearest_texture: int | None = None
         self._icon_cache: dict[str, int] = {}
         self._scene = None
         self._camera = None
@@ -148,6 +154,10 @@ class OpenGLRenderer:
         self._cursor_pos: tuple[float, float] | None = None
         self._transform_mode: str = 'pan'
         self._local_coords: bool = False
+        self.show_axes = True
+        self.show_grid = False
+        self.grid_size = 1.0
+        self.grid_color = (0.3, 0.3, 0.3, 1.0)
         self.keep_aspect = bool(self.keep_aspect)
         self.background = tuple(self.background)
         self._program = None
@@ -187,24 +197,29 @@ class OpenGLRenderer:
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
 
-    def _get_blank_texture(self) -> int:
+    def _get_blank_texture(self, smooth: bool = True) -> int:
         """Return a 1x1 white texture used for colored objects."""
-        if self._blank_texture is None:
+        attr = '_blank_texture' if smooth else '_blank_nearest_texture'
+        tex = getattr(self, attr, None)
+        if tex is None:
             data = b"\xff\xff\xff\xff"
-            self._blank_texture = glGenTextures(1)
-            glBindTexture(GL_TEXTURE_2D, self._blank_texture)
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+            tex = glGenTextures(1)
+            glBindTexture(GL_TEXTURE_2D, tex)
+            filt = GL_LINEAR if smooth else GL_NEAREST
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filt)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filt)
             glTexImage2D(
                 GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0,
                 GL_RGBA, GL_UNSIGNED_BYTE, data
             )
-        return self._blank_texture
+            setattr(self, attr, tex)
+        return tex
 
     def _get_texture(self, obj) -> int:
         if obj.image is None:
-            return self._get_blank_texture()
-        tex = self.textures.get(id(obj.image))
+            return self._get_blank_texture(obj.smooth)
+        key = (id(obj.image), bool(getattr(obj, 'smooth', True)))
+        tex = self.textures.get(key)
         if tex:
             return tex
         img = obj.image
@@ -212,13 +227,14 @@ class OpenGLRenderer:
         data = img.tobytes()
         tex_id = glGenTextures(1)
         glBindTexture(GL_TEXTURE_2D, tex_id)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+        filt = GL_LINEAR if getattr(obj, 'smooth', True) else GL_NEAREST
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filt)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filt)
         glTexImage2D(
             GL_TEXTURE_2D, 0, GL_RGBA, img.width, img.height, 0,
             GL_RGBA, GL_UNSIGNED_BYTE, data
         )
-        self.textures[id(obj.image)] = tex_id
+        self.textures[key] = tex_id
         return tex_id
 
     def _get_icon_texture(self, name: str) -> int:
@@ -277,7 +293,11 @@ class OpenGLRenderer:
         )
         glUseProgram(self._program)
         loc_color = glGetUniformLocation(self._program, 'color')
-        glUniform4f(loc_color, *(c / 255.0 for c in (obj.color or (255, 255, 255, 255))))
+        rgba = obj.color or (255, 255, 255, 255)
+        # Colors may be stored either in 0-255 range or already normalized
+        scale = 1 / 255.0 if max(rgba) > 1.0 else 1.0
+        norm = tuple(c * scale for c in rgba)
+        glUniform4f(loc_color, *norm)
         scale = units.UNITS_PER_METER
         sign = 1.0 if units.Y_UP else -1.0
         zoom = camera.zoom if camera else 1.0
@@ -292,11 +312,12 @@ class OpenGLRenderer:
         h = obj.height * obj.scale_y
         verts = [(-w/2, -h/2), (w/2, -h/2), (w/2, h/2), (-w/2, h/2)]
         data = []
+        obj_x, obj_y = obj.render_position(camera)
         for vx, vy in verts:
             rx = vx * cos_a - vy * sin_a
             ry = vx * sin_a + vy * cos_a
-            world_x = (rx + obj.x - cam_x) * scale * zoom
-            world_y = (ry + obj.y - cam_y) * scale * zoom * sign
+            world_x = (rx + obj_x - cam_x) * scale * zoom
+            world_y = (ry + obj_y - cam_y) * scale * zoom * sign
             ndc_x = (2.0 * world_x) / w_size
             ndc_y = (2.0 * world_y) / h_size
             data.extend([ndc_x, ndc_y])
@@ -315,18 +336,63 @@ class OpenGLRenderer:
         glBindBuffer(GL_ARRAY_BUFFER, 0)
         glUseProgram(0)
 
-    def _draw_frustum(self, cam: Camera):
+    def _draw_outline(
+        self,
+        obj: GameObject,
+        camera: Camera | None,
+        color: tuple[float, float, float, float] = (1.0, 0.5, 0.0, 1.0),
+        width: float = 3.0,
+    ) -> None:
+        """Draw a bright outline around ``obj`` in world coordinates."""
+        from OpenGL.GL import (
+            glBindTexture, glColor4f, glLineWidth, glBegin, glEnd, glVertex2f,
+            GL_LINE_LOOP, GL_TEXTURE_2D
+        )
+        if obj is None:
+            return
+        scale = units.UNITS_PER_METER
+        sign = 1.0 if units.Y_UP else -1.0
+        ang = math.radians(getattr(obj, "angle", 0.0))
+        cos_a = math.cos(ang)
+        sin_a = math.sin(ang)
+        w = obj.width * obj.scale_x
+        h = obj.height * obj.scale_y
+        verts = [(-w / 2, -h / 2), (w / 2, -h / 2), (w / 2, h / 2), (-w / 2, h / 2)]
+        glBindTexture(GL_TEXTURE_2D, 0)
+        scale = 1 / 255.0 if max(color) > 1.0 else 1.0
+        norm = tuple(c * scale for c in color)
+        glColor4f(*norm)
+        glLineWidth(width)
+        glBegin(GL_LINE_LOOP)
+        obj_x, obj_y = obj.render_position(camera)
+        for vx, vy in verts:
+            rx = vx * cos_a - vy * sin_a
+            ry = vx * sin_a + vy * cos_a
+            world_x = (rx + obj_x) * scale
+            world_y = (ry + obj_y) * scale * sign
+            glVertex2f(world_x, world_y)
+        glEnd()
+        glLineWidth(1.0)
+
+    def _draw_frustum(
+        self,
+        cam: Camera,
+        color: tuple[float, float, float, float] = (1.0, 1.0, 0.0, 1.0),
+        width: float = 1.0,
+    ) -> None:
         """Draw a rectangle representing the camera's view."""
         left, bottom, w, h = cam.view_rect()
         sign = 1.0 if units.Y_UP else -1.0
         glBindTexture(GL_TEXTURE_2D, 0)
-        glColor4f(1.0, 1.0, 0.0, 1.0)
+        glColor4f(*color)
+        glLineWidth(width)
         glBegin(GL_LINE_LOOP)
         glVertex2f(left, bottom * sign)
         glVertex2f(left + w, bottom * sign)
         glVertex2f(left + w, (bottom + h) * sign)
         glVertex2f(left, (bottom + h) * sign)
         glEnd()
+        glLineWidth(1.0)
 
     def _draw_origin(self, size: float = 1.0):
         glBindTexture(GL_TEXTURE_2D, 0)
@@ -337,6 +403,41 @@ class OpenGLRenderer:
         glColor4f(0.0, 1.0, 0.0, 1.0)
         glVertex2f(0.0, -size)
         glVertex2f(0.0, size)
+        glEnd()
+
+    def _draw_grid(self, camera: Camera | None):
+        """Draw a simple grid relative to the camera."""
+        if not camera:
+            zoom = 1.0
+            cam_x = cam_y = 0.0
+        else:
+            zoom = camera.zoom
+            cam_x = camera.x
+            cam_y = camera.y
+        spacing = self.grid_size
+        if spacing <= 0:
+            return
+        scale = units.UNITS_PER_METER
+        sign = 1.0 if units.Y_UP else -1.0
+        half_w = self.width / 2 / (scale * zoom)
+        half_h = self.height / 2 / (scale * zoom)
+        start_x = math.floor((cam_x - half_w) / spacing) * spacing
+        end_x = math.ceil((cam_x + half_w) / spacing) * spacing
+        start_y = math.floor((cam_y - half_h) / spacing) * spacing
+        end_y = math.ceil((cam_y + half_h) / spacing) * spacing
+        glBindTexture(GL_TEXTURE_2D, 0)
+        glColor4f(*self.grid_color)
+        glBegin(GL_LINES)
+        x = start_x
+        while x <= end_x:
+            glVertex2f(x * scale, start_y * scale * sign)
+            glVertex2f(x * scale, end_y * scale * sign)
+            x += spacing
+        y = start_y
+        while y <= end_y:
+            glVertex2f(start_x * scale, y * scale * sign)
+            glVertex2f(end_x * scale, y * scale * sign)
+            y += spacing
         glEnd()
 
     def _draw_cursor(self, x: float, y: float, camera: Camera | None):
@@ -537,14 +638,19 @@ class OpenGLRenderer:
         glLineWidth(1)
         glPopMatrix()
 
-    def _apply_viewport(self, camera: Camera | None) -> None:
-        """Set GL viewport respecting the camera aspect ratio."""
+    def _apply_viewport(self, camera: Camera | None) -> tuple[int, int, int, int]:
+        """Set GL viewport respecting the camera aspect ratio.
+
+        Returns the viewport rectangle ``(x, y, width, height)`` so the caller
+        can optionally restrict further operations to this area using scissor
+        tests.
+        """
         from OpenGL.GL import glViewport
         w = self.widget.width() if self.widget else self.width
         h = self.widget.height() if self.widget else self.height
         if not self.keep_aspect or camera is None:
             glViewport(0, 0, w, h)
-            return
+            return 0, 0, w, h
         cam_ratio = camera.width / camera.height if camera.height else 1.0
         win_ratio = w / h if h else cam_ratio
         if cam_ratio > win_ratio:
@@ -558,6 +664,7 @@ class OpenGLRenderer:
             x = int((w - vp_w) / 2)
             y = 0
         glViewport(x, y, vp_w, vp_h)
+        return x, y, vp_w, vp_h
 
     def _apply_projection(self, camera: Camera | None) -> None:
         from OpenGL.GL import glMatrixMode, glLoadIdentity, glOrtho, GL_PROJECTION, GL_MODELVIEW
@@ -572,7 +679,11 @@ class OpenGLRenderer:
 
     def paint(self):
         # called from GLWidget.paintGL
-        self.clear(self.background)
+        if not self.widget:
+            return
+        from OpenGL.GL import glViewport
+        glViewport(0, 0, self.widget.width(), self.widget.height())
+        self.clear((0, 0, 0))
         if self._scene:
             self._render_scene(self._scene, self._camera)
 
@@ -594,46 +705,79 @@ class OpenGLRenderer:
         self.widget.update()
 
     def _render_scene(self, scene, camera: Camera | None):
-        self._apply_viewport(camera)
+        x, y, vp_w, vp_h = self._apply_viewport(camera)
+        from OpenGL.GL import glEnable, glDisable, glScissor, GL_SCISSOR_TEST
+        glEnable(GL_SCISSOR_TEST)
+        glScissor(x, y, vp_w, vp_h)
+        self.clear(self.background)
+        glDisable(GL_SCISSOR_TEST)
         self._apply_projection(camera)
         glPushMatrix()
-        scale = units.UNITS_PER_METER
-        sign = 1.0 if units.Y_UP else -1.0
-        if camera:
-            glScalef(camera.zoom, camera.zoom, 1.0)
-            glTranslatef(-camera.x * scale,
-                         -camera.y * scale * sign,
-                         0)
-        scene.sort_objects()
-        for obj in scene.objects:
-            if isinstance(obj, Camera):
+        try:
+            scale = units.UNITS_PER_METER
+            sign = 1.0 if units.Y_UP else -1.0
+            if camera:
+                glScalef(camera.zoom, camera.zoom, 1.0)
+                glTranslatef(-camera.x * scale,
+                             -camera.y * scale * sign,
+                             0)
+            scene.sort_objects()
+            for obj in scene.objects:
+                if isinstance(obj, Camera):
+                    if self._draw_gizmos:
+                        color = (
+                            1.0,
+                            0.5,
+                            0.0,
+                            1.0,
+                        ) if obj is self._selected_obj else (1.0, 1.0, 0.0, 1.0)
+                        width = 3.0 if obj is self._selected_obj else 1.0
+                        self._draw_frustum(obj, color=color, width=width)
+                        tex = self._get_icon_texture('camera.png')
+                        self._draw_icon(
+                            obj.x, obj.y, tex, camera.zoom if camera else 1.0
+                        )
+                    if obj is self._selected_obj:
+                        self._draw_gizmo(
+                            obj,
+                            camera,
+                            self._hover_axis,
+                            self._drag_axis,
+                            mode=self._transform_mode,
+                            local=self._local_coords,
+                        )
+                    continue
+                self._draw_object(obj, camera)
+                if obj is self._selected_obj:
+                    self._draw_outline(obj, camera)
                 if self._draw_gizmos:
-                    self._draw_frustum(obj)
-                    tex = self._get_icon_texture('camera.png')
+                    tex_icon = self._get_icon_texture('object.png')
                     self._draw_icon(
-                        obj.x, obj.y, tex, camera.zoom if camera else 1.0
+                        obj.x, obj.y, tex_icon, camera.zoom if camera else 1.0
                     )
-                continue
-            self._draw_object(obj, camera)
-            if self._draw_gizmos:
-                tex_icon = self._get_icon_texture('object.png')
-                self._draw_icon(
-                    obj.x, obj.y, tex_icon, camera.zoom if camera else 1.0
+            if (
+                self._draw_gizmos
+                and self._selected_obj
+                and not isinstance(self._selected_obj, Camera)
+            ):
+                self._draw_gizmo(
+                    self._selected_obj,
+                    camera,
+                    self._hover_axis,
+                    self._drag_axis,
+                    mode=self._transform_mode,
+                    local=self._local_coords,
                 )
-        if self._draw_gizmos and self._selected_obj:
-            self._draw_gizmo(
-                self._selected_obj,
-                camera,
-                self._hover_axis,
-                self._drag_axis,
-                mode=self._transform_mode,
-                local=self._local_coords,
-            )
-        self._draw_origin(50 * scale)
-        if self._cursor_pos is not None:
-            self._draw_cursor(self._cursor_pos[0], self._cursor_pos[1],
-                               camera)
-        glPopMatrix()
+            if self.show_grid:
+                self._draw_grid(camera)
+            if self.show_axes:
+                self._draw_origin(50 * scale)
+            if self._cursor_pos is not None:
+                self._draw_cursor(
+                    self._cursor_pos[0], self._cursor_pos[1], camera
+                )
+        finally:
+            glPopMatrix()
 
     def present(self):
         self.widget.update()

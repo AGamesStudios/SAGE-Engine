@@ -23,14 +23,15 @@ class LogicTab(QWidget):
             self.object_combo.setVisible(False)
         main_layout.addLayout(top_bar)
 
-        self.event_list = QTableWidget(0, 2)
+        self.event_list = QTableWidget(0, 3)
         self.event_list.setHorizontalHeaderLabels([
-            editor.t('conditions'), editor.t('actions')
+            editor.t('conditions'), editor.t('actions'), ''
         ])
         header = self.event_list.horizontalHeader()
-        header.setStretchLastSection(True)
+        header.setStretchLastSection(False)
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.Interactive)
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Interactive)
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
         self.event_list.setColumnWidth(0, 250)
         self.event_list.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         self.event_list.setWordWrap(True)
@@ -42,6 +43,8 @@ class LogicTab(QWidget):
             editor.t('name'), editor.t('value')
         ])
         self.var_table.horizontalHeader().setStretchLastSection(True)
+        self.var_table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.var_table.customContextMenuRequested.connect(editor._variable_menu)
         self.add_var_btn = QPushButton(editor.t('add_variable'))
         self.add_var_btn.clicked.connect(editor.add_variable)
 

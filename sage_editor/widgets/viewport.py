@@ -1,5 +1,7 @@
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QToolButton, QButtonGroup
-from PyQt6.QtGui import QIcon
+from PyQt6.QtWidgets import (
+    QWidget, QVBoxLayout, QToolButton, QButtonGroup
+)
+from PyQt6.QtGui import QIcon, QKeySequence, QShortcut
 from PyQt6.QtCore import QTimer, Qt, QPointF
 import math
 
@@ -38,7 +40,15 @@ class Viewport(GLWidget):
                 height=self.height(),
             )
         self._center_camera()
+        # default rendering options
+        self.show_grid = False
+        self.show_axes = True
+        self.snap_to_grid = False
+        self.grid_size = 1.0
         self.renderer = OpenGLRenderer(self.width(), self.height(), widget=self)
+        self.renderer.show_grid = self.show_grid
+        self.renderer.show_axes = self.show_axes
+        self.renderer.grid_size = self.grid_size
         self.timer = QTimer(self)
         self.timer.setInterval(33)  # ~30 FPS to reduce CPU load
         self.timer.timeout.connect(self._tick)
@@ -50,6 +60,8 @@ class Viewport(GLWidget):
         self._drag_offset = (0.0, 0.0)
         self._drag_start_world = (0.0, 0.0)
         self._drag_start_obj = (0.0, 0.0)
+        self._drag_start_angle = 0.0
+        self._drag_prev_state = None
         self.selected_obj: GameObject | None = None
         self._cursor_world: tuple[float, float] | None = None
 
@@ -88,9 +100,59 @@ class Viewport(GLWidget):
         self.transform_bar.show()
         self.transform_bar.raise_()
 
+        # keyboard shortcuts for viewport controls
+        self.shortcut_focus = QShortcut(QKeySequence('F'), self)
+        self.shortcut_focus.activated.connect(self._focus_selected)
+        self.shortcut_pan = QShortcut(QKeySequence('Q'), self)
+        self.shortcut_pan.activated.connect(lambda: self.set_transform_mode('pan'))
+        self.shortcut_move = QShortcut(QKeySequence('W'), self)
+        self.shortcut_move.activated.connect(lambda: self.set_transform_mode('move'))
+        self.shortcut_rot = QShortcut(QKeySequence('E'), self)
+        self.shortcut_rot.activated.connect(lambda: self.set_transform_mode('rotate'))
+        self.shortcut_scale = QShortcut(QKeySequence('R'), self)
+        self.shortcut_scale.activated.connect(lambda: self.set_transform_mode('scale'))
+
     def set_coord_mode(self, local: bool) -> None:
         """Set whether gizmos follow the object's rotation."""
         self._local_coords = bool(local)
+
+    def set_show_grid(self, enabled: bool) -> None:
+        """Toggle the background grid."""
+        self.show_grid = bool(enabled)
+        if self.renderer:
+            self.renderer.show_grid = self.show_grid
+        self.update()
+
+    def set_show_axes(self, enabled: bool) -> None:
+        """Toggle the coordinate axes gizmo."""
+        self.show_axes = bool(enabled)
+        if self.renderer:
+            self.renderer.show_axes = self.show_axes
+        self.update()
+
+    def set_snap(self, enabled: bool) -> None:
+        """Enable or disable snapping to the grid."""
+        self.snap_to_grid = bool(enabled)
+
+    def set_grid_size(self, size: float) -> None:
+        """Set the spacing of the background grid and snapping."""
+        if size <= 0:
+            return
+        self.grid_size = float(size)
+        if self.renderer:
+            self.renderer.grid_size = self.grid_size
+        self.update()
+
+    def set_grid_color(self, color: tuple[int, int, int]) -> None:
+        """Set the display color of the grid."""
+        if self.renderer:
+            self.renderer.grid_color = (
+                color[0] / 255.0,
+                color[1] / 255.0,
+                color[2] / 255.0,
+                1.0,
+            )
+        self.update()
 
     def set_transform_mode(self, mode: str) -> None:
         """Set the active transform interaction mode."""
@@ -113,6 +175,14 @@ class Viewport(GLWidget):
         ys = [o.y for o in objs]
         self.camera.x = sum(xs) / len(xs)
         self.camera.y = sum(ys) / len(ys)
+
+    def _focus_selected(self) -> None:
+        """Center the viewport camera on the selected object."""
+        if self.selected_obj is None:
+            return
+        self.camera.x = self.selected_obj.x
+        self.camera.y = self.selected_obj.y
+        self.update()
 
     # QWidget overrides -------------------------------------------------------
 
@@ -187,12 +257,15 @@ class Viewport(GLWidget):
                 world = self._screen_to_world(event.position())
                 self._cursor_world = world
                 if self.selected_obj:
+                    if self.editor:
+                        self._drag_prev_state = self.editor._capture_state(self.selected_obj)
                     if hit == 'rot':
                         ang = math.degrees(math.atan2(
                             world[1] - self.selected_obj.y,
                             world[0] - self.selected_obj.x,
                         ))
-                        self._drag_offset = getattr(self.selected_obj, 'angle', 0.0) - ang
+                        self._drag_start_angle = ang
+                        self._drag_offset = getattr(self.selected_obj, 'angle', 0.0)
                     elif hit == 'sx':
                         ang = math.radians(getattr(self.selected_obj, 'angle', 0.0))
                         cos_a = math.cos(ang)
@@ -226,6 +299,9 @@ class Viewport(GLWidget):
                                 self.editor.object_combo.setCurrentIndex(i)
                                 self.editor.object_list.setCurrentRow(i)
                                 break
+                    # automatically enable move mode when selecting via the hand tool
+                    if self._transform_mode == 'pan':
+                        self.set_transform_mode('move')
                     self._gizmo_hover = self._hit_gizmo(event.position())
                     self._cursor_world = self._screen_to_world(event.position())
                 else:
@@ -240,11 +316,18 @@ class Viewport(GLWidget):
         if self._gizmo_drag and self.selected_obj is not None:
             world = self._screen_to_world(event.position())
             if self._gizmo_drag == 'rot':
-                ang = math.degrees(math.atan2(
-                    world[1] - self.selected_obj.y,
-                    world[0] - self.selected_obj.x,
-                ))
-                self.selected_obj.angle = ang + self._drag_offset
+                ang = math.degrees(
+                    math.atan2(
+                        world[1] - self.selected_obj.y,
+                        world[0] - self.selected_obj.x,
+                    )
+                )
+                delta = ang - self._drag_start_angle
+                if delta > 180:
+                    delta -= 360
+                elif delta < -180:
+                    delta += 360
+                self.selected_obj.angle = self._drag_offset + delta
             elif self._gizmo_drag == 'sx':
                 start_dx, base = self._drag_offset
                 ang = math.radians(getattr(self.selected_obj, 'angle', 0.0))
@@ -254,7 +337,16 @@ class Viewport(GLWidget):
                     world[1] - self.selected_obj.y
                 ) * sin_a
                 if start_dx:
-                    self.selected_obj.scale_x = max(0.01, base * (dx_local / start_dx))
+                    value = base * (dx_local / start_dx)
+                    if self.snap_to_grid and self.grid_size > 0:
+                        world_w = self.selected_obj.width * value
+                        world_w = (
+                            round(world_w / self.grid_size) * self.grid_size
+                        )
+                        value = max(0.01, world_w / self.selected_obj.width)
+                    else:
+                        value = max(0.01, value)
+                    self.selected_obj.scale_x = value
             elif self._gizmo_drag == 'sy':
                 start_dy, base = self._drag_offset
                 ang = math.radians(getattr(self.selected_obj, 'angle', 0.0))
@@ -264,7 +356,16 @@ class Viewport(GLWidget):
                     world[1] - self.selected_obj.y
                 ) * cos_a
                 if start_dy:
-                    self.selected_obj.scale_y = max(0.01, base * (dy_local / start_dy))
+                    value = base * (dy_local / start_dy)
+                    if self.snap_to_grid and self.grid_size > 0:
+                        world_h = self.selected_obj.height * value
+                        world_h = (
+                            round(world_h / self.grid_size) * self.grid_size
+                        )
+                        value = max(0.01, world_h / self.selected_obj.height)
+                    else:
+                        value = max(0.01, value)
+                    self.selected_obj.scale_y = value
             else:
                 dx = world[0] - self._drag_start_world[0]
                 dy = world[1] - self._drag_start_world[1]
@@ -281,17 +382,23 @@ class Viewport(GLWidget):
                 else:
                     world_dx = dx if 'x' in self._gizmo_drag else 0.0
                     world_dy = dy if 'y' in self._gizmo_drag else 0.0
-                self.selected_obj.x = self._drag_start_obj[0] + world_dx
-                self.selected_obj.y = self._drag_start_obj[1] + world_dy
+                new_x = self._drag_start_obj[0] + world_dx
+                new_y = self._drag_start_obj[1] + world_dy
+                if self.snap_to_grid and self.grid_size > 0:
+                    new_x = round(new_x / self.grid_size) * self.grid_size
+                    new_y = round(new_y / self.grid_size) * self.grid_size
+                self.selected_obj.x = new_x
+                self.selected_obj.y = new_y
             if self.editor:
-                self.editor._update_transform_panel()
+                # update fields without rebuilding the variable panel
+                self.editor._update_transform_panel(False)
                 self.editor._mark_dirty()
             self.update()
             self._cursor_world = world
         elif self._drag_pos is not None and event.buttons() & Qt.MouseButton.LeftButton:
             dx = event.position().x() - self._drag_pos.x()
             dy = event.position().y() - self._drag_pos.y()
-            scale = units.UNITS_PER_METER
+            scale = units.UNITS_PER_METER * self.camera.zoom
             self.camera.x -= dx / scale
             self.camera.y += (1 if units.Y_UP else -1) * dy / scale
             self._drag_pos = event.position()
@@ -306,9 +413,13 @@ class Viewport(GLWidget):
 
     def mouseReleaseEvent(self, event):  # pragma: no cover - UI interaction
         self._drag_pos = None
+        dragged = self._gizmo_drag
         self._gizmo_drag = None
         self.releaseMouse()
         self.setCursor(Qt.CursorShape.ArrowCursor)
+        if dragged and self.editor and self.selected_obj and self._drag_prev_state:
+            self.editor._record_undo(self.selected_obj, self._drag_prev_state)
+        self._drag_prev_state = None
         self._gizmo_hover = self._hit_gizmo(event.position())
         self._cursor_world = self._screen_to_world(event.position())
         super().mouseReleaseEvent(event)
@@ -381,8 +492,12 @@ class Viewport(GLWidget):
         self.scene.sort_objects()
         for obj in reversed(self.scene.objects):
             if isinstance(obj, Camera):
-                continue
-            left, bottom, w, h = obj.rect()
+                icon_half = 16.0 / (obj.zoom if obj.zoom else 1.0)
+                left = obj.x - icon_half
+                bottom = obj.y - icon_half
+                w = h = icon_half * 2
+            else:
+                left, bottom, w, h = obj.rect()
             if left <= world[0] <= left + w and bottom <= world[1] <= bottom + h:
                 return obj
         return None

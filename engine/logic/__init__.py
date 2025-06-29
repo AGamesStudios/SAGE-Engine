@@ -6,6 +6,7 @@ from .base import (
     get_condition_params, get_action_params,
     get_registered_conditions, get_registered_actions,
     condition_from_dict, action_from_dict, event_from_dict,
+    load_logic_plugins,
     CONDITION_REGISTRY, ACTION_REGISTRY,
 )
 
@@ -33,6 +34,7 @@ __all__ = [
     'get_condition_params', 'get_action_params',
     'get_registered_conditions', 'get_registered_actions',
     'condition_from_dict', 'action_from_dict', 'event_from_dict',
+    'load_logic_plugins',
     'CONDITION_REGISTRY', 'ACTION_REGISTRY',
 ] + list(CONDITION_REGISTRY.keys()) + list(ACTION_REGISTRY.keys())
 

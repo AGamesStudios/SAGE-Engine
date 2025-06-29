@@ -14,10 +14,11 @@ try:
 except Exception:  # pragma: no cover - handle older PyQt versions
     QFileSystemModel = None
 from PyQt6.QtGui import QPixmap, QColor, QAction, QActionGroup, QDesktopServices
-from .icons import load_icon
+from .icons import load_icon, app_icon
 from PyQt6.QtCore import (
-    QRectF, Qt, QPointF, QSortFilterProxyModel, QSize, QUrl, QTimer
+    QRectF, Qt, QPointF, QSortFilterProxyModel, QSize, QUrl, QTimer, QEvent, QObject
 )
+from dataclasses import dataclass
 import logging
 from typing import Callable
 import copy
@@ -27,7 +28,7 @@ import inspect
 from .lang import LANGUAGES, DEFAULT_LANGUAGE
 from engine import Scene, GameObject, Project, Camera, ENGINE_VERSION, get_resource_path
 from . import plugins
-from .widgets import Viewport
+from .widgets import Viewport, ResourceLineEdit
 register_plugin = plugins.register_plugin
 import json
 from .docks.console import ConsoleDock
@@ -36,25 +37,55 @@ from .docks.resources import ResourceDock
 from .docks.logic import LogicTab, ObjectLogicTab
 from .docks.profiler import ProfilerDock
 
+
+class NoWheelFilter(QObject):
+    """Event filter to block mouse wheel events."""
+
+    def eventFilter(self, obj, event):  # pragma: no cover - UI behavior
+        if event.type() == QEvent.Type.Wheel:
+            event.ignore()
+            return True
+        return False
+
+
+@dataclass
+class UndoAction:
+    """Record a single object transform change for undo/redo."""
+
+    obj: GameObject
+    old: dict
+    new: dict
+
+    def undo(self) -> None:
+        for k, v in self.old.items():
+            setattr(self.obj, k, v)
+
+    def redo(self) -> None:
+        for k, v in self.new.items():
+            setattr(self.obj, k, v)
+
 RECENT_FILE = os.path.join(os.path.expanduser('~'), '.sage_recent.json')
-LAYOUT_FILE = os.path.join(os.path.expanduser('~'), '.sage_layouts.json')
 LAYOUT_FILE = os.path.join(os.path.expanduser('~'), '.sage_layouts.json')
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 LOG_DIR = os.path.join(BASE_DIR, 'logs')
 LOG_FILE = os.path.join(LOG_DIR, 'editor.log')
 
 def _setup_logger() -> logging.Logger:
+    """Configure and return the editor logger."""
     os.makedirs(LOG_DIR, exist_ok=True)
     logger = logging.getLogger('sage_editor')
     if not logger.handlers:
-        logger.setLevel(logging.INFO)
+        level = os.environ.get('SAGE_LOG_LEVEL', 'INFO').upper()
+        logger.setLevel(getattr(logging, level, logging.INFO))
         fmt = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
-
-    return sorted(
-        f"engine.{name}(" if callable(obj) else f"engine.{name}"
-        for name, obj in inspect.getmembers(Engine)
-        if not name.startswith("_")
-    )
+        fh = logging.FileHandler(LOG_FILE, encoding='utf-8')
+        fh.setFormatter(fmt)
+        ch = logging.StreamHandler()
+        ch.setFormatter(fmt)
+        logger.addHandler(fh)
+        logger.addHandler(ch)
+        logger.info('Logger initialised')
+    return logger
 logger = _setup_logger()
 atexit.register(logging.shutdown)
 
@@ -75,30 +106,13 @@ def _engine_completions() -> list[str]:
     names: list[str] = []
     for name, obj in inspect.getmembers(Engine):
         if name.startswith('_'):
-def load_layouts() -> dict:
-    """Return saved layout data or defaults."""
-    try:
-        with open(LAYOUT_FILE, 'r') as f:
-            data = json.load(f)
-            if 'layouts' in data:
-                return data
-    except Exception:
-        pass
-    return {'layouts': {}, 'default': None}
-
-def save_layouts(data: dict) -> None:
-    try:
-        with open(LAYOUT_FILE, 'w') as f:
-            json.dump(data, f)
-    except Exception:
-        pass
-
             continue
         if callable(obj):
             names.append(f'engine.{name}(')
         else:
             names.append(f'engine.{name}')
     return sorted(names)
+
 
 def load_recent():
     """Return a list of recent project files that still exist."""
@@ -145,9 +159,41 @@ KEY_OPTIONS = [
     ('Space', Qt.Key.Key_Space),
     ('Enter', Qt.Key.Key_Return),
     ('A', Qt.Key.Key_A),
-    ('S', Qt.Key.Key_S),
+    ('B', Qt.Key.Key_B),
+    ('C', Qt.Key.Key_C),
     ('D', Qt.Key.Key_D),
+    ('E', Qt.Key.Key_E),
+    ('F', Qt.Key.Key_F),
+    ('G', Qt.Key.Key_G),
+    ('H', Qt.Key.Key_H),
+    ('I', Qt.Key.Key_I),
+    ('J', Qt.Key.Key_J),
+    ('K', Qt.Key.Key_K),
+    ('L', Qt.Key.Key_L),
+    ('M', Qt.Key.Key_M),
+    ('N', Qt.Key.Key_N),
+    ('O', Qt.Key.Key_O),
+    ('P', Qt.Key.Key_P),
+    ('Q', Qt.Key.Key_Q),
+    ('R', Qt.Key.Key_R),
+    ('S', Qt.Key.Key_S),
+    ('T', Qt.Key.Key_T),
+    ('U', Qt.Key.Key_U),
+    ('V', Qt.Key.Key_V),
     ('W', Qt.Key.Key_W),
+    ('X', Qt.Key.Key_X),
+    ('Y', Qt.Key.Key_Y),
+    ('Z', Qt.Key.Key_Z),
+    ('0', Qt.Key.Key_0),
+    ('1', Qt.Key.Key_1),
+    ('2', Qt.Key.Key_2),
+    ('3', Qt.Key.Key_3),
+    ('4', Qt.Key.Key_4),
+    ('5', Qt.Key.Key_5),
+    ('6', Qt.Key.Key_6),
+    ('7', Qt.Key.Key_7),
+    ('8', Qt.Key.Key_8),
+    ('9', Qt.Key.Key_9),
 ]
 MOUSE_OPTIONS = [
     ('Left', Qt.MouseButton.LeftButton),
@@ -215,6 +261,20 @@ def describe_action(act, objects, t=lambda x: x):
         t = act.get('target')
         name = objects[t].name if t is not None and 0 <= t < len(objects) else 'N/A'
         return f"{t('Move')} {name} {t('dx')} {act.get('dx')},{t('dy')} {act.get('dy')}"
+    if typ == 'MoveDirection':
+        t_idx = act.get('target')
+        name = objects[t_idx].name if t_idx is not None and 0 <= t_idx < len(objects) else 'N/A'
+        dir_map = {
+            0: t('dir_right'),
+            90: t('dir_up'),
+            180: t('dir_left'),
+            270: t('dir_down'),
+        }
+        ang = float(act.get('direction', 0))
+        label = dir_map.get(int(ang) % 360)
+        if label is None:
+            label = f'{ang:g}'
+        return f"{t('MoveDirection')} {name} {t('direction_label')} {label} {t('speed_label')} {act.get('speed')}"
     if typ == 'SetPosition':
         t = act.get('target')
         name = objects[t].name if t is not None and 0 <= t < len(objects) else 'N/A'
@@ -259,9 +319,15 @@ class ConditionDialog(QDialog):
 
         self.key_label = QLabel(parent.t('key_button') if parent else 'Key/Button:')
         self.key_combo = QComboBox()
+        self.key_combo.setEditable(True)
         for name, val in KEY_OPTIONS:
             self.key_combo.addItem(name, val)
-        layout.addRow(self.key_label, self.key_combo)
+        self.detect_btn = QPushButton(parent.t('detect_key') if parent else 'Auto Detect')
+        self.detect_btn.clicked.connect(self._toggle_detect)
+        key_row = QHBoxLayout()
+        key_row.addWidget(self.key_combo)
+        key_row.addWidget(self.detect_btn)
+        layout.addRow(self.key_label, key_row)
 
         self.duration_label = QLabel(parent.t('time') if parent else 'Time:')
         self.hour_spin = QSpinBox(); self.hour_spin.setRange(0, 23)
@@ -294,7 +360,7 @@ class ConditionDialog(QDialog):
         self.b_box = QComboBox()
         from engine import Camera
         for i, obj in enumerate(objects):
-            label = f'{i}: {obj.name}'
+            label = obj.name
             self.a_box.addItem(label, i)
             if isinstance(obj, Camera):
                 self.cam_box.addItem(label, i)
@@ -346,6 +412,8 @@ class ConditionDialog(QDialog):
         self._update_fields()
         if data:
             self.set_condition(data)
+        if parent:
+            parent.apply_no_wheel(self)
 
     def _update_key_list(self, force_device=None):
         """Populate the key combo based on device choice."""
@@ -357,9 +425,15 @@ class ConditionDialog(QDialog):
 
     def _update_fields(self):
         typ = self.type_box.currentData()
+        # disable key detection when switching to a type that doesn't use it
+        if getattr(self, 'detecting', False) and typ not in (
+            'KeyPressed', 'KeyReleased', 'InputState', 'MouseButton'
+        ):
+            self._toggle_detect()
         widgets = [
             (self.device_label, self.device_box),
             (self.key_label, self.key_combo),
+            (self.key_label, self.detect_btn),
             (self.duration_label, self.hour_spin),
             (self.duration_label, self.min_spin),
             (self.duration_label, self.sec_spin),
@@ -382,10 +456,12 @@ class ConditionDialog(QDialog):
             self.device_box.setVisible(True)
             self.key_label.setVisible(True)
             self.key_combo.setVisible(True)
+            self.detect_btn.setVisible(True)
             self._update_key_list()
         elif typ == 'MouseButton':
             self.key_label.setVisible(True)
             self.key_combo.setVisible(True)
+            self.detect_btn.setVisible(True)
             self.state_label.setVisible(True)
             self.state_box.setVisible(True)
             self._update_key_list('mouse')
@@ -394,6 +470,7 @@ class ConditionDialog(QDialog):
             self.device_box.setVisible(True)
             self.key_label.setVisible(True)
             self.key_combo.setVisible(True)
+            self.detect_btn.setVisible(True)
             self.state_label.setVisible(True)
             self.state_box.setVisible(True)
             self._update_key_list()
@@ -442,6 +519,33 @@ class ConditionDialog(QDialog):
             if self.parent():
                 self.var_warn_text.setText(self.parent().t('text_not_comparable'))
             self.var_warn_text.show()
+
+    def _toggle_detect(self):
+        """Enable or disable key detection mode."""
+        self.detecting = not getattr(self, 'detecting', False)
+        if self.detecting:
+            text = self.parent().t('press_key') if self.parent() else 'Press a key...'
+            self.detect_btn.setText(text)
+            self.grabKeyboard()
+        else:
+            text = self.parent().t('detect_key') if self.parent() else 'Auto Detect'
+            self.detect_btn.setText(text)
+            self.releaseKeyboard()
+
+    def keyPressEvent(self, event):
+        if getattr(self, 'detecting', False):
+            code = event.key()
+            name = KEY_NAME_LOOKUP.get(code)
+            if name is None:
+                name = event.text().upper() or str(code)
+                self.key_combo.addItem(name, code)
+                KEY_NAME_LOOKUP[code] = name
+            idx = self.key_combo.findData(code)
+            if idx >= 0:
+                self.key_combo.setCurrentIndex(idx)
+            self._toggle_detect()
+            return
+        super().keyPressEvent(event)
 
     def get_condition(self):
         typ = self.type_box.currentData()
@@ -550,11 +654,12 @@ class ConditionDialog(QDialog):
 class ActionDialog(QDialog):
     """Dialog for creating a single action."""
 
-    def __init__(self, objects, variables, parent=None, data=None):
+    def __init__(self, objects, variables, parent=None, data=None, owner_index=None):
         super().__init__(parent)
         self.setWindowTitle(parent.t('add_action') if parent else 'Add Action')
         self.objects = objects
         self.variables = variables
+        self.owner_index = owner_index
         layout = QFormLayout(self)
 
         from engine.logic.base import get_registered_actions
@@ -568,8 +673,10 @@ class ActionDialog(QDialog):
         from engine import Camera
         self.all_objects = objects
         self.camera_indices = [i for i, o in enumerate(objects) if isinstance(o, Camera)]
+        if self.owner_index is not None:
+            self.target_box.addItem(parent.t('self_option') if parent else 'Self', self.owner_index)
         for i, obj in enumerate(objects):
-            self.target_box.addItem(f'{i}: {obj.name}', i)
+            self.target_box.addItem(obj.name, i)
         layout.addRow(self.target_label, self.target_box)
 
         self.dx_label = QLabel(parent.t('dx') if parent else 'dx:')
@@ -578,6 +685,18 @@ class ActionDialog(QDialog):
         self.dy_spin = QSpinBox(); self.dy_spin.setRange(-1000, 1000)
         layout.addRow(self.dx_label, self.dx_spin)
         layout.addRow(self.dy_label, self.dy_spin)
+
+        self.dir_label = QLabel(parent.t('direction_label') if parent else 'Direction:')
+        self.dir_box = QComboBox()
+        self.dir_box.addItem(parent.t('dir_right') if parent else 'Right', 0.0)
+        self.dir_box.addItem(parent.t('dir_left') if parent else 'Left', 180.0)
+        self.dir_box.addItem(parent.t('dir_up') if parent else 'Up', 90.0)
+        self.dir_box.addItem(parent.t('dir_down') if parent else 'Down', 270.0)
+        self.speed_label = QLabel(parent.t('speed_label') if parent else 'Speed:')
+        self.speed_spin = QDoubleSpinBox(); self.speed_spin.setRange(-1000.0, 1000.0)
+        self.speed_spin.setValue(100.0)
+        layout.addRow(self.dir_label, self.dir_box)
+        layout.addRow(self.speed_label, self.speed_spin)
 
         self.x_label = QLabel(parent.t('x') if parent else 'x:')
         self.x_spin = QSpinBox(); self.x_spin.setRange(-10000, 10000)
@@ -597,14 +716,18 @@ class ActionDialog(QDialog):
         layout.addRow(self.text_label, self.text_edit)
 
         self.path_label = QLabel(parent.t('path_label') if parent else 'Path:')
-        self.path_edit = QLineEdit()
+        self.path_edit = ResourceLineEdit(parent)
         if parent:
             parent.apply_engine_completer(self.path_edit)
         path_row = QHBoxLayout()
         path_row.addWidget(self.path_edit)
         self.browse_btn = QPushButton(parent.t('browse') if parent else 'Browse')
         self.browse_btn.clicked.connect(self._browse_path)
+        self.clear_path_btn = QPushButton()
+        self.clear_path_btn.setIcon(load_icon('clear.png'))
+        self.clear_path_btn.clicked.connect(self.path_edit.clear)
         path_row.addWidget(self.browse_btn)
+        path_row.addWidget(self.clear_path_btn)
         layout.addRow(self.path_label, path_row)
 
         self.var_name_label = QLabel(parent.t('variable') if parent else 'Variable:')
@@ -645,19 +768,39 @@ class ActionDialog(QDialog):
         self._update_fields()
         if data:
             self.set_action(data)
+        if parent:
+            parent.apply_no_wheel(self)
 
     def _browse_path(self):
         parent = self.parent()
         if not parent:
             return
-        path = parent._resource_file_dialog(parent.t('select_file'))
+        typ = self.type_box.currentData()
+        filters = ''
+        if typ == 'PlaySound':
+            filters = parent.t('audio_files')
+        elif typ == 'Spawn':
+            filters = parent.t('image_files')
+        path = parent._resource_file_dialog(parent.t('select_file'), filters)
         if path:
             self.path_edit.setText(os.path.relpath(path, parent.resource_dir))
 
     def get_action(self):
         typ = self.type_box.currentData()
         if typ == 'Move':
-            return {'type': typ, 'target': self.target_box.currentData(), 'dx': self.dx_spin.value(), 'dy': self.dy_spin.value()}
+            return {
+                'type': typ,
+                'target': self.target_box.currentData(),
+                'dx': self.dx_spin.value(),
+                'dy': self.dy_spin.value(),
+            }
+        if typ == 'MoveDirection':
+            return {
+                'type': typ,
+                'target': self.target_box.currentData(),
+                'direction': self.dir_box.currentData(),
+                'speed': self.speed_spin.value(),
+            }
         if typ == 'SetPosition':
             return {'type': typ, 'target': self.target_box.currentData(), 'x': self.x_spin.value(), 'y': self.y_spin.value()}
         if typ == 'Destroy':
@@ -695,16 +838,29 @@ class ActionDialog(QDialog):
         typ = self.type_box.currentData()
         self.target_box.clear()
         if typ == 'SetZoom':
+            if self.owner_index is not None and self.owner_index in self.camera_indices:
+                self.target_box.addItem(self.parent().t('self_option') if self.parent() else 'Self', self.owner_index)
             for i in self.camera_indices:
                 obj = self.all_objects[i]
-                self.target_box.addItem(f'{i}: {obj.name}', i)
+                self.target_box.addItem(obj.name, i)
         else:
+            if self.owner_index is not None:
+                self.target_box.addItem(self.parent().t('self_option') if self.parent() else 'Self', self.owner_index)
             for i, obj in enumerate(self.all_objects):
-                self.target_box.addItem(f'{i}: {obj.name}', i)
+                self.target_box.addItem(obj.name, i)
+        # update path extensions for drag/drop
+        if typ == 'PlaySound':
+            self.path_edit.set_extensions({'.wav', '.mp3', '.ogg'})
+        elif typ == 'Spawn':
+            self.path_edit.set_extensions({'.png', '.jpg', '.jpeg', '.bmp', '.gif'})
+        else:
+            self.path_edit.set_extensions(None)
         widgets = [
             (self.target_label, self.target_box),
             (self.dx_label, self.dx_spin),
             (self.dy_label, self.dy_spin),
+            (self.dir_label, self.dir_box),
+            (self.speed_label, self.speed_spin),
             (self.x_label, self.x_spin),
             (self.y_label, self.y_spin),
             (self.text_label, self.text_edit),
@@ -722,7 +878,19 @@ class ActionDialog(QDialog):
             label.setVisible(False)
             w.setVisible(False)
         if typ == 'Move':
-            for pair in [(self.target_label, self.target_box), (self.dx_label, self.dx_spin), (self.dy_label, self.dy_spin)]:
+            for pair in [
+                (self.target_label, self.target_box),
+                (self.dx_label, self.dx_spin),
+                (self.dy_label, self.dy_spin),
+            ]:
+                pair[0].setVisible(True)
+                pair[1].setVisible(True)
+        elif typ == 'MoveDirection':
+            for pair in [
+                (self.target_label, self.target_box),
+                (self.dir_label, self.dir_box),
+                (self.speed_label, self.speed_spin),
+            ]:
                 pair[0].setVisible(True)
                 pair[1].setVisible(True)
         elif typ == 'SetPosition':
@@ -750,9 +918,11 @@ class ActionDialog(QDialog):
             self.zoom_label.setVisible(True)
             self.zoom_spin.setVisible(True)
             self.target_box.clear()
+            if self.owner_index is not None and self.owner_index in self.camera_indices:
+                self.target_box.addItem(self.parent().t('self_option') if self.parent() else 'Self', self.owner_index)
             for i in self.camera_indices:
                 obj = self.all_objects[i]
-                self.target_box.addItem(f'{i}: {obj.name}', i)
+                self.target_box.addItem(obj.name, i)
         elif typ == 'SetVariable':
             for pair in [
                 (self.var_name_label, self.var_name_box),
@@ -814,11 +984,21 @@ class ActionDialog(QDialog):
         if idx >= 0:
             self.type_box.setCurrentIndex(idx)
             typ = self.type_box.itemData(idx)
-        if typ in ('Move', 'SetPosition', 'Destroy'):
+        if typ in ('Move', 'MoveDirection', 'SetPosition', 'Destroy'):
             self.target_box.setCurrentIndex(int(data.get('target', 0)))
             if typ == 'Move':
                 self.dx_spin.setValue(int(data.get('dx', 0)))
                 self.dy_spin.setValue(int(data.get('dy', 0)))
+            elif typ == 'MoveDirection':
+                ang = float(data.get('direction', 0)) % 360
+                idx = -1
+                for i in range(self.dir_box.count()):
+                    if int(self.dir_box.itemData(i)) == int(ang):
+                        idx = i
+                        break
+                if idx >= 0:
+                    self.dir_box.setCurrentIndex(idx)
+                self.speed_spin.setValue(float(data.get('speed', 0)))
             elif typ == 'SetPosition':
                 self.x_spin.setValue(int(data.get('x', 0)))
                 self.y_spin.setValue(int(data.get('y', 0)))
@@ -857,19 +1037,33 @@ class ActionDialog(QDialog):
 
 
 class AddEventDialog(QDialog):
-    """Dialog to create an event from arbitrary conditions and actions."""
+    """Dialog to create or edit an event."""
 
-    def __init__(self, objects, variables, parent=None):
+    def __init__(self, objects, variables, parent=None, data=None, owner=None):
         super().__init__(parent)
         self.objects = objects
         self.variables = variables
-        self.setWindowTitle(parent.t('add_event') if parent else 'Add Event')
+        self.owner_index = None
+        if owner is not None and owner in objects:
+            self.owner_index = objects.index(owner)
+        title = parent.t('add_event') if parent else 'Add Event'
+        if data:
+            title = parent.t('edit_event') if parent else 'Edit Event'
+        self.setWindowTitle(title)
         self.conditions = []
         self.actions = []
         layout = QGridLayout(self)
         layout.setContentsMargins(8, 8, 8, 8)
         layout.setHorizontalSpacing(12)
         layout.setVerticalSpacing(6)
+
+        self.name_edit = QLineEdit()
+        self.enabled_check = QCheckBox(parent.t('enabled') if parent else 'Enabled')
+        self.enabled_check.setChecked(True)
+        form = QFormLayout()
+        form.addRow(parent.t('name_label') if parent else 'Name:', self.name_edit)
+        form.addRow(self.enabled_check)
+        layout.addLayout(form, 0, 0, 1, 2)
 
         left_box = QGroupBox(parent.t('conditions') if parent else 'Conditions')
         left = QVBoxLayout(left_box)
@@ -885,21 +1079,36 @@ class AddEventDialog(QDialog):
         add_act = QPushButton(parent.t('add_action') if parent else 'Add Action'); right.addWidget(add_act)
         add_cond.clicked.connect(self.add_condition)
         add_act.clicked.connect(self.add_action)
-        layout.addWidget(left_box, 0, 0)
-        layout.addWidget(right_box, 0, 1)
+        layout.addWidget(left_box, 1, 0)
+        layout.addWidget(right_box, 1, 1)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
-        layout.addWidget(buttons, 1, 0, 1, 2, Qt.AlignmentFlag.AlignRight)
+        layout.addWidget(buttons, 2, 0, 1, 2, Qt.AlignmentFlag.AlignRight)
 
         self._clip_cond = None
         self._clip_act = None
+        if parent:
+            parent.apply_no_wheel(self)
+
+        if data:
+            self.name_edit.setText(data.get('name', ''))
+            self.enabled_check.setChecked(data.get('enabled', True))
+            for c in data.get('conditions', []):
+                self.conditions.append(c)
+                desc = describe_condition(c, self.objects, parent.t if parent else self.t)
+                self.cond_list.addItem(desc)
+            for a in data.get('actions', []):
+                self.actions.append(a)
+                desc = describe_action(a, self.objects, parent.t if parent else self.t)
+                self.act_list.addItem(desc)
 
     def add_condition(self):
-        dlg = ConditionDialog(self.objects, self.variables, self)
+        parent = self.parent() if self.parent() else self
+        dlg = ConditionDialog(self.objects, self.variables, parent)
         if dlg.exec() == QDialog.DialogCode.Accepted:
             cond = dlg.get_condition()
             self.conditions.append(cond)
@@ -907,7 +1116,9 @@ class AddEventDialog(QDialog):
             self.cond_list.addItem(desc)
 
     def add_action(self):
-        dlg = ActionDialog(self.objects, self.variables, self)
+        parent = self.parent() if self.parent() else self
+        dlg = ActionDialog(self.objects, self.variables, parent,
+                           owner_index=self.owner_index)
         if dlg.exec() == QDialog.DialogCode.Accepted:
             act = dlg.get_action()
             self.actions.append(act)
@@ -915,7 +1126,12 @@ class AddEventDialog(QDialog):
             self.act_list.addItem(desc)
 
     def get_event(self):
-        return {'conditions': self.conditions, 'actions': self.actions}
+        return {
+            'name': self.name_edit.text().strip() or None,
+            'enabled': self.enabled_check.isChecked(),
+            'conditions': self.conditions,
+            'actions': self.actions,
+        }
 
     def _cond_menu(self, pos):
         menu = QMenu(self)
@@ -929,7 +1145,8 @@ class AddEventDialog(QDialog):
             action = menu.exec(self.cond_list.mapToGlobal(pos))
             row = self.cond_list.row(item)
             if action == edit_act:
-                dlg = ConditionDialog(self.objects, self.variables, self, self.conditions[row])
+                parent = self.parent() if self.parent() else self
+                dlg = ConditionDialog(self.objects, self.variables, parent, self.conditions[row])
                 if dlg.exec() == QDialog.DialogCode.Accepted:
                     self.conditions[row] = dlg.get_condition()
                     desc = describe_condition(
@@ -972,7 +1189,14 @@ class AddEventDialog(QDialog):
             action = menu.exec(self.act_list.mapToGlobal(pos))
             row = self.act_list.row(item)
             if action == edit_act:
-                dlg = ActionDialog(self.objects, self.variables, self, self.actions[row])
+                parent = self.parent() if self.parent() else self
+                dlg = ActionDialog(
+                    self.objects,
+                    self.variables,
+                    parent,
+                    self.actions[row],
+                    owner_index=self.owner_index,
+                )
                 if dlg.exec() == QDialog.DialogCode.Accepted:
                     self.actions[row] = dlg.get_action()
                     desc = describe_action(
@@ -1004,15 +1228,141 @@ class AddEventDialog(QDialog):
                 self.act_list.addItem(desc)
 
 
+class VariableDialog(QDialog):
+    """Dialog for adding or editing a variable."""
+
+    def __init__(self, parent=None, name="", value=None, public=False, editing=False):
+        super().__init__(parent)
+        title = parent.t("edit") if editing else parent.t("add_variable")
+        if editing:
+            title = f"{parent.t('edit')} {parent.t('variable')}"
+        self.setWindowTitle(title)
+        self.name_edit = QLineEdit(name)
+        self.type_box = QComboBox()
+        self.type_box.addItems(["int", "float", "string", "bool"])
+        self.value_label = QLabel(parent.t("value_label") if parent else "Value:")
+        self.value_edit = QLineEdit()
+        if parent:
+            parent.apply_engine_completer(self.value_edit)
+        self.bool_check = QCheckBox()
+        self.bool_label = QLabel(parent.t("value_label") if parent else "Value:")
+        self.public_check = QCheckBox()
+        form = QFormLayout(self)
+        form.addRow(parent.t("name_label") if parent else "Name:", self.name_edit)
+        form.addRow(parent.t("type_label") if parent else "Type:", self.type_box)
+        form.addRow(self.value_label, self.value_edit)
+        form.addRow(self.bool_label, self.bool_check)
+        form.addRow(parent.t("public"), self.public_check)
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        form.addRow(buttons)
+        self.type_box.currentTextChanged.connect(self.update_fields)
+
+        # Pre-fill when editing
+        if value is not None:
+            if isinstance(value, bool):
+                v_type = "bool"
+            elif isinstance(value, int):
+                v_type = "int"
+            elif isinstance(value, float):
+                v_type = "float"
+            else:
+                v_type = "string"
+            i = self.type_box.findText(v_type)
+            if i >= 0:
+                self.type_box.setCurrentIndex(i)
+            if v_type == "bool":
+                self.bool_check.setChecked(bool(value))
+            else:
+                self.value_edit.setText(str(value))
+        self.public_check.setChecked(public)
+        self.update_fields()
+        if parent:
+            parent.apply_no_wheel(self)
+
+    def update_fields(self):
+        if self.type_box.currentText() == "bool":
+            self.value_label.hide()
+            self.value_edit.hide()
+            self.bool_check.show()
+            self.bool_label.show()
+        else:
+            self.value_label.show()
+            self.value_edit.show()
+            self.bool_check.hide()
+            self.bool_label.hide()
+
+    def get_data(self):
+        name = self.name_edit.text().strip()
+        typ = self.type_box.currentText()
+        if typ == "bool":
+            value = self.bool_check.isChecked()
+        else:
+            text = self.value_edit.text()
+            try:
+                if typ == "int":
+                    value = int(text)
+                elif typ == "float":
+                    value = float(text)
+                else:
+                    value = text
+            except Exception:
+                value = text
+        return name, value, self.public_check.isChecked()
+
+
+class EffectDialog(QDialog):
+    """Dialog for adding or editing an object effect."""
+
+    def __init__(self, parent=None, data=None):
+        super().__init__(parent)
+        self.setWindowTitle(parent.t('add_effect') if parent else 'Add Effect')
+        layout = QFormLayout(self)
+        self.type_box = QComboBox()
+        self.type_box.addItem(parent.t('parallax') if parent else 'Parallax', 'parallax')
+        layout.addRow(parent.t('type_label') if parent else 'Type:', self.type_box)
+        self.fx_spin = QDoubleSpinBox(); self.fx_spin.setRange(-5.0, 5.0); self.fx_spin.setValue(0.1)
+        self.fy_spin = QDoubleSpinBox(); self.fy_spin.setRange(-5.0, 5.0); self.fy_spin.setValue(0.1)
+        layout.addRow(parent.t('factor_x') if parent else 'Factor X:', self.fx_spin)
+        layout.addRow(parent.t('factor_y') if parent else 'Factor Y:', self.fy_spin)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        layout.addRow(buttons)
+        if data:
+            i = self.type_box.findData(data.get('type'))
+            if i >= 0:
+                self.type_box.setCurrentIndex(i)
+            self.fx_spin.setValue(data.get('factor_x', data.get('factor', 0.1)))
+            self.fy_spin.setValue(data.get('factor_y', data.get('factor', 0.1)))
+        if parent:
+            parent.apply_no_wheel(self)
+
+    def get_data(self):
+        return {
+            'type': self.type_box.currentData(),
+            'factor_x': self.fx_spin.value(),
+            'factor_y': self.fy_spin.value(),
+        }
+
+
 class Editor(QMainWindow):
     def __init__(self, autoshow: bool = True):
         super().__init__()
+        self.setWindowIcon(app_icon())
+        self.resize(1200, 800)
         self.lang = DEFAULT_LANGUAGE
         self.window_width = 640
         self.window_height = 480
         self.keep_aspect = True
         self.background_color = (0, 0, 0)
         self.local_coords = False
+        self.snap_to_grid = False
+        self.grid_size = 1.0
+        self.grid_color = (77, 77, 77)
         self.resource_dir: str | None = None
         self.resource_manager = None
         self.scene = Scene()
@@ -1023,9 +1373,13 @@ class Editor(QMainWindow):
         self.project_description: str = ''
         self._game_window = None
         self._game_engine = None
+        # undo/redo stacks
+        self._undo_stack: list[UndoAction] = []
+        self._redo_stack: list[UndoAction] = []
         self.setWindowTitle(f'SAGE Editor ({ENGINE_VERSION})')
         self.engine_completer = QCompleter(_engine_completions(), self)
         self.engine_completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self._wheel_filter = NoWheelFilter(self)
         # set up tabs
         self.tabs = QTabWidget()
         self.tabs.tabBar().setExpanding(False)
@@ -1035,6 +1389,9 @@ class Editor(QMainWindow):
         # viewport tab renders the scene
         self.view = Viewport(self.scene, editor=self)
         self.view.renderer.background = self.background_color
+        self.view.set_snap(self.snap_to_grid)
+        self.view.set_grid_size(self.grid_size)
+        self.view.set_grid_color(self.grid_color)
         self.tabs.addTab(self.view, self.t('viewport'))
 
         # object list and transform inspector dock
@@ -1082,12 +1439,14 @@ class Editor(QMainWindow):
         form.addRow(self.t('coord_mode'), self.coord_combo)
         form.addRow(self.t('rotation'), self.angle_spin)
         obj_dock = QDockWidget(self.t('objects'), self)
+        obj_dock.setObjectName('ObjectsDock')
         obj_dock.setWidget(obj_widget)
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, obj_dock)
         self.objects_dock = obj_dock
 
         # properties dock
         prop_dock = PropertiesDock(self)
+        prop_dock.setObjectName('PropertiesDock')
         self.properties_dock = prop_dock
         self.transform_group = prop_dock.transform_group
         self.camera_group = prop_dock.camera_group
@@ -1109,13 +1468,27 @@ class Editor(QMainWindow):
         self.logic_btn = prop_dock.logic_btn
         self.var_group = prop_dock.var_group
         self.var_layout = prop_dock.var_layout
+        self.effects_group = prop_dock.effects_group
+        self.effects_list = prop_dock.effects_list
+        self.add_effect_btn = prop_dock.add_effect_btn
+        self.image_edit = prop_dock.image_edit
+        self.image_btn = prop_dock.image_btn
+        self.clear_img_btn = prop_dock.clear_img_btn
+        self.color_btn = prop_dock.color_btn
+        self.smooth_check = prop_dock.smooth_check
+        self.img_row = prop_dock.img_row
+        self.image_label = prop_dock.image_label
+        self.color_label = prop_dock.color_label
+        self.smooth_label = prop_dock.smooth_label
+        self.image_edit.setPlaceholderText(self.t('path_label'))
+        self.color_btn.setText('')
+        self.color_btn.setStyleSheet('background-color: rgb(255, 255, 255);')
+        self.color_btn.setText('')
+        self.smooth_check.setChecked(True)
 
-        self.layouts = load_layouts()
-        self._default_state = self.saveState().toBase64().data().decode()
-        self._build_layout_menu()
-        self._load_default_layout()
         # resources dock on the left
         res_dock = ResourceDock(self)
+        res_dock.setObjectName('ResourcesDock')
         self.resources_dock = res_dock
         self.import_btn = res_dock.import_btn
         self.new_folder_btn = res_dock.new_folder_btn
@@ -1134,9 +1507,15 @@ class Editor(QMainWindow):
         self.object_label = self.logic_widget.object_label
         self.add_var_btn = self.logic_widget.add_var_btn
         self.tabs.addTab(self.logic_widget, self.t('scene_logic'))
-        self.object_combo.currentIndexChanged.connect(self._update_transform_panel)
+        self.object_combo.currentIndexChanged.connect(lambda _=None: self._update_transform_panel())
         self.name_edit.editingFinished.connect(self._object_name_changed)
         self.type_combo.currentIndexChanged.connect(self._object_type_changed)
+        self.image_btn.clicked.connect(self._choose_object_image)
+        self.clear_img_btn.clicked.connect(self._clear_object_image)
+        self.image_edit.editingFinished.connect(self._image_path_edited)
+        self.color_btn.clicked.connect(self._choose_object_color)
+        self.smooth_check.stateChanged.connect(self._smooth_changed)
+        self.add_effect_btn.clicked.connect(self._add_effect)
         self.tabs.setTabsClosable(True)
         self.tabs.currentChanged.connect(self._tab_changed)
         self.tabs.tabCloseRequested.connect(self._close_tab)
@@ -1145,9 +1524,11 @@ class Editor(QMainWindow):
 
         # console dock
         cons = ConsoleDock(self)
+        cons.setObjectName('ConsoleDock')
         self.console_dock = cons
         # profiler dock
         self.profiler_dock = ProfilerDock(self)
+        self.profiler_dock.setObjectName('ProfilerDock')
         self._tmp_project = None
 
         # camera rectangle showing the visible area
@@ -1170,6 +1551,7 @@ class Editor(QMainWindow):
         self._on_coord_mode()
         self._build_layout_menu()
         self._load_default_layout()
+        self.apply_no_wheel(self)
         # load optional editor plugins
         plugins.load_plugins(self)
 
@@ -1180,10 +1562,6 @@ class Editor(QMainWindow):
     def set_language(self, lang: str):
         """Switch UI language."""
         if lang not in LANGUAGES:
-        self.editor_menu.setTitle(self.t('editor_menu'))
-        self.layout_menu.setTitle(self.t('interface_menu'))
-        self.save_layout_act.setText(self.t('save_layout'))
-        self.restore_layout_act.setText(self.t('restore_default'))
             return
         self.lang = lang
         self.lang_box.setCurrentText(lang)
@@ -1219,6 +1597,7 @@ class Editor(QMainWindow):
         self.name_edit.setPlaceholderText(self.t('name'))
         self.type_combo.setItemText(0, self.t('sprite'))
         self.type_combo.setItemText(1, self.t('camera'))
+        self.image_edit.setPlaceholderText(self.t('path_label'))
         self.cam_active.setText(self.t('primary_camera'))
         self.x_spin.setPrefix(''); self.y_spin.setPrefix(''); self.z_spin.setPrefix('')
         self.scale_x_spin.setPrefix(''); self.scale_y_spin.setPrefix(''); self.angle_spin.setPrefix('')
@@ -1236,6 +1615,8 @@ class Editor(QMainWindow):
         self.layout_menu.setTitle(self.t('interface_menu'))
         self.save_layout_act.setText(self.t('save_layout'))
         self.restore_layout_act.setText(self.t('restore_default'))
+        self.grid_act.setText(self.t('show_grid'))
+        self.axes_act.setText(self.t('show_gizmo'))
         self.coord_combo.setItemText(0, self.t('global'))
         self.coord_combo.setItemText(1, self.t('local'))
         self.link_scale.setText(self.t('link_scale'))
@@ -1246,6 +1627,12 @@ class Editor(QMainWindow):
     def apply_engine_completer(self, widget: QLineEdit):
         """Attach the engine method completer to a line edit."""
         widget.setCompleter(self.engine_completer)
+
+    def apply_no_wheel(self, widget: QWidget) -> None:
+        """Disable mouse wheel value changes for spin boxes and combos."""
+        for cls in (QSpinBox, QDoubleSpinBox, QComboBox):
+            for child in widget.findChildren(cls):
+                child.installEventFilter(self._wheel_filter)
         
     def _update_project_state(self):
         """Enable or disable project-dependent actions."""
@@ -1275,6 +1662,52 @@ class Editor(QMainWindow):
             self.dirty = True
             self._update_title()
 
+    # ------------------------------------------------------------------
+    def _capture_state(self, obj: GameObject) -> dict:
+        """Return a dictionary of transform properties for *obj*."""
+        props = {}
+        for name in (
+            'x', 'y', 'z', 'scale_x', 'scale_y', 'angle',
+            'width', 'height', 'zoom',
+        ):
+            if hasattr(obj, name):
+                props[name] = getattr(obj, name)
+        return props
+
+    def _record_undo(self, obj: GameObject, old: dict) -> None:
+        """Push an undo action if the object changed."""
+        new = self._capture_state(obj)
+        if old != new:
+            self._undo_stack.append(UndoAction(obj, old, new))
+            self._redo_stack.clear()
+            if hasattr(self, 'undo_act'):
+                self.undo_act.setEnabled(True)
+                self.redo_act.setEnabled(False)
+
+    def undo(self) -> None:
+        """Revert the last action."""
+        if not self._undo_stack:
+            return
+        action = self._undo_stack.pop()
+        action.undo()
+        self._redo_stack.append(action)
+        self._update_transform_panel(False)
+        self.view.update()
+        self.undo_act.setEnabled(bool(self._undo_stack))
+        self.redo_act.setEnabled(True)
+
+    def redo(self) -> None:
+        """Reapply the last undone action."""
+        if not self._redo_stack:
+            return
+        action = self._redo_stack.pop()
+        action.redo()
+        self._undo_stack.append(action)
+        self._update_transform_panel(False)
+        self.view.update()
+        self.undo_act.setEnabled(True)
+        self.redo_act.setEnabled(bool(self._redo_stack))
+
     def _check_project(self) -> bool:
         """Return True if a project is open; otherwise warn the user."""
         if self.project_path:
@@ -1299,18 +1732,6 @@ class Editor(QMainWindow):
             act.triggered.connect(lambda _, path=p: self.open_project(path))
         if self.recent_projects:
             self.recent_menu.addSeparator()
-        self.editor_menu = menubar.addMenu(self.t('editor_menu'))
-        self.layout_menu = self.editor_menu.addMenu(self.t('interface_menu'))
-        self.save_layout_act = QAction(self.t('save_layout'), self)
-        self.save_layout_act.triggered.connect(self.save_layout_dialog)
-        self.restore_layout_act = QAction(self.t('restore_default'), self)
-        self.restore_layout_act.triggered.connect(self.restore_default_layout)
-        self.layout_menu.addAction(self.save_layout_act)
-        self.layout_menu.addAction(self.restore_layout_act)
-        self.layout_menu.addSeparator()
-        self.layout_group = QActionGroup(self)
-        self.layout_actions = []
-
             clear_act = self.recent_menu.addAction(self.t('clear_recent'))
             clear_act.triggered.connect(self.clear_recent)
 
@@ -1350,6 +1771,18 @@ class Editor(QMainWindow):
         self.file_menu.addAction(self.save_proj_act)
         self.recent_menu = self.file_menu.addMenu(load_icon('recent.png'), self.t('recent_projects'))
 
+        self.edit_menu = menubar.addMenu(self.t('edit'))
+        self.undo_act = QAction(self.t('undo'), self)
+        self.undo_act.setShortcut('Ctrl+Z')
+        self.undo_act.setEnabled(False)
+        self.undo_act.triggered.connect(self.undo)
+        self.redo_act = QAction(self.t('redo'), self)
+        self.redo_act.setShortcut('Ctrl+Y')
+        self.redo_act.setEnabled(False)
+        self.redo_act.triggered.connect(self.redo)
+        self.edit_menu.addAction(self.undo_act)
+        self.edit_menu.addAction(self.redo_act)
+
         self.settings_menu = menubar.addMenu(self.t('settings'))
         self.project_settings_act = QAction(self.t('project_settings'), self)
         self.project_settings_act.triggered.connect(self.show_project_settings)
@@ -1357,11 +1790,6 @@ class Editor(QMainWindow):
         self.plugins_act = QAction(load_icon('plugin.png'), self.t('manage_plugins'), self)
         self.plugins_act.triggered.connect(self.show_plugin_manager)
         self.settings_menu.addAction(self.plugins_act)
-
-        self.about_menu = menubar.addMenu(self.t('about_menu'))
-        self.about_act = QAction(self.t('about_us'), self)
-        self.about_act.triggered.connect(self.show_about)
-        self.about_menu.addAction(self.about_act)
 
         self.editor_menu = menubar.addMenu(self.t('editor_menu'))
         self.layout_menu = self.editor_menu.addMenu(self.t('interface_menu'))
@@ -1375,7 +1803,37 @@ class Editor(QMainWindow):
         self.layout_group = QActionGroup(self)
         self.layout_actions = []
 
+        self.view_menu = self.editor_menu.addMenu('View')
+        self.grid_act = QAction(self.t('show_grid'), self)
+        self.grid_act.setCheckable(True)
+        self.grid_act.triggered.connect(self.toggle_grid)
+        self.view_menu.addAction(self.grid_act)
+        self.axes_act = QAction(self.t('show_gizmo'), self)
+        self.axes_act.setCheckable(True)
+        self.axes_act.setChecked(True)
+        self.axes_act.triggered.connect(self.toggle_gizmo)
+        self.view_menu.addAction(self.axes_act)
+        self.snap_act = QAction(self.t('snap_to_grid'), self)
+        self.snap_act.setCheckable(True)
+        self.snap_act.triggered.connect(self.toggle_snap)
+        self.view_menu.addAction(self.snap_act)
+        self.size_act = QAction(self.t('grid_size'), self)
+        self.size_act.triggered.connect(self.grid_size_dialog)
+        self.view_menu.addAction(self.size_act)
+        self.color_act = QAction(self.t('grid_color'), self)
+        self.color_act.triggered.connect(self.choose_grid_color)
+        self.view_menu.addAction(self.color_act)
+        self.grid_act.setChecked(self.view.show_grid)
+        self.axes_act.setChecked(self.view.show_axes)
+        self.snap_act.setChecked(self.snap_to_grid)
+
+        self.about_menu = menubar.addMenu(self.t('about_menu'))
+        self.about_act = QAction(self.t('about_us'), self)
+        self.about_act.triggered.connect(self.show_about)
+        self.about_menu.addAction(self.about_act)
+
         toolbar = self.addToolBar('main')
+        toolbar.setObjectName('MainToolbar')
         from PyQt6.QtWidgets import QWidget, QSizePolicy
         left_spacer = QWidget()
         left_spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
@@ -1383,6 +1841,24 @@ class Editor(QMainWindow):
         self.run_act = QAction(load_icon('start.png'), self.t('run'), self)
         self.run_act.triggered.connect(self.run_project)
         toolbar.addAction(self.run_act)
+        self.grid_btn = QToolButton()
+        self.grid_btn.setCheckable(True)
+        self.grid_btn.setText(self.t('show_grid'))
+        self.grid_btn.setChecked(self.view.show_grid)
+        self.grid_btn.toggled.connect(self.toggle_grid)
+        toolbar.addWidget(self.grid_btn)
+        self.axes_btn = QToolButton()
+        self.axes_btn.setCheckable(True)
+        self.axes_btn.setText(self.t('show_gizmo'))
+        self.axes_btn.setChecked(self.view.show_axes)
+        self.axes_btn.toggled.connect(self.toggle_gizmo)
+        toolbar.addWidget(self.axes_btn)
+        self.snap_btn = QToolButton()
+        self.snap_btn.setCheckable(True)
+        self.snap_btn.setText(self.t('snap_to_grid'))
+        self.snap_btn.setChecked(self.snap_to_grid)
+        self.snap_btn.toggled.connect(self.toggle_snap)
+        toolbar.addWidget(self.snap_btn)
         self.coord_mode_btn = QToolButton()
         self.coord_mode_btn.setCheckable(True)
         self.coord_mode_btn.setIcon(load_icon('world.png'))
@@ -1431,6 +1907,8 @@ class Editor(QMainWindow):
                 buttons.accepted.connect(self.accept)
                 buttons.rejected.connect(self.reject)
                 form.addRow(buttons)
+                if parent:
+                    parent.apply_no_wheel(self)
 
             def browse(self):
                 path = QFileDialog.getExistingDirectory(self, self.parent.t('project_path'), '')
@@ -1522,14 +2000,27 @@ class Editor(QMainWindow):
             self.keep_aspect = getattr(proj, 'keep_aspect', True)
             self.background_color = getattr(proj, 'background', (0, 0, 0))
             self.view.renderer.background = self.background_color
-            self.scene_path = os.path.join(os.path.dirname(path), proj.scene_file)
-            self.load_scene(Scene.from_dict(proj.scene))
-            self._update_camera_rect()
             self.resource_dir = os.path.join(os.path.dirname(path), proj.resources)
             from engine import set_resource_root, ResourceManager
             set_resource_root(self.resource_dir)
             self.resource_manager = ResourceManager(self.resource_dir)
             _log(f'Resource manager ready at {self.resource_dir}')
+            self.scene_path = os.path.join(os.path.dirname(path), proj.scene_file)
+            self.load_scene(Scene.from_dict(proj.scene))
+            self._update_camera_rect()
+            state = self.project_metadata.get('editor_state', {})
+            if state:
+                self.view.camera.x = state.get('cam_x', self.view.camera.x)
+                self.view.camera.y = state.get('cam_y', self.view.camera.y)
+                self.view.camera.zoom = state.get('cam_zoom', self.view.camera.zoom)
+                sel_name = state.get('selected')
+                if sel_name:
+                    for i, (_, o) in enumerate(self.items):
+                        if o.name == sel_name:
+                            self.object_combo.setCurrentIndex(i)
+                            self.object_list.setCurrentRow(i)
+                            self.view.set_selected(o)
+                            break
             if self.resource_model is not None:
                 self.resource_model.setRootPath(self.resource_dir)
                 if self.proxy_model is not None:
@@ -1568,6 +2059,12 @@ class Editor(QMainWindow):
             obj.angle = item.rotation()
         if self.scene_path:
             os.makedirs(os.path.dirname(self.scene_path), exist_ok=True)
+        self.project_metadata['editor_state'] = {
+            'cam_x': self.view.camera.x,
+            'cam_y': self.view.camera.y,
+            'cam_zoom': self.view.camera.zoom,
+            'selected': self.view.selected_obj.name if self.view.selected_obj else None,
+        }
         try:
             Project(
                 self.scene.to_dict(),
@@ -1606,16 +2103,17 @@ class Editor(QMainWindow):
     def show_project_settings(self):
         if not self._check_project():
             return
+
         class ProjectSettingsDialog(QDialog):
             """Dialog with side tabs using the Fusion style."""
-            def __init__(self, parent: 'Editor'):
+
+            def __init__(self, parent: "Editor"):
                 super().__init__(parent)
                 self.parent = parent
                 self.setWindowTitle(parent.t('project_settings'))
                 self.setFixedSize(480, 360)
                 self.setStyle(QStyleFactory.create('Fusion'))
 
-                # left list acting as tabs
                 self.list = QListWidget()
                 self.list.setFixedWidth(110)
                 self.list.addItem(parent.t('info_tab'))
@@ -1623,7 +2121,6 @@ class Editor(QMainWindow):
 
                 self.stack = QStackedWidget()
 
-                # Info page
                 gen_widget = QWidget()
                 gen_form = QFormLayout()
                 gen_form.setLabelAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
@@ -1641,18 +2138,16 @@ class Editor(QMainWindow):
                 gen_page.setWidget(gen_widget)
                 self.stack.addWidget(gen_page)
 
-                # Window page
                 win_widget = QWidget()
                 win_form = QFormLayout()
                 win_form.setLabelAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
                 win_form.setFormAlignment(Qt.AlignmentFlag.AlignTop)
                 self.w_spin = QSpinBox(); self.w_spin.setRange(100, 4096); self.w_spin.setValue(parent.window_width)
                 self.h_spin = QSpinBox(); self.h_spin.setRange(100, 4096); self.h_spin.setValue(parent.window_height)
-                self.aspect_check = QCheckBox()
-                self.aspect_check.setChecked(parent.keep_aspect)
+                self.aspect_check = QCheckBox(); self.aspect_check.setChecked(parent.keep_aspect)
                 self.bg_btn = QPushButton()
                 self.bg_btn.setStyleSheet(
-                    f"background: rgb({parent.background_color[0]}, {parent.background_color[1]}, {parent.background_color[2]});"
+                    f"background-color: rgb({parent.background_color[0]}, {parent.background_color[1]}, {parent.background_color[2]});"
                 )
                 self.bg_btn.clicked.connect(self._choose_bg)
                 win_form.addRow(parent.t('width'), self.w_spin)
@@ -1668,7 +2163,9 @@ class Editor(QMainWindow):
                 self.list.currentRowChanged.connect(self.stack.setCurrentIndex)
                 self.list.setCurrentRow(0)
 
-                buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+                buttons = QDialogButtonBox(
+                    QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+                )
                 buttons.accepted.connect(self.accept)
                 buttons.rejected.connect(self.reject)
 
@@ -1678,71 +2175,17 @@ class Editor(QMainWindow):
                 bottom = QHBoxLayout()
                 bottom.addStretch(1)
                 bottom.addWidget(buttons)
-    def save_layout_dialog(self):
-        name, ok = QInputDialog.getText(self, self.t('save_layout'), self.t('layout_name'))
-        if not ok or not name:
-            return
-        self._save_layout(name)
-
-    def _save_layout(self, name: str):
-        state = self.saveState().toBase64().data().decode()
-        tabs = [tab.object_combo.itemText(0) for tab in self.object_tabs.values()]
-        self.layouts['layouts'][name] = {'state': state, 'tabs': tabs}
-        self.layouts['default'] = name
-        save_layouts(self.layouts)
-        self._build_layout_menu()
-
-    def set_startup_layout(self, name: str):
-        if name not in self.layouts.get('layouts', {}):
-            return
-        self.layouts['default'] = name
-        save_layouts(self.layouts)
-        self.apply_layout(name)
-        self._build_layout_menu()
-
-    def apply_layout(self, name: str):
-        data = self.layouts.get('layouts', {}).get(name)
-        if not data:
-            return
-        from PyQt6.QtCore import QByteArray
-        self.restoreState(QByteArray.fromBase64(data.get('state', '').encode()))
-        for obj_name in data.get('tabs', []):
-            idx = next((i for i, (_, o) in enumerate(self.items) if o.name == obj_name), -1)
-            if idx >= 0:
-                self.open_object_logic(idx)
-
-    def restore_default_layout(self):
-        from PyQt6.QtCore import QByteArray
-        self.restoreState(QByteArray.fromBase64(self._default_state.encode()))
-        self._build_layout_menu()
-
-    def _build_layout_menu(self):
-        for act in getattr(self, 'layout_actions', []):
-            self.layout_menu.removeAction(act)
-        self.layout_actions = []
-        for name in self.layouts.get('layouts', {}):
-            act = QAction(name, self, checkable=True)
-            act.triggered.connect(lambda checked, n=name: self.set_startup_layout(n))
-            if name == self.layouts.get('default'):
-                act.setChecked(True)
-            self.layout_group.addAction(act)
-            self.layout_menu.addAction(act)
-            self.layout_actions.append(act)
-
-    def _load_default_layout(self):
-        name = self.layouts.get('default')
-        if name:
-            self.apply_layout(name)
 
                 outer = QVBoxLayout(self)
                 outer.addLayout(layout)
                 outer.addLayout(bottom)
+                parent.apply_no_wheel(self)
 
             def _choose_bg(self):
                 color = QColorDialog.getColor(QColor(*self.parent.background_color), self)
                 if color.isValid():
                     self.bg_btn.setStyleSheet(
-                        f"background: rgb({color.red()}, {color.green()}, {color.blue()});"
+                        f"background-color: rgb({color.red()}, {color.green()}, {color.blue()});"
                     )
                     self._bg = (color.red(), color.green(), color.blue())
                 else:
@@ -1858,7 +2301,11 @@ class Editor(QMainWindow):
         QMessageBox.information(
             self,
             self.t('about_us'),
-            f'SAGE Engine {ENGINE_VERSION}'
+            (
+                f"SAGE Engine {ENGINE_VERSION}\n"
+                "Developed by AGStudios\n"
+                "https://github.com/AGStudios"
+            ),
         )
 
     def run_project(self):
@@ -1908,9 +2355,7 @@ class Editor(QMainWindow):
     def add_sprite(self):
         if not self._check_project():
             return
-        path, _ = QFileDialog.getOpenFileName(
-            self, self.t('add_sprite'), '', self.t('image_files')
-        )
+        path = self._resource_file_dialog(self.t('add_sprite'), self.t('image_files'))
         if not path:
             return
         try:
@@ -1999,72 +2444,20 @@ class Editor(QMainWindow):
         if not isinstance(self.tabs.currentWidget(), ObjectLogicTab):
             QMessageBox.warning(self, self.t('error'), self.t('object_var_only'))
             return
-        class VariableDialog(QDialog):
-            def __init__(self, parent=None):
-                super().__init__(parent)
-                self.setWindowTitle(parent.t('add_variable'))
-                self.name_edit = QLineEdit()
-                self.type_box = QComboBox()
-                self.type_box.addItems(['int', 'float', 'string', 'bool'])
-                self.value_label = QLabel(parent.t('value_label') if parent else 'Value:')
-                self.value_edit = QLineEdit()
-                if parent:
-                    parent.apply_engine_completer(self.value_edit)
-                self.bool_check = QCheckBox()
-                self.bool_label = QLabel(parent.t('value_label') if parent else 'Value:')
-                self.public_check = QCheckBox()
-                form = QFormLayout(self)
-                form.addRow(parent.t('name_label') if parent else 'Name:', self.name_edit)
-                form.addRow(parent.t('type_label') if parent else 'Type:', self.type_box)
-                form.addRow(self.value_label, self.value_edit)
-                form.addRow(self.bool_label, self.bool_check)
-                form.addRow(parent.t('public'), self.public_check)
-                buttons = QDialogButtonBox(
-                    QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
-                )
-                buttons.accepted.connect(self.accept)
-                buttons.rejected.connect(self.reject)
-                form.addRow(buttons)
-                self.type_box.currentTextChanged.connect(self.update_fields)
-                self.update_fields()
-
-            def update_fields(self):
-                if self.type_box.currentText() == 'bool':
-                    self.value_label.hide()
-                    self.value_edit.hide()
-                    self.bool_check.show()
-                    self.bool_label.show()
-                else:
-                    self.value_label.show()
-                    self.value_edit.show()
-                    self.bool_check.hide()
-                    self.bool_label.hide()
-
         dlg = VariableDialog(self)
         if dlg.exec() != QDialog.DialogCode.Accepted:
             return
         try:
-            name = dlg.name_edit.text().strip()
+            name, value, public = dlg.get_data()
             if not name:
                 raise ValueError('name required')
-            typ = dlg.type_box.currentText()
-            if typ == 'bool':
-                value = dlg.bool_check.isChecked()
-            else:
-                text = dlg.value_edit.text()
-                if typ == 'int':
-                    value = int(text)
-                elif typ == 'float':
-                    value = float(text)
-                else:
-                    value = text
             tab = self.tabs.currentWidget()
             if isinstance(tab, ObjectLogicTab):
                 idx = tab.object_combo.itemData(0)
                 if idx is not None and 0 <= idx < len(self.items):
                     obj = self.items[idx][1]
                     obj.variables[name] = value
-                    if dlg.public_check.isChecked():
+                    if public:
                         obj.public_vars.add(name)
             else:
                 self.scene.variables[name] = value
@@ -2073,6 +2466,65 @@ class Editor(QMainWindow):
             self._mark_dirty()
         except Exception as exc:
             QMessageBox.warning(self, 'Error', f'Failed to add variable: {exc}')
+
+    def _variable_dicts(self):
+        """Return the variable dictionary and public set for the current tab."""
+        tab = self.tabs.currentWidget()
+        if isinstance(tab, ObjectLogicTab):
+            idx = tab.object_combo.itemData(0)
+            if idx is not None and 0 <= idx < len(self.items):
+                obj = self.items[idx][1]
+                return obj.variables, getattr(obj, "public_vars", set())
+        return self.scene.variables, set()
+
+    def _event_holder(self):
+        """Return the object or scene whose events are being edited."""
+        tab = self.tabs.currentWidget()
+        if isinstance(tab, ObjectLogicTab):
+            idx = tab.object_combo.itemData(0)
+            if idx is not None and 0 <= idx < len(self.items):
+                return self.items[idx][1]
+            return None
+        return self.scene
+
+    def _edit_variable(self, row: int) -> None:
+        vars_dict, pub = self._variable_dicts()
+        if row < 0 or row >= len(vars_dict):
+            return
+        name_item = self.var_table.item(row, 0)
+        if name_item is None:
+            return
+        name = name_item.text()
+        value = vars_dict.get(name)
+        dlg = VariableDialog(self, name=name, value=value, public=name in pub, editing=True)
+        if dlg.exec() != QDialog.DialogCode.Accepted:
+            return
+        new_name, new_value, new_public = dlg.get_data()
+        if not new_name:
+            return
+        if new_name != name:
+            vars_dict.pop(name, None)
+            pub.discard(name)
+        vars_dict[new_name] = new_value
+        if new_public:
+            pub.add(new_name)
+        else:
+            pub.discard(new_name)
+        self.refresh_variables()
+        self._update_variable_panel()
+        self._mark_dirty()
+
+    def _delete_variable(self, row: int) -> None:
+        vars_dict, pub = self._variable_dicts()
+        item = self.var_table.item(row, 0)
+        if item is None:
+            return
+        name = item.text()
+        vars_dict.pop(name, None)
+        pub.discard(name)
+        self.refresh_variables()
+        self._update_variable_panel()
+        self._mark_dirty()
 
     def refresh_variables(self):
         self.var_table.setRowCount(0)
@@ -2239,16 +2691,52 @@ class Editor(QMainWindow):
         self._refresh_object_labels()
 
     def toggle_grid(self, checked: bool):
-        pass
+        if hasattr(self, 'grid_act'):
+            self.grid_act.blockSignals(True)
+            self.grid_act.setChecked(checked)
+            self.grid_act.blockSignals(False)
+        if hasattr(self, 'grid_btn'):
+            self.grid_btn.blockSignals(True)
+            self.grid_btn.setChecked(checked)
+            self.grid_btn.blockSignals(False)
+        if hasattr(self, 'view'):
+            self.view.set_show_grid(checked)
 
     def toggle_gizmo(self, checked: bool):
-        pass
+        if hasattr(self, 'axes_act'):
+            self.axes_act.blockSignals(True)
+            self.axes_act.setChecked(checked)
+            self.axes_act.blockSignals(False)
+        if hasattr(self, 'axes_btn'):
+            self.axes_btn.blockSignals(True)
+            self.axes_btn.setChecked(checked)
+            self.axes_btn.blockSignals(False)
+        if hasattr(self, 'view'):
+            self.view.set_show_axes(checked)
 
     def toggle_snap(self, checked: bool):
-        pass
+        self.snap_to_grid = bool(checked)
+        if hasattr(self, 'snap_act'):
+            self.snap_act.blockSignals(True)
+            self.snap_act.setChecked(checked)
+            self.snap_act.blockSignals(False)
+        if hasattr(self, 'snap_btn'):
+            self.snap_btn.blockSignals(True)
+            self.snap_btn.setChecked(checked)
+            self.snap_btn.blockSignals(False)
+        if hasattr(self, 'view'):
+            self.view.set_snap(self.snap_to_grid)
 
     def set_grid_size(self, size: int):
-        pass
+        try:
+            size = float(size)
+        except Exception:
+            return
+        if size <= 0:
+            return
+        self.grid_size = size
+        if hasattr(self, 'view'):
+            self.view.set_grid_size(size)
 
     def _on_coord_mode(self):
         self.local_coords = self.coord_combo.currentIndex() == 1
@@ -2269,7 +2757,21 @@ class Editor(QMainWindow):
             self.view.set_coord_mode(self.local_coords)
 
     def choose_grid_color(self):
-        pass
+        current = self.grid_color
+        color = QColorDialog.getColor(QColor(*current), self)
+        if not color.isValid():
+            return
+        self.grid_color = (color.red(), color.green(), color.blue())
+        if hasattr(self, 'view'):
+            self.view.set_grid_color(self.grid_color)
+
+    def grid_size_dialog(self) -> None:
+        """Prompt the user for a new grid size."""
+        size, ok = QInputDialog.getDouble(
+            self, self.t('grid_size'), self.t('grid_size'), self.grid_size, 0.1, 1000.0, 2
+        )
+        if ok:
+            self.set_grid_size(size)
 
     def _clear_transform_panel(self):
         """Hide property groups and reset their values."""
@@ -2279,6 +2781,19 @@ class Editor(QMainWindow):
         self.transform_group.setEnabled(False)
         if hasattr(self, 'camera_group'):
             self.camera_group.setVisible(False)
+        # hide sprite-specific fields
+        if hasattr(self, 'img_row'):
+            self.img_row.setVisible(False)
+        if hasattr(self, 'image_label'):
+            self.image_label.setVisible(False)
+        if hasattr(self, 'color_label'):
+            self.color_label.setVisible(False)
+        if hasattr(self, 'color_btn'):
+            self.color_btn.setVisible(False)
+        if hasattr(self, 'smooth_label'):
+            self.smooth_label.setVisible(False)
+        if hasattr(self, 'smooth_check'):
+            self.smooth_check.setVisible(False)
         # clear values so stale data never shows
         for spin in (
             self.x_spin, self.y_spin, self.z_spin,
@@ -2298,12 +2813,39 @@ class Editor(QMainWindow):
         self.type_combo.blockSignals(True)
         self.type_combo.setCurrentIndex(-1)
         self.type_combo.blockSignals(False)
+        self.image_edit.blockSignals(True)
+        self.image_edit.clear()
+        self.image_edit.blockSignals(False)
+        self.image_edit.setEnabled(False)
+        self.image_btn.setEnabled(False)
+        self.clear_img_btn.setEnabled(False)
+        self.color_btn.setEnabled(False)
+        self.color_btn.setStyleSheet('')
+        self.smooth_check.blockSignals(True)
+        self.smooth_check.setChecked(False)
+        self.smooth_check.setEnabled(False)
+        self.smooth_check.blockSignals(False)
         if hasattr(self, 'var_group'):
             self.var_group.setVisible(False)
             while self.var_layout.rowCount():
                 self.var_layout.removeRow(0)
+        if hasattr(self, 'effects_group'):
+            self.effects_group.setVisible(False)
+            while self.effects_list.count():
+                item = self.effects_list.takeAt(0)
+                if item.widget():
+                    item.widget().deleteLater()
 
-    def _update_transform_panel(self):
+    def _update_transform_panel(self, update_vars: bool = True):
+        """Refresh the transform inputs for the selected object.
+
+        Parameters
+        ----------
+        update_vars: bool, optional
+            If True (default), also rebuild the public variables section.
+            Dragging objects with the gizmo passes ``False`` to avoid
+            expensive UI rebuilds that caused the dock to jitter.
+        """
         idx = self.object_combo.currentIndex()
         if idx < 0 or idx >= len(self.items):
             self._clear_transform_panel()
@@ -2324,6 +2866,23 @@ class Editor(QMainWindow):
             self.type_combo.setCurrentIndex(i)
             self.type_combo.blockSignals(False)
         self.transform_group.setEnabled(True)
+        if isinstance(obj, Camera):
+            self.img_row.setVisible(False)
+            self.image_label.setVisible(False)
+            self.image_edit.blockSignals(True); self.image_edit.clear(); self.image_edit.blockSignals(False)
+            self.image_edit.setEnabled(False)
+            self.image_btn.setEnabled(False)
+            self.clear_img_btn.setEnabled(False)
+            self.color_label.setVisible(False)
+            self.color_btn.setVisible(False)
+            self.color_btn.setEnabled(False)
+            self.color_btn.setStyleSheet('')
+            self.smooth_label.setVisible(False)
+            self.smooth_check.setVisible(False)
+            self.smooth_check.setEnabled(False)
+            self.smooth_check.blockSignals(True)
+            self.smooth_check.setChecked(False)
+            self.smooth_check.blockSignals(False)
         self.x_spin.blockSignals(True); self.x_spin.setValue(obj.x); self.x_spin.blockSignals(False)
         self.y_spin.blockSignals(True); self.y_spin.setValue(obj.y); self.y_spin.blockSignals(False)
         self.z_spin.blockSignals(True); self.z_spin.setValue(getattr(obj, 'z', 0)); self.z_spin.blockSignals(False)
@@ -2347,14 +2906,34 @@ class Editor(QMainWindow):
             self.scale_y_spin.blockSignals(True); self.scale_y_spin.setValue(obj.scale_y); self.scale_y_spin.blockSignals(False)
             self.link_scale.blockSignals(True); self.link_scale.setChecked(obj.scale_x == obj.scale_y); self.link_scale.blockSignals(False)
             self.angle_spin.blockSignals(True); self.angle_spin.setValue(obj.angle); self.angle_spin.blockSignals(False)
+            self.img_row.setVisible(True)
+            self.image_label.setVisible(True)
+            self.image_edit.blockSignals(True); self.image_edit.setText(obj.image_path); self.image_edit.blockSignals(False)
+            self.image_edit.setEnabled(True)
+            self.image_btn.setEnabled(True)
+            self.clear_img_btn.setEnabled(True)
+            c = obj.color or (255, 255, 255)
+            self.color_label.setVisible(True)
+            self.color_btn.setVisible(True)
+            self.color_btn.setEnabled(True)
+            self.color_btn.setStyleSheet(f"background-color: rgb({c[0]}, {c[1]}, {c[2]});")
+            self.smooth_label.setVisible(True)
+            self.smooth_check.setVisible(True)
+            self.smooth_check.setEnabled(True)
+            self.smooth_check.blockSignals(True)
+            self.smooth_check.setChecked(getattr(obj, 'smooth', True))
+            self.smooth_check.blockSignals(False)
 
-        self._update_variable_panel()
+        if update_vars:
+            self._update_variable_panel()
+        self._update_effect_panel()
 
     def _apply_transform(self):
         idx = self.object_combo.currentIndex()
         if idx < 0 or idx >= len(self.items):
             return
         item, obj = self.items[idx]
+        prev = self._capture_state(obj)
         obj.x = self.x_spin.value(); obj.y = self.y_spin.value(); obj.z = self.z_spin.value()
         if isinstance(obj, Camera):
             obj.width = self.cam_w_spin.value()
@@ -2374,6 +2953,7 @@ class Editor(QMainWindow):
                 item.apply_object_transform()
         self._mark_dirty()
         self._update_gizmo()
+        self._record_undo(obj, prev)
 
     def _update_variable_panel(self):
         if not hasattr(self, 'var_group'):
@@ -2447,6 +3027,57 @@ class Editor(QMainWindow):
         self.refresh_variables()
         self._mark_dirty()
 
+    def _update_effect_panel(self):
+        if not hasattr(self, 'effects_group'):
+            return
+        while self.effects_list.count():
+            item = self.effects_list.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+        idx = self.object_combo.currentIndex()
+        if idx < 0 or idx >= len(self.items):
+            self.effects_group.setVisible(False)
+            return
+        obj = self.items[idx][1]
+        effects = getattr(obj, 'effects', [])
+        if not effects:
+            self.effects_group.setVisible(False)
+            return
+        self.effects_group.setVisible(True)
+        for i, eff in enumerate(effects):
+            row = QWidget()
+            lay = QHBoxLayout(row)
+            lay.setContentsMargins(0, 0, 0, 0)
+            lbl = QLabel(self.t(eff.get('type')))
+            btn = QPushButton()
+            btn.setIcon(load_icon('delete.png'))
+            btn.clicked.connect(lambda _=None, r=i: self._remove_effect(r))
+            lay.addWidget(lbl)
+            lay.addStretch(1)
+            lay.addWidget(btn)
+            self.effects_list.addWidget(row)
+
+    def _add_effect(self):
+        idx = self.object_combo.currentIndex()
+        if idx < 0 or idx >= len(self.items):
+            return
+        obj = self.items[idx][1]
+        dlg = EffectDialog(self)
+        if dlg.exec() == QDialog.DialogCode.Accepted:
+            obj.effects.append(dlg.get_data())
+            self._update_effect_panel()
+            self._mark_dirty()
+
+    def _remove_effect(self, index: int):
+        idx = self.object_combo.currentIndex()
+        if idx < 0 or idx >= len(self.items):
+            return
+        obj = self.items[idx][1]
+        if 0 <= index < len(obj.effects):
+            obj.effects.pop(index)
+            self._update_effect_panel()
+            self._mark_dirty()
+
     def _object_name_changed(self):
         idx = self.object_combo.currentIndex()
         if idx < 0 or idx >= len(self.items):
@@ -2496,6 +3127,97 @@ class Editor(QMainWindow):
             return
         self._refresh_object_labels()
         self._update_transform_panel()
+        self._update_gizmo()
+        self._mark_dirty()
+
+    def _choose_object_image(self) -> None:
+        """Select a sprite image for the current object."""
+        idx = self.object_combo.currentIndex()
+        if idx < 0 or idx >= len(self.items):
+            return
+        if not self._check_project():
+            return
+        path = self._resource_file_dialog(self.t('select_file'), self.t('image_files'))
+        if not path:
+            return
+        try:
+            abs_path, rel_path = self._copy_to_resources(path)
+            obj = self.items[idx][1]
+            obj.image_path = rel_path
+            obj._load_image()
+            self.image_edit.setText(rel_path)
+            if hasattr(self, 'view'):
+                self.view.update()
+            self._mark_dirty()
+        except Exception as exc:
+            QMessageBox.warning(self, self.t('error'), str(exc))
+
+    def _clear_object_image(self) -> None:
+        """Remove the sprite image from the current object."""
+        idx = self.object_combo.currentIndex()
+        if idx < 0 or idx >= len(self.items):
+            return
+        obj = self.items[idx][1]
+        obj.image_path = ''
+        obj._load_image()
+        self.image_edit.clear()
+        if hasattr(self, 'view'):
+            self.view.update()
+        self._mark_dirty()
+
+    def _image_path_edited(self) -> None:
+        """Update the image path when the line edit changes."""
+        idx = self.object_combo.currentIndex()
+        if idx < 0 or idx >= len(self.items):
+            return
+        obj = self.items[idx][1]
+        path = self.image_edit.text().strip()
+        if path == obj.image_path:
+            return
+        obj.image_path = path
+        try:
+            obj._load_image()
+            if hasattr(self, 'view'):
+                self.view.update()
+            self._mark_dirty()
+        except Exception as exc:
+            QMessageBox.warning(self, self.t('error'), str(exc))
+
+    def _choose_object_color(self) -> None:
+        """Pick a tint color for the current object."""
+        idx = self.object_combo.currentIndex()
+        if idx < 0 or idx >= len(self.items):
+            return
+        obj = self.items[idx][1]
+        current = obj.color or (255, 255, 255, 255)
+        color = QColorDialog.getColor(QColor(*current), self)
+        if not color.isValid():
+            return
+        obj.color = (color.red(), color.green(), color.blue(), color.alpha())
+        if not obj.image_path:
+            obj._load_image()
+        self.color_btn.setStyleSheet(
+            f"background-color: rgb({color.red()}, {color.green()}, {color.blue()});"
+        )
+        if hasattr(self, 'view'):
+            self.view.update()
+        self._mark_dirty()
+
+    def _smooth_changed(self) -> None:
+        """Toggle texture filtering for the current object."""
+        idx = self.object_combo.currentIndex()
+        if idx < 0 or idx >= len(self.items):
+            return
+        obj = self.items[idx][1]
+        if not hasattr(obj, 'smooth'):
+            return
+        obj.smooth = self.smooth_check.isChecked()
+        if hasattr(self.view, 'renderer'):
+            key1 = (id(obj.image), True)
+            key2 = (id(obj.image), False)
+            self.view.renderer.textures.pop(key1, None)
+            self.view.renderer.textures.pop(key2, None)
+            self.view.update()
         self._mark_dirty()
 
     def _object_menu(self, pos):
@@ -2564,40 +3286,73 @@ class Editor(QMainWindow):
 
     def _event_menu(self, pos):
         """Show context actions for the event list."""
-        idx = self.object_combo.currentData()
-        if idx is None or idx < 0 or idx >= len(self.items):
+        holder = self._event_holder()
+        if holder is None or not hasattr(holder, 'events'):
             return
-        obj = self.items[idx][1]
-        events = getattr(obj, 'events', [])
+        events = holder.events
         item = self.event_list.itemAt(pos)
         menu = QMenu(self)
         paste_act = menu.addAction(load_icon('paste.png'), self.t('paste')) if self._clip_event else None
         if item and self.event_list.row(item) < len(events):
             row = self.event_list.row(item)
+            edit_act = menu.addAction(self.t('edit'))
+            dup_act = menu.addAction(self.t('duplicate'))
             cut_act = menu.addAction(load_icon('cut.png'), self.t('cut'))
             copy_act = menu.addAction(load_icon('copy.png'), self.t('copy'))
             del_act = menu.addAction(load_icon('delete.png'), self.t('delete'))
             action = menu.exec(self.event_list.viewport().mapToGlobal(pos))
-            if action == paste_act and self._clip_event:
+            if action == edit_act:
+                holder = self._event_holder()
+                dlg = AddEventDialog(
+                    [o for _, o in self.items],
+                    self.scene.variables,
+                    self,
+                    events[row],
+                    owner=holder if holder is not self.scene else None,
+                )
+                if dlg.exec() == QDialog.DialogCode.Accepted:
+                    events[row] = dlg.get_event()
+                    self._mark_dirty()
+            elif action == dup_act:
+                events.insert(row + 1, copy.deepcopy(events[row]))
+                self._mark_dirty()
+            elif action == paste_act and self._clip_event:
                 events.insert(row + 1, copy.deepcopy(self._clip_event))
                 self._mark_dirty()
             elif action == cut_act or action == copy_act:
                 self._clip_event = copy.deepcopy(events[row])
                 if action == cut_act:
-                    events.pop(row)
-                    self._mark_dirty()
+                    self._delete_event(row)
             elif action == del_act:
-                events.pop(row)
-                self._mark_dirty()
+                self._delete_event(row)
         else:
             add_act = menu.addAction(load_icon('add.png'), self.t('add_event'))
             action = menu.exec(self.event_list.viewport().mapToGlobal(pos))
             if action == add_act:
-                self.add_condition(len(events))
+                self.add_event()
             elif action == paste_act and self._clip_event:
                 events.append(copy.deepcopy(self._clip_event))
                 self._mark_dirty()
         self.refresh_events()
+
+    def _variable_menu(self, pos):
+        """Show context actions for the variables table."""
+        item = self.var_table.itemAt(pos)
+        menu = QMenu(self)
+        if item:
+            edit_act = menu.addAction(self.t('edit'))
+            del_act = menu.addAction(load_icon('delete.png'), self.t('delete'))
+            action = menu.exec(self.var_table.viewport().mapToGlobal(pos))
+            row = self.var_table.row(item)
+            if action == edit_act:
+                self._edit_variable(row)
+            elif action == del_act:
+                self._delete_variable(row)
+        else:
+            add_act = menu.addAction(load_icon('add.png'), self.t('add_variable'))
+            action = menu.exec(self.var_table.viewport().mapToGlobal(pos))
+            if action == add_act:
+                self.add_variable()
 
     def _new_folder(self, base: str | None = None) -> None:
         """Create a subfolder inside the resources directory."""
@@ -3097,26 +3852,56 @@ class Editor(QMainWindow):
                 self.tabs.removeTab(idx_tab)
             tab.deleteLater()
 
+    def _delete_event(self, index: int) -> None:
+        """Remove an event from the current object or scene."""
+        holder = self._event_holder()
+        if holder is None:
+            return
+        events = getattr(holder, 'events', [])
+        if index < 0 or index >= len(events):
+            return
+        events.pop(index)
+        self._mark_dirty()
+        self.refresh_events()
+
+    def add_event(self) -> None:
+        """Create a new event using the full event editor."""
+        if not self._check_project():
+            return
+        holder = self._event_holder()
+        if holder is None or not hasattr(holder, 'events'):
+            self.console_dock.write('Object has no events list')
+            return
+        owner = holder if holder is not self.scene else None
+        dlg = AddEventDialog(
+            [o for _, o in self.items],
+            self.scene.variables,
+            self,
+            owner=owner,
+        )
+        if dlg.exec() == QDialog.DialogCode.Accepted:
+            holder.events.append(dlg.get_event())
+            self._mark_dirty()
+        self.refresh_events()
+
     def add_condition(self, row):
         if not self._check_project():
             return
         try:
-            idx = self.object_combo.currentData()
-            if idx is None or idx < 0 or idx >= len(self.items):
-                return
-            obj = self.items[idx][1]
-            if not hasattr(obj, 'events'):
+            holder = self._event_holder()
+            if holder is None or not hasattr(holder, 'events'):
                 self.console_dock.write('Object has no events list')
                 return
+            events = holder.events
             if row < 0:
                 return
-            creating_new = row >= len(obj.events)
-            evt = {'conditions': [], 'actions': []} if creating_new else obj.events[row]
+            creating_new = row >= len(events)
+            evt = {'conditions': [], 'actions': []} if creating_new else events[row]
             dlg = ConditionDialog([o for _, o in self.items], self.scene.variables, self)
             if dlg.exec() == QDialog.DialogCode.Accepted:
                 evt['conditions'].append(dlg.get_condition())
                 if creating_new:
-                    obj.events.append(evt)
+                    events.append(evt)
                 self._mark_dirty()
             self.refresh_events()
         except Exception as exc:
@@ -3126,17 +3911,26 @@ class Editor(QMainWindow):
         if not self._check_project():
             return
         try:
-            idx = self.object_combo.currentData()
-            if idx is None or idx < 0 or idx >= len(self.items):
-                return
-            obj = self.items[idx][1]
-            if not hasattr(obj, 'events'):
+            holder = self._event_holder()
+            if holder is None or not hasattr(holder, 'events'):
                 self.console_dock.write('Object has no events list')
                 return
-            if row < 0 or row >= len(obj.events):
+            events = holder.events
+            if row < 0 or row >= len(events):
                 return
-            evt = obj.events[row]
-            dlg = ActionDialog([o for _, o in self.items], self.scene.variables, self)
+            evt = events[row]
+            owner_idx = None
+            if holder is not self.scene:
+                for i, (_, obj) in enumerate(self.items):
+                    if obj is holder:
+                        owner_idx = i
+                        break
+            dlg = ActionDialog(
+                [o for _, o in self.items],
+                self.scene.variables,
+                self,
+                owner_index=owner_idx,
+            )
             if dlg.exec() == QDialog.DialogCode.Accepted:
                 evt['actions'].append(dlg.get_action())
                 self._mark_dirty()
@@ -3146,17 +3940,10 @@ class Editor(QMainWindow):
 
     def refresh_events(self):
         self.event_list.setRowCount(0)
-        tab = self.tabs.currentWidget()
-        if tab is self.logic_widget:
-            events = getattr(self.scene, 'events', [])
-        else:
-            idx = self.object_combo.currentData()
-            if idx is None and self.items:
-                idx = 0
-            if idx is None or idx < 0 or idx >= len(self.items):
-                return
-            obj = self.items[idx][1]
-            events = getattr(obj, 'events', [])
+        holder = self._event_holder()
+        if holder is None:
+            return
+        events = getattr(holder, 'events', [])
         if not isinstance(events, list):
             events = []
         for i, evt in enumerate(events):
@@ -3170,26 +3957,38 @@ class Editor(QMainWindow):
                 self.event_list.setCellWidget(row, 0, btn_cond)
             else:
                 try:
-                    desc = ', '.join(describe_condition(c, [o for _, o in self.items], self.t) for c in evt.get('conditions', []))
+                    desc = ', '.join(
+                        describe_condition(c, [o for _, o in self.items], self.t)
+                        for c in evt.get('conditions', [])
+                    )
                     self.event_list.setItem(row, 0, QTableWidgetItem(desc))
                 except Exception:
                     self.event_list.setItem(row, 0, QTableWidgetItem(''))
-                if evt.get('actions'):
-                    try:
-                        desc = ', '.join(describe_action(a, [o for _, o in self.items], self.t) for a in evt.get('actions', []))
-                        self.event_list.setItem(row, 1, QTableWidgetItem(desc))
-                    except Exception:
-                        self.event_list.setItem(row, 1, QTableWidgetItem(''))
-                else:
-                    btn_act = QPushButton(self.t('add_action'))
-                    btn_act.clicked.connect(lambda _, r=i: self.add_action(r))
-                    self.event_list.setCellWidget(row, 1, btn_act)
+            if evt.get('actions'):
+                try:
+                    desc = ', '.join(
+                        describe_action(a, [o for _, o in self.items], self.t)
+                        for a in evt.get('actions', [])
+                    )
+                    self.event_list.setItem(row, 1, QTableWidgetItem(desc))
+                except Exception:
+                    self.event_list.setItem(row, 1, QTableWidgetItem(''))
+            else:
+                btn_act = QPushButton(self.t('add_action'))
+                btn_act.clicked.connect(lambda _, r=i: self.add_action(r))
+                self.event_list.setCellWidget(row, 1, btn_act)
+            del_btn = QPushButton()
+            del_btn.setIcon(load_icon('delete.png'))
+            del_btn.clicked.connect(lambda _, r=i: self._delete_event(r))
+            self.event_list.setCellWidget(row, 2, del_btn)
         # extra row for new event
         row = self.event_list.rowCount()
         self.event_list.insertRow(row)
-        btn_new = QPushButton(self.t('add_condition'))
-        btn_new.clicked.connect(lambda _, r=row: self.add_condition(r))
+        btn_new = QPushButton(self.t('add_event'))
+        btn_new.clicked.connect(self.add_event)
         self.event_list.setCellWidget(row, 0, btn_new)
+        self.event_list.setItem(row, 1, QTableWidgetItem(''))
+        self.event_list.setItem(row, 2, QTableWidgetItem(''))
         self.event_list.resizeRowsToContents()
 
     def load_scene(self, scene_or_path):

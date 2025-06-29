@@ -19,23 +19,29 @@ class GameWindow(QMainWindow):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(engine.renderer.widget)
         self.setCentralWidget(central)
-        # match the project settings
+        # match the project settings and keep aspect ratio like the editor
         self.resize(engine.renderer.width, engine.renderer.height)
+        # ensure the renderer preserves the project aspect when resizing so
+        # unused regions are letterboxed in black
         interval = int(1000 / engine.fps) if engine.fps else 0
         self.timer = QTimer(self)
         self.timer.setInterval(max(1, interval))
         self.timer.timeout.connect(self._step)
         self.engine.last_time = time.perf_counter()
+        self.engine.delta_time = 0.0
+        self.engine.logic_active = True
         self.timer.start()
 
     def _step(self):
         now = time.perf_counter()
         dt = now - self.engine.last_time
         self.engine.last_time = now
+        self.engine.delta_time = dt
         self.engine.input.poll()
         try:
-            self.engine.events.update(self.engine, self.engine.scene, dt)
-            self.engine.scene.update_events(self.engine, dt)
+            if self.engine.logic_active:
+                self.engine.events.update(self.engine, self.engine.scene, dt)
+                self.engine.scene.update_events(self.engine, dt)
             self.engine.scene.update(dt)
             cam = self.engine.camera or self.engine.scene.get_active_camera()
             self.engine.renderer.draw_scene(self.engine.scene, cam, gizmos=False)
@@ -46,6 +52,7 @@ class GameWindow(QMainWindow):
 
     def closeEvent(self, event):  # pragma: no cover - GUI cleanup
         self.timer.stop()
+        self.engine.logic_active = False
         self.engine.input.shutdown()
         self.engine.renderer.close()
         event.accept()

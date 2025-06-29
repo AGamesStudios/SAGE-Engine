@@ -44,6 +44,14 @@ for entries in LANGUAGES.values():
         if eng != local:
             TRANSLATION_LOOKUP[local] = eng
 
+def load_logic_plugins(*modules) -> None:
+    """Import modules that register additional logic blocks."""
+    for name in modules:
+        try:
+            __import__(name)
+        except Exception:
+            logger.exception('Failed to load logic plugin %s', name)
+
 import re
 
 class EngineRef:
@@ -114,6 +122,21 @@ def resolve_value(val, engine):
     return val
 
 
+def _auto_params(cls):
+    """Return parameter metadata from ``cls.__init__`` if available."""
+    from inspect import signature, Parameter
+    meta = []
+    try:
+        sig = signature(cls.__init__)
+    except (TypeError, ValueError):
+        return meta
+    for p in list(sig.parameters.values())[1:]:  # skip ``self``
+        if p.kind in (Parameter.VAR_POSITIONAL, Parameter.VAR_KEYWORD):
+            continue
+        meta.append((p.name, 'value'))
+    return meta
+
+
 def register_condition(name: str, params: list[tuple] | None = None):
     """Decorator to register a Condition subclass.
 
@@ -122,12 +145,14 @@ def register_condition(name: str, params: list[tuple] | None = None):
     ``'value'`` for plain values, ``'object'`` to look up a scene object by
     index and ``'variable'`` for variables. ``key`` is the dictionary key when
     loading, defaulting to ``arg_name``. ``types`` optionally lists allowed
-    object types when ``kind`` is ``'object'``.
+    object types when ``kind`` is ``'object'``. When ``params`` is omitted the
+    ``__init__`` signature is inspected and each argument defaults to a
+    ``'value'`` entry, allowing quick creation of simple logic blocks.
     """
 
     def decorator(cls):
         CONDITION_REGISTRY[name] = cls
-        CONDITION_META[name] = params or []
+        CONDITION_META[name] = params or _auto_params(cls)
         return cls
 
     return decorator
@@ -136,13 +161,14 @@ def register_condition(name: str, params: list[tuple] | None = None):
 def register_action(name: str, params: list[tuple] | None = None):
     """Decorator to register an Action subclass with optional metadata.
 
-    ``params`` follows the same format as :func:`register_condition` and may
-    include a list of allowed object types for ``'object'`` parameters.
+    ``params`` follows the same format as :func:`register_condition`. If omitted
+    the ``__init__`` signature is inspected to build simple ``'value'``
+    parameters automatically.
     """
 
     def decorator(cls):
         ACTION_REGISTRY[name] = cls
-        ACTION_META[name] = params or []
+        ACTION_META[name] = params or _auto_params(cls)
         return cls
 
     return decorator
@@ -202,20 +228,22 @@ class Event:
         self,
         conditions,
         actions,
-        once: bool = False,
         name: str | None = None,
         enabled: bool = True,
         priority: int = 0,
         groups: list[str] | None = None,
     ):
+        """Create a new event instance.
+
+        When ``conditions`` is empty the ``actions`` will execute every frame
+        until the event is disabled.
+        """
         self.conditions = conditions
         self.actions = actions
-        self.once = once
         self.name = name
         self.enabled = enabled
         self.priority = priority
         self.groups = set(groups or [])
-        self.triggered = False
 
     def enable(self):
         self.enabled = True
@@ -228,8 +256,7 @@ class Event:
             logger.debug('Disabled event %s', self.name)
 
     def reset(self):
-        """Clear the triggered flag and enable the event."""
-        self.triggered = False
+        """Enable the event and reset all conditions and actions."""
         self.enabled = True
         for cond in self.conditions:
             if hasattr(cond, 'reset'):
@@ -247,28 +274,38 @@ class Event:
             logger.debug('Reset event %s', self.name)
 
     def update(self, engine, scene, dt):
-        if not self.enabled or (self.once and self.triggered):
+        if not self.enabled:
             return
-        try:
-            if all(cond.check(engine, scene, dt) for cond in self.conditions):
-                for action in self.actions:
-                    try:
-                        action.execute(engine, scene, dt)
-                    except Exception:
-                        logger.exception('Action error')
-                self.triggered = True
-                if self.name:
-                    logger.debug('Event %s triggered', self.name)
-        except Exception:
-            logger.exception('Condition error')
+        if self.conditions:
+            try:
+                if all(cond.check(engine, scene, dt) for cond in self.conditions):
+                    for action in self.actions:
+                        try:
+                            action.execute(engine, scene, dt)
+                        except Exception:
+                            logger.exception('Action error')
+                    if self.name:
+                        logger.debug('Event %s triggered', self.name)
+            except Exception:
+                logger.exception('Condition error')
+        else:
+            for action in self.actions:
+                try:
+                    action.execute(engine, scene, dt)
+                except Exception:
+                    logger.exception('Action error')
+            if self.name:
+                logger.debug('Event %s triggered', self.name)
 
 class EventSystem:
     """Container for events."""
 
-    def __init__(self, variables=None):
+    def __init__(self, variables=None, engine_version: str | None = None):
+        from .. import ENGINE_VERSION
         self.events: list[Event] = []
         self.variables = variables if variables is not None else {}
         self.groups: dict[str, list[Event]] = {}
+        self.engine_version = engine_version or ENGINE_VERSION
 
     def get_event(self, name):
         for evt in self.events:
@@ -354,6 +391,8 @@ class EventSystem:
             logger.debug('Reset group %s', name)
 
     def update(self, engine, scene, dt):
+        if not self.events:
+            return
         for evt in list(self.events):
             evt.update(engine, scene, dt)
 
@@ -480,7 +519,6 @@ def event_from_dict(data, objects, variables):
     return Event(
         conditions,
         actions,
-        data.get('once', False),
         data.get('name'),
         data.get('enabled', True),
         data.get('priority', 0),
