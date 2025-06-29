@@ -64,7 +64,7 @@ class BrushTool(Tool):
         painter.setPen(pen)
         painter.setBrush(Qt.BrushStyle.NoBrush)
         r = self.canvas.pen_width / 2
-        painter.drawEllipse(pos, r, r)
+        painter.drawEllipse(pos, int(r), int(r))
         painter.restore()
 
 
@@ -83,5 +83,5 @@ class EraserTool(BrushTool):
         painter.setPen(pen)
         painter.setBrush(Qt.BrushStyle.NoBrush)
         r = self.canvas.pen_width / 2
-        painter.drawRect(pos.x() - r, pos.y() - r, self.canvas.pen_width, self.canvas.pen_width)
+        painter.drawRect(int(pos.x() - r), int(pos.y() - r), int(self.canvas.pen_width), int(self.canvas.pen_width))
         painter.restore()
