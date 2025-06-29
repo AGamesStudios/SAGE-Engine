@@ -428,13 +428,30 @@ class OpenGLRenderer:
             return
         unit_scale = units.UNITS_PER_METER
         sign = 1.0 if units.Y_UP else -1.0
-        ang = math.radians(getattr(obj, "angle", 0.0))
-        cos_a = math.cos(ang)
-        sin_a = math.sin(ang)
         scale_mul = obj.render_scale(camera, apply_effects=self.apply_effects)
-        w = obj.width * obj.scale_x * scale_mul
-        h = obj.height * obj.scale_y * scale_mul
-        verts = [(-w / 2, -h / 2), (w / 2, -h / 2), (w / 2, h / 2), (-w / 2, h / 2)]
+        obj_x, obj_y = obj.render_position(
+            camera, apply_effects=self.apply_effects
+        )
+        from engine.core.fastmath import calc_matrix
+        m = calc_matrix(
+            obj_x,
+            obj_y,
+            obj.width,
+            obj.height,
+            obj.pivot_x,
+            obj.pivot_y,
+            obj.scale_x * scale_mul,
+            obj.scale_y * scale_mul,
+            getattr(obj, "angle", 0.0),
+            unit_scale,
+            units.Y_UP,
+        )
+        corners = [
+            (0.0, 0.0),
+            (obj.width, 0.0),
+            (obj.width, obj.height),
+            (0.0, obj.height),
+        ]
         glBindTexture(GL_TEXTURE_2D, 0)
         color_scale = 1 / 255.0 if max(color) > 1.0 else 1.0
         norm = tuple(c * color_scale for c in color)
@@ -444,13 +461,12 @@ class OpenGLRenderer:
         cam_x = camera.x if camera else 0.0
         cam_y = camera.y if camera else 0.0
         zoom = camera.zoom if camera else 1.0
-        obj_x, obj_y = obj.render_position(camera, apply_effects=self.apply_effects)
-        for vx, vy in verts:
-            rx = vx * cos_a - vy * sin_a
-            ry = vx * sin_a + vy * cos_a
-            world_x = (rx + obj_x) * unit_scale - cam_x * unit_scale
-            world_y = (ry + obj_y) * unit_scale * sign - cam_y * unit_scale * sign
-            glVertex2f(world_x * zoom, world_y * zoom)
+        for cx, cy in corners:
+            world_x = m[0] * cx + m[4] * cy + m[12]
+            world_y = m[1] * cx + m[5] * cy + m[13]
+            screen_x = (world_x - cam_x * unit_scale) * zoom
+            screen_y = (world_y - cam_y * unit_scale * sign) * zoom
+            glVertex2f(screen_x, screen_y)
         glEnd()
         glLineWidth(1.0)
 

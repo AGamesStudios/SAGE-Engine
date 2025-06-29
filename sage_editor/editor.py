@@ -1411,6 +1411,7 @@ class Editor(QMainWindow):
         self.project_description: str = ''
         self._game_window = None
         self._game_engine = None
+        self._paint_windows: list[QMainWindow] = []
         # undo/redo stacks
         self._undo_stack: list[UndoAction] = []
         self._redo_stack: list[UndoAction] = []
@@ -1512,6 +1513,7 @@ class Editor(QMainWindow):
         self.image_edit = prop_dock.image_edit
         self.image_btn = prop_dock.image_btn
         self.clear_img_btn = prop_dock.clear_img_btn
+        self.paint_btn = prop_dock.paint_btn
         self.color_btn = prop_dock.color_btn
         self.smooth_check = prop_dock.smooth_check
         self.img_row = prop_dock.img_row
@@ -1550,6 +1552,7 @@ class Editor(QMainWindow):
         self.type_combo.currentIndexChanged.connect(self._object_type_changed)
         self.image_btn.clicked.connect(self._choose_object_image)
         self.clear_img_btn.clicked.connect(self._clear_object_image)
+        self.paint_btn.clicked.connect(self.open_paint_tool)
         self.image_edit.editingFinished.connect(self._image_path_edited)
         self.color_btn.clicked.connect(self._choose_object_color)
         self.smooth_check.stateChanged.connect(self._smooth_changed)
@@ -1608,6 +1611,7 @@ class Editor(QMainWindow):
 
     def _apply_language(self):
         self.file_menu.setTitle(self.t('file'))
+        self.edit_menu.setTitle(self.t('edit_menu'))
         self.new_proj_act.setText(self.t('new_project'))
         self.open_proj_act.setText(self.t('open_project'))
         self.save_proj_act.setText(self.t('save_project'))
@@ -1653,6 +1657,9 @@ class Editor(QMainWindow):
         self.layout_menu.setTitle(self.t('interface_menu'))
         self.save_layout_act.setText(self.t('save_layout'))
         self.restore_layout_act.setText(self.t('restore_default'))
+        self.paint_act.setText(self.t('open_paint'))
+        if hasattr(self, 'paint_toolbar_btn'):
+            self.paint_toolbar_btn.setText(self.t('open_paint'))
         self.grid_act.setText(self.t('show_grid'))
         self.axes_act.setText(self.t('show_gizmo'))
         self.coord_combo.setItemText(0, self.t('global'))
@@ -1661,6 +1668,8 @@ class Editor(QMainWindow):
         self.coord_combo.setToolTip(self.t('coord_mode'))
         if hasattr(self, 'coord_mode_btn'):
             self.coord_mode_btn.setToolTip(self.t('coord_mode'))
+        if hasattr(self, 'paint_btn'):
+            self.paint_btn.setText(self.t('paint_sprite'))
 
     def apply_engine_completer(self, widget: QLineEdit):
         """Attach the engine method completer to a line edit."""
@@ -1809,7 +1818,7 @@ class Editor(QMainWindow):
         self.file_menu.addAction(self.save_proj_act)
         self.recent_menu = self.file_menu.addMenu(load_icon('recent.png'), self.t('recent_projects'))
 
-        self.edit_menu = menubar.addMenu(self.t('edit'))
+        self.edit_menu = menubar.addMenu(self.t('edit_menu'))
         self.undo_act = QAction(self.t('undo'), self)
         self.undo_act.setShortcut('Ctrl+Z')
         self.undo_act.setEnabled(False)
@@ -1840,6 +1849,10 @@ class Editor(QMainWindow):
         self.layout_menu.addSeparator()
         self.layout_group = QActionGroup(self)
         self.layout_actions = []
+
+        self.paint_act = QAction(self.t('open_paint'), self)
+        self.paint_act.triggered.connect(self.open_paint_tool)
+        self.editor_menu.addAction(self.paint_act)
 
         self.view_menu = self.editor_menu.addMenu('View')
         self.grid_act = QAction(self.t('show_grid'), self)
@@ -1879,6 +1892,11 @@ class Editor(QMainWindow):
         self.run_act = QAction(load_icon('start.png'), self.t('run'), self)
         self.run_act.triggered.connect(self.run_project)
         toolbar.addAction(self.run_act)
+        self.paint_toolbar_btn = QToolButton()
+        self.paint_toolbar_btn.setText(self.t('open_paint'))
+        self.paint_toolbar_btn.setIcon(load_icon('edit.png'))
+        self.paint_toolbar_btn.clicked.connect(self.open_paint_tool)
+        toolbar.addWidget(self.paint_toolbar_btn)
         self.grid_btn = QToolButton()
         self.grid_btn.setCheckable(True)
         self.grid_btn.setText(self.t('show_grid'))
@@ -2389,6 +2407,17 @@ class Editor(QMainWindow):
             logger.exception('Failed to start engine')
             QMessageBox.warning(self, self.t('error'), str(exc))
 
+    def open_paint_tool(self) -> None:
+        """Launch the SAGE Paint window."""
+        try:
+            from sage_paint import PaintWindow
+        except Exception as exc:  # pragma: no cover - import issues
+            QMessageBox.warning(self, self.t('error'), str(exc))
+            return
+        win = PaintWindow()
+        win.show()
+        self._paint_windows.append(win)
+        win.destroyed.connect(lambda _: self._paint_windows.remove(win))
 
     def add_sprite(self):
         if not self._check_project():
@@ -2832,6 +2861,8 @@ class Editor(QMainWindow):
             self.smooth_label.setVisible(False)
         if hasattr(self, 'smooth_check'):
             self.smooth_check.setVisible(False)
+        if hasattr(self, 'paint_btn'):
+            self.paint_btn.setVisible(False)
         # clear values so stale data never shows
         for spin in (
             self.x_spin, self.y_spin, self.z_spin,
@@ -2934,6 +2965,7 @@ class Editor(QMainWindow):
             self.cam_h_spin.blockSignals(True); self.cam_h_spin.setValue(obj.height); self.cam_h_spin.blockSignals(False)
             self.cam_zoom_spin.blockSignals(True); self.cam_zoom_spin.setValue(obj.zoom); self.cam_zoom_spin.blockSignals(False)
             self.cam_active.blockSignals(True); self.cam_active.setChecked(obj is self.scene.camera); self.cam_active.blockSignals(False)
+            self.paint_btn.setVisible(False)
         else:
             self.camera_group.setVisible(False)
             self.scale_x_spin.setEnabled(True)
@@ -2950,6 +2982,7 @@ class Editor(QMainWindow):
             self.image_edit.setEnabled(True)
             self.image_btn.setEnabled(True)
             self.clear_img_btn.setEnabled(True)
+            self.paint_btn.setVisible(not bool(obj.image_path))
             c = obj.color or (255, 255, 255)
             self.color_label.setVisible(True)
             self.color_btn.setVisible(True)
