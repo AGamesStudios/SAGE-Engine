@@ -21,6 +21,7 @@ from OpenGL.GL import (
     GL_FLOAT, GL_TRIANGLE_FAN, GL_VERTEX_SHADER, GL_FRAGMENT_SHADER
 )
 from OpenGL.GL.shaders import compileProgram, compileShader
+from .shader import Shader
 from PIL import Image
 
 from engine.core.camera import Camera
@@ -104,10 +105,9 @@ class OpenGLRenderer:
                 gl_FragColor = texture2D(tex, v_uv) * c;
             }
         """
-        self._program = compileProgram(
-            compileShader(vert, GL_VERTEX_SHADER),
-            compileShader(frag, GL_FRAGMENT_SHADER),
-        )
+        from .shader import Shader
+        self._sprite_shader = Shader(vert, frag)
+        self._program = self._sprite_shader.compile()
         from OpenGL.GL import (
             glGenVertexArrays, glBindVertexArray, glGenBuffers, glBindBuffer,
             glBufferData, GL_ARRAY_BUFFER, GL_STATIC_DRAW, glGetAttribLocation,
@@ -210,6 +210,7 @@ class OpenGLRenderer:
         self.keep_aspect = bool(self.keep_aspect)
         self.background = tuple(self.background)
         self._program = None
+        self._sprite_shader: Shader | None = None
         self._pano_program = None
         self._vao = None
         self._vbo = None
@@ -365,13 +366,18 @@ class OpenGLRenderer:
             glBufferSubData, GL_ARRAY_BUFFER, glBindVertexArray, glDrawArrays,
             GL_TRIANGLE_FAN, glBindTexture
         )
-        glUseProgram(self._program)
-        loc_color = glGetUniformLocation(self._program, 'color')
-        rgba = obj.color or (255, 255, 255, 255)
-        # Colors may be stored either in 0-255 range or already normalized
-        scale = 1 / 255.0 if max(rgba) > 1.0 else 1.0
-        norm = tuple(c * scale for c in rgba)
-        glUniform4f(loc_color, *norm)
+        custom_shader = obj.get_shader() if hasattr(obj, "get_shader") else None
+        if custom_shader:
+            custom_shader.use(obj.shader_uniforms)
+            program = custom_shader.program
+        else:
+            program = self._program
+            glUseProgram(program)
+            loc_color = glGetUniformLocation(program, "color")
+            rgba = obj.color or (255, 255, 255, 255)
+            scale = 1 / 255.0 if max(rgba) > 1.0 else 1.0
+            norm = tuple(c * scale for c in rgba)
+            glUniform4f(loc_color, *norm)
         scale = units.UNITS_PER_METER
         sign = 1.0 if units.Y_UP else -1.0
         zoom = camera.zoom if camera else 1.0
@@ -410,7 +416,10 @@ class OpenGLRenderer:
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4)
         glBindVertexArray(0)
         glBindBuffer(GL_ARRAY_BUFFER, 0)
-        glUseProgram(0)
+        if custom_shader:
+            Shader.stop()
+        else:
+            glUseProgram(0)
 
     def _draw_outline(
         self,

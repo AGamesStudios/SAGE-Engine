@@ -1,4 +1,5 @@
 from engine.renderers.shader import Shader
+from engine.core.game_object import GameObject
 
 
 def test_shader_from_files(tmp_path, monkeypatch):
@@ -24,3 +25,27 @@ def test_shader_from_files(tmp_path, monkeypatch):
 
     assert prog == 123
     assert compiled["program"] == (1, 2)
+
+
+def test_gameobject_get_shader(tmp_path, monkeypatch):
+    vert = tmp_path / "v.glsl"
+    frag = tmp_path / "f.glsl"
+    vert.write_text("v")
+    frag.write_text("f")
+
+    paths = []
+
+    def fake_from_files(v, f):
+        paths.append((v, f))
+        return Shader("vs", "fs")
+
+    monkeypatch.setattr(
+        "engine.core.game_object.Shader.from_files",
+        staticmethod(fake_from_files),
+    )
+
+    obj = GameObject(shader={"vertex": str(vert), "fragment": str(frag)})
+    shader = obj.get_shader()
+
+    assert paths == [(str(vert), str(frag))]
+    assert isinstance(shader, Shader)

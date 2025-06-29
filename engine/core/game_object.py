@@ -11,6 +11,7 @@ from .fastmath import (
     calc_matrix as _calc_matrix,
 )
 from PIL import Image
+from engine.renderers import Shader
 from .objects import register_object
 from ..logic import EventSystem, event_from_dict
 from .. import units
@@ -44,6 +45,8 @@ def clear_image_cache():
         ('variables', 'variables'),
         ('public_vars', 'public_vars'),
         ('effects', 'effects'),
+        ('shader', 'shader'),
+        ('shader_uniforms', 'shader_uniforms'),
     ],
 )
 @dataclass(slots=True)
@@ -67,6 +70,8 @@ class GameObject:
     variables: dict = field(default_factory=dict)  # name -> value
     public_vars: set[str] = field(default_factory=set)
     effects: list = field(default_factory=list)
+    shader: dict | None = None
+    shader_uniforms: dict = field(default_factory=dict)
     event_system: EventSystem | None = field(init=False, default=None)
     rotation: tuple[float, float, float, float] = field(init=False)
     image: Image.Image | None = field(init=False, default=None)
@@ -75,6 +80,7 @@ class GameObject:
     _dirty: bool = field(init=False, default=True)
     _cached_rect: tuple[float, float, float, float] | None = field(init=False, default=None)
     _cached_matrix: list[float] | None = field(init=False, default=None)
+    _compiled_shader: "Shader | None" = field(init=False, default=None)
 
     _DIRTY_FIELDS = {
         'x', 'y', 'z', 'scale_x', 'scale_y', 'angle', 'pivot_x', 'pivot_y'
@@ -100,10 +106,30 @@ class GameObject:
         if self.name is None:
             self.name = "New Object"
         self._load_image()
+        if self.shader and isinstance(self.shader, dict):
+            vert = self.shader.get("vertex")
+            frag = self.shader.get("fragment")
+            if vert and frag:
+                try:
+                    self._compiled_shader = Shader.from_files(vert, frag)
+                except Exception:
+                    logger.exception("Failed to load shader %s/%s", vert, frag)
 
 
     def update(self, dt: float):
         pass
+
+    def get_shader(self) -> "Shader | None":
+        """Return the compiled :class:`Shader` for this object."""
+        if self._compiled_shader is None and self.shader and isinstance(self.shader, dict):
+            vert = self.shader.get("vertex")
+            frag = self.shader.get("fragment")
+            if vert and frag:
+                try:
+                    self._compiled_shader = Shader.from_files(vert, frag)
+                except Exception:
+                    logger.exception("Failed to load shader %s/%s", vert, frag)
+        return self._compiled_shader
 
     def render_position(
         self, camera, apply_effects: bool = True

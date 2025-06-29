@@ -2,7 +2,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from OpenGL.GL import GL_VERTEX_SHADER, GL_FRAGMENT_SHADER
+from OpenGL.GL import (
+    GL_VERTEX_SHADER,
+    GL_FRAGMENT_SHADER,
+    glUseProgram,
+    glGetUniformLocation,
+    glUniform1f,
+    glUniform2f,
+    glUniform3f,
+    glUniform4f,
+)
 from OpenGL.GL.shaders import compileProgram, compileShader
 
 from ..log import logger
@@ -27,6 +36,33 @@ class Shader:
         )
         logger.info("Shader compiled: %s", self.program)
         return self.program
+
+    def use(self, uniforms: dict | None = None) -> None:
+        """Activate the shader and optionally upload ``uniforms``."""
+        prog = self.compile()
+        glUseProgram(prog)
+        if not uniforms:
+            return
+        for name, val in uniforms.items():
+            loc = glGetUniformLocation(prog, name)
+            if loc < 0:
+                continue
+            if isinstance(val, (list, tuple)):
+                if len(val) == 2:
+                    glUniform2f(loc, *val)
+                elif len(val) == 3:
+                    glUniform3f(loc, *val)
+                elif len(val) == 4:
+                    glUniform4f(loc, *val)
+                else:
+                    logger.warning("Unsupported uniform size for %s", name)
+            else:
+                glUniform1f(loc, float(val))
+
+    @staticmethod
+    def stop() -> None:
+        """Deactivate the current shader program."""
+        glUseProgram(0)
 
     @classmethod
     def from_files(cls, vert_path: str, frag_path: str) -> "Shader":

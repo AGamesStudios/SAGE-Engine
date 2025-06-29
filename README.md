@@ -78,9 +78,13 @@ without affecting gameplay.
 
 ### Shader Support
 
-Custom rendering effects can use the :class:`~engine.renderers.shader.Shader`
-helper. Provide vertex and fragment GLSL source strings or load them from files,
-then call :meth:`Shader.compile` to obtain an OpenGL program ID.
+Custom effects can use the :class:`~engine.renderers.shader.Shader` helper.
+Provide vertex and fragment GLSL source strings or load them from files,
+then call :meth:`Shader.compile` to obtain an OpenGL program ID. `GameObject`
+instances may reference a shader via ``obj.shader = {'vertex': 'v.glsl',
+'fragment': 'f.glsl'}`` and supply a ``shader_uniforms`` dictionary that will be
+uploaded whenever the object draws. If no custom shader is set the renderer
+falls back to its default textured program.
 
 ### Units and Coordinates
 
