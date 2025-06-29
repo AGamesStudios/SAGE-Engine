@@ -85,7 +85,10 @@ class BrushTool(Tool):
         painter.setPen(pen)
         painter.setBrush(Qt.BrushStyle.NoBrush)
         r = self.canvas.pen_width / 2
-        if self.shape == 'square':
+        if self.canvas.pen_width <= 2:
+            painter.drawLine(pos.x() - 2, pos.y(), pos.x() + 2, pos.y())
+            painter.drawLine(pos.x(), pos.y() - 2, pos.x(), pos.y() + 2)
+        elif self.shape == 'square':
             painter.drawRect(int(pos.x() - r), int(pos.y() - r), int(self.canvas.pen_width), int(self.canvas.pen_width))
         else:
             painter.drawEllipse(pos, int(r), int(r))
@@ -107,7 +110,11 @@ class EraserTool(BrushTool):
         painter.setPen(pen)
         painter.setBrush(Qt.BrushStyle.NoBrush)
         r = self.canvas.pen_width / 2
-        painter.drawRect(int(pos.x() - r), int(pos.y() - r), int(self.canvas.pen_width), int(self.canvas.pen_width))
+        if self.canvas.pen_width <= 2:
+            painter.drawLine(pos.x() - 2, pos.y(), pos.x() + 2, pos.y())
+            painter.drawLine(pos.x(), pos.y() - 2, pos.x(), pos.y() + 2)
+        else:
+            painter.drawRect(int(pos.x() - r), int(pos.y() - r), int(self.canvas.pen_width), int(self.canvas.pen_width))
         painter.restore()
 
 
