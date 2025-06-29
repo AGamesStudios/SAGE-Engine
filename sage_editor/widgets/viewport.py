@@ -48,6 +48,8 @@ class Viewport(GLWidget):
         self.renderer = OpenGLRenderer(self.width(), self.height(), widget=self)
         self.renderer.show_grid = self.show_grid
         self.renderer.show_axes = self.show_axes
+        # disable sprite effects inside the editor so objects stay put
+        self.renderer.apply_effects = False
         self.renderer.grid_size = self.grid_size
         self.timer = QTimer(self)
         self.timer.setInterval(33)  # ~30 FPS to reduce CPU load

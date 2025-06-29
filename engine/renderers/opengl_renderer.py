@@ -154,6 +154,8 @@ class OpenGLRenderer:
         self._cursor_pos: tuple[float, float] | None = None
         self._transform_mode: str = 'pan'
         self._local_coords: bool = False
+        # apply sprite effects during rendering
+        self.apply_effects: bool = True
         self.show_axes = True
         self.show_grid = False
         self.grid_size = 1.0
@@ -312,7 +314,7 @@ class OpenGLRenderer:
         h = obj.height * obj.scale_y
         verts = [(-w/2, -h/2), (w/2, -h/2), (w/2, h/2), (-w/2, h/2)]
         data = []
-        obj_x, obj_y = obj.render_position(camera)
+        obj_x, obj_y = obj.render_position(camera, apply_effects=self.apply_effects)
         for vx, vy in verts:
             rx = vx * cos_a - vy * sin_a
             ry = vx * sin_a + vy * cos_a
@@ -364,7 +366,7 @@ class OpenGLRenderer:
         glColor4f(*norm)
         glLineWidth(width)
         glBegin(GL_LINE_LOOP)
-        obj_x, obj_y = obj.render_position(camera)
+        obj_x, obj_y = obj.render_position(camera, apply_effects=self.apply_effects)
         for vx, vy in verts:
             rx = vx * cos_a - vy * sin_a
             ry = vx * sin_a + vy * cos_a

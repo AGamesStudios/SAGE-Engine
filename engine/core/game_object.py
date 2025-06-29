@@ -105,17 +105,22 @@ class GameObject:
     def update(self, dt: float):
         pass
 
-    def render_position(self, camera) -> tuple[float, float]:
-        """Return the on-screen position with effects applied."""
+    def render_position(
+        self, camera, apply_effects: bool = True
+    ) -> tuple[float, float]:
+        """Return the on-screen position with optional effects."""
         x = self.x
         y = self.y
-        if camera:
+        if apply_effects and camera:
             for eff in getattr(self, 'effects', []):
                 if eff.get('type') == 'panorama':
                     fx = eff.get('factor_x', eff.get('factor', 0.0))
                     fy = eff.get('factor_y', eff.get('factor', 0.0))
-                    x -= camera.x * fx
-                    y -= camera.y * fy
+                    # offset from the camera center so objects stay anchored
+                    cx = camera.x - camera.width / 2
+                    cy = camera.y - camera.height / 2
+                    x -= cx * fx
+                    y -= cy * fy
         return x, y
 
 

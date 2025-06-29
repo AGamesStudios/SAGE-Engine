@@ -66,6 +66,8 @@ class Engine:
             self.renderer.show_axes = False
         if hasattr(self.renderer, 'show_grid'):
             self.renderer.show_grid = False
+        if hasattr(self.renderer, 'apply_effects'):
+            self.renderer.apply_effects = True
         self.bg_color = tuple(background)
         if input_backend == "sdl":
             try:
