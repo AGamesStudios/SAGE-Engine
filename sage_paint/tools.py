@@ -103,13 +103,8 @@ class BrushTool(Tool):
         painter.setBrush(Qt.BrushStyle.NoBrush)
         r = self.canvas.pen_width / 2.0
         if self.canvas.pen_width <= 2:
-            cross = 4
-            painter.setPen(QPen(Qt.GlobalColor.white))
-            painter.drawLine(pos.x() - cross, pos.y(), pos.x() + cross, pos.y())
-            painter.drawLine(pos.x(), pos.y() - cross, pos.x(), pos.y() + cross)
-            painter.setPen(QPen(Qt.GlobalColor.black))
-            painter.drawLine(pos.x() - cross + 1, pos.y(), pos.x() + cross - 1, pos.y())
-            painter.drawLine(pos.x(), pos.y() - cross + 1, pos.x(), pos.y() + cross - 1)
+            # tiny sizes do not show a gizmo to avoid obscuring the pixel
+            pass
         elif self.shape == 'square':
             painter.drawRect(QRectF(pos.x() - r, pos.y() - r, self.canvas.pen_width, self.canvas.pen_width))
         else:
@@ -128,6 +123,44 @@ class EraserTool(BrushTool):
             pen.setColor(bg)
         return pen
 
+    def _prepare_painter(self) -> QPainter:
+        painter = QPainter(self.canvas.image)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, self.canvas.smooth_pen)
+        hqa = getattr(QPainter.RenderHint, 'HighQualityAntialiasing', None)
+        if hqa is not None:
+            painter.setRenderHint(hqa, self.canvas.smooth_pen)
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, self.canvas.smooth_pen)
+        if getattr(self.canvas, 'bg_color', QColor('white')) is None:
+            painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_Clear)
+        return painter
+
+    def move(self, pos: QPoint) -> None:
+        if not self._drawing:
+            return
+        painter = self._prepare_painter()
+        painter.setPen(self.pen())
+        painter.drawLine(self._last, pos)
+        painter.end()
+        dirty = QRectF(QRect(self._last, pos)).normalized()
+        w = self.canvas.pen_width
+        dirty = dirty.adjusted(-w, -w, w, w)
+        self.canvas.update(self.canvas.image_to_view_rect(dirty))
+        self._last = pos
+
+    def release(self, pos: QPoint) -> None:
+        if self._drawing:
+            if pos == self._start:
+                painter = self._prepare_painter()
+                painter.setPen(self.pen())
+                painter.drawPoint(pos)
+                painter.end()
+                w = self.canvas.pen_width
+                dirty = QRectF(pos.x() - w, pos.y() - w, w * 2, w * 2)
+                self.canvas.update(self.canvas.image_to_view_rect(dirty))
+            else:
+                self.move(pos)
+            self._drawing = False
+
     def draw_gizmo(self, painter: QPainter, pos: QPoint) -> None:
         painter.save()
         pen = QPen(Qt.GlobalColor.black)
@@ -138,13 +171,8 @@ class EraserTool(BrushTool):
         painter.setBrush(Qt.BrushStyle.NoBrush)
         r = self.canvas.pen_width / 2.0
         if self.canvas.pen_width <= 2:
-            cross = 4
-            painter.setPen(QPen(Qt.GlobalColor.white))
-            painter.drawLine(pos.x() - cross, pos.y(), pos.x() + cross, pos.y())
-            painter.drawLine(pos.x(), pos.y() - cross, pos.x(), pos.y() + cross)
-            painter.setPen(QPen(Qt.GlobalColor.black))
-            painter.drawLine(pos.x() - cross + 1, pos.y(), pos.x() + cross - 1, pos.y())
-            painter.drawLine(pos.x(), pos.y() - cross + 1, pos.x(), pos.y() + cross - 1)
+            # tiny sizes do not show a gizmo to avoid obscuring the pixel
+            pass
         else:
             painter.drawRect(QRectF(pos.x() - r, pos.y() - r, self.canvas.pen_width, self.canvas.pen_width))
         painter.restore()
