@@ -51,7 +51,7 @@ class Canvas(QWidget):
 
     def paintEvent(self, event) -> None:  # pragma: no cover - Qt paint
         painter = QPainter(self)
-        painter.fillRect(self.rect(), Qt.white)
+        painter.fillRect(self.rect(), Qt.GlobalColor.white)
         painter.translate(self.offset)
         painter.scale(self.zoom_level, self.zoom_level)
         painter.drawImage(0, 0, self.image)
