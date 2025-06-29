@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import (
     QToolBar, QLabel, QMessageBox, QSpinBox, QFileDialog
 )
 from PyQt6.QtGui import QAction, QActionGroup
-from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtCore import Qt, QTimer, QPointF
 
 from .canvas import Canvas
 from sage.icons import load_icon
@@ -180,13 +180,13 @@ class PaintWindow(QMainWindow):
         toolbar.addSeparator()
         zoom_in = QAction(load_icon('zoomin.png'), "Zoom +", self)
         zoom_in.triggered.connect(lambda: self.canvas.zoom_at(
-            self.canvas.rect().center(), 1.2
+            QPointF(self.canvas.rect().center()), 1.2
         ))
         toolbar.addAction(zoom_in)
 
         zoom_out = QAction(load_icon('zoomout.png'), "Zoom -", self)
         zoom_out.triggered.connect(lambda: self.canvas.zoom_at(
-            self.canvas.rect().center(), 1/1.2
+            QPointF(self.canvas.rect().center()), 1/1.2
         ))
         toolbar.addAction(zoom_out)
 
