@@ -17,6 +17,13 @@ def test_perspective_scale():
     assert scale == 1.5
 
 
+def test_panorama_depth():
+    cam = Camera(zoom=2.0)
+    obj = GameObject(effects=[{"type": "panorama", "depth": 0.25}])
+    scale = obj.render_scale(cam)
+    assert scale == 1.25
+
+
 def test_equirectangular_uv():
     cam = Camera()
     fx = 0.1

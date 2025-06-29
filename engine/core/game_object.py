@@ -127,7 +127,7 @@ class GameObject:
         scale = 1.0
         if apply_effects and camera:
             for eff in getattr(self, "effects", []):
-                if eff.get("type") == "perspective":
+                if eff.get("type") in {"perspective", "panorama"}:
                     depth = eff.get("depth", eff.get("factor_z", eff.get("factor", 0.0)))
                     scale *= 1.0 + (camera.zoom - 1.0) * depth
         return scale

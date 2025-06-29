@@ -76,6 +76,12 @@ the Z axis and square handles at the ends let you scale objects. The game window
 the active camera object from the scene so you can inspect levels from any angle
 without affecting gameplay.
 
+### Shader Support
+
+Custom rendering effects can use the :class:`~engine.renderers.shader.Shader`
+helper. Provide vertex and fragment GLSL source strings or load them from files,
+then call :meth:`Shader.compile` to obtain an OpenGL program ID.
+
 ### Units and Coordinates
 
 All positions in the engine use **world units** which can be mapped to real
@@ -500,4 +506,6 @@ background.effects.append({
 The camera itself may display a panorama background. Set the image path on the
 ``Camera.panorama`` field and choose parallax factors ``pano_fx`` and
 ``pano_fy``. A dedicated shader maps the equirectangular texture around the
-view so the panorama scrolls smoothly when the camera moves.
+view so the panorama scrolls smoothly when the camera moves. The sprite
+``panorama`` effect also accepts a ``depth`` value which scales the object based
+on the camera zoom.

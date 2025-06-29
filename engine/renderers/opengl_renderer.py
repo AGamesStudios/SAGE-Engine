@@ -520,6 +520,12 @@ class OpenGLRenderer:
     def _draw_panorama(self, camera: Camera) -> None:
         if self._pano_program is None or not camera.panorama:
             return
+        logger.debug(
+            "Drawing camera panorama %s fx=%s fy=%s",
+            camera.panorama,
+            camera.pano_fx,
+            camera.pano_fy,
+        )
         from OpenGL.GL import glUseProgram, glGetUniformLocation, glUniform2f, glBindVertexArray, glBindTexture, glDrawArrays
         glUseProgram(self._pano_program)
         loc_cam = glGetUniformLocation(self._pano_program, "cam")

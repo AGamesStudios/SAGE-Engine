@@ -4,6 +4,8 @@ from abc import ABC, abstractmethod
 import logging
 from importlib import metadata
 
+from .shader import Shader
+
 logger = logging.getLogger(__name__)
 
 RENDERER_REGISTRY: dict[str, type] = {}
@@ -81,6 +83,7 @@ __all__ = [
     "register_renderer",
     "get_renderer",
     "RENDERER_REGISTRY",
+    "Shader",
 ]
 
 
