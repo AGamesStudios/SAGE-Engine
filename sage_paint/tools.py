@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from PyQt6.QtGui import QPainter, QPen, QColor
-from PyQt6.QtCore import Qt, QPoint
+from PyQt6.QtCore import Qt, QPoint, QRectF
 
 
 class Tool:
@@ -66,6 +66,10 @@ class BrushTool(Tool):
         painter.setPen(self.pen())
         painter.drawLine(self._last, pos)
         painter.end()
+        dirty = QRectF(self._last, pos).normalized()
+        w = self.canvas.pen_width
+        dirty = dirty.adjusted(-w, -w, w, w)
+        self.canvas.update(self.canvas.image_to_view_rect(dirty))
         self._last = pos
 
     def release(self, pos: QPoint) -> None:
@@ -112,6 +116,7 @@ class FillTool(Tool):
 
     def press(self, pos: QPoint) -> None:
         self._flood_fill(pos.x(), pos.y())
+        self.canvas.update()
 
     def _flood_fill(self, x: int, y: int) -> None:
         image = self.canvas.image

@@ -2,7 +2,7 @@
 from importlib import import_module
 from types import ModuleType
 
-__all__ = ['engine', 'editor', 'paint']
+__all__ = ['engine', 'editor', 'paint', 'icons']
 
 def __getattr__(name: str) -> ModuleType:
     if name == 'engine':
@@ -11,4 +11,6 @@ def __getattr__(name: str) -> ModuleType:
         return import_module('sage_editor')
     if name == 'paint':
         return import_module('sage_paint')
+    if name == 'icons':
+        return import_module('sage.icons')
     raise AttributeError(name)

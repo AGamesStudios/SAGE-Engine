@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from PyQt6.QtWidgets import QWidget
 from PyQt6.QtGui import QPainter, QImage, QColor, QPen
-from PyQt6.QtCore import Qt, QPoint, QPointF
+from PyQt6.QtCore import Qt, QPoint, QPointF, QRect
 
 from .tools import BrushTool, EraserTool, FillTool, Tool
 
@@ -27,6 +27,8 @@ class Canvas(QWidget):
         self._pan_start = QPointF()
         self._cursor = QPointF()
         self.setMouseTracking(True)
+        self.setAttribute(Qt.WidgetAttribute.WA_StaticContents)
+        self.setAttribute(Qt.WidgetAttribute.WA_OpaquePaintEvent)
         self.smooth_pen = True
 
     def zoom(self, factor: float) -> None:
@@ -99,6 +101,15 @@ class Canvas(QWidget):
         y = (point.y() - self.offset.y()) / self.zoom_level
         return QPoint(int(x), int(y))
 
+    def image_to_view_rect(self, rect) -> 'QRect':
+        """Convert an image-space QRectF to a view QRect."""
+        from PyQt6.QtCore import QRect
+        x1 = rect.left() * self.zoom_level + self.offset.x()
+        y1 = rect.top() * self.zoom_level + self.offset.y()
+        x2 = rect.right() * self.zoom_level + self.offset.x()
+        y2 = rect.bottom() * self.zoom_level + self.offset.y()
+        return QRect(int(x1), int(y1), int(x2 - x1 + 1), int(y2 - y1 + 1))
+
     # Painting -----------------------------------------------------------
 
     def paintEvent(self, event) -> None:  # pragma: no cover - Qt paint
@@ -125,6 +136,7 @@ class Canvas(QWidget):
             self._push_undo()
             img_pos = self.view_to_image(event.position())
             self._tool.press(img_pos)
+            self.update()
         elif event.button() == Qt.MouseButton.RightButton:
             self._panning = True
             self._pan_start = event.position()
@@ -140,7 +152,7 @@ class Canvas(QWidget):
             if event.buttons() & Qt.MouseButton.LeftButton:
                 img_pos = self.view_to_image(event.position())
                 self._tool.move(img_pos)
-        self.update()
+            self.update()
 
     def mouseReleaseEvent(self, event) -> None:
         self._cursor = event.position()

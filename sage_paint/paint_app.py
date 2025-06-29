@@ -11,7 +11,7 @@ from PyQt6.QtGui import QAction, QActionGroup
 from PyQt6.QtCore import Qt
 
 from .canvas import Canvas
-from sage_editor.icons import load_icon
+from sage.icons import load_icon
 
 EXPERIMENTAL_NOTICE = (
     "SAGE Paint is experimental. Features may change and stability is not guaranteed."
@@ -36,21 +36,21 @@ class PaintWindow(QMainWindow):
     def _init_menu(self) -> None:
         bar = self.menuBar()
         file_menu = bar.addMenu("File")
-        new_act = QAction("New", self)
+        new_act = QAction(load_icon('add.png'), "New", self)
         new_act.triggered.connect(self.new_project)
         file_menu.addAction(new_act)
-        open_act = QAction("Open...", self)
+        open_act = QAction(load_icon('open.png'), "Open...", self)
         open_act.triggered.connect(self.open_project)
         file_menu.addAction(open_act)
-        save_act = QAction("Save", self)
+        save_act = QAction(load_icon('save.png'), "Save", self)
         save_act.triggered.connect(self.save_project)
         file_menu.addAction(save_act)
-        export_act = QAction("Export PNG...", self)
+        export_act = QAction(load_icon('folder.png'), "Export PNG...", self)
         export_act.triggered.connect(self.export_png)
         file_menu.addAction(export_act)
 
         settings = bar.addMenu("Settings")
-        size_action = QAction("Set Window Size", self)
+        size_action = QAction(load_icon('scale.png'), "Set Window Size", self)
         size_action.triggered.connect(self._change_size)
         settings.addAction(size_action)
 
@@ -132,7 +132,7 @@ class PaintWindow(QMainWindow):
         toolbar = QToolBar(self)
         self.addToolBar(toolbar)
 
-        color_action = QAction("Color", self)
+        color_action = QAction(load_icon('plugin.png'), "Color", self)
         color_action.triggered.connect(self.choose_color)
         toolbar.addAction(color_action)
 
@@ -147,17 +147,17 @@ class PaintWindow(QMainWindow):
         toolbar.addWidget(self.width_spin)
 
         toolbar.addSeparator()
-        smooth_act = QAction("Smooth", self)
+        smooth_act = QAction(load_icon('refresh.png'), "Smooth", self)
         smooth_act.setCheckable(True)
         smooth_act.setChecked(True)
         smooth_act.triggered.connect(lambda checked: setattr(self.canvas, 'smooth_pen', checked))
         toolbar.addAction(smooth_act)
 
         toolbar.addSeparator()
-        circle_act = QAction("Circle", self)
+        circle_act = QAction(load_icon('object.png'), "Circle", self)
         circle_act.setCheckable(True)
         circle_act.setChecked(True)
-        square_act = QAction("Square", self)
+        square_act = QAction(load_icon('move.png'), "Square", self)
         square_act.setCheckable(True)
         shape_group = QActionGroup(self)
         shape_group.addAction(circle_act)
@@ -167,21 +167,21 @@ class PaintWindow(QMainWindow):
         toolbar.addAction(circle_act)
         toolbar.addAction(square_act)
 
-        undo_act = QAction("Undo", self)
+        undo_act = QAction(load_icon('rotate.png'), "Undo", self)
         undo_act.triggered.connect(self.canvas.undo)
         toolbar.addAction(undo_act)
-        redo_act = QAction("Redo", self)
+        redo_act = QAction(load_icon('refresh.png'), "Redo", self)
         redo_act.triggered.connect(self.canvas.redo)
         toolbar.addAction(redo_act)
 
         toolbar.addSeparator()
-        zoom_in = QAction("Zoom +", self)
+        zoom_in = QAction(load_icon('add.png'), "Zoom +", self)
         zoom_in.triggered.connect(lambda: self.canvas.zoom_at(
             self.canvas.rect().center(), 1.2
         ))
         toolbar.addAction(zoom_in)
 
-        zoom_out = QAction("Zoom -", self)
+        zoom_out = QAction(load_icon('cut.png'), "Zoom -", self)
         zoom_out.triggered.connect(lambda: self.canvas.zoom_at(
             self.canvas.rect().center(), 1/1.2
         ))

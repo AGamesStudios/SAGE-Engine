@@ -13,6 +13,8 @@ the image stays centred on what you are working on.  A vertical toolbar on the
 left hosts brush, eraser and fill tools with optional circle or square brush
 tips and a smoothing toggle.  Each tool remembers its own width controlled by a
 spin box on the main toolbar which also shows the currently selected colour.
+Canvas updates are limited to the changed area so even low-end PCs can draw
+smoothly without dropping frames.
 Undo and redo shortcuts make it easy to revert mistakes.  The canvas sits on a
 dark gray background so its white area stands out clearly, and a thin border is
 drawn around it while you work.  A new **File** menu can create blank
@@ -130,7 +132,8 @@ keeping CPU usage low even on slower machines.
 An **Add Object** button beneath the list places a blank object with a default
  name like `New Object`. Every toolbar action and list item loads its icon from
  the `sage_editor/icons` folder, so you can replace these images with your own
- to completely theme the interface. The Import button loads `add.png`, the New
+ to completely theme the interface. SAGE Paint shares this same folder for its
+ toolbar icons, ensuring all tools draw from one location. The Import button loads `add.png`, the New
  Folder button uses `folder.png`, the Refresh button uses `refresh.png`, the Run
  action shows `start.png`, the New Project action shows `file.png`, Save Project
  uses `save.png`, the Recent Projects menu displays `recent.png`, the Manage
