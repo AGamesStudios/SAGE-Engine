@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from PyQt6.QtGui import QPainter, QPen, QColor, QImage
-from PyQt6.QtCore import Qt, QPoint, QRectF, QRect
+from PyQt6.QtCore import Qt, QPoint, QPointF, QRectF, QRect
 
 
 class Tool:
@@ -97,20 +97,23 @@ class BrushTool(Tool):
         painter.save()
         pen = QPen(Qt.GlobalColor.black)
         pen.setStyle(Qt.PenStyle.DotLine)
-        pen.setWidth(1)
+        pen.setWidth(0)
+        pen.setCosmetic(True)
         painter.setPen(pen)
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        r = self.canvas.pen_width / 2
+        r = self.canvas.pen_width / 2.0
         if self.canvas.pen_width <= 2:
-            size = int(max(1, self.canvas.pen_width))
-            x = int(pos.x() - size / 2)
-            y = int(pos.y() - size / 2)
+            cross = 4
+            painter.setPen(QPen(Qt.GlobalColor.white))
+            painter.drawLine(pos.x() - cross, pos.y(), pos.x() + cross, pos.y())
+            painter.drawLine(pos.x(), pos.y() - cross, pos.x(), pos.y() + cross)
             painter.setPen(QPen(Qt.GlobalColor.black))
-            painter.drawRect(x - 1, y - 1, size + 2, size + 2)
+            painter.drawLine(pos.x() - cross + 1, pos.y(), pos.x() + cross - 1, pos.y())
+            painter.drawLine(pos.x(), pos.y() - cross + 1, pos.x(), pos.y() + cross - 1)
         elif self.shape == 'square':
-            painter.drawRect(int(pos.x() - r), int(pos.y() - r), int(self.canvas.pen_width), int(self.canvas.pen_width))
+            painter.drawRect(QRectF(pos.x() - r, pos.y() - r, self.canvas.pen_width, self.canvas.pen_width))
         else:
-            painter.drawEllipse(pos, int(r), int(r))
+            painter.drawEllipse(QPointF(pos), r, r)
         painter.restore()
 
 
@@ -129,18 +132,21 @@ class EraserTool(BrushTool):
         painter.save()
         pen = QPen(Qt.GlobalColor.black)
         pen.setStyle(Qt.PenStyle.DotLine)
-        pen.setWidth(1)
+        pen.setWidth(0)
+        pen.setCosmetic(True)
         painter.setPen(pen)
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        r = self.canvas.pen_width / 2
+        r = self.canvas.pen_width / 2.0
         if self.canvas.pen_width <= 2:
-            size = int(max(1, self.canvas.pen_width))
-            x = int(pos.x() - size / 2)
-            y = int(pos.y() - size / 2)
+            cross = 4
+            painter.setPen(QPen(Qt.GlobalColor.white))
+            painter.drawLine(pos.x() - cross, pos.y(), pos.x() + cross, pos.y())
+            painter.drawLine(pos.x(), pos.y() - cross, pos.x(), pos.y() + cross)
             painter.setPen(QPen(Qt.GlobalColor.black))
-            painter.drawRect(x - 1, y - 1, size + 2, size + 2)
+            painter.drawLine(pos.x() - cross + 1, pos.y(), pos.x() + cross - 1, pos.y())
+            painter.drawLine(pos.x(), pos.y() - cross + 1, pos.x(), pos.y() + cross - 1)
         else:
-            painter.drawRect(int(pos.x() - r), int(pos.y() - r), int(self.canvas.pen_width), int(self.canvas.pen_width))
+            painter.drawRect(QRectF(pos.x() - r, pos.y() - r, self.canvas.pen_width, self.canvas.pen_width))
         painter.restore()
 
 
