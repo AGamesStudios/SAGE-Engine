@@ -152,10 +152,12 @@ class OpenGLRenderer:
             uniform vec2 cam;
             uniform vec2 factor;
             uniform vec2 size;
+            uniform float y_sign;
             const float PI = 3.14159265;
             void main() {
                 float wx = cam.x - size.x / 2.0 + (v_pos.x + 1.0) * size.x / 2.0;
                 float wy = cam.y - size.y / 2.0 + (v_pos.y + 1.0) * size.y / 2.0;
+                wy *= y_sign;
                 float lon = wx * factor.x;
                 float lat = wy * factor.y;
                 float u = mod(lon / (2.0 * PI), 1.0);
@@ -523,9 +525,12 @@ class OpenGLRenderer:
         loc_cam = glGetUniformLocation(self._pano_program, "cam")
         loc_fac = glGetUniformLocation(self._pano_program, "factor")
         loc_size = glGetUniformLocation(self._pano_program, "size")
-        glUniform2f(loc_cam, camera.x, camera.y)
+        loc_sign = glGetUniformLocation(self._pano_program, "y_sign")
+        scale = units.UNITS_PER_METER
+        glUniform2f(loc_cam, camera.x * scale, camera.y * scale)
         glUniform2f(loc_fac, camera.pano_fx, camera.pano_fy)
-        glUniform2f(loc_size, float(camera.width), float(camera.height))
+        glUniform2f(loc_size, float(camera.width) * scale, float(camera.height) * scale)
+        glUniform1f(loc_sign, 1.0 if units.Y_UP else -1.0)
         tex = self._get_panorama_texture(camera.panorama)
         glBindTexture(GL_TEXTURE_2D, tex)
         glBindVertexArray(self._pano_vao)
