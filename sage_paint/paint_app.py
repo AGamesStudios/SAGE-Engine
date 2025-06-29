@@ -5,9 +5,9 @@ from __future__ import annotations
 import sys
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QColorDialog,
-    QToolBar, QLabel, QMessageBox, QActionGroup
+    QToolBar, QLabel, QMessageBox
 )
-from PyQt6.QtGui import QAction
+from PyQt6.QtGui import QAction, QActionGroup
 from PyQt6.QtCore import Qt
 
 from .canvas import Canvas
