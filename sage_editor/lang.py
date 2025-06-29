@@ -1,7 +1,7 @@
 LANGUAGES = {
     'English': {
         'file': 'File',
-        'edit': 'Edit',
+        'edit_menu': 'Edit',
         'open': 'Open',
         'save': 'Save',
         'run': 'Run',
@@ -202,7 +202,7 @@ LANGUAGES = {
     },
     'Русский': {
         'file': 'Файл',
-        'edit': 'Правка',
+        'edit_menu': 'Правка',
         'open': 'Открыть',
         'save': 'Сохранить',
         'run': 'Запуск',

@@ -1608,6 +1608,7 @@ class Editor(QMainWindow):
 
     def _apply_language(self):
         self.file_menu.setTitle(self.t('file'))
+        self.edit_menu.setTitle(self.t('edit_menu'))
         self.new_proj_act.setText(self.t('new_project'))
         self.open_proj_act.setText(self.t('open_project'))
         self.save_proj_act.setText(self.t('save_project'))
@@ -1809,7 +1810,7 @@ class Editor(QMainWindow):
         self.file_menu.addAction(self.save_proj_act)
         self.recent_menu = self.file_menu.addMenu(load_icon('recent.png'), self.t('recent_projects'))
 
-        self.edit_menu = menubar.addMenu(self.t('edit'))
+        self.edit_menu = menubar.addMenu(self.t('edit_menu'))
         self.undo_act = QAction(self.t('undo'), self)
         self.undo_act.setShortcut('Ctrl+Z')
         self.undo_act.setEnabled(False)

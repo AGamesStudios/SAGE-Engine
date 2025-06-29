@@ -441,16 +441,13 @@ class OpenGLRenderer:
         glColor4f(*norm)
         glLineWidth(width)
         glBegin(GL_LINE_LOOP)
-        cam_x = camera.x if camera else 0.0
-        cam_y = camera.y if camera else 0.0
-        zoom = camera.zoom if camera else 1.0
         obj_x, obj_y = obj.render_position(camera, apply_effects=self.apply_effects)
         for vx, vy in verts:
             rx = vx * cos_a - vy * sin_a
             ry = vx * sin_a + vy * cos_a
-            world_x = (rx + obj_x) * unit_scale - cam_x * unit_scale
-            world_y = (ry + obj_y) * unit_scale * sign - cam_y * unit_scale * sign
-            glVertex2f(world_x * zoom, world_y * zoom)
+            world_x = (rx + obj_x) * unit_scale
+            world_y = (ry + obj_y) * unit_scale * sign
+            glVertex2f(world_x, world_y)
         glEnd()
         glLineWidth(1.0)
 
