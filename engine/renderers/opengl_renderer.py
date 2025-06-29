@@ -785,4 +785,19 @@ class OpenGLRenderer:
     def close(self):
         self._should_close = True
         if self.widget:
+            try:
+                from OpenGL.GL import glDeleteTextures
+                tex_ids = list(self.textures.values())
+                if self._blank_texture:
+                    tex_ids.append(self._blank_texture)
+                if self._blank_nearest_texture:
+                    tex_ids.append(self._blank_nearest_texture)
+                tex_ids.extend(self._icon_cache.values())
+                if tex_ids:
+                    arr = (ctypes.c_uint * len(tex_ids))(*tex_ids)
+                    self.widget.makeCurrent()
+                    glDeleteTextures(len(tex_ids), arr)
+                    self.widget.doneCurrent()
+            except Exception:
+                logger.exception("Failed to delete GL textures")
             self.widget.close()

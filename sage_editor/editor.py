@@ -3040,10 +3040,9 @@ class Editor(QMainWindow):
             return
         obj = self.items[idx][1]
         effects = getattr(obj, 'effects', [])
-        if not effects:
-            self.effects_group.setVisible(False)
-            return
         self.effects_group.setVisible(True)
+        if not effects:
+            return
         for i, eff in enumerate(effects):
             row = QWidget()
             lay = QHBoxLayout(row)
