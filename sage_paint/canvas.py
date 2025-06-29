@@ -29,6 +29,7 @@ class Canvas(QWidget):
         self.setMouseTracking(True)
         self.setAttribute(Qt.WidgetAttribute.WA_StaticContents)
         self.setAttribute(Qt.WidgetAttribute.WA_OpaquePaintEvent)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.smooth_pen = True
         self.selection: QRect | None = None
 
@@ -127,6 +128,8 @@ class Canvas(QWidget):
 
     def paintEvent(self, event) -> None:  # pragma: no cover - Qt paint
         painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
         painter.fillRect(self.rect(), QColor(80, 80, 80))
         painter.translate(self.offset)
         painter.scale(self.zoom_level, self.zoom_level)
@@ -188,3 +191,10 @@ class Canvas(QWidget):
         else:
             factor = 1 / 1.2
         self.zoom_at(event.position(), factor)
+
+    def keyPressEvent(self, event) -> None:
+        if event.key() == Qt.Key.Key_Escape and self.selection is not None:
+            self.selection = None
+            self.update()
+        else:
+            super().keyPressEvent(event)

@@ -156,6 +156,9 @@ class SelectTool(Tool):
             self._offset = QPoint()
             self._base_image = self.canvas.image.copy()
             self._sel_image = self.canvas.image.copy(sel)
+            painter = QPainter(self._base_image)
+            painter.fillRect(sel, QColor('white'))
+            painter.end()
         else:
             self.canvas.selection = None
             self._start = pos
@@ -178,7 +181,11 @@ class SelectTool(Tool):
 
     def release(self, pos: QPoint) -> None:
         if self._dragging:
-            self.canvas.selection = QRect(self._start, pos).normalized()
+            rect = QRect(self._start, pos).normalized()
+            if rect.width() < 2 or rect.height() < 2:
+                self.canvas.selection = None
+            else:
+                self.canvas.selection = rect
             self._dragging = False
             self.canvas.update()
         elif self._moving and self._base_image and self._sel_image:
