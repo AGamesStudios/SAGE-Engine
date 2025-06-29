@@ -116,11 +116,8 @@ class EraserTool(BrushTool):
     def pen(self) -> QPen:
         # Draw with background color or transparent when available
         pen = super().pen()
-        bg = getattr(self.canvas, 'bg_color', QColor('white'))
-        if bg is None:
-            pen.setColor(Qt.GlobalColor.transparent)
-        else:
-            pen.setColor(bg)
+        # color doesn't matter when clearing; use transparent for clarity
+        pen.setColor(Qt.GlobalColor.transparent)
         return pen
 
     def _prepare_painter(self) -> QPainter:
@@ -130,8 +127,7 @@ class EraserTool(BrushTool):
         if hqa is not None:
             painter.setRenderHint(hqa, self.canvas.smooth_pen)
         painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, self.canvas.smooth_pen)
-        if getattr(self.canvas, 'bg_color', QColor('white')) is None:
-            painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_Clear)
+        painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_Clear)
         return painter
 
     def move(self, pos: QPoint) -> None:
@@ -225,12 +221,8 @@ class SelectTool(Tool):
             self._base_image = self.canvas.image.copy()
             self._sel_image = self.canvas.image.copy(sel)
             painter = QPainter(self._base_image)
-            bg = getattr(self.canvas, 'bg_color', QColor('white'))
-            if bg is None:
-                painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_Clear)
-                painter.fillRect(sel, QColor(0, 0, 0, 0))
-            else:
-                painter.fillRect(sel, bg)
+            painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_Clear)
+            painter.fillRect(sel, QColor(0, 0, 0, 0))
             painter.end()
             self._orig_rect = QRect(sel)
         else:

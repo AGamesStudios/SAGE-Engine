@@ -12,10 +12,9 @@ class Canvas(QWidget):
 
     def __init__(self, width: int = 512, height: int = 512, parent: QWidget | None = None):
         super().__init__(parent)
-        self.image = QImage(width, height, QImage.Format.Format_RGB32)
-        self.image.fill(QColor('white'))
-        # remember the project background so eraser and selection know what
-        # "transparent" means
+        self.image = QImage(width, height, QImage.Format.Format_ARGB32)
+        self.image.fill(Qt.GlobalColor.transparent)
+        # background color is purely visual and not baked into the image
         self.bg_color: QColor | None = QColor('white')
         self.zoom_level = 1.0
         self.offset = QPointF(0, 0)

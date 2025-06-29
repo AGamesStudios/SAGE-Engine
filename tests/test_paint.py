@@ -19,9 +19,9 @@ class TestPaintModule(unittest.TestCase):
 
     def test_canvas_defaults(self):
         canvas = Canvas(16, 16)
-        # Top-left pixel should be white
+        # New canvas starts transparent; background color is visual only
         color = canvas.image.pixelColor(0, 0)
-        self.assertEqual(color, QColor(255, 255, 255))
+        self.assertEqual(color, QColor(0, 0, 0, 0))
         # zoom helper
         before = canvas.zoom_level
         canvas.zoom(2.0)
@@ -53,7 +53,7 @@ class TestPaintModule(unittest.TestCase):
         tool.press(QPoint(0, 0))
         self.assertEqual(canvas.image.pixelColor(0, 0), QColor('red'))
         canvas.undo()
-        self.assertEqual(canvas.image.pixelColor(0, 0), QColor('white'))
+        self.assertEqual(canvas.image.pixelColor(0, 0), QColor(0, 0, 0, 0))
         canvas.redo()
         self.assertEqual(canvas.image.pixelColor(0, 0), QColor('red'))
 
