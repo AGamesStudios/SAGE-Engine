@@ -23,11 +23,21 @@ to_units = units.to_units
 from_units = units.from_units
 set_y_up = units.set_y_up
 Y_UP = units.Y_UP
-from sage_sdk.plugins import register_plugin as register_engine_plugin, load_plugins as _load_engine_plugins
+from sage_sdk.plugins import (
+    PluginManager,
+)
+
+ENGINE_PLUGINS = PluginManager('engine')
+
+
+def register_engine_plugin(func):
+    """Register an engine plugin programmatically."""
+    ENGINE_PLUGINS.register(func)
+
 
 def load_engine_plugins(engine, paths=None):
     """Load plugins targeting the engine."""
-    _load_engine_plugins('engine', engine, paths)
+    ENGINE_PLUGINS.load(engine, paths)
 from .logic.base import (
     Event, EventSystem, register_condition, register_action,
     get_registered_conditions, get_registered_actions,

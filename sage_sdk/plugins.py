@@ -1,3 +1,7 @@
+"""Plugin loading utilities for the SAGE engine and editor."""
+
+from __future__ import annotations
+
 import importlib
 from importlib import metadata
 import logging
@@ -5,23 +9,141 @@ import os
 import sys
 import json
 
-logger = logging.getLogger('sage.plugins')
-
-# store plugin functions registered programmatically
-_PLUGIN_FUNCS = {
-    'engine': [],
-    'editor': [],
-}
-
 # default plugin directory in the user's home
 PLUGIN_DIR = os.path.join(os.path.expanduser('~'), '.sage_plugins')
 CONFIG_FILE = os.path.join(PLUGIN_DIR, 'plugins.json')
 
 
-def read_config():
+logger = logging.getLogger('sage.plugins')
+
+
+class PluginBase:
+    """Base class for engine and editor plugins."""
+
+    def init_engine(self, engine) -> None:
+        """Called when the engine starts."""
+
+    def init_editor(self, editor) -> None:
+        """Called when the editor starts."""
+
+    def register_logic(self, register_condition, register_action) -> None:
+        """Optional hook to register custom logic blocks."""
+
+
+class PluginManager:
+    """Load and register plugins for a specific target."""
+
+    def __init__(self, target: str,
+                 *, plugin_dir: str = PLUGIN_DIR,
+                 config_file: str = CONFIG_FILE,
+                 entry_point_group: str | None = None) -> None:
+        if target not in ("engine", "editor"):
+            raise ValueError(f"Unknown plugin target: {target}")
+        self.target = target
+        self.plugin_dir = plugin_dir
+        self.config_file = config_file
+        self.entry_point_group = (
+            entry_point_group or f"sage_{target}.plugins")
+        self._funcs: list[callable] = []
+
+    def register(self, func) -> None:
+        """Register a plugin initialization function."""
+        self._funcs.append(func)
+
+    def _call_init(self, mod_or_obj, instance) -> None:
+        if isinstance(mod_or_obj, PluginBase):
+            if self.target == "engine":
+                mod_or_obj.init_engine(instance)
+                mod_or_obj.register_logic = getattr(
+                    mod_or_obj, "register_logic", lambda *a: None)
+                mod_or_obj.register_logic(
+                    getattr(instance, "register_condition", None),
+                    getattr(instance, "register_action", None))
+            else:
+                mod_or_obj.init_editor(instance)
+            return
+
+        _call_init(mod_or_obj, self.target, instance)
+
+    def load(self, instance, paths: list[str] | None = None) -> None:
+        """Load plugins and initialize them with ``instance``."""
+        dirs: list[str] = []
+        env_all = os.environ.get("SAGE_PLUGINS")
+        if env_all:
+            dirs.extend(env_all.split(os.pathsep))
+        env_specific = os.environ.get(
+            "SAGE_EDITOR_PLUGINS" if self.target == "editor" else "SAGE_ENGINE_PLUGINS"
+        )
+        if env_specific:
+            dirs.extend(env_specific.split(os.pathsep))
+        if paths:
+            dirs.extend(paths)
+        dirs.append(self.plugin_dir)
+
+        cfg = read_config(self.config_file)
+
+        for func in list(self._funcs):
+            try:
+                func(instance)
+            except Exception:
+                logger.exception(
+                    "Plugin function %s failed", getattr(func, "__name__", func))
+
+        for path in dirs:
+            if not path:
+                continue
+            if os.path.isdir(path) and path not in sys.path:
+                sys.path.append(path)
+            if not os.path.isdir(path):
+                logger.warning("Plugin directory %s does not exist", path)
+                continue
+            for name in os.listdir(path):
+                if name.startswith("_") or not name.endswith(".py"):
+                    continue
+                mod_name = os.path.splitext(name)[0]
+                if not cfg.get(mod_name, True):
+                    continue
+                try:
+                    module = importlib.import_module(mod_name)
+                    self._call_init(module, instance)
+                except Exception:
+                    logger.exception(
+                        "Failed to load plugin %s at %s", mod_name,
+                        os.path.join(path, name))
+
+        try:
+            eps = metadata.entry_points()
+            entries = (eps.select(group=self.entry_point_group)
+                       if hasattr(eps, "select")
+                       else eps.get(self.entry_point_group, []))
+            for ep in entries:
+                try:
+                    mod = ep.load()
+                    self._call_init(mod, instance) if not callable(mod) else mod(instance)
+                except Exception:
+                    logger.exception("Failed to load entry point %s", ep.name)
+        except Exception:
+            logger.exception(
+                "Error loading entry points for %s", self.entry_point_group)
+
+
+
+# store plugin functions registered programmatically
+_MANAGERS = {
+    'engine': PluginManager('engine'),
+    'editor': PluginManager('editor'),
+}
+
+_PLUGIN_FUNCS = {
+    'engine': _MANAGERS['engine']._funcs,
+    'editor': _MANAGERS['editor']._funcs,
+}
+
+
+def read_config(config_file: str = CONFIG_FILE) -> dict:
     """Return the plugin enabled state dictionary."""
     try:
-        with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+        with open(config_file, 'r', encoding='utf-8') as f:
             data = json.load(f)
             if isinstance(data, dict):
                 return data
@@ -30,23 +152,24 @@ def read_config():
     return {}
 
 
-def write_config(cfg):
-    os.makedirs(PLUGIN_DIR, exist_ok=True)
-    with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
+def write_config(cfg: dict, *, config_file: str = CONFIG_FILE) -> None:
+    os.makedirs(os.path.dirname(config_file), exist_ok=True)
+    with open(config_file, 'w', encoding='utf-8') as f:
         json.dump(cfg, f, indent=2)
 
 
-def list_plugins(paths=None):
+def list_plugins(paths: list[str] | None = None, *, plugin_dir: str = PLUGIN_DIR,
+                 config_file: str = CONFIG_FILE) -> list[tuple[str, str, bool]]:
     """Return a list of (module name, path, enabled)."""
-    dirs = []
+    dirs: list[str] = []
     env_all = os.environ.get('SAGE_PLUGINS')
     if env_all:
         dirs.extend(env_all.split(os.pathsep))
     if paths:
         dirs.extend(paths)
-    dirs.append(PLUGIN_DIR)
+    dirs.append(plugin_dir)
 
-    cfg = read_config()
+    cfg = read_config(config_file)
     result = []
     for path in dirs:
         if not os.path.isdir(path):
@@ -61,13 +184,28 @@ def list_plugins(paths=None):
 
 def register_plugin(target: str, func):
     """Register a plugin for the given target ('engine' or 'editor')."""
-    if target not in _PLUGIN_FUNCS:
+    if target not in _MANAGERS:
         raise ValueError(f'Unknown plugin target: {target}')
-    _PLUGIN_FUNCS[target].append(func)
+    _MANAGERS[target].register(func)
 
 
 def _call_init(module, target, instance):
     """Call the init function for the requested target if present."""
+    plugin_obj = getattr(module, 'plugin', None)
+    if isinstance(plugin_obj, PluginBase):
+        if target == 'engine':
+            plugin_obj.init_engine(instance)
+        else:
+            plugin_obj.init_editor(instance)
+        if target == 'engine':
+            reg = getattr(plugin_obj, 'register_logic', None)
+            if callable(reg):
+                try:
+                    from engine.logic import register_condition, register_action
+                    reg(register_condition, register_action)
+                except Exception:
+                    logger.exception('register_logic failed in %s', module.__name__)
+        return
     init_name = f'init_{target}'
     func = getattr(module, init_name, None)
     if callable(func):
@@ -88,62 +226,7 @@ def _call_init(module, target, instance):
 
 def load_plugins(target: str, instance, paths=None):
     """Load plugins for the given target and initialize them with *instance*."""
-    if target not in _PLUGIN_FUNCS:
+    if target not in _MANAGERS:
         raise ValueError(f'Unknown plugin target: {target}')
-
-    dirs = []
-    env_all = os.environ.get('SAGE_PLUGINS')
-    if env_all:
-        dirs.extend(env_all.split(os.pathsep))
-    env_specific = os.environ.get('SAGE_EDITOR_PLUGINS' if target == 'editor' else 'SAGE_ENGINE_PLUGINS')
-    if env_specific:
-        dirs.extend(env_specific.split(os.pathsep))
-    if paths:
-        dirs.extend(paths)
-    dirs.append(PLUGIN_DIR)
-
-    cfg = read_config()
-
-    for func in list(_PLUGIN_FUNCS[target]):
-        try:
-            func(instance)
-        except Exception:
-            logger.exception('Plugin function %s failed', getattr(func, '__name__', func))
-
-    for path in dirs:
-        if not path:
-            continue
-        if os.path.isdir(path) and path not in sys.path:
-            sys.path.append(path)
-        if not os.path.isdir(path):
-            logger.warning('Plugin directory %s does not exist', path)
-            continue
-        for name in os.listdir(path):
-            if name.startswith('_') or not name.endswith('.py'):
-                continue
-            mod_name = os.path.splitext(name)[0]
-            if not cfg.get(mod_name, True):
-                continue
-            try:
-                module = importlib.import_module(mod_name)
-                _call_init(module, target, instance)
-            except Exception:
-                logger.exception('Failed to load plugin %s at %s', mod_name, os.path.join(path, name))
-
-    # also load plugins provided via package entry points
-    group = f'sage_{target}.plugins'
-    try:
-        eps = metadata.entry_points()
-        if hasattr(eps, 'select'):
-            entries = eps.select(group=group)
-        else:
-            entries = eps.get(group, [])
-        for ep in entries:
-            try:
-                mod = ep.load()
-                _call_init(mod, target, instance) if not callable(mod) else mod(instance)
-            except Exception:
-                logger.exception('Failed to load entry point %s', ep.name)
-    except Exception:
-        logger.exception('Error loading entry points for %s', group)
+    _MANAGERS[target].load(instance, paths)
 
