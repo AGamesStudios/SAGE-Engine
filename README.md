@@ -8,7 +8,11 @@ tool provides an experimental sprite editor for drawing 2D graphics. The
 window shows an "EXPERIMENTAL" banner to highlight this status.  SAGE Paint
 supports zooming, right-click panning and an eraser tool so sprites can be
 drawn or touched up without leaving the engine.  A live gizmo shows the brush
-or eraser size so edits feel precise.
+or eraser size so edits feel precise.  A vertical toolbar on the left now hosts
+brush, eraser and fill tools with optional circle or square brush tips.  Undo
+and redo shortcuts make it easy to revert mistakes.  The canvas sits on a dark
+gray background so its white area stands out clearly and a thin border is drawn
+around it while you work.
 
 The current release is **SAGE Engine: 2D prototype v0.0.01a**. The engine
 stores its version inside every `.sageproject` file so you can safely upgrade

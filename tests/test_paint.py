@@ -1,8 +1,9 @@
 import unittest
 from PyQt6.QtWidgets import QApplication
-from PyQt6.QtCore import QPoint
+from PyQt6.QtCore import QPoint, Qt
+from PyQt6.QtGui import QColor
 
-from sage_paint import PaintWindow, EXPERIMENTAL_NOTICE, Canvas
+from sage_paint import PaintWindow, EXPERIMENTAL_NOTICE, Canvas, FillTool, BrushTool
 
 
 class TestPaintModule(unittest.TestCase):
@@ -20,7 +21,6 @@ class TestPaintModule(unittest.TestCase):
         canvas = Canvas(16, 16)
         # Top-left pixel should be white
         color = canvas.image.pixelColor(0, 0)
-        from PyQt6.QtGui import QColor
         self.assertEqual(color, QColor(255, 255, 255))
         # zoom helper
         before = canvas.zoom_level
@@ -33,6 +33,23 @@ class TestPaintModule(unittest.TestCase):
         painter = QPainter(canvas.image)
         canvas._tool.draw_gizmo(painter, QPoint(0, 0))
         painter.end()
+
+    def test_fill_and_undo(self):
+        canvas = Canvas(8, 8)
+        canvas.pen_color = QColor('red')
+        tool = FillTool(canvas)
+        canvas.set_tool(tool)
+        tool.press(QPoint(0, 0))
+        self.assertEqual(canvas.image.pixelColor(0, 0), QColor('red'))
+        canvas.undo()
+        self.assertEqual(canvas.image.pixelColor(0, 0), QColor('white'))
+        canvas.redo()
+        self.assertEqual(canvas.image.pixelColor(0, 0), QColor('red'))
+
+    def test_brush_shapes(self):
+        canvas = Canvas(8, 8)
+        brush = BrushTool(canvas, shape='square')
+        self.assertEqual(brush.pen().capStyle(), Qt.PenCapStyle.SquareCap)
 
 
 if __name__ == "__main__":

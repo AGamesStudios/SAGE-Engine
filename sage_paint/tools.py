@@ -33,10 +33,22 @@ class Tool:
 
 
 class BrushTool(Tool):
-    def __init__(self, canvas: 'Canvas'):
+    def __init__(self, canvas: 'Canvas', shape: str = 'circle'):
         super().__init__(canvas)
+        self.shape = shape
         self._last = QPoint()
         self._drawing = False
+
+    def set_shape(self, shape: str) -> None:
+        self.shape = shape
+
+    def pen(self) -> QPen:
+        join = Qt.PenJoinStyle.RoundJoin
+        cap = Qt.PenCapStyle.RoundCap
+        if self.shape == 'square':
+            join = Qt.PenJoinStyle.MiterJoin
+            cap = Qt.PenCapStyle.SquareCap
+        return QPen(self.canvas.pen_color, self.canvas.pen_width, join=join, cap=cap)
 
     def press(self, pos: QPoint) -> None:
         self._last = pos
@@ -64,7 +76,10 @@ class BrushTool(Tool):
         painter.setPen(pen)
         painter.setBrush(Qt.BrushStyle.NoBrush)
         r = self.canvas.pen_width / 2
-        painter.drawEllipse(pos, int(r), int(r))
+        if self.shape == 'square':
+            painter.drawRect(int(pos.x() - r), int(pos.y() - r), int(self.canvas.pen_width), int(self.canvas.pen_width))
+        else:
+            painter.drawEllipse(pos, int(r), int(r))
         painter.restore()
 
 
@@ -85,3 +100,27 @@ class EraserTool(BrushTool):
         r = self.canvas.pen_width / 2
         painter.drawRect(int(pos.x() - r), int(pos.y() - r), int(self.canvas.pen_width), int(self.canvas.pen_width))
         painter.restore()
+
+
+class FillTool(Tool):
+    """Simple flood fill tool."""
+
+    def press(self, pos: QPoint) -> None:
+        self._flood_fill(pos.x(), pos.y())
+
+    def _flood_fill(self, x: int, y: int) -> None:
+        image = self.canvas.image
+        w, h = image.width(), image.height()
+        target = image.pixelColor(x, y)
+        new = self.canvas.pen_color
+        if target == new:
+            return
+        stack = [(x, y)]
+        while stack:
+            px, py = stack.pop()
+            if px < 0 or py < 0 or px >= w or py >= h:
+                continue
+            if image.pixelColor(px, py) != target:
+                continue
+            image.setPixelColor(px, py, new)
+            stack.extend([(px + 1, py), (px - 1, py), (px, py + 1), (px, py - 1)])

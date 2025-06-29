@@ -11,6 +11,7 @@ from PyQt6.QtGui import QAction, QActionGroup
 from PyQt6.QtCore import Qt
 
 from .canvas import Canvas
+from sage_editor.icons import load_icon
 
 EXPERIMENTAL_NOTICE = (
     "SAGE Paint is experimental. Features may change and stability is not guaranteed."
@@ -31,23 +32,35 @@ class PaintWindow(QMainWindow):
     # Toolbar ------------------------------------------------------------
 
     def _init_toolbar(self) -> None:
-        toolbar = QToolBar(self)
-        self.addToolBar(toolbar)
+        tools_bar = QToolBar(self)
+        tools_bar.setOrientation(Qt.Orientation.Vertical)
+        self.addToolBar(Qt.ToolBarArea.LeftToolBarArea, tools_bar)
         group = QActionGroup(self)
-        brush_action = QAction("Brush", self)
+        brush_action = QAction(load_icon('brush.png'), "Brush", self)
         brush_action.setCheckable(True)
         brush_action.setChecked(True)
         brush_action.triggered.connect(lambda: self.canvas.use_brush())
         group.addAction(brush_action)
-        toolbar.addAction(brush_action)
+        tools_bar.addAction(brush_action)
 
-        eraser_action = QAction("Eraser", self)
+        eraser_action = QAction(load_icon('eraser.png'), "Eraser", self)
         eraser_action.setCheckable(True)
         eraser_action.triggered.connect(lambda: self.canvas.use_eraser())
         group.addAction(eraser_action)
-        toolbar.addAction(eraser_action)
+        tools_bar.addAction(eraser_action)
+
+        fill_action = QAction(load_icon('fill.png'), "Fill", self)
+        fill_action.setCheckable(True)
+        fill_action.triggered.connect(lambda: self.canvas.use_fill())
+        group.addAction(fill_action)
+        tools_bar.addAction(fill_action)
+
         self.brush_action = brush_action
         self.eraser_action = eraser_action
+        self.fill_action = fill_action
+
+        toolbar = QToolBar(self)
+        self.addToolBar(toolbar)
 
         color_action = QAction("Color", self)
         color_action.triggered.connect(self.choose_color)
@@ -60,6 +73,27 @@ class PaintWindow(QMainWindow):
         dec_action = QAction("Width -", self)
         dec_action.triggered.connect(self.decrease_width)
         toolbar.addAction(dec_action)
+
+        toolbar.addSeparator()
+        circle_act = QAction("Circle", self)
+        circle_act.setCheckable(True)
+        circle_act.setChecked(True)
+        square_act = QAction("Square", self)
+        square_act.setCheckable(True)
+        shape_group = QActionGroup(self)
+        shape_group.addAction(circle_act)
+        shape_group.addAction(square_act)
+        circle_act.triggered.connect(lambda: self.canvas.set_brush_shape('circle'))
+        square_act.triggered.connect(lambda: self.canvas.set_brush_shape('square'))
+        toolbar.addAction(circle_act)
+        toolbar.addAction(square_act)
+
+        undo_act = QAction("Undo", self)
+        undo_act.triggered.connect(self.canvas.undo)
+        toolbar.addAction(undo_act)
+        redo_act = QAction("Redo", self)
+        redo_act.triggered.connect(self.canvas.redo)
+        toolbar.addAction(redo_act)
 
         toolbar.addSeparator()
         zoom_in = QAction("Zoom +", self)
