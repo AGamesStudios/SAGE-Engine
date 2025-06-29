@@ -58,6 +58,7 @@ class BrushTool(Tool):
         if not self._drawing:
             return
         painter = QPainter(self.canvas.image)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, self.canvas.smooth_pen)
         painter.setPen(self.pen())
         painter.drawLine(self._last, pos)
         painter.end()

@@ -26,8 +26,26 @@ class PaintWindow(QMainWindow):
         self.setWindowTitle("SAGE Paint (Experimental)")
         self.canvas = Canvas()
         self.setCentralWidget(self.canvas)
+        self._init_menu()
         self._init_toolbar()
         self._show_disclaimer()
+
+    # Menu ---------------------------------------------------------------
+
+    def _init_menu(self) -> None:
+        menu = self.menuBar().addMenu("Settings")
+        size_action = QAction("Set Window Size", self)
+        size_action.triggered.connect(self._change_size)
+        menu.addAction(size_action)
+
+    def _change_size(self) -> None:
+        from PyQt6.QtWidgets import QInputDialog
+        w, ok = QInputDialog.getInt(self, "Width", "Window width", self.width(), 1)
+        if not ok:
+            return
+        h, ok = QInputDialog.getInt(self, "Height", "Window height", self.height(), 1)
+        if ok:
+            self.resize(w, h)
 
     # Toolbar ------------------------------------------------------------
 
@@ -75,6 +93,13 @@ class PaintWindow(QMainWindow):
         toolbar.addAction(dec_action)
 
         toolbar.addSeparator()
+        smooth_act = QAction("Smooth", self)
+        smooth_act.setCheckable(True)
+        smooth_act.setChecked(True)
+        smooth_act.triggered.connect(lambda checked: setattr(self.canvas, 'smooth_pen', checked))
+        toolbar.addAction(smooth_act)
+
+        toolbar.addSeparator()
         circle_act = QAction("Circle", self)
         circle_act.setCheckable(True)
         circle_act.setChecked(True)
@@ -97,11 +122,15 @@ class PaintWindow(QMainWindow):
 
         toolbar.addSeparator()
         zoom_in = QAction("Zoom +", self)
-        zoom_in.triggered.connect(lambda: self.canvas.zoom(1.2))
+        zoom_in.triggered.connect(lambda: self.canvas.zoom_at(
+            self.canvas.rect().center(), 1.2
+        ))
         toolbar.addAction(zoom_in)
 
         zoom_out = QAction("Zoom -", self)
-        zoom_out.triggered.connect(lambda: self.canvas.zoom(1/1.2))
+        zoom_out.triggered.connect(lambda: self.canvas.zoom_at(
+            self.canvas.rect().center(), 1/1.2
+        ))
         toolbar.addAction(zoom_out)
 
         label = QLabel("EXPERIMENTAL", self)

@@ -25,10 +25,18 @@ class Canvas(QWidget):
         self._pan_start = QPointF()
         self._cursor = QPointF()
         self.setMouseTracking(True)
+        self.smooth_pen = True
 
     def zoom(self, factor: float) -> None:
         """Scale the view by ``factor`` and refresh."""
         self.zoom_level *= factor
+        self.update()
+
+    def zoom_at(self, view_pos: QPointF, factor: float) -> None:
+        """Zoom relative to ``view_pos`` keeping that point stable."""
+        img_pos = self.view_to_image(view_pos)
+        self.zoom_level *= factor
+        self.offset = view_pos - QPointF(img_pos) * self.zoom_level
         self.update()
 
     # Tool management ----------------------------------------------------
@@ -135,4 +143,4 @@ class Canvas(QWidget):
             factor = 1.2
         else:
             factor = 1 / 1.2
-        self.zoom(factor)
+        self.zoom_at(event.position(), factor)

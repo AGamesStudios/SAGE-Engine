@@ -26,6 +26,10 @@ class TestPaintModule(unittest.TestCase):
         before = canvas.zoom_level
         canvas.zoom(2.0)
         self.assertAlmostEqual(canvas.zoom_level, before * 2.0)
+        center = canvas.rect().center()
+        img_before = canvas.view_to_image(center)
+        canvas.zoom_at(center, 1.5)
+        self.assertEqual(canvas.view_to_image(center), img_before)
 
     def test_gizmo_draw(self):
         canvas = Canvas(16, 16)
@@ -50,6 +54,13 @@ class TestPaintModule(unittest.TestCase):
         canvas = Canvas(8, 8)
         brush = BrushTool(canvas, shape='square')
         self.assertEqual(brush.pen().capStyle(), Qt.PenCapStyle.SquareCap)
+
+    def test_smooth_toggle(self):
+        canvas = Canvas(8, 8)
+        self.assertTrue(canvas.smooth_pen)
+        canvas.smooth_pen = False
+        brush = BrushTool(canvas)
+        self.assertFalse(canvas.smooth_pen)
 
 
 if __name__ == "__main__":
