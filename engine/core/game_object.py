@@ -112,16 +112,27 @@ class GameObject:
         x = self.x
         y = self.y
         if apply_effects and camera:
-            for eff in getattr(self, 'effects', []):
-                if eff.get('type') == 'panorama':
-                    fx = eff.get('factor_x', eff.get('factor', 0.0))
-                    fy = eff.get('factor_y', eff.get('factor', 0.0))
+            for eff in getattr(self, "effects", []):
+                etype = eff.get("type")
+                if etype in {"panorama", "perspective"}:
+                    fx = eff.get("factor_x", eff.get("factor", 0.0))
+                    fy = eff.get("factor_y", eff.get("factor", 0.0))
                     # offset from the camera center so objects stay anchored
                     cx = camera.x - camera.width / 2
                     cy = camera.y - camera.height / 2
                     x -= cx * fx
                     y -= cy * fy
         return x, y
+
+    def render_scale(self, camera, apply_effects: bool = True) -> float:
+        """Return an additional scale factor from active effects."""
+        scale = 1.0
+        if apply_effects and camera:
+            for eff in getattr(self, "effects", []):
+                if eff.get("type") == "perspective":
+                    depth = eff.get("depth", eff.get("factor_z", eff.get("factor", 0.0)))
+                    scale *= 1.0 + (camera.zoom - 1.0) * depth
+        return scale
 
 
     def _load_image(self):
