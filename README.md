@@ -134,7 +134,8 @@ An **Add Object** button beneath the list places a blank object with a default
  name like `New Object`. Every toolbar action and list item loads its icon from
  the `sage_editor/icons` folder, so you can replace these images with your own
  to completely theme the interface. SAGE Paint shares this same folder for its
- toolbar icons, ensuring all tools draw from one location. The Import button loads `add.png`, the New
+ toolbar icons, ensuring all tools draw from one location.
+SAGE Paint uses icons named `brush.png`, `eraser.png`, `fill.png`, `undo.png`, `redo.png`, `circle.png`, `square.png`, `colorpicker.png`, `smooth.png`, `zoomin.png` and `zoomout.png` for its toolbar. The Import button loads `add.png`, the New
  Folder button uses `folder.png`, the Refresh button uses `refresh.png`, the Run
  action shows `start.png`, the New Project action shows `file.png`, Save Project
  uses `save.png`, the Recent Projects menu displays `recent.png`, the Manage
