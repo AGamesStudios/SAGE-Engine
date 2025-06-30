@@ -455,11 +455,13 @@ class OpenGLRenderer:
         sy = -1.0 if getattr(obj, "flip_y", False) else 1.0
         w = obj.width * obj.scale_x * scale_mul
         h = obj.height * obj.scale_y * scale_mul
+        off_x = (0.5 - getattr(obj, "pivot_x", 0.5)) * w * sx
+        off_y = (0.5 - getattr(obj, "pivot_y", 0.5)) * h * sy
         corners = [
-            (-w / 2, -h / 2),
-            (w / 2, -h / 2),
-            (w / 2, h / 2),
-            (-w / 2, h / 2),
+            (-w / 2 * sx + off_x, -h / 2 * sy + off_y),
+            (w / 2 * sx + off_x, -h / 2 * sy + off_y),
+            (w / 2 * sx + off_x, h / 2 * sy + off_y),
+            (-w / 2 * sx + off_x, h / 2 * sy + off_y),
         ]
         glUseProgram(0)
         glBindTexture(GL_TEXTURE_2D, 0)
@@ -530,25 +532,33 @@ class OpenGLRenderer:
         sy = -1.0 if getattr(obj, "flip_y", False) else 1.0
         w = obj.width * obj.scale_x * scale_mul
         h = obj.height * obj.scale_y * scale_mul
+        off_x = (0.5 - getattr(obj, "pivot_x", 0.5)) * w * sx
+        off_y = (0.5 - getattr(obj, "pivot_y", 0.5)) * h * sy
 
         if shape == "triangle":
-            verts = [(-w / 2, -h / 2), (w / 2, -h / 2), (0.0, h / 2)]
+            verts = [
+                (-w / 2 * sx + off_x, -h / 2 * sy + off_y),
+                (w / 2 * sx + off_x, -h / 2 * sy + off_y),
+                (0.0 + off_x, h / 2 * sy + off_y),
+            ]
             mode = GL_TRIANGLES
         elif shape == "square":
             verts = [
-                (-w / 2, -h / 2),
-                (w / 2, -h / 2),
-                (w / 2, h / 2),
-                (-w / 2, h / 2),
+                (-w / 2 * sx + off_x, -h / 2 * sy + off_y),
+                (w / 2 * sx + off_x, -h / 2 * sy + off_y),
+                (w / 2 * sx + off_x, h / 2 * sy + off_y),
+                (-w / 2 * sx + off_x, h / 2 * sy + off_y),
             ]
             mode = GL_TRIANGLE_FAN
         else:
-            verts = []
+            verts = [(off_x, off_y)]
             r = max(w, h) / 2
             steps = 32
             for i in range(steps + 1):
                 ang2 = 2 * math.pi * i / steps
-                verts.append((math.cos(ang2) * r, math.sin(ang2) * r))
+                x = math.cos(ang2) * r * sx + off_x
+                y = math.sin(ang2) * r * sy + off_y
+                verts.append((x, y))
             mode = GL_TRIANGLE_FAN
 
         obj_x, obj_y = obj.render_position(camera, apply_effects=self.apply_effects)
