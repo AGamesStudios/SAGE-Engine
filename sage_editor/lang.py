@@ -45,6 +45,7 @@ LANGUAGES = {
         'save_project': 'Save Project',
         'sage_files': 'SAGE Project (*.sageproject)',
         'browse': 'Browse',
+        'clear': 'Clear',
         'detect_key': 'Auto Detect',
         'press_key': 'Press a key...',
         'recent_projects': 'Recent Projects',
@@ -106,6 +107,7 @@ LANGUAGES = {
         , 'outline_width': 'Outline Width:'
         , 'outline_color': 'Outline Color:'
         , 'effects_sprite_only': 'Effects can only be added to sprites'
+        , 'object_settings': 'Object Settings'
         , 'settings': 'Settings'
         , 'window_settings': 'Window Settings'
         , 'project_settings': 'Project Settings'
@@ -146,6 +148,11 @@ LANGUAGES = {
         , 'pivot_y': 'Pivot Y:'
         , 'flip_x': 'Flip X'
         , 'flip_y': 'Flip Y'
+        , 'flip': 'Flip:'
+        , 'position': 'Position:'
+        , 'pivot': 'Pivot:'
+        , 'material': 'Material'
+        , 'alpha': 'Alpha:'
         , 'coord_mode': 'Coordinate Mode:'
         , 'global': 'Global'
         , 'local': 'Local'
@@ -253,6 +260,7 @@ LANGUAGES = {
         'save_project': 'Сохранить проект',
         'sage_files': 'Проекты SAGE (*.sageproject)',
         'browse': 'Обзор',
+        'clear': 'Очистить',
         'detect_key': 'Автоопределение',
         'press_key': 'Нажмите клавишу...',
         'recent_projects': 'Недавние проекты',
@@ -314,6 +322,7 @@ LANGUAGES = {
         , 'outline_width': 'Толщина обводки:'
         , 'outline_color': 'Цвет обводки:'
         , 'effects_sprite_only': 'Эффекты можно добавлять только спрайтам'
+        , 'object_settings': 'Настройки объекта'
         , 'settings': 'Настройки'
         , 'window_settings': 'Параметры окна'
         , 'project_settings': 'Параметры проекта'
@@ -354,6 +363,11 @@ LANGUAGES = {
         , 'pivot_y': 'Пивот Y:'
         , 'flip_x': 'Отразить по X'
         , 'flip_y': 'Отразить по Y'
+        , 'flip': 'Отразить:'
+        , 'position': 'Позиция:'
+        , 'pivot': 'Пивот:'
+        , 'material': 'Материал'
+        , 'alpha': 'Альфа:'
         , 'coord_mode': 'Режим координат:'
         , 'global': 'Глобальные'
         , 'local': 'Локальные'
