@@ -277,7 +277,11 @@ class Viewport(GLWidget):
                         start = (world[0] - self.selected_obj.x) * cos_a + (
                             world[1] - self.selected_obj.y
                         ) * sin_a
-                        self._drag_offset = (start, getattr(self.selected_obj, 'scale_x', 1.0))
+                        self._drag_offset = (
+                            start,
+                            getattr(self.selected_obj, 'scale_x', 1.0),
+                            self.selected_obj.width * getattr(self.selected_obj, 'scale_x', 1.0),
+                        )
                     elif hit == 'sy':
                         ang = math.radians(getattr(self.selected_obj, 'angle', 0.0))
                         cos_a = math.cos(ang)
@@ -285,7 +289,11 @@ class Viewport(GLWidget):
                         start = (world[0] - self.selected_obj.x) * (-sin_a) + (
                             world[1] - self.selected_obj.y
                         ) * cos_a
-                        self._drag_offset = (start, getattr(self.selected_obj, 'scale_y', 1.0))
+                        self._drag_offset = (
+                            start,
+                            getattr(self.selected_obj, 'scale_y', 1.0),
+                            self.selected_obj.height * getattr(self.selected_obj, 'scale_y', 1.0),
+                        )
                     else:
                         self._drag_offset = (
                             self.selected_obj.x - world[0],
@@ -333,7 +341,7 @@ class Viewport(GLWidget):
                     delta += 360
                 self.selected_obj.angle = self._drag_offset + delta
             elif self._gizmo_drag == 'sx':
-                start_dx, base = self._drag_offset
+                start_dx, base, start_w = self._drag_offset
                 ang = math.radians(getattr(self.selected_obj, 'angle', 0.0))
                 cos_a = math.cos(ang)
                 sin_a = math.sin(ang)
@@ -341,18 +349,16 @@ class Viewport(GLWidget):
                     world[1] - self.selected_obj.y
                 ) * sin_a
                 if start_dx:
-                    value = base * (dx_local / start_dx)
                     if self.snap_to_grid and self.grid_size > 0:
-                        world_w = self.selected_obj.width * value
-                        world_w = (
-                            round(world_w / self.grid_size) * self.grid_size
-                        )
+                        world_w = start_w + (dx_local - start_dx)
+                        world_w = round(world_w / self.grid_size) * self.grid_size
                         value = max(0.01, world_w / self.selected_obj.width)
                     else:
+                        value = base * (dx_local / start_dx)
                         value = max(0.01, value)
                     self.selected_obj.scale_x = value
             elif self._gizmo_drag == 'sy':
-                start_dy, base = self._drag_offset
+                start_dy, base, start_h = self._drag_offset
                 ang = math.radians(getattr(self.selected_obj, 'angle', 0.0))
                 cos_a = math.cos(ang)
                 sin_a = math.sin(ang)
@@ -360,14 +366,12 @@ class Viewport(GLWidget):
                     world[1] - self.selected_obj.y
                 ) * cos_a
                 if start_dy:
-                    value = base * (dy_local / start_dy)
                     if self.snap_to_grid and self.grid_size > 0:
-                        world_h = self.selected_obj.height * value
-                        world_h = (
-                            round(world_h / self.grid_size) * self.grid_size
-                        )
+                        world_h = start_h + (dy_local - start_dy)
+                        world_h = round(world_h / self.grid_size) * self.grid_size
                         value = max(0.01, world_h / self.selected_obj.height)
                     else:
+                        value = base * (dy_local / start_dy)
                         value = max(0.01, value)
                     self.selected_obj.scale_y = value
             else:
