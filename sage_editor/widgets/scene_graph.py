@@ -4,7 +4,7 @@ import os
 from typing import Dict
 
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor, QPainterPath, QPen, QPixmap
+from PyQt6.QtGui import QColor, QPainterPath, QPen, QPixmap, QPainter
 from PyQt6.QtWidgets import (
     QGraphicsItem, QGraphicsPixmapItem, QGraphicsRectItem, QGraphicsScene,
     QGraphicsTextItem, QGraphicsView
@@ -59,7 +59,8 @@ class SceneGraphView(QGraphicsView):
     def __init__(self, parent=None) -> None:
         scene = QGraphicsScene()
         super().__init__(scene, parent)
-        self.setRenderHint(QPainterPath.RenderHint.Antialiasing)
+        # QPainter.RenderHint is the correct enum for antialiasing in Qt6
+        self.setRenderHint(QPainter.RenderHint.Antialiasing)
         self.graph: SceneGraph | None = None
         self.items: Dict[str, SceneNodeItem] = {}
         self.lines: list = []
