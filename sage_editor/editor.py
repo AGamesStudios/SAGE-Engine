@@ -1997,8 +1997,8 @@ class Editor(QMainWindow):
         self.settings_menu.addAction(self.editor_settings_act)
 
         self.plugins_menu = menubar.addMenu(self.t('plugins_menu'))
-        self.plugins_menu.setIcon(load_icon('plugin.png'))
         self.plugins_act = QAction(self.t('manage_plugins'), self)
+        self.plugins_act.setIcon(load_icon('plugin.png'))
         self.plugins_act.triggered.connect(self.show_plugin_manager)
         self.plugins_menu.addAction(self.plugins_act)
 

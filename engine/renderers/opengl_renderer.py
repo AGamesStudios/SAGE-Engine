@@ -659,15 +659,33 @@ class OpenGLRenderer:
         glEnd()
         glLineWidth(1.0)
 
-    def _draw_origin(self, size: float = 1.0):
+    def _draw_origin(self, camera: Camera | None):
+        """Draw infinite coordinate axes relative to the viewport."""
+        if not camera:
+            zoom = 1.0
+            cam_x = cam_y = 0.0
+        else:
+            zoom = camera.zoom
+            cam_x = camera.x
+            cam_y = camera.y
+
+        scale = units.UNITS_PER_METER
+        sign = 1.0 if units.Y_UP else -1.0
+        half_w = self.width / 2 / (scale * zoom)
+        half_h = self.height / 2 / (scale * zoom)
+        start_x = cam_x - half_w
+        end_x = cam_x + half_w
+        start_y = cam_y - half_h
+        end_y = cam_y + half_h
+
         glBindTexture(GL_TEXTURE_2D, 0)
         glBegin(GL_LINES)
         glColor4f(1.0, 0.0, 0.0, 1.0)
-        glVertex2f(-size, 0.0)
-        glVertex2f(size, 0.0)
+        glVertex2f(start_x * scale, 0.0)
+        glVertex2f(end_x * scale, 0.0)
         glColor4f(0.0, 1.0, 0.0, 1.0)
-        glVertex2f(0.0, -size)
-        glVertex2f(0.0, size)
+        glVertex2f(0.0, start_y * scale * sign)
+        glVertex2f(0.0, end_y * scale * sign)
         glEnd()
 
     def _draw_grid(self, camera: Camera | None):
@@ -1040,7 +1058,7 @@ class OpenGLRenderer:
             if self.show_grid:
                 self._draw_grid(camera)
             if self.show_axes:
-                self._draw_origin(50 * scale)
+                self._draw_origin(camera)
             if self._cursor_pos is not None:
                 self._draw_cursor(
                     self._cursor_pos[0], self._cursor_pos[1], camera
