@@ -15,7 +15,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPalette, QColor, QFont
 from .icons import load_icon, app_icon
 
-STYLE_SHEET = """
+DARK_STYLE = """
 QToolBar { icon-size: 24px; spacing: 6px; }
 QDockWidget::title { padding: 4px; background: #333; color: #ddd; }
 QGroupBox { margin-top: 8px; }
@@ -33,6 +33,7 @@ def apply_palette(theme: str) -> None:
     app = QApplication.instance()
     if app is None:
         return
+    app.setStyle("Fusion")
     if theme == 'dark':
         palette = QPalette()
         palette.setColor(QPalette.ColorRole.Window, QColor(53, 53, 53))
@@ -46,9 +47,12 @@ def apply_palette(theme: str) -> None:
         palette.setColor(QPalette.ColorRole.ButtonText, QColor(220, 220, 220))
         palette.setColor(QPalette.ColorRole.Highlight, QColor(42, 130, 218))
         palette.setColor(QPalette.ColorRole.HighlightedText, QColor(0, 0, 0))
+        app.setPalette(palette)
+        app.setStyleSheet(DARK_STYLE)
     else:
         palette = app.style().standardPalette()
-    app.setPalette(palette)
+        app.setPalette(palette)
+        app.setStyleSheet("")
 
 from .editor import Editor, save_recent, load_recent, _log, logger
 
@@ -206,9 +210,7 @@ def main(argv=None):
         argv = sys.argv
     app = QApplication(argv)
     app.setWindowIcon(app_icon())
-    app.setStyle('Fusion')
     apply_palette('dark')
-    app.setStyleSheet(STYLE_SHEET)
     font = QFont()
     font.setPointSize(font.pointSize() + 3)
     app.setFont(font)
