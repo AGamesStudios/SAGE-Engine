@@ -14,7 +14,9 @@ try:
     from PyQt6.QtWidgets import QFileSystemModel
 except Exception:  # pragma: no cover - handle older PyQt versions
     QFileSystemModel = None
-from PyQt6.QtGui import QPixmap, QColor, QAction, QActionGroup, QDesktopServices
+from PyQt6.QtGui import (
+    QPixmap, QColor, QAction, QActionGroup, QDesktopServices, QCursor
+)
 from .icons import load_icon, app_icon
 from PyQt6.QtCore import (
     QRectF, Qt, QPointF, QSortFilterProxyModel, QSize, QUrl, QTimer, QEvent, QObject
@@ -1392,7 +1394,8 @@ class ViewSettingsPopup(QFrame):
     """Popup widget for viewport options."""
 
     def __init__(self, editor: "Editor"):
-        super().__init__(editor, Qt.WindowType.Popup)
+        super().__init__(editor, Qt.WindowType.Tool | Qt.WindowType.FramelessWindowHint)
+        editor.installEventFilter(self)
         self.editor = editor
         layout = QVBoxLayout(self)
         row = QHBoxLayout()
@@ -1426,6 +1429,13 @@ class ViewSettingsPopup(QFrame):
         self.snap_chk.toggled.connect(editor.toggle_snap)
         self.size_spin.valueChanged.connect(editor.set_grid_size)
         self.color_btn.clicked.connect(editor.choose_grid_color)
+
+    def eventFilter(self, obj, event):  # pragma: no cover - UI interaction
+        if obj is self.editor and event.type() == QEvent.Type.MouseButtonPress:
+            pos = self.mapFromGlobal(event.globalPosition().toPoint())
+            if not self.rect().contains(pos):
+                self.hide()
+        return super().eventFilter(obj, event)
 
 class Editor(QMainWindow):
     def __init__(self, autoshow: bool = True):
@@ -3013,8 +3023,6 @@ class Editor(QMainWindow):
             )
         if hasattr(self, 'view'):
             self.view.set_grid_color(self.grid_color)
-        if hasattr(self, 'view_opts_popup') and not self.view_opts_popup.isVisible():
-            self.show_view_settings()
 
     def grid_size_dialog(self) -> None:
         """Prompt the user for a new grid size."""
