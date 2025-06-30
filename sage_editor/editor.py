@@ -20,7 +20,7 @@ from PyQt6.QtGui import (
 from .icons import load_icon, app_icon, set_icon_theme
 from PyQt6.QtCore import (
     QRectF, Qt, QPointF, QSortFilterProxyModel, QSize, QUrl, QTimer, QEvent, QObject,
-    QProcess, QProcessEnvironment
+    
 )
 from dataclasses import dataclass
 import logging
@@ -42,8 +42,6 @@ from .docks.resources import ResourceDock
 from .docks.logic import LogicTab, ObjectLogicTab
 from .docks.profiler import ProfilerDock
 from engine.core.effects import EFFECT_REGISTRY
-
-RESTART_ENV = "SAGE_RESTART_PROJECT"
 
 
 class NoWheelFilter(QObject):
@@ -1826,35 +1824,6 @@ class Editor(QMainWindow):
             for btn, ico in zip(self.view.transform_buttons, icons):
                 btn.setIcon(load_icon(ico))
 
-    def restart_editor(self) -> None:
-        """Restart the application to fully apply settings."""
-        app = QApplication.instance()
-        if app is None:
-            return
-        exe = sys.executable
-        script = os.path.abspath(sys.argv[0])
-        args = [script] + sys.argv[1:]
-        env = os.environ.copy()
-        if self.project_path:
-            env[RESTART_ENV] = self.project_path
-        else:
-            env.pop(RESTART_ENV, None)
-
-        proc = QProcess()
-        proc.setProgram(exe)
-        proc.setArguments(args)
-        proc.setWorkingDirectory(os.getcwd())
-        qenv = QProcessEnvironment()
-        for key, value in env.items():
-            qenv.insert(key, value)
-        proc.setProcessEnvironment(qenv)
-
-        if not proc.startDetached():
-            try:
-                os.execve(exe, [exe, script] + sys.argv[1:], env)
-            except Exception:
-                logger.exception("Failed to restart editor")
-        app.quit()
 
     def _apply_language(self):
         self.file_menu.setTitle(self.t('file'))
@@ -1865,8 +1834,6 @@ class Editor(QMainWindow):
         self.save_proj_act.setText(self.t('save_project'))
         self.save_as_act.setText(self.t('save_as'))
         self.export_exe_act.setText(self.t('export_exe'))
-        if hasattr(self, 'restart_act'):
-            self.restart_act.setText(self.t('restart_editor'))
         self.exit_act.setText(self.t('exit'))
         self.tabs.setTabText(0, self.t('viewport'))
         self.tabs.setTabText(1, self.t('logic'))
@@ -2146,10 +2113,6 @@ class Editor(QMainWindow):
         self.export_exe_act.setEnabled(False)
         self.export_exe_act.triggered.connect(lambda: None)
         self.file_menu.addAction(self.export_exe_act)
-
-        self.restart_act = QAction(self.t('restart_editor'), self)
-        self.restart_act.triggered.connect(self.restart_editor)
-        self.file_menu.addAction(self.restart_act)
 
         self.file_menu.addSeparator()
         self.exit_act = QAction(self.t('exit'), self)
@@ -2662,9 +2625,6 @@ class Editor(QMainWindow):
             self.setFont(font)
             self.theme = 'dark' if dlg.theme_combo.currentIndex() == 0 else 'light'
             save_settings({"font_size": self.font_size, "theme": self.theme})
-            if self.theme != prev_theme:
-                self.restart_editor()
-                return
             self.apply_theme()
     def show_plugin_manager(self):
         from .dialogs.plugin_manager import PluginManager
