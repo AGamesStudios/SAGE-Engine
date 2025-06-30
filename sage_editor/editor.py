@@ -72,6 +72,7 @@ class UndoAction:
 RECENT_FILE = os.path.join(os.path.expanduser('~'), '.sage_recent.json')
 LAYOUT_FILE = os.path.join(os.path.expanduser('~'), '.sage_layouts.json')
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+SETTINGS_FILE = os.path.join(os.path.expanduser("~"), ".sage_editor.json")
 LOG_DIR = os.path.join(BASE_DIR, 'logs')
 LOG_FILE = os.path.join(LOG_DIR, 'editor.log')
 
@@ -152,6 +153,21 @@ def load_layouts() -> dict:
 def save_layouts(data: dict) -> None:
     try:
         with open(LAYOUT_FILE, 'w') as f:
+            json.dump(data, f)
+    except Exception:
+        pass
+
+
+def load_settings() -> dict:
+    try:
+        with open(SETTINGS_FILE, 'r') as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+def save_settings(data: dict) -> None:
+    try:
+        with open(SETTINGS_FILE, 'w') as f:
             json.dump(data, f)
     except Exception:
         pass
@@ -1487,6 +1503,15 @@ class Editor(QMainWindow):
         self.grid_color = (77, 77, 77)
         self.font_size = QApplication.font().pointSize()
         self.theme = 'dark'
+        settings = load_settings()
+        self.font_size = settings.get('font_size', self.font_size)
+        self.theme = settings.get('theme', self.theme)
+        font = QApplication.font()
+        font.setPointSize(self.font_size)
+        app = QApplication.instance()
+        if app is not None:
+            app.setFont(font)
+        self.setFont(font)
         self.resource_dir: str | None = None
         self.resource_manager = None
         self.scene = Scene()
@@ -1729,11 +1754,11 @@ class Editor(QMainWindow):
 
     def apply_theme(self) -> None:
         """Apply the selected application theme."""
-        from .app import apply_palette, apply_default_palette
+        from .app import apply_palette, apply_light_palette
         if getattr(self, 'theme', 'dark') == 'dark':
             apply_palette()
         else:
-            apply_default_palette()
+            apply_light_palette()
 
     def _apply_language(self):
         self.file_menu.setTitle(self.t('file'))
@@ -2535,6 +2560,7 @@ class Editor(QMainWindow):
             self.theme = 'dark' if dlg.theme_combo.currentIndex() == 0 else 'light'
             self.apply_theme()
 
+            save_settings({"font_size": self.font_size, "theme": self.theme})
     def show_plugin_manager(self):
         from .dialogs.plugin_manager import PluginManager
         PluginManager(self).exec()
@@ -4755,11 +4781,10 @@ class Editor(QMainWindow):
                 return
         event.accept()
         # ensure viewport timers stop and renderer closes cleanly
+        save_settings({"font_size": self.font_size, "theme": self.theme})
         if hasattr(self, "view"):
             try:
                 self.view.close()
             except Exception:
                 pass
         super().closeEvent(event)
-
-

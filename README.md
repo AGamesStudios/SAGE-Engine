@@ -133,7 +133,8 @@ dialog now groups the table under a "Recent Projects" heading with larger
 fonts and spacing so paths are easy to read. Right click a project to open it
 immediately or remove it from the list. Choosing **Delete** now asks for
 confirmation and then removes the entire project folder along with its files.
-Once a project is chosen the editor opens maximized using a dark Fusion theme.
+Once a project is chosen the editor opens maximized using a Fusion theme.
+You can switch between dark or light mode in the Editor Settings.
 The editor provides two
 tabs: **Viewport** and **Logic**. The viewport and runtime windows both use an
 OpenGL widget so they display the same scene. The viewport refreshes about

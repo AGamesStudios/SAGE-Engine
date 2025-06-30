@@ -55,6 +55,28 @@ def apply_palette() -> None:
     app.setPalette(palette)
     app.setStyleSheet(DARK_STYLE)
 
+def apply_light_palette() -> None:
+    """Apply a light Fusion palette to the QApplication."""
+    app = QApplication.instance()
+    if app is None:
+        return
+    app.setStyle("Fusion")
+    palette = QPalette()
+    palette.setColor(QPalette.ColorRole.Window, QColor(255, 255, 255))
+    palette.setColor(QPalette.ColorRole.WindowText, QColor(0, 0, 0))
+    palette.setColor(QPalette.ColorRole.Base, QColor(255, 255, 255))
+    palette.setColor(QPalette.ColorRole.AlternateBase, QColor(240, 240, 240))
+    palette.setColor(QPalette.ColorRole.ToolTipBase, QColor(255, 255, 220))
+    palette.setColor(QPalette.ColorRole.ToolTipText, QColor(0, 0, 0))
+    palette.setColor(QPalette.ColorRole.Text, QColor(0, 0, 0))
+    palette.setColor(QPalette.ColorRole.Button, QColor(240, 240, 240))
+    palette.setColor(QPalette.ColorRole.ButtonText, QColor(0, 0, 0))
+    palette.setColor(QPalette.ColorRole.Highlight, QColor(0, 120, 215))
+    palette.setColor(QPalette.ColorRole.HighlightedText, QColor(255, 255, 255))
+    app.setPalette(palette)
+    app.setStyleSheet("")
+
+
 
 def apply_default_palette() -> None:
     """Restore the default Qt palette and style."""
