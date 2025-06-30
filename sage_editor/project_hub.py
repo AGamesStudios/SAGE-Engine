@@ -81,15 +81,30 @@ class ProjectHub(QDialog):
         item = self.list.itemAt(pos)
         menu = QMenu(self)
         if item and item.data(Qt.ItemDataRole.UserRole):
-            del_act = menu.addAction(load_icon('delete.png'), self.editor.t('delete'))
+            del_act = menu.addAction(
+                load_icon('delete.png'), self.editor.t('delete_project')
+            )
             action = menu.exec(self.list.viewport().mapToGlobal(pos))
             if action == del_act:
                 path = item.data(Qt.ItemDataRole.UserRole)
-                row = self.list.row(item)
-                self.list.takeItem(row)
-                if path in self.editor.recent_projects:
-                    self.editor.recent_projects.remove(path)
-                    save_recent(self.editor.recent_projects)
+                if (
+                    QMessageBox.question(
+                        self,
+                        self.editor.t('delete_project'),
+                        self.editor.t('confirm_delete_project'),
+                    )
+                    == QMessageBox.StandardButton.Yes
+                ):
+                    try:
+                        import shutil
+                        shutil.rmtree(os.path.dirname(path))
+                    except Exception as exc:
+                        QMessageBox.warning(self, self.editor.t('error'), str(exc))
+                    row = self.list.row(item)
+                    self.list.takeItem(row)
+                    if path in self.editor.recent_projects:
+                        self.editor.recent_projects.remove(path)
+                        save_recent(self.editor.recent_projects)
         else:
             new_act = menu.addAction(load_icon('add.png'), self.editor.t('new_project'))
             action = menu.exec(self.list.viewport().mapToGlobal(pos))
