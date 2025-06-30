@@ -20,7 +20,7 @@ from PyQt6.QtGui import (
 from .icons import load_icon, app_icon, set_icon_theme
 from PyQt6.QtCore import (
     QRectF, Qt, QPointF, QSortFilterProxyModel, QSize, QUrl, QTimer, QEvent, QObject,
-    QProcess
+    QProcess, QProcessEnvironment
 )
 from dataclasses import dataclass
 import logging
@@ -1833,15 +1833,19 @@ class Editor(QMainWindow):
             return
         exe = sys.executable
         args = [exe] + sys.argv
-        env = os.environ.copy()
+        env = QProcessEnvironment.systemEnvironment()
         if self.project_path:
-            env[RESTART_ENV] = self.project_path
+            env.insert(RESTART_ENV, self.project_path)
         else:
-            env.pop(RESTART_ENV, None)
-        env_list = [f"{k}={v}" for k, v in env.items()]
-        if not QProcess.startDetached(exe, sys.argv, os.getcwd(), env_list):
+            env.remove(RESTART_ENV)
+        proc = QProcess()
+        proc.setProgram(exe)
+        proc.setArguments(sys.argv)
+        proc.setWorkingDirectory(os.getcwd())
+        proc.setProcessEnvironment(env)
+        if not proc.startDetached():
             try:  # pragma: no cover - OS may not support exec
-                os.execve(exe, args, env)
+                os.execve(exe, args, {k: env.value(k) for k in env.keys()})
             except Exception:
                 pass
         app.quit()
