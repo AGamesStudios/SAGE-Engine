@@ -522,6 +522,8 @@ sprite.effects.append({
     "color": "0,0,0,255",
 })
 ```
+Colors may also be provided as hexadecimal strings like ``"#FF8800"`` or
+``"#FF8800FF"`` which the renderer automatically converts to RGBA values.
 Effects are only supported on sprite objects. Retrieve a sprite from a
 scene using ``get_object_type`` and append the effect to its ``effects``
 list. Cameras ignore such data because they lack an ``effects`` field.

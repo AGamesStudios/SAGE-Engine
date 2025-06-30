@@ -329,11 +329,22 @@ class OpenGLRenderer:
         if value is None:
             return 255, 255, 255, 255
         if isinstance(value, str):
+            text = value.strip()
             try:
-                parts = [int(p) for p in value.split(",")]
+                if text.startswith("#"):
+                    text = text[1:]
+                    if len(text) in (3, 4):
+                        parts = [int(c * 2, 16) for c in text]
+                    elif len(text) in (6, 8):
+                        parts = [int(text[i:i+2], 16) for i in range(0, len(text), 2)]
+                    else:
+                        raise ValueError
+                else:
+                    text = text.replace(" ", ",")
+                    parts = [int(p) for p in text.split(",") if p]
                 while len(parts) < 4:
                     parts.append(255)
-                return tuple(parts[:4])
+                return tuple(int(p) for p in parts[:4])
             except Exception:
                 return 255, 255, 255, 255
         if isinstance(value, (list, tuple)):
