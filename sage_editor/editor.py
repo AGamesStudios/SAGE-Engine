@@ -7,7 +7,8 @@ from PyQt6.QtWidgets import (
     QDialogButtonBox, QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox, QCompleter, QToolButton,
     QTextEdit, QDockWidget, QGroupBox, QCheckBox, QMessageBox, QMenu, QColorDialog,
     QTreeView, QInputDialog, QTreeWidget, QTreeWidgetItem, QStackedWidget,
-    QHeaderView, QAbstractItemView, QProgressDialog, QScrollArea, QStyleFactory
+    QHeaderView, QAbstractItemView, QProgressDialog, QScrollArea, QStyleFactory,
+    QSlider
 )
 try:
     from PyQt6.QtWidgets import QFileSystemModel
@@ -1720,6 +1721,10 @@ class Editor(QMainWindow):
             self.paint_btn.setToolTip(self.t('paint_sprite'))
         if hasattr(self, 'alpha_label'):
             self.alpha_label.setText(self.t('alpha'))
+        if hasattr(self, 'pivot_x_label'):
+            self.pivot_x_label.setText(self.t('x'))
+        if hasattr(self, 'pivot_y_label'):
+            self.pivot_y_label.setText(self.t('y'))
 
     def apply_engine_completer(self, widget: QLineEdit):
         """Attach the engine method completer to a line edit."""
