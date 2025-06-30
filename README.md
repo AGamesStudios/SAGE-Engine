@@ -524,6 +524,9 @@ sprite.effects.append({
 ```
 Colors may also be provided as hexadecimal strings like ``"#FF8800"`` or
 ``"#FF8800FF"`` which the renderer automatically converts to RGBA values.
+Sprites accept an ``alpha`` attribute from ``0.0`` to ``1.0`` controlling
+overall transparency. The value multiplies the alpha channel of the sprite's
+``color`` if one is supplied.
 Effects are only supported on sprite objects. Retrieve a sprite from a
 scene using ``get_object_type`` and append the effect to its ``effects``
 list. Cameras ignore such data because they lack an ``effects`` field.

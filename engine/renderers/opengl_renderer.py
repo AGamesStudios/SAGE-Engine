@@ -386,7 +386,15 @@ class OpenGLRenderer:
             loc_color = glGetUniformLocation(program, "color")
             rgba = self._parse_color(obj.color)
             scale = 1 / 255.0 if max(rgba) > 1.0 else 1.0
-            norm = tuple(c * scale for c in rgba)
+            alpha = getattr(obj, 'alpha', 1.0)
+            if alpha > 1.0:
+                alpha = alpha / 255.0
+            norm = (
+                rgba[0] * scale,
+                rgba[1] * scale,
+                rgba[2] * scale,
+                min(1.0, rgba[3] * scale * alpha),
+            )
             glUniform4f(loc_color, *norm)
 
         mesh = getattr(obj, "mesh", None)
@@ -578,7 +586,15 @@ class OpenGLRenderer:
 
         rgba = self._parse_color(obj.color)
         scale = 1 / 255.0 if max(rgba) > 1.0 else 1.0
-        glColor4f(rgba[0] * scale, rgba[1] * scale, rgba[2] * scale, rgba[3] * scale)
+        alpha = getattr(obj, 'alpha', 1.0)
+        if alpha > 1.0:
+            alpha = alpha / 255.0
+        glColor4f(
+            rgba[0] * scale,
+            rgba[1] * scale,
+            rgba[2] * scale,
+            min(1.0, rgba[3] * scale * alpha),
+        )
 
         ang = math.radians(getattr(obj, "angle", 0.0))
         cos_a = math.cos(ang)

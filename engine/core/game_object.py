@@ -46,6 +46,7 @@ def clear_image_cache():
         ('flip_y', None),
         ('smooth', None),
         ('color', None),
+        ('alpha', None),
         ('mesh', 'mesh'),
         ('metadata', 'metadata'),
         ('variables', 'variables'),
@@ -74,6 +75,7 @@ class GameObject:
     flip_y: bool = False
     smooth: bool = True
     color: tuple[int, int, int, int] | None = None
+    alpha: float = 1.0
     metadata: dict = field(default_factory=dict)
     events: list = field(default_factory=list)
     settings: dict = field(default_factory=dict)
