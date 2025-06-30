@@ -1986,7 +1986,8 @@ class Editor(QMainWindow):
         self.editor_settings_act.triggered.connect(self.show_editor_settings)
         self.settings_menu.addAction(self.editor_settings_act)
 
-        self.plugins_menu = menubar.addMenu(load_icon('plugin.png'), self.t('plugins_menu'))
+        self.plugins_menu = menubar.addMenu(self.t('plugins_menu'))
+        self.plugins_menu.setIcon(load_icon('plugin.png'))
         self.plugins_act = QAction(self.t('manage_plugins'), self)
         self.plugins_act.triggered.connect(self.show_plugin_manager)
         self.plugins_menu.addAction(self.plugins_act)
@@ -3012,6 +3013,8 @@ class Editor(QMainWindow):
             )
         if hasattr(self, 'view'):
             self.view.set_grid_color(self.grid_color)
+        if hasattr(self, 'view_opts_popup') and not self.view_opts_popup.isVisible():
+            self.show_view_settings()
 
     def grid_size_dialog(self) -> None:
         """Prompt the user for a new grid size."""
