@@ -12,6 +12,7 @@ from .fastmath import (
 )
 from PIL import Image
 from engine.renderers import Shader
+from engine.mesh_utils import Mesh
 from .objects import register_object
 from ..logic import EventSystem, event_from_dict
 from .. import units
@@ -45,6 +46,7 @@ def clear_image_cache():
         ('flip_y', None),
         ('smooth', None),
         ('color', None),
+        ('mesh', 'mesh'),
         ('metadata', 'metadata'),
         ('variables', 'variables'),
         ('public_vars', 'public_vars'),
@@ -58,6 +60,7 @@ class GameObject:
     """Sprite-based object used in scenes."""
     image_path: str = ""
     shape: str | None = None
+    mesh: "Mesh | None" = None
     x: float = 0
     y: float = 0
     z: float = 0
@@ -114,6 +117,8 @@ class GameObject:
         if self.name is None:
             self.name = "New Object"
         self._load_image()
+        if not self.image_path and self.shape is None:
+            self.shape = "square"
         if self.shader and isinstance(self.shader, dict):
             vert = self.shader.get("vertex")
             frag = self.shader.get("fragment")
@@ -181,6 +186,8 @@ class GameObject:
             # No sprite image - default dimensions for shape rendering
             self.image = None
             self.width, self.height = 32, 32
+            if self.shape is None:
+                self.shape = "square"
             self._dirty = True
             self._cached_rect = None
             self._cached_matrix = None

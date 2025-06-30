@@ -14,6 +14,7 @@ from .core import (
     POST_EFFECT_REGISTRY,
 )
 from .mesh_utils import (
+    Mesh,
     create_square_mesh,
     create_triangle_mesh,
     create_circle_mesh,
@@ -76,7 +77,7 @@ __all__ = [
     'set_y_up', 'Y_UP', 'GameWindow', 'EngineSettings',
     'register_effect', 'get_effect', 'EFFECT_REGISTRY',
     'register_post_effect', 'get_post_effect', 'POST_EFFECT_REGISTRY',
-    'create_square_mesh', 'create_triangle_mesh', 'create_circle_mesh'
+    'create_square_mesh', 'create_triangle_mesh', 'create_circle_mesh', 'Mesh'
 ]
 
 

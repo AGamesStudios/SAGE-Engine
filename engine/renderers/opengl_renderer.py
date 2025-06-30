@@ -29,6 +29,7 @@ from engine.core.game_object import GameObject
 from engine import units
 from engine.log import logger
 from engine.mesh_utils import (
+    Mesh,
     create_square_mesh,
     create_triangle_mesh,
     create_circle_mesh,
@@ -377,6 +378,15 @@ class OpenGLRenderer:
             norm = tuple(c * scale for c in rgba)
             glUniform4f(loc_color, *norm)
 
+        mesh = getattr(obj, "mesh", None)
+        if isinstance(mesh, Mesh):
+            if shader:
+                Shader.stop()
+            else:
+                glUseProgram(0)
+            self._draw_mesh(obj, camera, mesh)
+            return
+
         shape = getattr(obj, "shape", None)
         if isinstance(shape, str):
             shape = shape.strip().lower()
@@ -521,12 +531,13 @@ class OpenGLRenderer:
         glLineWidth(1.0)
         glEnable(GL_TEXTURE_2D)
 
-    def _draw_shape(
+    def _draw_mesh(
         self,
         obj: GameObject,
         camera: Camera | None,
-        shape: str,
+        mesh: Mesh,
     ) -> None:
+        """Render a custom Mesh with the object's transform."""
         from OpenGL.GL import (
             glBindTexture,
             glColor4f,
@@ -536,9 +547,9 @@ class OpenGLRenderer:
             glUseProgram,
             glDisable,
             glEnable,
+            GL_TEXTURE_2D,
             GL_TRIANGLE_FAN,
             GL_TRIANGLES,
-            GL_TEXTURE_2D,
         )
 
         unit_scale = units.UNITS_PER_METER
@@ -566,24 +577,19 @@ class OpenGLRenderer:
         w = obj.width * obj.scale_x * scale_mul
         h = obj.height * obj.scale_y * scale_mul
 
-        if shape == "triangle":
-            mesh = create_triangle_mesh()
-            mode = GL_TRIANGLES
-        elif shape == "square":
-            mesh = create_square_mesh()
-            mode = GL_TRIANGLE_FAN
-        else:
-            mesh = create_circle_mesh()
-            mode = GL_TRIANGLE_FAN
-
-        logger.debug('Drawing shape %s for %s', shape, getattr(obj, 'name', 'obj'))
+        mode = GL_TRIANGLE_FAN if not mesh.indices else GL_TRIANGLES
+        logger.debug('Drawing mesh for %s', getattr(obj, 'name', 'obj'))
         obj_x, obj_y = obj.render_position(camera, apply_effects=self.apply_effects)
         px = w * obj.pivot_x
         py = h * obj.pivot_y
         sx = -1.0 if flip_x else 1.0
         sy = -1.0 if flip_y else 1.0
+
         glBegin(mode)
-        for vx, vy in mesh.vertices:
+        verts = mesh.vertices
+        indices = mesh.indices if mesh.indices else range(len(verts))
+        for idx in indices:
+            vx, vy = verts[idx]
             vx = (vx * w - px) * sx + px
             vy = (vy * h - py) * sy + py
             rx = vx * cos_a - vy * sin_a
@@ -595,6 +601,22 @@ class OpenGLRenderer:
             glVertex2f(ndc_x, ndc_y)
         glEnd()
         glEnable(GL_TEXTURE_2D)
+
+    def _draw_shape(
+        self,
+        obj: GameObject,
+        camera: Camera | None,
+        shape: str,
+    ) -> None:
+        if shape == "triangle":
+            mesh = create_triangle_mesh()
+        elif shape == "square":
+            mesh = create_square_mesh()
+        else:
+            mesh = create_circle_mesh()
+
+        logger.debug('Drawing shape %s for %s', shape, getattr(obj, 'name', 'obj'))
+        self._draw_mesh(obj, camera, mesh)
 
     def _draw_frustum(
         self,
