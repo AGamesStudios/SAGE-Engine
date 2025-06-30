@@ -359,7 +359,9 @@ class OpenGLRenderer:
             glUniform4f(loc_color, *norm)
 
         shape = getattr(obj, "shape", None)
-        if shape in ("triangle", "circle"):
+        if isinstance(shape, str):
+            shape = shape.strip().lower()
+        if shape in ("triangle", "circle", "square"):
             if shader:
                 Shader.stop()
             else:
