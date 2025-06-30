@@ -30,7 +30,10 @@ class SceneNodeItem(QGraphicsRectItem):
         text = QGraphicsTextItem(node.name, header)
         text.setDefaultTextColor(Qt.GlobalColor.white)
         br = text.boundingRect()
-        text.setPos((self.WIDTH - br.width()) / 2, 2)
+        text.setPos(
+            (self.WIDTH - br.width()) / 2,
+            (header.rect().height() - br.height()) / 2,
+        )
         if node.screenshot and os.path.exists(node.screenshot):
             pix = QPixmap(node.screenshot).scaled(
                 self.WIDTH, self.HEIGHT - 20,
@@ -147,7 +150,10 @@ class SceneGraphView(QGraphicsView):
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         pos = event.position().toPoint()
-        item = self.itemAt(pos)
+        item = None
+        items = self.items(pos)
+        if items:
+            item = items[0]
         if event.button() == Qt.MouseButton.MiddleButton:
             self._panning = True
             self._last_pos = pos
@@ -161,7 +167,11 @@ class SceneGraphView(QGraphicsView):
             parent = item.parentItem()
             if isinstance(parent, SceneNodeItem):
                 self._connect_src = parent.node.name
-                self._temp_line = self.scene().addPath(QPainterPath(), QPen(Qt.PenStyle.DashLine))
+                path = QPainterPath()
+                sx, sy = parent.output_pos()
+                path.moveTo(sx, sy)
+                path.lineTo(sx, sy)
+                self._temp_line = self.scene().addPath(path, QPen(Qt.PenStyle.DashLine))
                 return
         super().mousePressEvent(event)
 
@@ -191,13 +201,17 @@ class SceneGraphView(QGraphicsView):
             self.setCursor(Qt.CursorShape.ArrowCursor)
             return
         if self._temp_line and self._connect_src:
-            item = self.itemAt(pos)
-            if (
-                isinstance(item, QGraphicsEllipseItem)
-                and item.data(0) == 'input'
-                and isinstance(item.parentItem(), SceneNodeItem)
-            ):
-                dst = item.parentItem().node.name
+            target = None
+            for it in self.items(pos):
+                if (
+                    isinstance(it, QGraphicsEllipseItem)
+                    and it.data(0) == 'input'
+                    and isinstance(it.parentItem(), SceneNodeItem)
+                ):
+                    target = it
+                    break
+            if target:
+                dst = target.parentItem().node.name
                 try:
                     if self.graph:
                         self.graph.connect(self._connect_src, dst)

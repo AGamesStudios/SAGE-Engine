@@ -43,7 +43,7 @@ from engine import Scene, GameObject, Project, Camera, ENGINE_VERSION, get_resou
 from engine.core.objects import get_object_type
 from engine.core.scene_graph import SceneGraph
 from . import plugins
-from .widgets import Viewport, ResourceLineEdit, SceneGraphView
+from .widgets import Viewport, ResourceLineEdit, SceneGraphView, SceneNodeItem
 register_plugin = plugins.register_plugin
 import json
 from .docks.console import ConsoleDock
@@ -4756,9 +4756,17 @@ class Editor(QMainWindow):
                 item.setData(Qt.ItemDataRole.UserRole, path)
                 self.scenes_dock.list.addItem(item)
                 if item_name not in self.scene_graph.nodes:
-                    rel = os.path.relpath(path, os.path.dirname(self.project_path)) if self.project_path else path
+                    rel = (
+                        os.path.relpath(path, os.path.dirname(self.project_path))
+                        if self.project_path
+                        else path
+                    )
                     try:
-                        self.scene_graph.add_scene(item_name, rel)
+                        node = self.scene_graph.add_scene(item_name, rel)
+                        node.position = (
+                            (len(self.scene_graph.nodes) - 1) * 200,
+                            0,
+                        )
                     except ValueError:
                         pass
         if self.graph_view:
@@ -4780,10 +4788,25 @@ class Editor(QMainWindow):
         item.setData(Qt.ItemDataRole.UserRole, path)
         self.scenes_dock.list.addItem(item)
         self.open_scene_tab(path)
-        rel = os.path.relpath(path, os.path.dirname(self.project_path)) if self.project_path else path
+        rel = (
+            os.path.relpath(path, os.path.dirname(self.project_path))
+            if self.project_path
+            else path
+        )
         try:
             node = self.scene_graph.add_scene(name, rel)
-            node.position = ((len(self.scene_graph.nodes) - 1) * 200, 0)
+            if self.scene_graph.nodes and len(self.scene_graph.nodes) > 1:
+                last_name = list(self.scene_graph.nodes.keys())[-2]
+                last_item = (
+                    self.graph_view.items.get(last_name) if self.graph_view else None
+                )
+                if last_item:
+                    x, y = last_item.output_pos()
+                    node.position = (x + 20, y - SceneNodeItem.HEIGHT / 2)
+                else:
+                    node.position = ((len(self.scene_graph.nodes) - 1) * 200, 0)
+            else:
+                node.position = (0, 0)
         except ValueError:
             pass
         if self.graph_view:
@@ -4811,13 +4834,13 @@ class Editor(QMainWindow):
             if idx >= 0:
                 self.tabs.removeTab(idx)
             view.deleteLater()
-        rel = os.path.relpath(path, os.path.dirname(self.project_path)) if self.project_path else path
-        if rel in self.scene_graph.nodes:
-            self.scene_graph.nodes.pop(rel)
+        name = os.path.splitext(os.path.basename(path))[0]
+        if name in self.scene_graph.nodes:
+            self.scene_graph.nodes.pop(name)
             for node in self.scene_graph.nodes.values():
-                if rel in node.next_nodes:
-                    node.next_nodes.remove(rel)
-            if self.scene_graph.start == rel:
+                if name in node.next_nodes:
+                    node.next_nodes.remove(name)
+            if self.scene_graph.start == name:
                 self.scene_graph.start = next(iter(self.scene_graph.nodes), None)
         if self.graph_view:
             self.graph_view.load_graph(self.scene_graph)
