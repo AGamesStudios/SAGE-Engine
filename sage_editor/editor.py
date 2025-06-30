@@ -1506,6 +1506,9 @@ class Editor(QMainWindow):
         settings = load_settings()
         self.font_size = settings.get('font_size', self.font_size)
         self.theme = settings.get('theme', self.theme)
+        # ensure icons load from the correct theme before widgets are created
+        from .icons import set_icon_theme
+        set_icon_theme('white' if self.theme == 'dark' else 'black')
         font = QApplication.font()
         font.setPointSize(self.font_size)
         app = QApplication.instance()
@@ -1761,6 +1764,40 @@ class Editor(QMainWindow):
         else:
             set_icon_theme('black')
             apply_light_palette()
+        if hasattr(self, 'view') and hasattr(self.view, 'renderer'):
+            try:
+                self.view.renderer.clear_icon_cache()
+            except Exception:
+                pass
+        self._update_icons()
+
+    def _update_icons(self) -> None:
+        """Reload icons for persistent widgets."""
+        from .icons import load_icon
+        if hasattr(self, 'clear_path_btn'):
+            self.clear_path_btn.setIcon(load_icon('clear.png'))
+        if hasattr(self, 'add_obj_btn'):
+            self.add_obj_btn.setIcon(load_icon('object.png'))
+        if hasattr(self, 'add_cam_btn'):
+            self.add_cam_btn.setIcon(load_icon('camera.png'))
+        if hasattr(self, 'link_scale'):
+            self.link_scale.setIcon(load_icon('link.png'))
+        if hasattr(self, 'plugins_act'):
+            self.plugins_act.setIcon(load_icon('plugin.png'))
+        if hasattr(self, 'tools_btn'):
+            self.tools_btn.setIcon(load_icon('tools.png'))
+        if hasattr(self, 'view_opts_btn'):
+            self.view_opts_btn.setIcon(load_icon('settings.png'))
+        if hasattr(self, 'coord_mode_btn'):
+            icon = 'local.png' if self.local_coords else 'world.png'
+            self.coord_mode_btn.setIcon(load_icon(icon))
+        if hasattr(self, 'lang_icon'):
+            self.lang_icon.setPixmap(load_icon('lang.png').pixmap(16, 16))
+        if hasattr(self, 'run_act'):
+            if getattr(self, '_game_window', None) and self._game_window.isVisible():
+                self.run_act.setIcon(load_icon('stop.png'))
+            else:
+                self.run_act.setIcon(load_icon('start.png'))
 
     def _apply_language(self):
         self.file_menu.setTitle(self.t('file'))

@@ -161,6 +161,7 @@ class OpenGLRenderer:
         self._blank_texture: int | None = None
         self._blank_nearest_texture: int | None = None
         self._icon_cache: dict[str, int] = {}
+        self._missing_icons: set[str] = set()
         self._scene = None
         self._camera = None
         self._draw_gizmos = True
@@ -292,15 +293,23 @@ class OpenGLRenderer:
 
 
     def _get_icon_texture(self, name: str) -> int:
-        """Load an icon image from ``sage_editor/icons`` and cache it."""
-        tex = self._icon_cache.get(name)
+        """Load an icon image from ``sage_editor/icons`` respecting the theme."""
+        from sage_editor.icons import ICON_DIR, ICON_THEME
+        key = f"{ICON_THEME}/{name}"
+        tex = self._icon_cache.get(key)
         if tex:
             return tex
-        from sage_editor.icons import ICON_DIR
-        path = ICON_DIR / name
+        path = (ICON_DIR / ICON_THEME / name)
         if not path.is_file():
-            logger.warning('Icon %s not found at %s', name, path)
-            return self._get_blank_texture()
+            alt = 'white' if ICON_THEME == 'black' else 'black'
+            alt_path = ICON_DIR / alt / name
+            if alt_path.is_file():
+                path = alt_path
+            else:
+                if name not in getattr(self, '_missing_icons', set()):
+                    logger.warning('Icon %s not found for theme %s', name, ICON_THEME)
+                    self._missing_icons.add(name)
+                return self._get_blank_texture()
         try:
             img = Image.open(path).convert('RGBA')
         except Exception:
@@ -316,8 +325,23 @@ class OpenGLRenderer:
             GL_TEXTURE_2D, 0, GL_RGBA, img.width, img.height, 0,
             GL_RGBA, GL_UNSIGNED_BYTE, data
         )
-        self._icon_cache[name] = tex
+        self._icon_cache[key] = tex
         return tex
+
+    def clear_icon_cache(self) -> None:
+        """Delete cached icon textures when the theme changes."""
+        if not self._icon_cache:
+            return
+        try:
+            from OpenGL.GL import glDeleteTextures
+            arr = (ctypes.c_uint * len(self._icon_cache))(*self._icon_cache.values())
+            self.widget.makeCurrent()
+            glDeleteTextures(len(self._icon_cache), arr)
+            self.widget.doneCurrent()
+        except Exception:
+            logger.exception("Failed to delete icon textures")
+        self._icon_cache.clear()
+        self._missing_icons.clear()
 
     def _draw_icon(self, x: float, y: float, tex: int, zoom: float, size: float = 32.0):
         """Render a billboard icon at ``(x, y)`` in world units."""
