@@ -3163,7 +3163,9 @@ class Editor(QMainWindow):
                 self.material_group.setVisible(False)
         self.x_spin.blockSignals(True); self.x_spin.setValue(obj.x); self.x_spin.blockSignals(False)
         self.y_spin.blockSignals(True); self.y_spin.setValue(obj.y); self.y_spin.blockSignals(False)
-        self.z_spin.blockSignals(True); self.z_spin.setValue(getattr(obj, 'z', 0)); self.z_spin.blockSignals(False)
+        self.z_spin.blockSignals(True)
+        self.z_spin.setValue(int(getattr(obj, 'z', 0)))
+        self.z_spin.blockSignals(False)
         if isinstance(obj, Camera):
             self.camera_group.setVisible(True)
             self.scale_x_spin.setEnabled(False)
