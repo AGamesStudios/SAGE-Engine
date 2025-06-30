@@ -186,6 +186,7 @@ class OpenGLRenderer:
         self._quad_vbo = None
         self._post_tex = None
         self._post_fbo = None
+        self._projection: list[float] | None = None
 
     def set_window_size(self, width: int, height: int):
         if self.widget:
@@ -222,7 +223,9 @@ class OpenGLRenderer:
         return self._post_tex
 
     def setup_view(self):
+        """Configure the OpenGL projection and store it for later."""
         from OpenGL.GL import glMatrixMode, glLoadIdentity, glOrtho, GL_PROJECTION, GL_MODELVIEW
+        from engine.core import math2d
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
         # center the origin so camera transforms are stable
@@ -234,8 +237,18 @@ class OpenGLRenderer:
             -1,
             1,
         )
+        self._projection = math2d.make_ortho(
+            -self.width / 2,
+            self.width / 2,
+            -self.height / 2,
+            self.height / 2,
+        )
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
+
+    def get_projection(self) -> list[float] | None:
+        """Return the current orthographic projection matrix."""
+        return self._projection
 
     def _get_blank_texture(self, smooth: bool = True) -> int:
         """Return a 1x1 white texture used for colored objects."""
@@ -409,6 +422,8 @@ class OpenGLRenderer:
         shape = getattr(obj, "shape", None)
         if isinstance(shape, str):
             shape = shape.strip().lower()
+        if shape in ("rectangle", "rect"):
+            shape = "square"
         if shape in ("triangle", "circle", "square"):
             if shader:
                 Shader.stop()

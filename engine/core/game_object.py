@@ -4,7 +4,7 @@ import traceback
 from ..log import logger
 import math
 from collections import OrderedDict
-from .fastmath import (
+from .math2d import (
     angle_to_quat as _angle_to_quat,
     quat_to_angle as _quat_to_angle,
     calc_rect as _calc_rect,
