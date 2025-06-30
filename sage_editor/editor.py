@@ -19,7 +19,8 @@ from PyQt6.QtGui import (
 )
 from .icons import load_icon, app_icon, set_icon_theme
 from PyQt6.QtCore import (
-    QRectF, Qt, QPointF, QSortFilterProxyModel, QSize, QUrl, QTimer, QEvent, QObject
+    QRectF, Qt, QPointF, QSortFilterProxyModel, QSize, QUrl, QTimer, QEvent, QObject,
+    QProcess
 )
 from dataclasses import dataclass
 import logging
@@ -1798,6 +1799,38 @@ class Editor(QMainWindow):
                 self.run_act.setIcon(load_icon('stop.png'))
             else:
                 self.run_act.setIcon(load_icon('start.png'))
+        # docks ----------------------------------------------------------
+        if hasattr(self, 'import_btn'):
+            self.import_btn.setIcon(load_icon('add.png'))
+        if hasattr(self, 'new_folder_btn'):
+            self.new_folder_btn.setIcon(load_icon('folder.png'))
+        if hasattr(self, 'refresh_btn'):
+            self.refresh_btn.setIcon(load_icon('refresh.png'))
+        if hasattr(self, 'console_dock') and hasattr(self.console_dock, 'clear_btn'):
+            self.console_dock.clear_btn.setIcon(load_icon('delete.png'))
+        if hasattr(self, 'image_btn'):
+            self.image_btn.setIcon(load_icon('open.png'))
+        if hasattr(self, 'clear_img_btn'):
+            self.clear_img_btn.setIcon(load_icon('clear.png'))
+        if hasattr(self, 'paint_btn'):
+            self.paint_btn.setIcon(load_icon('edit.png'))
+        if hasattr(self, 'add_effect_btn'):
+            self.add_effect_btn.setIcon(load_icon('add.png'))
+        if hasattr(self, 'logic_btn'):
+            self.logic_btn.setIcon(load_icon('edit.png'))
+        # viewport toolbar ----------------------------------------------
+        if hasattr(self, 'view') and hasattr(self.view, 'transform_buttons'):
+            icons = ['hand.png', 'move.png', 'rotate.png', 'scale.png']
+            for btn, ico in zip(self.view.transform_buttons, icons):
+                btn.setIcon(load_icon(ico))
+
+    def restart_editor(self) -> None:
+        """Restart the application to fully apply settings."""
+        app = QApplication.instance()
+        if app is None:
+            return
+        QProcess.startDetached(sys.executable, sys.argv)
+        app.quit()
 
     def _apply_language(self):
         self.file_menu.setTitle(self.t('file'))
@@ -1808,6 +1841,8 @@ class Editor(QMainWindow):
         self.save_proj_act.setText(self.t('save_project'))
         self.save_as_act.setText(self.t('save_as'))
         self.export_exe_act.setText(self.t('export_exe'))
+        if hasattr(self, 'restart_act'):
+            self.restart_act.setText(self.t('restart_editor'))
         self.exit_act.setText(self.t('exit'))
         self.tabs.setTabText(0, self.t('viewport'))
         self.tabs.setTabText(1, self.t('logic'))
@@ -2087,6 +2122,10 @@ class Editor(QMainWindow):
         self.export_exe_act.setEnabled(False)
         self.export_exe_act.triggered.connect(lambda: None)
         self.file_menu.addAction(self.export_exe_act)
+
+        self.restart_act = QAction(self.t('restart_editor'), self)
+        self.restart_act.triggered.connect(self.restart_editor)
+        self.file_menu.addAction(self.restart_act)
 
         self.file_menu.addSeparator()
         self.exit_act = QAction(self.t('exit'), self)
