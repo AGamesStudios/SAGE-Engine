@@ -43,6 +43,8 @@ from .docks.logic import LogicTab, ObjectLogicTab
 from .docks.profiler import ProfilerDock
 from engine.core.effects import EFFECT_REGISTRY
 
+RESTART_ENV = "SAGE_RESTART_PROJECT"
+
 
 class NoWheelFilter(QObject):
     """Event filter to block mouse wheel events."""
@@ -1831,9 +1833,15 @@ class Editor(QMainWindow):
             return
         exe = sys.executable
         args = [exe] + sys.argv
-        if not QProcess.startDetached(exe, sys.argv, os.getcwd()):
+        env = os.environ.copy()
+        if self.project_path:
+            env[RESTART_ENV] = self.project_path
+        else:
+            env.pop(RESTART_ENV, None)
+        env_list = [f"{k}={v}" for k, v in env.items()]
+        if not QProcess.startDetached(exe, sys.argv, os.getcwd(), env_list):
             try:  # pragma: no cover - OS may not support exec
-                os.execv(exe, args)
+                os.execve(exe, args, env)
             except Exception:
                 pass
         app.quit()

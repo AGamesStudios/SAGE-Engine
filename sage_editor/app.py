@@ -112,11 +112,18 @@ def main(argv=None):
     app.setFont(font)
     editor = Editor(autoshow=False)
     editor.font_size = font.pointSize()
-    pm = ProjectManager(editor)
-    if pm.exec() != QDialog.DialogCode.Accepted:
-        app.quit()
-        sys.exit(0)
-        return 0
+    restart_path = os.environ.pop('SAGE_RESTART_PROJECT', None)
+    opened = False
+    if restart_path:
+        editor.open_project(restart_path)
+        if editor.project_path:
+            opened = True
+    if not opened:
+        pm = ProjectManager(editor)
+        if pm.exec() != QDialog.DialogCode.Accepted:
+            app.quit()
+            sys.exit(0)
+            return 0
     editor.showMaximized()
 
     orig_out = sys.stdout
