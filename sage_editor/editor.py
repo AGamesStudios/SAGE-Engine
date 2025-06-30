@@ -1491,6 +1491,7 @@ class Editor(QMainWindow):
         self.transform_group = prop_dock.transform_group
         self.camera_group = prop_dock.camera_group
         self.object_group = prop_dock.object_group
+        self.material_group = prop_dock.material_group
         self.name_edit = prop_dock.name_edit
         self.type_combo = prop_dock.type_combo
         self.x_spin = prop_dock.x_spin
@@ -1520,6 +1521,7 @@ class Editor(QMainWindow):
         self.clear_img_btn = prop_dock.clear_img_btn
         self.paint_btn = prop_dock.paint_btn
         self.color_btn = prop_dock.color_btn
+        self.alpha_spin = prop_dock.alpha_spin
         self.shape_combo = prop_dock.shape_combo
         self.smooth_check = prop_dock.smooth_check
         self.img_row = prop_dock.img_row
@@ -1528,6 +1530,7 @@ class Editor(QMainWindow):
         self.shape_label = prop_dock.shape_label
         self.pivot_x_label = prop_dock.pivot_x_label
         self.pivot_y_label = prop_dock.pivot_y_label
+        self.alpha_label = prop_dock.alpha_label
         self.smooth_label = prop_dock.smooth_label
         self.image_edit.setPlaceholderText(self.t('path_label'))
         self.color_btn.setText('')
@@ -1648,6 +1651,7 @@ class Editor(QMainWindow):
         self.camera_group.setTitle(self.t('camera'))
         self.properties_dock.setWindowTitle(self.t('properties'))
         self.object_group.setTitle(self.t('object'))
+        self.material_group.setTitle(self.t('material'))
         self.name_edit.setPlaceholderText(self.t('name'))
         self.type_combo.setItemText(0, self.t('sprite'))
         self.type_combo.setItemText(1, self.t('camera'))
@@ -1682,6 +1686,8 @@ class Editor(QMainWindow):
             self.coord_mode_btn.setToolTip(self.t('coord_mode'))
         if hasattr(self, 'paint_btn'):
             self.paint_btn.setText(self.t('paint_sprite'))
+        if hasattr(self, 'alpha_label'):
+            self.alpha_label.setText(self.t('alpha'))
 
     def apply_engine_completer(self, widget: QLineEdit):
         """Attach the engine method completer to a line edit."""
@@ -2912,6 +2918,8 @@ class Editor(QMainWindow):
         self.object_group.setEnabled(False)
         self.transform_group.setVisible(False)
         self.transform_group.setEnabled(False)
+        if hasattr(self, 'material_group'):
+            self.material_group.setVisible(False)
         if hasattr(self, 'camera_group'):
             self.camera_group.setVisible(False)
         # hide sprite-specific fields
@@ -2923,6 +2931,8 @@ class Editor(QMainWindow):
             self.color_label.setVisible(False)
         if hasattr(self, 'shape_label'):
             self.shape_label.setVisible(False)
+        if hasattr(self, 'alpha_label'):
+            self.alpha_label.setVisible(False)
         if hasattr(self, 'pivot_x_label'):
             self.pivot_x_label.setVisible(False)
         if hasattr(self, 'pivot_y_label'):
@@ -2931,6 +2941,8 @@ class Editor(QMainWindow):
             self.color_btn.setVisible(False)
         if hasattr(self, 'shape_combo'):
             self.shape_combo.setVisible(False)
+        if hasattr(self, 'alpha_spin'):
+            self.alpha_spin.setVisible(False)
         if hasattr(self, 'pivot_x_spin'):
             self.pivot_x_spin.setVisible(False)
         if hasattr(self, 'pivot_y_spin'):
@@ -2998,6 +3010,11 @@ class Editor(QMainWindow):
             self.flip_y_check.setChecked(False)
             self.flip_y_check.setEnabled(False)
             self.flip_y_check.blockSignals(False)
+        if hasattr(self, 'alpha_spin'):
+            self.alpha_spin.blockSignals(True)
+            self.alpha_spin.setValue(1.0)
+            self.alpha_spin.setEnabled(False)
+            self.alpha_spin.blockSignals(False)
         self.smooth_check.blockSignals(True)
         self.smooth_check.setChecked(False)
         self.smooth_check.setEnabled(False)
@@ -3054,6 +3071,11 @@ class Editor(QMainWindow):
             self.color_btn.setVisible(False)
             self.color_btn.setEnabled(False)
             self.color_btn.setStyleSheet('')
+            if hasattr(self, 'alpha_label'):
+                self.alpha_label.setVisible(False)
+            if hasattr(self, 'alpha_spin'):
+                self.alpha_spin.setVisible(False)
+                self.alpha_spin.setEnabled(False)
             self.shape_label.setVisible(False)
             self.shape_combo.setVisible(False)
             self.shape_combo.setEnabled(False)
@@ -3075,6 +3097,8 @@ class Editor(QMainWindow):
             self.smooth_check.blockSignals(True)
             self.smooth_check.setChecked(False)
             self.smooth_check.blockSignals(False)
+            if hasattr(self, 'material_group'):
+                self.material_group.setVisible(False)
         self.x_spin.blockSignals(True); self.x_spin.setValue(obj.x); self.x_spin.blockSignals(False)
         self.y_spin.blockSignals(True); self.y_spin.setValue(obj.y); self.y_spin.blockSignals(False)
         self.z_spin.blockSignals(True); self.z_spin.setValue(getattr(obj, 'z', 0)); self.z_spin.blockSignals(False)
@@ -3099,6 +3123,8 @@ class Editor(QMainWindow):
             self.scale_y_spin.blockSignals(True); self.scale_y_spin.setValue(obj.scale_y); self.scale_y_spin.blockSignals(False)
             self.link_scale.blockSignals(True); self.link_scale.setChecked(obj.scale_x == obj.scale_y); self.link_scale.blockSignals(False)
             self.angle_spin.blockSignals(True); self.angle_spin.setValue(obj.angle); self.angle_spin.blockSignals(False)
+            if hasattr(self, 'material_group'):
+                self.material_group.setVisible(True)
             self.img_row.setVisible(True)
             self.image_label.setVisible(True)
             self.image_edit.blockSignals(True); self.image_edit.setText(obj.image_path); self.image_edit.blockSignals(False)
@@ -3111,6 +3137,14 @@ class Editor(QMainWindow):
             self.color_btn.setVisible(True)
             self.color_btn.setEnabled(True)
             self.color_btn.setStyleSheet(f"background-color: rgb({c[0]}, {c[1]}, {c[2]});")
+            if hasattr(self, 'alpha_label'):
+                self.alpha_label.setVisible(True)
+            if hasattr(self, 'alpha_spin'):
+                self.alpha_spin.setVisible(True)
+                self.alpha_spin.setEnabled(True)
+                self.alpha_spin.blockSignals(True)
+                self.alpha_spin.setValue(getattr(obj, 'alpha', 1.0))
+                self.alpha_spin.blockSignals(False)
             self.shape_label.setVisible(True)
             self.shape_combo.setVisible(True)
             self.shape_combo.setEnabled(True)
@@ -3176,6 +3210,8 @@ class Editor(QMainWindow):
             obj.pivot_y = self.pivot_y_spin.value()
             obj.flip_x = self.flip_x_check.isChecked()
             obj.flip_y = self.flip_y_check.isChecked()
+            if hasattr(obj, 'alpha') and hasattr(self, 'alpha_spin'):
+                obj.alpha = self.alpha_spin.value()
             if item is not None:
                 item.setZValue(obj.z)
                 item.apply_object_transform()
