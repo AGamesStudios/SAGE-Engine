@@ -2373,6 +2373,7 @@ class Editor(QMainWindow):
                 self.setWindowTitle(parent.t('project_settings'))
                 self.setFixedSize(480, 360)
                 self.setStyle(QStyleFactory.create('Fusion'))
+                parent.apply_theme()
 
                 self.list = QListWidget()
                 self.list.setFixedWidth(110)
@@ -2505,6 +2506,7 @@ class Editor(QMainWindow):
                 self.setWindowTitle(parent.t('editor_settings'))
                 self.setFixedSize(280, 150)
                 self.setStyle(QStyleFactory.create('Fusion'))
+                parent.apply_theme()
 
                 form = QFormLayout(self)
                 form.setLabelAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)

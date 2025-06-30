@@ -20,13 +20,16 @@ class DocumentationDialog(QDialog):
         self.setWindowTitle(editor.t('documentation'))
         self.resize(700, 500)
         self.setStyle(QStyleFactory.create('Fusion'))
+        editor.apply_theme()
 
         self.docs: dict[str, str] = {}
-        doc_dir = os.path.join(BASE_DIR, 'docs')
-        for fname in os.listdir(doc_dir):
+        lang_dir = os.path.join(BASE_DIR, 'docs', editor.lang)
+        if not os.path.isdir(lang_dir):
+            lang_dir = os.path.join(BASE_DIR, 'docs', 'en')
+        for fname in os.listdir(lang_dir):
             if fname.endswith('.md'):
                 name = os.path.splitext(fname)[0].replace('_', ' ').title()
-                self.docs[name] = os.path.join(doc_dir, fname)
+                self.docs[name] = os.path.join(lang_dir, fname)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(8, 8, 8, 8)
