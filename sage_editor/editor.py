@@ -1829,13 +1829,14 @@ class Editor(QMainWindow):
         app = QApplication.instance()
         if app is None:
             return
-        script = os.path.abspath(sys.argv[0])
-        args = [sys.executable, script] + sys.argv[1:]
-        try:
-            os.execv(sys.executable, args)
-        except Exception:
-            QProcess.startDetached(sys.executable, [script] + sys.argv[1:], os.getcwd())
-            app.quit()
+        exe = sys.executable
+        args = [exe] + sys.argv
+        if not QProcess.startDetached(exe, sys.argv, os.getcwd()):
+            try:  # pragma: no cover - OS may not support exec
+                os.execv(exe, args)
+            except Exception:
+                pass
+        app.quit()
 
     def _apply_language(self):
         self.file_menu.setTitle(self.t('file'))
