@@ -1574,7 +1574,8 @@ class Editor(QMainWindow):
 
         # scene graph tab
         self.graph_view = SceneGraphView()
-        self.graph_view.load_graph(self.scene_graph)
+        if self.graph_view:
+            self.graph_view.load_graph(self.scene_graph)
         self.tabs.addTab(self.graph_view, self.t('scene_graph'))
 
         # object list and transform inspector dock
@@ -2434,7 +2435,8 @@ class Editor(QMainWindow):
         else:
             self._refresh_resource_tree()
         self._scan_scenes()
-        self.graph_view.load_graph(self.scene_graph)
+        if self.graph_view:
+            self.graph_view.load_graph(self.scene_graph)
         try:
             self.open_scene_tab(self.scene_path)
         except Exception as exc:
@@ -2476,7 +2478,8 @@ class Editor(QMainWindow):
             self.scenes_dir = os.path.join(os.path.dirname(path), proj.scenes)
             self.scene_tabs.clear()
             self.scene_graph = SceneGraph.from_dict(proj.scene_graph or {})
-            self.graph_view.load_graph(self.scene_graph)
+            if self.graph_view:
+                self.graph_view.load_graph(self.scene_graph)
             self._scan_scenes()
             tabs = self.project_metadata.get('open_tabs') or [proj.scene_file]
             proj_dir = os.path.dirname(path)
@@ -3255,7 +3258,7 @@ class Editor(QMainWindow):
     def _tab_changed(self, index: int) -> None:
         """Update widget references when the current tab changes."""
         widget = self.tabs.widget(index)
-        from .widgets import Viewport
+        from .widgets import Viewport, SceneGraphView
         if isinstance(widget, Viewport):
             self.view = widget
             self.scene_path = getattr(widget, 'scene_path', self.scene_path)
@@ -3283,7 +3286,7 @@ class Editor(QMainWindow):
     def _close_tab(self, index: int) -> None:
         """Close any tab in the editor."""
         widget = self.tabs.widget(index)
-        from .widgets import Viewport
+        from .widgets import Viewport, SceneGraphView
         if isinstance(widget, Viewport):
             path = getattr(widget, 'scene_path', None)
             if path and path in self.scene_tabs:
@@ -3310,6 +3313,12 @@ class Editor(QMainWindow):
             self.tabs.removeTab(index)
             widget.deleteLater()
             self._update_open_tabs_metadata()
+            return
+        elif isinstance(widget, SceneGraphView):
+            if widget is self.graph_view:
+                self.graph_view = None
+            self.tabs.removeTab(index)
+            widget.deleteLater()
             return
         # closing a scene logic tab
         for path, logic in list(self.scene_logic_tabs.items()):
@@ -4766,7 +4775,8 @@ class Editor(QMainWindow):
             self.scene_graph.add_scene(name, rel)
         except ValueError:
             pass
-        self.graph_view.load_graph(self.scene_graph)
+        if self.graph_view:
+            self.graph_view.load_graph(self.scene_graph)
 
     def delete_selected_scene(self) -> None:
         item = self.scenes_dock.list.currentItem()
@@ -4798,7 +4808,8 @@ class Editor(QMainWindow):
                     node.next_nodes.remove(rel)
             if self.scene_graph.start == rel:
                 self.scene_graph.start = next(iter(self.scene_graph.nodes), None)
-        self.graph_view.load_graph(self.scene_graph)
+        if self.graph_view:
+            self.graph_view.load_graph(self.scene_graph)
         if self.scene_path == path:
             self.scene_path = None
             if self.scene_tabs:
