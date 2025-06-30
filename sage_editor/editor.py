@@ -1683,8 +1683,12 @@ class Editor(QMainWindow):
         self.add_obj_btn.setToolTip(self.t('add_object'))
         self.add_cam_btn.setText(self.t('add_camera'))
         self.add_cam_btn.setToolTip(self.t('add_camera'))
-        self.run_act.setText(self.t('run'))
-        self.run_act.setToolTip(self.t('run'))
+        if self._game_window and self._game_window.isVisible():
+            self.run_act.setText(self.t('stop'))
+            self.run_act.setToolTip(self.t('stop'))
+        else:
+            self.run_act.setText(self.t('run'))
+            self.run_act.setToolTip(self.t('run'))
         self.settings_menu.setTitle(self.t('settings'))
         self.project_settings_act.setText(self.t('project_settings'))
         self.editor_settings_act.setText(self.t('editor_settings'))
@@ -1692,17 +1696,15 @@ class Editor(QMainWindow):
         self.plugins_act.setText(self.t('manage_plugins'))
         self.about_menu.setTitle(self.t('about_menu'))
         self.about_act.setText(self.t('about_us'))
-        if hasattr(self, 'paint_toolbar_btn'):
-            self.paint_toolbar_btn.setText(self.t('open_paint'))
-            self.paint_toolbar_btn.setToolTip(self.t('open_paint'))
+        if hasattr(self, 'tools_btn'):
+            self.tools_btn.setText(self.t('sage_tools'))
+            self.open_paint_act.setText(self.t('open_paint'))
+        self.view_opts_btn.setText(self.t('view_options'))
         self.grid_act.setText(self.t('show_grid'))
         self.axes_act.setText(self.t('show_gizmo'))
-        if hasattr(self, 'grid_btn'):
-            self.grid_btn.setToolTip(self.t('show_grid'))
-        if hasattr(self, 'axes_btn'):
-            self.axes_btn.setToolTip(self.t('show_gizmo'))
-        if hasattr(self, 'snap_btn'):
-            self.snap_btn.setToolTip(self.t('snap_to_grid'))
+        self.snap_act.setText(self.t('snap_to_grid'))
+        self.size_act.setText(self.t('grid_size'))
+        self.color_act.setText(self.t('grid_color'))
         self.coord_combo.setItemText(0, self.t('global'))
         self.coord_combo.setItemText(1, self.t('local'))
         self.link_scale.setToolTip(self.t('link_scale'))
@@ -1719,6 +1721,8 @@ class Editor(QMainWindow):
         self.coord_combo.setToolTip(self.t('coord_mode'))
         if hasattr(self, 'coord_mode_btn'):
             self.coord_mode_btn.setToolTip(self.t('coord_mode'))
+        if hasattr(self, 'lang_label'):
+            self.lang_label.setText(self.t('language_label'))
         if hasattr(self, 'paint_btn'):
             self.paint_btn.setToolTip(self.t('paint_sprite'))
         if hasattr(self, 'alpha_label'):
@@ -1918,37 +1922,60 @@ class Editor(QMainWindow):
         left_spacer = QWidget()
         left_spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         toolbar.addWidget(left_spacer)
+
+        # Run/Stop toggle -------------------------------------------------
         self.run_act = QAction(load_icon('start.png'), self.t('run'), self)
         self.run_act.setToolTip(self.t('run'))
         self.run_act.triggered.connect(self.run_project)
         toolbar.addAction(self.run_act)
-        self.paint_toolbar_btn = QToolButton()
-        self.paint_toolbar_btn.setText(self.t('open_paint'))
-        self.paint_toolbar_btn.setIcon(load_icon('edit.png'))
-        self.paint_toolbar_btn.setToolTip(self.t('open_paint'))
-        self.paint_toolbar_btn.clicked.connect(self.open_paint_tool)
-        toolbar.addWidget(self.paint_toolbar_btn)
-        self.grid_btn = QToolButton()
-        self.grid_btn.setCheckable(True)
-        self.grid_btn.setText(self.t('show_grid'))
-        self.grid_btn.setToolTip(self.t('show_grid'))
-        self.grid_btn.setChecked(self.view.show_grid)
-        self.grid_btn.toggled.connect(self.toggle_grid)
-        toolbar.addWidget(self.grid_btn)
-        self.axes_btn = QToolButton()
-        self.axes_btn.setCheckable(True)
-        self.axes_btn.setText(self.t('show_gizmo'))
-        self.axes_btn.setToolTip(self.t('show_gizmo'))
-        self.axes_btn.setChecked(self.view.show_axes)
-        self.axes_btn.toggled.connect(self.toggle_gizmo)
-        toolbar.addWidget(self.axes_btn)
-        self.snap_btn = QToolButton()
-        self.snap_btn.setCheckable(True)
-        self.snap_btn.setText(self.t('snap_to_grid'))
-        self.snap_btn.setToolTip(self.t('snap_to_grid'))
-        self.snap_btn.setChecked(self.snap_to_grid)
-        self.snap_btn.toggled.connect(self.toggle_snap)
-        toolbar.addWidget(self.snap_btn)
+        toolbar.addSeparator()
+
+        # SAGE Tools menu ------------------------------------------------
+        self.tools_btn = QToolButton()
+        self.tools_btn.setIcon(load_icon('plugin.png'))
+        self.tools_btn.setText(self.t('sage_tools'))
+        self.tools_menu = QMenu(self)
+        self.open_paint_act = QAction(self.t('open_paint'), self)
+        self.open_paint_act.triggered.connect(self.open_paint_tool)
+        self.tools_menu.addAction(self.open_paint_act)
+        self.tools_btn.setMenu(self.tools_menu)
+        self.tools_btn.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+        toolbar.addWidget(self.tools_btn)
+        toolbar.addSeparator()
+
+        # View options menu ----------------------------------------------
+        self.view_opts_btn = QToolButton()
+        self.view_opts_btn.setIcon(load_icon('recent.png'))
+        self.view_opts_btn.setText(self.t('view_options'))
+        self.view_opts_menu = QMenu(self)
+        self.grid_act = QAction(self.t('show_grid'), self)
+        self.grid_act.setCheckable(True)
+        self.grid_act.setChecked(self.view.show_grid)
+        self.grid_act.triggered.connect(self.toggle_grid)
+        self.view_opts_menu.addAction(self.grid_act)
+        self.axes_act = QAction(self.t('show_gizmo'), self)
+        self.axes_act.setCheckable(True)
+        self.axes_act.setChecked(self.view.show_axes)
+        self.axes_act.triggered.connect(self.toggle_gizmo)
+        self.view_opts_menu.addAction(self.axes_act)
+        self.snap_act = QAction(self.t('snap_to_grid'), self)
+        self.snap_act.setCheckable(True)
+        self.snap_act.setChecked(self.snap_to_grid)
+        self.snap_act.triggered.connect(self.toggle_snap)
+        self.view_opts_menu.addAction(self.snap_act)
+        self.view_opts_menu.addSeparator()
+        self.size_act = QAction(self.t('grid_size'), self)
+        self.size_act.triggered.connect(self.grid_size_dialog)
+        self.view_opts_menu.addAction(self.size_act)
+        self.color_act = QAction(self.t('grid_color'), self)
+        self.color_act.triggered.connect(self.choose_grid_color)
+        self.view_opts_menu.addAction(self.color_act)
+        self.view_opts_btn.setMenu(self.view_opts_menu)
+        self.view_opts_btn.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+        toolbar.addWidget(self.view_opts_btn)
+        toolbar.addSeparator()
+
+        # Coordinate mode toggle ----------------------------------------
         self.coord_mode_btn = QToolButton()
         self.coord_mode_btn.setCheckable(True)
         self.coord_mode_btn.setIcon(load_icon('world.png'))
@@ -1958,6 +1985,8 @@ class Editor(QMainWindow):
         right_spacer = QWidget()
         right_spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         toolbar.addWidget(right_spacer)
+        self.lang_label = QLabel(self.t('language_label'))
+        toolbar.addWidget(self.lang_label)
         self.lang_box = QComboBox()
         self.lang_box.addItems(list(LANGUAGES.keys()))
         self.lang_box.setCurrentText(self.lang)
@@ -2402,6 +2431,12 @@ class Editor(QMainWindow):
 
     def run_project(self):
         """Save and run the current project in a separate window."""
+        if self._game_window and self._game_window.isVisible():
+            self._game_window.close()
+            self._game_window = None
+            self._game_engine = None
+            self._apply_language()
+            return
         if not self._check_project():
             return
         self.save_project()
@@ -2437,11 +2472,18 @@ class Editor(QMainWindow):
                 background=self.background_color,
             )
             window = engine.run()
+            window.destroyed.connect(self._on_game_closed)
             self._game_engine = engine
             self._game_window = window
+            self._apply_language()
         except Exception as exc:  # pragma: no cover - runtime errors
             logger.exception('Failed to start engine')
             QMessageBox.warning(self, self.t('error'), str(exc))
+
+    def _on_game_closed(self):
+        self._game_window = None
+        self._game_engine = None
+        self._apply_language()
 
     def open_paint_tool(self, obj=None) -> None:
         """Launch the SAGE Paint window."""
@@ -2831,10 +2873,6 @@ class Editor(QMainWindow):
             self.grid_act.blockSignals(True)
             self.grid_act.setChecked(checked)
             self.grid_act.blockSignals(False)
-        if hasattr(self, 'grid_btn'):
-            self.grid_btn.blockSignals(True)
-            self.grid_btn.setChecked(checked)
-            self.grid_btn.blockSignals(False)
         if hasattr(self, 'view'):
             self.view.set_show_grid(checked)
 
@@ -2843,10 +2881,6 @@ class Editor(QMainWindow):
             self.axes_act.blockSignals(True)
             self.axes_act.setChecked(checked)
             self.axes_act.blockSignals(False)
-        if hasattr(self, 'axes_btn'):
-            self.axes_btn.blockSignals(True)
-            self.axes_btn.setChecked(checked)
-            self.axes_btn.blockSignals(False)
         if hasattr(self, 'view'):
             self.view.set_show_axes(checked)
 
@@ -2856,10 +2890,6 @@ class Editor(QMainWindow):
             self.snap_act.blockSignals(True)
             self.snap_act.setChecked(checked)
             self.snap_act.blockSignals(False)
-        if hasattr(self, 'snap_btn'):
-            self.snap_btn.blockSignals(True)
-            self.snap_btn.setChecked(checked)
-            self.snap_btn.blockSignals(False)
         if hasattr(self, 'view'):
             self.view.set_snap(self.snap_to_grid)
 
