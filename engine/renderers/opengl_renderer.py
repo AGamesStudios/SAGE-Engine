@@ -29,6 +29,7 @@ from engine.core.game_object import GameObject
 from engine import units
 from engine.log import logger
 from engine.mesh_utils import (
+    Mesh,
     create_square_mesh,
     create_triangle_mesh,
     create_circle_mesh,
@@ -185,6 +186,7 @@ class OpenGLRenderer:
         self._quad_vbo = None
         self._post_tex = None
         self._post_fbo = None
+        self._projection: list[float] | None = None
 
     def set_window_size(self, width: int, height: int):
         if self.widget:
@@ -221,7 +223,9 @@ class OpenGLRenderer:
         return self._post_tex
 
     def setup_view(self):
+        """Configure the OpenGL projection and store it for later."""
         from OpenGL.GL import glMatrixMode, glLoadIdentity, glOrtho, GL_PROJECTION, GL_MODELVIEW
+        from engine.core import math2d
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
         # center the origin so camera transforms are stable
@@ -233,8 +237,18 @@ class OpenGLRenderer:
             -1,
             1,
         )
+        self._projection = math2d.make_ortho(
+            -self.width / 2,
+            self.width / 2,
+            -self.height / 2,
+            self.height / 2,
+        )
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
+
+    def get_projection(self) -> list[float] | None:
+        """Return the current orthographic projection matrix."""
+        return self._projection
 
     def _get_blank_texture(self, smooth: bool = True) -> int:
         """Return a 1x1 white texture used for colored objects."""
@@ -323,6 +337,36 @@ class OpenGLRenderer:
         glEnd()
         glPopMatrix()
 
+    def _parse_color(self, value) -> tuple[int, int, int, int]:
+        """Return a 4-tuple RGBA color from various input formats."""
+        if value is None:
+            return 255, 255, 255, 255
+        if isinstance(value, str):
+            text = value.strip()
+            try:
+                if text.startswith("#"):
+                    text = text[1:]
+                    if len(text) in (3, 4):
+                        parts = [int(c * 2, 16) for c in text]
+                    elif len(text) in (6, 8):
+                        parts = [int(text[i:i+2], 16) for i in range(0, len(text), 2)]
+                    else:
+                        raise ValueError
+                else:
+                    text = text.replace(" ", ",")
+                    parts = [int(p) for p in text.split(",") if p]
+                while len(parts) < 4:
+                    parts.append(255)
+                return tuple(int(p) for p in parts[:4])
+            except Exception:
+                return 255, 255, 255, 255
+        if isinstance(value, (list, tuple)):
+            if len(value) == 3:
+                return int(value[0]), int(value[1]), int(value[2]), 255
+            if len(value) >= 4:
+                return int(value[0]), int(value[1]), int(value[2]), int(value[3])
+        return 255, 255, 255, 255
+
     def _draw_object(
         self,
         obj: GameObject,
@@ -353,13 +397,34 @@ class OpenGLRenderer:
             program = self._program
             glUseProgram(program)
             loc_color = glGetUniformLocation(program, "color")
-            rgba = obj.color or (255, 255, 255, 255)
+            rgba = self._parse_color(obj.color)
             scale = 1 / 255.0 if max(rgba) > 1.0 else 1.0
-            norm = tuple(c * scale for c in rgba)
+            alpha = getattr(obj, 'alpha', 1.0)
+            if alpha > 1.0:
+                alpha = alpha / 255.0
+            norm = (
+                rgba[0] * scale,
+                rgba[1] * scale,
+                rgba[2] * scale,
+                min(1.0, rgba[3] * scale * alpha),
+            )
             glUniform4f(loc_color, *norm)
 
+        mesh = getattr(obj, "mesh", None)
+        if isinstance(mesh, Mesh):
+            if shader:
+                Shader.stop()
+            else:
+                glUseProgram(0)
+            self._draw_mesh(obj, camera, mesh)
+            return
+
         shape = getattr(obj, "shape", None)
-        if shape in ("triangle", "circle"):
+        if isinstance(shape, str):
+            shape = shape.strip().lower()
+        if shape in ("rectangle", "rect"):
+            shape = "square"
+        if shape in ("triangle", "circle", "square"):
             if shader:
                 Shader.stop()
             else:
@@ -385,11 +450,6 @@ class OpenGLRenderer:
                     break
         unit_scale = units.UNITS_PER_METER
         sign = 1.0 if units.Y_UP else -1.0
-        zoom = camera.zoom if camera else 1.0
-        cam_x = camera.x if camera else 0.0
-        cam_y = camera.y if camera else 0.0
-        w_size = camera.width if (self.keep_aspect and camera) else self.width
-        h_size = camera.height if (self.keep_aspect and camera) else self.height
         ang = math.radians(getattr(obj, 'angle', 0.0))
         cos_a = math.cos(ang)
         sin_a = math.sin(ang)
@@ -415,9 +475,7 @@ class OpenGLRenderer:
             ry = vx * sin_a + vy * cos_a
             world_x = (rx + obj_x) * unit_scale
             world_y = (ry + obj_y) * unit_scale * sign
-            ndc_x = (2.0 * (world_x - cam_x * unit_scale) * zoom) / w_size
-            ndc_y = (2.0 * (world_y - cam_y * unit_scale * sign) * zoom) / h_size
-            data.extend([ndc_x, ndc_y])
+            data.extend([world_x, world_y])
         uvs = obj.texture_coords(camera, apply_effects=self.apply_effects)
         arr = (ctypes.c_float * 16)(
             data[0], data[1], uvs[0], uvs[1],
@@ -481,11 +539,6 @@ class OpenGLRenderer:
         glColor4f(*norm)
         glLineWidth(width)
         glBegin(GL_LINE_LOOP)
-        cam_x = camera.x if camera else 0.0
-        cam_y = camera.y if camera else 0.0
-        zoom = camera.zoom if camera else 1.0
-        w_size = camera.width if (self.keep_aspect and camera) else self.width
-        h_size = camera.height if (self.keep_aspect and camera) else self.height
         for cx, cy in corners:
             vx = (cx - px) * sx + px
             vy = (cy - py) * sy + py
@@ -493,19 +546,18 @@ class OpenGLRenderer:
             ry = vx * sin_a + vy * cos_a
             world_x = (rx + obj_x) * unit_scale
             world_y = (ry + obj_y) * unit_scale * sign
-            ndc_x = (2.0 * (world_x - cam_x * unit_scale) * zoom) / w_size
-            ndc_y = (2.0 * (world_y - cam_y * unit_scale * sign) * zoom) / h_size
-            glVertex2f(ndc_x, ndc_y)
+            glVertex2f(world_x, world_y)
         glEnd()
         glLineWidth(1.0)
         glEnable(GL_TEXTURE_2D)
 
-    def _draw_shape(
+    def _draw_mesh(
         self,
         obj: GameObject,
         camera: Camera | None,
-        shape: str,
+        mesh: Mesh,
     ) -> None:
+        """Render a custom Mesh with the object's transform."""
         from OpenGL.GL import (
             glBindTexture,
             glColor4f,
@@ -515,27 +567,30 @@ class OpenGLRenderer:
             glUseProgram,
             glDisable,
             glEnable,
+            GL_TEXTURE_2D,
             GL_TRIANGLE_FAN,
             GL_TRIANGLES,
-            GL_TEXTURE_2D,
         )
 
         unit_scale = units.UNITS_PER_METER
         sign = 1.0 if units.Y_UP else -1.0
         scale_mul = obj.render_scale(camera, apply_effects=self.apply_effects)
-        cam_x = camera.x if camera else 0.0
-        cam_y = camera.y if camera else 0.0
-        zoom = camera.zoom if camera else 1.0
-        w_size = camera.width if (self.keep_aspect and camera) else self.width
-        h_size = camera.height if (self.keep_aspect and camera) else self.height
 
         glUseProgram(0)
         glBindTexture(GL_TEXTURE_2D, 0)
         glDisable(GL_TEXTURE_2D)
 
-        rgba = obj.color or (255, 255, 255, 255)
+        rgba = self._parse_color(obj.color)
         scale = 1 / 255.0 if max(rgba) > 1.0 else 1.0
-        glColor4f(rgba[0] * scale, rgba[1] * scale, rgba[2] * scale, rgba[3] * scale)
+        alpha = getattr(obj, 'alpha', 1.0)
+        if alpha > 1.0:
+            alpha = alpha / 255.0
+        glColor4f(
+            rgba[0] * scale,
+            rgba[1] * scale,
+            rgba[2] * scale,
+            min(1.0, rgba[3] * scale * alpha),
+        )
 
         ang = math.radians(getattr(obj, "angle", 0.0))
         cos_a = math.cos(ang)
@@ -545,35 +600,44 @@ class OpenGLRenderer:
         w = obj.width * obj.scale_x * scale_mul
         h = obj.height * obj.scale_y * scale_mul
 
-        if shape == "triangle":
-            mesh = create_triangle_mesh()
-            mode = GL_TRIANGLES
-        elif shape == "square":
-            mesh = create_square_mesh()
-            mode = GL_TRIANGLE_FAN
-        else:
-            mesh = create_circle_mesh()
-            mode = GL_TRIANGLE_FAN
-
-        logger.debug('Drawing shape %s for %s', shape, getattr(obj, 'name', 'obj'))
+        mode = GL_TRIANGLE_FAN if not mesh.indices else GL_TRIANGLES
+        logger.debug('Drawing mesh for %s', getattr(obj, 'name', 'obj'))
         obj_x, obj_y = obj.render_position(camera, apply_effects=self.apply_effects)
         px = w * obj.pivot_x
         py = h * obj.pivot_y
         sx = -1.0 if flip_x else 1.0
         sy = -1.0 if flip_y else 1.0
+
         glBegin(mode)
-        for vx, vy in mesh.vertices:
+        verts = mesh.vertices
+        indices = mesh.indices if mesh.indices else range(len(verts))
+        for idx in indices:
+            vx, vy = verts[idx]
             vx = (vx * w - px) * sx + px
             vy = (vy * h - py) * sy + py
             rx = vx * cos_a - vy * sin_a
             ry = vx * sin_a + vy * cos_a
             world_x = (rx + obj_x) * unit_scale
             world_y = (ry + obj_y) * unit_scale * sign
-            ndc_x = (2.0 * (world_x - cam_x * unit_scale) * zoom) / w_size
-            ndc_y = (2.0 * (world_y - cam_y * unit_scale * sign) * zoom) / h_size
-            glVertex2f(ndc_x, ndc_y)
+            glVertex2f(world_x, world_y)
         glEnd()
         glEnable(GL_TEXTURE_2D)
+
+    def _draw_shape(
+        self,
+        obj: GameObject,
+        camera: Camera | None,
+        shape: str,
+    ) -> None:
+        if shape == "triangle":
+            mesh = create_triangle_mesh()
+        elif shape == "square":
+            mesh = create_square_mesh()
+        else:
+            mesh = create_circle_mesh()
+
+        logger.debug('Drawing shape %s for %s', shape, getattr(obj, 'name', 'obj'))
+        self._draw_mesh(obj, camera, mesh)
 
     def _draw_frustum(
         self,

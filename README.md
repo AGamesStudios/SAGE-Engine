@@ -117,6 +117,15 @@ functions ``engine.meters()`` and ``engine.kilometers()`` convert distances so
 objects can be placed using real-world values. The coordinate system is
 **Y-up**, meaning positive ``y`` values move objects upward while negative
 values move them down.
+
+### Math Utilities
+
+The engine exposes a small ``engine.core.math2d`` module providing
+helpers for 2D projects. It supplies quaternion conversions, bounding box
+calculations and new functions like ``make_transform`` for building 3×3
+matrices, ``transform_point`` to apply them and ``make_ortho`` for
+orthographic projection.  ``engine.core.fastmath`` remains as a thin
+wrapper for compatibility but now simply re-exports these features.
 When launching the editor a **Project Manager** window appears. It lists your
 recent projects with their creation date and full path.  Buttons let you create
 a new project, open an existing file or clear the list for a clean start. The
@@ -522,6 +531,11 @@ sprite.effects.append({
     "color": "0,0,0,255",
 })
 ```
+Colors may also be provided as hexadecimal strings like ``"#FF8800"`` or
+``"#FF8800FF"`` which the renderer automatically converts to RGBA values.
+Sprites accept an ``alpha`` attribute from ``0.0`` to ``1.0`` controlling
+overall transparency. The value multiplies the alpha channel of the sprite's
+``color`` if one is supplied.
 Effects are only supported on sprite objects. Retrieve a sprite from a
 scene using ``get_object_type`` and append the effect to its ``effects``
 list. Cameras ignore such data because they lack an ``effects`` field.

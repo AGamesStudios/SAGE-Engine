@@ -33,13 +33,16 @@ def create_square_mesh(width: float = 1.0, height: float | None = None) -> Mesh:
 
 
 def create_triangle_mesh(size: float = 1.0) -> Mesh:
-    """Return vertices for an equilateral triangle."""
+    """Return vertices for a centered equilateral triangle."""
     h = math.sqrt(3) / 2 * size
     verts = [
         (-size / 2, -h / 3),
         (size / 2, -h / 3),
         (0.0, 2 * h / 3),
     ]
+    # shift so the bounding box is centred on the origin
+    offset = (max(v[1] for v in verts) + min(v[1] for v in verts)) / 2
+    verts = [(x, y - offset) for x, y in verts]
     return Mesh(verts, [0, 1, 2])
 
 
