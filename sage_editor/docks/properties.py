@@ -170,6 +170,11 @@ class PropertiesDock(QDockWidget):
         prop_layout.addWidget(self.var_group)
         self.var_group.setVisible(False)
 
+        self.settings_group = QGroupBox(editor.t('object_settings'))
+        self.settings_layout = QFormLayout(self.settings_group)
+        prop_layout.addWidget(self.settings_group)
+        self.settings_group.setVisible(False)
+
         self.effects_group = QGroupBox(editor.t('effects'))
         eff_layout = QVBoxLayout(self.effects_group)
         self.effects_list = QVBoxLayout()

@@ -2589,6 +2589,7 @@ class Editor(QMainWindow):
                 self.scene.variables[name] = value
             self.refresh_variables()
             self._update_variable_panel()
+            self._update_settings_panel()
             self._mark_dirty()
         except Exception as exc:
             QMessageBox.warning(self, 'Error', f'Failed to add variable: {exc}')
@@ -2638,6 +2639,7 @@ class Editor(QMainWindow):
             pub.discard(new_name)
         self.refresh_variables()
         self._update_variable_panel()
+        self._update_settings_panel()
         self._mark_dirty()
 
     def _delete_variable(self, row: int) -> None:
@@ -2650,6 +2652,7 @@ class Editor(QMainWindow):
         pub.discard(name)
         self.refresh_variables()
         self._update_variable_panel()
+        self._update_settings_panel()
         self._mark_dirty()
 
     def refresh_variables(self):
@@ -3029,6 +3032,10 @@ class Editor(QMainWindow):
                 item = self.effects_list.takeAt(0)
                 if item.widget():
                     item.widget().deleteLater()
+        if hasattr(self, 'settings_group'):
+            self.settings_group.setVisible(False)
+            while self.settings_layout.rowCount():
+                self.settings_layout.removeRow(0)
 
     def _update_transform_panel(self, update_vars: bool = True):
         """Refresh the transform inputs for the selected object.
@@ -3182,6 +3189,7 @@ class Editor(QMainWindow):
 
         if update_vars:
             self._update_variable_panel()
+            self._update_settings_panel()
         self._update_effect_panel()
 
     def _apply_transform(self):
@@ -3260,6 +3268,35 @@ class Editor(QMainWindow):
             self.var_layout.addRow(name + ':', edit)
             shown = True
         self.var_group.setVisible(shown)
+
+    def _update_settings_panel(self):
+        if not hasattr(self, 'settings_group'):
+            return
+        while self.settings_layout.rowCount():
+            self.settings_layout.removeRow(0)
+        idx = self.object_combo.currentIndex()
+        if idx < 0 or idx >= len(self.items):
+            self.settings_group.setVisible(False)
+            return
+        obj = self.items[idx][1]
+        shown = False
+        for key, val in getattr(obj, 'settings', {}).items():
+            edit = QLineEdit(str(val))
+            edit.editingFinished.connect(
+                lambda n=key, w=edit: self._object_setting_changed(n, w))
+            self.settings_layout.addRow(f'{key}:', edit)
+            shown = True
+        self.settings_group.setVisible(shown)
+
+    def _object_setting_changed(self, name: str, widget):
+        idx = self.object_combo.currentIndex()
+        if idx < 0 or idx >= len(self.items):
+            return
+        obj = self.items[idx][1]
+        if name not in getattr(obj, 'settings', {}):
+            return
+        obj.settings[name] = widget.text()
+        self._mark_dirty()
 
     def _public_var_changed(self, name: str, widget):
         if isinstance(widget, QCheckBox):
