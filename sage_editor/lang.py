@@ -47,6 +47,7 @@ LANGUAGES = {
         'new_project': 'New Project',
         'open_project': 'Open Project',
         'save_project': 'Save Project',
+        'save_as': 'Save As...',
         'sage_files': 'SAGE Project (*.sageproject)',
         'browse': 'Browse',
         'clear': 'Clear',
@@ -117,6 +118,7 @@ LANGUAGES = {
         , 'project_settings': 'Project Settings'
         , 'editor_settings': 'Editor Settings'
         , 'export_exe': 'Export EXE'
+        , 'exit': 'Exit'
         , 'plugins_menu': 'Plugins'
         , 'title_label': 'Title:'
         , 'version_label': 'Version:'
@@ -273,6 +275,7 @@ LANGUAGES = {
         'new_project': 'Новый проект',
         'open_project': 'Открыть проект',
         'save_project': 'Сохранить проект',
+        'save_as': 'Сохранить как...',
         'sage_files': 'Проекты SAGE (*.sageproject)',
         'browse': 'Обзор',
         'clear': 'Очистить',
@@ -343,6 +346,7 @@ LANGUAGES = {
         , 'project_settings': 'Параметры проекта'
         , 'editor_settings': 'Параметры редактора'
         , 'export_exe': 'Экспорт EXE'
+        , 'exit': 'Выход'
         , 'plugins_menu': 'Плагины'
         , 'title_label': 'Название:'
         , 'version_label': 'Версия:'

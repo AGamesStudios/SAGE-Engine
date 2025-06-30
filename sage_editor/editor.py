@@ -1649,7 +1649,13 @@ class Editor(QMainWindow):
     def _apply_language(self):
         self.file_menu.setTitle(self.t('file'))
         self.edit_menu.setTitle(self.t('edit_menu'))
+        self.new_proj_act.setText(self.t('new_project'))
+        self.open_proj_act.setText(self.t('open_project'))
+        self.recent_menu.setTitle(self.t('recent_projects'))
+        self.save_proj_act.setText(self.t('save_project'))
+        self.save_as_act.setText(self.t('save_as'))
         self.export_exe_act.setText(self.t('export_exe'))
+        self.exit_act.setText(self.t('exit'))
         self.tabs.setTabText(0, self.t('viewport'))
         self.tabs.setTabText(1, self.t('logic'))
         self.object_label.setText(self.t('scene'))
@@ -1756,6 +1762,10 @@ class Editor(QMainWindow):
         self.project_settings_act.setEnabled(enabled)
         self.objects_dock.setEnabled(enabled)
         self.resources_dock.setEnabled(enabled)
+        if hasattr(self, 'save_proj_act'):
+            self.save_proj_act.setEnabled(enabled)
+        if hasattr(self, 'save_as_act'):
+            self.save_as_act.setEnabled(enabled)
         self._update_title()
         self._tab_changed(self.tabs.currentIndex())
 
@@ -1881,10 +1891,35 @@ class Editor(QMainWindow):
     def _init_actions(self):
         menubar = self.menuBar()
         self.file_menu = menubar.addMenu(self.t('file'))
+        self.new_proj_act = QAction(self.t('new_project'), self)
+        self.new_proj_act.triggered.connect(self.new_project)
+        self.file_menu.addAction(self.new_proj_act)
+
+        self.open_proj_act = QAction(self.t('open_project'), self)
+        self.open_proj_act.triggered.connect(self.open_project)
+        self.file_menu.addAction(self.open_proj_act)
+
+        self.recent_menu = self.file_menu.addMenu(self.t('recent_projects'))
+        self._update_recent_menu()
+
+        self.save_proj_act = QAction(self.t('save_project'), self)
+        self.save_proj_act.triggered.connect(self.save_project)
+        self.file_menu.addAction(self.save_proj_act)
+
+        self.save_as_act = QAction(self.t('save_as'), self)
+        self.save_as_act.triggered.connect(self.save_project_as)
+        self.file_menu.addAction(self.save_as_act)
+
+        self.file_menu.addSeparator()
         self.export_exe_act = QAction(self.t('export_exe'), self)
         self.export_exe_act.setEnabled(False)
         self.export_exe_act.triggered.connect(lambda: None)
         self.file_menu.addAction(self.export_exe_act)
+
+        self.file_menu.addSeparator()
+        self.exit_act = QAction(self.t('exit'), self)
+        self.exit_act.triggered.connect(self.close)
+        self.file_menu.addAction(self.exit_act)
 
         self.edit_menu = menubar.addMenu(self.t('edit_menu'))
         self.undo_act = QAction(self.t('undo'), self)
@@ -2204,6 +2239,19 @@ class Editor(QMainWindow):
             self._update_title()
         except Exception as exc:
             QMessageBox.warning(self, 'Error', f'Failed to save project: {exc}')
+
+    def save_project_as(self):
+        """Prompt for a location and save the project there."""
+        path, _ = QFileDialog.getSaveFileName(
+            self, self.t('save_project'), '', self.t('sage_files')
+        )
+        if not path:
+            return
+        old = self.project_path
+        self.project_path = path
+        self.save_project()
+        if self.dirty:
+            self.project_path = old
 
     def save_scene(self):
         path, _ = QFileDialog.getSaveFileName(

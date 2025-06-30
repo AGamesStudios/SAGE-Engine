@@ -308,9 +308,10 @@ current project and opens a new game window using the same OpenGL renderer,
 so the scene appears exactly as in the viewport.
 
 
-Project files store the entire scene data so you can share a single file. Use
-**File → Save Project** to write the current project. The **Recent Projects**
-submenu lists the last few files you opened for quick access.
+Project files store the entire scene so you can share a single file. Use
+**File → Save Project** or **File → Save As…** to write your work. The
+**Recent Projects** submenu lists the last few files you opened for quick
+access. Choose **File → Exit** to close the editor when you are done.
 If you make changes after saving, the window title shows `(unsaved)` so you
 know there are modifications. Closing the editor with unsaved work displays a
 dialog asking whether to save before exiting.
