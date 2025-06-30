@@ -29,6 +29,7 @@ import copy
 import atexit
 import traceback
 import inspect
+import sip
 from .lang import LANGUAGES, DEFAULT_LANGUAGE
 from engine import Scene, GameObject, Project, Camera, ENGINE_VERSION, get_resource_path
 from engine.core.objects import get_object_type
@@ -2264,12 +2265,25 @@ class Editor(QMainWindow):
                 return
         scene = Scene.load(path)
         if not self.scene_tabs:
-            view = self.view
+            if self.view is None or sip.isdeleted(self.view):
+                view = Viewport(scene, editor=self)
+                view.renderer.background = self.background_color
+                view.set_snap(self.snap_steps)
+                view.set_grid_size(self.grid_size)
+                view.set_move_step(self.move_step)
+                view.set_rotate_step(self.rotate_step)
+                view.set_scale_step(self.scale_step)
+                view.set_grid_color(self.grid_color)
+                self.view = view
+            else:
+                view = self.view
             self.scene_tabs[path] = view
             self.tabs.setTabText(
                 self.tabs.indexOf(view), os.path.splitext(os.path.basename(path))[0]
             )
             view.scene_path = path
+            if self.logic_widget is None or sip.isdeleted(self.logic_widget):
+                self.logic_widget = LogicTab(self, label=self.t('scene'), hide_combo=True)
             logic = self.logic_widget
             self.scene_logic_tabs[path] = logic
             self.tabs.setTabText(
@@ -3223,6 +3237,13 @@ class Editor(QMainWindow):
         if isinstance(widget, Viewport):
             self.view = widget
             self.scene_path = getattr(widget, 'scene_path', self.scene_path)
+            logic_widget = self.scene_logic_tabs.get(self.scene_path, self.logic_widget)
+            if logic_widget:
+                self.event_list = logic_widget.event_list
+                self.var_table = logic_widget.var_table
+                self.object_combo = logic_widget.object_combo
+                self.object_label = logic_widget.object_label
+                self.add_var_btn = logic_widget.add_var_btn
             self.load_scene(widget.scene, viewport=widget, keep_camera=True)
             return
         if hasattr(widget, "object_combo"):
@@ -3238,7 +3259,7 @@ class Editor(QMainWindow):
             )
 
     def _close_tab(self, index: int) -> None:
-        """Close an object logic tab."""
+        """Close any tab in the editor."""
         widget = self.tabs.widget(index)
         from .widgets import Viewport
         if isinstance(widget, Viewport):
@@ -3250,7 +3271,9 @@ class Editor(QMainWindow):
                 lidx = self.tabs.indexOf(logic)
                 if lidx >= 0:
                     self.tabs.removeTab(lidx)
-                    logic.deleteLater()
+                if logic is self.logic_widget:
+                    self.logic_widget = None
+                logic.deleteLater()
             if self.scene_path == path:
                 self.scene_path = None
                 if self.scene_tabs:
@@ -3258,18 +3281,27 @@ class Editor(QMainWindow):
                     self.tabs.setCurrentWidget(self.scene_tabs[first])
                     self.scene_path = first
                     self.load_scene(Scene.load(first))
+                else:
+                    self.view = None
+            if widget is self.view:
+                self.view = None
             self.tabs.removeTab(index)
             widget.deleteLater()
             self._update_open_tabs_metadata()
             return
-        if widget is self.logic_widget:
-            return
+        # closing a scene logic tab
+        for path, logic in list(self.scene_logic_tabs.items()):
+            if logic is widget:
+                del self.scene_logic_tabs[path]
+                break
         obj_id = getattr(widget, "object_id", None)
         if obj_id and obj_id in self.object_tabs:
             del self.object_tabs[obj_id]
+        if widget is self.logic_widget:
+            self.logic_widget = None
         self.tabs.removeTab(index)
         widget.deleteLater()
-
+        
     def _set_active_camera(self, index: int):
         """Make the selected camera the scene's active camera."""
         if index < 0 or index >= len(self.items):
