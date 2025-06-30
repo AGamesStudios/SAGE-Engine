@@ -14,6 +14,7 @@ from .core import (
     POST_EFFECT_REGISTRY,
 )
 from .mesh_utils import (
+    Mesh,
     create_square_mesh,
     create_triangle_mesh,
     create_circle_mesh,
@@ -33,6 +34,7 @@ from .core.engine import main
 from .log import logger
 from .diagnostics import warn, error, exception
 from . import units
+from .core import math2d
 set_units_per_meter = units.set_units_per_meter
 meters = units.meters
 kilometers = units.kilometers
@@ -76,7 +78,8 @@ __all__ = [
     'set_y_up', 'Y_UP', 'GameWindow', 'EngineSettings',
     'register_effect', 'get_effect', 'EFFECT_REGISTRY',
     'register_post_effect', 'get_post_effect', 'POST_EFFECT_REGISTRY',
-    'create_square_mesh', 'create_triangle_mesh', 'create_circle_mesh'
+    'create_square_mesh', 'create_triangle_mesh', 'create_circle_mesh', 'Mesh',
+    'math2d'
 ]
 
 

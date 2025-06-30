@@ -7,7 +7,8 @@ from PyQt6.QtWidgets import (
     QDialogButtonBox, QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox, QCompleter, QToolButton,
     QTextEdit, QDockWidget, QGroupBox, QCheckBox, QMessageBox, QMenu, QColorDialog,
     QTreeView, QInputDialog, QTreeWidget, QTreeWidgetItem, QStackedWidget,
-    QHeaderView, QAbstractItemView, QProgressDialog, QScrollArea, QStyleFactory
+    QHeaderView, QAbstractItemView, QProgressDialog, QScrollArea, QStyleFactory,
+    QSlider, QFrame
 )
 try:
     from PyQt6.QtWidgets import QFileSystemModel
@@ -1387,6 +1388,45 @@ class EffectDialog(QDialog):
             self.params_form.addRow(t('outline_color'), self.color_edit)
 
 
+class ViewSettingsPopup(QFrame):
+    """Popup widget for viewport options."""
+
+    def __init__(self, editor: "Editor"):
+        super().__init__(editor, Qt.WindowType.Popup)
+        self.editor = editor
+        layout = QVBoxLayout(self)
+        row = QHBoxLayout()
+        self.grid_chk = QCheckBox(editor.t('show_grid'))
+        self.grid_chk.setChecked(editor.view.show_grid)
+        self.gizmo_chk = QCheckBox(editor.t('show_gizmo'))
+        self.gizmo_chk.setChecked(editor.view.show_axes)
+        row.addWidget(self.grid_chk)
+        row.addWidget(self.gizmo_chk)
+        layout.addLayout(row)
+
+        self.snap_chk = QCheckBox(editor.t('snap_to_grid'))
+        self.snap_chk.setChecked(editor.snap_to_grid)
+        layout.addWidget(self.snap_chk)
+
+        size_row = QHBoxLayout()
+        size_row.addWidget(QLabel(editor.t('grid_size')))
+        self.size_spin = QDoubleSpinBox()
+        self.size_spin.setRange(0.1, 1000.0)
+        self.size_spin.setValue(editor.grid_size)
+        size_row.addWidget(self.size_spin)
+        layout.addLayout(size_row)
+
+        self.color_btn = QPushButton(editor.t('grid_color'))
+        layout.addWidget(self.color_btn)
+
+        editor.apply_no_wheel(self)
+
+        self.grid_chk.toggled.connect(editor.toggle_grid)
+        self.gizmo_chk.toggled.connect(editor.toggle_gizmo)
+        self.snap_chk.toggled.connect(editor.toggle_snap)
+        self.size_spin.valueChanged.connect(editor.set_grid_size)
+        self.color_btn.clicked.connect(editor.choose_grid_color)
+
 class Editor(QMainWindow):
     def __init__(self, autoshow: bool = True):
         super().__init__()
@@ -1402,6 +1442,7 @@ class Editor(QMainWindow):
         self.grid_size = 1.0
         self.grid_color = (77, 77, 77)
         self.font_size = QApplication.font().pointSize()
+        self.theme = 'dark'
         self.resource_dir: str | None = None
         self.resource_manager = None
         self.scene = Scene()
@@ -1447,10 +1488,12 @@ class Editor(QMainWindow):
         obj_layout.addWidget(self.object_list)
         self.add_obj_btn = QPushButton(self.t('add_object'))
         self.add_obj_btn.setIcon(load_icon('object.png'))
+        self.add_obj_btn.setToolTip(self.t('add_object'))
         self.add_obj_btn.clicked.connect(self.add_object)
         obj_layout.addWidget(self.add_obj_btn)
         self.add_cam_btn = QPushButton(self.t('add_camera'))
         self.add_cam_btn.setIcon(load_icon('camera.png'))
+        self.add_cam_btn.setToolTip(self.t('add_camera'))
         self.add_cam_btn.clicked.connect(self.add_camera)
         obj_layout.addWidget(self.add_cam_btn)
 
@@ -1461,18 +1504,24 @@ class Editor(QMainWindow):
         self.z_spin = QDoubleSpinBox(); self.z_spin.setRange(-1000, 1000)
         self.scale_x_spin = QDoubleSpinBox(); self.scale_x_spin.setRange(0.01, 100)
         self.scale_y_spin = QDoubleSpinBox(); self.scale_y_spin.setRange(0.01, 100)
-        self.link_scale = QCheckBox(self.t('link_scale'))
+        self.link_scale = QToolButton()
+        self.link_scale.setCheckable(True)
+        self.link_scale.setIcon(load_icon('link.png'))
+        self.link_scale.setToolTip(self.t('link_scale'))
         self.coord_combo = QComboBox();
         self.coord_combo.addItem(self.t('global'), False)
         self.coord_combo.addItem(self.t('local'), True)
         self.coord_combo.currentIndexChanged.connect(self._on_coord_mode)
         self.coord_combo.setCurrentIndex(0)
-        self.angle_spin = QDoubleSpinBox(); self.angle_spin.setRange(-360, 360)
+        self.angle_spin = QSlider(Qt.Orientation.Horizontal)
+        self.angle_spin.setRange(0, 360)
+        self.angle_spin.setValue(0)
+        self.angle_spin.setToolTip(self.t('rotation'))
         for spin in (self.x_spin, self.y_spin, self.z_spin, self.scale_x_spin, self.scale_y_spin, self.angle_spin):
             spin.valueChanged.connect(self._apply_transform)
         form.addRow(self.t('x'), self.x_spin)
         form.addRow(self.t('y'), self.y_spin)
-        form.addRow(self.t('z'), self.z_spin)
+        form.addRow(self.t('z_order'), self.z_spin)
         form.addRow(self.t('scale_x'), self.scale_x_spin)
         form.addRow(self.t('scale_y'), self.scale_y_spin)
         form.addRow("", self.link_scale)
@@ -1491,6 +1540,7 @@ class Editor(QMainWindow):
         self.transform_group = prop_dock.transform_group
         self.camera_group = prop_dock.camera_group
         self.object_group = prop_dock.object_group
+        self.material_group = prop_dock.material_group
         self.name_edit = prop_dock.name_edit
         self.type_combo = prop_dock.type_combo
         self.x_spin = prop_dock.x_spin
@@ -1501,6 +1551,7 @@ class Editor(QMainWindow):
         self.link_scale = prop_dock.link_scale
         self.coord_combo = prop_dock.coord_combo
         self.angle_spin = prop_dock.angle_spin
+        self.angle_value = prop_dock.angle_value
         self.pivot_x_spin = prop_dock.pivot_x_spin
         self.pivot_y_spin = prop_dock.pivot_y_spin
         self.flip_x_check = prop_dock.flip_x_check
@@ -1520,6 +1571,8 @@ class Editor(QMainWindow):
         self.clear_img_btn = prop_dock.clear_img_btn
         self.paint_btn = prop_dock.paint_btn
         self.color_btn = prop_dock.color_btn
+        self.alpha_spin = prop_dock.alpha_spin
+        self.alpha_value = prop_dock.alpha_value
         self.shape_combo = prop_dock.shape_combo
         self.smooth_check = prop_dock.smooth_check
         self.img_row = prop_dock.img_row
@@ -1528,7 +1581,14 @@ class Editor(QMainWindow):
         self.shape_label = prop_dock.shape_label
         self.pivot_x_label = prop_dock.pivot_x_label
         self.pivot_y_label = prop_dock.pivot_y_label
+        self.alpha_label = prop_dock.alpha_label
+        self.angle_label = prop_dock.angle_label
+        self.z_label = prop_dock.z_label
         self.smooth_label = prop_dock.smooth_label
+        self.pos_x_label = prop_dock.pos_x_label
+        self.pos_y_label = prop_dock.pos_y_label
+        self.scale_x_label = prop_dock.scale_x_label
+        self.scale_y_label = prop_dock.scale_y_label
         self.image_edit.setPlaceholderText(self.t('path_label'))
         self.color_btn.setText('')
         self.color_btn.setStyleSheet('background-color: rgb(255, 255, 255);')
@@ -1595,14 +1655,13 @@ class Editor(QMainWindow):
         self._clip_object = None
         self._clip_event = None
         self._init_actions()
+        self.apply_theme()
         self._default_state = self.saveState().toBase64().data().decode()
         if autoshow:
             self.showMaximized()
         self._apply_language()
         self._update_project_state()
-        self._update_recent_menu()
         self._on_coord_mode()
-        self._build_layout_menu()
         self._load_default_layout()
         self.apply_no_wheel(self)
         # load optional editor plugins
@@ -1621,12 +1680,21 @@ class Editor(QMainWindow):
         self._apply_language()
         self.refresh_events()
 
+    def apply_theme(self) -> None:
+        """Apply the editor's dark theme."""
+        from .app import apply_palette
+        apply_palette()
+
     def _apply_language(self):
         self.file_menu.setTitle(self.t('file'))
         self.edit_menu.setTitle(self.t('edit_menu'))
         self.new_proj_act.setText(self.t('new_project'))
         self.open_proj_act.setText(self.t('open_project'))
+        self.recent_menu.setTitle(self.t('recent_projects'))
         self.save_proj_act.setText(self.t('save_project'))
+        self.save_as_act.setText(self.t('save_as'))
+        self.export_exe_act.setText(self.t('export_exe'))
+        self.exit_act.setText(self.t('exit'))
         self.tabs.setTabText(0, self.t('viewport'))
         self.tabs.setTabText(1, self.t('logic'))
         self.object_label.setText(self.t('scene'))
@@ -1648,40 +1716,76 @@ class Editor(QMainWindow):
         self.camera_group.setTitle(self.t('camera'))
         self.properties_dock.setWindowTitle(self.t('properties'))
         self.object_group.setTitle(self.t('object'))
+        self.material_group.setTitle(self.t('material'))
         self.name_edit.setPlaceholderText(self.t('name'))
         self.type_combo.setItemText(0, self.t('sprite'))
         self.type_combo.setItemText(1, self.t('camera'))
         self.image_edit.setPlaceholderText(self.t('path_label'))
         self.cam_active.setText(self.t('primary_camera'))
         self.x_spin.setPrefix(''); self.y_spin.setPrefix(''); self.z_spin.setPrefix('')
-        self.scale_x_spin.setPrefix(''); self.scale_y_spin.setPrefix(''); self.angle_spin.setPrefix('')
+        self.scale_x_spin.setPrefix(''); self.scale_y_spin.setPrefix('')
         self.add_obj_btn.setText(self.t('add_object'))
+        self.add_obj_btn.setToolTip(self.t('add_object'))
         self.add_cam_btn.setText(self.t('add_camera'))
-        self.run_act.setText(self.t('run'))
-        self.recent_menu.setTitle(self.t('recent_projects'))
-        self.recent_menu.setIcon(load_icon('recent.png'))
+        self.add_cam_btn.setToolTip(self.t('add_camera'))
+        if self._game_window and self._game_window.isVisible():
+            self.run_act.setIcon(load_icon('stop.png'))
+            self.run_act.setText(self.t('stop'))
+            self.run_act.setToolTip(self.t('stop'))
+        else:
+            self.run_act.setIcon(load_icon('start.png'))
+            self.run_act.setText(self.t('run'))
+            self.run_act.setToolTip(self.t('run'))
         self.settings_menu.setTitle(self.t('settings'))
         self.project_settings_act.setText(self.t('project_settings'))
+        self.editor_settings_act.setText(self.t('editor_settings'))
+        self.plugins_menu.setTitle(self.t('plugins_menu'))
         self.plugins_act.setText(self.t('manage_plugins'))
         self.about_menu.setTitle(self.t('about_menu'))
         self.about_act.setText(self.t('about_us'))
-        self.editor_menu.setTitle(self.t('editor_menu'))
-        self.layout_menu.setTitle(self.t('interface_menu'))
-        self.save_layout_act.setText(self.t('save_layout'))
-        self.restore_layout_act.setText(self.t('restore_default'))
-        self.paint_act.setText(self.t('open_paint'))
-        if hasattr(self, 'paint_toolbar_btn'):
-            self.paint_toolbar_btn.setText(self.t('open_paint'))
-        self.grid_act.setText(self.t('show_grid'))
-        self.axes_act.setText(self.t('show_gizmo'))
+        if hasattr(self, 'tools_btn'):
+            self.tools_btn.setText(self.t('sage_tools'))
+            self.open_paint_act.setText(self.t('open_paint'))
+        self.view_opts_btn.setText(self.t('view_options'))
+        # update popup labels if available
+        if hasattr(self, 'view_opts_popup'):
+            self.view_opts_popup.grid_chk.setText(self.t('show_grid'))
+            self.view_opts_popup.gizmo_chk.setText(self.t('show_gizmo'))
+            self.view_opts_popup.snap_chk.setText(self.t('snap_to_grid'))
+            self.view_opts_popup.size_spin.blockSignals(True)
+            self.view_opts_popup.size_spin.setValue(self.grid_size)
+            self.view_opts_popup.size_spin.blockSignals(False)
+            self.view_opts_popup.color_btn.setText(self.t('grid_color'))
         self.coord_combo.setItemText(0, self.t('global'))
         self.coord_combo.setItemText(1, self.t('local'))
-        self.link_scale.setText(self.t('link_scale'))
+        self.link_scale.setToolTip(self.t('link_scale'))
+        self.image_btn.setToolTip(self.t('browse'))
+        self.clear_img_btn.setToolTip(self.t('clear'))
+        self.paint_btn.setToolTip(self.t('paint_sprite'))
+        self.color_btn.setToolTip(self.t('color'))
+        self.add_effect_btn.setToolTip(self.t('add_effect'))
+        self.logic_btn.setToolTip(self.t('edit_logic'))
+        self.pos_x_label.setText(self.t('x'))
+        self.pos_y_label.setText(self.t('y'))
+        self.scale_x_label.setText(self.t('x'))
+        self.scale_y_label.setText(self.t('y'))
         self.coord_combo.setToolTip(self.t('coord_mode'))
         if hasattr(self, 'coord_mode_btn'):
             self.coord_mode_btn.setToolTip(self.t('coord_mode'))
+        if hasattr(self, 'lang_label'):
+            self.lang_label.setText(self.t('language_label'))
         if hasattr(self, 'paint_btn'):
-            self.paint_btn.setText(self.t('paint_sprite'))
+            self.paint_btn.setToolTip(self.t('paint_sprite'))
+        if hasattr(self, 'alpha_label'):
+            self.alpha_label.setText(self.t('alpha'))
+        if hasattr(self, 'angle_label'):
+            self.angle_label.setText(self.t('rotation'))
+        if hasattr(self, 'z_label'):
+            self.z_label.setText(self.t('z_order'))
+        if hasattr(self, 'pivot_x_label'):
+            self.pivot_x_label.setText(self.t('x'))
+        if hasattr(self, 'pivot_y_label'):
+            self.pivot_y_label.setText(self.t('y'))
 
     def apply_engine_completer(self, widget: QLineEdit):
         """Attach the engine method completer to a line edit."""
@@ -1703,6 +1807,10 @@ class Editor(QMainWindow):
         self.project_settings_act.setEnabled(enabled)
         self.objects_dock.setEnabled(enabled)
         self.resources_dock.setEnabled(enabled)
+        if hasattr(self, 'save_proj_act'):
+            self.save_proj_act.setEnabled(enabled)
+        if hasattr(self, 'save_as_act'):
+            self.save_as_act.setEnabled(enabled)
         self._update_title()
         self._tab_changed(self.tabs.currentIndex())
 
@@ -1790,9 +1898,12 @@ class Editor(QMainWindow):
         self.recent_projects.insert(0, path)
         self.recent_projects = self.recent_projects[:5]
         save_recent(self.recent_projects)
-        self._update_recent_menu()
+        if hasattr(self, 'recent_menu'):
+            self._update_recent_menu()
 
     def _update_recent_menu(self):
+        if not hasattr(self, 'recent_menu'):
+            return
         self.recent_menu.clear()
         for p in self.recent_projects:
             act = self.recent_menu.addAction(p)
@@ -1805,7 +1916,8 @@ class Editor(QMainWindow):
     def clear_recent(self):
         self.recent_projects = []
         save_recent(self.recent_projects)
-        self._update_recent_menu()
+        if hasattr(self, 'recent_menu'):
+            self._update_recent_menu()
 
     def _resource_file_dialog(self, title: str, filters: str = '') -> str:
         """Return a file path chosen from the resources folder."""
@@ -1824,19 +1936,35 @@ class Editor(QMainWindow):
     def _init_actions(self):
         menubar = self.menuBar()
         self.file_menu = menubar.addMenu(self.t('file'))
-        self.new_proj_act = QAction(load_icon('file.png'), self.t('new_project'), self)
-        self.new_proj_act.setShortcut('Ctrl+N')
+        self.new_proj_act = QAction(self.t('new_project'), self)
         self.new_proj_act.triggered.connect(self.new_project)
-        self.open_proj_act = QAction(load_icon('open.png'), self.t('open_project'), self)
-        self.open_proj_act.setShortcut('Ctrl+O')
-        self.open_proj_act.triggered.connect(self.open_project)
-        self.save_proj_act = QAction(load_icon('save.png'), self.t('save_project'), self)
-        self.save_proj_act.setShortcut('Ctrl+S')
-        self.save_proj_act.triggered.connect(self.save_project)
         self.file_menu.addAction(self.new_proj_act)
+
+        self.open_proj_act = QAction(self.t('open_project'), self)
+        self.open_proj_act.triggered.connect(self.open_project)
         self.file_menu.addAction(self.open_proj_act)
+
+        self.recent_menu = self.file_menu.addMenu(self.t('recent_projects'))
+        self._update_recent_menu()
+
+        self.save_proj_act = QAction(self.t('save_project'), self)
+        self.save_proj_act.triggered.connect(self.save_project)
         self.file_menu.addAction(self.save_proj_act)
-        self.recent_menu = self.file_menu.addMenu(load_icon('recent.png'), self.t('recent_projects'))
+
+        self.save_as_act = QAction(self.t('save_as'), self)
+        self.save_as_act.triggered.connect(self.save_project_as)
+        self.file_menu.addAction(self.save_as_act)
+
+        self.file_menu.addSeparator()
+        self.export_exe_act = QAction(self.t('export_exe'), self)
+        self.export_exe_act.setEnabled(False)
+        self.export_exe_act.triggered.connect(lambda: None)
+        self.file_menu.addAction(self.export_exe_act)
+
+        self.file_menu.addSeparator()
+        self.exit_act = QAction(self.t('exit'), self)
+        self.exit_act.triggered.connect(self.close)
+        self.file_menu.addAction(self.exit_act)
 
         self.edit_menu = menubar.addMenu(self.t('edit_menu'))
         self.undo_act = QAction(self.t('undo'), self)
@@ -1854,52 +1982,14 @@ class Editor(QMainWindow):
         self.project_settings_act = QAction(self.t('project_settings'), self)
         self.project_settings_act.triggered.connect(self.show_project_settings)
         self.settings_menu.addAction(self.project_settings_act)
-        self.plugins_act = QAction(load_icon('plugin.png'), self.t('manage_plugins'), self)
+        self.editor_settings_act = QAction(self.t('editor_settings'), self)
+        self.editor_settings_act.triggered.connect(self.show_editor_settings)
+        self.settings_menu.addAction(self.editor_settings_act)
+
+        self.plugins_menu = menubar.addMenu(load_icon('plugin.png'), self.t('plugins_menu'))
+        self.plugins_act = QAction(self.t('manage_plugins'), self)
         self.plugins_act.triggered.connect(self.show_plugin_manager)
-        self.settings_menu.addAction(self.plugins_act)
-
-        self.editor_menu = menubar.addMenu(self.t('editor_menu'))
-        self.layout_menu = self.editor_menu.addMenu(self.t('interface_menu'))
-        self.save_layout_act = QAction(self.t('save_layout'), self)
-        self.save_layout_act.triggered.connect(self.save_layout_dialog)
-        self.restore_layout_act = QAction(self.t('restore_default'), self)
-        self.restore_layout_act.triggered.connect(self.restore_default_layout)
-        self.layout_menu.addAction(self.save_layout_act)
-        self.layout_menu.addAction(self.restore_layout_act)
-        self.layout_menu.addSeparator()
-        self.layout_group = QActionGroup(self)
-        self.layout_actions = []
-
-        self.paint_act = QAction(self.t('open_paint'), self)
-        self.paint_act.triggered.connect(self.open_paint_tool)
-        self.editor_menu.addAction(self.paint_act)
-
-        self.view_menu = self.editor_menu.addMenu('View')
-        self.grid_act = QAction(self.t('show_grid'), self)
-        self.grid_act.setCheckable(True)
-        self.grid_act.triggered.connect(self.toggle_grid)
-        self.view_menu.addAction(self.grid_act)
-        self.axes_act = QAction(self.t('show_gizmo'), self)
-        self.axes_act.setCheckable(True)
-        self.axes_act.setChecked(True)
-        self.axes_act.triggered.connect(self.toggle_gizmo)
-        self.view_menu.addAction(self.axes_act)
-        self.snap_act = QAction(self.t('snap_to_grid'), self)
-        self.snap_act.setCheckable(True)
-        self.snap_act.triggered.connect(self.toggle_snap)
-        self.view_menu.addAction(self.snap_act)
-        self.size_act = QAction(self.t('grid_size'), self)
-        self.size_act.triggered.connect(self.grid_size_dialog)
-        self.view_menu.addAction(self.size_act)
-        self.color_act = QAction(self.t('grid_color'), self)
-        self.color_act.triggered.connect(self.choose_grid_color)
-        self.view_menu.addAction(self.color_act)
-        self.font_size_act = QAction(self.t('font_size'), self)
-        self.font_size_act.triggered.connect(self.font_size_dialog)
-        self.view_menu.addAction(self.font_size_act)
-        self.grid_act.setChecked(self.view.show_grid)
-        self.axes_act.setChecked(self.view.show_axes)
-        self.snap_act.setChecked(self.snap_to_grid)
+        self.plugins_menu.addAction(self.plugins_act)
 
         self.about_menu = menubar.addMenu(self.t('about_menu'))
         self.about_act = QAction(self.t('about_us'), self)
@@ -1912,40 +2002,51 @@ class Editor(QMainWindow):
         left_spacer = QWidget()
         left_spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         toolbar.addWidget(left_spacer)
+
+        # Run/Stop toggle -------------------------------------------------
         self.run_act = QAction(load_icon('start.png'), self.t('run'), self)
+        self.run_act.setToolTip(self.t('run'))
         self.run_act.triggered.connect(self.run_project)
         toolbar.addAction(self.run_act)
-        self.paint_toolbar_btn = QToolButton()
-        self.paint_toolbar_btn.setText(self.t('open_paint'))
-        self.paint_toolbar_btn.setIcon(load_icon('edit.png'))
-        self.paint_toolbar_btn.clicked.connect(self.open_paint_tool)
-        toolbar.addWidget(self.paint_toolbar_btn)
-        self.grid_btn = QToolButton()
-        self.grid_btn.setCheckable(True)
-        self.grid_btn.setText(self.t('show_grid'))
-        self.grid_btn.setChecked(self.view.show_grid)
-        self.grid_btn.toggled.connect(self.toggle_grid)
-        toolbar.addWidget(self.grid_btn)
-        self.axes_btn = QToolButton()
-        self.axes_btn.setCheckable(True)
-        self.axes_btn.setText(self.t('show_gizmo'))
-        self.axes_btn.setChecked(self.view.show_axes)
-        self.axes_btn.toggled.connect(self.toggle_gizmo)
-        toolbar.addWidget(self.axes_btn)
-        self.snap_btn = QToolButton()
-        self.snap_btn.setCheckable(True)
-        self.snap_btn.setText(self.t('snap_to_grid'))
-        self.snap_btn.setChecked(self.snap_to_grid)
-        self.snap_btn.toggled.connect(self.toggle_snap)
-        toolbar.addWidget(self.snap_btn)
+        toolbar.addSeparator()
+
+        # SAGE Tools menu ------------------------------------------------
+        self.tools_btn = QToolButton()
+        self.tools_btn.setIcon(load_icon('tools.png'))
+        self.tools_btn.setText(self.t('sage_tools'))
+        self.tools_menu = QMenu(self)
+        self.open_paint_act = QAction(self.t('open_paint'), self)
+        self.open_paint_act.triggered.connect(self.open_paint_tool)
+        self.tools_menu.addAction(self.open_paint_act)
+        self.tools_btn.setMenu(self.tools_menu)
+        self.tools_btn.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+        toolbar.addWidget(self.tools_btn)
+        toolbar.addSeparator()
+
+        # View settings popup --------------------------------------------
+        self.view_opts_btn = QToolButton()
+        self.view_opts_btn.setIcon(load_icon('settings.png'))
+        self.view_opts_btn.setText(self.t('view_options'))
+        self.view_opts_btn.clicked.connect(self.show_view_settings)
+        toolbar.addWidget(self.view_opts_btn)
+        self._init_view_settings()
+        toolbar.addSeparator()
+
+        # Coordinate mode toggle ----------------------------------------
         self.coord_mode_btn = QToolButton()
         self.coord_mode_btn.setCheckable(True)
         self.coord_mode_btn.setIcon(load_icon('world.png'))
+        self.coord_mode_btn.setToolTip(self.t('coord_mode'))
         self.coord_mode_btn.clicked.connect(self._toggle_coord_mode)
         toolbar.addWidget(self.coord_mode_btn)
         right_spacer = QWidget()
         right_spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         toolbar.addWidget(right_spacer)
+        self.lang_icon = QLabel()
+        self.lang_icon.setPixmap(load_icon('lang.png').pixmap(16, 16))
+        toolbar.addWidget(self.lang_icon)
+        self.lang_label = QLabel(self.t('language_label'))
+        toolbar.addWidget(self.lang_label)
         self.lang_box = QComboBox()
         self.lang_box.addItems(list(LANGUAGES.keys()))
         self.lang_box.setCurrentText(self.lang)
@@ -2164,6 +2265,19 @@ class Editor(QMainWindow):
         except Exception as exc:
             QMessageBox.warning(self, 'Error', f'Failed to save project: {exc}')
 
+    def save_project_as(self):
+        """Prompt for a location and save the project there."""
+        path, _ = QFileDialog.getSaveFileName(
+            self, self.t('save_project'), '', self.t('sage_files')
+        )
+        if not path:
+            return
+        old = self.project_path
+        self.project_path = path
+        self.save_project()
+        if self.dirty:
+            self.project_path = old
+
     def save_scene(self):
         path, _ = QFileDialog.getSaveFileName(
             self, self.t('save_scene'), '', self.t('scene_files')
@@ -2316,6 +2430,9 @@ class Editor(QMainWindow):
     def show_renderer_settings(self):
         pass
 
+    def show_editor_settings(self):
+        pass
+
     def show_plugin_manager(self):
         from .dialogs.plugin_manager import PluginManager
         PluginManager(self).exec()
@@ -2332,7 +2449,6 @@ class Editor(QMainWindow):
         self.layouts['layouts'][name] = {'state': state, 'tabs': tabs}
         self.layouts['default'] = name
         save_layouts(self.layouts)
-        self._build_layout_menu()
 
     def set_startup_layout(self, name: str):
         if name not in self.layouts.get('layouts', {}):
@@ -2340,7 +2456,6 @@ class Editor(QMainWindow):
         self.layouts['default'] = name
         save_layouts(self.layouts)
         self.apply_layout(name)
-        self._build_layout_menu()
 
     def apply_layout(self, name: str):
         data = self.layouts.get('layouts', {}).get(name)
@@ -2356,7 +2471,7 @@ class Editor(QMainWindow):
     def restore_default_layout(self):
         from PyQt6.QtCore import QByteArray
         self.restoreState(QByteArray.fromBase64(self._default_state.encode()))
-        self._build_layout_menu()
+        
 
     def _build_layout_menu(self):
         for act in getattr(self, 'layout_actions', []):
@@ -2389,6 +2504,12 @@ class Editor(QMainWindow):
 
     def run_project(self):
         """Save and run the current project in a separate window."""
+        if self._game_window and self._game_window.isVisible():
+            self._game_window.close()
+            self._game_window = None
+            self._game_engine = None
+            self._apply_language()
+            return
         if not self._check_project():
             return
         self.save_project()
@@ -2424,11 +2545,18 @@ class Editor(QMainWindow):
                 background=self.background_color,
             )
             window = engine.run()
+            window.destroyed.connect(self._on_game_closed)
             self._game_engine = engine
             self._game_window = window
+            self._apply_language()
         except Exception as exc:  # pragma: no cover - runtime errors
             logger.exception('Failed to start engine')
             QMessageBox.warning(self, self.t('error'), str(exc))
+
+    def _on_game_closed(self):
+        self._game_window = None
+        self._game_engine = None
+        self._apply_language()
 
     def open_paint_tool(self, obj=None) -> None:
         """Launch the SAGE Paint window."""
@@ -2583,6 +2711,7 @@ class Editor(QMainWindow):
                 self.scene.variables[name] = value
             self.refresh_variables()
             self._update_variable_panel()
+            self._update_settings_panel()
             self._mark_dirty()
         except Exception as exc:
             QMessageBox.warning(self, 'Error', f'Failed to add variable: {exc}')
@@ -2632,6 +2761,7 @@ class Editor(QMainWindow):
             pub.discard(new_name)
         self.refresh_variables()
         self._update_variable_panel()
+        self._update_settings_panel()
         self._mark_dirty()
 
     def _delete_variable(self, row: int) -> None:
@@ -2644,6 +2774,7 @@ class Editor(QMainWindow):
         pub.discard(name)
         self.refresh_variables()
         self._update_variable_panel()
+        self._update_settings_panel()
         self._mark_dirty()
 
     def refresh_variables(self):
@@ -2811,39 +2942,27 @@ class Editor(QMainWindow):
         self._refresh_object_labels()
 
     def toggle_grid(self, checked: bool):
-        if hasattr(self, 'grid_act'):
-            self.grid_act.blockSignals(True)
-            self.grid_act.setChecked(checked)
-            self.grid_act.blockSignals(False)
-        if hasattr(self, 'grid_btn'):
-            self.grid_btn.blockSignals(True)
-            self.grid_btn.setChecked(checked)
-            self.grid_btn.blockSignals(False)
+        if hasattr(self, 'view_opts_popup'):
+            self.view_opts_popup.grid_chk.blockSignals(True)
+            self.view_opts_popup.grid_chk.setChecked(checked)
+            self.view_opts_popup.grid_chk.blockSignals(False)
         if hasattr(self, 'view'):
             self.view.set_show_grid(checked)
 
     def toggle_gizmo(self, checked: bool):
-        if hasattr(self, 'axes_act'):
-            self.axes_act.blockSignals(True)
-            self.axes_act.setChecked(checked)
-            self.axes_act.blockSignals(False)
-        if hasattr(self, 'axes_btn'):
-            self.axes_btn.blockSignals(True)
-            self.axes_btn.setChecked(checked)
-            self.axes_btn.blockSignals(False)
+        if hasattr(self, 'view_opts_popup'):
+            self.view_opts_popup.gizmo_chk.blockSignals(True)
+            self.view_opts_popup.gizmo_chk.setChecked(checked)
+            self.view_opts_popup.gizmo_chk.blockSignals(False)
         if hasattr(self, 'view'):
             self.view.set_show_axes(checked)
 
     def toggle_snap(self, checked: bool):
         self.snap_to_grid = bool(checked)
-        if hasattr(self, 'snap_act'):
-            self.snap_act.blockSignals(True)
-            self.snap_act.setChecked(checked)
-            self.snap_act.blockSignals(False)
-        if hasattr(self, 'snap_btn'):
-            self.snap_btn.blockSignals(True)
-            self.snap_btn.setChecked(checked)
-            self.snap_btn.blockSignals(False)
+        if hasattr(self, 'view_opts_popup'):
+            self.view_opts_popup.snap_chk.blockSignals(True)
+            self.view_opts_popup.snap_chk.setChecked(checked)
+            self.view_opts_popup.snap_chk.blockSignals(False)
         if hasattr(self, 'view'):
             self.view.set_snap(self.snap_to_grid)
 
@@ -2855,6 +2974,10 @@ class Editor(QMainWindow):
         if size <= 0:
             return
         self.grid_size = size
+        if hasattr(self, 'view_opts_popup'):
+            self.view_opts_popup.size_spin.blockSignals(True)
+            self.view_opts_popup.size_spin.setValue(size)
+            self.view_opts_popup.size_spin.blockSignals(False)
         if hasattr(self, 'view'):
             self.view.set_grid_size(size)
 
@@ -2878,10 +3001,15 @@ class Editor(QMainWindow):
 
     def choose_grid_color(self):
         current = self.grid_color
-        color = QColorDialog.getColor(QColor(*current), self)
+        parent = getattr(self, 'view_opts_popup', self)
+        color = QColorDialog.getColor(QColor(*current), parent)
         if not color.isValid():
             return
         self.grid_color = (color.red(), color.green(), color.blue())
+        if hasattr(self, 'view_opts_popup'):
+            self.view_opts_popup.color_btn.setStyleSheet(
+                f"background-color: rgb({self.grid_color[0]}, {self.grid_color[1]}, {self.grid_color[2]});"
+            )
         if hasattr(self, 'view'):
             self.view.set_grid_color(self.grid_color)
 
@@ -2906,12 +3034,31 @@ class Editor(QMainWindow):
             app.setFont(font)
             self.setFont(font)
 
+    def _init_view_settings(self) -> None:
+        """Create the popup for viewport options."""
+        self.view_opts_popup = ViewSettingsPopup(self)
+
+    def show_view_settings(self) -> None:
+        """Display the viewport settings popup."""
+        if not hasattr(self, 'view_opts_popup'):
+            self._init_view_settings()
+        self.view_opts_popup.grid_chk.setChecked(self.view.show_grid)
+        self.view_opts_popup.gizmo_chk.setChecked(self.view.show_axes)
+        self.view_opts_popup.snap_chk.setChecked(self.snap_to_grid)
+        self.view_opts_popup.size_spin.setValue(self.grid_size)
+        btn = self.view_opts_btn
+        pos = btn.mapToGlobal(btn.rect().bottomLeft())
+        self.view_opts_popup.move(pos)
+        self.view_opts_popup.show()
+
     def _clear_transform_panel(self):
         """Hide property groups and reset their values."""
         self.object_group.setVisible(False)
         self.object_group.setEnabled(False)
         self.transform_group.setVisible(False)
         self.transform_group.setEnabled(False)
+        if hasattr(self, 'material_group'):
+            self.material_group.setVisible(False)
         if hasattr(self, 'camera_group'):
             self.camera_group.setVisible(False)
         # hide sprite-specific fields
@@ -2923,6 +3070,8 @@ class Editor(QMainWindow):
             self.color_label.setVisible(False)
         if hasattr(self, 'shape_label'):
             self.shape_label.setVisible(False)
+        if hasattr(self, 'alpha_label'):
+            self.alpha_label.setVisible(False)
         if hasattr(self, 'pivot_x_label'):
             self.pivot_x_label.setVisible(False)
         if hasattr(self, 'pivot_y_label'):
@@ -2931,6 +3080,8 @@ class Editor(QMainWindow):
             self.color_btn.setVisible(False)
         if hasattr(self, 'shape_combo'):
             self.shape_combo.setVisible(False)
+        if hasattr(self, 'alpha_spin'):
+            self.alpha_spin.setVisible(False)
         if hasattr(self, 'pivot_x_spin'):
             self.pivot_x_spin.setVisible(False)
         if hasattr(self, 'pivot_y_spin'):
@@ -2955,6 +3106,8 @@ class Editor(QMainWindow):
             spin.blockSignals(True)
             spin.setValue(0)
             spin.blockSignals(False)
+        if hasattr(self, 'angle_value'):
+            self.angle_value.setText('0')
         if hasattr(self, 'cam_active'):
             self.cam_active.blockSignals(True)
             self.cam_active.setChecked(False)
@@ -2998,6 +3151,13 @@ class Editor(QMainWindow):
             self.flip_y_check.setChecked(False)
             self.flip_y_check.setEnabled(False)
             self.flip_y_check.blockSignals(False)
+        if hasattr(self, 'alpha_spin'):
+            self.alpha_spin.blockSignals(True)
+            self.alpha_spin.setValue(100)
+            self.alpha_spin.setEnabled(False)
+            self.alpha_spin.blockSignals(False)
+        if hasattr(self, 'alpha_value'):
+            self.alpha_value.setText('100')
         self.smooth_check.blockSignals(True)
         self.smooth_check.setChecked(False)
         self.smooth_check.setEnabled(False)
@@ -3012,6 +3172,10 @@ class Editor(QMainWindow):
                 item = self.effects_list.takeAt(0)
                 if item.widget():
                     item.widget().deleteLater()
+        if hasattr(self, 'settings_group'):
+            self.settings_group.setVisible(False)
+            while self.settings_layout.rowCount():
+                self.settings_layout.removeRow(0)
 
     def _update_transform_panel(self, update_vars: bool = True):
         """Refresh the transform inputs for the selected object.
@@ -3054,6 +3218,11 @@ class Editor(QMainWindow):
             self.color_btn.setVisible(False)
             self.color_btn.setEnabled(False)
             self.color_btn.setStyleSheet('')
+            if hasattr(self, 'alpha_label'):
+                self.alpha_label.setVisible(False)
+            if hasattr(self, 'alpha_spin'):
+                self.alpha_spin.setVisible(False)
+                self.alpha_spin.setEnabled(False)
             self.shape_label.setVisible(False)
             self.shape_combo.setVisible(False)
             self.shape_combo.setEnabled(False)
@@ -3075,9 +3244,13 @@ class Editor(QMainWindow):
             self.smooth_check.blockSignals(True)
             self.smooth_check.setChecked(False)
             self.smooth_check.blockSignals(False)
+            if hasattr(self, 'material_group'):
+                self.material_group.setVisible(False)
         self.x_spin.blockSignals(True); self.x_spin.setValue(obj.x); self.x_spin.blockSignals(False)
         self.y_spin.blockSignals(True); self.y_spin.setValue(obj.y); self.y_spin.blockSignals(False)
-        self.z_spin.blockSignals(True); self.z_spin.setValue(getattr(obj, 'z', 0)); self.z_spin.blockSignals(False)
+        self.z_spin.blockSignals(True)
+        self.z_spin.setValue(int(getattr(obj, 'z', 0)))
+        self.z_spin.blockSignals(False)
         if isinstance(obj, Camera):
             self.camera_group.setVisible(True)
             self.scale_x_spin.setEnabled(False)
@@ -3098,7 +3271,13 @@ class Editor(QMainWindow):
             self.scale_x_spin.blockSignals(True); self.scale_x_spin.setValue(obj.scale_x); self.scale_x_spin.blockSignals(False)
             self.scale_y_spin.blockSignals(True); self.scale_y_spin.setValue(obj.scale_y); self.scale_y_spin.blockSignals(False)
             self.link_scale.blockSignals(True); self.link_scale.setChecked(obj.scale_x == obj.scale_y); self.link_scale.blockSignals(False)
-            self.angle_spin.blockSignals(True); self.angle_spin.setValue(obj.angle); self.angle_spin.blockSignals(False)
+            self.angle_spin.blockSignals(True)
+            self.angle_spin.setValue(int(obj.angle % 360))
+            self.angle_spin.blockSignals(False)
+            if hasattr(self, 'angle_value'):
+                self.angle_value.setText(str(int(obj.angle % 360)))
+            if hasattr(self, 'material_group'):
+                self.material_group.setVisible(True)
             self.img_row.setVisible(True)
             self.image_label.setVisible(True)
             self.image_edit.blockSignals(True); self.image_edit.setText(obj.image_path); self.image_edit.blockSignals(False)
@@ -3111,6 +3290,16 @@ class Editor(QMainWindow):
             self.color_btn.setVisible(True)
             self.color_btn.setEnabled(True)
             self.color_btn.setStyleSheet(f"background-color: rgb({c[0]}, {c[1]}, {c[2]});")
+            if hasattr(self, 'alpha_label'):
+                self.alpha_label.setVisible(True)
+            if hasattr(self, 'alpha_spin'):
+                self.alpha_spin.setVisible(True)
+                self.alpha_spin.setEnabled(True)
+                self.alpha_spin.blockSignals(True)
+                self.alpha_spin.setValue(int(getattr(obj, 'alpha', 1.0) * 100))
+                self.alpha_spin.blockSignals(False)
+                if hasattr(self, 'alpha_value'):
+                    self.alpha_value.setText(str(int(getattr(obj, 'alpha', 1.0) * 100)))
             self.shape_label.setVisible(True)
             self.shape_combo.setVisible(True)
             self.shape_combo.setEnabled(True)
@@ -3148,6 +3337,7 @@ class Editor(QMainWindow):
 
         if update_vars:
             self._update_variable_panel()
+            self._update_settings_panel()
         self._update_effect_panel()
 
     def _apply_transform(self):
@@ -3176,9 +3366,15 @@ class Editor(QMainWindow):
             obj.pivot_y = self.pivot_y_spin.value()
             obj.flip_x = self.flip_x_check.isChecked()
             obj.flip_y = self.flip_y_check.isChecked()
-            if item is not None:
-                item.setZValue(obj.z)
-                item.apply_object_transform()
+            if hasattr(obj, 'alpha') and hasattr(self, 'alpha_spin'):
+                obj.alpha = self.alpha_spin.value() / 100
+        if hasattr(self, 'angle_value'):
+            self.angle_value.setText(str(int(self.angle_spin.value())))
+        if hasattr(self, 'alpha_value'):
+            self.alpha_value.setText(str(int(self.alpha_spin.value())))
+        if item is not None:
+            item.setZValue(obj.z)
+            item.apply_object_transform()
         self._mark_dirty()
         self._update_gizmo()
         self._record_undo(obj, prev)
@@ -3224,6 +3420,35 @@ class Editor(QMainWindow):
             self.var_layout.addRow(name + ':', edit)
             shown = True
         self.var_group.setVisible(shown)
+
+    def _update_settings_panel(self):
+        if not hasattr(self, 'settings_group'):
+            return
+        while self.settings_layout.rowCount():
+            self.settings_layout.removeRow(0)
+        idx = self.object_combo.currentIndex()
+        if idx < 0 or idx >= len(self.items):
+            self.settings_group.setVisible(False)
+            return
+        obj = self.items[idx][1]
+        shown = False
+        for key, val in getattr(obj, 'settings', {}).items():
+            edit = QLineEdit(str(val))
+            edit.editingFinished.connect(
+                lambda n=key, w=edit: self._object_setting_changed(n, w))
+            self.settings_layout.addRow(f'{key}:', edit)
+            shown = True
+        self.settings_group.setVisible(shown)
+
+    def _object_setting_changed(self, name: str, widget):
+        idx = self.object_combo.currentIndex()
+        if idx < 0 or idx >= len(self.items):
+            return
+        obj = self.items[idx][1]
+        if name not in getattr(obj, 'settings', {}):
+            return
+        obj.settings[name] = widget.text()
+        self._mark_dirty()
 
     def _public_var_changed(self, name: str, widget):
         if isinstance(widget, QCheckBox):
