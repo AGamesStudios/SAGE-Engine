@@ -1501,6 +1501,8 @@ class Editor(QMainWindow):
         self.link_scale = prop_dock.link_scale
         self.coord_combo = prop_dock.coord_combo
         self.angle_spin = prop_dock.angle_spin
+        self.pivot_x_spin = prop_dock.pivot_x_spin
+        self.pivot_y_spin = prop_dock.pivot_y_spin
         self.flip_x_check = prop_dock.flip_x_check
         self.flip_y_check = prop_dock.flip_y_check
         self.cam_w_spin = prop_dock.cam_w_spin
@@ -1524,6 +1526,8 @@ class Editor(QMainWindow):
         self.image_label = prop_dock.image_label
         self.color_label = prop_dock.color_label
         self.shape_label = prop_dock.shape_label
+        self.pivot_x_label = prop_dock.pivot_x_label
+        self.pivot_y_label = prop_dock.pivot_y_label
         self.smooth_label = prop_dock.smooth_label
         self.image_edit.setPlaceholderText(self.t('path_label'))
         self.color_btn.setText('')
@@ -2919,10 +2923,18 @@ class Editor(QMainWindow):
             self.color_label.setVisible(False)
         if hasattr(self, 'shape_label'):
             self.shape_label.setVisible(False)
+        if hasattr(self, 'pivot_x_label'):
+            self.pivot_x_label.setVisible(False)
+        if hasattr(self, 'pivot_y_label'):
+            self.pivot_y_label.setVisible(False)
         if hasattr(self, 'color_btn'):
             self.color_btn.setVisible(False)
         if hasattr(self, 'shape_combo'):
             self.shape_combo.setVisible(False)
+        if hasattr(self, 'pivot_x_spin'):
+            self.pivot_x_spin.setVisible(False)
+        if hasattr(self, 'pivot_y_spin'):
+            self.pivot_y_spin.setVisible(False)
         if hasattr(self, 'smooth_label'):
             self.smooth_label.setVisible(False)
         if hasattr(self, 'smooth_check'):
@@ -2937,6 +2949,7 @@ class Editor(QMainWindow):
         for spin in (
             self.x_spin, self.y_spin, self.z_spin,
             self.scale_x_spin, self.scale_y_spin, self.angle_spin,
+            self.pivot_x_spin, self.pivot_y_spin,
             self.cam_w_spin, self.cam_h_spin, self.cam_zoom_spin,
         ):
             spin.blockSignals(True)
@@ -2965,6 +2978,16 @@ class Editor(QMainWindow):
             self.shape_combo.setCurrentIndex(0)
             self.shape_combo.setEnabled(False)
             self.shape_combo.blockSignals(False)
+        if hasattr(self, 'pivot_x_spin'):
+            self.pivot_x_spin.blockSignals(True)
+            self.pivot_x_spin.setValue(0.5)
+            self.pivot_x_spin.setEnabled(False)
+            self.pivot_x_spin.blockSignals(False)
+        if hasattr(self, 'pivot_y_spin'):
+            self.pivot_y_spin.blockSignals(True)
+            self.pivot_y_spin.setValue(0.5)
+            self.pivot_y_spin.setEnabled(False)
+            self.pivot_y_spin.blockSignals(False)
         if hasattr(self, 'flip_x_check'):
             self.flip_x_check.blockSignals(True)
             self.flip_x_check.setChecked(False)
@@ -3034,6 +3057,12 @@ class Editor(QMainWindow):
             self.shape_label.setVisible(False)
             self.shape_combo.setVisible(False)
             self.shape_combo.setEnabled(False)
+            self.pivot_x_label.setVisible(False)
+            self.pivot_x_spin.setVisible(False)
+            self.pivot_x_spin.setEnabled(False)
+            self.pivot_y_label.setVisible(False)
+            self.pivot_y_spin.setVisible(False)
+            self.pivot_y_spin.setEnabled(False)
             if hasattr(self, 'flip_x_check'):
                 self.flip_x_check.setVisible(False)
                 self.flip_x_check.setEnabled(False)
@@ -3092,6 +3121,14 @@ class Editor(QMainWindow):
             else:
                 self.shape_combo.setCurrentIndex(0)
             self.shape_combo.blockSignals(False)
+            self.pivot_x_label.setVisible(True)
+            self.pivot_y_label.setVisible(True)
+            self.pivot_x_spin.setVisible(True)
+            self.pivot_y_spin.setVisible(True)
+            self.pivot_x_spin.setEnabled(True)
+            self.pivot_y_spin.setEnabled(True)
+            self.pivot_x_spin.blockSignals(True); self.pivot_x_spin.setValue(getattr(obj, 'pivot_x', 0.5)); self.pivot_x_spin.blockSignals(False)
+            self.pivot_y_spin.blockSignals(True); self.pivot_y_spin.setValue(getattr(obj, 'pivot_y', 0.5)); self.pivot_y_spin.blockSignals(False)
             self.flip_x_check.setVisible(True)
             self.flip_x_check.setEnabled(True)
             self.flip_x_check.blockSignals(True)
@@ -3135,6 +3172,8 @@ class Editor(QMainWindow):
             else:
                 obj.scale_y = self.scale_y_spin.value()
             obj.angle = self.angle_spin.value()
+            obj.pivot_x = self.pivot_x_spin.value()
+            obj.pivot_y = self.pivot_y_spin.value()
             obj.flip_x = self.flip_x_check.isChecked()
             obj.flip_y = self.flip_y_check.isChecked()
             if item is not None:

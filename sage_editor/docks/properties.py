@@ -85,9 +85,12 @@ class PropertiesDock(QDockWidget):
         self.coord_combo.addItem(editor.t('global'), False)
         self.coord_combo.addItem(editor.t('local'), True)
         self.angle_spin = QDoubleSpinBox(); self.angle_spin.setRange(-360, 360)
+        self.pivot_x_spin = QDoubleSpinBox(); self.pivot_x_spin.setRange(0.0, 1.0); self.pivot_x_spin.setSingleStep(0.01)
+        self.pivot_y_spin = QDoubleSpinBox(); self.pivot_y_spin.setRange(0.0, 1.0); self.pivot_y_spin.setSingleStep(0.01)
         for spin in (
             self.x_spin, self.y_spin, self.z_spin,
-            self.scale_x_spin, self.scale_y_spin, self.angle_spin
+            self.scale_x_spin, self.scale_y_spin, self.angle_spin,
+            self.pivot_x_spin, self.pivot_y_spin,
         ):
             spin.valueChanged.connect(editor._apply_transform)
         form.addRow(editor.t('x'), self.x_spin)
@@ -98,6 +101,10 @@ class PropertiesDock(QDockWidget):
         form.addRow('', self.link_scale)
         form.addRow(editor.t('coord_mode'), self.coord_combo)
         form.addRow(editor.t('rotation'), self.angle_spin)
+        form.addRow(editor.t('pivot_x'), self.pivot_x_spin)
+        self.pivot_x_label = form.labelForField(self.pivot_x_spin)
+        form.addRow(editor.t('pivot_y'), self.pivot_y_spin)
+        self.pivot_y_label = form.labelForField(self.pivot_y_spin)
         self.flip_x_check = QCheckBox(editor.t('flip_x'))
         self.flip_y_check = QCheckBox(editor.t('flip_y'))
         form.addRow('', self.flip_x_check)

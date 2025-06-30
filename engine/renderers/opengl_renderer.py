@@ -447,6 +447,7 @@ class OpenGLRenderer:
         )
         if obj is None:
             return
+        logger.debug('Drawing outline for %s', getattr(obj, 'name', 'obj'))
         unit_scale = units.UNITS_PER_METER
         sign = 1.0 if units.Y_UP else -1.0
         scale_mul = obj.render_scale(camera, apply_effects=self.apply_effects)
@@ -460,13 +461,13 @@ class OpenGLRenderer:
         sy = -1.0 if getattr(obj, "flip_y", False) else 1.0
         w = obj.width * obj.scale_x * scale_mul
         h = obj.height * obj.scale_y * scale_mul
-        off_x = (0.5 - getattr(obj, "pivot_x", 0.5)) * w * sx
-        off_y = (0.5 - getattr(obj, "pivot_y", 0.5)) * h * sy
+        off_x = (obj.pivot_x - 0.5) * w
+        off_y = (obj.pivot_y - 0.5) * h
         corners = [
-            (-w / 2 * sx + off_x, -h / 2 * sy + off_y),
-            (w / 2 * sx + off_x, -h / 2 * sy + off_y),
-            (w / 2 * sx + off_x, h / 2 * sy + off_y),
-            (-w / 2 * sx + off_x, h / 2 * sy + off_y),
+            (-0.5, -0.5),
+            (0.5, -0.5),
+            (0.5, 0.5),
+            (-0.5, 0.5),
         ]
         glUseProgram(0)
         glBindTexture(GL_TEXTURE_2D, 0)
@@ -482,8 +483,10 @@ class OpenGLRenderer:
         w_size = camera.width if (self.keep_aspect and camera) else self.width
         h_size = camera.height if (self.keep_aspect and camera) else self.height
         for cx, cy in corners:
-            rx = cx * cos_a - cy * sin_a
-            ry = cx * sin_a + cy * cos_a
+            vx = sx * cx * w + (1 - sx) * off_x
+            vy = sy * cy * h + (1 - sy) * off_y
+            rx = vx * cos_a - vy * sin_a
+            ry = vx * sin_a + vy * cos_a
             world_x = (rx + obj_x) * unit_scale
             world_y = (ry + obj_y) * unit_scale * sign
             ndc_x = (2.0 * (world_x - cam_x * unit_scale) * zoom) / w_size
@@ -548,17 +551,16 @@ class OpenGLRenderer:
             mesh = create_circle_mesh()
             mode = GL_TRIANGLE_FAN
 
+        logger.debug('Drawing shape %s for %s', shape, getattr(obj, 'name', 'obj'))
         obj_x, obj_y = obj.render_position(camera, apply_effects=self.apply_effects)
-        off_x = (0.5 - getattr(obj, "pivot_x", 0.5)) * w
-        off_y = (0.5 - getattr(obj, "pivot_y", 0.5)) * h
+        off_x = (obj.pivot_x - 0.5) * w
+        off_y = (obj.pivot_y - 0.5) * h
+        sx = -1.0 if flip_x else 1.0
+        sy = -1.0 if flip_y else 1.0
         glBegin(mode)
         for vx, vy in mesh.vertices:
-            vx = vx * w - off_x
-            vy = vy * h - off_y
-            if flip_x:
-                vx = -vx
-            if flip_y:
-                vy = -vy
+            vx = sx * vx * w + (1 - sx) * off_x
+            vy = sy * vy * h + (1 - sy) * off_y
             rx = vx * cos_a - vy * sin_a
             ry = vx * sin_a + vy * cos_a
             world_x = (rx + obj_x) * unit_scale
