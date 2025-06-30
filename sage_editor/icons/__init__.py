@@ -20,12 +20,23 @@ def _find_icon_dir() -> Path:
 
 
 ICON_DIR = _find_icon_dir()
+# Subdirectory holding icons for the current theme. Light mode should use
+# black icons while dark mode uses white ones.
+ICON_THEME = "white"
+
 # Name of the icon representing the whole application. The actual
 # ``icon.png`` file should live inside :mod:`sage_editor.icons` but is
 # excluded from version control. Provide a 256x256 image to get good
 # results on high-DPI displays.
 APP_ICON_NAME = "icon.png"
 logger = logging.getLogger('sage_editor')
+
+
+def set_icon_theme(theme: str) -> None:
+    """Select the icon subdirectory."""
+    global ICON_THEME
+    if theme in {"black", "white"}:
+        ICON_THEME = theme
 
 def load_icon(name: str) -> QIcon:
     """Return a :class:`QIcon` from ``sage_editor/icons``.
@@ -35,9 +46,14 @@ def load_icon(name: str) -> QIcon:
     name:
         File name of the icon to load.
     """
-    path = ICON_DIR / name
+    # Look inside the themed subdirectory first
+    path = ICON_DIR / ICON_THEME / name
     if not path.is_file():
-        logger.warning("Icon %s not found at %s", name, path)
+        # Fallback to the other theme
+        alt = "black" if ICON_THEME == "white" else "white"
+        path = ICON_DIR / alt / name
+    if not path.is_file():
+        logger.warning("Icon %s not found for theme %s", name, ICON_THEME)
         return QIcon()
     return QIcon(str(path))
 

@@ -17,7 +17,7 @@ except Exception:  # pragma: no cover - handle older PyQt versions
 from PyQt6.QtGui import (
     QPixmap, QColor, QAction, QActionGroup, QDesktopServices, QCursor
 )
-from .icons import load_icon, app_icon
+from .icons import load_icon, app_icon, set_icon_theme
 from PyQt6.QtCore import (
     QRectF, Qt, QPointF, QSortFilterProxyModel, QSize, QUrl, QTimer, QEvent, QObject
 )
@@ -1756,8 +1756,10 @@ class Editor(QMainWindow):
         """Apply the selected application theme."""
         from .app import apply_palette, apply_light_palette
         if getattr(self, 'theme', 'dark') == 'dark':
+            set_icon_theme('white')
             apply_palette()
         else:
+            set_icon_theme('black')
             apply_light_palette()
 
     def _apply_language(self):
