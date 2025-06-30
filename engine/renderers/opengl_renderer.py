@@ -323,6 +323,25 @@ class OpenGLRenderer:
         glEnd()
         glPopMatrix()
 
+    def _parse_color(self, value) -> tuple[int, int, int, int]:
+        """Return a 4-tuple RGBA color from various input formats."""
+        if value is None:
+            return 255, 255, 255, 255
+        if isinstance(value, str):
+            try:
+                parts = [int(p) for p in value.split(",")]
+                while len(parts) < 4:
+                    parts.append(255)
+                return tuple(parts[:4])
+            except Exception:
+                return 255, 255, 255, 255
+        if isinstance(value, (list, tuple)):
+            if len(value) == 3:
+                return int(value[0]), int(value[1]), int(value[2]), 255
+            if len(value) >= 4:
+                return int(value[0]), int(value[1]), int(value[2]), int(value[3])
+        return 255, 255, 255, 255
+
     def _draw_object(
         self,
         obj: GameObject,
@@ -353,7 +372,7 @@ class OpenGLRenderer:
             program = self._program
             glUseProgram(program)
             loc_color = glGetUniformLocation(program, "color")
-            rgba = obj.color or (255, 255, 255, 255)
+            rgba = self._parse_color(obj.color)
             scale = 1 / 255.0 if max(rgba) > 1.0 else 1.0
             norm = tuple(c * scale for c in rgba)
             glUniform4f(loc_color, *norm)
@@ -535,7 +554,7 @@ class OpenGLRenderer:
         glBindTexture(GL_TEXTURE_2D, 0)
         glDisable(GL_TEXTURE_2D)
 
-        rgba = obj.color or (255, 255, 255, 255)
+        rgba = self._parse_color(obj.color)
         scale = 1 / 255.0 if max(rgba) > 1.0 else 1.0
         glColor4f(rgba[0] * scale, rgba[1] * scale, rgba[2] * scale, rgba[3] * scale)
 
