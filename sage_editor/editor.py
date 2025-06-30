@@ -1829,16 +1829,12 @@ class Editor(QMainWindow):
         app = QApplication.instance()
         if app is None:
             return
-        # Replace the current process so all environment variables and
-        # working directories remain intact. Using ``os.execv`` avoids
-        # launching a detached child which sometimes failed to fully
-        # initialise the editor after a theme change.
-        try:
-            os.execv(sys.executable, [sys.executable, *sys.argv])
-        except Exception:  # pragma: no cover - fallback for platforms
-            QProcess.startDetached(sys.executable, sys.argv)
-        finally:
-            app.quit()
+        # Relaunch the editor as a detached process. ``os.execv`` caused
+        # issues on some platforms, leaving the new instance unable to
+        # open projects correctly. ``startDetached`` provides a more
+        # reliable restart across Windows and Linux.
+        QProcess.startDetached(sys.executable, sys.argv, os.getcwd())
+        app.quit()
 
     def _apply_language(self):
         self.file_menu.setTitle(self.t('file'))
