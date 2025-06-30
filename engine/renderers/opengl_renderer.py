@@ -28,6 +28,11 @@ from engine.core.camera import Camera
 from engine.core.game_object import GameObject
 from engine import units
 from engine.log import logger
+from engine.mesh_utils import (
+    create_square_mesh,
+    create_triangle_mesh,
+    create_circle_mesh,
+)
 
 
 class GLWidget(QOpenGLWidget):
@@ -528,44 +533,32 @@ class OpenGLRenderer:
         ang = math.radians(getattr(obj, "angle", 0.0))
         cos_a = math.cos(ang)
         sin_a = math.sin(ang)
-        sx = -1.0 if getattr(obj, "flip_x", False) else 1.0
-        sy = -1.0 if getattr(obj, "flip_y", False) else 1.0
+        flip_x = getattr(obj, "flip_x", False)
+        flip_y = getattr(obj, "flip_y", False)
         w = obj.width * obj.scale_x * scale_mul
         h = obj.height * obj.scale_y * scale_mul
-        off_x = (0.5 - getattr(obj, "pivot_x", 0.5)) * w * sx
-        off_y = (0.5 - getattr(obj, "pivot_y", 0.5)) * h * sy
 
         if shape == "triangle":
-            verts = [
-                (-w / 2 * sx + off_x, -h / 2 * sy + off_y),
-                (w / 2 * sx + off_x, -h / 2 * sy + off_y),
-                (0.0 + off_x, h / 2 * sy + off_y),
-            ]
+            mesh = create_triangle_mesh()
             mode = GL_TRIANGLES
         elif shape == "square":
-            verts = [
-                (-w / 2 * sx + off_x, -h / 2 * sy + off_y),
-                (w / 2 * sx + off_x, -h / 2 * sy + off_y),
-                (w / 2 * sx + off_x, h / 2 * sy + off_y),
-                (-w / 2 * sx + off_x, h / 2 * sy + off_y),
-            ]
+            mesh = create_square_mesh()
             mode = GL_TRIANGLE_FAN
         else:
-            verts = [(off_x, off_y)]
-            r = max(w, h) / 2
-            steps = 32
-            for i in range(steps + 1):
-                ang2 = 2 * math.pi * i / steps
-                x = math.cos(ang2) * r * sx + off_x
-                y = math.sin(ang2) * r * sy + off_y
-                verts.append((x, y))
+            mesh = create_circle_mesh()
             mode = GL_TRIANGLE_FAN
 
         obj_x, obj_y = obj.render_position(camera, apply_effects=self.apply_effects)
+        off_x = (0.5 - getattr(obj, "pivot_x", 0.5)) * w
+        off_y = (0.5 - getattr(obj, "pivot_y", 0.5)) * h
         glBegin(mode)
-        for vx, vy in verts:
-            vx *= sx
-            vy *= sy
+        for vx, vy in mesh.vertices:
+            vx = vx * w - off_x
+            vy = vy * h - off_y
+            if flip_x:
+                vx = -vx
+            if flip_y:
+                vy = -vy
             rx = vx * cos_a - vy * sin_a
             ry = vx * sin_a + vy * cos_a
             world_x = (rx + obj_x) * unit_scale

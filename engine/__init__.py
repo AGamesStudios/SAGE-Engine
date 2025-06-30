@@ -13,6 +13,11 @@ from .core import (
     get_post_effect,
     POST_EFFECT_REGISTRY,
 )
+from .mesh_utils import (
+    create_square_mesh,
+    create_triangle_mesh,
+    create_circle_mesh,
+)
 from .core.game_object import clear_image_cache
 from .api import (
     load_project,
@@ -70,7 +75,8 @@ __all__ = [
     'units', 'set_units_per_meter', 'meters', 'kilometers', 'to_units', 'from_units',
     'set_y_up', 'Y_UP', 'GameWindow', 'EngineSettings',
     'register_effect', 'get_effect', 'EFFECT_REGISTRY',
-    'register_post_effect', 'get_post_effect', 'POST_EFFECT_REGISTRY'
+    'register_post_effect', 'get_post_effect', 'POST_EFFECT_REGISTRY',
+    'create_square_mesh', 'create_triangle_mesh', 'create_circle_mesh'
 ]
 
 
