@@ -2,13 +2,15 @@ from __future__ import annotations
 
 import time
 from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout
-from PyQt6.QtCore import QTimer
+from PyQt6.QtCore import QTimer, Qt, pyqtSignal
 
 from .log import logger
 
 
 class GameWindow(QMainWindow):
     """Window that runs the Engine using a Qt timer."""
+
+    closed = pyqtSignal()
 
     def __init__(self, engine, parent=None):
         super().__init__(parent)
@@ -19,6 +21,7 @@ class GameWindow(QMainWindow):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(engine.renderer.widget)
         self.setCentralWidget(central)
+        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         # match the project settings and keep aspect ratio like the editor
         self.resize(engine.renderer.width, engine.renderer.height)
         # ensure the renderer preserves the project aspect when resizing so
@@ -51,6 +54,7 @@ class GameWindow(QMainWindow):
             self.timer.stop()
 
     def closeEvent(self, event):  # pragma: no cover - GUI cleanup
+        self.closed.emit()
         self.timer.stop()
         self.engine.logic_active = False
         self.engine.input.shutdown()
