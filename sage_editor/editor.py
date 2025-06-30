@@ -29,7 +29,15 @@ import copy
 import atexit
 import traceback
 import inspect
-import sip
+try:
+    from PyQt6.sip import isdeleted  # PyQt6 >= 6.5 provides sip as submodule
+except Exception:  # pragma: no cover - handle missing PyQt6.sip
+    try:
+        import sip
+        isdeleted = sip.isdeleted
+    except Exception:  # pragma: no cover - sip not available
+        def isdeleted(obj):
+            return False
 from .lang import LANGUAGES, DEFAULT_LANGUAGE
 from engine import Scene, GameObject, Project, Camera, ENGINE_VERSION, get_resource_path
 from engine.core.objects import get_object_type
@@ -2265,7 +2273,7 @@ class Editor(QMainWindow):
                 return
         scene = Scene.load(path)
         if not self.scene_tabs:
-            if self.view is None or sip.isdeleted(self.view):
+            if self.view is None or isdeleted(self.view):
                 view = Viewport(scene, editor=self)
                 view.renderer.background = self.background_color
                 view.set_snap(self.snap_steps)
@@ -2282,7 +2290,7 @@ class Editor(QMainWindow):
                 self.tabs.indexOf(view), os.path.splitext(os.path.basename(path))[0]
             )
             view.scene_path = path
-            if self.logic_widget is None or sip.isdeleted(self.logic_widget):
+            if self.logic_widget is None or isdeleted(self.logic_widget):
                 self.logic_widget = LogicTab(self, label=self.t('scene'), hide_combo=True)
             logic = self.logic_widget
             self.scene_logic_tabs[path] = logic

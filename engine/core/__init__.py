@@ -1,19 +1,6 @@
-from .game_object import GameObject, clear_image_cache
-from .scene import Scene
-from .project import Project
-from .scene_graph import SceneGraph
-from .camera import Camera
-from .objects import (
-    register_object,
-    object_from_dict,
-    object_to_dict,
-)
-from .effects import register_effect, get_effect, EFFECT_REGISTRY
-from .post_effects import (
-    register_post_effect,
-    get_post_effect,
-    POST_EFFECT_REGISTRY,
-)
+"""Core module public API with lazy imports to avoid heavy dependencies."""
+
+from importlib import import_module
 
 __all__ = [
     'GameObject',
@@ -35,12 +22,32 @@ __all__ = [
     'POST_EFFECT_REGISTRY',
 ]
 
+_lazy = {
+    'GameObject': ('engine.core.game_object', 'GameObject'),
+    'clear_image_cache': ('engine.core.game_object', 'clear_image_cache'),
+    'Scene': ('engine.core.scene', 'Scene'),
+    'SceneGraph': ('engine.core.scene_graph', 'SceneGraph'),
+    'Project': ('engine.core.project', 'Project'),
+    'Camera': ('engine.core.camera', 'Camera'),
+    'register_object': ('engine.core.objects', 'register_object'),
+    'object_from_dict': ('engine.core.objects', 'object_from_dict'),
+    'object_to_dict': ('engine.core.objects', 'object_to_dict'),
+    'Engine': ('engine.core.engine', 'Engine'),
+    'EngineSettings': ('engine.core.settings', 'EngineSettings'),
+    'register_effect': ('engine.core.effects', 'register_effect'),
+    'get_effect': ('engine.core.effects', 'get_effect'),
+    'EFFECT_REGISTRY': ('engine.core.effects', 'EFFECT_REGISTRY'),
+    'register_post_effect': ('engine.core.post_effects', 'register_post_effect'),
+    'get_post_effect': ('engine.core.post_effects', 'get_post_effect'),
+    'POST_EFFECT_REGISTRY': ('engine.core.post_effects', 'POST_EFFECT_REGISTRY'),
+}
+
 
 def __getattr__(name):
-    if name == 'Engine':
-        from .engine import Engine
-        return Engine
-    if name == 'EngineSettings':
-        from .settings import EngineSettings
-        return EngineSettings
+    if name in _lazy:
+        module_name, attr = _lazy[name]
+        module = import_module(module_name)
+        value = getattr(module, attr)
+        globals()[name] = value
+        return value
     raise AttributeError(name)
