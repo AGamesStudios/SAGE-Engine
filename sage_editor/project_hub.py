@@ -5,7 +5,7 @@ from datetime import datetime
 
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QListWidget, QListWidgetItem,
-    QWidget, QLabel, QGroupBox, QFrame
+    QWidget, QLabel, QGroupBox, QFrame, QMenu
 )
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
@@ -65,6 +65,8 @@ class ProjectHub(QDialog):
 
         self.list = QListWidget()
         self.list.setSelectionMode(QListWidget.SelectionMode.SingleSelection)
+        self.list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.list.customContextMenuRequested.connect(self._context_menu)
         g_layout.addWidget(self.list)
         layout.addWidget(group, 1)
 
@@ -74,6 +76,25 @@ class ProjectHub(QDialog):
         self.list.itemActivated.connect(self.open_selected)
 
         self.populate()
+
+    def _context_menu(self, pos) -> None:
+        item = self.list.itemAt(pos)
+        menu = QMenu(self)
+        if item and item.data(Qt.ItemDataRole.UserRole):
+            del_act = menu.addAction(load_icon('delete.png'), self.editor.t('delete'))
+            action = menu.exec(self.list.viewport().mapToGlobal(pos))
+            if action == del_act:
+                path = item.data(Qt.ItemDataRole.UserRole)
+                row = self.list.row(item)
+                self.list.takeItem(row)
+                if path in self.editor.recent_projects:
+                    self.editor.recent_projects.remove(path)
+                    save_recent(self.editor.recent_projects)
+        else:
+            new_act = menu.addAction(load_icon('add.png'), self.editor.t('new_project'))
+            action = menu.exec(self.list.viewport().mapToGlobal(pos))
+            if action == new_act:
+                self.create_project()
 
     def add_project_card(self, path: str) -> bool:
         """Add a project entry for *path* if it exists."""
