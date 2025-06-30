@@ -5,7 +5,11 @@ LANGUAGES = {
         'open': 'Open',
         'save': 'Save',
         'run': 'Run',
+        'stop': 'Stop',
         'open_paint': 'Open SAGE Paint',
+        'sage_tools': 'SAGE Tools',
+        'view_options': 'View Options',
+        'language_label': 'Language:',
         'add_sprite': 'Add Sprite',
         'paint_sprite': 'Paint Sprite',
         'add_object': 'Add Object',
@@ -43,8 +47,10 @@ LANGUAGES = {
         'new_project': 'New Project',
         'open_project': 'Open Project',
         'save_project': 'Save Project',
+        'save_as': 'Save As...',
         'sage_files': 'SAGE Project (*.sageproject)',
         'browse': 'Browse',
+        'clear': 'Clear',
         'detect_key': 'Auto Detect',
         'press_key': 'Press a key...',
         'recent_projects': 'Recent Projects',
@@ -106,9 +112,14 @@ LANGUAGES = {
         , 'outline_width': 'Outline Width:'
         , 'outline_color': 'Outline Color:'
         , 'effects_sprite_only': 'Effects can only be added to sprites'
+        , 'object_settings': 'Object Settings'
         , 'settings': 'Settings'
         , 'window_settings': 'Window Settings'
         , 'project_settings': 'Project Settings'
+        , 'editor_settings': 'Editor Settings'
+        , 'export_exe': 'Export EXE'
+        , 'exit': 'Exit'
+        , 'plugins_menu': 'Plugins'
         , 'title_label': 'Title:'
         , 'version_label': 'Version:'
         , 'description_label': 'Description:'
@@ -133,7 +144,10 @@ LANGUAGES = {
         , 'grid_size': 'Grid Size:'
         , 'grid_color': 'Grid Color'
         , 'font_size': 'Font Size'
-        
+        , 'theme': 'Theme'
+        , 'dark_theme': 'Dark'
+        , 'light_theme': 'Light'
+
         , 'show_gizmo': 'Show Gizmo'
         , 'camera_settings': 'Camera Settings'
         , 'objects': 'Objects'
@@ -146,11 +160,17 @@ LANGUAGES = {
         , 'pivot_y': 'Pivot Y:'
         , 'flip_x': 'Flip X'
         , 'flip_y': 'Flip Y'
+        , 'flip': 'Flip:'
+        , 'position': 'Position:'
+        , 'pivot': 'Pivot:'
+        , 'material': 'Material'
+        , 'alpha': 'Alpha:'
         , 'coord_mode': 'Coordinate Mode:'
         , 'global': 'Global'
         , 'local': 'Local'
         , 'scale_label': 'Scale:'
         , 'z': 'z:'
+        , 'z_order': 'Z Order:'
         , 'manage_plugins': 'Manage Plugins'
         , 'plugin': 'Plugin'
         , 'enabled': 'Enabled'
@@ -214,7 +234,11 @@ LANGUAGES = {
         'open': 'Открыть',
         'save': 'Сохранить',
         'run': 'Запуск',
+        'stop': 'Остановить',
         'open_paint': 'Открыть SAGE Paint',
+        'sage_tools': 'Инструменты SAGE',
+        'view_options': 'Параметры вида',
+        'language_label': 'Язык:',
         'add_sprite': 'Добавить спрайт',
         'paint_sprite': 'Нарисовать спрайт',
         'add_object': 'Добавить объект',
@@ -251,8 +275,10 @@ LANGUAGES = {
         'new_project': 'Новый проект',
         'open_project': 'Открыть проект',
         'save_project': 'Сохранить проект',
+        'save_as': 'Сохранить как...',
         'sage_files': 'Проекты SAGE (*.sageproject)',
         'browse': 'Обзор',
+        'clear': 'Очистить',
         'detect_key': 'Автоопределение',
         'press_key': 'Нажмите клавишу...',
         'recent_projects': 'Недавние проекты',
@@ -314,9 +340,14 @@ LANGUAGES = {
         , 'outline_width': 'Толщина обводки:'
         , 'outline_color': 'Цвет обводки:'
         , 'effects_sprite_only': 'Эффекты можно добавлять только спрайтам'
+        , 'object_settings': 'Настройки объекта'
         , 'settings': 'Настройки'
         , 'window_settings': 'Параметры окна'
         , 'project_settings': 'Параметры проекта'
+        , 'editor_settings': 'Параметры редактора'
+        , 'export_exe': 'Экспорт EXE'
+        , 'exit': 'Выход'
+        , 'plugins_menu': 'Плагины'
         , 'title_label': 'Название:'
         , 'version_label': 'Версия:'
         , 'description_label': 'Описание:'
@@ -341,7 +372,10 @@ LANGUAGES = {
         , 'grid_size': 'Шаг сетки:'
         , 'grid_color': 'Цвет сетки'
         , 'font_size': 'Размер шрифта'
-        
+        , 'theme': 'Тема'
+        , 'dark_theme': 'Тёмная'
+        , 'light_theme': 'Светлая'
+
         , 'show_gizmo': 'Показывать гизмo'
         , 'camera_settings': 'Параметры камеры'
         , 'objects': 'Объекты'
@@ -354,11 +388,17 @@ LANGUAGES = {
         , 'pivot_y': 'Пивот Y:'
         , 'flip_x': 'Отразить по X'
         , 'flip_y': 'Отразить по Y'
+        , 'flip': 'Отразить:'
+        , 'position': 'Позиция:'
+        , 'pivot': 'Пивот:'
+        , 'material': 'Материал'
+        , 'alpha': 'Альфа:'
         , 'coord_mode': 'Режим координат:'
         , 'global': 'Глобальные'
         , 'local': 'Локальные'
         , 'scale_label': 'Масштаб:'
         , 'z': 'z:'
+        , 'z_order': 'Порядок Z:'
         , 'manage_plugins': 'Плагины'
         , 'plugin': 'Плагин'
         , 'enabled': 'Включен'
