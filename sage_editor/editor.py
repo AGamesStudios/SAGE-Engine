@@ -1773,6 +1773,9 @@ class Editor(QMainWindow):
         self._update_icons()
         if hasattr(self, 'console_dock'):
             self.console_dock.update_display()
+        if hasattr(self, 'search_edit'):
+            palette = QApplication.palette()
+            self.search_edit.setPalette(palette)
 
     def _update_icons(self) -> None:
         """Reload icons for persistent widgets."""

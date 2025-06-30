@@ -3,7 +3,6 @@ from __future__ import annotations
 from collections import deque
 from typing import Deque
 
-from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPainter, QColor, QPaintEvent
 from PyQt6.QtWidgets import QWidget
 
@@ -28,7 +27,7 @@ class GraphWidget(QWidget):
     def paintEvent(self, event: QPaintEvent) -> None:  # pragma: no cover - UI drawing
         painter = QPainter(self)
         painter.fillRect(event.rect(), self.palette().base())
-        painter.setPen(Qt.GlobalColor.white)
+        painter.setPen(self.palette().text().color())
         last = self.data[-1] if self.data else 0.0
         painter.drawText(4, 14, f"{self.title} {last:.1f}")
         if len(self.data) < 2:
