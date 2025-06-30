@@ -351,7 +351,10 @@ class Viewport(GLWidget):
                 if start_dx:
                     if self.snap_to_grid and self.grid_size > 0:
                         world_w = start_w + (dx_local - start_dx)
-                        world_w = round(world_w / self.grid_size) * self.grid_size
+                        if world_w >= start_w:
+                            world_w = math.ceil(world_w / self.grid_size) * self.grid_size
+                        else:
+                            world_w = math.floor(world_w / self.grid_size) * self.grid_size
                         value = max(0.01, world_w / self.selected_obj.width)
                     else:
                         value = base * (dx_local / start_dx)
@@ -368,7 +371,10 @@ class Viewport(GLWidget):
                 if start_dy:
                     if self.snap_to_grid and self.grid_size > 0:
                         world_h = start_h + (dy_local - start_dy)
-                        world_h = round(world_h / self.grid_size) * self.grid_size
+                        if world_h >= start_h:
+                            world_h = math.ceil(world_h / self.grid_size) * self.grid_size
+                        else:
+                            world_h = math.floor(world_h / self.grid_size) * self.grid_size
                         value = max(0.01, world_h / self.selected_obj.height)
                     else:
                         value = base * (dy_local / start_dy)
