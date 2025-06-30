@@ -1,6 +1,7 @@
 from .game_object import GameObject, clear_image_cache
 from .scene import Scene
 from .project import Project
+from .scene_graph import SceneGraph
 from .camera import Camera
 from .objects import (
     register_object,
@@ -17,6 +18,7 @@ from .post_effects import (
 __all__ = [
     'GameObject',
     'Scene',
+    'SceneGraph',
     'Project',
     'Camera',
     'clear_image_cache',

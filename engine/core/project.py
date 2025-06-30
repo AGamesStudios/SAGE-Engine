@@ -18,6 +18,7 @@ class Project:
     scenes: str = 'Scenes'
     scene_file: str = 'Scenes/Scene1.sagescene'
     metadata: dict = field(default_factory=dict)
+    scene_graph: dict = field(default_factory=dict)
 
     @classmethod
     def load(cls, path: str) -> "Project":
@@ -44,9 +45,11 @@ class Project:
         version = data.get('version', '0.1.0')
         resources = data.get('resources', 'resources')
         metadata = data.get('metadata', {})
+        scene_graph = data.get('scene_graph', {})
         return cls(scene or {}, renderer, width, height, keep_aspect,
                    background, title, version, resources, scenes_dir,
-                   scene_file or 'Scenes/Scene1.sagescene', metadata)
+                   scene_file or 'Scenes/Scene1.sagescene', metadata,
+                   scene_graph)
 
     def save(self, path: str):
         """Write the project file and associated scene."""
@@ -74,5 +77,6 @@ class Project:
                 'scenes': self.scenes,
                 'scene_file': self.scene_file,
                 'metadata': self.metadata,
+                'scene_graph': self.scene_graph,
             }, f, indent=2)
 
