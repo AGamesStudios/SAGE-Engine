@@ -55,6 +55,16 @@ def apply_palette() -> None:
     app.setPalette(palette)
     app.setStyleSheet(DARK_STYLE)
 
+
+def apply_default_palette() -> None:
+    """Restore the default Qt palette and style."""
+    app = QApplication.instance()
+    if app is None:
+        return
+    app.setStyle("Fusion")
+    app.setPalette(QApplication.style().standardPalette())
+    app.setStyleSheet("")
+
 from .editor import Editor, save_recent, load_recent, _log, logger
 
 

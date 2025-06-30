@@ -1728,9 +1728,12 @@ class Editor(QMainWindow):
         self.refresh_events()
 
     def apply_theme(self) -> None:
-        """Apply the editor's dark theme."""
-        from .app import apply_palette
-        apply_palette()
+        """Apply the selected application theme."""
+        from .app import apply_palette, apply_default_palette
+        if getattr(self, 'theme', 'dark') == 'dark':
+            apply_palette()
+        else:
+            apply_default_palette()
 
     def _apply_language(self):
         self.file_menu.setTitle(self.t('file'))
@@ -1788,7 +1791,8 @@ class Editor(QMainWindow):
         self.editor_settings_act.setText(self.t('editor_settings'))
         self.plugins_menu.setTitle(self.t('plugins_menu'))
         self.plugins_act.setText(self.t('manage_plugins'))
-        self.about_menu.setTitle(self.t('about_menu'))
+        self.help_menu.setTitle(self.t('help_menu'))
+        self.docs_act.setText(self.t('documentation'))
         self.about_act.setText(self.t('about_us'))
         if hasattr(self, 'tools_btn'):
             self.tools_btn.setText(self.t('sage_tools'))
@@ -2051,10 +2055,13 @@ class Editor(QMainWindow):
         self.plugins_act.triggered.connect(self.show_plugin_manager)
         self.plugins_menu.addAction(self.plugins_act)
 
-        self.about_menu = menubar.addMenu(self.t('about_menu'))
+        self.help_menu = menubar.addMenu(self.t('help_menu'))
+        self.docs_act = QAction(self.t('documentation'), self)
+        self.docs_act.triggered.connect(self.show_docs)
+        self.help_menu.addAction(self.docs_act)
         self.about_act = QAction(self.t('about_us'), self)
         self.about_act.triggered.connect(self.show_about)
-        self.about_menu.addAction(self.about_act)
+        self.help_menu.addAction(self.about_act)
 
         toolbar = self.addToolBar('main')
         toolbar.setObjectName('MainToolbar')
@@ -2491,7 +2498,40 @@ class Editor(QMainWindow):
         pass
 
     def show_editor_settings(self):
-        pass
+        class EditorSettingsDialog(QDialog):
+            def __init__(self, parent: "Editor"):
+                super().__init__(parent)
+                self.parent = parent
+                self.setWindowTitle(parent.t('editor_settings'))
+                self.setFixedSize(280, 150)
+                self.setStyle(QStyleFactory.create('Fusion'))
+
+                form = QFormLayout(self)
+                form.setLabelAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+                form.setFormAlignment(Qt.AlignmentFlag.AlignTop)
+
+                self.font_spin = QSpinBox(); self.font_spin.setRange(6, 72); self.font_spin.setValue(parent.font_size)
+                self.theme_combo = QComboBox(); self.theme_combo.addItems([parent.t('dark_theme'), parent.t('light_theme')])
+                self.theme_combo.setCurrentIndex(0 if parent.theme == 'dark' else 1)
+                form.addRow(parent.t('font_size'), self.font_spin)
+                form.addRow(parent.t('theme'), self.theme_combo)
+
+                buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+                buttons.accepted.connect(self.accept)
+                buttons.rejected.connect(self.reject)
+                form.addRow(buttons)
+                parent.apply_no_wheel(self)
+
+        dlg = EditorSettingsDialog(self)
+        if dlg.exec() == QDialog.DialogCode.Accepted:
+            self.font_size = dlg.font_spin.value()
+            font = QApplication.font()
+            font.setPointSize(self.font_size)
+            app = QApplication.instance()
+            app.setFont(font)
+            self.setFont(font)
+            self.theme = 'dark' if dlg.theme_combo.currentIndex() == 0 else 'light'
+            self.apply_theme()
 
     def show_plugin_manager(self):
         from .dialogs.plugin_manager import PluginManager
@@ -2550,6 +2590,10 @@ class Editor(QMainWindow):
         name = self.layouts.get('default')
         if name:
             self.apply_layout(name)
+
+    def show_docs(self):
+        from .dialogs import DocumentationDialog
+        DocumentationDialog(self).exec()
 
     def show_about(self):
         QMessageBox.information(
