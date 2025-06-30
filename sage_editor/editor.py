@@ -1829,14 +1829,13 @@ class Editor(QMainWindow):
         app = QApplication.instance()
         if app is None:
             return
-        # Relaunch the editor as a detached process. ``os.execv`` caused
-        # issues on some platforms, leaving the new instance unable to
-        # open projects correctly. ``startDetached`` provides a more
-        # reliable restart across Windows and Linux.
         script = os.path.abspath(sys.argv[0])
-        args = [script] + sys.argv[1:]
-        QProcess.startDetached(sys.executable, args, os.getcwd())
-        app.quit()
+        args = [sys.executable, script] + sys.argv[1:]
+        try:
+            os.execv(sys.executable, args)
+        except Exception:
+            QProcess.startDetached(sys.executable, [script] + sys.argv[1:], os.getcwd())
+            app.quit()
 
     def _apply_language(self):
         self.file_menu.setTitle(self.t('file'))
