@@ -1833,21 +1833,19 @@ class Editor(QMainWindow):
             return
         exe = sys.executable
         args = [exe] + sys.argv
-        env = QProcessEnvironment.systemEnvironment()
+        env = os.environ.copy()
         if self.project_path:
-            env.insert(RESTART_ENV, self.project_path)
+            env[RESTART_ENV] = self.project_path
         else:
-            env.remove(RESTART_ENV)
-        proc = QProcess()
-        proc.setProgram(exe)
-        proc.setArguments(sys.argv)
-        proc.setWorkingDirectory(os.getcwd())
-        proc.setProcessEnvironment(env)
-        if not proc.startDetached():
-            try:  # pragma: no cover - OS may not support exec
-                os.execve(exe, args, {k: env.value(k) for k in env.keys()})
-            except Exception:
-                pass
+            env.pop(RESTART_ENV, None)
+        try:
+            os.execve(exe, args, env)
+        except Exception:
+            qenv = QProcessEnvironment()
+            for key, value in env.items():
+                qenv.insert(key, value)
+            if not QProcess.startDetached(exe, sys.argv, os.getcwd(), qenv):
+                logger.error("Failed to restart editor")
         app.quit()
 
     def _apply_language(self):
