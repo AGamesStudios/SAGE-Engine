@@ -2629,6 +2629,7 @@ class Editor(QMainWindow):
 
         dlg = EditorSettingsDialog(self)
         if dlg.exec() == QDialog.DialogCode.Accepted:
+            prev_theme = self.theme
             self.font_size = dlg.font_spin.value()
             font = QApplication.font()
             font.setPointSize(self.font_size)
@@ -2636,9 +2637,11 @@ class Editor(QMainWindow):
             app.setFont(font)
             self.setFont(font)
             self.theme = 'dark' if dlg.theme_combo.currentIndex() == 0 else 'light'
-            self.apply_theme()
-
             save_settings({"font_size": self.font_size, "theme": self.theme})
+            if self.theme != prev_theme:
+                self.restart_editor()
+                return
+            self.apply_theme()
     def show_plugin_manager(self):
         from .dialogs.plugin_manager import PluginManager
         PluginManager(self).exec()
