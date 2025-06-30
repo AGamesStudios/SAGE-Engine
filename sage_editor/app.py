@@ -243,7 +243,16 @@ def main(argv=None):
         argv = sys.argv
     app = QApplication(argv)
     app.setWindowIcon(app_icon())
-    apply_palette()
+    from .editor import load_settings
+    from .icons import set_icon_theme
+    settings = load_settings()
+    theme = settings.get("theme", "dark")
+    if theme == "light":
+        set_icon_theme("black")
+        apply_light_palette()
+    else:
+        set_icon_theme("white")
+        apply_palette()
     font = QFont()
     font.setPointSize(font.pointSize() + 3)
     app.setFont(font)
