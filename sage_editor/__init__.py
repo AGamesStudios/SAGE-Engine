@@ -6,11 +6,13 @@ under :mod:`sage_editor.docks` and :mod:`sage_editor.widgets`.
 """
 
 from .editor import Editor, logger, load_recent, save_recent
-from .app import main, ProjectManager
+from .app import main
+from .project_hub import ProjectHub
+ProjectManager = ProjectHub
 from .plugins import register_plugin, load_plugins
 
 __all__ = [
-    'Editor', 'ProjectManager', 'main',
+    'Editor', 'ProjectManager', 'ProjectHub', 'main',
     'register_plugin', 'load_plugins',
     'logger', 'load_recent', 'save_recent',
 ]
