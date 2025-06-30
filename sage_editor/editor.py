@@ -1481,7 +1481,7 @@ class Editor(QMainWindow):
             spin.valueChanged.connect(self._apply_transform)
         form.addRow(self.t('x'), self.x_spin)
         form.addRow(self.t('y'), self.y_spin)
-        form.addRow(self.t('z'), self.z_spin)
+        form.addRow(self.t('z_order'), self.z_spin)
         form.addRow(self.t('scale_x'), self.scale_x_spin)
         form.addRow(self.t('scale_y'), self.scale_y_spin)
         form.addRow("", self.link_scale)
@@ -1511,6 +1511,7 @@ class Editor(QMainWindow):
         self.link_scale = prop_dock.link_scale
         self.coord_combo = prop_dock.coord_combo
         self.angle_spin = prop_dock.angle_spin
+        self.angle_value = prop_dock.angle_value
         self.pivot_x_spin = prop_dock.pivot_x_spin
         self.pivot_y_spin = prop_dock.pivot_y_spin
         self.flip_x_check = prop_dock.flip_x_check
@@ -1531,6 +1532,7 @@ class Editor(QMainWindow):
         self.paint_btn = prop_dock.paint_btn
         self.color_btn = prop_dock.color_btn
         self.alpha_spin = prop_dock.alpha_spin
+        self.alpha_value = prop_dock.alpha_value
         self.shape_combo = prop_dock.shape_combo
         self.smooth_check = prop_dock.smooth_check
         self.img_row = prop_dock.img_row
@@ -1540,6 +1542,8 @@ class Editor(QMainWindow):
         self.pivot_x_label = prop_dock.pivot_x_label
         self.pivot_y_label = prop_dock.pivot_y_label
         self.alpha_label = prop_dock.alpha_label
+        self.angle_label = prop_dock.angle_label
+        self.z_label = prop_dock.z_label
         self.smooth_label = prop_dock.smooth_label
         self.pos_x_label = prop_dock.pos_x_label
         self.pos_y_label = prop_dock.pos_y_label
@@ -1721,6 +1725,10 @@ class Editor(QMainWindow):
             self.paint_btn.setToolTip(self.t('paint_sprite'))
         if hasattr(self, 'alpha_label'):
             self.alpha_label.setText(self.t('alpha'))
+        if hasattr(self, 'angle_label'):
+            self.angle_label.setText(self.t('rotation'))
+        if hasattr(self, 'z_label'):
+            self.z_label.setText(self.t('z_order'))
         if hasattr(self, 'pivot_x_label'):
             self.pivot_x_label.setText(self.t('x'))
         if hasattr(self, 'pivot_y_label'):
@@ -3013,6 +3021,8 @@ class Editor(QMainWindow):
             spin.blockSignals(True)
             spin.setValue(0)
             spin.blockSignals(False)
+        if hasattr(self, 'angle_value'):
+            self.angle_value.setText('0')
         if hasattr(self, 'cam_active'):
             self.cam_active.blockSignals(True)
             self.cam_active.setChecked(False)
@@ -3061,6 +3071,8 @@ class Editor(QMainWindow):
             self.alpha_spin.setValue(100)
             self.alpha_spin.setEnabled(False)
             self.alpha_spin.blockSignals(False)
+        if hasattr(self, 'alpha_value'):
+            self.alpha_value.setText('100')
         self.smooth_check.blockSignals(True)
         self.smooth_check.setChecked(False)
         self.smooth_check.setEnabled(False)
@@ -3172,7 +3184,11 @@ class Editor(QMainWindow):
             self.scale_x_spin.blockSignals(True); self.scale_x_spin.setValue(obj.scale_x); self.scale_x_spin.blockSignals(False)
             self.scale_y_spin.blockSignals(True); self.scale_y_spin.setValue(obj.scale_y); self.scale_y_spin.blockSignals(False)
             self.link_scale.blockSignals(True); self.link_scale.setChecked(obj.scale_x == obj.scale_y); self.link_scale.blockSignals(False)
-            self.angle_spin.blockSignals(True); self.angle_spin.setValue(int(obj.angle % 360)); self.angle_spin.blockSignals(False)
+            self.angle_spin.blockSignals(True)
+            self.angle_spin.setValue(int(obj.angle % 360))
+            self.angle_spin.blockSignals(False)
+            if hasattr(self, 'angle_value'):
+                self.angle_value.setText(str(int(obj.angle % 360)))
             if hasattr(self, 'material_group'):
                 self.material_group.setVisible(True)
             self.img_row.setVisible(True)
@@ -3195,6 +3211,8 @@ class Editor(QMainWindow):
                 self.alpha_spin.blockSignals(True)
                 self.alpha_spin.setValue(int(getattr(obj, 'alpha', 1.0) * 100))
                 self.alpha_spin.blockSignals(False)
+                if hasattr(self, 'alpha_value'):
+                    self.alpha_value.setText(str(int(getattr(obj, 'alpha', 1.0) * 100)))
             self.shape_label.setVisible(True)
             self.shape_combo.setVisible(True)
             self.shape_combo.setEnabled(True)
@@ -3263,9 +3281,13 @@ class Editor(QMainWindow):
             obj.flip_y = self.flip_y_check.isChecked()
             if hasattr(obj, 'alpha') and hasattr(self, 'alpha_spin'):
                 obj.alpha = self.alpha_spin.value() / 100
-            if item is not None:
-                item.setZValue(obj.z)
-                item.apply_object_transform()
+        if hasattr(self, 'angle_value'):
+            self.angle_value.setText(str(int(self.angle_spin.value())))
+        if hasattr(self, 'alpha_value'):
+            self.alpha_value.setText(str(int(self.alpha_spin.value())))
+        if item is not None:
+            item.setZValue(obj.z)
+            item.apply_object_transform()
         self._mark_dirty()
         self._update_gizmo()
         self._record_undo(obj, prev)
