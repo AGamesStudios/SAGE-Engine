@@ -1747,11 +1747,7 @@ class Editor(QMainWindow):
             self.tools_btn.setText(self.t('sage_tools'))
             self.open_paint_act.setText(self.t('open_paint'))
         self.view_opts_btn.setText(self.t('view_options'))
-        self.grid_act.setText(self.t('show_grid'))
-        self.axes_act.setText(self.t('show_gizmo'))
-        self.snap_act.setText(self.t('snap_to_grid'))
-        self.size_act.setText(self.t('grid_size'))
-        self.color_act.setText(self.t('grid_color'))
+        # update popup labels if available
         if hasattr(self, 'view_opts_popup'):
             self.view_opts_popup.grid_chk.setText(self.t('show_grid'))
             self.view_opts_popup.gizmo_chk.setText(self.t('show_gizmo'))
@@ -2947,27 +2943,27 @@ class Editor(QMainWindow):
         self._refresh_object_labels()
 
     def toggle_grid(self, checked: bool):
-        if hasattr(self, 'grid_act'):
-            self.grid_act.blockSignals(True)
-            self.grid_act.setChecked(checked)
-            self.grid_act.blockSignals(False)
+        if hasattr(self, 'view_opts_popup'):
+            self.view_opts_popup.grid_chk.blockSignals(True)
+            self.view_opts_popup.grid_chk.setChecked(checked)
+            self.view_opts_popup.grid_chk.blockSignals(False)
         if hasattr(self, 'view'):
             self.view.set_show_grid(checked)
 
     def toggle_gizmo(self, checked: bool):
-        if hasattr(self, 'axes_act'):
-            self.axes_act.blockSignals(True)
-            self.axes_act.setChecked(checked)
-            self.axes_act.blockSignals(False)
+        if hasattr(self, 'view_opts_popup'):
+            self.view_opts_popup.gizmo_chk.blockSignals(True)
+            self.view_opts_popup.gizmo_chk.setChecked(checked)
+            self.view_opts_popup.gizmo_chk.blockSignals(False)
         if hasattr(self, 'view'):
             self.view.set_show_axes(checked)
 
     def toggle_snap(self, checked: bool):
         self.snap_to_grid = bool(checked)
-        if hasattr(self, 'snap_act'):
-            self.snap_act.blockSignals(True)
-            self.snap_act.setChecked(checked)
-            self.snap_act.blockSignals(False)
+        if hasattr(self, 'view_opts_popup'):
+            self.view_opts_popup.snap_chk.blockSignals(True)
+            self.view_opts_popup.snap_chk.setChecked(checked)
+            self.view_opts_popup.snap_chk.blockSignals(False)
         if hasattr(self, 'view'):
             self.view.set_snap(self.snap_to_grid)
 
@@ -2979,6 +2975,10 @@ class Editor(QMainWindow):
         if size <= 0:
             return
         self.grid_size = size
+        if hasattr(self, 'view_opts_popup'):
+            self.view_opts_popup.size_spin.blockSignals(True)
+            self.view_opts_popup.size_spin.setValue(size)
+            self.view_opts_popup.size_spin.blockSignals(False)
         if hasattr(self, 'view'):
             self.view.set_grid_size(size)
 
@@ -3006,6 +3006,10 @@ class Editor(QMainWindow):
         if not color.isValid():
             return
         self.grid_color = (color.red(), color.green(), color.blue())
+        if hasattr(self, 'view_opts_popup'):
+            self.view_opts_popup.color_btn.setStyleSheet(
+                f"background-color: rgb({self.grid_color[0]}, {self.grid_color[1]}, {self.grid_color[2]});"
+            )
         if hasattr(self, 'view'):
             self.view.set_grid_color(self.grid_color)
 
