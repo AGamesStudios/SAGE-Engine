@@ -90,7 +90,7 @@ class SceneGraphView(QGraphicsView):
         # QPainter.RenderHint is the correct enum for antialiasing in Qt6
         self.setRenderHint(QPainter.RenderHint.Antialiasing)
         self.graph: SceneGraph | None = None
-        self.items: Dict[str, SceneNodeItem] = {}
+        self.node_items: Dict[str, SceneNodeItem] = {}
         self.lines: list = []
         self.grid_size = 20
         self._panning = False
@@ -101,12 +101,12 @@ class SceneGraphView(QGraphicsView):
     def load_graph(self, graph: SceneGraph) -> None:
         self.graph = graph
         self.scene().clear()
-        self.items.clear()
+        self.node_items.clear()
         self.lines.clear()
         for node in graph.nodes.values():
             item = SceneNodeItem(node, self)
             self.scene().addItem(item)
-            self.items[node.name] = item
+            self.node_items[node.name] = item
         self.update_edges()
         self.setSceneRect(self.scene().itemsBoundingRect())
 
@@ -118,12 +118,12 @@ class SceneGraphView(QGraphicsView):
             return
         pen = QPen(Qt.GlobalColor.black, 2)
         for name, node in self.graph.nodes.items():
-            src_item = self.items.get(name)
+            src_item = self.node_items.get(name)
             if not src_item:
                 continue
             sx, sy = src_item.output_pos()
             for dst in node.next_nodes:
-                dst_item = self.items.get(dst)
+                dst_item = self.node_items.get(dst)
                 if not dst_item:
                     continue
                 dx, dy = dst_item.input_pos()
@@ -151,9 +151,9 @@ class SceneGraphView(QGraphicsView):
     def mousePressEvent(self, event: QMouseEvent) -> None:
         pos = event.position().toPoint()
         item = None
-        items = self.items(pos)
-        if items:
-            item = items[0]
+        items_at = self.items(pos)
+        if items_at:
+            item = items_at[0]
         if event.button() == Qt.MouseButton.MiddleButton:
             self._panning = True
             self._last_pos = pos
@@ -183,7 +183,7 @@ class SceneGraphView(QGraphicsView):
             self.translate(delta.x(), delta.y())
             return
         if self._temp_line and self._connect_src:
-            src_item = self.items.get(self._connect_src)
+            src_item = self.node_items.get(self._connect_src)
             if src_item:
                 sx, sy = src_item.output_pos()
                 path = QPainterPath()
