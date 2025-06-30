@@ -1529,6 +1529,7 @@ class Editor(QMainWindow):
         self.scene_path: str | None = None
         self.scenes_dir: str | None = None
         self.scene_tabs: dict[str, Viewport] = {}
+        self.scene_logic_tabs: dict[str, QWidget] = {}
         self.project_metadata: dict = {}
         self.project_title: str = 'SAGE 2D'
         self.project_version: str = '0.1.0'
@@ -2005,6 +2006,18 @@ class Editor(QMainWindow):
             self.dirty = True
             self._update_title()
 
+    def _update_open_tabs_metadata(self) -> None:
+        """Update metadata about open scene tabs."""
+        if not self.project_path:
+            return
+        proj_dir = os.path.dirname(self.project_path)
+        self.project_metadata['open_tabs'] = [
+            os.path.relpath(p, proj_dir) for p in self.scene_tabs.keys()
+        ]
+        self.project_metadata['active_tab'] = (
+            os.path.relpath(self.scene_path, proj_dir) if self.scene_path else ''
+        )
+
     # ------------------------------------------------------------------
     def _current_object(self):
         """Return the currently selected object or ``None``."""
@@ -2257,6 +2270,11 @@ class Editor(QMainWindow):
                 self.tabs.indexOf(view), os.path.splitext(os.path.basename(path))[0]
             )
             view.scene_path = path
+            logic = self.logic_widget
+            self.scene_logic_tabs[path] = logic
+            self.tabs.setTabText(
+                self.tabs.indexOf(logic), self.t('scene_logic')
+            )
         else:
             view = Viewport(scene, editor=self)
             view.renderer.background = self.background_color
@@ -2269,6 +2287,9 @@ class Editor(QMainWindow):
             view.scene_path = path
             self.scene_tabs[path] = view
             idx = self.tabs.addTab(view, os.path.splitext(os.path.basename(path))[0])
+            logic = LogicTab(self, label=self.t('scene'), hide_combo=True)
+            self.scene_logic_tabs[path] = logic
+            self.tabs.insertTab(idx + 1, logic, self.t('scene_logic'))
             self.tabs.setCurrentIndex(idx)
         self.scene_path = path
         rel = (
@@ -2282,6 +2303,7 @@ class Editor(QMainWindow):
             view.camera.x = cam_data.get("x", view.camera.x)
             view.camera.y = cam_data.get("y", view.camera.y)
             view.camera.zoom = cam_data.get("zoom", view.camera.zoom)
+        self._update_open_tabs_metadata()
 
     def new_project(self):
         class NewProjectDialog(QDialog):
@@ -2386,6 +2408,7 @@ class Editor(QMainWindow):
             QMessageBox.warning(self, 'Error', f'Failed to load scene: {exc}')
             self.project_path = None
             return
+        self._update_open_tabs_metadata()
         self._update_camera_rect()
         self._update_project_state()
         self._add_recent(proj_path)
@@ -2459,6 +2482,7 @@ class Editor(QMainWindow):
             QMessageBox.warning(self, 'Error', f'Failed to open project: {exc}')
             self.project_path = None
             return
+        self._update_open_tabs_metadata()
         self._update_project_state()
         self._add_recent(path)
         self.dirty = False
@@ -3217,7 +3241,28 @@ class Editor(QMainWindow):
         """Close an object logic tab."""
         widget = self.tabs.widget(index)
         from .widgets import Viewport
-        if isinstance(widget, Viewport) or widget is self.logic_widget:
+        if isinstance(widget, Viewport):
+            path = getattr(widget, 'scene_path', None)
+            if path and path in self.scene_tabs:
+                del self.scene_tabs[path]
+            logic = self.scene_logic_tabs.pop(path, None)
+            if logic:
+                lidx = self.tabs.indexOf(logic)
+                if lidx >= 0:
+                    self.tabs.removeTab(lidx)
+                    logic.deleteLater()
+            if self.scene_path == path:
+                self.scene_path = None
+                if self.scene_tabs:
+                    first = next(iter(self.scene_tabs))
+                    self.tabs.setCurrentWidget(self.scene_tabs[first])
+                    self.scene_path = first
+                    self.load_scene(Scene.load(first))
+            self.tabs.removeTab(index)
+            widget.deleteLater()
+            self._update_open_tabs_metadata()
+            return
+        if widget is self.logic_widget:
             return
         obj_id = getattr(widget, "object_id", None)
         if obj_id and obj_id in self.object_tabs:
