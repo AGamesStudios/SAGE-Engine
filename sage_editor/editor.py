@@ -2253,7 +2253,9 @@ class Editor(QMainWindow):
         if not self.scene_tabs:
             view = self.view
             self.scene_tabs[path] = view
-            self.tabs.setTabText(self.tabs.indexOf(view), os.path.splitext(os.path.basename(path))[0])
+            self.tabs.setTabText(
+                self.tabs.indexOf(view), os.path.splitext(os.path.basename(path))[0]
+            )
             view.scene_path = path
         else:
             view = Viewport(scene, editor=self)
@@ -2269,7 +2271,17 @@ class Editor(QMainWindow):
             idx = self.tabs.addTab(view, os.path.splitext(os.path.basename(path))[0])
             self.tabs.setCurrentIndex(idx)
         self.scene_path = path
-        self.load_scene(scene)
+        rel = (
+            os.path.relpath(path, os.path.dirname(self.project_path))
+            if self.project_path
+            else path
+        )
+        cam_data = self.project_metadata.get("viewports", {}).get(rel)
+        self.load_scene(scene, viewport=view, keep_camera=bool(cam_data))
+        if cam_data:
+            view.camera.x = cam_data.get("x", view.camera.x)
+            view.camera.y = cam_data.get("y", view.camera.y)
+            view.camera.zoom = cam_data.get("zoom", view.camera.zoom)
 
     def new_project(self):
         class NewProjectDialog(QDialog):
@@ -2324,7 +2336,13 @@ class Editor(QMainWindow):
         self.scene_path = os.path.join(scenes_dir, 'Scene1.sagescene')
         self.scenes_dir = scenes_dir
         self.scene_tabs.clear()
-        self.project_metadata = {'name': name, 'description': ''}
+        self.project_metadata = {
+            'name': name,
+            'description': '',
+            'open_tabs': ['Scenes/Scene1.sagescene'],
+            'active_tab': 'Scenes/Scene1.sagescene',
+            'viewports': {},
+        }
         self.project_title = name
         self.project_version = '0.1.0'
         self.project_description = ''
@@ -2402,7 +2420,19 @@ class Editor(QMainWindow):
             self.scenes_dir = os.path.join(os.path.dirname(path), proj.scenes)
             self.scene_tabs.clear()
             self._scan_scenes()
-            self.open_scene_tab(self.scene_path)
+            tabs = self.project_metadata.get('open_tabs') or [proj.scene_file]
+            proj_dir = os.path.dirname(path)
+            for p in tabs:
+                abs_path = os.path.join(proj_dir, p)
+                if os.path.exists(abs_path):
+                    self.open_scene_tab(abs_path)
+            active = self.project_metadata.get('active_tab')
+            if active:
+                a_path = os.path.join(proj_dir, active)
+                view = self.scene_tabs.get(a_path)
+                if view:
+                    self.tabs.setCurrentWidget(view)
+                    self.scene_path = a_path
             state = self.project_metadata.get('editor_state', {})
             if state:
                 self.view.camera.x = state.get('cam_x', self.view.camera.x)
@@ -2460,6 +2490,23 @@ class Editor(QMainWindow):
             'cam_zoom': self.view.camera.zoom,
             'selected': self.view.selected_obj.name if self.view.selected_obj else None,
         }
+        if self.project_path:
+            proj_dir = os.path.dirname(self.project_path)
+            self.project_metadata['open_tabs'] = [
+                os.path.relpath(p, proj_dir) for p in self.scene_tabs.keys()
+            ]
+            self.project_metadata['active_tab'] = os.path.relpath(
+                self.scene_path, proj_dir
+            ) if self.scene_path else ''
+            cams = {}
+            for p, view in self.scene_tabs.items():
+                rel = os.path.relpath(p, proj_dir)
+                cams[rel] = {
+                    'x': view.camera.x,
+                    'y': view.camera.y,
+                    'zoom': view.camera.zoom,
+                }
+            self.project_metadata['viewports'] = cams
         try:
             Project(
                 self.scene.to_dict(),
@@ -3152,7 +3199,7 @@ class Editor(QMainWindow):
         if isinstance(widget, Viewport):
             self.view = widget
             self.scene_path = getattr(widget, 'scene_path', self.scene_path)
-            self.load_scene(widget.scene)
+            self.load_scene(widget.scene, viewport=widget, keep_camera=True)
             return
         if hasattr(widget, "object_combo"):
             self.event_list = widget.event_list
@@ -4923,7 +4970,10 @@ class Editor(QMainWindow):
         self.event_list.setItem(row, 2, QTableWidgetItem(''))
         self.event_list.resizeRowsToContents()
 
-    def load_scene(self, scene_or_path):
+    def load_scene(self, scene_or_path, *, viewport=None, keep_camera=False):
+        """Load *scene_or_path* into ``viewport`` and refresh the UI."""
+        if viewport is None:
+            viewport = self.view
         if isinstance(scene_or_path, Scene):
             self.scene = scene_or_path
         else:
@@ -4961,7 +5011,9 @@ class Editor(QMainWindow):
         self.refresh_variables()
         self._refresh_object_labels()
         self._update_object_tabs()
-        self.view.set_scene(self.scene)
+        viewport.set_scene(self.scene, keep_camera=keep_camera)
+        if viewport is not self.view:
+            self.view = viewport
         if self.items:
             self.object_combo.setCurrentIndex(0)
             self.object_list.setCurrentRow(0)

@@ -216,7 +216,23 @@ class Viewport(GLWidget):
         self.renderer.close()
         super().closeEvent(event)
 
-    def set_scene(self, scene: Scene) -> None:
+    def set_scene(self, scene: Scene, *, keep_camera: bool = False) -> None:
+        """Assign a new scene to the viewport.
+
+        Parameters
+        ----------
+        scene:
+            Scene to display.
+        keep_camera:
+            If ``True`` the current camera position is preserved instead of
+            centering on the scene contents. This helps maintain the user's view
+            when switching between tabs.
+        """
+
+        prev_cam = None
+        if keep_camera:
+            prev_cam = (self.camera.x, self.camera.y, self.camera.zoom)
+
         self.scene = scene
         if not scene.objects:
             square = GameObject(color=(0, 255, 0, 255))
@@ -238,7 +254,10 @@ class Viewport(GLWidget):
                 width=self.width(),
                 height=self.height(),
             )
-        self._center_camera()
+        if keep_camera and prev_cam is not None:
+            self.camera.x, self.camera.y, self.camera.zoom = prev_cam
+        else:
+            self._center_camera()
         self._cursor_world = None
 
     def _tick(self) -> None:
