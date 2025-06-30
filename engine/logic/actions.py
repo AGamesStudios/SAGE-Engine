@@ -103,7 +103,10 @@ class ShowObject(Action):
         self.target = target
 
     def execute(self, engine, scene, dt):
-        self.target.alpha = 1.0
+        if hasattr(self.target, 'visible'):
+            self.target.visible = True
+        if hasattr(self.target, 'alpha'):
+            self.target.alpha = 1.0
 
 
 @register_action('HideObject', [('target', 'object')])
@@ -114,7 +117,10 @@ class HideObject(Action):
         self.target = target
 
     def execute(self, engine, scene, dt):
-        self.target.alpha = 0.0
+        if hasattr(self.target, 'visible'):
+            self.target.visible = False
+        if hasattr(self.target, 'alpha'):
+            self.target.alpha = 0.0
 
 
 @register_action('SetPosition', [('target', 'object'), ('x', 'value'), ('y', 'value')])

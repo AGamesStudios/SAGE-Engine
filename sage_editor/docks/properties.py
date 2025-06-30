@@ -35,6 +35,9 @@ class PropertiesDock(QDockWidget):
         self.type_combo.addItem(editor.t('camera'), 'camera')
         obj_form.addRow(editor.t('name_label'), self.name_edit)
         obj_form.addRow(editor.t('type_label'), self.type_combo)
+        self.visible_check = QCheckBox()
+        self.visible_check.setToolTip(editor.t('visible'))
+        obj_form.addRow(editor.t('visible'), self.visible_check)
         prop_layout.addWidget(self.object_group)
 
         # material group containing sprite specific fields

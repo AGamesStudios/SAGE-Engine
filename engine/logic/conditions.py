@@ -107,7 +107,8 @@ class ObjectVisible(Condition):
 
     def check(self, engine, scene, dt):
         alpha = getattr(self.target, 'alpha', 1.0)
-        return (alpha > 0) == self.visible
+        vis = getattr(self.target, 'visible', alpha > 0)
+        return (vis and alpha > 0) == self.visible
 
 
 @register_condition('VariableCompare', [('name', 'variable'), ('op', 'value'), ('value', 'value')])

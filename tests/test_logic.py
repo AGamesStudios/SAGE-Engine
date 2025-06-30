@@ -50,6 +50,7 @@ class DummyObj:
         self.x = 0.0
         self.y = 0.0
         self.alpha = 1.0
+        self.visible = True
 
 
 def test_variable_actions_and_condition():
@@ -71,7 +72,9 @@ def test_visibility_actions_and_condition():
     assert visible_cond.check(engine, None, 0)
     HideObject(obj).execute(engine, None, 0)
     assert obj.alpha == 0.0
+    assert obj.visible is False
     assert not visible_cond.check(engine, None, 0)
     ShowObject(obj).execute(engine, None, 0)
     assert obj.alpha == 1.0
+    assert obj.visible is True
     assert visible_cond.check(engine, None, 0)

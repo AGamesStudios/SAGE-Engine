@@ -274,6 +274,11 @@ def describe_condition(cond, objects, t=lambda x: x):
         return f"{t('Collision')} {a_name} with {b_name}"
     if typ == 'VariableCompare':
         return f"{t('VariableCompare')} {cond.get('name')} {cond.get('op')} {cond.get('value')}"
+    if typ == 'ObjectVisible':
+        idx = cond.get('target')
+        name = objects[idx].name if idx is not None and 0 <= idx < len(objects) else 'N/A'
+        vis = cond.get('visible', True)
+        return f"{t('ObjectVisible')} {name} {vis}"
     return t(typ)
 
 
@@ -1143,9 +1148,10 @@ class AddEventDialog(QDialog):
                            owner_index=self.owner_index)
         if dlg.exec() == QDialog.DialogCode.Accepted:
             act = dlg.get_action()
-            self.actions.append(act)
-            desc = describe_action(act, self.objects, self.parent().t if self.parent() else self.t)
-            self.act_list.addItem(desc)
+            if act is not None:
+                self.actions.append(act)
+                desc = describe_action(act, self.objects, self.parent().t if self.parent() else self.t)
+                self.act_list.addItem(desc)
 
     def get_event(self):
         return {
@@ -1619,6 +1625,7 @@ class Editor(QMainWindow):
         self.material_group = prop_dock.material_group
         self.name_edit = prop_dock.name_edit
         self.type_combo = prop_dock.type_combo
+        self.visible_check = prop_dock.visible_check
         self.x_spin = prop_dock.x_spin
         self.y_spin = prop_dock.y_spin
         self.z_spin = prop_dock.z_spin
@@ -1695,6 +1702,7 @@ class Editor(QMainWindow):
         self.object_combo.currentIndexChanged.connect(lambda _=None: self._update_transform_panel())
         self.name_edit.editingFinished.connect(self._object_name_changed)
         self.type_combo.currentIndexChanged.connect(self._object_type_changed)
+        self.visible_check.stateChanged.connect(self._visible_changed)
         self.image_btn.clicked.connect(self._choose_object_image)
         self.clear_img_btn.clicked.connect(self._clear_object_image)
         self.paint_btn.clicked.connect(lambda: self.open_paint_tool(self._current_object()))
@@ -3339,6 +3347,8 @@ class Editor(QMainWindow):
             self.shape_combo.setVisible(False)
         if hasattr(self, 'alpha_spin'):
             self.alpha_spin.setVisible(False)
+        if hasattr(self, 'visible_check'):
+            self.visible_check.setVisible(False)
         if hasattr(self, 'pivot_x_spin'):
             self.pivot_x_spin.setVisible(False)
         if hasattr(self, 'pivot_y_spin'):
@@ -3408,6 +3418,11 @@ class Editor(QMainWindow):
             self.flip_y_check.setChecked(False)
             self.flip_y_check.setEnabled(False)
             self.flip_y_check.blockSignals(False)
+        if hasattr(self, 'visible_check'):
+            self.visible_check.blockSignals(True)
+            self.visible_check.setChecked(True)
+            self.visible_check.setEnabled(False)
+            self.visible_check.blockSignals(False)
         if hasattr(self, 'alpha_spin'):
             self.alpha_spin.blockSignals(True)
             self.alpha_spin.setValue(100)
@@ -3456,6 +3471,12 @@ class Editor(QMainWindow):
         self.name_edit.blockSignals(True)
         self.name_edit.setText(obj.name)
         self.name_edit.blockSignals(False)
+        if hasattr(self, 'visible_check'):
+            self.visible_check.setVisible(True)
+            self.visible_check.setEnabled(True)
+            self.visible_check.blockSignals(True)
+            self.visible_check.setChecked(getattr(obj, 'visible', True))
+            self.visible_check.blockSignals(False)
         from engine import Camera
         typ = 'camera' if isinstance(obj, Camera) else 'sprite'
         i = self.type_combo.findData(typ)
@@ -3625,6 +3646,8 @@ class Editor(QMainWindow):
             obj.flip_y = self.flip_y_check.isChecked()
             if hasattr(obj, 'alpha') and hasattr(self, 'alpha_spin'):
                 obj.alpha = self.alpha_spin.value() / 100
+        if hasattr(obj, 'visible') and hasattr(self, 'visible_check'):
+            obj.visible = self.visible_check.isChecked()
         if hasattr(self, 'angle_value'):
             self.angle_value.setText(str(int(self.angle_spin.value())))
         if hasattr(self, 'alpha_value'):
@@ -4006,6 +4029,19 @@ class Editor(QMainWindow):
         obj.flip_x = self.flip_x_check.isChecked()
         obj.flip_y = self.flip_y_check.isChecked()
         if hasattr(self.view, 'renderer'):
+            self.view.update()
+        self._mark_dirty()
+
+    def _visible_changed(self) -> None:
+        """Toggle visibility for the selected object."""
+        idx = self.object_combo.currentIndex()
+        if idx < 0 or idx >= len(self.items):
+            return
+        obj = self.items[idx][1]
+        if not hasattr(obj, 'visible'):
+            return
+        obj.visible = self.visible_check.isChecked()
+        if hasattr(self.view, 'update'):
             self.view.update()
         self._mark_dirty()
 
