@@ -28,31 +28,26 @@ QToolTip { color: #ddd; background: #353535; border: 1px solid #555; }
 """
 
 
-def apply_palette(theme: str) -> None:
-    """Apply a light or dark palette to the QApplication."""
+def apply_palette() -> None:
+    """Apply the dark palette to the QApplication."""
     app = QApplication.instance()
     if app is None:
         return
     app.setStyle("Fusion")
-    if theme == 'dark':
-        palette = QPalette()
-        palette.setColor(QPalette.ColorRole.Window, QColor(53, 53, 53))
-        palette.setColor(QPalette.ColorRole.WindowText, QColor(220, 220, 220))
-        palette.setColor(QPalette.ColorRole.Base, QColor(35, 35, 35))
-        palette.setColor(QPalette.ColorRole.AlternateBase, QColor(53, 53, 53))
-        palette.setColor(QPalette.ColorRole.ToolTipBase, QColor(53, 53, 53))
-        palette.setColor(QPalette.ColorRole.ToolTipText, QColor(220, 220, 220))
-        palette.setColor(QPalette.ColorRole.Text, QColor(220, 220, 220))
-        palette.setColor(QPalette.ColorRole.Button, QColor(53, 53, 53))
-        palette.setColor(QPalette.ColorRole.ButtonText, QColor(220, 220, 220))
-        palette.setColor(QPalette.ColorRole.Highlight, QColor(42, 130, 218))
-        palette.setColor(QPalette.ColorRole.HighlightedText, QColor(0, 0, 0))
-        app.setPalette(palette)
-        app.setStyleSheet(DARK_STYLE)
-    else:
-        palette = app.style().standardPalette()
-        app.setPalette(palette)
-        app.setStyleSheet("")
+    palette = QPalette()
+    palette.setColor(QPalette.ColorRole.Window, QColor(53, 53, 53))
+    palette.setColor(QPalette.ColorRole.WindowText, QColor(220, 220, 220))
+    palette.setColor(QPalette.ColorRole.Base, QColor(35, 35, 35))
+    palette.setColor(QPalette.ColorRole.AlternateBase, QColor(53, 53, 53))
+    palette.setColor(QPalette.ColorRole.ToolTipBase, QColor(53, 53, 53))
+    palette.setColor(QPalette.ColorRole.ToolTipText, QColor(220, 220, 220))
+    palette.setColor(QPalette.ColorRole.Text, QColor(220, 220, 220))
+    palette.setColor(QPalette.ColorRole.Button, QColor(53, 53, 53))
+    palette.setColor(QPalette.ColorRole.ButtonText, QColor(220, 220, 220))
+    palette.setColor(QPalette.ColorRole.Highlight, QColor(42, 130, 218))
+    palette.setColor(QPalette.ColorRole.HighlightedText, QColor(0, 0, 0))
+    app.setPalette(palette)
+    app.setStyleSheet(DARK_STYLE)
 
 from .editor import Editor, save_recent, load_recent, _log, logger
 
@@ -210,7 +205,7 @@ def main(argv=None):
         argv = sys.argv
     app = QApplication(argv)
     app.setWindowIcon(app_icon())
-    apply_palette('dark')
+    apply_palette()
     font = QFont()
     font.setPointSize(font.pointSize() + 3)
     app.setFont(font)

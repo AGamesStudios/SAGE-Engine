@@ -1616,15 +1616,13 @@ class Editor(QMainWindow):
         self._clip_object = None
         self._clip_event = None
         self._init_actions()
-        self.set_theme(self.theme)
+        self.apply_theme()
         self._default_state = self.saveState().toBase64().data().decode()
         if autoshow:
             self.showMaximized()
         self._apply_language()
         self._update_project_state()
-        self._update_recent_menu()
         self._on_coord_mode()
-        self._build_layout_menu()
         self._load_default_layout()
         self.apply_no_wheel(self)
         # load optional editor plugins
@@ -1643,24 +1641,15 @@ class Editor(QMainWindow):
         self._apply_language()
         self.refresh_events()
 
-    def set_theme(self, theme: str) -> None:
-        """Apply a light or dark theme."""
-        if theme not in ('light', 'dark'):
-            return
-        self.theme = theme
+    def apply_theme(self) -> None:
+        """Apply the editor's dark theme."""
         from .app import apply_palette
-        apply_palette(theme)
-        if hasattr(self, 'dark_theme_act'):
-            self.dark_theme_act.setChecked(theme == 'dark')
-        if hasattr(self, 'light_theme_act'):
-            self.light_theme_act.setChecked(theme == 'light')
+        apply_palette()
 
     def _apply_language(self):
         self.file_menu.setTitle(self.t('file'))
         self.edit_menu.setTitle(self.t('edit_menu'))
-        self.new_proj_act.setText(self.t('new_project'))
-        self.open_proj_act.setText(self.t('open_project'))
-        self.save_proj_act.setText(self.t('save_project'))
+        self.export_exe_act.setText(self.t('export_exe'))
         self.tabs.setTabText(0, self.t('viewport'))
         self.tabs.setTabText(1, self.t('logic'))
         self.object_label.setText(self.t('scene'))
@@ -1696,23 +1685,13 @@ class Editor(QMainWindow):
         self.add_cam_btn.setToolTip(self.t('add_camera'))
         self.run_act.setText(self.t('run'))
         self.run_act.setToolTip(self.t('run'))
-        self.recent_menu.setTitle(self.t('recent_projects'))
-        self.recent_menu.setIcon(load_icon('recent.png'))
         self.settings_menu.setTitle(self.t('settings'))
         self.project_settings_act.setText(self.t('project_settings'))
+        self.editor_settings_act.setText(self.t('editor_settings'))
+        self.plugins_menu.setTitle(self.t('plugins_menu'))
         self.plugins_act.setText(self.t('manage_plugins'))
-        self.theme_menu.setTitle(self.t('theme'))
-        self.dark_theme_act.setText(self.t('dark_theme'))
-        self.light_theme_act.setText(self.t('light_theme'))
-        self.dark_theme_act.setChecked(self.theme == 'dark')
-        self.light_theme_act.setChecked(self.theme == 'light')
         self.about_menu.setTitle(self.t('about_menu'))
         self.about_act.setText(self.t('about_us'))
-        self.editor_menu.setTitle(self.t('editor_menu'))
-        self.layout_menu.setTitle(self.t('interface_menu'))
-        self.save_layout_act.setText(self.t('save_layout'))
-        self.restore_layout_act.setText(self.t('restore_default'))
-        self.paint_act.setText(self.t('open_paint'))
         if hasattr(self, 'paint_toolbar_btn'):
             self.paint_toolbar_btn.setText(self.t('open_paint'))
             self.paint_toolbar_btn.setToolTip(self.t('open_paint'))
@@ -1860,9 +1839,12 @@ class Editor(QMainWindow):
         self.recent_projects.insert(0, path)
         self.recent_projects = self.recent_projects[:5]
         save_recent(self.recent_projects)
-        self._update_recent_menu()
+        if hasattr(self, 'recent_menu'):
+            self._update_recent_menu()
 
     def _update_recent_menu(self):
+        if not hasattr(self, 'recent_menu'):
+            return
         self.recent_menu.clear()
         for p in self.recent_projects:
             act = self.recent_menu.addAction(p)
@@ -1875,7 +1857,8 @@ class Editor(QMainWindow):
     def clear_recent(self):
         self.recent_projects = []
         save_recent(self.recent_projects)
-        self._update_recent_menu()
+        if hasattr(self, 'recent_menu'):
+            self._update_recent_menu()
 
     def _resource_file_dialog(self, title: str, filters: str = '') -> str:
         """Return a file path chosen from the resources folder."""
@@ -1894,19 +1877,10 @@ class Editor(QMainWindow):
     def _init_actions(self):
         menubar = self.menuBar()
         self.file_menu = menubar.addMenu(self.t('file'))
-        self.new_proj_act = QAction(load_icon('file.png'), self.t('new_project'), self)
-        self.new_proj_act.setShortcut('Ctrl+N')
-        self.new_proj_act.triggered.connect(self.new_project)
-        self.open_proj_act = QAction(load_icon('open.png'), self.t('open_project'), self)
-        self.open_proj_act.setShortcut('Ctrl+O')
-        self.open_proj_act.triggered.connect(self.open_project)
-        self.save_proj_act = QAction(load_icon('save.png'), self.t('save_project'), self)
-        self.save_proj_act.setShortcut('Ctrl+S')
-        self.save_proj_act.triggered.connect(self.save_project)
-        self.file_menu.addAction(self.new_proj_act)
-        self.file_menu.addAction(self.open_proj_act)
-        self.file_menu.addAction(self.save_proj_act)
-        self.recent_menu = self.file_menu.addMenu(load_icon('recent.png'), self.t('recent_projects'))
+        self.export_exe_act = QAction(self.t('export_exe'), self)
+        self.export_exe_act.setEnabled(False)
+        self.export_exe_act.triggered.connect(lambda: None)
+        self.file_menu.addAction(self.export_exe_act)
 
         self.edit_menu = menubar.addMenu(self.t('edit_menu'))
         self.undo_act = QAction(self.t('undo'), self)
@@ -1924,65 +1898,14 @@ class Editor(QMainWindow):
         self.project_settings_act = QAction(self.t('project_settings'), self)
         self.project_settings_act.triggered.connect(self.show_project_settings)
         self.settings_menu.addAction(self.project_settings_act)
-        self.plugins_act = QAction(load_icon('plugin.png'), self.t('manage_plugins'), self)
+        self.editor_settings_act = QAction(self.t('editor_settings'), self)
+        self.editor_settings_act.triggered.connect(self.show_editor_settings)
+        self.settings_menu.addAction(self.editor_settings_act)
+
+        self.plugins_menu = menubar.addMenu(self.t('plugins_menu'))
+        self.plugins_act = QAction(self.t('manage_plugins'), self)
         self.plugins_act.triggered.connect(self.show_plugin_manager)
-        self.settings_menu.addAction(self.plugins_act)
-
-        self.theme_menu = self.settings_menu.addMenu(self.t('theme'))
-        self.theme_group = QActionGroup(self)
-        self.dark_theme_act = QAction(self.t('dark_theme'), self, checkable=True)
-        self.light_theme_act = QAction(self.t('light_theme'), self, checkable=True)
-        self.dark_theme_act.setChecked(self.theme == 'dark')
-        self.light_theme_act.setChecked(self.theme == 'light')
-        self.theme_group.addAction(self.dark_theme_act)
-        self.theme_group.addAction(self.light_theme_act)
-        self.theme_menu.addAction(self.dark_theme_act)
-        self.theme_menu.addAction(self.light_theme_act)
-        self.dark_theme_act.triggered.connect(lambda: self.set_theme('dark'))
-        self.light_theme_act.triggered.connect(lambda: self.set_theme('light'))
-
-        self.editor_menu = menubar.addMenu(self.t('editor_menu'))
-        self.layout_menu = self.editor_menu.addMenu(self.t('interface_menu'))
-        self.save_layout_act = QAction(self.t('save_layout'), self)
-        self.save_layout_act.triggered.connect(self.save_layout_dialog)
-        self.restore_layout_act = QAction(self.t('restore_default'), self)
-        self.restore_layout_act.triggered.connect(self.restore_default_layout)
-        self.layout_menu.addAction(self.save_layout_act)
-        self.layout_menu.addAction(self.restore_layout_act)
-        self.layout_menu.addSeparator()
-        self.layout_group = QActionGroup(self)
-        self.layout_actions = []
-
-        self.paint_act = QAction(self.t('open_paint'), self)
-        self.paint_act.triggered.connect(self.open_paint_tool)
-        self.editor_menu.addAction(self.paint_act)
-
-        self.view_menu = self.editor_menu.addMenu('View')
-        self.grid_act = QAction(self.t('show_grid'), self)
-        self.grid_act.setCheckable(True)
-        self.grid_act.triggered.connect(self.toggle_grid)
-        self.view_menu.addAction(self.grid_act)
-        self.axes_act = QAction(self.t('show_gizmo'), self)
-        self.axes_act.setCheckable(True)
-        self.axes_act.setChecked(True)
-        self.axes_act.triggered.connect(self.toggle_gizmo)
-        self.view_menu.addAction(self.axes_act)
-        self.snap_act = QAction(self.t('snap_to_grid'), self)
-        self.snap_act.setCheckable(True)
-        self.snap_act.triggered.connect(self.toggle_snap)
-        self.view_menu.addAction(self.snap_act)
-        self.size_act = QAction(self.t('grid_size'), self)
-        self.size_act.triggered.connect(self.grid_size_dialog)
-        self.view_menu.addAction(self.size_act)
-        self.color_act = QAction(self.t('grid_color'), self)
-        self.color_act.triggered.connect(self.choose_grid_color)
-        self.view_menu.addAction(self.color_act)
-        self.font_size_act = QAction(self.t('font_size'), self)
-        self.font_size_act.triggered.connect(self.font_size_dialog)
-        self.view_menu.addAction(self.font_size_act)
-        self.grid_act.setChecked(self.view.show_grid)
-        self.axes_act.setChecked(self.view.show_axes)
-        self.snap_act.setChecked(self.snap_to_grid)
+        self.plugins_menu.addAction(self.plugins_act)
 
         self.about_menu = menubar.addMenu(self.t('about_menu'))
         self.about_act = QAction(self.t('about_us'), self)
@@ -2405,6 +2328,9 @@ class Editor(QMainWindow):
     def show_renderer_settings(self):
         pass
 
+    def show_editor_settings(self):
+        pass
+
     def show_plugin_manager(self):
         from .dialogs.plugin_manager import PluginManager
         PluginManager(self).exec()
@@ -2421,7 +2347,6 @@ class Editor(QMainWindow):
         self.layouts['layouts'][name] = {'state': state, 'tabs': tabs}
         self.layouts['default'] = name
         save_layouts(self.layouts)
-        self._build_layout_menu()
 
     def set_startup_layout(self, name: str):
         if name not in self.layouts.get('layouts', {}):
@@ -2429,7 +2354,6 @@ class Editor(QMainWindow):
         self.layouts['default'] = name
         save_layouts(self.layouts)
         self.apply_layout(name)
-        self._build_layout_menu()
 
     def apply_layout(self, name: str):
         data = self.layouts.get('layouts', {}).get(name)
@@ -2445,7 +2369,7 @@ class Editor(QMainWindow):
     def restore_default_layout(self):
         from PyQt6.QtCore import QByteArray
         self.restoreState(QByteArray.fromBase64(self._default_state.encode()))
-        self._build_layout_menu()
+        
 
     def _build_layout_menu(self):
         for act in getattr(self, 'layout_actions', []):

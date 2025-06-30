@@ -133,11 +133,8 @@ dialog now groups the table under a "Recent Projects" heading with larger
 fonts and spacing so paths are easy to read. Right click a project to open it
 immediately or remove it from the list. Choosing **Delete** now asks for
 confirmation and then removes the entire project folder along with its files.
-Once a project is chosen the editor opens maximized in a dark Fusion
-theme by default. A "Theme" submenu under **Settings** lets you switch
-between light and dark modes. The dark theme applies a custom
-stylesheet while the light theme restores Qt's default palette. The
-editor provides two
+Once a project is chosen the editor opens maximized using a dark Fusion theme.
+The editor provides two
 tabs: **Viewport** and **Logic**. The viewport and runtime windows both use an
 OpenGL widget so they display the same scene. The viewport refreshes about
 sixty times per second and only resizes the renderer when necessary,
