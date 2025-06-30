@@ -1,0 +1,11 @@
+2025-06-30 07:29:05,898 INFO: Logger initialised
+2025-06-30 07:29:06,387 ERROR: Uncaught exception
+Traceback (most recent call last):
+  File "C:\Users\amcki\Documents\AmckinatorProject\SAGE-Engine\main.py", line 2, in <module>
+    from sage_editor import main as run
+  File "C:\Users\amcki\Documents\AmckinatorProject\SAGE-Engine\sage_editor\__init__.py", line 8, in <module>
+    from .editor import Editor, logger, load_recent, save_recent
+  File "C:\Users\amcki\Documents\AmckinatorProject\SAGE-Engine\sage_editor\editor.py", line 1391, in <module>
+    class ViewSettingsPopup(QFrame):
+                            ^^^^^^
+NameError: name 'QFrame' is not defined
