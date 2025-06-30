@@ -1407,17 +1407,34 @@ class ViewSettingsPopup(QFrame):
         row.addWidget(self.gizmo_chk)
         layout.addLayout(row)
 
-        self.snap_chk = QCheckBox(editor.t('snap_to_grid'))
-        self.snap_chk.setChecked(editor.snap_to_grid)
+        self.snap_chk = QCheckBox(editor.t('snap_steps'))
+        self.snap_chk.setChecked(editor.snap_steps)
         layout.addWidget(self.snap_chk)
 
-        size_row = QHBoxLayout()
-        size_row.addWidget(QLabel(editor.t('grid_size')))
-        self.size_spin = QDoubleSpinBox()
-        self.size_spin.setRange(0.1, 1000.0)
-        self.size_spin.setValue(editor.grid_size)
-        size_row.addWidget(self.size_spin)
-        layout.addLayout(size_row)
+        move_row = QHBoxLayout()
+        move_row.addWidget(QLabel(editor.t('move_step')))
+        self.move_spin = QDoubleSpinBox()
+        self.move_spin.setRange(0.01, 1000.0)
+        self.move_spin.setValue(editor.move_step)
+        move_row.addWidget(self.move_spin)
+        layout.addLayout(move_row)
+
+        rot_row = QHBoxLayout()
+        rot_row.addWidget(QLabel(editor.t('rotate_step')))
+        self.rot_spin = QDoubleSpinBox()
+        self.rot_spin.setRange(0.1, 360.0)
+        self.rot_spin.setValue(editor.rotate_step)
+        rot_row.addWidget(self.rot_spin)
+        layout.addLayout(rot_row)
+
+        scale_row = QHBoxLayout()
+        scale_row.addWidget(QLabel(editor.t('scale_step')))
+        self.scale_spin = QDoubleSpinBox()
+        self.scale_spin.setRange(0.01, 10.0)
+        self.scale_spin.setDecimals(3)
+        self.scale_spin.setValue(editor.scale_step)
+        scale_row.addWidget(self.scale_spin)
+        layout.addLayout(scale_row)
 
         self.color_btn = QPushButton(editor.t('grid_color'))
         layout.addWidget(self.color_btn)
@@ -1427,7 +1444,9 @@ class ViewSettingsPopup(QFrame):
         self.grid_chk.toggled.connect(editor.toggle_grid)
         self.gizmo_chk.toggled.connect(editor.toggle_gizmo)
         self.snap_chk.toggled.connect(editor.toggle_snap)
-        self.size_spin.valueChanged.connect(editor.set_grid_size)
+        self.move_spin.valueChanged.connect(editor.set_move_step)
+        self.rot_spin.valueChanged.connect(editor.set_rotate_step)
+        self.scale_spin.valueChanged.connect(editor.set_scale_step)
         self.color_btn.clicked.connect(editor.choose_grid_color)
 
     def eventFilter(self, obj, event):  # pragma: no cover - UI interaction
@@ -1448,8 +1467,11 @@ class Editor(QMainWindow):
         self.keep_aspect = True
         self.background_color = (0, 0, 0)
         self.local_coords = False
-        self.snap_to_grid = False
+        self.snap_steps = False
         self.grid_size = 1.0
+        self.move_step = 1.0
+        self.rotate_step = 15.0
+        self.scale_step = 0.1
         self.grid_color = (77, 77, 77)
         self.font_size = QApplication.font().pointSize()
         self.theme = 'dark'
@@ -1480,8 +1502,11 @@ class Editor(QMainWindow):
         # viewport tab renders the scene
         self.view = Viewport(self.scene, editor=self)
         self.view.renderer.background = self.background_color
-        self.view.set_snap(self.snap_to_grid)
+        self.view.set_snap(self.snap_steps)
         self.view.set_grid_size(self.grid_size)
+        self.view.set_move_step(self.move_step)
+        self.view.set_rotate_step(self.rotate_step)
+        self.view.set_scale_step(self.scale_step)
         self.view.set_grid_color(self.grid_color)
         self.tabs.addTab(self.view, self.t('viewport'))
 
@@ -1761,10 +1786,16 @@ class Editor(QMainWindow):
         if hasattr(self, 'view_opts_popup'):
             self.view_opts_popup.grid_chk.setText(self.t('show_grid'))
             self.view_opts_popup.gizmo_chk.setText(self.t('show_gizmo'))
-            self.view_opts_popup.snap_chk.setText(self.t('snap_to_grid'))
-            self.view_opts_popup.size_spin.blockSignals(True)
-            self.view_opts_popup.size_spin.setValue(self.grid_size)
-            self.view_opts_popup.size_spin.blockSignals(False)
+            self.view_opts_popup.snap_chk.setText(self.t('snap_steps'))
+            self.view_opts_popup.move_spin.blockSignals(True)
+            self.view_opts_popup.move_spin.setValue(self.move_step)
+            self.view_opts_popup.move_spin.blockSignals(False)
+            self.view_opts_popup.rot_spin.blockSignals(True)
+            self.view_opts_popup.rot_spin.setValue(self.rotate_step)
+            self.view_opts_popup.rot_spin.blockSignals(False)
+            self.view_opts_popup.scale_spin.blockSignals(True)
+            self.view_opts_popup.scale_spin.setValue(self.scale_step)
+            self.view_opts_popup.scale_spin.blockSignals(False)
             self.view_opts_popup.color_btn.setText(self.t('grid_color'))
         self.coord_combo.setItemText(0, self.t('global'))
         self.coord_combo.setItemText(1, self.t('local'))
@@ -2969,13 +3000,13 @@ class Editor(QMainWindow):
             self.view.set_show_axes(checked)
 
     def toggle_snap(self, checked: bool):
-        self.snap_to_grid = bool(checked)
+        self.snap_steps = bool(checked)
         if hasattr(self, 'view_opts_popup'):
             self.view_opts_popup.snap_chk.blockSignals(True)
             self.view_opts_popup.snap_chk.setChecked(checked)
             self.view_opts_popup.snap_chk.blockSignals(False)
         if hasattr(self, 'view'):
-            self.view.set_snap(self.snap_to_grid)
+            self.view.set_snap(self.snap_steps)
 
     def set_grid_size(self, size: int):
         try:
@@ -2986,11 +3017,54 @@ class Editor(QMainWindow):
             return
         self.grid_size = size
         if hasattr(self, 'view_opts_popup'):
-            self.view_opts_popup.size_spin.blockSignals(True)
-            self.view_opts_popup.size_spin.setValue(size)
-            self.view_opts_popup.size_spin.blockSignals(False)
+            pass
         if hasattr(self, 'view'):
             self.view.set_grid_size(size)
+
+    def set_move_step(self, step: float):
+        try:
+            step = float(step)
+        except Exception:
+            return
+        if step <= 0:
+            return
+        self.move_step = step
+        if hasattr(self, 'view_opts_popup'):
+            self.view_opts_popup.move_spin.blockSignals(True)
+            self.view_opts_popup.move_spin.setValue(step)
+            self.view_opts_popup.move_spin.blockSignals(False)
+        if hasattr(self, 'view'):
+            self.view.set_move_step(step)
+
+    def set_rotate_step(self, step: float):
+        try:
+            step = float(step)
+        except Exception:
+            return
+        if step <= 0:
+            return
+        self.rotate_step = step
+        if hasattr(self, 'view_opts_popup'):
+            self.view_opts_popup.rot_spin.blockSignals(True)
+            self.view_opts_popup.rot_spin.setValue(step)
+            self.view_opts_popup.rot_spin.blockSignals(False)
+        if hasattr(self, 'view'):
+            self.view.set_rotate_step(step)
+
+    def set_scale_step(self, step: float):
+        try:
+            step = float(step)
+        except Exception:
+            return
+        if step <= 0:
+            return
+        self.scale_step = step
+        if hasattr(self, 'view_opts_popup'):
+            self.view_opts_popup.scale_spin.blockSignals(True)
+            self.view_opts_popup.scale_spin.setValue(step)
+            self.view_opts_popup.scale_spin.blockSignals(False)
+        if hasattr(self, 'view'):
+            self.view.set_scale_step(step)
 
     def _on_coord_mode(self):
         self.local_coords = self.coord_combo.currentIndex() == 1
@@ -3055,8 +3129,10 @@ class Editor(QMainWindow):
             self._init_view_settings()
         self.view_opts_popup.grid_chk.setChecked(self.view.show_grid)
         self.view_opts_popup.gizmo_chk.setChecked(self.view.show_axes)
-        self.view_opts_popup.snap_chk.setChecked(self.snap_to_grid)
-        self.view_opts_popup.size_spin.setValue(self.grid_size)
+        self.view_opts_popup.snap_chk.setChecked(self.snap_steps)
+        self.view_opts_popup.move_spin.setValue(self.move_step)
+        self.view_opts_popup.rot_spin.setValue(self.rotate_step)
+        self.view_opts_popup.scale_spin.setValue(self.scale_step)
         btn = self.view_opts_btn
         pos = btn.mapToGlobal(btn.rect().bottomLeft())
         self.view_opts_popup.move(pos)

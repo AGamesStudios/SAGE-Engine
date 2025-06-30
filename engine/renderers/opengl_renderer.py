@@ -700,6 +700,15 @@ class OpenGLRenderer:
         spacing = self.grid_size
         if spacing <= 0:
             return
+        # adjust grid spacing based on zoom so lines remain readable
+        pix_per_unit = units.UNITS_PER_METER * zoom * spacing
+        target = 64.0
+        while pix_per_unit < target / 2:
+            spacing *= 2
+            pix_per_unit *= 2
+        while pix_per_unit > target * 2:
+            spacing /= 2
+            pix_per_unit /= 2
         scale = units.UNITS_PER_METER
         sign = 1.0 if units.Y_UP else -1.0
         half_w = self.width / 2 / (scale * zoom)

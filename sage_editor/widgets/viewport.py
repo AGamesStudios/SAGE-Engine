@@ -44,8 +44,11 @@ class Viewport(GLWidget):
         # default rendering options
         self.show_grid = False
         self.show_axes = True
-        self.snap_to_grid = False
+        self.snap_steps = False
         self.grid_size = 1.0
+        self.move_step = 1.0
+        self.rotate_step = 15.0
+        self.scale_step = 0.1
         self.renderer = OpenGLRenderer(self.width(), self.height(), widget=self)
         self.renderer.show_grid = self.show_grid
         self.renderer.show_axes = self.show_axes
@@ -134,8 +137,23 @@ class Viewport(GLWidget):
         self.update()
 
     def set_snap(self, enabled: bool) -> None:
-        """Enable or disable snapping to the grid."""
-        self.snap_to_grid = bool(enabled)
+        """Enable or disable step snapping."""
+        self.snap_steps = bool(enabled)
+
+    def set_move_step(self, step: float) -> None:
+        """Set movement snapping step size."""
+        if step > 0:
+            self.move_step = float(step)
+
+    def set_rotate_step(self, step: float) -> None:
+        """Set rotation snapping step size in degrees."""
+        if step > 0:
+            self.rotate_step = float(step)
+
+    def set_scale_step(self, step: float) -> None:
+        """Set scale snapping step size."""
+        if step > 0:
+            self.scale_step = float(step)
 
     def set_grid_size(self, size: float) -> None:
         """Set the spacing of the background grid and snapping."""
@@ -339,7 +357,10 @@ class Viewport(GLWidget):
                     delta -= 360
                 elif delta < -180:
                     delta += 360
-                self.selected_obj.angle = self._drag_offset + delta
+                angle = self._drag_offset + delta
+                if self.snap_steps and self.rotate_step > 0:
+                    angle = round(angle / self.rotate_step) * self.rotate_step
+                self.selected_obj.angle = angle
             elif self._gizmo_drag == 'sx':
                 start_dx, base, start_w = self._drag_offset
                 ang = math.radians(getattr(self.selected_obj, 'angle', 0.0))
@@ -349,16 +370,10 @@ class Viewport(GLWidget):
                     world[1] - self.selected_obj.y
                 ) * sin_a
                 if start_dx:
-                    if self.snap_to_grid and self.grid_size > 0:
-                        world_w = start_w + (dx_local - start_dx)
-                        if world_w >= start_w:
-                            world_w = math.ceil(world_w / self.grid_size) * self.grid_size
-                        else:
-                            world_w = math.floor(world_w / self.grid_size) * self.grid_size
-                        value = max(0.01, world_w / self.selected_obj.width)
-                    else:
-                        value = base * (dx_local / start_dx)
-                        value = max(0.01, value)
+                    value = base * (dx_local / start_dx)
+                    value = max(0.01, value)
+                    if self.snap_steps and self.scale_step > 0:
+                        value = max(0.01, round(value / self.scale_step) * self.scale_step)
                     self.selected_obj.scale_x = value
             elif self._gizmo_drag == 'sy':
                 start_dy, base, start_h = self._drag_offset
@@ -369,16 +384,10 @@ class Viewport(GLWidget):
                     world[1] - self.selected_obj.y
                 ) * cos_a
                 if start_dy:
-                    if self.snap_to_grid and self.grid_size > 0:
-                        world_h = start_h + (dy_local - start_dy)
-                        if world_h >= start_h:
-                            world_h = math.ceil(world_h / self.grid_size) * self.grid_size
-                        else:
-                            world_h = math.floor(world_h / self.grid_size) * self.grid_size
-                        value = max(0.01, world_h / self.selected_obj.height)
-                    else:
-                        value = base * (dy_local / start_dy)
-                        value = max(0.01, value)
+                    value = base * (dy_local / start_dy)
+                    value = max(0.01, value)
+                    if self.snap_steps and self.scale_step > 0:
+                        value = max(0.01, round(value / self.scale_step) * self.scale_step)
                     self.selected_obj.scale_y = value
             else:
                 dx = world[0] - self._drag_start_world[0]
@@ -398,9 +407,9 @@ class Viewport(GLWidget):
                     world_dy = dy if 'y' in self._gizmo_drag else 0.0
                 new_x = self._drag_start_obj[0] + world_dx
                 new_y = self._drag_start_obj[1] + world_dy
-                if self.snap_to_grid and self.grid_size > 0:
-                    new_x = round(new_x / self.grid_size) * self.grid_size
-                    new_y = round(new_y / self.grid_size) * self.grid_size
+                if self.snap_steps and self.move_step > 0:
+                    new_x = round(new_x / self.move_step) * self.move_step
+                    new_y = round(new_y / self.move_step) * self.move_step
                 self.selected_obj.x = new_x
                 self.selected_obj.y = new_y
             if self.editor:
