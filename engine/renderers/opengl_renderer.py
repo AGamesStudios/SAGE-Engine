@@ -299,17 +299,21 @@ class OpenGLRenderer:
         tex = self._icon_cache.get(key)
         if tex:
             return tex
-        path = (ICON_DIR / ICON_THEME / name)
+        path = ICON_DIR / ICON_THEME / name
         if not path.is_file():
             alt = 'white' if ICON_THEME == 'black' else 'black'
             alt_path = ICON_DIR / alt / name
             if alt_path.is_file():
                 path = alt_path
             else:
-                if name not in getattr(self, '_missing_icons', set()):
-                    logger.warning('Icon %s not found for theme %s', name, ICON_THEME)
-                    self._missing_icons.add(name)
-                return self._get_blank_texture()
+                root_path = ICON_DIR / name
+                if root_path.is_file():
+                    path = root_path
+                else:
+                    if name not in getattr(self, '_missing_icons', set()) and name != APP_ICON_NAME:
+                        logger.warning('Icon %s not found for theme %s', name, ICON_THEME)
+                        self._missing_icons.add(name)
+                    return self._get_blank_texture()
         try:
             img = Image.open(path).convert('RGBA')
         except Exception:

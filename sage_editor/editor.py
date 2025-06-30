@@ -1833,7 +1833,9 @@ class Editor(QMainWindow):
         # issues on some platforms, leaving the new instance unable to
         # open projects correctly. ``startDetached`` provides a more
         # reliable restart across Windows and Linux.
-        QProcess.startDetached(sys.executable, sys.argv, os.getcwd())
+        script = os.path.abspath(sys.argv[0])
+        args = [script] + sys.argv[1:]
+        QProcess.startDetached(sys.executable, args, os.getcwd())
         app.quit()
 
     def _apply_language(self):

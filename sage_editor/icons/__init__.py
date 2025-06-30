@@ -49,12 +49,21 @@ def load_icon(name: str) -> QIcon:
     # Look inside the themed subdirectory first
     path = ICON_DIR / ICON_THEME / name
     if not path.is_file():
-        # Fallback to the other theme
+        # Fallback to the other theme and then the root directory
         alt = "black" if ICON_THEME == "white" else "white"
-        path = ICON_DIR / alt / name
-    if not path.is_file():
-        logger.warning("Icon %s not found for theme %s", name, ICON_THEME)
-        return QIcon()
+        alt_path = ICON_DIR / alt / name
+        if alt_path.is_file():
+            path = alt_path
+        else:
+            root_path = ICON_DIR / name
+            if root_path.is_file():
+                path = root_path
+            else:
+                if name != APP_ICON_NAME:
+                    logger.warning(
+                        "Icon %s not found for theme %s", name, ICON_THEME
+                    )
+                return QIcon()
     return QIcon(str(path))
 
 
