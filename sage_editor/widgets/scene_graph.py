@@ -138,7 +138,7 @@ class SceneGraphView(QGraphicsView):
         pen = QPen(QColor(230, 230, 230))
         painter.setPen(pen)
         for a, b in lines:
-            painter.drawLine(a[0], a[1], b[0], b[1])
+            painter.drawLine(int(a[0]), int(a[1]), int(b[0]), int(b[1]))
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         pos = event.position().toPoint()
