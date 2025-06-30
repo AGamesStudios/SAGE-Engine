@@ -24,7 +24,13 @@ QPushButton { padding: 4px 8px; }
 QLineEdit { padding: 2px 4px; }
 QListWidget { background: #222; }
 QDockWidget { font-size: 11px; }
-QToolTip { color: #ddd; background: #353535; border: 1px solid #555; }
+QToolTip {
+    color: #eee;
+    background: #444;
+    border: 1px solid #666;
+    padding: 4px;
+    font-size: 12px;
+}
 """
 
 
