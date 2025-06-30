@@ -450,11 +450,6 @@ class OpenGLRenderer:
                     break
         unit_scale = units.UNITS_PER_METER
         sign = 1.0 if units.Y_UP else -1.0
-        zoom = camera.zoom if camera else 1.0
-        cam_x = camera.x if camera else 0.0
-        cam_y = camera.y if camera else 0.0
-        w_size = camera.width if (self.keep_aspect and camera) else self.width
-        h_size = camera.height if (self.keep_aspect and camera) else self.height
         ang = math.radians(getattr(obj, 'angle', 0.0))
         cos_a = math.cos(ang)
         sin_a = math.sin(ang)
@@ -480,9 +475,7 @@ class OpenGLRenderer:
             ry = vx * sin_a + vy * cos_a
             world_x = (rx + obj_x) * unit_scale
             world_y = (ry + obj_y) * unit_scale * sign
-            ndc_x = (2.0 * (world_x - cam_x * unit_scale) * zoom) / w_size
-            ndc_y = (2.0 * (world_y - cam_y * unit_scale * sign) * zoom) / h_size
-            data.extend([ndc_x, ndc_y])
+            data.extend([world_x, world_y])
         uvs = obj.texture_coords(camera, apply_effects=self.apply_effects)
         arr = (ctypes.c_float * 16)(
             data[0], data[1], uvs[0], uvs[1],
@@ -546,11 +539,6 @@ class OpenGLRenderer:
         glColor4f(*norm)
         glLineWidth(width)
         glBegin(GL_LINE_LOOP)
-        cam_x = camera.x if camera else 0.0
-        cam_y = camera.y if camera else 0.0
-        zoom = camera.zoom if camera else 1.0
-        w_size = camera.width if (self.keep_aspect and camera) else self.width
-        h_size = camera.height if (self.keep_aspect and camera) else self.height
         for cx, cy in corners:
             vx = (cx - px) * sx + px
             vy = (cy - py) * sy + py
@@ -558,9 +546,7 @@ class OpenGLRenderer:
             ry = vx * sin_a + vy * cos_a
             world_x = (rx + obj_x) * unit_scale
             world_y = (ry + obj_y) * unit_scale * sign
-            ndc_x = (2.0 * (world_x - cam_x * unit_scale) * zoom) / w_size
-            ndc_y = (2.0 * (world_y - cam_y * unit_scale * sign) * zoom) / h_size
-            glVertex2f(ndc_x, ndc_y)
+            glVertex2f(world_x, world_y)
         glEnd()
         glLineWidth(1.0)
         glEnable(GL_TEXTURE_2D)
@@ -589,11 +575,6 @@ class OpenGLRenderer:
         unit_scale = units.UNITS_PER_METER
         sign = 1.0 if units.Y_UP else -1.0
         scale_mul = obj.render_scale(camera, apply_effects=self.apply_effects)
-        cam_x = camera.x if camera else 0.0
-        cam_y = camera.y if camera else 0.0
-        zoom = camera.zoom if camera else 1.0
-        w_size = camera.width if (self.keep_aspect and camera) else self.width
-        h_size = camera.height if (self.keep_aspect and camera) else self.height
 
         glUseProgram(0)
         glBindTexture(GL_TEXTURE_2D, 0)
@@ -638,9 +619,7 @@ class OpenGLRenderer:
             ry = vx * sin_a + vy * cos_a
             world_x = (rx + obj_x) * unit_scale
             world_y = (ry + obj_y) * unit_scale * sign
-            ndc_x = (2.0 * (world_x - cam_x * unit_scale) * zoom) / w_size
-            ndc_y = (2.0 * (world_y - cam_y * unit_scale * sign) * zoom) / h_size
-            glVertex2f(ndc_x, ndc_y)
+            glVertex2f(world_x, world_y)
         glEnd()
         glEnable(GL_TEXTURE_2D)
 
