@@ -1839,10 +1839,17 @@ class Editor(QMainWindow):
             env[RESTART_ENV] = self.project_path
         else:
             env.pop(RESTART_ENV, None)
+
+        proc = QProcess()
+        proc.setProgram(exe)
+        proc.setArguments(args)
+        proc.setWorkingDirectory(os.getcwd())
         qenv = QProcessEnvironment()
         for key, value in env.items():
             qenv.insert(key, value)
-        if not QProcess.startDetached(exe, args, os.getcwd(), qenv):
+        proc.setProcessEnvironment(qenv)
+
+        if not proc.startDetached():
             try:
                 os.execve(exe, [exe, script] + sys.argv[1:], env)
             except Exception:
