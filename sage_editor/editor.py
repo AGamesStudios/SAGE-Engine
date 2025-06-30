@@ -4750,9 +4750,19 @@ class Editor(QMainWindow):
         self.scenes_dock.list.clear()
         for name in sorted(os.listdir(self.scenes_dir)):
             if name.lower().endswith('.sagescene'):
-                item = QListWidgetItem(os.path.splitext(name)[0])
-                item.setData(Qt.ItemDataRole.UserRole, os.path.join(self.scenes_dir, name))
+                item_name = os.path.splitext(name)[0]
+                path = os.path.join(self.scenes_dir, name)
+                item = QListWidgetItem(item_name)
+                item.setData(Qt.ItemDataRole.UserRole, path)
                 self.scenes_dock.list.addItem(item)
+                if item_name not in self.scene_graph.nodes:
+                    rel = os.path.relpath(path, os.path.dirname(self.project_path)) if self.project_path else path
+                    try:
+                        self.scene_graph.add_scene(item_name, rel)
+                    except ValueError:
+                        pass
+        if self.graph_view:
+            self.graph_view.load_graph(self.scene_graph)
 
     def new_scene(self) -> None:
         if not self.scenes_dir:
@@ -4772,7 +4782,8 @@ class Editor(QMainWindow):
         self.open_scene_tab(path)
         rel = os.path.relpath(path, os.path.dirname(self.project_path)) if self.project_path else path
         try:
-            self.scene_graph.add_scene(name, rel)
+            node = self.scene_graph.add_scene(name, rel)
+            node.position = ((len(self.scene_graph.nodes) - 1) * 200, 0)
         except ValueError:
             pass
         if self.graph_view:

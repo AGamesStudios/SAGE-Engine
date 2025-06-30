@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 from typing import Dict
 
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QPointF
 from PyQt6.QtGui import QColor, QPainterPath, QPen, QPixmap, QPainter, QMouseEvent
 from PyQt6.QtWidgets import (
     QGraphicsItem, QGraphicsPixmapItem, QGraphicsRectItem, QGraphicsEllipseItem,
@@ -29,7 +29,8 @@ class SceneNodeItem(QGraphicsRectItem):
         header.setBrush(QColor(70, 90, 200))
         text = QGraphicsTextItem(node.name, header)
         text.setDefaultTextColor(Qt.GlobalColor.white)
-        text.setPos(4, 2)
+        br = text.boundingRect()
+        text.setPos((self.WIDTH - br.width()) / 2, 2)
         if node.screenshot and os.path.exists(node.screenshot):
             pix = QPixmap(node.screenshot).scaled(
                 self.WIDTH, self.HEIGHT - 20,
@@ -57,8 +58,14 @@ class SceneNodeItem(QGraphicsRectItem):
             QGraphicsItem.GraphicsItemFlag.ItemSendsScenePositionChanges, True)
 
     def itemChange(self, change: 'QGraphicsItem.GraphicsItemChange', value):
+        if change == QGraphicsItem.GraphicsItemChange.ItemPositionChange:
+            # snap to the view grid
+            grid = self.view.grid_size
+            x = round(value.x() / grid) * grid
+            y = round(value.y() / grid) * grid
+            return QPointF(x, y)
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
-            self.node.position = (value.x(), value.y())
+            self.node.position = (self.pos().x(), self.pos().y())
             self.view.update_edges()
         return super().itemChange(change, value)
 
@@ -111,14 +118,12 @@ class SceneGraphView(QGraphicsView):
             src_item = self.items.get(name)
             if not src_item:
                 continue
-            sx = src_item.pos().x() + src_item.WIDTH / 2
-            sy = src_item.pos().y() + src_item.HEIGHT
+            sx, sy = src_item.output_pos()
             for dst in node.next_nodes:
                 dst_item = self.items.get(dst)
                 if not dst_item:
                     continue
-                dx = dst_item.pos().x() + dst_item.WIDTH / 2
-                dy = dst_item.pos().y()
+                dx, dy = dst_item.input_pos()
                 path = QPainterPath()
                 path.moveTo(sx, sy)
                 path.lineTo(dx, dy)
