@@ -1771,6 +1771,8 @@ class Editor(QMainWindow):
             except Exception:
                 pass
         self._update_icons()
+        if hasattr(self, 'console_dock'):
+            self.console_dock.update_display()
 
     def _update_icons(self) -> None:
         """Reload icons for persistent widgets."""

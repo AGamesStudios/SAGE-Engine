@@ -70,11 +70,12 @@ class ConsoleDock(QDockWidget):
         self.text.ensureCursorVisible()
 
     def _append_raw(self, level: str, line: str) -> None:
-        color = {
-            'INFO': 'white',
-            'WARNING': 'orange',
-            'ERROR': 'red',
-        }.get(level, 'white')
+        """Append a line to the text widget using the current theme colors."""
+        dark = getattr(self.editor, 'theme', 'dark') == 'dark'
+        colors_dark = {'INFO': 'white', 'WARNING': 'orange', 'ERROR': 'red'}
+        colors_light = {'INFO': 'black', 'WARNING': 'darkorange', 'ERROR': 'red'}
+        palette = colors_dark if dark else colors_light
+        color = palette.get(level, palette['INFO'])
         self.text.append(f'<span style="color:{color}">{escape(line)}</span>')
 
     def update_display(self) -> None:
