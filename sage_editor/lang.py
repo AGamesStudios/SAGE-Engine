@@ -135,7 +135,10 @@ LANGUAGES = {
         , 'grid_size': 'Grid Size:'
         , 'grid_color': 'Grid Color'
         , 'font_size': 'Font Size'
-        
+        , 'theme': 'Theme'
+        , 'dark_theme': 'Dark'
+        , 'light_theme': 'Light'
+
         , 'show_gizmo': 'Show Gizmo'
         , 'camera_settings': 'Camera Settings'
         , 'objects': 'Objects'
@@ -351,7 +354,10 @@ LANGUAGES = {
         , 'grid_size': 'Шаг сетки:'
         , 'grid_color': 'Цвет сетки'
         , 'font_size': 'Размер шрифта'
-        
+        , 'theme': 'Тема'
+        , 'dark_theme': 'Тёмная'
+        , 'light_theme': 'Светлая'
+
         , 'show_gizmo': 'Показывать гизмo'
         , 'camera_settings': 'Параметры камеры'
         , 'objects': 'Объекты'

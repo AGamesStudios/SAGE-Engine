@@ -1403,6 +1403,7 @@ class Editor(QMainWindow):
         self.grid_size = 1.0
         self.grid_color = (77, 77, 77)
         self.font_size = QApplication.font().pointSize()
+        self.theme = 'dark'
         self.resource_dir: str | None = None
         self.resource_manager = None
         self.scene = Scene()
@@ -1615,6 +1616,7 @@ class Editor(QMainWindow):
         self._clip_object = None
         self._clip_event = None
         self._init_actions()
+        self.set_theme(self.theme)
         self._default_state = self.saveState().toBase64().data().decode()
         if autoshow:
             self.showMaximized()
@@ -1640,6 +1642,18 @@ class Editor(QMainWindow):
         self.lang_box.setCurrentText(lang)
         self._apply_language()
         self.refresh_events()
+
+    def set_theme(self, theme: str) -> None:
+        """Apply a light or dark theme."""
+        if theme not in ('light', 'dark'):
+            return
+        self.theme = theme
+        from .app import apply_palette
+        apply_palette(theme)
+        if hasattr(self, 'dark_theme_act'):
+            self.dark_theme_act.setChecked(theme == 'dark')
+        if hasattr(self, 'light_theme_act'):
+            self.light_theme_act.setChecked(theme == 'light')
 
     def _apply_language(self):
         self.file_menu.setTitle(self.t('file'))
@@ -1687,6 +1701,11 @@ class Editor(QMainWindow):
         self.settings_menu.setTitle(self.t('settings'))
         self.project_settings_act.setText(self.t('project_settings'))
         self.plugins_act.setText(self.t('manage_plugins'))
+        self.theme_menu.setTitle(self.t('theme'))
+        self.dark_theme_act.setText(self.t('dark_theme'))
+        self.light_theme_act.setText(self.t('light_theme'))
+        self.dark_theme_act.setChecked(self.theme == 'dark')
+        self.light_theme_act.setChecked(self.theme == 'light')
         self.about_menu.setTitle(self.t('about_menu'))
         self.about_act.setText(self.t('about_us'))
         self.editor_menu.setTitle(self.t('editor_menu'))
@@ -1908,6 +1927,19 @@ class Editor(QMainWindow):
         self.plugins_act = QAction(load_icon('plugin.png'), self.t('manage_plugins'), self)
         self.plugins_act.triggered.connect(self.show_plugin_manager)
         self.settings_menu.addAction(self.plugins_act)
+
+        self.theme_menu = self.settings_menu.addMenu(self.t('theme'))
+        self.theme_group = QActionGroup(self)
+        self.dark_theme_act = QAction(self.t('dark_theme'), self, checkable=True)
+        self.light_theme_act = QAction(self.t('light_theme'), self, checkable=True)
+        self.dark_theme_act.setChecked(self.theme == 'dark')
+        self.light_theme_act.setChecked(self.theme == 'light')
+        self.theme_group.addAction(self.dark_theme_act)
+        self.theme_group.addAction(self.light_theme_act)
+        self.theme_menu.addAction(self.dark_theme_act)
+        self.theme_menu.addAction(self.light_theme_act)
+        self.dark_theme_act.triggered.connect(lambda: self.set_theme('dark'))
+        self.light_theme_act.triggered.connect(lambda: self.set_theme('light'))
 
         self.editor_menu = menubar.addMenu(self.t('editor_menu'))
         self.layout_menu = self.editor_menu.addMenu(self.t('interface_menu'))

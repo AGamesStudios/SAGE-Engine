@@ -24,7 +24,31 @@ QPushButton { padding: 4px 8px; }
 QLineEdit { padding: 2px 4px; }
 QListWidget { background: #222; }
 QDockWidget { font-size: 11px; }
+QToolTip { color: #ddd; background: #353535; border: 1px solid #555; }
 """
+
+
+def apply_palette(theme: str) -> None:
+    """Apply a light or dark palette to the QApplication."""
+    app = QApplication.instance()
+    if app is None:
+        return
+    if theme == 'dark':
+        palette = QPalette()
+        palette.setColor(QPalette.ColorRole.Window, QColor(53, 53, 53))
+        palette.setColor(QPalette.ColorRole.WindowText, QColor(220, 220, 220))
+        palette.setColor(QPalette.ColorRole.Base, QColor(35, 35, 35))
+        palette.setColor(QPalette.ColorRole.AlternateBase, QColor(53, 53, 53))
+        palette.setColor(QPalette.ColorRole.ToolTipBase, QColor(53, 53, 53))
+        palette.setColor(QPalette.ColorRole.ToolTipText, QColor(220, 220, 220))
+        palette.setColor(QPalette.ColorRole.Text, QColor(220, 220, 220))
+        palette.setColor(QPalette.ColorRole.Button, QColor(53, 53, 53))
+        palette.setColor(QPalette.ColorRole.ButtonText, QColor(220, 220, 220))
+        palette.setColor(QPalette.ColorRole.Highlight, QColor(42, 130, 218))
+        palette.setColor(QPalette.ColorRole.HighlightedText, QColor(0, 0, 0))
+    else:
+        palette = app.style().standardPalette()
+    app.setPalette(palette)
 
 from .editor import Editor, save_recent, load_recent, _log, logger
 
@@ -183,19 +207,7 @@ def main(argv=None):
     app = QApplication(argv)
     app.setWindowIcon(app_icon())
     app.setStyle('Fusion')
-    palette = QPalette()
-    palette.setColor(QPalette.ColorRole.Window, QColor(53, 53, 53))
-    palette.setColor(QPalette.ColorRole.WindowText, QColor(220, 220, 220))
-    palette.setColor(QPalette.ColorRole.Base, QColor(35, 35, 35))
-    palette.setColor(QPalette.ColorRole.AlternateBase, QColor(53, 53, 53))
-    palette.setColor(QPalette.ColorRole.ToolTipBase, QColor(255, 255, 255))
-    palette.setColor(QPalette.ColorRole.ToolTipText, QColor(220, 220, 220))
-    palette.setColor(QPalette.ColorRole.Text, QColor(220, 220, 220))
-    palette.setColor(QPalette.ColorRole.Button, QColor(53, 53, 53))
-    palette.setColor(QPalette.ColorRole.ButtonText, QColor(220, 220, 220))
-    palette.setColor(QPalette.ColorRole.Highlight, QColor(42, 130, 218))
-    palette.setColor(QPalette.ColorRole.HighlightedText, QColor(0, 0, 0))
-    app.setPalette(palette)
+    apply_palette('dark')
     app.setStyleSheet(STYLE_SHEET)
     font = QFont()
     font.setPointSize(font.pointSize() + 3)

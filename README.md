@@ -134,7 +134,9 @@ fonts and spacing so paths are easy to read. Right click a project to open it
 immediately or remove it from the list. Choosing **Delete** now asks for
 confirmation and then removes the entire project folder along with its files.
 Once a project is chosen the editor opens maximized in a dark Fusion
-theme and provides two
+theme by default. A "Theme" submenu under **Settings** lets you switch
+between light and dark styles, applying the palette immediately.  The
+editor provides two
 tabs: **Viewport** and **Logic**. The viewport and runtime windows both use an
 OpenGL widget so they display the same scene. The viewport refreshes about
 sixty times per second and only resizes the renderer when necessary,
