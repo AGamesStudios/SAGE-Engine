@@ -1823,6 +1823,9 @@ class Editor(QMainWindow):
             icons = ['hand.png', 'move.png', 'rotate.png', 'scale.png']
             for btn, ico in zip(self.view.transform_buttons, icons):
                 btn.setIcon(load_icon(ico))
+        # refresh object list icons when the theme changes
+        if hasattr(self, 'object_list'):
+            self._refresh_object_labels()
 
 
     def _apply_language(self):
