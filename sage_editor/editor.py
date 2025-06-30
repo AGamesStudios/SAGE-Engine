@@ -39,6 +39,7 @@ import json
 from .docks.console import ConsoleDock
 from .docks.properties import PropertiesDock
 from .docks.resources import ResourceDock
+from .docks.scenes import ScenesDock
 from .docks.logic import LogicTab, ObjectLogicTab
 from .docks.profiler import ProfilerDock
 from engine.core.effects import EFFECT_REGISTRY
@@ -1526,6 +1527,8 @@ class Editor(QMainWindow):
         self.resource_manager = None
         self.scene = Scene()
         self.scene_path: str | None = None
+        self.scenes_dir: str | None = None
+        self.scene_tabs: dict[str, Viewport] = {}
         self.project_metadata: dict = {}
         self.project_title: str = 'SAGE 2D'
         self.project_version: str = '0.1.0'
@@ -1682,6 +1685,9 @@ class Editor(QMainWindow):
         res_dock = ResourceDock(self)
         res_dock.setObjectName('ResourcesDock')
         self.resources_dock = res_dock
+        scenes_dock = ScenesDock(self)
+        scenes_dock.setObjectName('ScenesDock')
+        self.scenes_dock = scenes_dock
         self.import_btn = res_dock.import_btn
         self.new_folder_btn = res_dock.new_folder_btn
         self.search_edit = res_dock.search_edit
@@ -1690,6 +1696,7 @@ class Editor(QMainWindow):
         self._filter_timer.timeout.connect(self._apply_resource_filter)
         self._pending_filter = ""
         self.splitDockWidget(self.objects_dock, self.properties_dock, Qt.Orientation.Vertical)
+        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, scenes_dock)
 
         # logic tab for scene events
         self.logic_widget = LogicTab(self, label=self.t('scene'), hide_combo=True)
@@ -2231,8 +2238,38 @@ class Editor(QMainWindow):
             self, self.t('open_scene'), '', self.t('scene_files')
         )
         if path:
-            self.scene_path = path
-            self.load_scene(path)
+            self.open_scene_tab(path)
+
+    def open_scene_tab(self, path: str) -> None:
+        """Load *path* and show it in a viewport tab."""
+        if not path:
+            return
+        if path in self.scene_tabs:
+            idx = self.tabs.indexOf(self.scene_tabs[path])
+            if idx >= 0:
+                self.tabs.setCurrentIndex(idx)
+                return
+        scene = Scene.load(path)
+        if not self.scene_tabs:
+            view = self.view
+            self.scene_tabs[path] = view
+            self.tabs.setTabText(self.tabs.indexOf(view), os.path.splitext(os.path.basename(path))[0])
+            view.scene_path = path
+        else:
+            view = Viewport(scene, editor=self)
+            view.renderer.background = self.background_color
+            view.set_snap(self.snap_steps)
+            view.set_grid_size(self.grid_size)
+            view.set_move_step(self.move_step)
+            view.set_rotate_step(self.rotate_step)
+            view.set_scale_step(self.scale_step)
+            view.set_grid_color(self.grid_color)
+            view.scene_path = path
+            self.scene_tabs[path] = view
+            idx = self.tabs.addTab(view, os.path.splitext(os.path.basename(path))[0])
+            self.tabs.setCurrentIndex(idx)
+        self.scene_path = path
+        self.load_scene(scene)
 
     def new_project(self):
         class NewProjectDialog(QDialog):
@@ -2285,6 +2322,8 @@ class Editor(QMainWindow):
         proj_path = os.path.join(proj_dir, f'{name}.sageproject')
         self.scene = Scene()
         self.scene_path = os.path.join(scenes_dir, 'Scene1.sagescene')
+        self.scenes_dir = scenes_dir
+        self.scene_tabs.clear()
         self.project_metadata = {'name': name, 'description': ''}
         self.project_title = name
         self.project_version = '0.1.0'
@@ -2322,8 +2361,9 @@ class Editor(QMainWindow):
                 self.resource_view.setRootIndex(self.resource_model.index(self.resource_dir))
         else:
             self._refresh_resource_tree()
+        self._scan_scenes()
         try:
-            self.load_scene(self.scene)
+            self.open_scene_tab(self.scene_path)
         except Exception as exc:
             QMessageBox.warning(self, 'Error', f'Failed to load scene: {exc}')
             self.project_path = None
@@ -2359,8 +2399,10 @@ class Editor(QMainWindow):
             self.resource_manager = ResourceManager(self.resource_dir)
             _log(f'Resource manager ready at {self.resource_dir}')
             self.scene_path = os.path.join(os.path.dirname(path), proj.scene_file)
-            self.load_scene(Scene.from_dict(proj.scene))
-            self._update_camera_rect()
+            self.scenes_dir = os.path.join(os.path.dirname(path), proj.scenes)
+            self.scene_tabs.clear()
+            self._scan_scenes()
+            self.open_scene_tab(self.scene_path)
             state = self.project_metadata.get('editor_state', {})
             if state:
                 self.view.camera.x = state.get('cam_x', self.view.camera.x)
@@ -3106,6 +3148,12 @@ class Editor(QMainWindow):
     def _tab_changed(self, index: int) -> None:
         """Update widget references when the current tab changes."""
         widget = self.tabs.widget(index)
+        from .widgets import Viewport
+        if isinstance(widget, Viewport):
+            self.view = widget
+            self.scene_path = getattr(widget, 'scene_path', self.scene_path)
+            self.load_scene(widget.scene)
+            return
         if hasattr(widget, "object_combo"):
             self.event_list = widget.event_list
             self.var_table = widget.var_table
@@ -3121,7 +3169,8 @@ class Editor(QMainWindow):
     def _close_tab(self, index: int) -> None:
         """Close an object logic tab."""
         widget = self.tabs.widget(index)
-        if widget in (self.view, self.logic_widget):
+        from .widgets import Viewport
+        if isinstance(widget, Viewport) or widget is self.logic_widget:
             return
         obj_id = getattr(widget, "object_id", None)
         if obj_id and obj_id in self.object_tabs:
@@ -4539,6 +4588,63 @@ class Editor(QMainWindow):
             else:
                 self.resource_view.setRootIndex(self.resource_model.index(self.resource_dir))
         self._refresh_resource_tree()
+
+    def _scan_scenes(self) -> None:
+        if not self.scenes_dir or not os.path.isdir(self.scenes_dir):
+            return
+        self.scenes_dock.list.clear()
+        for name in sorted(os.listdir(self.scenes_dir)):
+            if name.lower().endswith('.sagescene'):
+                item = QListWidgetItem(os.path.splitext(name)[0])
+                item.setData(Qt.ItemDataRole.UserRole, os.path.join(self.scenes_dir, name))
+                self.scenes_dock.list.addItem(item)
+
+    def new_scene(self) -> None:
+        if not self.scenes_dir:
+            return
+        base = 'Scene'
+        i = 1
+        while True:
+            name = f'{base}{i}'
+            path = os.path.join(self.scenes_dir, f'{name}.sagescene')
+            if not os.path.exists(path):
+                break
+            i += 1
+        Scene().save(path)
+        item = QListWidgetItem(name)
+        item.setData(Qt.ItemDataRole.UserRole, path)
+        self.scenes_dock.list.addItem(item)
+        self.open_scene_tab(path)
+
+    def delete_selected_scene(self) -> None:
+        item = self.scenes_dock.list.currentItem()
+        if item is None:
+            return
+        path = item.data(Qt.ItemDataRole.UserRole)
+        if not path:
+            return
+        if QMessageBox.question(self, self.t('delete'), self.t('confirm_delete_project')) != QMessageBox.StandardButton.Yes:
+            return
+        try:
+            os.remove(path)
+        except Exception as exc:
+            QMessageBox.warning(self, self.t('error'), str(exc))
+            return
+        row = self.scenes_dock.list.row(item)
+        self.scenes_dock.list.takeItem(row)
+        view = self.scene_tabs.pop(path, None)
+        if view:
+            idx = self.tabs.indexOf(view)
+            if idx >= 0:
+                self.tabs.removeTab(idx)
+            view.deleteLater()
+        if self.scene_path == path:
+            self.scene_path = None
+            if self.scene_tabs:
+                first = next(iter(self.scene_tabs))
+                self.tabs.setCurrentWidget(self.scene_tabs[first])
+                self.scene_path = first
+                self.load_scene(Scene.load(first))
 
     def _serialize_object(self, index):
         item, obj = self.items[index]
