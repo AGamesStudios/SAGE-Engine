@@ -117,6 +117,15 @@ functions ``engine.meters()`` and ``engine.kilometers()`` convert distances so
 objects can be placed using real-world values. The coordinate system is
 **Y-up**, meaning positive ``y`` values move objects upward while negative
 values move them down.
+
+### Math Utilities
+
+The engine exposes a small ``engine.core.math2d`` module providing
+helpers for 2D projects. It supplies quaternion conversions, bounding box
+calculations and new functions like ``make_transform`` for building 3×3
+matrices, ``transform_point`` to apply them and ``make_ortho`` for
+orthographic projection.  ``engine.core.fastmath`` remains as a thin
+wrapper for compatibility but now simply re-exports these features.
 When launching the editor a **Project Manager** window appears. It lists your
 recent projects with their creation date and full path.  Buttons let you create
 a new project, open an existing file or clear the list for a clean start. The
@@ -124,8 +133,8 @@ dialog now groups the table under a "Recent Projects" heading with larger
 fonts and spacing so paths are easy to read. Right click a project to open it
 immediately or remove it from the list. Choosing **Delete** now asks for
 confirmation and then removes the entire project folder along with its files.
-Once a project is chosen the editor opens maximized in a dark Fusion
-theme and provides two
+Once a project is chosen the editor opens maximized using a dark Fusion theme.
+The editor provides two
 tabs: **Viewport** and **Logic**. The viewport and runtime windows both use an
 OpenGL widget so they display the same scene. The viewport refreshes about
 sixty times per second and only resizes the renderer when necessary,
@@ -137,9 +146,11 @@ An **Add Object** button beneath the list places a blank object with a default
  toolbar icons, ensuring all tools draw from one location.
 SAGE Paint uses icons named `brush.png`, `eraser.png`, `fill.png`, `undo.png`, `redo.png`, `circle.png`, `square.png`, `colorpicker.png`, `smooth.png`, `zoomin.png` and `zoomout.png` for its toolbar. The Import button loads `add.png`, the New
  Folder button uses `folder.png`, the Refresh button uses `refresh.png`, the Run
- action shows `start.png`, the New Project action shows `file.png`, Save Project
- uses `save.png`, the Recent Projects menu displays `recent.png`, the Manage
- Plugins entry uses `plugin.png` and objects show `object.png` or `camera.png`
+ action uses `start.png` and switches to `stop.png` while running. The New Project
+ action shows `file.png`, Save Project uses `save.png`, the Tools menu displays
+ `tools.png`, View settings uses `settings.png`, the language drop-down shows
+ `lang.png`, the Recent Projects menu displays `recent.png`, the Manage Plugins
+ entry uses `plugin.png` and objects show `object.png` or `camera.png`
  depending on their type. Object properties
  can be edited in a dock but there
  is no visual manipulation until rendering support returns.
@@ -299,9 +310,10 @@ current project and opens a new game window using the same OpenGL renderer,
 so the scene appears exactly as in the viewport.
 
 
-Project files store the entire scene data so you can share a single file. Use
-**File → Save Project** to write the current project. The **Recent Projects**
-submenu lists the last few files you opened for quick access.
+Project files store the entire scene so you can share a single file. Use
+**File → Save Project** or **File → Save As…** to write your work. The
+**Recent Projects** submenu lists the last few files you opened for quick
+access. Choose **File → Exit** to close the editor when you are done.
 If you make changes after saving, the window title shows `(unsaved)` so you
 know there are modifications. Closing the editor with unsaved work displays a
 dialog asking whether to save before exiting.
@@ -522,6 +534,11 @@ sprite.effects.append({
     "color": "0,0,0,255",
 })
 ```
+Colors may also be provided as hexadecimal strings like ``"#FF8800"`` or
+``"#FF8800FF"`` which the renderer automatically converts to RGBA values.
+Sprites accept an ``alpha`` attribute from ``0.0`` to ``1.0`` controlling
+overall transparency. The value multiplies the alpha channel of the sprite's
+``color`` if one is supplied.
 Effects are only supported on sprite objects. Retrieve a sprite from a
 scene using ``get_object_type`` and append the effect to its ``effects``
 list. Cameras ignore such data because they lack an ``effects`` field.
