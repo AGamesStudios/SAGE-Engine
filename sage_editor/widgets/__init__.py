@@ -4,5 +4,7 @@ from .viewport import Viewport
 from .image_preview import ImagePreview
 from .graph import GraphWidget
 from .resource_line_edit import ResourceLineEdit
+from .scene_graph import SceneGraphView
 
-__all__ = ['Viewport', 'ImagePreview', 'GraphWidget', 'ResourceLineEdit']
+__all__ = ['Viewport', 'ImagePreview', 'GraphWidget', 'ResourceLineEdit',
+           'SceneGraphView']

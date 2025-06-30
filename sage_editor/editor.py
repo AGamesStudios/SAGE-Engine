@@ -41,8 +41,9 @@ except Exception:  # pragma: no cover - handle missing PyQt6.sip
 from .lang import LANGUAGES, DEFAULT_LANGUAGE
 from engine import Scene, GameObject, Project, Camera, ENGINE_VERSION, get_resource_path
 from engine.core.objects import get_object_type
+from engine.core.scene_graph import SceneGraph
 from . import plugins
-from .widgets import Viewport, ResourceLineEdit
+from .widgets import Viewport, ResourceLineEdit, SceneGraphView
 register_plugin = plugins.register_plugin
 import json
 from .docks.console import ConsoleDock
@@ -1539,6 +1540,7 @@ class Editor(QMainWindow):
         self.scenes_dir: str | None = None
         self.scene_tabs: dict[str, Viewport] = {}
         self.scene_logic_tabs: dict[str, QWidget] = {}
+        self.scene_graph = SceneGraph()
         self.project_metadata: dict = {}
         self.project_title: str = 'SAGE 2D'
         self.project_version: str = '0.1.0'
@@ -1569,6 +1571,11 @@ class Editor(QMainWindow):
         self.view.set_scale_step(self.scale_step)
         self.view.set_grid_color(self.grid_color)
         self.tabs.addTab(self.view, self.t('viewport'))
+
+        # scene graph tab
+        self.graph_view = SceneGraphView()
+        self.graph_view.load_graph(self.scene_graph)
+        self.tabs.addTab(self.graph_view, self.t('scene_graph'))
 
         # object list and transform inspector dock
         obj_widget = QWidget()
@@ -2380,6 +2387,8 @@ class Editor(QMainWindow):
         self.scene_path = os.path.join(scenes_dir, 'Scene1.sagescene')
         self.scenes_dir = scenes_dir
         self.scene_tabs.clear()
+        self.scene_graph = SceneGraph()
+        self.scene_graph.add_scene('Scene1', 'Scenes/Scene1.sagescene')
         self.project_metadata = {
             'name': name,
             'description': '',
@@ -2403,6 +2412,7 @@ class Editor(QMainWindow):
                 scenes='Scenes',
                 scene_file='Scenes/Scene1.sagescene',
                 metadata=self.project_metadata,
+                scene_graph=self.scene_graph.to_dict(),
             ).save(proj_path)
         except Exception as exc:
             QMessageBox.warning(self, 'Error', f'Failed to create project: {exc}')
@@ -2424,6 +2434,7 @@ class Editor(QMainWindow):
         else:
             self._refresh_resource_tree()
         self._scan_scenes()
+        self.graph_view.load_graph(self.scene_graph)
         try:
             self.open_scene_tab(self.scene_path)
         except Exception as exc:
@@ -2464,6 +2475,8 @@ class Editor(QMainWindow):
             self.scene_path = os.path.join(os.path.dirname(path), proj.scene_file)
             self.scenes_dir = os.path.join(os.path.dirname(path), proj.scenes)
             self.scene_tabs.clear()
+            self.scene_graph = SceneGraph.from_dict(proj.scene_graph or {})
+            self.graph_view.load_graph(self.scene_graph)
             self._scan_scenes()
             tabs = self.project_metadata.get('open_tabs') or [proj.scene_file]
             proj_dir = os.path.dirname(path)
@@ -2565,7 +2578,8 @@ class Editor(QMainWindow):
                 resources=os.path.relpath(self.resource_dir, os.path.dirname(self.project_path)) if self.resource_dir else 'resources',
                 scenes='Scenes',
                 scene_file=os.path.relpath(self.scene_path, os.path.dirname(self.project_path)) if self.scene_path else 'Scenes/Scene1.sagescene',
-                metadata=self.project_metadata | {'description': self.project_description}
+                metadata=self.project_metadata | {'description': self.project_description},
+                scene_graph=self.scene_graph.to_dict()
             ).save(self.project_path)
             self._add_recent(self.project_path)
             self.dirty = False
@@ -4747,6 +4761,12 @@ class Editor(QMainWindow):
         item.setData(Qt.ItemDataRole.UserRole, path)
         self.scenes_dock.list.addItem(item)
         self.open_scene_tab(path)
+        rel = os.path.relpath(path, os.path.dirname(self.project_path)) if self.project_path else path
+        try:
+            self.scene_graph.add_scene(name, rel)
+        except ValueError:
+            pass
+        self.graph_view.load_graph(self.scene_graph)
 
     def delete_selected_scene(self) -> None:
         item = self.scenes_dock.list.currentItem()
@@ -4770,6 +4790,15 @@ class Editor(QMainWindow):
             if idx >= 0:
                 self.tabs.removeTab(idx)
             view.deleteLater()
+        rel = os.path.relpath(path, os.path.dirname(self.project_path)) if self.project_path else path
+        if rel in self.scene_graph.nodes:
+            self.scene_graph.nodes.pop(rel)
+            for node in self.scene_graph.nodes.values():
+                if rel in node.next_nodes:
+                    node.next_nodes.remove(rel)
+            if self.scene_graph.start == rel:
+                self.scene_graph.start = next(iter(self.scene_graph.nodes), None)
+        self.graph_view.load_graph(self.scene_graph)
         if self.scene_path == path:
             self.scene_path = None
             if self.scene_tabs:
