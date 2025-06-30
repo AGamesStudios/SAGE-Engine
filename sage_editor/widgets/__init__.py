@@ -4,7 +4,13 @@ from .viewport import Viewport
 from .image_preview import ImagePreview
 from .graph import GraphWidget
 from .resource_line_edit import ResourceLineEdit
-from .scene_graph import SceneGraphView
+from .scene_graph import SceneGraphView, SceneNodeItem
 
-__all__ = ['Viewport', 'ImagePreview', 'GraphWidget', 'ResourceLineEdit',
-           'SceneGraphView']
+__all__ = [
+    'Viewport',
+    'ImagePreview',
+    'GraphWidget',
+    'ResourceLineEdit',
+    'SceneGraphView',
+    'SceneNodeItem',
+]
