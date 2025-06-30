@@ -40,8 +40,12 @@ class ProjectHub(QDialog):
     """Experimental project launcher with big project cards."""
 
     def __init__(self, editor: Editor):
-        super().__init__(editor)
+        # Use no parent so the window appears in the taskbar and can be
+        # restored if hidden. This avoids losing access to the launcher if the
+        # hidden editor parent is not visible yet.
+        super().__init__(None)
         self.editor = editor
+        self.setWindowFlag(Qt.WindowType.Window, True)
         self.setWindowTitle(editor.t('project_launcher'))
         self.resize(600, 400)
         layout = QVBoxLayout(self)
