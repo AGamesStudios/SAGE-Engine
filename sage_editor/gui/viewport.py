@@ -14,7 +14,11 @@ class Viewport(QWidget):
     def __init__(self, scene: Scene, parent: QWidget | None = None):
         super().__init__(parent)
         self.scene = scene
-        self.camera = Camera(width=scene.width, height=scene.height)
+        # use the scene's active camera or create one sized to this widget
+        self.camera = scene.ensure_active_camera(
+            width=self.width() or 640,
+            height=self.height() or 480,
+        )
 
         self.gl = GLWidget(self)
         self.renderer = OpenGLRenderer(self.width(), self.height(), widget=self.gl)
@@ -30,4 +34,12 @@ class Viewport(QWidget):
 
     def _tick(self) -> None:
         self.renderer.draw_scene(self.scene, self.camera, gizmos=False)
+
+    # -------------------------
+    def resizeEvent(self, event) -> None:  # type: ignore[override]
+        super().resizeEvent(event)
+        if self.camera:
+            self.camera.width = self.width()
+            self.camera.height = self.height()
+        self.renderer.set_window_size(self.width(), self.height())
 
