@@ -1,3 +1,3 @@
-from .object import Object, Transform2D
+from .object import Object, Transform2D, Material, create_role
 
-__all__ = ["Object", "Transform2D"]
+__all__ = ["Object", "Transform2D", "Material", "create_role"]

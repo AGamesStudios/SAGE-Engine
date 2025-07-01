@@ -408,6 +408,13 @@ load and save new object classes without modifying the loader. All objects,
 scenes and projects expose a ``metadata`` dictionary for custom attributes so
 tools can store extra information without affecting the runtime.
 
+Objects also use the **SAGE Role** design. Calling ``create_role()`` returns
+an object configured for a specific role such as ``empty``, ``sprite`` or
+``camera``. Every role shares transform and logic fields while adding its own
+options. Sprites include a :class:`Material` with a color and optional
+texture, and camera roles keep width, height and active status in their
+metadata.
+
 ### SAGE SDK and Plugins
 
 The ``sage_sdk`` package ships with a flexible plugin system used by both the

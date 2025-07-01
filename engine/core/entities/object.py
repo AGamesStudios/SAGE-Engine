@@ -39,6 +39,14 @@ class Transform2D:
 
 
 @dataclass
+class Material:
+    """Simple material with a color and optional texture."""
+
+    color: tuple[int, int, int, int] = (255, 255, 255, 255)
+    texture: str | None = None
+
+
+@dataclass
 class Object:
     """Engine object with a role, transform and attached logic."""
 
@@ -46,6 +54,7 @@ class Object:
     name: Optional[str] = None
     transform: Transform2D = field(default_factory=Transform2D)
     logic: List[Callable[["Object", float], Any]] = field(default_factory=list)
+    material: Material | None = None
     metadata: dict = field(default_factory=dict)
     id: int = field(init=False)
     parent: Optional["Object"] = field(default=None, repr=False)
@@ -55,6 +64,12 @@ class Object:
         self.id = next_id()
         if self.name is None:
             self.name = self.role
+        if self.role == "sprite" and self.material is None:
+            self.material = Material()
+        if self.role == "camera":
+            self.metadata.setdefault("width", 640)
+            self.metadata.setdefault("height", 480)
+            self.metadata.setdefault("active", False)
 
     def update(self, dt: float) -> None:
         """Call logic callbacks sequentially."""
@@ -150,3 +165,37 @@ class Object:
             self.parent.remove_child(self)
         for ch in list(self.children):
             ch.destroy()
+
+
+ROLE_DEFAULTS = {
+    "empty": {},
+    "sprite": {"material": Material()},
+    "camera": {"metadata": {"width": 640, "height": 480, "active": False}},
+}
+
+
+def create_role(
+    role: str,
+    *,
+    name: str | None = None,
+    transform: Transform2D | None = None,
+    logic: list[Callable[[Object, float], Any]] | None = None,
+    material: Material | None = None,
+    metadata: dict | None = None,
+) -> Object:
+    """Return an :class:`Object` with defaults for ``role``."""
+    defaults = ROLE_DEFAULTS.get(role, {})
+    if material is None:
+        material = defaults.get("material")
+    meta = dict(defaults.get("metadata", {}))
+    if metadata:
+        meta.update(metadata)
+    return Object(
+        role=role,
+        name=name,
+        transform=transform or Transform2D(),
+        logic=list(logic) if logic else [],
+        material=material,
+        metadata=meta,
+    )
+

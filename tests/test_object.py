@@ -36,7 +36,7 @@ class Camera(GameObject):
 cam_mod.Camera = Camera
 sys.modules.setdefault('engine.core.camera', cam_mod)
 
-from engine.core.object import Object, Transform2D
+from engine.core.object import Object, Transform2D, Material, create_role
 from engine.core.scene import Scene
 
 
@@ -79,6 +79,15 @@ class TestObject(unittest.TestCase):
         scene.remove_object_by_name(obj.name)
         self.assertIsNone(scene.find_object(obj.id))
 
+    def test_create_role_defaults(self):
+        obj = create_role("sprite")
+        self.assertEqual(obj.role, "sprite")
+        self.assertIsInstance(obj.material, Material)
+        cam = create_role("camera", metadata={"active": True})
+        self.assertEqual(cam.metadata["width"], 640)
+        self.assertTrue(cam.metadata["active"])
+
 
 if __name__ == "__main__":
     unittest.main()
+
