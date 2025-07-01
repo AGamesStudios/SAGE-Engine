@@ -598,9 +598,8 @@ class Viewport(GLWidget):
         try:
             img = self.grabFramebuffer()
         except Exception:
-            try:
-                img = self.grab()
-            except Exception:
-                return
+            return
+        if img.isNull():
+            return
         os.makedirs(os.path.dirname(path), exist_ok=True)
         img.save(path)

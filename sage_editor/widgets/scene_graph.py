@@ -90,7 +90,7 @@ class SceneNodeItem(QGraphicsRectItem):
         if self._preview_timer is None:
             self._preview_timer = QTimer()
             self._preview_timer.timeout.connect(self._update_preview)
-            self._preview_timer.start(500)
+            self._preview_timer.start(1000)
         self._update_preview()
 
     def clear_preview(self) -> None:
@@ -105,10 +105,9 @@ class SceneNodeItem(QGraphicsRectItem):
         try:
             img = self._viewport.grabFramebuffer()
         except Exception:
-            try:
-                img = self._viewport.grab()
-            except Exception:
-                return
+            return
+        if img.isNull():
+            return
         pix = QPixmap.fromImage(img).scaled(
             self.WIDTH,
             self.HEIGHT - 20,
