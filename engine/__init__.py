@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING
 
 ENGINE_VERSION = '2D prototype v0.0.01a'
 
-from .log import logger
-from .diagnostics import warn, error, exception
+from .utils.log import logger
+from .utils.diagnostics import warn, error, exception
 from sage_sdk.plugins import PluginManager
 
 ENGINE_PLUGINS = PluginManager('engine')
@@ -85,14 +85,14 @@ _lazy = {
     'condition_from_dict': ('engine.logic.base', 'condition_from_dict'),
     'action_from_dict': ('engine.logic.base', 'action_from_dict'),
     'event_from_dict': ('engine.logic.base', 'event_from_dict'),
-    'units': ('engine.units', None),
-    'set_units_per_meter': ('engine.units', 'set_units_per_meter'),
-    'meters': ('engine.units', 'meters'),
-    'kilometers': ('engine.units', 'kilometers'),
-    'to_units': ('engine.units', 'to_units'),
-    'from_units': ('engine.units', 'from_units'),
-    'set_y_up': ('engine.units', 'set_y_up'),
-    'Y_UP': ('engine.units', 'Y_UP'),
+    'units': ('engine.utils.units', None),
+    'set_units_per_meter': ('engine.utils.units', 'set_units_per_meter'),
+    'meters': ('engine.utils.units', 'meters'),
+    'kilometers': ('engine.utils.units', 'kilometers'),
+    'to_units': ('engine.utils.units', 'to_units'),
+    'from_units': ('engine.utils.units', 'from_units'),
+    'set_y_up': ('engine.utils.units', 'set_y_up'),
+    'Y_UP': ('engine.utils.units', 'Y_UP'),
     'GameWindow': ('engine.game_window', 'GameWindow'),
     'Engine': ('engine.core.engine', 'Engine'),
     'Renderer': ('engine.renderers', 'Renderer'),
@@ -166,5 +166,6 @@ if TYPE_CHECKING:  # pragma: no cover - hints for static analyzers
         load_project, save_project, run_project, create_engine,
         load_scene, save_scene, run_scene,
     )
-    from . import units, math2d
+    from .utils import units
+    from . import math2d
     paint: _ModuleType
