@@ -3,6 +3,7 @@ import os
 import sys
 from typing import Callable
 from ..utils.log import logger
+from ..cache import SAGE_CACHE
 
 _RESOURCE_ROOT = ""
 
@@ -26,7 +27,6 @@ class ResourceManager:
     def __init__(self, root: str):
         self.root = root
         # cache already loaded files
-        self._cache = {}
         self._cache = {}
         os.makedirs(self._win_path(self.root), exist_ok=True)
         logger.info("Resource manager initialized at %s", self.root)
@@ -226,10 +226,13 @@ class ResourceManager:
     def load_data(self, rel_path: str) -> bytes:
         """Return the contents of a resource and cache it."""
         path = self.path(rel_path)
-        with open(self._win_path(path), 'rb') as fh:
-            data = fh.read()
+        data = SAGE_CACHE.get(path)
+        if data is None:
+            with open(self._win_path(path), 'rb') as fh:
+                data = fh.read()
+            SAGE_CACHE.set(path, data)
+            logger.info("Loaded resource %s (%d bytes)", rel_path, len(data))
         self._cache[rel_path] = data
-        logger.info("Loaded resource %s (%d bytes)", rel_path, len(data))
         return data
 
     def get_cached(self, rel_path: str) -> bytes | None:

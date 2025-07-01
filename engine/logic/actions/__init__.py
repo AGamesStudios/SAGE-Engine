@@ -4,8 +4,8 @@ No built-in actions are provided. Games and plugins should define their own
 :class:`Action` subclasses and register them with :func:`register_action`.
 """
 
-from .base import Action, register_action, resolve_value  # re-export for convenience
-from ..utils.log import logger
+from ..base import Action, register_action, resolve_value  # re-export for convenience
+from ...utils.log import logger
 import math
 import operator
 

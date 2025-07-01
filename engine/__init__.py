@@ -44,7 +44,8 @@ __all__ = [
     'math2d', 'SceneGraph', 'SceneNode', 'BaseGraph', 'BaseNode', 'Object',
     'Transform2D', 'Material', 'create_role', 'SceneManager', 'EngineExtension',
     'InputManager', 'LibraryLoader', 'DEFAULT_LIBRARY_LOADER',
-    'load_engine_libraries', 'register_draw_handler', 'tools', 'paint'
+    'load_engine_libraries', 'register_draw_handler',
+    'tools', 'paint', 'Cache', 'SAGE_CACHE'
 ]
 
 _lazy = {
@@ -118,6 +119,8 @@ _lazy = {
     'register_draw_handler': ('engine.renderers', 'register_draw_handler'),
     'tools': ('engine.tools', None),
     'paint': ('engine.tools', 'paint'),
+    'Cache': ('engine.cache', 'Cache'),
+    'SAGE_CACHE': ('engine.cache', 'SAGE_CACHE'),
 }
 
 
@@ -172,5 +175,6 @@ if TYPE_CHECKING:  # pragma: no cover - hints for static analyzers
         load_scene, save_scene, run_scene,
     )
     from .utils import units
+    from .cache import Cache, SAGE_CACHE
     from . import math2d
     paint: _ModuleType

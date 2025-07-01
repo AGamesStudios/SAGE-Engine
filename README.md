@@ -68,6 +68,15 @@ Dock widgets live under ``sage_editor.docks`` while reusable widgets live in
 scene you edit is visible inside the editor as well as when running the game.
 Embedding the editor in other tools only requires importing these modules.
 
+The runtime is organised in a simple hierarchy:
+
+```
+SAGE Engine -> Project -> Scenes -> Objects -> properties
+```
+Projects load resources through `engine.core.resources.ResourceManager` which
+uses a global **SAGE Cache** so data is reused between scenes. Debug messages
+are written to `logs/engine.log` using the helpers in `engine.utils.log`.
+
 Additional utilities live under ``engine.tools``.  For example the
 ``paint`` submodule exposes **SAGE Paint** so you can open it with
 ``engine.tools.paint.main()`` or import individual widgets like

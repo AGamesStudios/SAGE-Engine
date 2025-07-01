@@ -28,12 +28,12 @@ logic_base = importlib.util.module_from_spec(spec)
 sys.modules[spec.name] = logic_base
 spec.loader.exec_module(logic_base)
 
-spec = importlib.util.spec_from_file_location('engine.logic.conditions', base_path / 'conditions.py')
+spec = importlib.util.spec_from_file_location('engine.logic.conditions', base_path / 'conditions' / '__init__.py')
 logic_conditions = importlib.util.module_from_spec(spec)
 sys.modules[spec.name] = logic_conditions
 spec.loader.exec_module(logic_conditions)
 
-spec = importlib.util.spec_from_file_location('engine.logic.actions', base_path / 'actions.py')
+spec = importlib.util.spec_from_file_location('engine.logic.actions', base_path / 'actions' / '__init__.py')
 logic_actions = importlib.util.module_from_spec(spec)
 sys.modules[spec.name] = logic_actions
 spec.loader.exec_module(logic_actions)
