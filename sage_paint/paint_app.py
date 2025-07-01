@@ -13,7 +13,7 @@ from PyQt6.QtCore import Qt, QTimer, QPointF
 
 from .canvas import Canvas
 from .lang import LANGUAGES, DEFAULT_LANGUAGE
-from sage.icons import load_icon
+from sage_editor.icons import load_icon
 
 EXPERIMENTAL_NOTICE = (
     "SAGE Paint is experimental. Features may change and stability is not guaranteed."
