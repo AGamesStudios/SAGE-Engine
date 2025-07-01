@@ -1548,6 +1548,7 @@ class Editor(QMainWindow):
         self._game_window = None
         self._game_engine = None
         self._paint_windows: list[QMainWindow] = []
+        self.project_path: str | None = None
         # undo/redo stacks
         self._undo_stack: list[UndoAction] = []
         self._redo_stack: list[UndoAction] = []
@@ -1756,7 +1757,6 @@ class Editor(QMainWindow):
         # camera rectangle showing the visible area
         self.camera_rect = None
         self._update_camera_rect()
-        self.project_path: str | None = None
         self.items = []
         self.dirty = False
         self.recent_projects = load_recent()
