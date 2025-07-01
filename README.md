@@ -115,6 +115,11 @@ the Z axis and square handles at the ends let you scale objects. The game window
 the active camera object from the scene so you can inspect levels from any angle
 without affecting gameplay.
 
+For systems without graphics acceleration the engine includes a lightweight
+``NullRenderer``. It performs no drawing so games can run headless or on
+very old PCs. Pass ``renderer="null"`` to :class:`engine.core.engine.Engine` or
+use ``engine.renderers.NullRenderer`` directly when constructing the engine.
+
 ### Shader Support
 
 Custom effects can use the :class:`~engine.renderers.shader.Shader` helper.

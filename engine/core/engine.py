@@ -120,6 +120,22 @@ class Engine:
         except Exception:
             logger.exception("Failed to load engine libraries")
 
+    def step(self) -> None:
+        """Advance the engine by one frame respecting the target FPS."""
+        now = time.perf_counter()
+        dt = now - self.last_time
+        if self._frame_interval and dt < self._frame_interval:
+            time.sleep(self._frame_interval - dt)
+            now = time.perf_counter()
+            dt = now - self.last_time
+        self.last_time = now
+        self.delta_time = dt
+        self.input.poll()
+        try:
+            self.update(dt)
+        except Exception:
+            logger.exception("Runtime error")
+
     def to_settings(self) -> EngineSettings:
         """Return the current configuration as :class:`EngineSettings`."""
         return EngineSettings(

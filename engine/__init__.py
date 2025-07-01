@@ -30,7 +30,7 @@ __all__ = [
     'condition_from_dict', 'action_from_dict', 'event_from_dict',
     'Project', 'Camera', 'clear_image_cache',
     'register_object', 'object_from_dict', 'object_to_dict',
-    'Renderer', 'OpenGLRenderer', 'main',
+    'Renderer', 'OpenGLRenderer', 'NullRenderer', 'main',
     '__version__', 'ENGINE_VERSION', 'logger', 'ResourceManager', 'set_resource_root', 'get_resource_path',
     'load_project', 'save_project', 'run_project', 'create_engine',
     'load_scene', 'save_scene', 'run_scene',
@@ -101,6 +101,7 @@ _lazy = {
     'Engine': ('engine.core.engine', 'Engine'),
     'Renderer': ('engine.renderers', 'Renderer'),
     'OpenGLRenderer': ('engine.renderers.opengl_renderer', 'OpenGLRenderer'),
+    'NullRenderer': ('engine.renderers.null_renderer', 'NullRenderer'),
     'math2d': ('engine.core.math2d', None),
     'SceneGraph': ('engine.core.scene_graph', 'SceneGraph'),
     'SceneNode': ('engine.core.scene_graph', 'SceneNode'),
@@ -155,6 +156,7 @@ if TYPE_CHECKING:  # pragma: no cover - hints for static analyzers
     )
     from .renderers import Renderer
     from .renderers.opengl_renderer import OpenGLRenderer
+    from .renderers.null_renderer import NullRenderer
     from .renderers import register_draw_handler
     from .inputs import InputManager
     from .mesh_utils import (

@@ -6,6 +6,7 @@ from importlib import metadata
 from typing import Callable
 
 from .shader import Shader
+from .null_renderer import NullRenderer
 
 
 def register_draw_handler(role: str, func: Callable[["Renderer"], None]) -> None:
@@ -46,6 +47,9 @@ def _ensure_default() -> None:
     if "opengl" not in RENDERER_REGISTRY:
         from .opengl_renderer import OpenGLRenderer
         register_renderer("opengl", OpenGLRenderer)
+    if "null" not in RENDERER_REGISTRY:
+        from .null_renderer import NullRenderer
+        register_renderer("null", NullRenderer)
     _load_entry_points()
 
 
@@ -105,6 +109,7 @@ class Renderer(ABC):
 __all__ = [
     "Renderer",
     "OpenGLRenderer",
+    "NullRenderer",
     "register_renderer",
     "get_renderer",
     "RENDERER_REGISTRY",
@@ -117,4 +122,10 @@ def __getattr__(name):
     if name == "OpenGLRenderer":
         _ensure_default()
         return RENDERER_REGISTRY["opengl"]
+    if name == "NullRenderer":
+        _ensure_default()
+        if "null" not in RENDERER_REGISTRY:
+            from .null_renderer import NullRenderer
+            register_renderer("null", NullRenderer)
+        return RENDERER_REGISTRY["null"]
     raise AttributeError(name)

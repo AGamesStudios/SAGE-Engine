@@ -36,15 +36,9 @@ class GameWindow(QMainWindow):
         self.timer.start()
 
     def _step(self):
-        now = time.perf_counter()
-        dt = now - self.engine.last_time
-        self.engine.last_time = now
-        self.engine.delta_time = dt
-        self.engine.input.poll()
         try:
-            self.engine.update(dt)
+            self.engine.step()
         except Exception:
-            logger.exception("Runtime error")
             self.timer.stop()
 
     def closeEvent(self, event):  # pragma: no cover - GUI cleanup
