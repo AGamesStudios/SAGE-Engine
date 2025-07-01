@@ -1,4 +1,4 @@
-from PyQt6.QtCore import Qt, QObject
+from PyQt6.QtCore import QObject
 from ..inputs import InputBackend, register_input
 
 

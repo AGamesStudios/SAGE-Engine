@@ -1,14 +1,17 @@
 import types
 import importlib.util
+import importlib
 import pathlib
 import sys
 
 # Create minimal engine package so logic modules with relative imports load.
+_orig_engine = sys.modules.get('engine')
+_orig_logic = sys.modules.get('engine.logic')
 engine_pkg = types.ModuleType('engine')
-sys.modules.setdefault('engine', engine_pkg)
+sys.modules['engine'] = engine_pkg
 logic_pkg = types.ModuleType('engine.logic')
 logic_pkg.__path__ = []
-sys.modules.setdefault('engine.logic', logic_pkg)
+sys.modules['engine.logic'] = logic_pkg
 log_mod = types.ModuleType('engine.log')
 log_mod.logger = types.SimpleNamespace(
     info=lambda *a, **k: None,
@@ -47,6 +50,17 @@ SetObjectVariable = logic_actions.SetObjectVariable
 ModifyObjectVariable = logic_actions.ModifyObjectVariable
 ShowObject = logic_actions.ShowObject
 HideObject = logic_actions.HideObject
+
+# restore original engine modules so other tests can import the real package
+if _orig_engine is not None:
+    sys.modules['engine'] = _orig_engine
+else:
+    sys.modules.pop('engine', None)
+if _orig_logic is not None:
+    sys.modules['engine.logic'] = _orig_logic
+else:
+    sys.modules.pop('engine.logic', None)
+importlib.invalidate_caches()
 
 class DummyObj:
     def __init__(self):
@@ -103,3 +117,16 @@ def test_object_variable_actions_and_condition():
     assert obj.get_variable("hp") == 7
     cond = ObjectVariableCompare(obj, "hp", '>=', 5)
     assert cond.check(engine, None, 0)
+
+
+def teardown_module(module):
+    import importlib
+    for name in [
+        'engine.logic',
+        'engine.logic.base',
+        'engine.logic.actions',
+        'engine.logic.conditions',
+    ]:
+        if name in sys.modules:
+            del sys.modules[name]
+    importlib.invalidate_caches()

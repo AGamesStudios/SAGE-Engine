@@ -1,7 +1,5 @@
-from ..base import Action, register_action, resolve_value
-from ...utils.log import logger
-import math
-import operator
+from ..base import Action, register_action
+
 
 @register_action('DeleteObject', [('target', 'object')])
 class DeleteObject(Action):

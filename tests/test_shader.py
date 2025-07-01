@@ -1,4 +1,9 @@
-from engine.renderers.shader import Shader
+import pytest
+pytest.importorskip("OpenGL.GL")
+try:
+    from engine.renderers.shader import Shader
+except Exception as exc:  # pragma: no cover - optional dependency
+    pytest.skip(f"Shader module unavailable: {exc}", allow_module_level=True)
 from engine.entities.game_object import GameObject
 
 

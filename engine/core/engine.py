@@ -2,12 +2,10 @@ import sys
 import argparse
 import time
 import os
-from datetime import datetime
 from .scenes import Scene, SceneManager
 from .extensions import EngineExtension
 from .project import Project
 from ..inputs import get_input, InputBackend
-from .input_qt import QtInput
 from .settings import EngineSettings
 from .camera import Camera
 from ..renderers import (

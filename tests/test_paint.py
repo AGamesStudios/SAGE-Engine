@@ -1,5 +1,10 @@
 import unittest
-from PyQt6.QtWidgets import QApplication
+import pytest
+pytest.importorskip("PyQt6")
+try:
+    from PyQt6.QtWidgets import QApplication
+except Exception as exc:  # pragma: no cover - optional dependency
+    pytest.skip(f"PyQt6 widgets unavailable: {exc}", allow_module_level=True)
 from PyQt6.QtCore import QPoint, Qt
 from PyQt6.QtGui import QColor
 

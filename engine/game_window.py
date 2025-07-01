@@ -4,7 +4,6 @@ import time
 from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout
 from PyQt6.QtCore import QTimer, Qt, pyqtSignal
 
-from .utils.log import logger
 
 
 class GameWindow(QMainWindow):

@@ -4,7 +4,6 @@ from PyQt6.QtWidgets import QWidget, QVBoxLayout
 from PyQt6.QtCore import QTimer
 
 from engine.core.scenes.scene import Scene
-from engine.core.camera import Camera
 from engine.renderers.opengl_renderer import GLWidget, OpenGLRenderer
 
 

@@ -1,7 +1,5 @@
 from ..base import Action, register_action, resolve_value
-from ...utils.log import logger
-import math
-import operator
+
 
 @register_action('CreateObject', [('type', 'value'), ('x', 'value'), ('y', 'value'), ('z', 'value'), ('name', 'value')])
 class CreateObject(Action):

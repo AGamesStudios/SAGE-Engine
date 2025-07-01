@@ -141,3 +141,22 @@ def test_extension_hooks():
     assert ext.started
     assert ext.updated == [0.1]
     assert ext.stopped
+
+
+def teardown_module(module):
+    import sys
+    for name in [
+        'engine.renderers',
+        'engine.renderers.shader',
+        'engine.mesh_utils',
+        'engine.entities.game_object',
+        'engine.core.camera',
+        'PyQt6',
+        'PyQt6.QtCore',
+        'PyQt6.QtWidgets',
+        'OpenGL',
+        'OpenGL.GL',
+        'PIL',
+        'PIL.Image',
+    ]:
+        sys.modules.pop(name, None)

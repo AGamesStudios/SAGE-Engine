@@ -1,6 +1,11 @@
 import unittest
-from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import QApplication
+import pytest
+pytest.importorskip("PyQt6")
+try:
+    from PyQt6.QtGui import QIcon
+    from PyQt6.QtWidgets import QApplication
+except Exception as exc:  # pragma: no cover - optional dependency
+    pytest.skip(f"PyQt6 GUI unavailable: {exc}", allow_module_level=True)
 from sage_editor.icons import load_icon, set_icon_theme
 
 class TestIconTheme(unittest.TestCase):

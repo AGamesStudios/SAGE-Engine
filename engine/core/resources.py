@@ -1,6 +1,5 @@
 # Simple resource management for SAGE Engine
 import os
-import sys
 from typing import Callable
 from ..utils.log import logger
 from ..cache import SAGE_CACHE

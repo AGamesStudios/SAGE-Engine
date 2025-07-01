@@ -1,4 +1,3 @@
-import tempfile
 from engine.core.resources import ResourceManager
 from engine.cache import SAGE_CACHE
 

@@ -1,4 +1,4 @@
-from ..base import Condition, register_condition, resolve_value
+from ..base import Condition, register_condition
 
 @register_condition('ObjectVisible', [('target', 'object'), ('visible', 'value')])
 class ObjectVisible(Condition):

@@ -1,6 +1,5 @@
 from ..base import Action, register_action, resolve_value
 from ...utils.log import logger
-import math
 import operator
 
 @register_action('ModifyVariable', [('name', 'variable'), ('op', 'value'), ('value', 'value')])

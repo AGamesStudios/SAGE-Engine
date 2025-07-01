@@ -1,7 +1,11 @@
-from engine.core.camera import Camera
+import pytest
+pytest.importorskip("OpenGL.GL")
 from engine.core.camera import Camera
 from engine.core.objects import object_to_dict, object_from_dict
-from engine.renderers.shader import Shader
+try:
+    from engine.renderers.shader import Shader
+except Exception as exc:  # pragma: no cover - optional dependency
+    pytest.skip(f"Shader module unavailable: {exc}", allow_module_level=True)
 
 
 def test_camera_get_shader(tmp_path, monkeypatch):

@@ -1,3 +1,7 @@
+import pytest
+pytest.importorskip("PIL.Image")
+pytest.importorskip("PyQt6")
+pytest.importorskip("OpenGL.GL")
 from engine.core.engine import Engine
 from engine.core.settings import EngineSettings
 from engine.inputs import InputBackend

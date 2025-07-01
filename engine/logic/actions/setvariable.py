@@ -1,7 +1,5 @@
 from ..base import Action, register_action, resolve_value
-from ...utils.log import logger
-import math
-import operator
+
 
 @register_action('SetVariable', [('name', 'variable'), ('value', 'value')])
 class SetVariable(Action):
