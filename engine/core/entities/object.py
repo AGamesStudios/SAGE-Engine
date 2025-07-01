@@ -64,6 +64,16 @@ class Object:
             except Exception:
                 logger.exception("Logic error in %s", self.role)
 
+    def add_logic(self, func: Callable[["Object", float], Any]) -> None:
+        """Attach a logic callback if not already present."""
+        if func not in self.logic:
+            self.logic.append(func)
+
+    def remove_logic(self, func: Callable[["Object", float], Any]) -> None:
+        """Remove a previously attached logic callback."""
+        if func in self.logic:
+            self.logic.remove(func)
+
     # --- transformation helpers ---
     def move(self, dx: float, dy: float) -> None:
         """Translate the object by ``dx`` and ``dy``."""

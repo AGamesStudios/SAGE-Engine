@@ -4,6 +4,7 @@ import time
 import os
 from datetime import datetime
 from .scenes import Scene, SceneManager
+from .extensions import EngineExtension
 from .project import Project
 from ..inputs import get_input, InputBackend
 from .input_qt import QtInput
@@ -107,6 +108,7 @@ class Engine:
         self.last_time = time.perf_counter()
         self.delta_time = 0.0
         self.logic_active = False
+        self.extensions: list[EngineExtension] = []
         try:
             from .. import load_engine_plugins
             load_engine_plugins(self)
@@ -138,6 +140,29 @@ class Engine:
         """Return the value of an event variable."""
         return self.events.variables.get(name)
 
+    # --- extension management ---
+    def add_extension(self, ext: EngineExtension) -> None:
+        """Attach an :class:`EngineExtension` and call its ``start`` hook."""
+        self.extensions.append(ext)
+        try:
+            ext.start(self)
+        except Exception:
+            logger.exception("Extension %s failed during start", ext)
+
+    def remove_extension(self, ext: EngineExtension) -> None:
+        """Detach ``ext`` and call its ``stop`` hook."""
+        if ext in self.extensions:
+            self.extensions.remove(ext)
+            try:
+                ext.stop(self)
+            except Exception:
+                logger.exception("Extension %s failed during stop", ext)
+
+    def shutdown(self) -> None:
+        """Stop all extensions."""
+        for ext in list(self.extensions):
+            self.remove_extension(ext)
+
     def change_scene(self, name: str, scene: Scene | None = None) -> None:
         """Replace or switch the active scene."""
         if scene is not None:
@@ -157,6 +182,21 @@ class Engine:
             camera = next((o for o in self.scene.objects
                            if isinstance(o, Camera) and o.name == camera), None)
         self.camera = camera
+
+    def update(self, dt: float) -> None:
+        """Process one frame of logic and rendering."""
+        if self.logic_active:
+            self.events.update(self, self.scene, dt)
+            self.scene.update_events(self, dt)
+        self.scene.update(dt)
+        for ext in list(self.extensions):
+            try:
+                ext.update(self, dt)
+            except Exception:
+                logger.exception("Extension %s failed during update", ext)
+        cam = self.camera or self.scene.get_active_camera()
+        self.renderer.draw_scene(self.scene, cam, gizmos=False)
+        self.renderer.present()
 
     def run(self):
         """Run the engine using a Qt window."""

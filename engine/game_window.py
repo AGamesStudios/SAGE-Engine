@@ -42,13 +42,7 @@ class GameWindow(QMainWindow):
         self.engine.delta_time = dt
         self.engine.input.poll()
         try:
-            if self.engine.logic_active:
-                self.engine.events.update(self.engine, self.engine.scene, dt)
-                self.engine.scene.update_events(self.engine, dt)
-            self.engine.scene.update(dt)
-            cam = self.engine.camera or self.engine.scene.get_active_camera()
-            self.engine.renderer.draw_scene(self.engine.scene, cam, gizmos=False)
-            self.engine.renderer.present()
+            self.engine.update(dt)
         except Exception:
             logger.exception("Runtime error")
             self.timer.stop()
@@ -57,6 +51,7 @@ class GameWindow(QMainWindow):
         self.closed.emit()
         self.timer.stop()
         self.engine.logic_active = False
+        self.engine.shutdown()
         self.engine.input.shutdown()
         self.engine.renderer.close()
         event.accept()
