@@ -26,8 +26,8 @@ __all__ = [
 ]
 
 _lazy = {
-    'GameObject': ('engine.core.game_object', 'GameObject'),
-    'clear_image_cache': ('engine.core.game_object', 'clear_image_cache'),
+    'GameObject': ('engine.entities.game_object', 'GameObject'),
+    'clear_image_cache': ('engine.entities.game_object', 'clear_image_cache'),
     'Scene': ('engine.core.scenes.scene', 'Scene'),
     'SceneGraph': ('engine.core.scene_graph', 'SceneGraph'),
     'SceneNode': ('engine.core.scene_graph', 'SceneNode'),

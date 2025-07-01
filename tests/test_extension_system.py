@@ -37,7 +37,7 @@ sys.modules['engine.mesh_utils'] = mesh_mod
 sys.modules['PIL'] = types.ModuleType('PIL')
 sys.modules['PIL.Image'] = types.ModuleType('PIL.Image')
 
-game_mod = types.ModuleType('engine.core.game_object')
+game_mod = types.ModuleType('engine.entities.game_object')
 class GameObject:
     name: str = 'GameObject'
     z: int = 0
@@ -48,7 +48,7 @@ class GameObject:
         pass
     def draw(self, surf):
         pass
-sys.modules['engine.core.game_object'] = game_mod
+sys.modules['engine.entities.game_object'] = game_mod
 game_mod.GameObject = GameObject
 
 cam_mod = types.ModuleType('engine.core.camera')

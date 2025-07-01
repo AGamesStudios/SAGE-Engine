@@ -48,7 +48,7 @@ __all__ = [
 ]
 
 _lazy = {
-    'GameObject': ('engine.core.game_object', 'GameObject'),
+    'GameObject': ('engine.entities.game_object', 'GameObject'),
     'Scene': ('engine.core.scenes.scene', 'Scene'),
     'Project': ('engine.core.project', 'Project'),
     'Camera': ('engine.core.camera', 'Camera'),
@@ -63,7 +63,7 @@ _lazy = {
     'create_square_mesh': ('engine.mesh_utils', 'create_square_mesh'),
     'create_triangle_mesh': ('engine.mesh_utils', 'create_triangle_mesh'),
     'create_circle_mesh': ('engine.mesh_utils', 'create_circle_mesh'),
-    'clear_image_cache': ('engine.core.game_object', 'clear_image_cache'),
+    'clear_image_cache': ('engine.entities.game_object', 'clear_image_cache'),
     '__version__': ('engine.version', '__version__'),
     'register_object': ('engine.core.objects', 'register_object'),
     'object_from_dict': ('engine.core.objects', 'object_from_dict'),
@@ -131,7 +131,7 @@ def __getattr__(name):
 
 if TYPE_CHECKING:  # pragma: no cover - hints for static analyzers
     from types import ModuleType as _ModuleType
-    from .core.game_object import GameObject, clear_image_cache
+    from .entities.game_object import GameObject, clear_image_cache
     from .core.scenes.scene import Scene
     from .core.engine import Engine
     from .core.scene_graph import SceneGraph, SceneNode, BaseGraph, BaseNode

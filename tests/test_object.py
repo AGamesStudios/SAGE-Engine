@@ -13,7 +13,7 @@ sys.modules.setdefault('engine.mesh_utils', types.ModuleType('engine.mesh_utils'
 
 from dataclasses import dataclass
 
-game_mod = types.ModuleType('engine.core.game_object')
+game_mod = types.ModuleType('engine.entities.game_object')
 
 @dataclass
 class GameObject:
@@ -25,7 +25,7 @@ class GameObject:
         pass
 
 game_mod.GameObject = GameObject
-sys.modules.setdefault('engine.core.game_object', game_mod)
+sys.modules.setdefault('engine.entities.game_object', game_mod)
 
 cam_mod = types.ModuleType('engine.core.camera')
 
@@ -36,8 +36,8 @@ class Camera(GameObject):
 cam_mod.Camera = Camera
 sys.modules.setdefault('engine.core.camera', cam_mod)
 
-from engine.core.entities.object import Object, Transform2D, Material, create_role
-from engine.core.scene import Scene
+from engine.entities.object import Object, Transform2D, Material, create_role
+from engine.core.scenes.scene import Scene
 
 
 class TestObject(unittest.TestCase):

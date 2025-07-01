@@ -4,7 +4,7 @@ import traceback
 from ..utils.log import logger
 import math
 from collections import OrderedDict
-from .math2d import (
+from ..core.math2d import (
     angle_to_quat as _angle_to_quat,
     quat_to_angle as _quat_to_angle,
     calc_rect as _calc_rect,
@@ -13,10 +13,10 @@ from .math2d import (
 from PIL import Image
 from engine.renderers import Shader
 from engine.mesh_utils import Mesh
-from .objects import register_object
+from ..core.objects import register_object
 from ..logic import EventSystem, event_from_dict
 from .. import units
-from .effects import get_effect
+from ..core.effects import get_effect
 
 # LRU cache so repeated sprites don't reload files on low spec machines
 _IMAGE_CACHE: "OrderedDict[str, Image.Image]" = OrderedDict()

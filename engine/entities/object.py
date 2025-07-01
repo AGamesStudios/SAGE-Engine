@@ -4,8 +4,8 @@ from dataclasses import dataclass, field
 from typing import Callable, List, Any, Optional
 import itertools
 
-from ...utils.log import logger
-from ..math2d import make_transform, transform_point
+from ..utils.log import logger
+from ..core.math2d import make_transform, transform_point
 
 _ID_GEN = itertools.count()
 

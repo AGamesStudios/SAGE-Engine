@@ -1,4 +1,4 @@
-from .core.scene import Scene
+from .core.scenes.scene import Scene
 from .core.project import Project
 from .renderers import get_renderer
 from .core.engine import Engine

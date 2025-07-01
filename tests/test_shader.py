@@ -1,5 +1,5 @@
 from engine.renderers.shader import Shader
-from engine.core.game_object import GameObject
+from engine.entities.game_object import GameObject
 
 
 def test_shader_from_files(tmp_path, monkeypatch):

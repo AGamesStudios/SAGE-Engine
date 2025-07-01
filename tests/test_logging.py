@@ -3,7 +3,7 @@ import logging
 from io import StringIO
 
 from engine.utils.log import logger
-from engine.core.scene import Scene
+from engine.core.scenes.scene import Scene
 from engine.core.camera import Camera
 from engine.logic.base import EventSystem, Event
 

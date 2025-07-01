@@ -1,4 +1,4 @@
-from engine.core.game_object import GameObject
+from engine.entities.game_object import GameObject
 from engine.core.camera import Camera
 from engine.core.effects import register_effect, Effect, EFFECT_REGISTRY
 
