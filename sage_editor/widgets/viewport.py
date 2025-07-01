@@ -593,13 +593,3 @@ class Viewport(GLWidget):
             return None
         return result
 
-    def capture_screenshot(self, path: str) -> None:
-        """Save the current framebuffer to *path* if possible."""
-        try:
-            img = self.grabFramebuffer()
-        except Exception:
-            return
-        if img.isNull():
-            return
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-        img.save(path)

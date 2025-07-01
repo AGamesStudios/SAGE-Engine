@@ -4,7 +4,16 @@ import os
 from typing import Dict
 
 from PyQt6.QtCore import Qt, QPointF, QTimer
-from PyQt6.QtGui import QColor, QPainterPath, QPen, QPixmap, QPainter, QMouseEvent
+from PyQt6.QtGui import (
+    QColor,
+    QPainterPath,
+    QPen,
+    QPixmap,
+    QPainter,
+    QMouseEvent,
+    QLinearGradient,
+    QBrush,
+)
 from PyQt6.QtWidgets import (
     QGraphicsItem, QGraphicsPixmapItem, QGraphicsRectItem, QGraphicsEllipseItem,
     QGraphicsScene, QGraphicsTextItem, QGraphicsView, QGraphicsPathItem,
@@ -24,10 +33,13 @@ class SceneNodeItem(QGraphicsRectItem):
         super().__init__(0, 0, self.WIDTH, self.HEIGHT)
         self.node = node
         self.view = view
-        self.setBrush(Qt.GlobalColor.white)
-        self.setPen(QPen(Qt.GlobalColor.black))
+        self.setBrush(QColor(40, 40, 40))
+        self.setPen(QPen(QColor(60, 60, 60)))
         header = QGraphicsRectItem(0, 0, self.WIDTH, 20, self)
-        header.setBrush(QColor(70, 90, 200))
+        grad = QLinearGradient(0, 0, 0, 20)
+        grad.setColorAt(0, QColor(80, 150, 255))
+        grad.setColorAt(1, QColor(30, 100, 220))
+        header.setBrush(QBrush(grad))
         header.setZValue(0.5)
         text = QGraphicsTextItem(node.name, header)
         text.setDefaultTextColor(Qt.GlobalColor.white)
@@ -37,7 +49,7 @@ class SceneNodeItem(QGraphicsRectItem):
             (header.rect().height() - br.height()) / 2,
         )
         self.image_rect = QGraphicsRectItem(0, 20, self.WIDTH, self.HEIGHT - 20, self)
-        self.image_rect.setBrush(QColor(220, 220, 220))
+        self.image_rect.setBrush(QColor(60, 60, 60))
         self.image_rect.setZValue(0)
         self.pix_item: QGraphicsPixmapItem | None = None
         self._preview_timer: QTimer | None = None
@@ -77,24 +89,6 @@ class SceneNodeItem(QGraphicsRectItem):
             self.view.update_edges()
         return super().itemChange(change, value)
 
-    def set_screenshot(self, path: str) -> None:
-        """Update the screenshot preview if the image exists."""
-        if not os.path.exists(path):
-            return
-        self.node.screenshot = path
-        pix = QPixmap(path).scaled(
-            self.WIDTH,
-            self.HEIGHT - 20,
-            Qt.AspectRatioMode.KeepAspectRatio,
-            Qt.TransformationMode.SmoothTransformation,
-        )
-        if self.pix_item is None:
-            self.pix_item = QGraphicsPixmapItem(pix, self)
-            self.pix_item.setPos(0, 20)
-            self.pix_item.setZValue(0)
-            self.image_rect.setVisible(False)
-        else:
-            self.pix_item.setPixmap(pix)
 
     def set_preview_widget(self, viewport) -> None:
         """Show a live preview from *viewport* without saving images."""
@@ -186,11 +180,6 @@ class SceneGraphView(QGraphicsView):
         self.lines.clear()
         for node in graph.nodes.values():
             item = SceneNodeItem(node, self)
-            if node.screenshot:
-                path = node.screenshot
-                if self.base_dir and not os.path.isabs(path):
-                    path = os.path.join(self.base_dir, path)
-                item.set_screenshot(path)
             self.scene().addItem(item)
             self.node_items[node.name] = item
         self.update_edges()

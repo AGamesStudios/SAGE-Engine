@@ -87,7 +87,6 @@ class SceneNode(BaseNode):
     """Node describing a scene and its connections."""
 
     scene_file: str = ""
-    screenshot: Optional[str] = None
 
 
 class SceneGraph(BaseGraph):
@@ -98,14 +97,12 @@ class SceneGraph(BaseGraph):
         name: str,
         scene_file: str,
         *,
-        screenshot: Optional[str] = None,
         position: Tuple[int, int] = (0, 0),
         metadata: Optional[dict] = None,
     ) -> SceneNode:
         node = SceneNode(
             name=name,
             scene_file=scene_file,
-            screenshot=screenshot,
             position=position,
             metadata=metadata or {},
         )
@@ -119,7 +116,6 @@ class SceneGraph(BaseGraph):
                 name=name,
                 scene_file=entry.get("scene_file", ""),
                 next_nodes=list(entry.get("next", [])),
-                screenshot=entry.get("screenshot"),
                 position=tuple(entry.get("position", (0, 0))),
                 metadata=dict(entry.get("metadata", {})),
             )
@@ -129,8 +125,6 @@ class SceneGraph(BaseGraph):
     def to_dict(self) -> dict:
         data = super().to_dict()
         for name, node in self.nodes.items():
-            if isinstance(node, SceneNode):
-                data["nodes"][name]["scene_file"] = node.scene_file
-                if node.screenshot:
-                    data["nodes"][name]["screenshot"] = node.screenshot
+                if isinstance(node, SceneNode):
+                    data["nodes"][name]["scene_file"] = node.scene_file
         return data

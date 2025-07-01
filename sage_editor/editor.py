@@ -2619,22 +2619,6 @@ class Editor(QMainWindow):
                 obj.angle = item.rotation()
             self.scene_path = path
             self.scene.save(path)
-            if self.view:
-                name = os.path.splitext(os.path.basename(path))[0]
-                shot = os.path.join(
-                    os.path.dirname(self.project_path) if self.project_path else os.path.dirname(path),
-                    f"{name}.png",
-                )
-                self.view.capture_screenshot(shot)
-                node = self.scene_graph.nodes.get(name)
-                if node:
-                    node.screenshot = (
-                        os.path.relpath(shot, os.path.dirname(self.project_path))
-                        if self.project_path
-                        else shot
-                    )
-                    if self.graph_view and name in self.graph_view.node_items:
-                        self.graph_view.node_items[name].set_screenshot(shot)
 
 
     def show_project_settings(self):
@@ -4785,14 +4769,6 @@ class Editor(QMainWindow):
                     )
                     try:
                         node = self.scene_graph.add_scene(item_name, rel)
-                        shot_rel = os.path.splitext(rel)[0] + ".png"
-                        shot_abs = (
-                            os.path.join(os.path.dirname(self.project_path), shot_rel)
-                            if self.project_path
-                            else shot_rel
-                        )
-                        if os.path.exists(shot_abs):
-                            node.screenshot = shot_rel
                         node.position = (
                             (len(self.scene_graph.nodes) - 1) * 200,
                             0,
@@ -4825,14 +4801,6 @@ class Editor(QMainWindow):
         )
         try:
             node = self.scene_graph.add_scene(name, rel)
-            shot_rel = os.path.splitext(rel)[0] + ".png"
-            shot_abs = (
-                os.path.join(os.path.dirname(self.project_path), shot_rel)
-                if self.project_path
-                else shot_rel
-            )
-            if os.path.exists(shot_abs):
-                node.screenshot = shot_rel
             if self.scene_graph.nodes and len(self.scene_graph.nodes) > 1:
                 last_name = list(self.scene_graph.nodes.keys())[-2]
                 last_item = (
