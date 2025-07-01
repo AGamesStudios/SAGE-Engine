@@ -44,9 +44,11 @@ def register_draw_handler(role: str, func: Callable[["OpenGLRenderer", GameObjec
 
 
 class GLWidget(QOpenGLWidget):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, *, samples: int = 4, vsync: bool | None = None):
         fmt = QSurfaceFormat()
-        fmt.setSamples(4)
+        fmt.setSamples(samples)
+        if vsync is not None:
+            fmt.setSwapInterval(1 if vsync else 0)
         super().__init__(parent)
         self.setFormat(fmt)
         try:
@@ -81,13 +83,15 @@ class OpenGLRenderer:
     width: int = 640
     height: int = 480
     title: str = "SAGE 2D"
+    samples: int = 4
+    vsync: bool | None = None
     widget: Optional[GLWidget] = None
     keep_aspect: bool = True
     background: tuple[int, int, int] = (0, 0, 0)
 
     def create_widget(self) -> GLWidget:
         """Return the :class:`GLWidget` used for rendering."""
-        return GLWidget()
+        return GLWidget(samples=self.samples, vsync=self.vsync)
 
     def init_gl(self) -> None:
         """Initialize OpenGL resources and set up the viewport."""
@@ -229,6 +233,19 @@ class OpenGLRenderer:
         glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 0, 0, self.width, self.height, 0)
         glBindTexture(GL_TEXTURE_2D, 0)
         return self._post_tex
+
+    def grab_image(self) -> Image.Image:
+        """Return the current frame buffer as a :class:`PIL.Image.Image`."""
+        from OpenGL.GL import glReadPixels, GL_RGBA, GL_UNSIGNED_BYTE
+        self.widget.makeCurrent()
+        data = glReadPixels(0, 0, self.width, self.height, GL_RGBA, GL_UNSIGNED_BYTE)
+        self.widget.doneCurrent()
+        img = Image.frombytes("RGBA", (self.width, self.height), data)
+        return img.transpose(Image.Transpose.FLIP_TOP_BOTTOM)
+
+    def save_screenshot(self, path: str) -> None:
+        """Save the current frame buffer to ``path`` as PNG."""
+        self.grab_image().save(path)
 
     def setup_view(self):
         """Configure the OpenGL projection and store it for later."""

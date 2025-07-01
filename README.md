@@ -123,6 +123,11 @@ Scale modes. The game window instead uses the active camera object from
 the scene so you can inspect levels from any angle without affecting
 gameplay.
 
+``OpenGLRenderer`` accepts ``samples`` and ``vsync`` parameters so games can
+choose an MSAA level and control vertical sync. Call
+``renderer.grab_image()`` or ``renderer.save_screenshot()`` to capture the
+current frame.
+
 For systems without graphics acceleration the engine includes a lightweight
 ``NullRenderer``. It performs no drawing so games can run headless or on
 very old PCs. Pass ``renderer="null"`` to :class:`engine.core.engine.Engine` or
