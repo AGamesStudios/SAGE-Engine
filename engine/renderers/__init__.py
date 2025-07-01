@@ -6,7 +6,6 @@ from importlib import metadata
 from typing import Callable
 
 from .shader import Shader
-from .null_renderer import NullRenderer
 
 
 def register_draw_handler(role: str, func: Callable[["Renderer"], None]) -> None:
