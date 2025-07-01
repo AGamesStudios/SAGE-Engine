@@ -31,7 +31,9 @@ mesh_mod.__spec__ = importlib.machinery.ModuleSpec('engine.mesh_utils', None)
 sys.modules['engine.mesh_utils'] = mesh_mod
 
 sys.modules['PIL'] = types.ModuleType('PIL')
-sys.modules['PIL.Image'] = types.ModuleType('PIL.Image')
+stub_image = types.ModuleType('PIL.Image')
+stub_image.Image = type('Image', (), {})
+sys.modules['PIL.Image'] = stub_image
 
 
 def test_runtime_aliases():

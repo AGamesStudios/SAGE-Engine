@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+*.so
+*.dylib
+*.dll
+*.pyd
+*.log
+.log/
+logs/
+.pytest_cache/
+.idea/
+*.png
+*.jpg
+*.gif
+*.ico
+

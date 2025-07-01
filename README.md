@@ -622,3 +622,8 @@ camera.post_effects.append({
     "type": "grayscale",
 })
 ```
+
+## License
+
+This project is released under the [MIT License](LICENSE).
+
