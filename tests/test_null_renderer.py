@@ -13,7 +13,10 @@ sys.modules.setdefault('engine.renderers.shader', types.ModuleType('engine.rende
 sys.modules.setdefault('engine.mesh_utils', types.ModuleType('engine.mesh_utils'))
 dummy_renderers = sys.modules['engine.renderers']
 null_mod = types.ModuleType('engine.renderers.null_renderer')
-class _Renderer: pass
+
+
+class _Renderer:
+    pass
 dummy_renderers.Renderer = _Renderer
 dummy_renderers.Shader = object
 def get_renderer(name):
@@ -42,7 +45,11 @@ null_mod.NullRenderer = NullRendererStub
 
 qtcore = types.ModuleType('PyQt6.QtCore')
 qtcore.Qt = object()
-class _QObj: pass
+
+
+class _QObj:
+    pass
+
 qtcore.QObject = _QObj
 sys.modules.setdefault('PyQt6', types.ModuleType('PyQt6'))
 sys.modules.setdefault('PyQt6.QtCore', qtcore)
@@ -69,9 +76,9 @@ class Camera(GameObject):
 cam_mod.Camera = Camera
 sys.modules.setdefault('engine.core.camera', cam_mod)
 
-from engine.core.engine import Engine
-from engine.core.scenes.scene import Scene
-from engine.inputs import InputBackend
+from engine.core.engine import Engine  # noqa: E402
+from engine.core.scenes.scene import Scene  # noqa: E402
+from engine.inputs import InputBackend  # noqa: E402
 
 class DummyInput(InputBackend):
     def __init__(self, widget=None):

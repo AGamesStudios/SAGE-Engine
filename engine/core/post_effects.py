@@ -41,9 +41,11 @@ class GrayscaleEffect(PostEffect):
     def apply(self, renderer, texture: int, width: int, height: int,
               camera, params: dict) -> int:
         from OpenGL.GL import (
-            glUseProgram, glBindVertexArray, glDrawArrays,
+            glUseProgram, glDrawArrays,
             glActiveTexture, glBindTexture, glGetUniformLocation,
-            glUniform1i, GL_TEXTURE0,
+            glUniform1i, GL_TEXTURE0, GL_TEXTURE_2D,
+            glBindBuffer, glEnableVertexAttribArray, glVertexAttribPointer,
+            glGetAttribLocation, GL_ARRAY_BUFFER, GL_FLOAT, GL_TRIANGLE_FAN,
         )
         if self._program is None:
             from OpenGL.GL import GL_VERTEX_SHADER, GL_FRAGMENT_SHADER
@@ -77,7 +79,6 @@ class GrayscaleEffect(PostEffect):
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, texture)
         glUniform1i(loc_color, 0)
-        from OpenGL.GL import glBindBuffer, glEnableVertexAttribArray, glVertexAttribPointer
         glBindBuffer(GL_ARRAY_BUFFER, renderer._quad_vbo)
         loc = glGetAttribLocation(self._program, "pos")
         glEnableVertexAttribArray(loc)

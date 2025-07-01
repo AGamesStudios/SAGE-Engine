@@ -41,7 +41,7 @@ LANGUAGES = {
     }
 }
 
-import locale
+import locale  # noqa: E402
 
 def get_default_language() -> str:
     lang, _ = locale.getdefaultlocale()

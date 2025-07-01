@@ -72,7 +72,7 @@ def load_logic_plugins(*modules) -> None:
             logger.exception('Error loading logic entry points')
         _PLUGINS_LOADED = True
 
-import re
+import re  # noqa: E402
 
 class EngineRef:
     """Reference to an engine attribute or helper function."""

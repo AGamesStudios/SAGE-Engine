@@ -18,9 +18,8 @@ from OpenGL.GL import (
     GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_TEXTURE_MAG_FILTER, GL_LINEAR, GL_NEAREST,
     GL_QUADS, GL_LINES, GL_LINE_LOOP, GL_TRIANGLES, GL_RGBA, GL_UNSIGNED_BYTE,
     GL_MULTISAMPLE, GL_LINE_SMOOTH, GL_ARRAY_BUFFER, GL_STATIC_DRAW,
-    GL_FLOAT, GL_TRIANGLE_FAN, GL_VERTEX_SHADER, GL_FRAGMENT_SHADER
+    GL_FLOAT, GL_TRIANGLE_FAN
 )
-from OpenGL.GL.shaders import compileProgram, compileShader
 from .shader import Shader
 from PIL import Image
 
@@ -123,9 +122,8 @@ class OpenGLRenderer:
         self._sprite_shader = Shader(vert, frag)
         self._program = self._sprite_shader.compile()
         from OpenGL.GL import (
-            glGenVertexArrays, glBindVertexArray, glGenBuffers, glBindBuffer,
-            glBufferData, GL_ARRAY_BUFFER, GL_STATIC_DRAW, glGetAttribLocation,
-            glEnableVertexAttribArray, glVertexAttribPointer, GL_FLOAT,
+            glGenVertexArrays, glGenBuffers, glBufferData, glGetAttribLocation,
+            glEnableVertexAttribArray, glVertexAttribPointer,
         )
         self._vao = glGenVertexArrays(1)
         glBindVertexArray(self._vao)
@@ -303,7 +301,7 @@ class OpenGLRenderer:
 
     def _get_icon_texture(self, name: str) -> int:
         """Load an icon image from ``sage_editor/icons`` respecting the theme."""
-        from sage_editor.icons import ICON_DIR, ICON_THEME
+        from sage_editor.icons import ICON_DIR, ICON_THEME, APP_ICON_NAME
         key = f"{ICON_THEME}/{name}"
         tex = self._icon_cache.get(key)
         if tex:
@@ -367,10 +365,10 @@ class OpenGLRenderer:
         inv_zoom = 1.0 / zoom if zoom else 1.0
         half = size / 2.0 * inv_zoom
         glBegin(GL_QUADS)
-        glTexCoord2f(0.0, 0.0); glVertex2f(-half, -half)
-        glTexCoord2f(1.0, 0.0); glVertex2f( half, -half)
-        glTexCoord2f(1.0, 1.0); glVertex2f( half,  half)
-        glTexCoord2f(0.0, 1.0); glVertex2f(-half,  half)
+        glTexCoord2f(0.0, 0.0); glVertex2f(-half, -half)  # noqa: E702
+        glTexCoord2f(1.0, 0.0); glVertex2f( half, -half)  # noqa: E702
+        glTexCoord2f(1.0, 1.0); glVertex2f( half,  half)  # noqa: E702
+        glTexCoord2f(0.0, 1.0); glVertex2f(-half,  half)  # noqa: E702
         glEnd()
         glPopMatrix()
 
@@ -417,9 +415,7 @@ class OpenGLRenderer:
             handler(self, obj, camera)
             return
         from OpenGL.GL import (
-            glUseProgram, glGetUniformLocation, glUniform4f, glBindBuffer,
-            glBufferSubData, GL_ARRAY_BUFFER, glBindVertexArray, glDrawArrays,
-            GL_TRIANGLE_FAN, glBindTexture
+            glBindTexture
         )
         custom_shader = obj.get_shader() if hasattr(obj, "get_shader") else None
         if custom_shader:
@@ -546,7 +542,7 @@ class OpenGLRenderer:
         """Draw a bright outline around ``obj`` in world coordinates."""
         from OpenGL.GL import (
             glBindTexture, glColor4f, glLineWidth, glBegin, glEnd, glVertex2f,
-            glUseProgram, glDisable, glEnable, GL_LINE_LOOP, GL_TEXTURE_2D
+            glDisable, glEnable, GL_LINE_LOOP, GL_TEXTURE_2D
         )
         if obj is None:
             return
@@ -605,11 +601,9 @@ class OpenGLRenderer:
             glBegin,
             glEnd,
             glVertex2f,
-            glUseProgram,
             glDisable,
             glEnable,
             GL_TEXTURE_2D,
-            GL_TRIANGLE_FAN,
             GL_TRIANGLES,
         )
 

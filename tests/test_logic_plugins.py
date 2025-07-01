@@ -25,8 +25,9 @@ def test_logic_plugin_entry_point(tmp_path, monkeypatch):
     monkeypatch.setattr(metadata, 'entry_points', lambda: eps)
     sys.path.insert(0, str(tmp_path))
     try:
-        from engine.logic.base import ACTION_REGISTRY, _PLUGINS_LOADED
-        _PLUGINS_LOADED = False
+        from engine.logic import base as logic_base
+        ACTION_REGISTRY = logic_base.ACTION_REGISTRY
+        logic_base._PLUGINS_LOADED = False
         ACTION_REGISTRY.clear()
         import engine.logic
         importlib.reload(engine.logic.base)

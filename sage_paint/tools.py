@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from PyQt6.QtGui import QPainter, QPen, QColor, QImage
 from PyQt6.QtCore import Qt, QPoint, QPointF, QRectF, QRect
+from .canvas import Canvas
 
 
 class Tool:

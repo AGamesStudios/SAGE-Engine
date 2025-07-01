@@ -1,10 +1,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Tuple, Any
+from typing import Tuple, Any, TYPE_CHECKING
 
 from ..inputs import InputBackend
 from ..renderers import Renderer
+
+if TYPE_CHECKING:  # pragma: no cover - hints for static analyzers
+    from .camera import Camera
+    from .scenes.scene import Scene
 
 
 @dataclass(slots=True)

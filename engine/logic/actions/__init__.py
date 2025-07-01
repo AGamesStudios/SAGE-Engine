@@ -9,29 +9,29 @@ from ..base import Action, register_action, resolve_value  # re-export
 from ...utils.log import logger
 
 # pull in built-in actions
-from . import print as _print
-from . import movedirection
-from . import setvariable
-from . import modifyvariable
-from . import setobjectvariable
-from . import modifyobjectvariable
-from . import showobject
-from . import hideobject
-from . import setposition
-from . import setrotation
-from . import setscale
-from . import flip
-from . import setalpha
-from . import setcolor
-from . import setsprite
-from . import setzorder
-from . import renameobject
-from . import deleteobject
-from . import createobject
-from . import setcamerazoom
-from . import setcamerasize
-from . import setactivecamera
-from . import setkeepaspect
+from . import print as _print  # noqa: F401
+from . import movedirection  # noqa: F401
+from . import setvariable  # noqa: F401
+from . import modifyvariable  # noqa: F401
+from . import setobjectvariable  # noqa: F401
+from . import modifyobjectvariable  # noqa: F401
+from . import showobject  # noqa: F401
+from . import hideobject  # noqa: F401
+from . import setposition  # noqa: F401
+from . import setrotation  # noqa: F401
+from . import setscale  # noqa: F401
+from . import flip  # noqa: F401
+from . import setalpha  # noqa: F401
+from . import setcolor  # noqa: F401
+from . import setsprite  # noqa: F401
+from . import setzorder  # noqa: F401
+from . import renameobject  # noqa: F401
+from . import deleteobject  # noqa: F401
+from . import createobject  # noqa: F401
+from . import setcamerazoom  # noqa: F401
+from . import setcamerasize  # noqa: F401
+from . import setactivecamera  # noqa: F401
+from . import setkeepaspect  # noqa: F401
 
 __all__ = [
     'Action', 'register_action', 'resolve_value', 'logger',

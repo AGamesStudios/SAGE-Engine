@@ -1,12 +1,15 @@
 import types
 import sys
-from dataclasses import dataclass
 import importlib.machinery
 
 # Stub heavy modules so engine.core.engine imports without optional deps
 qtcore = types.ModuleType('PyQt6.QtCore')
 qtcore.Qt = object()
-class _QObj: pass
+
+
+class _QObj:
+    pass
+
 qtcore.QObject = _QObj
 sys.modules.setdefault('PyQt6', types.ModuleType('PyQt6'))
 sys.modules.setdefault('PyQt6.QtCore', qtcore)
@@ -14,7 +17,10 @@ sys.modules.setdefault('PyQt6.QtWidgets', types.ModuleType('PyQt6.QtWidgets'))
 sys.modules.setdefault('OpenGL', types.ModuleType('OpenGL'))
 sys.modules.setdefault('OpenGL.GL', types.ModuleType('OpenGL.GL'))
 render_mod = types.ModuleType('engine.renderers')
-class _Renderer: pass
+
+
+class _Renderer:
+    pass
 render_mod.Renderer = _Renderer
 render_mod.Shader = object
 def get_renderer(name):
@@ -22,11 +28,13 @@ def get_renderer(name):
 render_mod.get_renderer = get_renderer
 render_mod.__spec__ = importlib.machinery.ModuleSpec('engine.renderers', None)
 render_mod.__package__ = 'engine'
-import engine
 sys.modules['engine.renderers'] = render_mod
 sys.modules['engine.renderers.shader'] = types.ModuleType('engine.renderers.shader')
 mesh_mod = types.ModuleType('engine.mesh_utils')
-class _Mesh: pass
+
+
+class _Mesh:
+    pass
 mesh_mod.Mesh = _Mesh
 mesh_mod.create_square_mesh = lambda *a, **k: None
 mesh_mod.create_triangle_mesh = lambda *a, **k: None
@@ -67,15 +75,15 @@ class Camera(GameObject):
 cam_mod.Camera = Camera
 sys.modules['engine.core.camera'] = cam_mod
 
-import importlib
+import importlib  # noqa: E402
 if 'engine.core.scenes.scene' in sys.modules:
     importlib.reload(sys.modules['engine.core.scenes.scene'])
 
-from engine.core.engine import Engine
-from engine.core.extensions import EngineExtension
-from engine.core.settings import EngineSettings
-from engine.inputs import InputBackend
-from engine.renderers import Renderer
+from engine.core.engine import Engine  # noqa: E402
+from engine.core.extensions import EngineExtension  # noqa: E402
+from engine.core.settings import EngineSettings  # noqa: E402
+from engine.inputs import InputBackend  # noqa: E402
+from engine.renderers import Renderer  # noqa: E402
 
 class DummyRenderer(Renderer):
     def __init__(self, width, height, title):
@@ -112,11 +120,14 @@ class DummyExt(EngineExtension):
         self.started = False
         self.updated = []
         self.stopped = False
-    def start(self, engine):
+
+    def start(self, eng):
         self.started = True
-    def update(self, engine, dt):
+
+    def update(self, eng, dt):
         self.updated.append(dt)
-    def stop(self, engine):
+
+    def stop(self, eng):
         self.stopped = True
 
 

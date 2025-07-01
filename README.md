@@ -3,10 +3,11 @@
 This repository contains **SAGE Engine**, a lightweight core framework for
 games.  **SAGE 2D** extends the engine with sprite rendering while **SAGE
 Editor** lets you place objects visually and save projects.  The editor remains
-small so it runs well even on older computers.  An additional **SAGE Paint**
-A lightweight `sage_runtime` package exposes the core engine for standalone games while common utilities live in `sage_sdk`.
+small so it runs well even on older computers. An additional **SAGE Paint** tool
+provides an experimental sprite editor for drawing 2D graphics. A lightweight
+`sage_runtime` package exposes the core engine for standalone games while common
+utilities live in `sage_sdk`.
 
-tool provides an experimental sprite editor for drawing 2D graphics. The
 window shows an "EXPERIMENTAL" banner to highlight this status.  SAGE Paint
 supports zooming, right-click panning and an eraser tool so sprites can be
 drawn or touched up without leaving the engine.  A live gizmo shows the brush
@@ -40,8 +41,14 @@ pip install -r requirements.txt
 Or run `scripts/setup.sh` to install them automatically.
 
 ### Running tests
-Execute `pytest` to run the automated test suite which checks the
-engine for common errors and regressions.
+Execute `PYTHONPATH=. pytest` to run the automated test suite which
+checks the engine for common errors and regressions. You can also place
+the following snippet in `pytest.ini` so the path is set automatically:
+
+```ini
+[pytest]
+pythonpath = .
+```
 
 ## Building an executable
 Install PyInstaller and run the build script to create a standalone **SAGE Engine** executable. Place an ``icon.png`` (256×256 is recommended) in ``sage_editor/icons`` to brand the window. If building for Windows also provide ``icon.ico`` converted from that image. The script packages the editor icons so the program has a complete UI when run on another machine. The command below shows the full parameters on one line so it can be copied directly:
@@ -110,12 +117,9 @@ continues to track the grabbed point while zooming. Its arrows darken when
 hovered so you know they can be dragged. A yellow ring allows rotation around
 the Z axis and square handles at the ends let you scale objects. A small
 toolbar in the viewport corner lets you switch between Move, Rotate and
-Scale modes. The game window instead uses
-toolbar in the viewport corner lets you switch between Move, Rotate and
-Scale modes. The game window instead uses
-the Z axis and square handles at the ends let you scale objects. The game window instead uses
-the active camera object from the scene so you can inspect levels from any angle
-without affecting gameplay.
+Scale modes. The game window instead uses the active camera object from
+the scene so you can inspect levels from any angle without affecting
+gameplay.
 
 For systems without graphics acceleration the engine includes a lightweight
 ``NullRenderer``. It performs no drawing so games can run headless or on

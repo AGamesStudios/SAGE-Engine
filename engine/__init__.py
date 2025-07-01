@@ -7,9 +7,9 @@ from .version import __version__, require as require_version
 
 ENGINE_VERSION = __version__
 
-from .utils.log import logger
-from .utils.diagnostics import warn, error, exception
-from sage_sdk.plugins import PluginManager
+from .utils.log import logger  # noqa: E402
+from .utils.diagnostics import warn, error, exception  # noqa: E402
+from sage_sdk.plugins import PluginManager  # noqa: E402
 
 ENGINE_PLUGINS = PluginManager('engine')
 

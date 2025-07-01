@@ -1,18 +1,23 @@
+from engine.inputs import InputManager, get_input
+
+
 class DummyBackend:
     def __init__(self):
         self.keys = set()
         self.buttons = set()
+
     def poll(self):
         pass
+
     def is_key_down(self, key):
         return key in self.keys
+
     def is_button_down(self, button):
         return button in self.buttons
+
     def shutdown(self):
         self.keys.clear()
         self.buttons.clear()
-
-from engine.inputs import InputManager, get_input
 
 
 def test_action_binding():

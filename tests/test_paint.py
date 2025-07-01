@@ -66,7 +66,7 @@ class TestPaintModule(unittest.TestCase):
         canvas = Canvas(8, 8)
         self.assertTrue(canvas.smooth_pen)
         canvas.smooth_pen = False
-        brush = BrushTool(canvas)
+        BrushTool(canvas)
         self.assertFalse(canvas.smooth_pen)
 
     def test_width_spin_updates_canvas(self):

@@ -7,13 +7,13 @@ this package registers all built-in conditions via their decorators.
 from ..base import Condition, register_condition, resolve_value  # re-export
 
 # import submodules so decorators run
-from . import onstart
-from . import keypressed
-from . import keyreleased
-from . import inputstate
-from . import objectvisible
-from . import variablecompare
-from . import objectvariablecompare
+from . import onstart  # noqa: F401
+from . import keypressed  # noqa: F401
+from . import keyreleased  # noqa: F401
+from . import inputstate  # noqa: F401
+from . import objectvisible  # noqa: F401
+from . import variablecompare  # noqa: F401
+from . import objectvariablecompare  # noqa: F401
 
 __all__ = [
     'Condition', 'register_condition', 'resolve_value',

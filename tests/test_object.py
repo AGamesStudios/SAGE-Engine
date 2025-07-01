@@ -11,7 +11,7 @@ sys.modules.setdefault('engine.renderers', types.ModuleType('engine.renderers'))
 sys.modules.setdefault('engine.renderers.shader', types.ModuleType('engine.renderers.shader'))
 sys.modules.setdefault('engine.mesh_utils', types.ModuleType('engine.mesh_utils'))
 
-from dataclasses import dataclass
+from dataclasses import dataclass  # noqa: E402
 
 game_mod = types.ModuleType('engine.entities.game_object')
 
@@ -36,8 +36,8 @@ class Camera(GameObject):
 cam_mod.Camera = Camera
 sys.modules.setdefault('engine.core.camera', cam_mod)
 
-from engine.entities.object import Object, Transform2D, Material, create_role
-from engine.core.scenes.scene import Scene
+from engine.entities.object import Object, Transform2D, Material, create_role  # noqa: E402
+from engine.core.scenes.scene import Scene  # noqa: E402
 
 
 class TestObject(unittest.TestCase):
