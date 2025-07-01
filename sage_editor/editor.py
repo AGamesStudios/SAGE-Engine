@@ -1573,9 +1573,9 @@ class Editor(QMainWindow):
         self.tabs.addTab(self.view, self.t('viewport'))
 
         # scene graph tab
-        self.graph_view = SceneGraphView()
+        self.graph_view = SceneGraphView(base_dir=os.path.dirname(self.project_path) if self.project_path else None)
         if self.graph_view:
-            self.graph_view.load_graph(self.scene_graph)
+            self.graph_view.load_graph(self.scene_graph, os.path.dirname(self.project_path) if self.project_path else None)
         self.tabs.addTab(self.graph_view, self.t('scene_graph'))
 
         # object list and transform inspector dock
@@ -2436,7 +2436,7 @@ class Editor(QMainWindow):
             self._refresh_resource_tree()
         self._scan_scenes()
         if self.graph_view:
-            self.graph_view.load_graph(self.scene_graph)
+            self.graph_view.load_graph(self.scene_graph, os.path.dirname(self.project_path) if self.project_path else None)
         try:
             self.open_scene_tab(self.scene_path)
         except Exception as exc:
@@ -2479,7 +2479,7 @@ class Editor(QMainWindow):
             self.scene_tabs.clear()
             self.scene_graph = SceneGraph.from_dict(proj.scene_graph or {})
             if self.graph_view:
-                self.graph_view.load_graph(self.scene_graph)
+                self.graph_view.load_graph(self.scene_graph, os.path.dirname(path))
             self._scan_scenes()
             tabs = self.project_metadata.get('open_tabs') or [proj.scene_file]
             proj_dir = os.path.dirname(path)
@@ -2616,6 +2616,22 @@ class Editor(QMainWindow):
                 obj.angle = item.rotation()
             self.scene_path = path
             self.scene.save(path)
+            if self.view:
+                name = os.path.splitext(os.path.basename(path))[0]
+                shot = os.path.join(
+                    os.path.dirname(self.project_path) if self.project_path else os.path.dirname(path),
+                    f"{name}.png",
+                )
+                self.view.capture_screenshot(shot)
+                node = self.scene_graph.nodes.get(name)
+                if node:
+                    node.screenshot = (
+                        os.path.relpath(shot, os.path.dirname(self.project_path))
+                        if self.project_path
+                        else shot
+                    )
+                    if self.graph_view and name in self.graph_view.node_items:
+                        self.graph_view.node_items[name].set_screenshot(shot)
 
 
     def show_project_settings(self):
@@ -4763,6 +4779,14 @@ class Editor(QMainWindow):
                     )
                     try:
                         node = self.scene_graph.add_scene(item_name, rel)
+                        shot_rel = os.path.splitext(rel)[0] + ".png"
+                        shot_abs = (
+                            os.path.join(os.path.dirname(self.project_path), shot_rel)
+                            if self.project_path
+                            else shot_rel
+                        )
+                        if os.path.exists(shot_abs):
+                            node.screenshot = shot_rel
                         node.position = (
                             (len(self.scene_graph.nodes) - 1) * 200,
                             0,
@@ -4770,7 +4794,7 @@ class Editor(QMainWindow):
                     except ValueError:
                         pass
         if self.graph_view:
-            self.graph_view.load_graph(self.scene_graph)
+            self.graph_view.load_graph(self.scene_graph, os.path.dirname(self.project_path) if self.project_path else None)
 
     def new_scene(self) -> None:
         if not self.scenes_dir:
@@ -4795,6 +4819,14 @@ class Editor(QMainWindow):
         )
         try:
             node = self.scene_graph.add_scene(name, rel)
+            shot_rel = os.path.splitext(rel)[0] + ".png"
+            shot_abs = (
+                os.path.join(os.path.dirname(self.project_path), shot_rel)
+                if self.project_path
+                else shot_rel
+            )
+            if os.path.exists(shot_abs):
+                node.screenshot = shot_rel
             if self.scene_graph.nodes and len(self.scene_graph.nodes) > 1:
                 last_name = list(self.scene_graph.nodes.keys())[-2]
                 last_item = (
@@ -4810,7 +4842,7 @@ class Editor(QMainWindow):
         except ValueError:
             pass
         if self.graph_view:
-            self.graph_view.load_graph(self.scene_graph)
+            self.graph_view.load_graph(self.scene_graph, os.path.dirname(self.project_path) if self.project_path else None)
 
     def delete_selected_scene(self) -> None:
         item = self.scenes_dock.list.currentItem()
@@ -4843,7 +4875,7 @@ class Editor(QMainWindow):
             if self.scene_graph.start == name:
                 self.scene_graph.start = next(iter(self.scene_graph.nodes), None)
         if self.graph_view:
-            self.graph_view.load_graph(self.scene_graph)
+            self.graph_view.load_graph(self.scene_graph, os.path.dirname(self.project_path) if self.project_path else None)
         if self.scene_path == path:
             self.scene_path = None
             if self.scene_tabs:

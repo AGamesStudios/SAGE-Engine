@@ -3,6 +3,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import QIcon, QKeySequence, QShortcut
 from PyQt6.QtCore import QTimer, Qt, QPointF
+import os
 import math
 
 from engine.renderers.opengl_renderer import OpenGLRenderer, GLWidget
@@ -591,3 +592,15 @@ class Viewport(GLWidget):
         if result not in allowed:
             return None
         return result
+
+    def capture_screenshot(self, path: str) -> None:
+        """Save the current framebuffer to *path* if possible."""
+        try:
+            img = self.grabFramebuffer()
+        except Exception:
+            try:
+                img = self.grab()
+            except Exception:
+                return
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        img.save(path)

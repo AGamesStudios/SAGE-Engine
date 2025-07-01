@@ -37,8 +37,6 @@ class SceneNodeItem(QGraphicsRectItem):
         self.image_rect = QGraphicsRectItem(0, 20, self.WIDTH, self.HEIGHT - 20, self)
         self.image_rect.setBrush(QColor(220, 220, 220))
         self.pix_item: QGraphicsPixmapItem | None = None
-        if node.screenshot:
-            self.set_screenshot(node.screenshot)
         # connection ports
         self.input_port = QGraphicsEllipseItem(-5, self.HEIGHT / 2 - 5, 10, 10, self)
         self.input_port.setBrush(QColor(70, 70, 70))
@@ -99,7 +97,7 @@ class SceneNodeItem(QGraphicsRectItem):
 class SceneGraphView(QGraphicsView):
     """View widget for :class:`SceneGraph`."""
 
-    def __init__(self, parent=None) -> None:
+    def __init__(self, parent=None, *, base_dir: str | None = None) -> None:
         scene = QGraphicsScene()
         super().__init__(scene, parent)
         # QPainter.RenderHint is the correct enum for antialiasing in Qt6
@@ -107,19 +105,28 @@ class SceneGraphView(QGraphicsView):
         self.graph: SceneGraph | None = None
         self.node_items: Dict[str, SceneNodeItem] = {}
         self.lines: list = []
+        self.base_dir: str | None = base_dir
         self.grid_size = 20
         self._panning = False
         self._last_pos = None
         self._connect_src: str | None = None
         self._temp_line: QGraphicsPathItem | None = None
 
-    def load_graph(self, graph: SceneGraph) -> None:
+    def load_graph(self, graph: SceneGraph, base_dir: str | None = None) -> None:
+        """Display *graph* using optional *base_dir* for relative assets."""
         self.graph = graph
+        if base_dir is not None:
+            self.base_dir = base_dir
         self.scene().clear()
         self.node_items.clear()
         self.lines.clear()
         for node in graph.nodes.values():
             item = SceneNodeItem(node, self)
+            if node.screenshot:
+                path = node.screenshot
+                if self.base_dir and not os.path.isabs(path):
+                    path = os.path.join(self.base_dir, path)
+                item.set_screenshot(path)
             self.scene().addItem(item)
             self.node_items[node.name] = item
         self.update_edges()
@@ -180,14 +187,35 @@ class SceneGraphView(QGraphicsView):
         ):
             parent = item.parentItem()
             if isinstance(parent, SceneNodeItem) and self.graph:
+                pen = QPen(Qt.PenStyle.DashLine)
                 if item.data(0) == 'input':
+                    src = None
                     for node in self.graph.nodes.values():
                         if parent.node.name in node.next_nodes:
                             node.next_nodes.remove(parent.node.name)
+                            src = node.name
+                            break
+                    self.update_edges()
+                    if src:
+                        self._connect_src = src
+                        start = self.node_items[src].output_pos()
+                        path = QPainterPath()
+                        path.moveTo(*start)
+                        path.lineTo(*start)
+                        self._temp_line = self.scene().addPath(path, pen)
+                    return
                 elif item.data(0) == 'output':
-                    self.graph.nodes[parent.node.name].next_nodes.clear()
-                self.update_edges()
-                return
+                    src = parent.node.name
+                    if self.graph.nodes[src].next_nodes:
+                        self.graph.nodes[src].next_nodes.clear()
+                        self.update_edges()
+                    self._connect_src = src
+                    start = parent.output_pos()
+                    path = QPainterPath()
+                    path.moveTo(*start)
+                    path.lineTo(*start)
+                    self._temp_line = self.scene().addPath(path, pen)
+                    return
         if (
             event.button() == Qt.MouseButton.LeftButton
             and isinstance(item, QGraphicsEllipseItem)
