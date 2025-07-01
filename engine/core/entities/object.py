@@ -40,10 +40,12 @@ class Transform2D:
 
 @dataclass
 class Material:
-    """Simple material with a color and optional texture."""
+    """Simple material used by sprite roles."""
 
     color: tuple[int, int, int, int] = (255, 255, 255, 255)
     texture: str | None = None
+    opacity: float = 1.0
+    blend: str = "alpha"
 
 
 @dataclass
@@ -59,6 +61,36 @@ class Object:
     id: int = field(init=False)
     parent: Optional["Object"] = field(default=None, repr=False)
     children: List["Object"] = field(default_factory=list, repr=False)
+
+    # --- common properties ---
+    @property
+    def position(self) -> tuple[float, float]:
+        """Return the local position as ``(x, y)``."""
+        return self.transform.x, self.transform.y
+
+    @position.setter
+    def position(self, value: tuple[float, float]) -> None:
+        self.transform.x, self.transform.y = value
+
+    @property
+    def rotation(self) -> float:
+        """Return the object rotation angle in degrees."""
+        return self.transform.angle
+
+    @rotation.setter
+    def rotation(self, angle: float) -> None:
+        self.transform.angle = angle
+
+    @property
+    def scale(self) -> tuple[float, float]:
+        """Return the object's scale as ``(sx, sy)``."""
+        return self.transform.scale_x, self.transform.scale_y
+
+    @scale.setter
+    def scale(self, value: tuple[float, float]) -> None:
+        sx, sy = value
+        self.transform.scale_x = sx
+        self.transform.scale_y = sy
 
     def __post_init__(self) -> None:
         self.id = next_id()
