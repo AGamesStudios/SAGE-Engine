@@ -2333,6 +2333,9 @@ class Editor(QMainWindow):
             view.camera.x = cam_data.get("x", view.camera.x)
             view.camera.y = cam_data.get("y", view.camera.y)
             view.camera.zoom = cam_data.get("zoom", view.camera.zoom)
+        if self.graph_view:
+            name = os.path.splitext(os.path.basename(path))[0]
+            self.graph_view.attach_viewport(name, view)
         self._update_open_tabs_metadata()
 
     def new_project(self):
@@ -3307,6 +3310,9 @@ class Editor(QMainWindow):
             path = getattr(widget, 'scene_path', None)
             if path and path in self.scene_tabs:
                 del self.scene_tabs[path]
+            if path and self.graph_view:
+                name = os.path.splitext(os.path.basename(path))[0]
+                self.graph_view.detach_viewport(name)
             logic = self.scene_logic_tabs.pop(path, None)
             if logic:
                 lidx = self.tabs.indexOf(logic)

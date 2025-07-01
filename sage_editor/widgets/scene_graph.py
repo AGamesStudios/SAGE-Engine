@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 from typing import Dict
 
-from PyQt6.QtCore import Qt, QPointF
+from PyQt6.QtCore import Qt, QPointF, QTimer
 from PyQt6.QtGui import QColor, QPainterPath, QPen, QPixmap, QPainter, QMouseEvent
 from PyQt6.QtWidgets import (
     QGraphicsItem, QGraphicsPixmapItem, QGraphicsRectItem, QGraphicsEllipseItem,
@@ -37,6 +37,8 @@ class SceneNodeItem(QGraphicsRectItem):
         self.image_rect = QGraphicsRectItem(0, 20, self.WIDTH, self.HEIGHT - 20, self)
         self.image_rect.setBrush(QColor(220, 220, 220))
         self.pix_item: QGraphicsPixmapItem | None = None
+        self._preview_timer: QTimer | None = None
+        self._viewport = None
         # connection ports
         self.input_port = QGraphicsEllipseItem(-5, self.HEIGHT / 2 - 5, 10, 10, self)
         self.input_port.setBrush(QColor(70, 70, 70))
@@ -82,6 +84,44 @@ class SceneNodeItem(QGraphicsRectItem):
         else:
             self.pix_item.setPixmap(pix)
 
+    def set_preview_widget(self, viewport) -> None:
+        """Show a live preview from *viewport* without saving images."""
+        self._viewport = viewport
+        if self._preview_timer is None:
+            self._preview_timer = QTimer()
+            self._preview_timer.timeout.connect(self._update_preview)
+            self._preview_timer.start(500)
+        self._update_preview()
+
+    def clear_preview(self) -> None:
+        if self._preview_timer:
+            self._preview_timer.stop()
+            self._preview_timer = None
+        self._viewport = None
+
+    def _update_preview(self) -> None:
+        if not self._viewport:
+            return
+        try:
+            img = self._viewport.grabFramebuffer()
+        except Exception:
+            try:
+                img = self._viewport.grab()
+            except Exception:
+                return
+        pix = QPixmap.fromImage(img).scaled(
+            self.WIDTH,
+            self.HEIGHT - 20,
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation,
+        )
+        if self.pix_item is None:
+            self.pix_item = QGraphicsPixmapItem(pix, self)
+            self.pix_item.setPos(0, 20)
+            self.image_rect.setVisible(False)
+        else:
+            self.pix_item.setPixmap(pix)
+
     def input_pos(self):
         center = self.input_port.boundingRect().center()
         point = self.input_port.mapToScene(center)
@@ -111,6 +151,18 @@ class SceneGraphView(QGraphicsView):
         self._last_pos = None
         self._connect_src: str | None = None
         self._temp_line: QGraphicsPathItem | None = None
+
+    def attach_viewport(self, name: str, viewport) -> None:
+        item = self.node_items.get(name)
+        if not item:
+            return
+        item.set_preview_widget(viewport)
+
+    def detach_viewport(self, name: str) -> None:
+        item = self.node_items.get(name)
+        if not item:
+            return
+        item.clear_preview()
 
     def load_graph(self, graph: SceneGraph, base_dir: str | None = None) -> None:
         """Display *graph* using optional *base_dir* for relative assets."""
