@@ -152,6 +152,7 @@ class OpenGLRenderer:
         glBindVertexArray(0)
 
     def __post_init__(self):
+        super().__init__()
         if self.widget is None:
             self.widget = self.create_widget()
         self.widget.renderer = self
@@ -1118,6 +1119,7 @@ class OpenGLRenderer:
 
     def present(self):
         self.widget.update()
+        self.run_post_hooks()
 
     def close(self):
         self._should_close = True

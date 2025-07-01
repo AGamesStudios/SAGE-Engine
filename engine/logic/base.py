@@ -306,6 +306,7 @@ class EventSystem:
         self.variables = variables if variables is not None else {}
         self.groups: dict[str, list[Event]] = {}
         self.engine_version = engine_version or ENGINE_VERSION
+        self.paused = False
 
     def get_event(self, name):
         for evt in self.events:
@@ -362,6 +363,14 @@ class EventSystem:
             evt.reset()
         logger.debug('Reset all events')
 
+    def pause(self) -> None:
+        """Pause all events without clearing state."""
+        self.paused = True
+
+    def resume(self) -> None:
+        """Resume event processing."""
+        self.paused = False
+
     # group helpers -----------------------------------------------------
 
     def get_group_names(self) -> list[str]:
@@ -390,8 +399,13 @@ class EventSystem:
         if name in self.groups:
             logger.debug('Reset group %s', name)
 
+    def update_group(self, name: str, engine, scene, dt: float) -> None:
+        """Update only events in ``name``."""
+        for evt in list(self.groups.get(name, [])):
+            evt.update(engine, scene, dt)
+
     def update(self, engine, scene, dt):
-        if not self.events:
+        if self.paused or not self.events:
             return
         for evt in list(self.events):
             evt.update(engine, scene, dt)

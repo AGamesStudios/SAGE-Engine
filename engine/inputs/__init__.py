@@ -68,4 +68,46 @@ def get_input(name: str) -> Type | None:
     return INPUT_REGISTRY.get(name)
 
 
-__all__ = ["InputBackend", "register_input", "get_input", "INPUT_REGISTRY"]
+class InputManager:
+    """Map high level actions to backend keys or buttons."""
+
+    def __init__(self, backend: InputBackend):
+        self.backend = backend
+        self._key_map: dict[str, int] = {}
+        self._btn_map: dict[str, int] = {}
+
+    def bind_action(self, action: str, *, key: int | None = None,
+                    button: int | None = None) -> None:
+        """Bind ``action`` to ``key`` or ``button``."""
+        if key is not None:
+            self._key_map[action] = key
+        if button is not None:
+            self._btn_map[action] = button
+
+    def unbind_action(self, action: str) -> None:
+        self._key_map.pop(action, None)
+        self._btn_map.pop(action, None)
+
+    def poll(self) -> None:
+        self.backend.poll()
+
+    def is_action_down(self, action: str) -> bool:
+        key = self._key_map.get(action)
+        if key is not None and self.backend.is_key_down(key):
+            return True
+        button = self._btn_map.get(action)
+        if button is not None and self.backend.is_button_down(button):
+            return True
+        return False
+
+    def shutdown(self) -> None:
+        self.backend.shutdown()
+
+
+__all__ = [
+    "InputBackend",
+    "InputManager",
+    "register_input",
+    "get_input",
+    "INPUT_REGISTRY",
+]

@@ -3,6 +3,7 @@
 from abc import ABC, abstractmethod
 import logging
 from importlib import metadata
+from typing import Callable
 
 from .shader import Shader
 
@@ -75,6 +76,24 @@ class Renderer(ABC):
 
     def should_close(self) -> bool:
         return False
+
+    def __init__(self, *args, **kwargs):
+        self.post_hooks: list[Callable[["Renderer"], None]] = []
+
+    # hook management ---------------------------------------------------
+    def add_post_hook(self, func: Callable[["Renderer"], None]) -> None:
+        self.post_hooks.append(func)
+
+    def remove_post_hook(self, func: Callable[["Renderer"], None]) -> None:
+        if func in self.post_hooks:
+            self.post_hooks.remove(func)
+
+    def run_post_hooks(self) -> None:
+        for hook in list(self.post_hooks):
+            try:
+                hook(self)
+            except Exception:
+                logger.exception("Post hook error")
 
 
 __all__ = [

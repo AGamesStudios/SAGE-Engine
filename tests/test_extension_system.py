@@ -79,6 +79,7 @@ from engine.renderers import Renderer
 
 class DummyRenderer(Renderer):
     def __init__(self, width, height, title):
+        super().__init__()
         self.width = width
         self.height = height
         self.title = title
