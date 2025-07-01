@@ -65,7 +65,7 @@ editor.  Simply import the engine from `engine` and the editor from
 package re-exports both modules so ``import sage.engine`` and ``import
 sage.editor`` continue to work.  The ``sage_sdk`` package provides shared
 utilities like the plugin loader used by both components.
-The editor is fully modular. ``sage_editor.ui`` provides the main window
+The editor is fully modular. ``sage_editor.gui`` provides the main window
 and viewport widgets.
 Startup logic lives in ``sage_editor.app`` which configures a Qt ``Fusion``
 style for a modern look. Plugins registered via ``sage_editor.plugins`` can add

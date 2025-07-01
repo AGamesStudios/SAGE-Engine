@@ -13,7 +13,7 @@ def _find_icon_dir() -> Path:
     """
     if getattr(sys, "frozen", False):  # PyInstaller onefile/archive
         base = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
-        path = base / "sage_editor" / "icons"
+        path = base / "sage_editor" / "gui" / "icons"
         if path.is_dir():
             return path
     return Path(__file__).resolve().parent

@@ -9,12 +9,11 @@ from __future__ import annotations
 
 import logging
 
-from .ui import EditorWindow, Viewport
+from .gui import EditorWindow, Viewport
 from .app import main
-from .plugins import register_plugin, load_plugins
 
 logger = logging.getLogger("sage_editor")
 
 __all__ = [
-    'EditorWindow', 'Viewport', 'main', 'register_plugin', 'load_plugins', 'logger'
+    'EditorWindow', 'Viewport', 'main', 'logger'
 ]
