@@ -106,10 +106,10 @@ _lazy = {
     'SceneNode': ('engine.core.scene_graph', 'SceneNode'),
     'BaseGraph': ('engine.core.scene_graph', 'BaseGraph'),
     'BaseNode': ('engine.core.scene_graph', 'BaseNode'),
-    'Object': ('engine.core.entities.object', 'Object'),
-    'Transform2D': ('engine.core.entities.object', 'Transform2D'),
-    'Material': ('engine.core.entities.object', 'Material'),
-    'create_role': ('engine.core.entities.object', 'create_role'),
+    'Object': ('engine.entities.object', 'Object'),
+    'Transform2D': ('engine.entities.object', 'Transform2D'),
+    'Material': ('engine.entities.object', 'Material'),
+    'create_role': ('engine.entities.object', 'create_role'),
     'SceneManager': ('engine.core.scenes.manager', 'SceneManager'),
     'EngineExtension': ('engine.core.extensions', 'EngineExtension'),
     'InputManager': ('engine.inputs', 'InputManager'),
@@ -173,6 +173,11 @@ if TYPE_CHECKING:  # pragma: no cover - hints for static analyzers
     from .api import (
         load_project, save_project, run_project, create_engine,
         load_scene, save_scene, run_scene,
+    )
+    from .core.engine import main
+    from .utils.units import (
+        set_units_per_meter, meters, kilometers,
+        to_units, from_units, set_y_up, Y_UP,
     )
     from .utils import units
     from .cache import Cache, SAGE_CACHE
