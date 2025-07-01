@@ -21,6 +21,7 @@ class BaseGraph:
         self.nodes: Dict[str, BaseNode] = {}
         self.start: Optional[str] = start
         self.metadata: dict = metadata or {}
+        self.node_types: Dict[str, type[BaseNode]] = {}
 
     def add_node(self, node: BaseNode) -> BaseNode:
         if node.name in self.nodes:
@@ -35,6 +36,23 @@ class BaseGraph:
             raise KeyError("Both nodes must exist to connect")
         if dst not in self.nodes[src].next_nodes:
             self.nodes[src].next_nodes.append(dst)
+
+    def disconnect(self, src: str, dst: str) -> None:
+        """Remove a connection if present."""
+        if src in self.nodes and dst in self.nodes[src].next_nodes:
+            self.nodes[src].next_nodes.remove(dst)
+
+    def register_node_type(self, name: str, cls: type[BaseNode]) -> None:
+        """Register a custom node class for :meth:`create_node`."""
+        self.node_types[name] = cls
+
+    def create_node(self, type_name: str, name: str, **kwargs) -> BaseNode:
+        """Create and add a node of a registered type."""
+        if type_name not in self.node_types:
+            raise KeyError(type_name)
+        node = self.node_types[type_name](name=name, **kwargs)
+        self.add_node(node)
+        return node
 
     @classmethod
     def from_dict(cls, data: dict) -> "BaseGraph":

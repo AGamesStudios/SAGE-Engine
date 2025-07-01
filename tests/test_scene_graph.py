@@ -22,6 +22,14 @@ class TestSceneGraph(unittest.TestCase):
         self.assertEqual(new_graph.start, 'A')
         self.assertEqual(new_graph.nodes['B'].screenshot, 'shot.png')
 
+    def test_disconnect(self):
+        graph = SceneGraph()
+        graph.add_scene('A', 'a.sage')
+        graph.add_scene('B', 'b.sage')
+        graph.connect('A', 'B')
+        graph.disconnect('A', 'B')
+        self.assertEqual(graph.nodes['A'].next_nodes, [])
+
 
 if __name__ == '__main__':
     unittest.main()

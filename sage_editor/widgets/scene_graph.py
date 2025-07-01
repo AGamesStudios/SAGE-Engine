@@ -34,17 +34,11 @@ class SceneNodeItem(QGraphicsRectItem):
             (self.WIDTH - br.width()) / 2,
             (header.rect().height() - br.height()) / 2,
         )
-        if node.screenshot and os.path.exists(node.screenshot):
-            pix = QPixmap(node.screenshot).scaled(
-                self.WIDTH, self.HEIGHT - 20,
-                Qt.AspectRatioMode.KeepAspectRatio,
-                Qt.TransformationMode.SmoothTransformation,
-            )
-            img = QGraphicsPixmapItem(pix, self)
-            img.setPos(0, 20)
-        else:
-            img = QGraphicsRectItem(0, 20, self.WIDTH, self.HEIGHT - 20, self)
-            img.setBrush(QColor(220, 220, 220))
+        self.image_rect = QGraphicsRectItem(0, 20, self.WIDTH, self.HEIGHT - 20, self)
+        self.image_rect.setBrush(QColor(220, 220, 220))
+        self.pix_item: QGraphicsPixmapItem | None = None
+        if node.screenshot:
+            self.set_screenshot(node.screenshot)
         # connection ports
         self.input_port = QGraphicsEllipseItem(-5, self.HEIGHT / 2 - 5, 10, 10, self)
         self.input_port.setBrush(QColor(70, 70, 70))
@@ -72,13 +66,34 @@ class SceneNodeItem(QGraphicsRectItem):
             self.view.update_edges()
         return super().itemChange(change, value)
 
+    def set_screenshot(self, path: str) -> None:
+        """Update the screenshot preview if the image exists."""
+        if not os.path.exists(path):
+            return
+        self.node.screenshot = path
+        pix = QPixmap(path).scaled(
+            self.WIDTH,
+            self.HEIGHT - 20,
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation,
+        )
+        if self.pix_item is None:
+            self.pix_item = QGraphicsPixmapItem(pix, self)
+            self.pix_item.setPos(0, 20)
+            self.image_rect.setVisible(False)
+        else:
+            self.pix_item.setPixmap(pix)
+
     def input_pos(self):
-        point = self.input_port.mapToScene(self.input_port.boundingRect().center())
-        return point.x(), point.y()
+        center = self.input_port.boundingRect().center()
+        point = self.input_port.mapToScene(center)
+        # offset slightly so lines end behind the port
+        return point.x() - 5, point.y()
 
     def output_pos(self):
-        point = self.output_port.mapToScene(self.output_port.boundingRect().center())
-        return point.x(), point.y()
+        center = self.output_port.boundingRect().center()
+        point = self.output_port.mapToScene(center)
+        return point.x() + 5, point.y()
 
 
 class SceneGraphView(QGraphicsView):
@@ -159,6 +174,20 @@ class SceneGraphView(QGraphicsView):
             self._last_pos = pos
             self.setCursor(Qt.CursorShape.ClosedHandCursor)
             return
+        if (
+            event.button() == Qt.MouseButton.RightButton
+            and isinstance(item, QGraphicsEllipseItem)
+        ):
+            parent = item.parentItem()
+            if isinstance(parent, SceneNodeItem) and self.graph:
+                if item.data(0) == 'input':
+                    for node in self.graph.nodes.values():
+                        if parent.node.name in node.next_nodes:
+                            node.next_nodes.remove(parent.node.name)
+                elif item.data(0) == 'output':
+                    self.graph.nodes[parent.node.name].next_nodes.clear()
+                self.update_edges()
+                return
         if (
             event.button() == Qt.MouseButton.LeftButton
             and isinstance(item, QGraphicsEllipseItem)
