@@ -15,6 +15,9 @@ from .base import (
 from . import conditions  # noqa: F401
 from . import actions     # noqa: F401
 
+# load plugins registered via entry points
+load_logic_plugins()
+
 # Automatically import all submodules so built-ins register themselves
 import importlib
 import pkgutil

@@ -2,6 +2,7 @@
 # Provides Clickteam-style logic for both 2D and 3D games
 
 from ..utils.log import logger
+from importlib import metadata
 
 # registries used to map names to classes so new logic blocks can be added
 # without modifying the loader code
@@ -13,6 +14,8 @@ ACTION_REGISTRY: dict[str, type] = {}
 # GameObject references or ``variable`` for variable names.
 CONDITION_META: dict[str, list[tuple]] = {}
 ACTION_META: dict[str, list[tuple]] = {}
+
+_PLUGINS_LOADED = False
 
 # fallback dictionary mapping translated names back to the English
 # identifiers used internally.  This lets old projects saved with
@@ -45,12 +48,29 @@ for entries in LANGUAGES.values():
             TRANSLATION_LOOKUP[local] = eng
 
 def load_logic_plugins(*modules) -> None:
-    """Import modules that register additional logic blocks."""
+    """Import modules or entry points that register additional logic blocks."""
+    global _PLUGINS_LOADED
     for name in modules:
         try:
             __import__(name)
         except Exception:
             logger.exception('Failed to load logic plugin %s', name)
+    if not _PLUGINS_LOADED:
+        try:
+            eps = metadata.entry_points()
+            entries = (
+                eps.select(group="sage_engine.logic")
+                if hasattr(eps, "select")
+                else eps.get("sage_engine.logic", [])
+            )
+            for ep in entries:
+                try:
+                    ep.load()
+                except Exception:
+                    logger.exception('Failed to load logic plugin %s', ep.name)
+        except Exception:
+            logger.exception('Error loading logic entry points')
+        _PLUGINS_LOADED = True
 
 import re
 

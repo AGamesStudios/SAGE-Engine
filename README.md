@@ -482,6 +482,11 @@ the core logic modules. Any classes registered this way become instantly
 available in the editor and ``condition_from_dict`` can instantiate them from
 scene files.
 
+Logic plugins distributed as standard packages may also expose an entry point
+called ``sage_engine.logic``. Any modules listed under this group are imported
+when :mod:`engine.logic` is first imported so their conditions and actions are
+registered automatically.
+
 ### Versioning
 
 Each project records its own **game version** string along with the engine
