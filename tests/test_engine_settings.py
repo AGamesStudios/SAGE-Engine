@@ -45,3 +45,4 @@ def test_engine_from_settings():
     assert engine.fps == 60
     assert isinstance(engine.renderer, DummyRenderer)
     assert isinstance(engine.input, DummyInput)
+    assert engine.max_delta == settings.max_delta

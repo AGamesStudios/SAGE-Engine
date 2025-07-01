@@ -22,3 +22,4 @@ class EngineSettings:
     keep_aspect: bool = True
     background: Tuple[int, int, int] = (0, 0, 0)
     input_backend: str | type | InputBackend = "qt"
+    max_delta: float = 0.1

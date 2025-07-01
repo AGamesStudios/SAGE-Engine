@@ -39,6 +39,7 @@ class Engine:
                  camera: Camera | None = None, keep_aspect: bool = True,
                  background: tuple[int, int, int] = (0, 0, 0),
                  input_backend: str | type | InputBackend = "qt",
+                 max_delta: float = 0.1,
                  *, settings: "EngineSettings | None" = None):
         if settings is not None:
             width = settings.width
@@ -52,8 +53,10 @@ class Engine:
             keep_aspect = settings.keep_aspect
             background = settings.background
             input_backend = settings.input_backend
+            max_delta = settings.max_delta
         self.fps = fps
         self._frame_interval = 1.0 / fps if fps else 0
+        self.max_delta = max_delta
         self.scene_manager = SceneManager()
         self.scene_manager.add_scene("main", scene or Scene())
         self.scene = self.scene_manager.get_active_scene()
@@ -128,6 +131,8 @@ class Engine:
             time.sleep(self._frame_interval - dt)
             now = time.perf_counter()
             dt = now - self.last_time
+        if self.max_delta and dt > self.max_delta:
+            dt = self.max_delta
         self.last_time = now
         self.delta_time = dt
         self.input.poll()
@@ -150,6 +155,7 @@ class Engine:
             keep_aspect=getattr(self.renderer, "keep_aspect", True),
             background=getattr(self.renderer, "background", (0, 0, 0)),
             input_backend=type(self.input),
+            max_delta=self.max_delta,
         )
 
     def variable(self, name):

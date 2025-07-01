@@ -51,17 +51,26 @@ sys.modules.setdefault('PyQt6.QtOpenGLWidgets', types.ModuleType('PyQt6.QtOpenGL
 
 game_mod = types.ModuleType('engine.entities.game_object')
 class GameObject:
-    pass
+    def __init__(self, name="Obj"):
+        self.name = name
+        self.z = 0
 game_mod.GameObject = GameObject
 sys.modules.setdefault('engine.entities.game_object', game_mod)
 
 cam_mod = types.ModuleType('engine.core.camera')
 class Camera(GameObject):
-    pass
+    def __init__(self, x=0.0, y=0.0, width=640, height=480, active=False, name="Camera"):
+        super().__init__(name)
+        self.width = width
+        self.height = height
+        self.active = active
+    def update(self, dt):
+        pass
 cam_mod.Camera = Camera
 sys.modules.setdefault('engine.core.camera', cam_mod)
 
 from engine.core.engine import Engine
+from engine.core.scenes.scene import Scene
 from engine.inputs import InputBackend
 
 class DummyInput(InputBackend):
@@ -86,11 +95,28 @@ def test_engine_step(monkeypatch):
     monkeypatch.setattr(time, "perf_counter", lambda: next(times))
     slept = []
     monkeypatch.setattr(time, "sleep", lambda t: slept.append(round(t, 3)))
-    eng = TestEngine(fps=30, renderer=NullRendererStub, input_backend=DummyInput)
+    scene = Scene(with_defaults=False)
+    eng = TestEngine(fps=30, scene=scene, renderer=NullRendererStub, input_backend=DummyInput)
     eng.step()
     eng.step()
     assert slept and all(s > 0 for s in slept)
     assert pytest.approx(calls[0], 1e-3) == 0.033
     assert pytest.approx(calls[1], 1e-3) == 0.033
+
+
+def test_step_clamps_delta(monkeypatch):
+    calls = []
+
+    class TestEngine(Engine):
+        def update(self, dt):
+            calls.append(dt)
+
+    times = iter([0.0, 1.0])
+    monkeypatch.setattr(time, "perf_counter", lambda: next(times))
+    monkeypatch.setattr(time, "sleep", lambda t: None)
+    scene = Scene(with_defaults=False)
+    eng = TestEngine(fps=0, scene=scene, renderer=NullRendererStub, input_backend=DummyInput, max_delta=0.2)
+    eng.step()
+    assert pytest.approx(calls[0], 1e-3) == 0.2
 
 

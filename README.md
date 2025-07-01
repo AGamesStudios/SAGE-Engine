@@ -532,6 +532,11 @@ settings = EngineSettings(width=800, height=600, renderer="opengl")
 engine = Engine(settings=settings)
 ```
 
+`Engine` instances expose a ``delta_time`` attribute which stores the time in
+seconds since the last frame. The main loop clamps this value to
+``max_delta`` (``0.1`` by default) so logic remains stable even when a slow
+frame occurs on older hardware.
+
 ### SAGE API
 
 For small scripts or rapid prototyping the `engine.api` module exposes
