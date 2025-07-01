@@ -3,8 +3,7 @@ import argparse
 import time
 import os
 from datetime import datetime
-from .scene import Scene
-from .scene_manager import SceneManager
+from .scenes import Scene, SceneManager
 from .project import Project
 from ..inputs import get_input, InputBackend
 from .input_qt import QtInput
