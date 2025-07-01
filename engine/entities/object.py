@@ -49,6 +49,14 @@ class Material:
 
 
 @dataclass
+class Variable:
+    """Typed variable stored on an :class:`Object`."""
+
+    type: str = "any"
+    value: Any = None
+
+
+@dataclass
 class Object:
     """Engine object with a role, transform and attached logic."""
 
@@ -58,6 +66,7 @@ class Object:
     logic: List[Callable[["Object", float], Any]] = field(default_factory=list)
     material: Material | None = None
     metadata: dict = field(default_factory=dict)
+    variables: dict[str, "Variable"] = field(default_factory=dict)
     id: int = field(init=False)
     parent: Optional["Object"] = field(default=None, repr=False)
     children: List["Object"] = field(default_factory=list, repr=False)
@@ -120,6 +129,21 @@ class Object:
         """Remove a previously attached logic callback."""
         if func in self.logic:
             self.logic.remove(func)
+
+    # --- variable helpers ---
+    def add_variable(self, name: str, value: Any = None, typ: str = "any") -> None:
+        """Create or update a typed variable."""
+        self.variables[name] = Variable(type=typ, value=value)
+
+    def get_variable(self, name: str, default: Any = None) -> Any:
+        var = self.variables.get(name)
+        return var.value if var is not None else default
+
+    def set_variable(self, name: str, value: Any) -> None:
+        if name in self.variables:
+            self.variables[name].value = value
+        else:
+            self.variables[name] = Variable(value=value)
 
     # --- transformation helpers ---
     def move(self, dx: float, dy: float) -> None:

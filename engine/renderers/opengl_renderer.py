@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Callable
 import math
 import ctypes
 
@@ -34,6 +34,14 @@ from engine.mesh_utils import (
     create_triangle_mesh,
     create_circle_mesh,
 )
+
+# role-specific draw callbacks
+RENDER_HANDLERS: dict[str, Callable[["OpenGLRenderer", GameObject, Camera | None], None]] = {}
+
+
+def register_draw_handler(role: str, func: Callable[["OpenGLRenderer", GameObject, Camera | None], None]) -> None:
+    """Register a custom draw handler for ``role``."""
+    RENDER_HANDLERS[role] = func
 
 
 class GLWidget(QOpenGLWidget):
@@ -403,6 +411,10 @@ class OpenGLRenderer:
         cam_shader: Shader | None = None,
     ) -> None:
         if self._program is None:
+            return
+        handler = RENDER_HANDLERS.get(getattr(obj, "role", ""))
+        if handler:
+            handler(self, obj, camera)
             return
         from OpenGL.GL import (
             glUseProgram, glGetUniformLocation, glUniform4f, glBindBuffer,
@@ -1140,3 +1152,6 @@ class OpenGLRenderer:
             except Exception:
                 logger.exception("Failed to delete GL textures")
             self.widget.close()
+
+
+__all__ = ["OpenGLRenderer", "register_draw_handler", "RENDER_HANDLERS"]

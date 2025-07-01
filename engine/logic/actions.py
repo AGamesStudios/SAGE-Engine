@@ -95,6 +95,48 @@ class ModifyVariable(Action):
             logger.exception('ModifyVariable error')
 
 
+@register_action('SetObjectVariable', [('target', 'object'), ('name', 'value'), ('value', 'value'), ('type', 'value')])
+class SetObjectVariable(Action):
+    """Assign ``value`` to an object's variable."""
+
+    def __init__(self, target, name, value=None, type='any'):
+        self.target = target
+        self.name = name
+        self.value = value
+        self.type = type
+
+    def execute(self, engine, scene, dt):
+        val = resolve_value(self.value, engine)
+        if hasattr(self.target, 'add_variable'):
+            self.target.add_variable(str(self.name), val, str(self.type))
+
+
+@register_action('ModifyObjectVariable', [('target', 'object'), ('name', 'value'), ('op', 'value'), ('value', 'value')])
+class ModifyObjectVariable(Action):
+    """Modify a numeric object variable using ``op`` and ``value``."""
+
+    def __init__(self, target, name, op='+', value=0):
+        self.target = target
+        self.name = name
+        self.op = op
+        self.value = value
+
+    def execute(self, engine, scene, dt):
+        val = resolve_value(self.value, engine)
+        current = self.target.get_variable(self.name, 0)
+        ops = {
+            '+': operator.add,
+            '-': operator.sub,
+            '*': operator.mul,
+            '/': operator.truediv,
+        }
+        func = ops.get(self.op, operator.add)
+        try:
+            self.target.set_variable(self.name, func(current, val))
+        except Exception:
+            logger.exception('ModifyObjectVariable error')
+
+
 @register_action('ShowObject', [('target', 'object')])
 class ShowObject(Action):
     """Make an object visible by setting ``alpha`` to 1.0."""
@@ -344,5 +386,5 @@ __all__ = [
     'HideObject', 'SetPosition', 'SetRotation', 'SetScale', 'Flip', 'SetAlpha',
     'SetColor', 'SetSprite', 'SetZOrder', 'RenameObject', 'DeleteObject',
     'CreateObject', 'SetCameraZoom', 'SetCameraSize', 'SetActiveCamera',
-    'SetKeepAspect'
+    'SetKeepAspect', 'SetObjectVariable', 'ModifyObjectVariable'
 ]

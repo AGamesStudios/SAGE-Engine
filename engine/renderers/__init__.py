@@ -7,6 +7,12 @@ from typing import Callable
 
 from .shader import Shader
 
+
+def register_draw_handler(role: str, func: Callable[["Renderer"], None]) -> None:
+    """Forward to :func:`engine.renderers.opengl_renderer.register_draw_handler`."""
+    from .opengl_renderer import register_draw_handler as _reg
+    _reg(role, func)
+
 logger = logging.getLogger(__name__)
 
 RENDERER_REGISTRY: dict[str, type] = {}
@@ -103,6 +109,7 @@ __all__ = [
     "get_renderer",
     "RENDERER_REGISTRY",
     "Shader",
+    "register_draw_handler",
 ]
 
 

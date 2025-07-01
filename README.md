@@ -232,6 +232,9 @@ only apply to int or float variables, ensuring booleans and strings remain
 unchanged. When setting a variable in an action the name is
 chosen from a drop-down list and booleans use a check box. Events attach to specific objects and can trigger on
 game start or every frame. Fonts are slightly larger for readability.
+New actions `SetObjectVariable` and `ModifyObjectVariable` as well as the
+`ObjectVariableCompare` condition allow scripts to manipulate these per-object
+values at runtime.
 Window dimensions can be changed under **Settings → Project Settings**. The
 game window title matches the editor, e.g. `SAGE Editor: MyGame - Scene1`.
 When you edit the scene the title gains an `(unsaved)` suffix until you save.

@@ -40,8 +40,11 @@ spec.loader.exec_module(logic_actions)
 
 VariableCompare = logic_conditions.VariableCompare
 ObjectVisible = logic_conditions.ObjectVisible
+ObjectVariableCompare = logic_conditions.ObjectVariableCompare
 SetVariable = logic_actions.SetVariable
 ModifyVariable = logic_actions.ModifyVariable
+SetObjectVariable = logic_actions.SetObjectVariable
+ModifyObjectVariable = logic_actions.ModifyObjectVariable
 ShowObject = logic_actions.ShowObject
 HideObject = logic_actions.HideObject
 
@@ -51,6 +54,16 @@ class DummyObj:
         self.y = 0.0
         self.alpha = 1.0
         self.visible = True
+        self.variables = {}
+
+    def add_variable(self, name, value=None, typ='any'):
+        self.variables[name] = value
+
+    def get_variable(self, name, default=None):
+        return self.variables.get(name, default)
+
+    def set_variable(self, name, value):
+        self.variables[name] = value
 
 
 def test_variable_actions_and_condition():
@@ -78,3 +91,15 @@ def test_visibility_actions_and_condition():
     assert obj.alpha == 1.0
     assert obj.visible is True
     assert visible_cond.check(engine, None, 0)
+
+
+def test_object_variable_actions_and_condition():
+    obj = DummyObj()
+    es = types.SimpleNamespace(variables={})
+    engine = types.SimpleNamespace(events=es)
+    SetObjectVariable(obj, "hp", 10, "int").execute(engine, None, 0)
+    assert obj.get_variable("hp") == 10
+    ModifyObjectVariable(obj, "hp", '-', 3).execute(engine, None, 0)
+    assert obj.get_variable("hp") == 7
+    cond = ObjectVariableCompare(obj, "hp", '>=', 5)
+    assert cond.check(engine, None, 0)

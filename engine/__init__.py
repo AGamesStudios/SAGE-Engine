@@ -44,7 +44,7 @@ __all__ = [
     'math2d', 'SceneGraph', 'SceneNode', 'BaseGraph', 'BaseNode', 'Object',
     'Transform2D', 'Material', 'create_role', 'SceneManager', 'EngineExtension',
     'InputManager', 'LibraryLoader', 'DEFAULT_LIBRARY_LOADER',
-    'load_engine_libraries', 'tools', 'paint'
+    'load_engine_libraries', 'register_draw_handler', 'tools', 'paint'
 ]
 
 _lazy = {
@@ -115,6 +115,7 @@ _lazy = {
     'LibraryLoader': ('engine.core.library', 'LibraryLoader'),
     'DEFAULT_LIBRARY_LOADER': ('engine.core.library', 'DEFAULT_LIBRARY_LOADER'),
     'load_engine_libraries': ('engine.core.library', 'load_engine_libraries'),
+    'register_draw_handler': ('engine.renderers', 'register_draw_handler'),
     'tools': ('engine.tools', None),
     'paint': ('engine.tools', 'paint'),
 }
@@ -151,6 +152,7 @@ if TYPE_CHECKING:  # pragma: no cover - hints for static analyzers
     )
     from .renderers import Renderer
     from .renderers.opengl_renderer import OpenGLRenderer
+    from .renderers import register_draw_handler
     from .inputs import InputManager
     from .mesh_utils import (
         Mesh, create_square_mesh, create_triangle_mesh, create_circle_mesh
