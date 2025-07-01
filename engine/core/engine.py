@@ -4,6 +4,7 @@ import time
 import os
 from datetime import datetime
 from .scene import Scene
+from .scene_manager import SceneManager
 from .project import Project
 from ..inputs import get_input, InputBackend
 from .input_qt import QtInput
@@ -53,7 +54,9 @@ class Engine:
             input_backend = settings.input_backend
         self.fps = fps
         self._frame_interval = 1.0 / fps if fps else 0
-        self.scene = scene or Scene()
+        self.scene_manager = SceneManager()
+        self.scene_manager.add_scene("main", scene or Scene())
+        self.scene = self.scene_manager.get_active_scene()
         if camera is None:
             camera = self.scene.ensure_active_camera(width, height)
         else:
@@ -135,6 +138,19 @@ class Engine:
     def variable(self, name):
         """Return the value of an event variable."""
         return self.events.variables.get(name)
+
+    def change_scene(self, name: str, scene: Scene | None = None) -> None:
+        """Replace or switch the active scene."""
+        if scene is not None:
+            self.scene_manager.add_scene(name, scene)
+        self.scene_manager.set_active(name)
+        self.scene = self.scene_manager.get_active_scene()
+        if self.scene:
+            self.camera = self.scene.ensure_active_camera(
+                getattr(self.renderer, "width", 640),
+                getattr(self.renderer, "height", 480),
+            )
+            self.events = self.scene.build_event_system(aggregate=False)
 
     def set_camera(self, camera: Camera | str | None):
         """Switch the camera used for rendering."""

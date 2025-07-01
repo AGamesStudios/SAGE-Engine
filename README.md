@@ -47,11 +47,6 @@ Alternatively run `scripts/build_exe.sh` which uses the same command.
 The resulting file `dist/SAGE-Engine.exe` can be distributed without needing Python installed.
 
 
-## Simple Core
-A minimal alternative engine lives under `engine/simple_core`. It provides
-`Engine`, `Scene` and `GameObject` classes without plugins or an entity
-component system. Objects simply hold a transform and optional role.
-
 ## Architecture
 The core engine code resides under `engine/core` which defines the
 generic `GameObject`, `Scene`, `Engine` and `Project` classes. 2D helpers are
