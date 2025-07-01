@@ -4,6 +4,8 @@ This repository contains **SAGE Engine**, a lightweight core framework for
 games.  **SAGE 2D** extends the engine with sprite rendering while **SAGE
 Editor** lets you place objects visually and save projects.  The editor remains
 small so it runs well even on older computers.  An additional **SAGE Paint**
+A lightweight `sage_runtime` package exposes the core engine for standalone games while common utilities live in `sage_sdk`.
+
 tool provides an experimental sprite editor for drawing 2D graphics. The
 window shows an "EXPERIMENTAL" banner to highlight this status.  SAGE Paint
 supports zooming, right-click panning and an eraser tool so sprites can be
@@ -421,6 +423,8 @@ simple rendering parameters like ``opacity`` or ``blend`` mode. Camera roles
 keep width, height and active status in their metadata.
 
 ### SAGE SDK and Plugins
+
+The runtime-only distribution is available through the `sage_runtime` package for games that do not bundle the editor.
 
 The ``sage_sdk`` package ships with a flexible plugin system used by both the
 engine and editor.  A :class:`PluginManager` instance handles discovery and
