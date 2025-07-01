@@ -65,11 +65,11 @@ editor.  Simply import the engine from `engine` and the editor from
 package re-exports both modules so ``import sage.engine`` and ``import
 sage.editor`` continue to work.  The ``sage_sdk`` package provides shared
 utilities like the plugin loader used by both components.
-The editor code is split into ``sage_editor.editor`` for the main window and
-``sage_editor.app`` which contains the startup logic and project manager.
-Dock widgets live under ``sage_editor.docks`` while reusable widgets live in
-``sage_editor.widgets``. The viewport now uses a ``QOpenGLWidget`` so the
-scene you edit is visible inside the editor as well as when running the game.
+The editor is fully modular. ``sage_editor.main_window`` provides the main
+window class while ``sage_editor.viewport`` contains the viewport widget.
+Startup logic lives in ``sage_editor.app`` which configures a Qt ``Fusion``
+style for a modern look. Plugins registered via ``sage_editor.plugins`` can add
+their own dock widgets and actions without changing the core code.
 Embedding the editor in other tools only requires importing these modules.
 
 The runtime is organised in a simple hierarchy:

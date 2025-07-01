@@ -1,18 +1,21 @@
-"""SAGE Editor package.
+"""SAGE Editor package built on PyQt6.
 
-This module exposes the public API while the implementation
-lives in :mod:`sage_editor.editor` with supporting widgets
-under :mod:`sage_editor.docks` and :mod:`sage_editor.widgets`.
+The editor uses the engine but the engine is completely independent.
+Modules can register plugins using :func:`register_plugin` to extend the
+interface without modifying the core.
 """
 
-from .editor import Editor, logger, load_recent, save_recent
+from __future__ import annotations
+
+import logging
+
+from .main_window import EditorWindow
+from .viewport import Viewport
 from .app import main
-from .project_hub import ProjectHub
-ProjectManager = ProjectHub
 from .plugins import register_plugin, load_plugins
 
+logger = logging.getLogger("sage_editor")
+
 __all__ = [
-    'Editor', 'ProjectManager', 'ProjectHub', 'main',
-    'register_plugin', 'load_plugins',
-    'logger', 'load_recent', 'save_recent',
+    'EditorWindow', 'Viewport', 'main', 'register_plugin', 'load_plugins', 'logger'
 ]
