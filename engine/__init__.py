@@ -141,7 +141,7 @@ if TYPE_CHECKING:  # pragma: no cover - hints for static analyzers
     from .core.scene_graph import SceneGraph, SceneNode, BaseGraph, BaseNode
     from .core.project import Project
     from .core.camera import Camera
-    from .core.entities.object import Object, Transform2D, Material, create_role
+    from .entities.object import Object, Transform2D, Material, create_role
     from .core.objects import register_object, object_from_dict, object_to_dict
     from .core.scenes.manager import SceneManager
     from .core.extensions import EngineExtension
