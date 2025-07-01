@@ -2,13 +2,14 @@ import unittest
 import logging
 from io import StringIO
 
-from engine.utils.log import logger
+from engine.utils.log import logger, init_logger
 from engine.core.scenes.scene import Scene
 from engine.core.camera import Camera
 from engine.logic.base import EventSystem, Event
 
 class TestDebugLogging(unittest.TestCase):
     def test_event_logging(self):
+        init_logger()
         stream = StringIO()
         handler = logging.StreamHandler(stream)
         logger.addHandler(handler)
@@ -56,6 +57,13 @@ class TestDebugLogging(unittest.TestCase):
             self.assertEqual(logger.level, logging.DEBUG)
         finally:
             set_level(old)
+
+    def test_init_logger_idempotent(self):
+        logger.handlers.clear()
+        init_logger()
+        count = len(logger.handlers)
+        init_logger()
+        self.assertEqual(count, len(logger.handlers))
 
 if __name__ == '__main__':
     unittest.main()

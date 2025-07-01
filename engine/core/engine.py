@@ -13,7 +13,7 @@ from ..renderers import (
     get_renderer,
 )
 from .. import ENGINE_VERSION
-from ..utils.log import logger
+from ..utils.log import logger, init_logger
 
 
 def _exception_handler(exc_type, exc, tb):
@@ -21,7 +21,6 @@ def _exception_handler(exc_type, exc, tb):
     logger.error("Uncaught exception", exc_info=(exc_type, exc, tb))
 
 
-sys.excepthook = _exception_handler
 
 
 def _log(text: str) -> None:
@@ -218,8 +217,11 @@ class Engine:
         self.renderer.draw_scene(self.scene, cam, gizmos=False)
         self.renderer.present()
 
-    def run(self):
+    def run(self, *, install_hook: bool = True):
         """Run the engine using a Qt window."""
+        init_logger()
+        if install_hook:
+            sys.excepthook = _exception_handler
         from PyQt6.QtWidgets import QApplication
         from ..game_window import GameWindow
 

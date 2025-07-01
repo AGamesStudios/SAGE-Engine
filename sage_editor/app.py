@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+import argparse
 
 from PyQt6.QtWidgets import QApplication, QStyleFactory
 
@@ -12,12 +13,24 @@ from .gui import EditorWindow
 
 def main(argv: list[str] | None = None) -> int:
     """Launch the SAGE Editor."""
-    app = QApplication(argv or sys.argv)
+    args = argv or sys.argv[1:]
+    parser = argparse.ArgumentParser(description="Launch SAGE Editor")
+    parser.add_argument("file", nargs="?", help="Scene or project file")
+    ns, qt_args = parser.parse_known_args(args)
+
+    app = QApplication([sys.argv[0], *qt_args])
     app.setStyle(QStyleFactory.create("Fusion"))
 
-    # minimal scene with a single object
-    scene = Scene()
-    scene.add_object(GameObject(name="origin"))
+    if ns.file:
+        from engine.api import load_project, load_scene
+        if ns.file.endswith(".sageproject"):
+            proj = load_project(ns.file)
+            scene = Scene.from_dict(proj.scene) if proj.scene else Scene()
+        else:
+            scene = load_scene(ns.file)
+    else:
+        scene = Scene()
+        scene.add_object(GameObject(name="origin"))
 
     window = EditorWindow(scene)
     window.resize(800, 600)

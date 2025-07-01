@@ -6,7 +6,8 @@ Editor** lets you place objects visually and save projects.  The editor remains
 small so it runs well even on older computers. An additional **SAGE Paint** tool
 provides an experimental sprite editor for drawing 2D graphics. A lightweight
 `sage_runtime` package exposes the core engine for standalone games while common
-utilities live in `sage_sdk`.
+utilities live in `sage_sdk`. See the files under `docs/` for detailed
+instructions and tutorials.
 
 window shows an "EXPERIMENTAL" banner to highlight this status.  SAGE Paint
 supports zooming, right-click panning and an eraser tool so sprites can be
@@ -87,6 +88,7 @@ SAGE Engine -> Project -> Scenes -> Objects -> properties
 Projects load resources through `engine.core.resources.ResourceManager` which
 uses a global **SAGE Cache** so data is reused between scenes. Debug messages
 are written to `logs/engine.log` using the helpers in `engine.utils.log`.
+Call `engine.utils.log.init_logger()` once at startup to create this file.
 You can change the verbosity at runtime with
 `engine.utils.log.set_level('DEBUG')`.
 
@@ -168,9 +170,9 @@ immediately or remove it from the list. Choosing **Delete** now asks for
 confirmation and then removes the entire project folder along with its files.
 Once a project is chosen the editor opens maximized using a Fusion theme.
 You can switch between dark or light mode in the Editor Settings.
-The editor provides two
-tabs: **Viewport** and **Logic**. The viewport and runtime windows both use an
-OpenGL widget so they display the same scene. The viewport refreshes about
+The simplified editor hosts only a single **Viewport** widget that shows the
+current scene using the same OpenGL renderer as the runtime. The viewport
+refreshes about
 sixty times per second and only resizes the renderer when necessary,
 keeping CPU usage low even on slower machines.
 An **Add Object** button beneath the list places a blank object with a default
@@ -266,12 +268,14 @@ dialog asking whether to save before exiting.
 Launch the editor with:
 
 ```bash
-python main.py
+python main.py path/to/project.sageproject
 # or
-python -m sage_editor
+python -m sage_editor path/to/scene.json
 # or from Python
-python -c "import sage_editor as ed; ed.main()"
+python -c "import sage_editor as ed; ed.main(['game.sageproject'])"
 ```
+Supply a project or scene path to open it directly; otherwise a blank
+scene is created with a single object at the origin.
 
 Sprite positions are stored when you save so the runtime engine can render them
 exactly as placed in the editor.
@@ -507,8 +511,6 @@ overall transparency. The value multiplies the alpha channel of the sprite's
 Effects are only supported on sprite objects. Retrieve a sprite from a
 scene using ``get_object_type`` and append the effect to its ``effects``
 list. Cameras ignore such data because they lack an ``effects`` field.
-The editor lists active effects in the **Properties** panel so you can edit or
-remove them with a single click.
 
 ### Post-processing Effects
 
