@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sage-engine"
+version = "0.0.1-alpha"
+description = "SAGE 2D game engine"
+authors = [{name = "SAGE Team"}]
+license = {file = "LICENSE"}
+readme = "README.md"
+requires-python = ">=3.9"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["engine*", "sage_editor*", "sage_runtime*", "sage_paint*", "sage_sdk*"]

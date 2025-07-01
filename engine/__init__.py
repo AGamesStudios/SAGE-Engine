@@ -7,8 +7,8 @@ from .version import __version__, require as require_version
 
 ENGINE_VERSION = __version__
 
-from .utils.log import logger  # noqa: E402
-from .utils.diagnostics import warn, error, exception  # noqa: E402
+from .utils.log import logger  # noqa: E402,F401
+from .utils.diagnostics import warn, error, exception  # noqa: E402,F401
 from sage_sdk.plugins import PluginManager  # noqa: E402
 
 ENGINE_PLUGINS = PluginManager('engine')
@@ -23,30 +23,6 @@ def load_engine_plugins(engine, paths=None):
     """Load plugins targeting the engine."""
     ENGINE_PLUGINS.load(engine, paths)
 
-__all__ = [
-    'GameObject', 'Scene', 'Engine', 'EventSystem', 'Event',
-    'register_condition', 'register_action',
-    'get_registered_conditions', 'get_registered_actions',
-    'condition_from_dict', 'action_from_dict', 'event_from_dict',
-    'Project', 'Camera', 'clear_image_cache',
-    'register_object', 'object_from_dict', 'object_to_dict',
-    'Renderer', 'OpenGLRenderer', 'NullRenderer', 'main',
-    '__version__', 'ENGINE_VERSION', 'logger', 'ResourceManager', 'set_resource_root', 'get_resource_path',
-    'load_project', 'save_project', 'run_project', 'create_engine',
-    'load_scene', 'save_scene', 'run_scene',
-    'warn', 'error', 'exception',
-    'register_engine_plugin', 'load_engine_plugins',
-    'units', 'set_units_per_meter', 'meters', 'kilometers', 'to_units', 'from_units',
-    'set_y_up', 'Y_UP', 'GameWindow', 'EngineSettings',
-    'register_effect', 'get_effect', 'EFFECT_REGISTRY',
-    'register_post_effect', 'get_post_effect', 'POST_EFFECT_REGISTRY',
-    'create_square_mesh', 'create_triangle_mesh', 'create_circle_mesh', 'Mesh',
-    'math2d', 'SceneGraph', 'SceneNode', 'BaseGraph', 'BaseNode', 'Object',
-    'Transform2D', 'Material', 'create_role', 'SceneManager', 'EngineExtension',
-    'InputManager', 'NullInput', 'LibraryLoader', 'DEFAULT_LIBRARY_LOADER',
-    'load_engine_libraries', 'register_draw_handler',
-    'tools', 'paint', 'Cache', 'SAGE_CACHE', 'require_version'
-]
 
 _lazy = {
     'GameObject': ('engine.entities.game_object', 'GameObject'),
@@ -125,6 +101,16 @@ _lazy = {
     'SAGE_CACHE': ('engine.cache', 'SAGE_CACHE'),
 }
 
+__all__ = sorted(
+    list(_lazy.keys())
+    + [
+        '__version__', 'ENGINE_VERSION', 'logger',
+        'warn', 'error', 'exception',
+        'register_engine_plugin', 'load_engine_plugins',
+        'require_version',
+    ]
+)
+
 
 def __getattr__(name):
     if name in _lazy:
@@ -141,53 +127,77 @@ def __dir__():
 
 if TYPE_CHECKING:  # pragma: no cover - hints for static analyzers
     from types import ModuleType as _ModuleType
-    from .entities.game_object import GameObject, clear_image_cache
-    from .core.scenes.scene import Scene
-    from .core.engine import Engine
-    from .core.scene_graph import SceneGraph, SceneNode, BaseGraph, BaseNode
-    from .core.project import Project
-    from .core.camera import Camera
-    from .entities.object import Object, Transform2D, Material, create_role
-    from .core.objects import register_object, object_from_dict, object_to_dict
-    from .core.scenes.manager import SceneManager
-    from .core.extensions import EngineExtension
-    from .core.settings import EngineSettings
-    from .core.effects import register_effect, get_effect, EFFECT_REGISTRY
+    from .entities.game_object import GameObject, clear_image_cache  # noqa: F401
+    from .core.scenes.scene import Scene  # noqa: F401
+    from .core.engine import Engine  # noqa: F401
+    from .core.scene_graph import SceneGraph, SceneNode, BaseGraph, BaseNode  # noqa: F401
+    from .core.project import Project  # noqa: F401
+    from .core.camera import Camera  # noqa: F401
+    from .entities.object import Object, Transform2D, Material, create_role  # noqa: F401
+    from .core.objects import register_object, object_from_dict, object_to_dict  # noqa: F401
+    from .core.scenes.manager import SceneManager  # noqa: F401
+    from .core.extensions import EngineExtension  # noqa: F401
+    from .core.settings import EngineSettings  # noqa: F401
+    from .core.effects import register_effect, get_effect, EFFECT_REGISTRY  # noqa: F401
     from .core.post_effects import (
-        register_post_effect, get_post_effect, POST_EFFECT_REGISTRY
+        register_post_effect,  # noqa: F401
+        get_post_effect,  # noqa: F401
+        POST_EFFECT_REGISTRY,  # noqa: F401
     )
     from .core.library import (
-        LibraryLoader, DEFAULT_LIBRARY_LOADER, load_engine_libraries
+        LibraryLoader,  # noqa: F401
+        DEFAULT_LIBRARY_LOADER,  # noqa: F401
+        load_engine_libraries,  # noqa: F401
     )
-    from .renderers import Renderer
-    from .renderers.opengl_renderer import OpenGLRenderer
-    from .renderers.null_renderer import NullRenderer
-    from .renderers import register_draw_handler
-    from .inputs import InputManager, NullInput
+    from .renderers import Renderer  # noqa: F401
+    from .renderers.opengl_renderer import OpenGLRenderer  # noqa: F401
+    from .renderers.null_renderer import NullRenderer  # noqa: F401
+    from .renderers import register_draw_handler  # noqa: F401
+    from .inputs import InputManager, NullInput  # noqa: F401
     from .mesh_utils import (
-        Mesh, create_square_mesh, create_triangle_mesh, create_circle_mesh
+        Mesh,  # noqa: F401
+        create_square_mesh,  # noqa: F401
+        create_triangle_mesh,  # noqa: F401
+        create_circle_mesh,  # noqa: F401
     )
     from .logic.base import (
-        EventSystem, Event,
-        register_condition, register_action,
-        get_registered_conditions, get_registered_actions,
-        condition_from_dict, action_from_dict, event_from_dict,
+        EventSystem,  # noqa: F401
+        Event,  # noqa: F401
+        register_condition,  # noqa: F401
+        register_action,  # noqa: F401
+        get_registered_conditions,  # noqa: F401
+        get_registered_actions,  # noqa: F401
+        condition_from_dict,  # noqa: F401
+        action_from_dict,  # noqa: F401
+        event_from_dict,  # noqa: F401
     )
     from .core.resources import (
-        ResourceManager, set_resource_root, get_resource_path
+        ResourceManager,  # noqa: F401
+        set_resource_root,  # noqa: F401
+        get_resource_path,  # noqa: F401
     )
-    from .game_window import GameWindow
+    from .game_window import GameWindow  # noqa: F401
     from .api import (
-        load_project, save_project, run_project, create_engine,
-        load_scene, save_scene, run_scene,
+        load_project,  # noqa: F401
+        save_project,  # noqa: F401
+        run_project,  # noqa: F401
+        create_engine,  # noqa: F401
+        load_scene,  # noqa: F401
+        save_scene,  # noqa: F401
+        run_scene,  # noqa: F401
     )
-    from .core.engine import main
+    from .core.engine import main  # noqa: F401
     from .utils.units import (
-        set_units_per_meter, meters, kilometers,
-        to_units, from_units, set_y_up, Y_UP,
+        set_units_per_meter,  # noqa: F401
+        meters,  # noqa: F401
+        kilometers,  # noqa: F401
+        to_units,  # noqa: F401
+        from_units,  # noqa: F401
+        set_y_up,  # noqa: F401
+        Y_UP,  # noqa: F401
     )
-    from .utils import units
-    from .cache import Cache, SAGE_CACHE
-    from . import math2d
+    from .utils import units  # noqa: F401
+    from .cache import Cache, SAGE_CACHE  # noqa: F401
+    from . import math2d  # noqa: F401
     paint: _ModuleType
-    from .version import require as require_version
+    from .version import require as require_version  # noqa: F401

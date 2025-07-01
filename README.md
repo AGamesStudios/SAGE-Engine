@@ -185,89 +185,6 @@ SAGE Paint uses icons named `brush.png`, `eraser.png`, `fill.png`, `undo.png`, `
  `tools.png`, View settings uses `settings.png`, the language drop-down shows
  `lang.png`, the Recent Projects menu displays `recent.png`, the Manage Plugins
  entry uses `plugin.png` and objects show `object.png` or `camera.png`
- depending on their type. Object properties
- can be edited in a dock but there
- is no visual manipulation until rendering support returns.
-Projects store a window ``width`` and ``height`` separately from the active
-camera size. Scenes can contain multiple cameras. Select a camera in the object
-list and check **Main Camera** in the properties panel (or use the context menu
-action **Set Active Camera**) to decide which one is used. Camera objects now
-include a **Z** position so they can be layered with sprites. Projects are saved
-in a single `.sageproject` file
-The object list sits on the right above the Properties panel. Selecting one shows a **Transform**
-panel on the right with X, Y, Z, separate Scale X/Y and Rotation fields. A *Link XY* checkbox
-lets you keep both scales in sync. When no object is selected the Properties
-dock is empty so old values do not linger. The panel scrolls vertically so
-every field stays reachable even when the dock is short. Rotation now accounts for non-uniform
-scaling so objects spin correctly even when Scale X and Scale Y differ. Scaling
-also stays centered on the sprite regardless of rotation. Transform calculations
-now use **GLM** so scaling occurs before rotation and objects rotate around
-their center without skewing. Each object also defines a **pivot** so the
-coordinate system matches the runtime. The transform dock also includes a
-**Coordinate Mode** drop-down for switching between *Global* and *Local*
-coordinates. Internally every object stores its rotation as a quaternion so
-angles remain stable even after many incremental edits. A small **Object**
-section above the transform fields lets you rename items and change their type
-between *Sprite* and *Camera*. Each object also keeps its own settings
-dictionary so properties remain independent across different items. The
-project file stores the entire scene
-including object positions, events and variables.
-The **Resources** dock sits on the left and lists everything under your project's
-`resources` folder. Three buttons above the tree (**Import**, **New Folder** and
-**Refresh**) sit on the first row while a search field appears below them. The folder button
-uses `folder.png` from the `icons` directory. You can drag items
-between folders or drop files from outside the application. Dragging files out of
-the dock is disabled so resources remain inside the project. Files are sorted alphabetically so projects stay
-organized. Any asset chosen from outside the project is copied into this
-directory automatically, so scenes never reference files that might disappear.
-Imports accept files, folders or even `.zip` archives. A progress dialog shows
-the current path and counts bytes so large batches do not freeze the interface.
-The window keeps a fixed width so long filenames will not stretch the dialog.
-Windows paths are automatically prefixed so deeply nested archives import
-without hitting the 260 character limit.
-Imported files are loaded immediately into a small cache so previews appear
-instantly. Only the most recent images are kept using an LRU scheme so the
-cache never grows without bound. The engine loads all assets relative to this
-directory, ensuring reorganizing files will not break existing scenes. If PyQt
-does not provide ``QFileSystemModel`` the editor falls back to a simpler tree
-widget that still lets you create folders and import resources. Right-clicking
-any item offers to open it with the default application (icon `open.png`) or
-delete it from the project. Hovering an image reveals a floating preview just
-offset from the cursor so files are easy to identify. The preview is
-confined to the editor window and disappears when it loses focus. Thumbnails are
-cached in memory so browsing many files does not lag. Double-clicking a
-`.sagescene` file loads it in the editor so you can quickly switch between scenes.
-Use **File → New Project** to generate a folder for your game. The dialog asks
-for a project name and location. Projects use the OpenGL renderer so
-the editor viewport and runtime look the same.
-It then creates the folder with a `.sageproject` file and a `Scenes` subfolder
-containing `Scene1.sagescene`. Each new object
-receives a generic name like `New Object (1)` so conditions always target the
-correct item. The editor disables sprite, variable and logic actions until a
-project is opened, ensuring all changes are saved to a `.sageproject` file.
-The **Logic** tab lists object events with
-conditions on the left and actions on the right. The event dialog now provides
-drop-down lists for keys and shows only parameters relevant to the chosen
-action. Variables of type int, float, string and bool can be defined and used
-in conditions or actions. Each object stores its own variables so values are not
-shared across objects. Public variables appear in the
-**Properties** dock where their values can be edited directly. Integers use a spin
-box, floats a double spin box, booleans a check box and strings a text field.
-Mathematical actions
-only apply to int or float variables, ensuring booleans and strings remain
-unchanged. When setting a variable in an action the name is
-chosen from a drop-down list and booleans use a check box. Events attach to specific objects and can trigger on
-game start or every frame. Fonts are slightly larger for readability.
-New actions `SetObjectVariable` and `ModifyObjectVariable` as well as the
-`ObjectVariableCompare` condition allow scripts to manipulate these per-object
-values at runtime.
-Window dimensions can be changed under **Settings → Project Settings**. The
-game window title matches the editor, e.g. `SAGE Editor: MyGame - Scene1`.
-When you edit the scene the title gains an `(unsaved)` suffix until you save.
-A project's file records the window `width`, `height` and `title`. When loading a
-project the engine creates its window using these values. The active camera
-keeps its own resolution. The window can be resized at runtime and the camera
-follows the new dimensions while unused space is letterboxed so
 the scene maintains its aspect ratio. This behavior can be disabled in the
 Project Settings if you prefer the view to stretch. Running a project from the
 editor uses the same dimensions so what you see matches the final game.
@@ -290,20 +207,11 @@ window system. The editor also validates image and variable input and
 ensures combo boxes always point to valid objects, preventing crashes when
 adding multiple sprites, variables, or conditions on older hardware.
 Any errors when creating conditions, actions, or variables are caught and
-printed to the console instead of closing the editor.
-If something goes wrong during gameplay, the console shows the full
 Python traceback so you can identify exactly where the problem occurred.
-Use the **Clear Log** button in the console to empty it at any time.
 Log **Messages**, **Warnings** or **Errors** can be toggled on and off with the
 checkboxes provided.
-Custom window arrangements can be saved from **Editor → Interface → Save Layout**.
-Saved layouts appear in the same menu and selecting one makes it the startup layout. Use **Restore Default** to return to the factory arrangement.
-Custom window arrangements can be saved from **Editor → Interface → Save Layout**.
-Saved layouts appear in the same menu and selecting one makes it the startup layout. Use **Restore Default** to return to the factory arrangement.
 
-The editor also provides a **Profiler** dock with graphs for overall CPU,
 RAM usage of the editor process, GPU load and the editor process CPU. Frame time in milliseconds is also
-tracked so you can see how long each update takes. Sampling only runs while the dock is visible to
 keep CPU usage low. The graphs update every second with colored lines so you can monitor performance
 without wasting power when the profiler is hidden.
 
@@ -370,7 +278,6 @@ exactly as placed in the editor.
 Event definitions are saved as well, so running the scene will include any logic
 you created in the editor. Each scene maintains its own events in addition to
 per-object logic and new projects start with a simple "Hello, SAGE!" message
-printed to the console when the game launches.
 
 ### SAGE Logic Events
 
@@ -391,16 +298,6 @@ Event processing only occurs while a :class:`GameWindow` is running so editing a
 scene does not trigger logic. The engine updates all events every frame during
 gameplay and pauses them automatically when the window closes.
 
-The editor now includes a **Console** dock at the bottom. All output from the
-game process and the editor itself appears here so you can easily debug your
-scripts. All messages are also written to `logs/editor.log` while the
-runtime engine logs to `logs/engine.log` so you can review issues later.
-Set the environment variable `SAGE_LOG_LEVEL` to `DEBUG`, `INFO`, `WARNING` or
-`ERROR` to control how much detail is recorded. Unknown objects, conditions and
-actions generate warnings so issues show up in the log instead of failing silently.
-When set to `DEBUG`, additional messages report when scene objects are added or
-removed and when events are enabled, disabled or triggered. This output appears
-both in the editor's console and the IDE terminal.
 The engine also checks its exported names at import time and warns if a symbol
 listed in ``__all__`` does not exist. This helps catch mistakes like missing
 imports.
@@ -424,7 +321,6 @@ references. Typing ``engine.`` in a value field shows a list of available engine
 methods so you can insert calls without memorizing every name.
 
 Projects are checked as they load. If an image is missing or a file is
-corrupted, the editor reports the problem in the console instead of
 terminating.
 
 The logic module registers conditions and actions in dictionaries so new types
