@@ -248,9 +248,9 @@ def main(argv=None):
     parser.add_argument("--title", help="Window title")
     parser.add_argument(
         "--renderer",
-        choices=["opengl"],
+        choices=["opengl", "null"],
         default="opengl",
-        help="Rendering backend (default opengl)",
+        help="Rendering backend (opengl or null)",
     )
     args = parser.parse_args(argv)
 

@@ -3,12 +3,18 @@
 from abc import ABC, abstractmethod
 import logging
 from importlib import metadata
-from typing import Callable
+from typing import Callable, TYPE_CHECKING
+
+if TYPE_CHECKING:  # pragma: no cover
+    from ..entities.game_object import GameObject
+    from ..core.camera import Camera
 
 from .shader import Shader
 
 
-def register_draw_handler(role: str, func: Callable[["Renderer"], None]) -> None:
+def register_draw_handler(
+    role: str, func: Callable[["Renderer", "GameObject", "Camera | None"], None]
+) -> None:
     """Forward to :func:`engine.renderers.opengl_renderer.register_draw_handler`."""
     from .opengl_renderer import register_draw_handler as _reg
     _reg(role, func)

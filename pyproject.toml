@@ -18,16 +18,16 @@ classifiers = [
     "Topic :: Games/Entertainment",
 ]
 keywords = ["game", "engine", "sage"]
-
-[project.urls]
-Homepage = "https://example.com/sage-engine"
-Repository = "https://github.com/example/SAGE-Engine"
 dependencies = [
     "PyQt6>=6.5",
     "PyOpenGL>=3.1",
     "Pillow",
     "PySDL2",
 ]
+
+[project.urls]
+Homepage = "https://example.com/sage-engine"
+Repository = "https://github.com/example/SAGE-Engine"
 [project.scripts]
 sage-editor = "sage_editor.app:main"
 sage-runtime = "engine.runtime.__main__:main"

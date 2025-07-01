@@ -161,49 +161,7 @@ calculations and new functions like ``make_transform`` for building 3×3
 matrices, ``transform_point`` to apply them and ``make_ortho`` for
 orthographic projection.  ``engine.core.fastmath`` remains as a thin
 wrapper for compatibility but now simply re-exports these features.
-When launching the editor a **Project Manager** window appears. It lists your
-recent projects with their creation date and full path.  Buttons let you create
-a new project, open an existing file or clear the list for a clean start. The
-dialog now groups the table under a "Recent Projects" heading with larger
-fonts and spacing so paths are easy to read. Right click a project to open it
-immediately or remove it from the list. Choosing **Delete** now asks for
-confirmation and then removes the entire project folder along with its files.
-Once a project is chosen the editor opens maximized using a Fusion theme.
-You can switch between dark or light mode in the Editor Settings.
-The simplified editor hosts only a single **Viewport** widget that shows the
-current scene using the same OpenGL renderer as the runtime. The viewport
-refreshes about
-sixty times per second and only resizes the renderer when necessary,
-keeping CPU usage low even on slower machines.
-An **Add Object** button beneath the list places a blank object with a default
- name like `New Object`. Every toolbar action and list item loads its icon from
- the `sage_editor/icons` folder, so you can replace these images with your own
- to completely theme the interface. SAGE Paint shares this same folder for its
- toolbar icons, ensuring all tools draw from one location.
-SAGE Paint uses icons named `brush.png`, `eraser.png`, `fill.png`, `undo.png`, `redo.png`, `circle.png`, `square.png`, `colorpicker.png`, `smooth.png`, `zoomin.png` and `zoomout.png` for its toolbar. The Import button loads `add.png`, the New
- Folder button uses `folder.png`, the Refresh button uses `refresh.png`, the Run
- action uses `start.png` and switches to `stop.png` while running. The New Project
- action shows `file.png`, Save Project uses `save.png`, the Tools menu displays
- `tools.png`, View settings uses `settings.png`, the language drop-down shows
- `lang.png`, the Recent Projects menu displays `recent.png`, the Manage Plugins
- entry uses `plugin.png` and objects show `object.png` or `camera.png`
-the scene maintains its aspect ratio. This behavior can be disabled in the
-Project Settings if you prefer the view to stretch. Running a project from the
-editor uses the same dimensions so what you see matches the final game.
-The viewport camera also uses these dimensions so the aspect ratio is identical
-while editing.
-A **Project Settings** dialog under **Settings** groups options into side tabs.
-The dialog uses the Qt *Fusion* style and keeps the tab labels horizontal even
-though they sit vertically on the left. The **Info** tab edits the game title,
-version (default `0.1.0`) and description while a **Window** tab contains width
-and height fields plus the background color. The game title defaults to the name
-chosen when creating a project so you only set it once.  The pages scroll inside
-a fixed-size window so labels line up neatly.
-When defining variables, boolean values are edited with a convenient check box
-instead of typing "true" or "false".
-When comparing variables, the name is selected from a drop-down list so typos
-are avoided.
-
+The editor opens directly to a single viewport using the same OpenGL renderer as the runtime so even low-end machines maintain consistent performance.
 Sprites are loaded lazily so the editor does not depend on any particular
 window system. The editor also validates image and variable input and
 ensures combo boxes always point to valid objects, preventing crashes when
