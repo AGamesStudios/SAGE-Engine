@@ -66,6 +66,11 @@ Dock widgets live under ``sage_editor.docks`` while reusable widgets live in
 scene you edit is visible inside the editor as well as when running the game.
 Embedding the editor in other tools only requires importing these modules.
 
+Additional utilities live under ``engine.tools``.  For example the
+``paint`` submodule exposes **SAGE Paint** so you can open it with
+``engine.tools.paint.main()`` or import individual widgets like
+``engine.tools.paint.Canvas``.
+
 ### Renderer
 
 Rendering now uses an **OpenGLRenderer**. Both the editor viewport and the game

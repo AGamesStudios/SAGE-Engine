@@ -39,7 +39,7 @@ __all__ = [
     'math2d', 'SceneGraph', 'SceneNode', 'BaseGraph', 'BaseNode', 'Object',
     'Transform2D', 'Material', 'create_role', 'SceneManager', 'EngineExtension',
     'InputManager', 'LibraryLoader', 'DEFAULT_LIBRARY_LOADER',
-    'load_engine_libraries'
+    'load_engine_libraries', 'tools'
 ]
 
 _lazy = {
@@ -106,6 +106,7 @@ _lazy = {
     'LibraryLoader': ('engine.core.library', 'LibraryLoader'),
     'DEFAULT_LIBRARY_LOADER': ('engine.core.library', 'DEFAULT_LIBRARY_LOADER'),
     'load_engine_libraries': ('engine.core.library', 'load_engine_libraries'),
+    'tools': ('engine.tools', None),
 }
 
 
