@@ -66,8 +66,8 @@ utilities like the plugin loader used by both components.
 The editor is fully modular. ``sage_editor.gui`` provides the main window
 and viewport widgets.
 Startup logic lives in ``sage_editor.app`` which configures a Qt ``Fusion``
-style for a modern look. Plugins registered via ``sage_editor.plugins`` can add
-their own dock widgets and actions without changing the core code.
+style for a modern look. Plugins registered via ``sage_editor.plugins`` can
+extend the interface with custom actions without changing the core code.
 Embedding the editor in other tools only requires importing these modules.
 
 The runtime is organised in a simple hierarchy:
