@@ -422,6 +422,11 @@ options. Sprites include a :class:`Material` describing colour, texture and
 simple rendering parameters like ``opacity`` or ``blend`` mode. Camera roles
 keep width, height and active status in their metadata.
 
+Object roles can be expanded by plugins. Any package exposing an entry point
+named ``sage_engine.objects`` that returns a class will be registered
+automatically, allowing scenes to use custom objects without modifying the core
+engine.
+
 ### SAGE SDK and Plugins
 
 The runtime-only distribution is available through the `sage_runtime` package for games that do not bundle the editor.

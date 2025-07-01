@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 from typing import Any, Callable, Type
+from importlib import metadata
 from ..utils.log import logger
 
 OBJECT_REGISTRY: dict[str, Type[Any]] = {}
 OBJECT_META: dict[str, list[tuple]] = {}
+_PLUGINS_LOADED = False
 
 
 def register_object(name: str, params: list[tuple[str, str | None]] | None = None) -> Callable[[Type[Any]], Type[Any]]:
@@ -23,8 +25,37 @@ def register_object(name: str, params: list[tuple[str, str | None]] | None = Non
     return decorator
 
 
+def _load_entry_points() -> None:
+    """Register object classes exposed via entry points."""
+    global _PLUGINS_LOADED
+    if _PLUGINS_LOADED:
+        return
+    try:
+        eps = metadata.entry_points()
+        entries = (
+            eps.select(group="sage_engine.objects")
+            if hasattr(eps, "select")
+            else eps.get("sage_engine.objects", [])
+        )
+        for ep in entries:
+            try:
+                cls = ep.load()
+                register_object(ep.name)(cls)
+            except Exception:
+                logger.exception("Failed to load object plugin %s", ep.name)
+    except Exception:
+        logger.exception("Error loading object entry points")
+    _PLUGINS_LOADED = True
+
+
+def load_object_plugins() -> None:
+    """Public helper to load object plugins on demand."""
+    _load_entry_points()
+
+
 def object_from_dict(data: dict) -> Any | None:
     """Instantiate a registered object from ``data``."""
+    _load_entry_points()
     typ = data.get("type")
     cls = OBJECT_REGISTRY.get(typ)
     if cls is None:
@@ -47,6 +78,7 @@ def object_from_dict(data: dict) -> Any | None:
 
 def object_to_dict(obj: Any) -> dict | None:
     """Return a dictionary representation based on registry metadata."""
+    _load_entry_points()
     for name, cls in OBJECT_REGISTRY.items():
         if isinstance(obj, cls):
             params = OBJECT_META.get(name, [])
@@ -63,6 +95,7 @@ def object_to_dict(obj: Any) -> dict | None:
 
 def get_object_type(obj: Any) -> str | None:
     """Return the registry name for ``obj`` or ``None``."""
+    _load_entry_points()
     for name, cls in OBJECT_REGISTRY.items():
         if isinstance(obj, cls):
             return name
@@ -70,4 +103,4 @@ def get_object_type(obj: Any) -> str | None:
 
 
 __all__ = ['register_object', 'object_from_dict', 'object_to_dict', 'get_object_type',
-           'OBJECT_REGISTRY', 'OBJECT_META']
+           'OBJECT_REGISTRY', 'OBJECT_META', 'load_object_plugins']
