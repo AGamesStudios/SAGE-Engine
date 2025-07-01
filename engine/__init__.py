@@ -37,7 +37,8 @@ __all__ = [
     'register_post_effect', 'get_post_effect', 'POST_EFFECT_REGISTRY',
     'create_square_mesh', 'create_triangle_mesh', 'create_circle_mesh', 'Mesh',
     'math2d', 'SceneGraph', 'SceneNode', 'BaseGraph', 'BaseNode', 'Object',
-    'Transform2D'
+    'Transform2D', 'LibraryLoader', 'DEFAULT_LIBRARY_LOADER',
+    'load_engine_libraries'
 ]
 
 _lazy = {
@@ -96,6 +97,9 @@ _lazy = {
     'BaseNode': ('engine.core.scene_graph', 'BaseNode'),
     'Object': ('engine.core.object', 'Object'),
     'Transform2D': ('engine.core.object', 'Transform2D'),
+    'LibraryLoader': ('engine.core.library', 'LibraryLoader'),
+    'DEFAULT_LIBRARY_LOADER': ('engine.core.library', 'DEFAULT_LIBRARY_LOADER'),
+    'load_engine_libraries': ('engine.core.library', 'load_engine_libraries'),
 }
 
 

@@ -110,6 +110,11 @@ class Engine:
             load_engine_plugins(self)
         except Exception:
             logger.exception("Failed to load engine plugins")
+        try:
+            from .. import load_engine_libraries
+            load_engine_libraries(self)
+        except Exception:
+            logger.exception("Failed to load engine libraries")
 
     def to_settings(self) -> EngineSettings:
         """Return the current configuration as :class:`EngineSettings`."""
