@@ -7,7 +7,7 @@ import importlib.util
 import os
 import ctypes
 
-from ..log import logger
+from ..utils.log import logger
 
 
 class LibraryLoader:

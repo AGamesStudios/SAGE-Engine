@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 from typing import Any, Callable, Type
-from ..log import logger
+from ..utils.log import logger
 
 OBJECT_REGISTRY: dict[str, Type[Any]] = {}
 OBJECT_META: dict[str, list[tuple]] = {}

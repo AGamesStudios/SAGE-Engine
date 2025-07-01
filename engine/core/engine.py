@@ -15,7 +15,7 @@ from ..renderers import (
     get_renderer,
 )
 from .. import ENGINE_VERSION
-from ..log import logger
+from ..utils.log import logger
 
 
 def _exception_handler(exc_type, exc, tb):

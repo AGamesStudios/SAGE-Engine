@@ -1,7 +1,7 @@
 # SAGE Logic - a simple condition/action event system
 # Provides Clickteam-style logic for both 2D and 3D games
 
-from ..log import logger
+from ..utils.log import logger
 
 # registries used to map names to classes so new logic blocks can be added
 # without modifying the loader code

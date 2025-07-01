@@ -27,7 +27,7 @@ from PIL import Image
 from engine.core.camera import Camera
 from engine.core.game_object import GameObject
 from engine import units
-from engine.log import logger
+from engine.utils.log import logger
 from engine.mesh_utils import (
     Mesh,
     create_square_mesh,

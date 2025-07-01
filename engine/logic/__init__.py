@@ -40,7 +40,7 @@ __all__ = [
 
 # warn about any missing exports at import time
 _missing = [name for name in __all__ if name not in globals()]
-from ..diagnostics import warn
+from ..utils.diagnostics import warn
 for _name in _missing:
     warn("Missing reference %s in logic.__init__", _name)
 del _missing

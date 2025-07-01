@@ -1,4 +1,4 @@
-from engine.core.scene_manager import SceneManager
+from engine.core.scenes.manager import SceneManager
 
 class DummyScene:
     def __init__(self):

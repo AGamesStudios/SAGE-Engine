@@ -2,7 +2,7 @@
 import os
 import sys
 from typing import Callable
-from ..log import logger
+from ..utils.log import logger
 
 _RESOURCE_ROOT = ""
 

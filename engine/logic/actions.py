@@ -5,7 +5,7 @@ No built-in actions are provided. Games and plugins should define their own
 """
 
 from .base import Action, register_action, resolve_value  # re-export for convenience
-from ..log import logger
+from ..utils.log import logger
 import math
 import operator
 

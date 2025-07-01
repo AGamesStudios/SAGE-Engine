@@ -36,7 +36,7 @@ class Camera(GameObject):
 cam_mod.Camera = Camera
 sys.modules.setdefault('engine.core.camera', cam_mod)
 
-from engine.core.object import Object, Transform2D, Material, create_role
+from engine.core.entities.object import Object, Transform2D, Material, create_role
 from engine.core.scene import Scene
 
 

@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from .objects import register_object
 from ..logic import EventSystem, event_from_dict
-from ..log import logger
+from ..utils.log import logger
 from .. import units
 from engine.renderers import Shader
 

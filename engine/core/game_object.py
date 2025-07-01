@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 import os
 import traceback
-from ..log import logger
+from ..utils.log import logger
 import math
 from collections import OrderedDict
 from .math2d import (

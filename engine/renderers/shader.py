@@ -14,7 +14,7 @@ from OpenGL.GL import (
 )
 from OpenGL.GL.shaders import compileProgram, compileShader
 
-from ..log import logger
+from ..utils.log import logger
 
 
 @dataclass

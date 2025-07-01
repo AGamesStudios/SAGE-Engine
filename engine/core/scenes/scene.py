@@ -5,7 +5,7 @@ from typing import List
 from ..game_object import GameObject
 from ..camera import Camera
 from ..objects import object_from_dict, object_to_dict
-from ...log import logger
+from ...utils.log import logger
 from ...logic import (
     EventSystem, Event,
     condition_from_dict, action_from_dict, event_from_dict,

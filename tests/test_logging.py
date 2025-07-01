@@ -2,8 +2,9 @@ import unittest
 import logging
 from io import StringIO
 
-from engine.log import logger
-from engine.core.scene import Scene, Camera
+from engine.utils.log import logger
+from engine.core.scene import Scene
+from engine.core.camera import Camera
 from engine.logic.base import EventSystem, Event
 
 class TestDebugLogging(unittest.TestCase):
@@ -38,7 +39,7 @@ class TestDebugLogging(unittest.TestCase):
         self.assertIn('Removed event', log_output)
 
     def test_set_stream_console_only(self):
-        from engine.log import set_stream
+        from engine.utils.log import set_stream
         original_files = [h.baseFilename for h in logger.handlers if isinstance(h, logging.FileHandler)]
         stream = StringIO()
         set_stream(stream)

@@ -142,7 +142,7 @@ def main(argv=None):
     sys.stdout = _Stream(editor.console_dock, orig_out)
     sys.stderr = _Stream(editor.console_dock, orig_err)
     # ensure loggers send output to the editor console
-    from engine.log import set_stream as set_engine_stream
+    from engine.utils.log import set_stream as set_engine_stream
     from .editor import set_stream as set_editor_stream
     set_engine_stream(sys.stderr)
     set_editor_stream(sys.stderr)
