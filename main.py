@@ -1,10 +1,9 @@
 import sys
-from sage_editor import main as run
+
+try:
+    from sage_editor import main as run
+except Exception as exc:  # pragma: no cover - import-time failure
+    raise SystemExit(f"Cannot start SAGE Editor: {exc}") from exc
 
 if __name__ == '__main__':
-    try:
-        sys.exit(run(sys.argv))
-    except Exception:
-        import traceback
-        traceback.print_exc()
-        sys.exit(1)
+    raise SystemExit(run(sys.argv))

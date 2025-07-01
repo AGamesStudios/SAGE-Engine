@@ -1,14 +1,15 @@
 from __future__ import annotations
 
 from PyQt6.QtWidgets import (
-    QMainWindow, QDockWidget, QWidget, QAction, QMenuBar, QApplication
+    QMainWindow, QDockWidget, QWidget, QMenuBar, QApplication
 )
+from PyQt6.QtGui import QAction
 from PyQt6.QtCore import Qt
 
 from engine.core.scenes.scene import Scene
 
 from .viewport import Viewport
-from .plugins import load_plugins
+from ..plugins import load_plugins
 
 
 class EditorWindow(QMainWindow):

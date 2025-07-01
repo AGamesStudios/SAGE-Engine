@@ -7,7 +7,7 @@ from PyQt6.QtWidgets import QApplication, QStyleFactory
 from engine.core.scenes.scene import Scene
 from engine.entities.game_object import GameObject
 
-from .main_window import EditorWindow
+from .ui import EditorWindow
 
 
 def main(argv: list[str] | None = None) -> int:

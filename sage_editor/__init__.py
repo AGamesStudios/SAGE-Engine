@@ -9,8 +9,7 @@ from __future__ import annotations
 
 import logging
 
-from .main_window import EditorWindow
-from .viewport import Viewport
+from .ui import EditorWindow, Viewport
 from .app import main
 from .plugins import register_plugin, load_plugins
 
