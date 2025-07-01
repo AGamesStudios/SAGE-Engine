@@ -3,7 +3,7 @@
 from importlib import import_module
 from typing import TYPE_CHECKING
 
-from .version import __version__
+from .version import __version__, require as require_version
 
 ENGINE_VERSION = __version__
 
@@ -45,7 +45,7 @@ __all__ = [
     'Transform2D', 'Material', 'create_role', 'SceneManager', 'EngineExtension',
     'InputManager', 'NullInput', 'LibraryLoader', 'DEFAULT_LIBRARY_LOADER',
     'load_engine_libraries', 'register_draw_handler',
-    'tools', 'paint', 'Cache', 'SAGE_CACHE'
+    'tools', 'paint', 'Cache', 'SAGE_CACHE', 'require_version'
 ]
 
 _lazy = {
@@ -135,6 +135,10 @@ def __getattr__(name):
         return value
     raise AttributeError(name)
 
+
+def __dir__():
+    return sorted(list(globals().keys()) + list(_lazy.keys()))
+
 if TYPE_CHECKING:  # pragma: no cover - hints for static analyzers
     from types import ModuleType as _ModuleType
     from .entities.game_object import GameObject, clear_image_cache
@@ -186,3 +190,4 @@ if TYPE_CHECKING:  # pragma: no cover - hints for static analyzers
     from .cache import Cache, SAGE_CACHE
     from . import math2d
     paint: _ModuleType
+    from .version import require as require_version

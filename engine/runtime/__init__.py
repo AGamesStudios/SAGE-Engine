@@ -3,6 +3,7 @@ from importlib import import_module
 
 _engine = import_module('engine')
 __all__ = getattr(_engine, '__all__', [])
+__version__ = getattr(_engine, '__version__', '0')
 
 def __getattr__(name: str):
     return getattr(_engine, name)

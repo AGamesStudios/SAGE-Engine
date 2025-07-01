@@ -29,6 +29,8 @@ stores its version inside every `.sageproject` file so you can safely upgrade
 without losing progress.
 An **About** entry in the menu shows this version so players know which build
 they are running.
+Use ``engine.require_version()`` to ensure your project runs on a compatible
+engine release.
 
 ## Setup
 Install dependencies with:
@@ -85,6 +87,8 @@ Additional utilities live under ``engine.tools``.  For example the
 ``paint`` submodule exposes **SAGE Paint** so you can open it with
 ``engine.tools.paint.main()`` or import individual widgets like
 ``engine.tools.paint.Canvas``.
+Each tool package also reports its own ``__version__`` so scripts can
+check compatibility.
 
 ### Renderer
 

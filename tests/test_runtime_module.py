@@ -53,3 +53,12 @@ def test_runtime_entrypoints():
     srm.main(['one'])
     erm.main(['two'])
     assert called == [['one'], ['two']]
+
+
+def test_versions_match_and_paint_dir():
+    import engine
+    import engine.runtime as er
+    import sage_runtime as sr
+    assert er.__version__ == engine.__version__
+    assert sr.__version__ == engine.__version__
+    assert 'paint' in dir(engine)
