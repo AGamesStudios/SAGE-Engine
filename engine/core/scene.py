@@ -28,6 +28,7 @@ class Scene:
         """
         # collections of scene objects and metadata
         self.objects = []
+        self.object_lookup = {}
         self.variables = {}
         if with_defaults:
             self.events = [
@@ -81,6 +82,8 @@ class Scene:
                 new_name = f"{base} ({i})"
             obj.name = new_name
         self.objects.append(obj)
+        key = getattr(obj, 'id', id(obj))
+        self.object_lookup[key] = obj
         logger.debug('Added object %s', obj.name)
         if isinstance(obj, Camera):
             if obj.active:
@@ -92,6 +95,7 @@ class Scene:
     def remove_object(self, obj: GameObject):
         if obj in self.objects:
             self.objects.remove(obj)
+            self.object_lookup.pop(getattr(obj, 'id', id(obj)), None)
             logger.debug('Removed object %s', obj.name)
             if obj is self.camera:
                 self.camera = None
@@ -99,6 +103,20 @@ class Scene:
             if isinstance(obj, Camera):
                 obj.active = False
             self.sort_objects()
+
+    def find_object(self, key) -> GameObject | Camera | None:
+        """Return an object by name or id."""
+        if isinstance(key, int):
+            return self.object_lookup.get(key)
+        for obj in self.objects:
+            if getattr(obj, 'name', None) == key:
+                return obj
+        return None
+
+    def remove_object_by_name(self, name: str) -> None:
+        obj = self.find_object(name)
+        if obj is not None:
+            self.remove_object(obj)
 
     def set_active_camera(self, camera: Camera | str | None):
         """Select which camera is used for rendering."""

@@ -1,5 +1,43 @@
 import unittest
+import types
+import sys
+
+# Stub heavy modules so engine.core.scene imports without optional deps
+sys.modules.setdefault('PIL', types.ModuleType('PIL'))
+sys.modules.setdefault('PIL.Image', types.ModuleType('PIL.Image'))
+sys.modules.setdefault('OpenGL', types.ModuleType('OpenGL'))
+sys.modules.setdefault('OpenGL.GL', types.ModuleType('OpenGL.GL'))
+sys.modules.setdefault('engine.renderers', types.ModuleType('engine.renderers'))
+sys.modules.setdefault('engine.renderers.shader', types.ModuleType('engine.renderers.shader'))
+sys.modules.setdefault('engine.mesh_utils', types.ModuleType('engine.mesh_utils'))
+
+from dataclasses import dataclass
+
+game_mod = types.ModuleType('engine.core.game_object')
+
+@dataclass
+class GameObject:
+    name: str = 'GameObject'
+    z: int = 0
+    def update(self, dt):
+        pass
+    def draw(self, surface):
+        pass
+
+game_mod.GameObject = GameObject
+sys.modules.setdefault('engine.core.game_object', game_mod)
+
+cam_mod = types.ModuleType('engine.core.camera')
+
+@dataclass
+class Camera(GameObject):
+    active: bool = False
+
+cam_mod.Camera = Camera
+sys.modules.setdefault('engine.core.camera', cam_mod)
+
 from engine.core.object import Object, Transform2D
+from engine.core.scene import Scene
 
 
 class TestObject(unittest.TestCase):
@@ -19,6 +57,27 @@ class TestObject(unittest.TestCase):
         self.assertEqual(len(mat), 9)
         self.assertAlmostEqual(mat[6], 1)
         self.assertAlmostEqual(mat[7], 2)
+
+    def test_object_hierarchy(self):
+        parent = Object(role="p")
+        child = Object(role="c")
+        parent.add_child(child)
+        parent.move(5, 2)
+        child.move(1, 0)
+        wx, wy = child.world_position()
+        self.assertAlmostEqual(wx, 6)
+        self.assertAlmostEqual(wy, 2)
+        self.assertIs(child.parent, parent)
+        self.assertIn(child, parent.children)
+
+    def test_scene_object_lookup(self):
+        scene = Scene(with_defaults=False)
+        obj = Object(role="t")
+        scene.add_object(obj)
+        by_id = scene.find_object(obj.id)
+        self.assertIs(by_id, obj)
+        scene.remove_object_by_name(obj.name)
+        self.assertIsNone(scene.find_object(obj.id))
 
 
 if __name__ == "__main__":
