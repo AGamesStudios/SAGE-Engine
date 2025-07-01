@@ -26,6 +26,13 @@ def _setup_logger() -> logging.Logger:
 logger = _setup_logger()
 atexit.register(logging.shutdown)
 
+
+def set_level(level: str | int) -> None:
+    """Set the logger verbosity at runtime."""
+    if isinstance(level, str):
+        level = getattr(logging, level.upper(), logging.INFO)
+    logger.setLevel(level)
+
 def set_stream(stream) -> None:
     """Redirect console output to the given stream without affecting the log file."""
     for handler in logger.handlers:
@@ -33,4 +40,4 @@ def set_stream(stream) -> None:
         if isinstance(handler, logging.StreamHandler) and not isinstance(handler, logging.FileHandler):
             handler.setStream(stream)
 
-__all__ = ['logger', 'LOG_FILE', 'set_stream']
+__all__ = ['logger', 'LOG_FILE', 'set_stream', 'set_level']

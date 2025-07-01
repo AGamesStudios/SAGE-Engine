@@ -48,5 +48,14 @@ class TestDebugLogging(unittest.TestCase):
         new_files = [h.baseFilename for h in logger.handlers if isinstance(h, logging.FileHandler)]
         self.assertEqual(original_files, new_files)
 
+    def test_set_level_helper(self):
+        from engine.utils.log import set_level
+        old = logger.level
+        set_level('DEBUG')
+        try:
+            self.assertEqual(logger.level, logging.DEBUG)
+        finally:
+            set_level(old)
+
 if __name__ == '__main__':
     unittest.main()

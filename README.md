@@ -37,6 +37,10 @@ pip install -r requirements.txt
 ```
 Or run `scripts/setup.sh` to install them automatically.
 
+### Running tests
+Execute `pytest` to run the automated test suite which checks the
+engine for common errors and regressions.
+
 ## Building an executable
 Install PyInstaller and run the build script to create a standalone **SAGE Engine** executable. Place an ``icon.png`` (256×256 is recommended) in ``sage_editor/icons`` to brand the window. If building for Windows also provide ``icon.ico`` converted from that image. The script packages the editor icons so the program has a complete UI when run on another machine. The command below shows the full parameters on one line so it can be copied directly:
 
@@ -76,6 +80,8 @@ SAGE Engine -> Project -> Scenes -> Objects -> properties
 Projects load resources through `engine.core.resources.ResourceManager` which
 uses a global **SAGE Cache** so data is reused between scenes. Debug messages
 are written to `logs/engine.log` using the helpers in `engine.utils.log`.
+You can change the verbosity at runtime with
+`engine.utils.log.set_level('DEBUG')`.
 
 Additional utilities live under ``engine.tools``.  For example the
 ``paint`` submodule exposes **SAGE Paint** so you can open it with
