@@ -26,7 +26,9 @@ __all__ = [
     'register_condition', 'register_action',
     'get_registered_conditions', 'get_registered_actions',
     'condition_from_dict', 'action_from_dict', 'event_from_dict',
-    'Project', 'Camera', 'clear_image_cache', 'Renderer', 'OpenGLRenderer', 'main',
+    'Project', 'Camera', 'clear_image_cache',
+    'register_object', 'object_from_dict', 'object_to_dict',
+    'Renderer', 'OpenGLRenderer', 'main',
     'ENGINE_VERSION', 'logger', 'ResourceManager', 'set_resource_root', 'get_resource_path',
     'load_project', 'save_project', 'run_project', 'create_engine',
     'load_scene', 'save_scene', 'run_scene',
@@ -60,6 +62,9 @@ _lazy = {
     'create_triangle_mesh': ('engine.mesh_utils', 'create_triangle_mesh'),
     'create_circle_mesh': ('engine.mesh_utils', 'create_circle_mesh'),
     'clear_image_cache': ('engine.core.game_object', 'clear_image_cache'),
+    'register_object': ('engine.core.objects', 'register_object'),
+    'object_from_dict': ('engine.core.objects', 'object_from_dict'),
+    'object_to_dict': ('engine.core.objects', 'object_to_dict'),
     'load_project': ('engine.api', 'load_project'),
     'save_project': ('engine.api', 'save_project'),
     'run_project': ('engine.api', 'run_project'),
@@ -122,9 +127,44 @@ def __getattr__(name):
     raise AttributeError(name)
 
 if TYPE_CHECKING:  # pragma: no cover - hints for static analyzers
-    from .core.game_object import GameObject as GameObject
-    from .core.scenes.scene import Scene as Scene
-    from .core.engine import Engine as Engine
-    from .logic.base import get_registered_conditions as get_registered_conditions
     from types import ModuleType as _ModuleType
+    from .core.game_object import GameObject, clear_image_cache
+    from .core.scenes.scene import Scene
+    from .core.engine import Engine
+    from .core.scene_graph import SceneGraph, SceneNode, BaseGraph, BaseNode
+    from .core.project import Project
+    from .core.camera import Camera
+    from .core.object import Object, Transform2D, Material, create_role
+    from .core.objects import register_object, object_from_dict, object_to_dict
+    from .core.scenes.manager import SceneManager
+    from .core.extensions import EngineExtension
+    from .core.settings import EngineSettings
+    from .core.effects import register_effect, get_effect, EFFECT_REGISTRY
+    from .core.post_effects import (
+        register_post_effect, get_post_effect, POST_EFFECT_REGISTRY
+    )
+    from .core.library import (
+        LibraryLoader, DEFAULT_LIBRARY_LOADER, load_engine_libraries
+    )
+    from .renderers import Renderer
+    from .renderers.opengl_renderer import OpenGLRenderer
+    from .inputs import InputManager
+    from .mesh_utils import (
+        Mesh, create_square_mesh, create_triangle_mesh, create_circle_mesh
+    )
+    from .logic.base import (
+        EventSystem, Event,
+        register_condition, register_action,
+        get_registered_conditions, get_registered_actions,
+        condition_from_dict, action_from_dict, event_from_dict,
+    )
+    from .core.resources import (
+        ResourceManager, set_resource_root, get_resource_path
+    )
+    from .game_window import GameWindow
+    from .api import (
+        load_project, save_project, run_project, create_engine,
+        load_scene, save_scene, run_scene,
+    )
+    from . import units, math2d
     paint: _ModuleType
