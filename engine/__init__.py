@@ -3,7 +3,9 @@
 from importlib import import_module
 from typing import TYPE_CHECKING
 
-ENGINE_VERSION = '2D prototype v0.0.01a'
+from .version import __version__
+
+ENGINE_VERSION = __version__
 
 from .utils.log import logger
 from .utils.diagnostics import warn, error, exception
@@ -29,7 +31,7 @@ __all__ = [
     'Project', 'Camera', 'clear_image_cache',
     'register_object', 'object_from_dict', 'object_to_dict',
     'Renderer', 'OpenGLRenderer', 'main',
-    'ENGINE_VERSION', 'logger', 'ResourceManager', 'set_resource_root', 'get_resource_path',
+    '__version__', 'ENGINE_VERSION', 'logger', 'ResourceManager', 'set_resource_root', 'get_resource_path',
     'load_project', 'save_project', 'run_project', 'create_engine',
     'load_scene', 'save_scene', 'run_scene',
     'warn', 'error', 'exception',
@@ -62,6 +64,7 @@ _lazy = {
     'create_triangle_mesh': ('engine.mesh_utils', 'create_triangle_mesh'),
     'create_circle_mesh': ('engine.mesh_utils', 'create_circle_mesh'),
     'clear_image_cache': ('engine.core.game_object', 'clear_image_cache'),
+    '__version__': ('engine.version', '__version__'),
     'register_object': ('engine.core.objects', 'register_object'),
     'object_from_dict': ('engine.core.objects', 'object_from_dict'),
     'object_to_dict': ('engine.core.objects', 'object_to_dict'),

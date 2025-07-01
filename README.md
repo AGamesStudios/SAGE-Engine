@@ -24,7 +24,7 @@ you work.  A new **File** menu can create blank documents, open or save
 ``.sagepaint`` files and export the current image to PNG alongside the existing
 Settings menu for window size.
 
-The current release is **SAGE Engine: 2D prototype v0.0.01a**. The engine
+The current release is **SAGE Engine v0.0.1-alpha**. The engine
 stores its version inside every `.sageproject` file so you can safely upgrade
 without losing progress.
 An **About** entry in the menu shows this version so players know which build
