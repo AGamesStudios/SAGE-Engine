@@ -18,6 +18,7 @@ class SceneNodeItem(QGraphicsRectItem):
 
     WIDTH = 160
     HEIGHT = 120
+    RADIUS = 8
 
     def __init__(self, node: SceneNode, view: 'SceneGraphView') -> None:
         super().__init__(0, 0, self.WIDTH, self.HEIGHT)
@@ -27,6 +28,7 @@ class SceneNodeItem(QGraphicsRectItem):
         self.setPen(QPen(Qt.GlobalColor.black))
         header = QGraphicsRectItem(0, 0, self.WIDTH, 20, self)
         header.setBrush(QColor(70, 90, 200))
+        header.setZValue(0.5)
         text = QGraphicsTextItem(node.name, header)
         text.setDefaultTextColor(Qt.GlobalColor.white)
         br = text.boundingRect()
@@ -36,6 +38,7 @@ class SceneNodeItem(QGraphicsRectItem):
         )
         self.image_rect = QGraphicsRectItem(0, 20, self.WIDTH, self.HEIGHT - 20, self)
         self.image_rect.setBrush(QColor(220, 220, 220))
+        self.image_rect.setZValue(0)
         self.pix_item: QGraphicsPixmapItem | None = None
         self._preview_timer: QTimer | None = None
         self._viewport = None
@@ -44,15 +47,23 @@ class SceneNodeItem(QGraphicsRectItem):
         self.input_port.setBrush(QColor(70, 70, 70))
         self.input_port.setPen(QPen(Qt.PenStyle.NoPen))
         self.input_port.setData(0, 'input')
+        self.input_port.setZValue(1)
         self.output_port = QGraphicsEllipseItem(
             self.WIDTH - 5, self.HEIGHT / 2 - 5, 10, 10, self)
         self.output_port.setBrush(QColor(70, 70, 70))
         self.output_port.setPen(QPen(Qt.PenStyle.NoPen))
         self.output_port.setData(0, 'output')
+        self.output_port.setZValue(1)
         self.setPos(*node.position)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, True)
         self.setFlag(
             QGraphicsItem.GraphicsItemFlag.ItemSendsScenePositionChanges, True)
+
+    def paint(self, painter: QPainter, option, widget=None) -> None:  # type: ignore[override]
+        painter.setBrush(self.brush())
+        painter.setPen(self.pen())
+        painter.drawRoundedRect(self.rect(), self.RADIUS, self.RADIUS)
+        # no call to super().paint to avoid drawing a square
 
     def itemChange(self, change: 'QGraphicsItem.GraphicsItemChange', value):
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionChange:
@@ -80,6 +91,7 @@ class SceneNodeItem(QGraphicsRectItem):
         if self.pix_item is None:
             self.pix_item = QGraphicsPixmapItem(pix, self)
             self.pix_item.setPos(0, 20)
+            self.pix_item.setZValue(0)
             self.image_rect.setVisible(False)
         else:
             self.pix_item.setPixmap(pix)
@@ -117,6 +129,7 @@ class SceneNodeItem(QGraphicsRectItem):
         if self.pix_item is None:
             self.pix_item = QGraphicsPixmapItem(pix, self)
             self.pix_item.setPos(0, 20)
+            self.pix_item.setZValue(0)
             self.image_rect.setVisible(False)
         else:
             self.pix_item.setPixmap(pix)
