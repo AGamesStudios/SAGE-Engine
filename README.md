@@ -425,6 +425,7 @@ keep width, height and active status in their metadata.
 ### SAGE SDK and Plugins
 
 The runtime-only distribution is available through the `sage_runtime` package for games that do not bundle the editor.
+It can be launched directly with ``python -m sage_runtime <file>`` or ``python -m engine.runtime <file>`` to run a scene or project without the editor.
 
 The ``sage_sdk`` package ships with a flexible plugin system used by both the
 engine and editor.  A :class:`PluginManager` instance handles discovery and
