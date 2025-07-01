@@ -515,9 +515,16 @@ pip install numba
 ### Input Backends
 
 The engine defaults to Qt input handling but also supports PySDL2. Pass
-`input_backend='sdl'` to :class:`~engine.core.engine.Engine` to use SDL for
+``input_backend='sdl'`` to :class:`~engine.core.engine.Engine` to use SDL for
 keyboard and mouse events. This allows easy detection of any SDL key and
 works without a Qt window. The editor continues to use Qt input.
+
+### SAGE Input
+
+``engine.inputs`` provides a flexible ``InputManager`` that maps actions to
+keys or mouse buttons and dispatches press/release callbacks. Axes can be
+defined with positive and negative keys for analog-like control. A lightweight
+``NullInput`` backend is bundled for testing or headless systems.
 
 ### Engine Configuration
 

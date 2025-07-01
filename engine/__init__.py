@@ -43,7 +43,7 @@ __all__ = [
     'create_square_mesh', 'create_triangle_mesh', 'create_circle_mesh', 'Mesh',
     'math2d', 'SceneGraph', 'SceneNode', 'BaseGraph', 'BaseNode', 'Object',
     'Transform2D', 'Material', 'create_role', 'SceneManager', 'EngineExtension',
-    'InputManager', 'LibraryLoader', 'DEFAULT_LIBRARY_LOADER',
+    'InputManager', 'NullInput', 'LibraryLoader', 'DEFAULT_LIBRARY_LOADER',
     'load_engine_libraries', 'register_draw_handler',
     'tools', 'paint', 'Cache', 'SAGE_CACHE'
 ]
@@ -114,6 +114,7 @@ _lazy = {
     'SceneManager': ('engine.core.scenes.manager', 'SceneManager'),
     'EngineExtension': ('engine.core.extensions', 'EngineExtension'),
     'InputManager': ('engine.inputs', 'InputManager'),
+    'NullInput': ('engine.inputs', 'NullInput'),
     'LibraryLoader': ('engine.core.library', 'LibraryLoader'),
     'DEFAULT_LIBRARY_LOADER': ('engine.core.library', 'DEFAULT_LIBRARY_LOADER'),
     'load_engine_libraries': ('engine.core.library', 'load_engine_libraries'),
@@ -158,7 +159,7 @@ if TYPE_CHECKING:  # pragma: no cover - hints for static analyzers
     from .renderers.opengl_renderer import OpenGLRenderer
     from .renderers.null_renderer import NullRenderer
     from .renderers import register_draw_handler
-    from .inputs import InputManager
+    from .inputs import InputManager, NullInput
     from .mesh_utils import (
         Mesh, create_square_mesh, create_triangle_mesh, create_circle_mesh
     )

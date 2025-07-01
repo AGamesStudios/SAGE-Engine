@@ -69,12 +69,16 @@ def get_input(name: str) -> Type | None:
 
 
 class InputManager:
-    """Map high level actions to backend keys or buttons."""
+    """Map high level actions to backend keys or buttons and dispatch callbacks."""
 
     def __init__(self, backend: InputBackend):
         self.backend = backend
         self._key_map: dict[str, int] = {}
         self._btn_map: dict[str, int] = {}
+        self._axes: dict[str, tuple[int | None, int | None, float]] = {}
+        self._press: dict[str, list[callable]] = {}
+        self._release: dict[str, list[callable]] = {}
+        self._state: set[str] = set()
 
     def bind_action(self, action: str, *, key: int | None = None,
                     button: int | None = None) -> None:
@@ -84,12 +88,33 @@ class InputManager:
         if button is not None:
             self._btn_map[action] = button
 
+    def bind_axis(self, axis: str, *, positive: int | None = None,
+                  negative: int | None = None, scale: float = 1.0) -> None:
+        """Map ``axis`` to positive/negative keys."""
+        self._axes[axis] = (positive, negative, scale)
+
+    def unbind_axis(self, axis: str) -> None:
+        self._axes.pop(axis, None)
+
     def unbind_action(self, action: str) -> None:
         self._key_map.pop(action, None)
         self._btn_map.pop(action, None)
 
     def poll(self) -> None:
         self.backend.poll()
+        actions = set(self._key_map) | set(self._btn_map)
+        for action in actions:
+            down = self.is_action_down(action)
+            if down and action not in self._state:
+                for cb in self._press.get(action, []):
+                    cb()
+            elif not down and action in self._state:
+                for cb in self._release.get(action, []):
+                    cb()
+            if down:
+                self._state.add(action)
+            else:
+                self._state.discard(action)
 
     def is_action_down(self, action: str) -> bool:
         key = self._key_map.get(action)
@@ -100,14 +125,32 @@ class InputManager:
             return True
         return False
 
+    def get_axis(self, axis: str) -> float:
+        pos, neg, scale = self._axes.get(axis, (None, None, 1.0))
+        value = 0.0
+        if pos is not None and self.backend.is_key_down(pos):
+            value += scale
+        if neg is not None and self.backend.is_key_down(neg):
+            value -= scale
+        return value
+
     def shutdown(self) -> None:
         self.backend.shutdown()
+
+    def on_press(self, action: str, callback) -> None:
+        self._press.setdefault(action, []).append(callback)
+
+    def on_release(self, action: str, callback) -> None:
+        self._release.setdefault(action, []).append(callback)
 
 
 __all__ = [
     "InputBackend",
     "InputManager",
+    "NullInput",
     "register_input",
     "get_input",
     "INPUT_REGISTRY",
 ]
+
+from .null_input import NullInput  # noqa: E402
