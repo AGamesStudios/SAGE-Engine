@@ -1,6 +1,7 @@
 """Top level package for the SAGE engine with lazy imports."""
 
 from importlib import import_module
+from typing import TYPE_CHECKING
 
 ENGINE_VERSION = '2D prototype v0.0.01a'
 
@@ -39,7 +40,7 @@ __all__ = [
     'math2d', 'SceneGraph', 'SceneNode', 'BaseGraph', 'BaseNode', 'Object',
     'Transform2D', 'Material', 'create_role', 'SceneManager', 'EngineExtension',
     'InputManager', 'LibraryLoader', 'DEFAULT_LIBRARY_LOADER',
-    'load_engine_libraries', 'tools'
+    'load_engine_libraries', 'tools', 'paint'
 ]
 
 _lazy = {
@@ -107,6 +108,7 @@ _lazy = {
     'DEFAULT_LIBRARY_LOADER': ('engine.core.library', 'DEFAULT_LIBRARY_LOADER'),
     'load_engine_libraries': ('engine.core.library', 'load_engine_libraries'),
     'tools': ('engine.tools', None),
+    'paint': ('engine.tools', 'paint'),
 }
 
 
@@ -118,3 +120,11 @@ def __getattr__(name):
         globals()[name] = value
         return value
     raise AttributeError(name)
+
+if TYPE_CHECKING:  # pragma: no cover - hints for static analyzers
+    from .core.game_object import GameObject as GameObject
+    from .core.scenes.scene import Scene as Scene
+    from .core.engine import Engine as Engine
+    from .logic.base import get_registered_conditions as get_registered_conditions
+    from types import ModuleType as _ModuleType
+    paint: _ModuleType
