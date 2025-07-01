@@ -47,7 +47,7 @@ __all__ = [
 
 _lazy = {
     'GameObject': ('engine.core.game_object', 'GameObject'),
-    'Scene': ('engine.core.scene', 'Scene'),
+    'Scene': ('engine.core.scenes.scene', 'Scene'),
     'Project': ('engine.core.project', 'Project'),
     'Camera': ('engine.core.camera', 'Camera'),
     'EngineSettings': ('engine.core.settings', 'EngineSettings'),
@@ -102,10 +102,10 @@ _lazy = {
     'SceneNode': ('engine.core.scene_graph', 'SceneNode'),
     'BaseGraph': ('engine.core.scene_graph', 'BaseGraph'),
     'BaseNode': ('engine.core.scene_graph', 'BaseNode'),
-    'Object': ('engine.core.object', 'Object'),
-    'Transform2D': ('engine.core.object', 'Transform2D'),
-    'Material': ('engine.core.object', 'Material'),
-    'create_role': ('engine.core.object', 'create_role'),
+    'Object': ('engine.core.entities.object', 'Object'),
+    'Transform2D': ('engine.core.entities.object', 'Transform2D'),
+    'Material': ('engine.core.entities.object', 'Material'),
+    'create_role': ('engine.core.entities.object', 'create_role'),
     'SceneManager': ('engine.core.scenes.manager', 'SceneManager'),
     'EngineExtension': ('engine.core.extensions', 'EngineExtension'),
     'InputManager': ('engine.inputs', 'InputManager'),
@@ -134,7 +134,7 @@ if TYPE_CHECKING:  # pragma: no cover - hints for static analyzers
     from .core.scene_graph import SceneGraph, SceneNode, BaseGraph, BaseNode
     from .core.project import Project
     from .core.camera import Camera
-    from .core.object import Object, Transform2D, Material, create_role
+    from .core.entities.object import Object, Transform2D, Material, create_role
     from .core.objects import register_object, object_from_dict, object_to_dict
     from .core.scenes.manager import SceneManager
     from .core.extensions import EngineExtension
