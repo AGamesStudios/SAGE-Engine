@@ -5,7 +5,7 @@ from importlib import import_module
 __all__ = [
     'GameObject',
     'Scene',
-    'SceneGraph',
+    'SceneGraph', 'SceneNode', 'BaseGraph', 'BaseNode',
     'Project',
     'Camera',
     'clear_image_cache',
@@ -27,6 +27,9 @@ _lazy = {
     'clear_image_cache': ('engine.core.game_object', 'clear_image_cache'),
     'Scene': ('engine.core.scene', 'Scene'),
     'SceneGraph': ('engine.core.scene_graph', 'SceneGraph'),
+    'SceneNode': ('engine.core.scene_graph', 'SceneNode'),
+    'BaseGraph': ('engine.core.scene_graph', 'BaseGraph'),
+    'BaseNode': ('engine.core.scene_graph', 'BaseNode'),
     'Project': ('engine.core.project', 'Project'),
     'Camera': ('engine.core.camera', 'Camera'),
     'register_object': ('engine.core.objects', 'register_object'),

@@ -73,12 +73,12 @@ class SceneNodeItem(QGraphicsRectItem):
         return super().itemChange(change, value)
 
     def input_pos(self):
-        p = self.input_port.scenePos()
-        return p.x() + 5, p.y() + 5
+        point = self.input_port.mapToScene(self.input_port.boundingRect().center())
+        return point.x(), point.y()
 
     def output_pos(self):
-        p = self.output_port.scenePos()
-        return p.x() + 5, p.y() + 5
+        point = self.output_port.mapToScene(self.output_port.boundingRect().center())
+        return point.x(), point.y()
 
 
 class SceneGraphView(QGraphicsView):

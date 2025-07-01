@@ -36,7 +36,7 @@ __all__ = [
     'register_effect', 'get_effect', 'EFFECT_REGISTRY',
     'register_post_effect', 'get_post_effect', 'POST_EFFECT_REGISTRY',
     'create_square_mesh', 'create_triangle_mesh', 'create_circle_mesh', 'Mesh',
-    'math2d'
+    'math2d', 'SceneGraph', 'SceneNode', 'BaseGraph', 'BaseNode'
 ]
 
 _lazy = {
@@ -89,6 +89,10 @@ _lazy = {
     'Renderer': ('engine.renderers', 'Renderer'),
     'OpenGLRenderer': ('engine.renderers.opengl_renderer', 'OpenGLRenderer'),
     'math2d': ('engine.core.math2d', None),
+    'SceneGraph': ('engine.core.scene_graph', 'SceneGraph'),
+    'SceneNode': ('engine.core.scene_graph', 'SceneNode'),
+    'BaseGraph': ('engine.core.scene_graph', 'BaseGraph'),
+    'BaseNode': ('engine.core.scene_graph', 'BaseNode'),
 }
 
 

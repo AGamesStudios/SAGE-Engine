@@ -4798,7 +4798,7 @@ class Editor(QMainWindow):
             if self.scene_graph.nodes and len(self.scene_graph.nodes) > 1:
                 last_name = list(self.scene_graph.nodes.keys())[-2]
                 last_item = (
-                    self.graph_view.items.get(last_name) if self.graph_view else None
+                    self.graph_view.node_items.get(last_name) if self.graph_view else None
                 )
                 if last_item:
                     x, y = last_item.output_pos()
