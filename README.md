@@ -74,7 +74,7 @@ editor.  Simply import the engine from `engine` and the editor from
 `sage_editor` to keep them modular.  The ``sage_sdk`` package provides shared
 utilities like the plugin loader used by both components.
 The editor is fully modular. ``sage_editor.gui`` provides the main window
-and viewport widgets.
+and viewport widgets, plus a simple console showing log output beneath the view.
 Startup logic lives in ``sage_editor.app`` which configures a Qt ``Fusion``
 style for a modern look. Plugins registered via ``sage_editor.plugins`` can
 extend the interface with custom actions without changing the core code.
@@ -111,9 +111,8 @@ textures. A white cross follows the mouse so you can see its world position
 and stays aligned even when zooming the viewport.
 These gizmos are shown only in the viewport; the game window draws
 just the scene objects. The viewport has its own camera which can be panned by
-dragging with the left mouse button; the cursor is hidden and captured during
-the drag so movement feels smooth and the game camera stays untouched. Use the
-mouse wheel to zoom the editor camera in or out.
+dragging with the left mouse button. Click without moving to select the object
+under the cursor. Use the mouse wheel to zoom the editor camera in or out.
 The transform gizmo keeps a constant screen size even on high‑DPI displays and
 continues to track the grabbed point while zooming. Its arrows darken when
 hovered so you know they can be dragged. A yellow ring allows rotation around

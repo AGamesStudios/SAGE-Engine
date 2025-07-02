@@ -1,11 +1,19 @@
 from __future__ import annotations
 
-from PyQt6.QtWidgets import QMainWindow, QWidget, QMenuBar, QApplication
+from PyQt6.QtWidgets import (
+    QMainWindow,
+    QWidget,
+    QMenuBar,
+    QApplication,
+    QVBoxLayout,
+)
 from PyQt6.QtGui import QAction
 
 from engine.core.scenes.scene import Scene
 
 from .viewport import Viewport
+from .console import ConsoleWidget
+from engine.utils.log import set_stream
 
 
 
@@ -17,7 +25,17 @@ class EditorWindow(QMainWindow):
         self.setWindowTitle("SAGE Editor")
         self.scene = scene
         self.viewport = Viewport(scene, self)
-        self.setCentralWidget(self.viewport)
+        self.console = ConsoleWidget(self)
+
+        container = QWidget(self)
+        layout = QVBoxLayout(container)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        layout.addWidget(self.viewport)
+        layout.addWidget(self.console)
+        self.setCentralWidget(container)
+
+        set_stream(self.console)
 
         self._create_menu()
 
