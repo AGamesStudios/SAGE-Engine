@@ -58,12 +58,13 @@ class Viewport(QWidget):
         return None
 
     def _tick(self) -> None:
-        self.renderer.draw_scene(
-            self.scene,
-            self.camera,
-            gizmos=True,
-            selected=self.selected_obj,
-        )
+        if self.width() > 0 and self.height() > 0:
+            self.renderer.draw_scene(
+                self.scene,
+                self.camera,
+                gizmos=True,
+                selected=self.selected_obj,
+            )
 
     # -------------------------
     def resizeEvent(self, event) -> None:  # type: ignore[override]

@@ -1040,6 +1040,8 @@ class OpenGLRenderer:
         # called from GLWidget.paintGL
         if not self.widget:
             return
+        if self.widget.width() == 0 or self.widget.height() == 0:
+            return
         from OpenGL.GL import glViewport
         glViewport(0, 0, self.widget.width(), self.widget.height())
         self.clear((0, 0, 0))
