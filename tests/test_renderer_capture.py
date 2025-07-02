@@ -20,6 +20,8 @@ sys.modules['PyQt6.QtOpenGLWidgets'] = opengl_widgets
 sys.modules['PIL'] = types.ModuleType('PIL')
 image_mod = types.ModuleType('PIL.Image')
 image_mod.Image = type('Image', (), {})
+image_mod.frombytes = lambda *a, **k: types.SimpleNamespace(size=(2, 2), transpose=lambda t: types.SimpleNamespace(size=(2, 2)))
+image_mod.Transpose = types.SimpleNamespace(FLIP_TOP_BOTTOM=0)
 sys.modules['PIL.Image'] = image_mod
 sys.modules['PIL'].Image = image_mod
 

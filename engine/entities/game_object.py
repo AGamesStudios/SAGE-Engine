@@ -273,9 +273,9 @@ class GameObject(Object):
                         _IMAGE_CACHE[path] = img
                         while len(_IMAGE_CACHE) > _MAX_CACHE:
                             _IMAGE_CACHE.popitem(last=False)
-                    except Exception:
-                        logger.exception('Failed to load image %s', path)
-                        img = Image.new('RGBA', (32, 32), self.color or (255, 255, 255, 255))
+                    except Exception as exc:
+                        logger.error('Failed to load image %s: %s', path, exc)
+                        raise
         self.image = img
         self.width, self.height = img.size
         self._dirty = True

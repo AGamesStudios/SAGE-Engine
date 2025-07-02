@@ -254,6 +254,10 @@ class Engine:
                     self.step()
             except KeyboardInterrupt:
                 pass
+            finally:
+                self.shutdown()
+                self.input.shutdown()
+                self.renderer.close()
             return None
 
         _log(f"Starting engine version {ENGINE_VERSION}")

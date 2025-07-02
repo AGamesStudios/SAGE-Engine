@@ -77,7 +77,7 @@ def object_from_dict(data: dict) -> Any | None:
         return cls(**params)
     except Exception:
         logger.exception('Failed to construct object %s', typ)
-        return None
+        raise
 
 
 def object_to_dict(obj: Any) -> dict | None:

@@ -40,6 +40,8 @@ class FancyInput(InputBackend):
 register_input('fancy', FancyInput)
 ```
 
+Built-in backends include `sdl`, `null` and `qt`.
+
 ## Renderers
 
 Renderers subclass `Renderer`:

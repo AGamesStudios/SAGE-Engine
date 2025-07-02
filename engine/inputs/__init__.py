@@ -52,6 +52,13 @@ def _ensure_default() -> None:
             register_input("sdl", NullInput)
         else:
             register_input("sdl", SDLInput)
+    if "qt" not in INPUT_REGISTRY:
+        try:
+            from .qt_input import QtInput
+        except Exception as exc:  # pragma: no cover - optional dependency
+            logger.warning("Qt backend unavailable: %s", exc)
+        else:
+            register_input("qt", QtInput)
     _load_entry_points()
 
 
@@ -169,9 +176,14 @@ __all__ = [
     "InputBackend",
     "InputManager",
     "NullInput",
+    "QtInput",
     "register_input",
     "get_input",
     "INPUT_REGISTRY",
 ]
 
 from .null_input import NullInput  # noqa: E402
+try:  # noqa: E402 - optional dependency
+    from .qt_input import QtInput
+except Exception:  # pragma: no cover - PyQt6 missing
+    pass
