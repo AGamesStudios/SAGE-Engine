@@ -82,9 +82,8 @@ class Scene:
         self.objects.append(obj)
         key = getattr(obj, 'id', id(obj))
         self.object_lookup[key] = obj
-        grp = getattr(obj, 'group', None)
-        if grp:
-            self.groups.setdefault(grp, []).append(obj)
+        obj.scene = self
+        self.update_object_group(obj, None)
         logger.debug('Added object %s', obj.name)
         if isinstance(obj, Camera):
             if obj.active:
@@ -102,6 +101,7 @@ class Scene:
                 self.groups[grp].remove(obj)
                 if not self.groups[grp]:
                     del self.groups[grp]
+            obj.scene = None
             logger.debug('Removed object %s', obj.name)
             if obj is self.camera:
                 self.camera = None
@@ -297,3 +297,15 @@ class Scene:
     def iter_group(self, group: str):
         """Yield objects belonging to ``group``."""
         yield from self.groups.get(group, [])
+
+    def update_object_group(self, obj: GameObject, old_group: str | None) -> None:
+        """Move ``obj`` from ``old_group`` to its current ``group``."""
+        new_group = getattr(obj, "group", None)
+        if old_group and old_group in self.groups:
+            lst = self.groups[old_group]
+            if obj in lst:
+                lst.remove(obj)
+                if not lst:
+                    del self.groups[old_group]
+        if new_group:
+            self.groups.setdefault(new_group, []).append(obj)

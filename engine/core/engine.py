@@ -239,6 +239,8 @@ class Engine:
             try:
                 while not self.renderer.should_close():
                     self.step()
+                    if self._frame_interval:
+                        time.sleep(self._frame_interval)
             except KeyboardInterrupt:
                 pass
             return None

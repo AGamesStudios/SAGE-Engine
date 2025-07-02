@@ -7,5 +7,6 @@ This project contains a modular game engine (`engine`), an optional editor (`sag
 - **Keep packages modular.** Engine code should never import from `sage_editor`. Extensions should be optional and loaded via entry points or plugins.
 - **Testing**: Run `ruff check .` and `PYTHONPATH=. pytest -q` before every commit. Update tests when changing behaviour.
 - **Documentation**: Keep `README.md` concise. Place detailed guides under `docs/` and link to them from the README.
+- **Commits**: Write descriptive commit messages that summarise the change.
 
 Following these rules helps keep the engine lightweight, extensible and easy to maintain.

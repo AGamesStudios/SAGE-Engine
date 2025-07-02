@@ -43,4 +43,4 @@ def test_run_without_pyqt(monkeypatch):
                  input_backend=NullInput,
                  fps=30)
     eng.run()
-    assert eng.renderer.calls >= 2
+    assert eng.renderer.calls == 2

@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Callable, List, Any, Optional
+from typing import Callable, List, Any, Optional, TYPE_CHECKING
 import itertools
 
 from ..utils.log import logger
+
+if TYPE_CHECKING:
+    from ..core.scenes.scene import Scene
 from ..core.math2d import (
     make_transform,
     transform_point,
@@ -18,7 +21,7 @@ def next_id() -> int:
     """Return a unique object id."""
     return next(_ID_GEN)
 
-@dataclass
+@dataclass(slots=True)
 class Transform2D:
     """Simple 2D transform container."""
 
@@ -54,7 +57,7 @@ class Transform2D:
         )
 
 
-@dataclass
+@dataclass(slots=True)
 class Material:
     """Simple material used by sprite roles."""
 
@@ -64,7 +67,7 @@ class Material:
     blend: str = "alpha"
 
 
-@dataclass
+@dataclass(slots=True)
 class Variable:
     """Typed variable stored on an :class:`Object`."""
 
@@ -72,7 +75,7 @@ class Variable:
     value: Any = None
 
 
-@dataclass
+@dataclass(slots=True)
 class Object:
     """Engine object with a role, transform and attached logic."""
 
@@ -88,6 +91,7 @@ class Object:
     id: int = field(init=False)
     parent: Optional["Object"] = field(default=None, repr=False)
     children: List["Object"] = field(default_factory=list, repr=False)
+    scene: "Scene | None" = field(init=False, default=None, repr=False)
 
     # --- common properties ---
     @property
@@ -118,6 +122,16 @@ class Object:
         sx, sy = value
         self.transform.scale_x = sx
         self.transform.scale_y = sy
+
+    def __setattr__(self, name, value):
+        if name == "group":
+            old = getattr(self, "group", None)
+            object.__setattr__(self, name, value)
+            scene = getattr(self, "scene", None)
+            if scene is not None and old != value:
+                scene.update_object_group(self, old)
+            return
+        object.__setattr__(self, name, value)
 
     def __post_init__(self) -> None:
         self.id = next_id()

@@ -56,3 +56,26 @@ def test_scene_file_roundtrip(tmp_path):
     assert groups["dummy"] == "alpha"
     assert groups["dummy2"] == "beta"
     assert list(loaded.iter_group("alpha"))[0].role == "dummy"
+
+
+def test_group_updates_on_change():
+    scene = Scene(with_defaults=False)
+    from engine.entities.object import Object
+    obj = Object(role="empty")
+    scene.add_object(obj)
+    assert list(scene.iter_group("alpha")) == []
+    obj.group = "alpha"
+    assert list(scene.iter_group("alpha")) == [obj]
+    obj.group = "beta"
+    assert list(scene.iter_group("alpha")) == []
+    assert list(scene.iter_group("beta")) == [obj]
+
+
+def test_scene_file_extension_warning(tmp_path, caplog):
+    scene = Scene(with_defaults=False)
+    path = tmp_path / "test.json"
+    SceneFile(scene).save(path)
+    assert any("extension" in rec.message for rec in caplog.records)
+    caplog.clear()
+    SceneFile.load(path)
+    assert any("extension" in rec.message for rec in caplog.records)

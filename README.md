@@ -384,7 +384,8 @@ memory.  A helper `engine.clear_image_cache()` empties this LRU cache if
 memory becomes tight. The `Engine` class accepts an `fps` argument (default 30)
 to control the frame rate. `Engine.run()` opens a Qt window and manages
 the loop itself, keeping CPU usage low. If PyQt6 is not available the method
-falls back to a simple sleep loop so headless tests can still run. Object
+falls back to a simple loop using ``renderer.should_close()`` and
+``time.sleep`` so headless tests can still run. Object
 lists are sorted only when modified and heavy math dependencies were removed.
 Runtime errors no longer close the game window automatically; they are logged so
 the scene remains visible for inspection.
@@ -506,4 +507,9 @@ camera.post_effects.append({
 ## License
 
 This project is released under the [MIT License](LICENSE).
+
+## Contributing
+
+Use clear commit messages summarizing your changes so the history stays easy to
+follow. Run `ruff check .` and `PYTHONPATH=. pytest -q` before committing.
 

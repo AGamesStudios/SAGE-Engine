@@ -94,7 +94,7 @@ class GameObject(Object):
             object.__setattr__(self, '_dirty', True)
         if name == 'transform':
             object.__setattr__(self, '_dirty', True)
-        object.__setattr__(self, name, value)
+        Object.__setattr__(self, name, value)
 
     # ----- transform proxy properties -----------------------------------
     @property

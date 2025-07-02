@@ -6,6 +6,7 @@ import os
 
 from .scenes import Scene
 from ..utils import load_json
+from ..utils.log import logger
 
 __all__ = ["SceneFile", "load_scene_file", "save_scene_file"]
 
@@ -18,13 +19,19 @@ class SceneFile:
 
     @classmethod
     def load(cls, path: str) -> "SceneFile":
-        data = load_json(path)
+        p = str(path)
+        if not p.endswith(".sagescene"):
+            logger.warning("Loading scene with unusual extension: %s", path)
+        data = load_json(p)
         scene = Scene.from_dict(data)
         return cls(scene)
 
     def save(self, path: str) -> None:
-        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
-        with open(path, "w", encoding="utf-8") as f:
+        p = str(path)
+        if not p.endswith(".sagescene"):
+            logger.warning("Saving scene with unusual extension: %s", path)
+        os.makedirs(os.path.dirname(p) or ".", exist_ok=True)
+        with open(p, "w", encoding="utf-8") as f:
             json.dump(self.scene.to_dict(), f, indent=2)
 
 
