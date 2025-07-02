@@ -34,6 +34,7 @@ def _load_entry_points() -> None:
     global _PLUGINS_LOADED
     if _PLUGINS_LOADED:
         return
+    failed: list[str] = []
     try:
         eps = metadata.entry_points()
         entries = eps.select(group="sage_engine.renderers") if hasattr(eps, "select") else eps.get("sage_engine.renderers", [])
@@ -43,8 +44,11 @@ def _load_entry_points() -> None:
                 register_renderer(ep.name, cls)
             except Exception:
                 logger.exception("Failed to load renderer %s", ep.name)
+                failed.append(ep.name)
     except Exception:
         logger.exception("Error loading renderer entry points")
+    if failed:
+        logger.warning("Failed renderer plugins: %s", ", ".join(failed))
     _PLUGINS_LOADED = True
 
 

@@ -30,6 +30,7 @@ def _load_entry_points() -> None:
     global _PLUGINS_LOADED
     if _PLUGINS_LOADED:
         return
+    failed: list[str] = []
     try:
         eps = metadata.entry_points()
         entries = (
@@ -43,8 +44,11 @@ def _load_entry_points() -> None:
                 register_object(ep.name)(cls)
             except Exception:
                 logger.exception("Failed to load object plugin %s", ep.name)
+                failed.append(ep.name)
     except Exception:
         logger.exception("Error loading object entry points")
+    if failed:
+        logger.warning("Failed object plugins: %s", ", ".join(failed))
     _PLUGINS_LOADED = True
 
 

@@ -65,6 +65,7 @@ def _load_entry_points() -> None:
     global _PLUGINS_LOADED
     if _PLUGINS_LOADED:
         return
+    failed: list[str] = []
     try:
         eps = metadata.entry_points()
         entries = eps.select(group="sage_engine.inputs") if hasattr(eps, "select") else eps.get("sage_engine.inputs", [])
@@ -74,8 +75,11 @@ def _load_entry_points() -> None:
                 register_input(ep.name, cls)
             except Exception:
                 logger.exception("Failed to load input backend %s", ep.name)
+                failed.append(ep.name)
     except Exception:
         logger.exception("Error loading input entry points")
+    if failed:
+        logger.warning("Failed input plugins: %s", ", ".join(failed))
     _PLUGINS_LOADED = True
 
 

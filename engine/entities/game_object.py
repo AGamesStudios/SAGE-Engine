@@ -77,7 +77,6 @@ class GameObject(Object):
     effects: list = field(default_factory=list)
     shader: dict | None = None
     shader_uniforms: dict = field(default_factory=dict)
-    visible: bool = True
     event_system: EventSystem | None = field(init=False, default=None)
     rotation: tuple[float, float, float, float] = field(init=False)
     image: Image.Image | None = field(init=False, default=None)

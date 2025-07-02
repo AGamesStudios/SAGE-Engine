@@ -83,6 +83,8 @@ class Object:
     material: Material | None = None
     metadata: dict = field(default_factory=dict)
     variables: dict[str, "Variable"] = field(default_factory=dict)
+    visible: bool = True
+    group: str | None = None
     id: int = field(init=False)
     parent: Optional["Object"] = field(default=None, repr=False)
     children: List["Object"] = field(default_factory=list, repr=False)

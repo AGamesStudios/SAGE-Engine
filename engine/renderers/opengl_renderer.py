@@ -1093,7 +1093,7 @@ class OpenGLRenderer:
                 cam_shader.use(getattr(camera, "shader_uniforms", {}))
             scene.sort_objects()
             for obj in scene.objects:
-                if hasattr(obj, 'visible') and not obj.visible:
+                if not getattr(obj, 'visible', True):
                     continue
                 if isinstance(obj, Camera):
                     if self._draw_gizmos:

@@ -14,7 +14,6 @@ from engine.renderers import Shader
         ('width', None),
         ('height', None),
         ('zoom', None),
-        ('visible', None),
         ('name', None),
         ('active', 'active'),
         ('post_effects', 'post_effects'),
@@ -35,7 +34,6 @@ class Camera:
     width: int = 640
     height: int = 480
     zoom: float = 1.0
-    visible: bool = True
     name: str = "Camera"
     active: bool = False
     type: str = "camera"

@@ -15,26 +15,29 @@ from engine.core.scenes.scene import Scene  # noqa: E402
 from engine.core.objects import register_object  # noqa: E402
 
 
-@register_object('dummy', [('name', None)])
+@register_object('dummy', [('name', None), ('visible', None), ('group', None)])
 class DummyObj:
-    def __init__(self, name='Dummy', metadata=None):
+    def __init__(self, name='Dummy', visible=True, group=None, metadata=None):
         self.name = name
         self.role = 'dummy'
+        self.visible = visible
+        self.group = group
         self.metadata = metadata or {}
 
 
-@register_object('dummy2', [('name', None), ('metadata', 'metadata')])
+@register_object('dummy2', [('name', None), ('metadata', 'metadata'), ('group', None)])
 class DummyObj2:
-    def __init__(self, name='Other', metadata=None):
+    def __init__(self, name='Other', metadata=None, group=None):
         self.name = name
         self.role = 'dummy2'
+        self.group = group
         self.metadata = metadata or {}
 
 
 def test_scene_file_roundtrip(tmp_path):
     scene = Scene(with_defaults=False)
-    obj1 = DummyObj(metadata={"hp": 10})
-    obj2 = DummyObj2(metadata={"info": "ok"})
+    obj1 = DummyObj(metadata={"hp": 10}, visible=False, group="alpha")
+    obj2 = DummyObj2(metadata={"info": "ok"}, group="beta")
     scene.add_object(obj1)
     scene.add_object(obj2)
     path = tmp_path / "test.sagescene"
@@ -46,3 +49,10 @@ def test_scene_file_roundtrip(tmp_path):
     meta = {o.role: o.metadata for o in loaded.objects}
     assert meta["dummy"]["hp"] == 10
     assert meta["dummy2"]["info"] == "ok"
+    vis = {o.role: getattr(o, "visible", True) for o in loaded.objects}
+    assert vis["dummy"] is False
+    assert vis["dummy2"] is True
+    groups = {o.role: getattr(o, "group", None) for o in loaded.objects}
+    assert groups["dummy"] == "alpha"
+    assert groups["dummy2"] == "beta"
+    assert list(loaded.iter_group("alpha"))[0].role == "dummy"

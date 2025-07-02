@@ -14,7 +14,11 @@ class MyObject:
     def __init__(self, name='MyObject'):
         self.name = name
         self.role = 'my_object'
+        self.group = None  # optional scene grouping
 ```
+
+Objects may set ``group`` to categorize them. The scene helper
+``Scene.iter_group('enemies')`` yields all objects assigned to a group.
 
 ## Input Backends
 

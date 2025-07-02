@@ -26,6 +26,7 @@ class Scene:
         # collections of scene objects and metadata
         self.objects = []
         self.object_lookup = {}
+        self.groups = {}
         self.variables = {}
         if with_defaults:
             self.events = [
@@ -81,6 +82,9 @@ class Scene:
         self.objects.append(obj)
         key = getattr(obj, 'id', id(obj))
         self.object_lookup[key] = obj
+        grp = getattr(obj, 'group', None)
+        if grp:
+            self.groups.setdefault(grp, []).append(obj)
         logger.debug('Added object %s', obj.name)
         if isinstance(obj, Camera):
             if obj.active:
@@ -93,6 +97,11 @@ class Scene:
         if obj in self.objects:
             self.objects.remove(obj)
             self.object_lookup.pop(getattr(obj, 'id', id(obj)), None)
+            grp = getattr(obj, 'group', None)
+            if grp and obj in self.groups.get(grp, []):
+                self.groups[grp].remove(obj)
+                if not self.groups[grp]:
+                    del self.groups[grp]
             logger.debug('Removed object %s', obj.name)
             if obj is self.camera:
                 self.camera = None
@@ -284,3 +293,7 @@ class Scene:
             es = getattr(obj, "event_system", None)
             if es is not None:
                 es.update(engine, self, dt)
+
+    def iter_group(self, group: str):
+        """Yield objects belonging to ``group``."""
+        yield from self.groups.get(group, [])
