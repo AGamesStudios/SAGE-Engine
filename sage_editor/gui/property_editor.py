@@ -28,10 +28,6 @@ class PropertyEditor(QWidget):
         self._object: Object | None = None
         self._creating = True
         vbox = QFormLayout(self)
-        self.setStyleSheet(
-            "QLineEdit,QDoubleSpinBox,QSpinBox{background:#2b2b2b;color:#ddd;border:1px solid #555;}"
-            "QGroupBox{margin-top:6px;}"
-        )
 
         # Object info
         self.obj_group = QGroupBox("Object", self)

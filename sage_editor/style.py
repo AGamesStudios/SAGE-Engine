@@ -42,11 +42,19 @@ def apply_modern_theme(app: QApplication) -> None:
     # subtle widget borders and headings
     app.setStyleSheet(
         """
-        QGroupBox { font-weight: bold; border: 1px solid #555; margin-top: 6px; }
-        QGroupBox::title { subcontrol-origin: margin; left: 4px; top: -4px; }
+        QGroupBox { font-weight: bold; border: 1px solid #555; margin-top: 8px; }
+        QGroupBox::title { subcontrol-origin: margin; left: 4px; top: -2px; }
         QPlainTextEdit { background: #1e1e1e; color: #dcdcdc; }
         QListWidget { background: #2b2b2b; color: #ddd; }
         QListWidget::item:selected { background: #444; }
+        QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox {
+            background: #2b2b2b; color: #ddd; border: 1px solid #555;
+        }
+        QSlider::groove:horizontal { background: #444; height: 6px; }
+        QSlider::handle:horizontal {
+            background: #dcdcdc; border: 1px solid #555; width: 10px; margin: -4px 0;
+        }
+        QPushButton { background: #3c3c3c; color: #ddd; border: 1px solid #555; }
         """
     )
 
