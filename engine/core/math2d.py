@@ -18,6 +18,7 @@ __all__ = [
     "make_transform",
     "transform_point",
     "make_ortho",
+    "normalize_angle",
 ]
 
 
@@ -30,6 +31,14 @@ def angle_to_quat(angle: float) -> tuple[float, float, float, float]:
 @njit(cache=True)
 def quat_to_angle(z: float, w: float) -> float:
     return math.degrees(2.0 * math.atan2(z, w))
+
+
+def normalize_angle(angle: float) -> float:
+    """Return *angle* wrapped into the ``0-360`` range."""
+    value = angle % 360.0
+    if value < 0:
+        value += 360.0
+    return value
 
 
 @njit(cache=True)

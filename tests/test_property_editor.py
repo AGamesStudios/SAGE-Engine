@@ -135,6 +135,7 @@ sys.modules.setdefault('engine.renderers.shader', types.ModuleType('engine.rende
 import importlib.util  # noqa: E402
 from pathlib import Path  # noqa: E402
 from engine.core.camera import Camera  # noqa: E402
+from engine.entities.object import Transform2D  # noqa: E402
 
 prop_path = Path(__file__).resolve().parents[1] / 'sage_editor' / 'gui' / 'property_editor.py'
 spec = importlib.util.spec_from_file_location('prop', prop_path)
@@ -150,3 +151,13 @@ def test_property_editor_handles_camera():
     pe.pos_x.setValue(5)
     pe._apply()
     assert cam.x == 5
+
+
+def test_property_editor_updates_quaternion():
+    pe = PropertyEditor()
+    obj = types.SimpleNamespace(transform=Transform2D(angle=90))
+    pe.set_object(obj)
+    assert "0.00" in pe.quat_edit.text()
+    pe.rot_slider.setValue(180)
+    pe._apply()
+    assert obj.transform.angle == 180

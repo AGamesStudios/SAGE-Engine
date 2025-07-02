@@ -85,6 +85,7 @@ screen using ``sage_editor.style.fit_to_screen``. The console now prints the
 engine version and loaded project path at startup and the property editor groups
 fields under ``Object`` and ``Transform`` categories. Plugins registered via ``sage_editor.plugins`` can
 extend the interface with custom actions without changing the core code.
+Transform data now stores a quaternion and pivot so rotations stay within ``0-360`` degrees.
 Embedding the editor in other tools only requires importing these modules.
 
 The runtime is organised in a simple hierarchy:

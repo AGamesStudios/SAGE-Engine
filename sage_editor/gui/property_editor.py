@@ -60,11 +60,20 @@ class PropertyEditor(QWidget):
         self.z_spin = QSpinBox()
         self.z_spin.setRange(-10000, 10000)
         self.rot_slider = QSlider(Qt.Orientation.Horizontal)
-        self.rot_slider.setRange(-180, 180)
+        self.rot_slider.setRange(0, 360)
         self.scale_x = QDoubleSpinBox()
         self.scale_x.setRange(0, 1000)
         self.scale_y = QDoubleSpinBox()
         self.scale_y.setRange(0, 1000)
+        self.pivot_x = QDoubleSpinBox()
+        self.pivot_x.setRange(-1000.0, 1000.0)
+        self.pivot_y = QDoubleSpinBox()
+        self.pivot_y.setRange(-1000.0, 1000.0)
+        pivot_layout = QHBoxLayout()
+        pivot_layout.addWidget(self.pivot_x)
+        pivot_layout.addWidget(self.pivot_y)
+        self.quat_edit = QLineEdit()
+        self.quat_edit.setReadOnly(True)
         self.scale_lock = QPushButton("⤒")
         self.scale_lock.setCheckable(True)
         scale_layout = QHBoxLayout()
@@ -74,6 +83,8 @@ class PropertyEditor(QWidget):
         tr_form.addRow("Position", pos_layout)
         tr_form.addRow("Z", self.z_spin)
         tr_form.addRow("Rotation", self.rot_slider)
+        tr_form.addRow("Pivot", pivot_layout)
+        tr_form.addRow("Quaternion", self.quat_edit)
         tr_form.addRow("Scale", scale_layout)
 
         # Material placeholder
@@ -88,6 +99,9 @@ class PropertyEditor(QWidget):
             self.rot_slider,
             self.scale_x,
             self.scale_y,
+            self.pivot_x,
+            self.pivot_y,
+            self.quat_edit,
         ):
             if hasattr(spin, "editingFinished"):
                 spin.editingFinished.connect(self._apply)
@@ -113,10 +127,12 @@ class PropertyEditor(QWidget):
                 self.pos_x,
                 self.pos_y,
                 self.z_spin,
-                self.rot_slider,
-                self.scale_x,
-                self.scale_y,
-            ):
+            self.rot_slider,
+            self.scale_x,
+            self.scale_y,
+            self.pivot_x,
+            self.pivot_y,
+        ):
                 if isinstance(w, QLineEdit):
                     w.setText("")
                 elif isinstance(w, (QSpinBox, QDoubleSpinBox, QSlider)):
@@ -138,6 +154,15 @@ class PropertyEditor(QWidget):
         self.rot_slider.setValue(int(getattr(t, "angle", 0)))
         self.scale_x.setValue(getattr(t, "scale_x", getattr(obj, "scale_x", 1.0)))
         self.scale_y.setValue(getattr(t, "scale_y", getattr(obj, "scale_y", 1.0)))
+        self.pivot_x.setValue(getattr(t, "pivot_x", 0.0))
+        self.pivot_y.setValue(getattr(t, "pivot_y", 0.0))
+        quat = getattr(t, "rotation", None)
+        if quat is not None:
+            self.quat_edit.setText(
+                ", ".join(f"{v:.2f}" for v in quat)
+            )
+        else:
+            self.quat_edit.setText("")
 
     def _apply(self) -> None:
         if self._object is None or self._creating:
@@ -156,12 +181,20 @@ class PropertyEditor(QWidget):
                 t.scale_x = float(self.scale_x.value())
             if hasattr(t, "scale_y"):
                 t.scale_y = float(self.scale_y.value())
+            if hasattr(t, "pivot_x"):
+                t.pivot_x = float(self.pivot_x.value())
+            if hasattr(t, "pivot_y"):
+                t.pivot_y = float(self.pivot_y.value())
             if hasattr(self._object, "name"):
                 self._object.name = self.name_edit.text()
             if hasattr(self._object, "role"):
                 role = self.role_combo.currentText()
                 if role:
                     self._object.role = role
+            if hasattr(t, "rotation"):
+                self.quat_edit.setText(
+                    ", ".join(f"{v:.2f}" for v in t.rotation)
+                )
             self.objectChanged.emit(self._object)
         except ValueError:
             pass

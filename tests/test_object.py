@@ -87,6 +87,12 @@ class TestObject(unittest.TestCase):
         self.assertEqual(cam.metadata["width"], 640)
         self.assertTrue(cam.metadata["active"])
 
+    def test_transform_angle_clamped(self):
+        t = Transform2D(angle=370)
+        self.assertEqual(t.angle, 10)
+        t.angle = -45
+        self.assertEqual(t.angle, 315)
+
 
 if __name__ == "__main__":
     unittest.main()

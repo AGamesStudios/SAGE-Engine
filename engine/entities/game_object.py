@@ -5,6 +5,7 @@ from ..core.math2d import (
     angle_to_quat as _angle_to_quat,
     calc_rect as _calc_rect,
     calc_matrix as _calc_matrix,
+    normalize_angle,
 )
 from PIL import Image
 from engine.renderers import Shader
@@ -101,6 +102,7 @@ class GameObject:
         if name in GameObject._DIRTY_FIELDS:
             object.__setattr__(self, '_dirty', True)
         if name == 'angle':
+            value = normalize_angle(value)
             object.__setattr__(self, 'rotation', _angle_to_quat(value))
         object.__setattr__(self, name, value)
 
@@ -113,6 +115,7 @@ class GameObject:
         self.scale_x = self.scale_y = value
 
     def __post_init__(self):
+        self.angle = normalize_angle(self.angle)
         self.rotation = _angle_to_quat(self.angle)
         if self.name is None:
             self.name = "New Object"

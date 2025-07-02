@@ -5,7 +5,12 @@ from typing import Callable, List, Any, Optional
 import itertools
 
 from ..utils.log import logger
-from ..core.math2d import make_transform, transform_point
+from ..core.math2d import (
+    make_transform,
+    transform_point,
+    angle_to_quat,
+    normalize_angle,
+)
 
 _ID_GEN = itertools.count()
 
@@ -24,6 +29,17 @@ class Transform2D:
     angle: float = 0.0
     pivot_x: float = 0.0
     pivot_y: float = 0.0
+    rotation: tuple[float, float, float, float] = field(init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        self.angle = normalize_angle(self.angle)
+        self.rotation = angle_to_quat(self.angle)
+
+    def __setattr__(self, name, value):
+        if name == "angle":
+            value = normalize_angle(value)
+            object.__setattr__(self, "rotation", angle_to_quat(value))
+        object.__setattr__(self, name, value)
 
     def matrix(self) -> List[float]:
         """Return a 3x3 column-major transform matrix."""
