@@ -8,6 +8,7 @@ from engine.entities.game_object import GameObject
 
 from engine.core.scenes.scene import Scene
 from engine.renderers.opengl_renderer import GLWidget, OpenGLRenderer
+from engine.utils.log import logger
 
 
 class Viewport(QWidget):
@@ -64,12 +65,15 @@ class Viewport(QWidget):
             and self.gl.context() is not None
             and self.gl.context().isValid()
         ):
-            self.renderer.draw_scene(
-                self.scene,
-                self.camera,
-                gizmos=True,
-                selected=self.selected_obj,
-            )
+            try:
+                self.renderer.draw_scene(
+                    self.scene,
+                    self.camera,
+                    gizmos=True,
+                    selected=self.selected_obj,
+                )
+            except Exception:
+                logger.exception("Viewport draw failed")
 
     # -------------------------
     def resizeEvent(self, event) -> None:  # type: ignore[override]

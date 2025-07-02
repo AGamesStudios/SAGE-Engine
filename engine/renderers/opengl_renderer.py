@@ -1035,10 +1035,13 @@ class OpenGLRenderer:
         glLoadIdentity()
 
     def paint(self):
-        # called from GLWidget.paintGL
+        """Draw the current scene to the widget."""
         if not self.widget:
             return
         if self.widget.width() == 0 or self.widget.height() == 0:
+            return
+        ctx = self.widget.context()
+        if ctx is None or not ctx.isValid():
             return
         from OpenGL.GL import glViewport
         glViewport(0, 0, self.widget.width(), self.widget.height())
