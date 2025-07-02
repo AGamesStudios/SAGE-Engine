@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "sage-engine"
 version = "0.0.1-alpha"
 description = "SAGE 2D game engine"
-authors = [{name = "SAGE Team"}]
+authors = [{name = "Amckinator Games Studios (AGStudios)", email = "amckinatorgamesstudios@gmail.com"}]
 license = {file = "LICENSE"}
 readme = "README.md"
 requires-python = ">=3.10"
