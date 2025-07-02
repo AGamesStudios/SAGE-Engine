@@ -25,5 +25,5 @@ class EngineSettings:
     events: Any = None
     keep_aspect: bool = True
     background: Tuple[int, int, int] = (0, 0, 0)
-    input_backend: str | type | InputBackend = "qt"
+    input_backend: str | type | InputBackend = "sdl"
     max_delta: float = 0.1

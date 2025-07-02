@@ -38,7 +38,7 @@ class Engine:
                  title="SAGE 2D", renderer: Renderer | str | None = None,
                  camera: Camera | None = None, keep_aspect: bool = True,
                  background: tuple[int, int, int] = (0, 0, 0),
-                 input_backend: str | type | InputBackend = "qt",
+                 input_backend: str | type | InputBackend = "sdl",
                  max_delta: float = 0.1,
                  *, settings: "EngineSettings | None" = None,
                  metadata: dict | None = None):
