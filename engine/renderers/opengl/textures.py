@@ -80,11 +80,9 @@ def get_texture(renderer, obj) -> int:
 def get_icon_texture(renderer, name: str) -> int:
     try:
         from engine.icons import ICON_DIR, ICON_THEME
-    except Exception:  # pragma: no cover - optional
-        try:
-            from sage_editor.icons import ICON_DIR, ICON_THEME
-        except Exception:  # pragma: no cover - no icons available
-            return get_blank_texture(renderer)
+    except ImportError:  # pragma: no cover - optional
+        logger.warning("Icon resources unavailable")
+        return get_blank_texture(renderer)
     key = f"{ICON_THEME}/{name}"
     tex = renderer._icon_cache.get(key)
     if tex:

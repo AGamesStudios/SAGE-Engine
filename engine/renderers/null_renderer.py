@@ -15,7 +15,7 @@ class NullRenderer(Renderer):
     def clear(self, color=(0, 0, 0)):
         pass
 
-    def draw_scene(self, scene, camera=None):
+    def draw_scene(self, scene, camera=None, gizmos=False):
         pass
 
     def present(self):

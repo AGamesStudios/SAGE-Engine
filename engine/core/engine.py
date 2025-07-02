@@ -122,12 +122,12 @@ class Engine:
         try:
             from .. import load_engine_plugins
             load_engine_plugins(self)
-        except Exception:
+        except ImportError:
             logger.exception("Failed to load engine plugins")
         try:
             from .. import load_engine_libraries
             load_engine_libraries(self)
-        except Exception:
+        except ImportError:
             logger.exception("Failed to load engine libraries")
 
     def step(self) -> None:
@@ -152,6 +152,7 @@ class Engine:
                     self.renderer.reset()
                 except Exception:
                     logger.exception("Renderer recovery failed")
+            raise
 
     def to_settings(self) -> EngineSettings:
         """Return the current configuration as :class:`EngineSettings`."""
@@ -184,6 +185,7 @@ class Engine:
             ext.start(self)
         except Exception:
             logger.exception("Extension %s failed during start", ext)
+            raise
 
     def remove_extension(self, ext: EngineExtension) -> None:
         """Detach ``ext`` and call its ``stop`` hook."""
@@ -193,6 +195,7 @@ class Engine:
                 ext.stop(self)
             except Exception:
                 logger.exception("Extension %s failed during stop", ext)
+                raise
 
     def shutdown(self) -> None:
         """Stop all extensions."""
@@ -230,6 +233,7 @@ class Engine:
                 ext.update(self, dt)
             except Exception:
                 logger.exception("Extension %s failed during update", ext)
+                raise
         cam = self.camera or self.scene.get_active_camera()
         self.renderer.draw_scene(self.scene, cam, gizmos=False)
         self.renderer.present()
@@ -242,7 +246,7 @@ class Engine:
         try:
             from PyQt6.QtWidgets import QApplication
             from ..game_window import GameWindow
-        except Exception as exc:  # pragma: no cover - platform dependent
+        except ImportError as exc:  # pragma: no cover - platform dependent
             logger.warning("PyQt6 unavailable: %s", exc)
             self.logic_active = True
             try:
