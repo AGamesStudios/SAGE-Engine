@@ -1,6 +1,6 @@
 # Guidelines for SAGE Engine contributors
 
-This project contains a modular game engine (`engine`), an optional editor (`sage_editor`) and supporting tools. The editor relies on the engine but the engine must remain independent from the editor so it can run on its own or via the `sage_runtime` package.
+This project contains a modular game engine (`engine`), an optional editor (`sage_editor`) and supporting tools. The editor relies on the engine but the engine must remain independent from the editor so it can run on its own or via the `engine.runtime` package.
 
 ## Rules
 - **No binary assets**. Do not commit `.png`, `.jpg`, `.gif`, `.ico` or other non-text files. Reference icons by filename only.
