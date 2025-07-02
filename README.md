@@ -10,9 +10,9 @@ pip install -r requirements.txt
 ruff check .
 PYTHONPATH=. pytest -q
 ```
-Optional backends can be installed via extras, e.g.:
+Optional backends and audio support can be installed via extras, e.g.:
 ```bash
-pip install .[opengl,sdl]
+pip install .[opengl,sdl,audio]
 ```
 
 Open `examples/blank.sageproject` with the editor or runtime to see the basic structure. The sample scene now contains two sprites and a camera.
