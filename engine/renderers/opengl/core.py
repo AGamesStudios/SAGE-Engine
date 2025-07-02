@@ -9,12 +9,7 @@ import math
 import ctypes
 
 from .glwidget import GLWidget
-from .textures import (
-    get_blank_texture,
-    get_texture,
-    get_icon_texture,
-    clear_icon_cache,
-)
+from .textures import get_blank_texture, get_texture
 try:
     from OpenGL.GL import *  # noqa: F401,F403
 except Exception as exc:  # pragma: no cover - optional dependency
@@ -87,8 +82,6 @@ class OpenGLRenderer(Renderer):
         self.textures: dict[tuple[int, bool], int] = {}
         self._blank_texture: int | None = None
         self._blank_nearest_texture: int | None = None
-        self._icon_cache: dict[str, int] = {}
-        self._missing_icons: set[str] = set()
         self._scene = None
         self._camera = None
         self._draw_gizmos = True
@@ -201,16 +194,7 @@ class OpenGLRenderer(Renderer):
     def _get_texture(self, obj) -> int:
         return get_texture(self, obj)
 
-    def _get_icon_texture(self, name: str) -> int:
-        return get_icon_texture(self, name)
 
-    def clear_icon_cache(self) -> None:
-        clear_icon_cache(self)
-
-
-    def _draw_icon(self, x: float, y: float, tex: int, zoom: float, size: float = 32.0):
-        """Render a billboard icon at ``(x, y)`` in world units."""
-        drawing.draw_icon(self, x, y, tex, zoom, size)
 
     def _parse_color(self, value) -> tuple[int, int, int, int]:
         return drawing.parse_color(value)
@@ -505,10 +489,6 @@ class OpenGLRenderer(Renderer):
                         ) if obj is self._selected_obj else (1.0, 1.0, 0.0, 1.0)
                         width = 3.0 if obj is self._selected_obj else 1.0
                         self._draw_frustum(obj, color=color, width=width)
-                        tex = self._get_icon_texture('camera.png')
-                        self._draw_icon(
-                            obj.x, obj.y, tex, camera.zoom if camera else 1.0
-                        )
                     if obj is self._selected_obj:
                         self._draw_gizmo(
                             obj,
@@ -523,10 +503,8 @@ class OpenGLRenderer(Renderer):
                 if obj is self._selected_obj:
                     self._draw_outline(obj, camera)
                 if self._draw_gizmos:
-                    tex_icon = self._get_icon_texture('object.png')
-                    self._draw_icon(
-                        obj.x, obj.y, tex_icon, camera.zoom if camera else 1.0
-                    )
+                    # icons removed; keep placeholder for future gizmos
+                    pass
             if (
                 self._draw_gizmos
                 and self._selected_obj
@@ -576,7 +554,6 @@ class OpenGLRenderer(Renderer):
                     tex_ids.append(self._blank_texture)
                 if self._blank_nearest_texture:
                     tex_ids.append(self._blank_nearest_texture)
-                tex_ids.extend(self._icon_cache.values())
                 if tex_ids:
                     arr = (ctypes.c_uint * len(tex_ids))(*tex_ids)
                     self.widget.makeCurrent()
@@ -587,7 +564,6 @@ class OpenGLRenderer(Renderer):
             self.widget.close()
 
     def reset(self) -> None:
-        self.clear_icon_cache()
         self.textures.clear()
 
 

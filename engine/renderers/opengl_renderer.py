@@ -2,12 +2,7 @@
 
 from .opengl.core import OpenGLRenderer, register_draw_handler, RENDER_HANDLERS
 from .opengl.glwidget import GLWidget
-from .opengl.textures import (
-    get_blank_texture,
-    get_texture,
-    get_icon_texture,
-    clear_icon_cache,
-)
+from .opengl.textures import get_blank_texture, get_texture
 
 __all__ = [
     "OpenGLRenderer",
@@ -16,6 +11,4 @@ __all__ = [
     "GLWidget",
     "get_blank_texture",
     "get_texture",
-    "get_icon_texture",
-    "clear_icon_cache",
 ]

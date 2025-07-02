@@ -88,10 +88,6 @@ class TestPaintModule(unittest.TestCase):
         win.set_pen_color(blue)
         self.assertIn(blue.name(), win.color_label.styleSheet())
 
-    def test_menu_icons_present(self):
-        win = PaintWindow()
-        file_actions = win.menuBar().actions()[0].menu().actions()
-        self.assertTrue(all(not a.icon().isNull() for a in file_actions))
 
 
 if __name__ == "__main__":

@@ -6,8 +6,8 @@ import math
 from OpenGL.GL import (
     glBindTexture, glColor4f, glBegin, glEnd, glVertex2f, glLineWidth,
     glPushMatrix, glPopMatrix, glTranslatef,
-    glTexCoord2f, glUseProgram,
-    GL_LINES, GL_LINE_LOOP, GL_QUADS, GL_TRIANGLES, GL_TRIANGLE_FAN,
+    glUseProgram,
+    GL_LINES, GL_LINE_LOOP, GL_TRIANGLES, GL_TRIANGLE_FAN,
     GL_TEXTURE_2D,
 )
 
@@ -60,26 +60,6 @@ def parse_color(value) -> tuple[int, int, int, int]:
 # ---------------------------------------------------------------------------
 # Drawing helpers
 # ---------------------------------------------------------------------------
-
-def draw_icon(renderer, x: float, y: float, tex: int, zoom: float, size: float = 32.0) -> None:
-    """Render a billboard icon at ``(x, y)`` in world units."""
-    unit_scale = units.UNITS_PER_METER
-    sign = 1.0 if units.Y_UP else -1.0
-    glBindTexture(GL_TEXTURE_2D, tex)
-    glColor4f(1.0, 1.0, 1.0, 1.0)
-    glPushMatrix()
-    glTranslatef(x * unit_scale, y * unit_scale * sign, 0)
-    inv_zoom = 1.0 / zoom if zoom else 1.0
-    half = size / 2.0 * inv_zoom
-    glBegin(GL_QUADS)
-    glTexCoord2f(0.0, 0.0); glVertex2f(-half, -half)  # noqa: E702
-    glTexCoord2f(1.0, 0.0); glVertex2f( half, -half)  # noqa: E702
-    glTexCoord2f(1.0, 1.0); glVertex2f( half,  half)  # noqa: E702
-    glTexCoord2f(0.0, 1.0); glVertex2f(-half,  half)  # noqa: E702
-    glEnd()
-    glPopMatrix()
-
-
 def draw_outline(renderer, obj: GameObject, camera: Camera | None,
                  color: tuple[float, float, float, float] = (1.0, 0.5, 0.0, 1.0),
                  width: float = 3.0) -> None:

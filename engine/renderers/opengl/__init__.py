@@ -3,12 +3,7 @@
 from .glwidget import GLWidget
 from .core import OpenGLRenderer, register_draw_handler, RENDER_HANDLERS
 from . import drawing, gizmos, shaders
-from .textures import (
-    get_blank_texture,
-    get_texture,
-    get_icon_texture,
-    clear_icon_cache,
-)
+from .textures import get_blank_texture, get_texture
 
 __all__ = [
     "GLWidget",
@@ -20,6 +15,4 @@ __all__ = [
     "shaders",
     "get_blank_texture",
     "get_texture",
-    "get_icon_texture",
-    "clear_icon_cache",
 ]

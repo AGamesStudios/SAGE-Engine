@@ -13,7 +13,6 @@ from PyQt6.QtCore import Qt, QTimer, QPointF
 
 from .canvas import Canvas
 from .lang import LANGUAGES, DEFAULT_LANGUAGE
-from sage_editor.icons import load_icon
 
 EXPERIMENTAL_NOTICE = (
     "SAGE Paint is experimental. Features may change and stability is not guaranteed."
@@ -63,25 +62,25 @@ class PaintWindow(QMainWindow):
         bar = self.menuBar()
         bar.clear()
         file_menu = bar.addMenu(self.t("File"))
-        new_act = QAction(load_icon('file.png'), self.t("New"), self)
+        new_act = QAction(self.t("New"), self)
         new_act.setShortcut('Ctrl+N')
         new_act.triggered.connect(self.new_project)
         file_menu.addAction(new_act)
-        open_act = QAction(load_icon('open.png'), self.t("Open..."), self)
+        open_act = QAction(self.t("Open..."), self)
         open_act.setShortcut('Ctrl+O')
         open_act.triggered.connect(self.open_project)
         file_menu.addAction(open_act)
-        save_act = QAction(load_icon('save.png'), self.t("Save"), self)
+        save_act = QAction(self.t("Save"), self)
         save_act.setShortcut('Ctrl+S')
         save_act.triggered.connect(self.save_project)
         file_menu.addAction(save_act)
-        export_act = QAction(load_icon('folder.png'), self.t("Export PNG..."), self)
+        export_act = QAction(self.t("Export PNG..."), self)
         export_act.setShortcut('Ctrl+E')
         export_act.triggered.connect(self.export_png)
         file_menu.addAction(export_act)
 
         settings = bar.addMenu(self.t("Settings"))
-        size_action = QAction(load_icon('scale.png'), self.t("Set Window Size"), self)
+        size_action = QAction(self.t("Set Window Size"), self)
         size_action.triggered.connect(self._change_size)
         settings.addAction(size_action)
 
@@ -239,7 +238,7 @@ class PaintWindow(QMainWindow):
         self.tools_bar = tools_bar
         group = QActionGroup(self)
 
-        brush_action = QAction(load_icon('brush.png'), self.t("Brush"), self)
+        brush_action = QAction(self.t("Brush"), self)
         brush_action.setShortcut('B')
         brush_action.setCheckable(True)
         brush_action.setChecked(True)
@@ -247,35 +246,35 @@ class PaintWindow(QMainWindow):
         group.addAction(brush_action)
         tools_bar.addAction(brush_action)
 
-        eraser_action = QAction(load_icon('eraser.png'), self.t("Eraser"), self)
+        eraser_action = QAction(self.t("Eraser"), self)
         eraser_action.setShortcut('E')
         eraser_action.setCheckable(True)
         eraser_action.triggered.connect(lambda: self._select_tool('eraser'))
         group.addAction(eraser_action)
         tools_bar.addAction(eraser_action)
 
-        fill_action = QAction(load_icon('fill.png'), self.t("Fill"), self)
+        fill_action = QAction(self.t("Fill"), self)
         fill_action.setShortcut('F')
         fill_action.setCheckable(True)
         fill_action.triggered.connect(lambda: self._select_tool('fill'))
         group.addAction(fill_action)
         tools_bar.addAction(fill_action)
 
-        select_action = QAction(load_icon('move.png'), self.t("Select"), self)
+        select_action = QAction(self.t("Select"), self)
         select_action.setShortcut('M')
         select_action.setCheckable(True)
         select_action.triggered.connect(lambda: self._select_tool('select'))
         group.addAction(select_action)
         tools_bar.addAction(select_action)
 
-        line_action = QAction(load_icon('pen.png'), self.t("Line"), self)
+        line_action = QAction(self.t("Line"), self)
         line_action.setShortcut('L')
         line_action.setCheckable(True)
         line_action.triggered.connect(lambda: self._select_tool('line'))
         group.addAction(line_action)
         tools_bar.addAction(line_action)
 
-        rect_action = QAction(load_icon('square.png'), self.t("Rect"), self)
+        rect_action = QAction(self.t("Rect"), self)
         rect_action.setShortcut('R')
         rect_action.setCheckable(True)
         rect_action.triggered.connect(lambda: self._select_tool('rect'))
@@ -293,7 +292,7 @@ class PaintWindow(QMainWindow):
         self.addToolBar(toolbar)
         self.toolbar = toolbar
 
-        color_action = QAction(load_icon('colorpicker.png'), self.t("Color"), self)
+        color_action = QAction(self.t("Color"), self)
         color_action.setShortcut('C')
         color_action.triggered.connect(self.choose_color)
         toolbar.addAction(color_action)
@@ -311,17 +310,17 @@ class PaintWindow(QMainWindow):
         toolbar.addWidget(self.width_spin)
 
         toolbar.addSeparator()
-        smooth_act = QAction(load_icon('smooth.png'), self.t("Smooth"), self)
+        smooth_act = QAction(self.t("Smooth"), self)
         smooth_act.setCheckable(True)
         smooth_act.setChecked(True)
         smooth_act.triggered.connect(lambda checked: setattr(self.canvas, 'smooth_pen', checked))
         toolbar.addAction(smooth_act)
 
         toolbar.addSeparator()
-        circle_act = QAction(load_icon('circle.png'), self.t("Circle"), self)
+        circle_act = QAction(self.t("Circle"), self)
         circle_act.setCheckable(True)
         circle_act.setChecked(True)
-        square_act = QAction(load_icon('square.png'), self.t("Square"), self)
+        square_act = QAction(self.t("Square"), self)
         square_act.setCheckable(True)
         shape_group = QActionGroup(self)
         shape_group.addAction(circle_act)
@@ -331,24 +330,24 @@ class PaintWindow(QMainWindow):
         toolbar.addAction(circle_act)
         toolbar.addAction(square_act)
 
-        undo_act = QAction(load_icon('undo.png'), self.t("Undo"), self)
+        undo_act = QAction(self.t("Undo"), self)
         undo_act.setShortcut('Ctrl+Z')
         undo_act.triggered.connect(self.canvas.undo)
         toolbar.addAction(undo_act)
-        redo_act = QAction(load_icon('redo.png'), self.t("Redo"), self)
+        redo_act = QAction(self.t("Redo"), self)
         redo_act.setShortcut('Ctrl+Y')
         redo_act.triggered.connect(self.canvas.redo)
         toolbar.addAction(redo_act)
 
         toolbar.addSeparator()
-        zoom_in = QAction(load_icon('zoomin.png'), self.t("Zoom +"), self)
+        zoom_in = QAction(self.t("Zoom +"), self)
         zoom_in.setShortcut('=')
         zoom_in.triggered.connect(lambda: self.canvas.zoom_at(
             QPointF(self.canvas.rect().center()), 1.2
         ))
         toolbar.addAction(zoom_in)
 
-        zoom_out = QAction(load_icon('zoomout.png'), self.t("Zoom -"), self)
+        zoom_out = QAction(self.t("Zoom -"), self)
         zoom_out.setShortcut('-')
         zoom_out.triggered.connect(lambda: self.canvas.zoom_at(
             QPointF(self.canvas.rect().center()), 1/1.2
