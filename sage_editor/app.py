@@ -23,11 +23,15 @@ def main(argv: list[str] | None = None) -> int:
 
     if ns.file:
         from engine.api import load_project, load_scene
-        if ns.file.endswith(".sageproject"):
-            proj = load_project(ns.file)
-            scene = Scene.from_dict(proj.scene) if proj.scene else Scene()
-        else:
-            scene = load_scene(ns.file)
+        try:
+            if ns.file.endswith(".sageproject"):
+                proj = load_project(ns.file)
+                scene = Scene.from_dict(proj.scene) if proj.scene else Scene()
+            else:
+                scene = load_scene(ns.file)
+        except Exception as exc:  # pragma: no cover - editor startup
+            print(f"Cannot load {ns.file}: {exc}")
+            scene = Scene()
     else:
         scene = Scene()
         scene.add_object(GameObject(name="origin"))

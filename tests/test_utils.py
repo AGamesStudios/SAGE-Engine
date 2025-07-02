@@ -15,5 +15,14 @@ class TestLoadJson(unittest.TestCase):
             os.unlink(path)
         self.assertEqual(data, {"a":1, "b":2})
 
+    def test_empty_file_returns_empty_dict(self):
+        with tempfile.NamedTemporaryFile("w", delete=False) as tf:
+            path = tf.name
+        try:
+            data = load_json(path)
+        finally:
+            os.unlink(path)
+        self.assertEqual(data, {})
+
 if __name__ == '__main__':
     unittest.main()
