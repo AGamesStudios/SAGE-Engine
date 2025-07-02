@@ -68,7 +68,7 @@ class GLWidget(QOpenGLWidget):
             self.renderer.init_gl()
 
     def paintGL(self):
-        if self.renderer:
+        if self.renderer and self.width() > 0 and self.height() > 0:
             self.renderer.paint()
 
     def resizeGL(self, width: int, height: int):
@@ -325,13 +325,12 @@ class OpenGLRenderer:
         installed. If that fails we fall back to ``sage_editor.icons``.
         """
         try:  # engine package may ship its own icons
-            from engine.icons import ICON_DIR, ICON_THEME, APP_ICON_NAME
+            from engine.icons import ICON_DIR, ICON_THEME
         except Exception:  # pragma: no cover - optional
             try:
                 from sage_editor.icons import (
                     ICON_DIR,
                     ICON_THEME,
-                    APP_ICON_NAME,
                 )
             except Exception:  # pragma: no cover - no icons available
                 return self._get_blank_texture()
@@ -350,9 +349,6 @@ class OpenGLRenderer:
                 if root_path.is_file():
                     path = root_path
                 else:
-                    if name not in getattr(self, '_missing_icons', set()) and name != APP_ICON_NAME:
-                        logger.warning('Icon %s not found for theme %s', name, ICON_THEME)
-                        self._missing_icons.add(name)
                     return self._get_blank_texture()
         try:
             img = Image.open(path).convert('RGBA')

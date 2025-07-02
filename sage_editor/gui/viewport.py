@@ -58,7 +58,12 @@ class Viewport(QWidget):
         return None
 
     def _tick(self) -> None:
-        if self.width() > 0 and self.height() > 0:
+        if (
+            self.width() > 0
+            and self.height() > 0
+            and self.gl.context() is not None
+            and self.gl.context().isValid()
+        ):
             self.renderer.draw_scene(
                 self.scene,
                 self.camera,
