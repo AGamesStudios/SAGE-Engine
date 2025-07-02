@@ -1,39 +1,25 @@
 # SAGE Engine
 
-This repository contains **SAGE Engine**, a lightweight core framework for
-games.  **SAGE 2D** extends the engine with sprite rendering while **SAGE
-Editor** lets you place objects visually and save projects.  The editor remains
-small so it runs well even on older computers. An additional **SAGE Paint** tool
-provides an experimental sprite editor for drawing 2D graphics. A lightweight
-`sage_runtime` provides the runtime library while common utilities live in
-`sage_sdk`. Detailed guides are kept under `docs/`. Start with
-[`docs/en/index.md`](docs/en/index.md) for an overview and see the
-[plugins guide](docs/en/plugins.md) for extending the engine.
+**SAGE Engine** is a lightweight runtime with an optional Qt based editor.  It
+loads scenes written in the `.sagescene` format and can run entire projects from
+`.sageproject` files.  The engine stays independent of the editor so games may
+ship only the runtime.
 
-window shows an "EXPERIMENTAL" banner to highlight this status.  SAGE Paint
-supports zooming, right-click panning and an eraser tool so sprites can be
-drawn or touched up without leaving the engine.  A live gizmo shows the brush
-or eraser size so edits feel precise.  Zoom now follows the cursor position so
-the image stays centred on what you are working on.  A vertical toolbar on the
-left hosts brush, eraser and fill tools with optional circle or square brush
-tips and a smoothing toggle.  Each tool remembers its own width controlled by a
-spin box on the main toolbar which also shows the currently selected colour.
-Canvas updates are limited to the changed area so even low-end PCs can draw
-smoothly without dropping frames.
-Undo and redo shortcuts make it easy to revert mistakes.  The window opens
-maximised and centres the canvas in its viewport so drawing starts focused on
-the artwork.  The canvas sits on a dark gray background with a thin border while
-you work.  A new **File** menu can create blank documents, open or save
-``.sagepaint`` files and export the current image to PNG alongside the existing
-Settings menu for window size.
+Documentation lives under the `docs/` folder.  Start with
+[the index](docs/en/index.md) for an overview, see the
+[plugins guide](docs/en/plugins.md) for extending the engine and read
+[optimisation tips](docs/en/optimisation.md) for performance advice.
 
-The current release is **SAGE Engine v0.0.1-alpha**. The engine
-stores its version inside every `.sageproject` file so you can safely upgrade
-without losing progress.
-An **About** entry in the menu shows this version so players know which build
-they are running.
-Use ``engine.require_version()`` to ensure your project runs on a compatible
-engine release.
+## Quick start
+
+```bash
+pip install -r requirements.txt
+ruff check .
+PYTHONPATH=. pytest -q
+```
+
+Load `examples/blank.sageproject` with the editor or runtime to see the default
+project structure.
 
 ## Setup
 Install dependencies with:
