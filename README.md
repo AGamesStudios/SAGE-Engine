@@ -87,7 +87,7 @@ the same Fusion palette. The console prints the engine version and loaded projec
 path at startup and the property editor groups fields under ``Object`` and ``Transform``
 categories. Plugins registered via ``sage_editor.plugins`` can
 extend the interface with custom actions without changing the core code.
-Transform data now stores a quaternion and pivot so rotations stay within ``0-360`` degrees.
+Transform data now stores a quaternion and pivot so rotations stay within ``0-360`` degrees. Rotation shows its value next to the slider and any field can be reset to its default via a right-click menu.
 Embedding the editor in other tools only requires importing these modules.
 
 The runtime is organised in a simple hierarchy:

@@ -1,19 +1,37 @@
 from __future__ import annotations
 
-from PyQt6.QtWidgets import (
-    QWidget,
-    QFormLayout,
-    QGroupBox,
-    QLineEdit,
-    QHBoxLayout,
-    QDoubleSpinBox,
-    QSpinBox,
-    QSlider,
-    QComboBox,
-    QPushButton,
-    QLabel,
-    QFrame,
-)
+try:
+    from PyQt6.QtWidgets import (
+        QWidget,
+        QFormLayout,
+        QGroupBox,
+        QLineEdit,
+        QHBoxLayout,
+        QDoubleSpinBox,
+        QSpinBox,
+        QSlider,
+        QMenu,
+        QComboBox,
+        QPushButton,
+        QLabel,
+        QFrame,
+    )
+except Exception:  # pragma: no cover - tests may stub Qt modules
+    from PyQt6.QtWidgets import (
+        QWidget,
+        QFormLayout,
+        QGroupBox,
+        QLineEdit,
+        QHBoxLayout,
+        QDoubleSpinBox,
+        QSpinBox,
+        QSlider,
+        QComboBox,
+        QPushButton,
+        QLabel,
+        QFrame,
+    )
+    QMenu = None
 from PyQt6.QtCore import pyqtSignal, Qt
 
 from engine.entities.object import Object
@@ -64,6 +82,13 @@ class PropertyEditor(QWidget):
         self.z_spin.setRange(-10000, 10000)
         self.rot_slider = QSlider(Qt.Orientation.Horizontal)
         self.rot_slider.setRange(0, 360)
+        self.rot_spin = QSpinBox()
+        self.rot_spin.setRange(0, 360)
+        rot_layout = QHBoxLayout()
+        rot_layout.addWidget(self.rot_slider)
+        rot_layout.addWidget(self.rot_spin)
+        self.rot_slider.valueChanged.connect(self.rot_spin.setValue)
+        self.rot_spin.valueChanged.connect(self.rot_slider.setValue)
         self.scale_x = QDoubleSpinBox()
         self.scale_x.setRange(0, 1000)
         self.scale_y = QDoubleSpinBox()
@@ -91,7 +116,7 @@ class PropertyEditor(QWidget):
         scale_layout.addWidget(self.scale_lock)
         tr_form.addRow("Position", pos_layout)
         tr_form.addRow("Z Order", self.z_spin)
-        tr_form.addRow("Rotation", self.rot_slider)
+        tr_form.addRow("Rotation", rot_layout)
         tr_form.addRow("Pivot", pivot_layout)
         tr_form.addRow("Quaternion", self.quat_edit)
         tr_form.addRow("Scale", scale_layout)
@@ -106,6 +131,7 @@ class PropertyEditor(QWidget):
             self.pos_y,
             self.z_spin,
             self.rot_slider,
+            self.rot_spin,
             self.scale_x,
             self.scale_y,
             self.pivot_x,
@@ -120,6 +146,20 @@ class PropertyEditor(QWidget):
         self.scale_lock.toggled.connect(self._lock_scale)
         self.name_edit.editingFinished.connect(self._apply)
         self.role_combo.currentTextChanged.connect(self._apply)
+
+        self._defaults = {
+            self.pos_x: 0.0,
+            self.pos_y: 0.0,
+            self.z_spin: 0,
+            self.rot_slider: 0,
+            self.rot_spin: 0,
+            self.scale_x: 1.0,
+            self.scale_y: 1.0,
+            self.pivot_x: 0.0,
+            self.pivot_y: 0.0,
+        }
+        for w, val in self._defaults.items():
+            self._add_reset_menu(w, val)
 
         vbox.addRow(self.obj_group)
         line1 = QFrame()
@@ -144,12 +184,13 @@ class PropertyEditor(QWidget):
                 self.pos_x,
                 self.pos_y,
                 self.z_spin,
-            self.rot_slider,
-            self.scale_x,
-            self.scale_y,
-            self.pivot_x,
-            self.pivot_y,
-        ):
+                self.rot_slider,
+                self.rot_spin,
+                self.scale_x,
+                self.scale_y,
+                self.pivot_x,
+                self.pivot_y,
+            ):
                 if isinstance(w, QLineEdit):
                     w.setText("")
                 elif isinstance(w, (QSpinBox, QDoubleSpinBox, QSlider)):
@@ -168,7 +209,9 @@ class PropertyEditor(QWidget):
             self.z_spin.setValue(int(getattr(obj, "z", 0)))
         else:
             self.z_spin.setValue(0)
-        self.rot_slider.setValue(int(getattr(t, "angle", 0)))
+        angle = int(getattr(t, "angle", 0))
+        self.rot_slider.setValue(angle)
+        self.rot_spin.setValue(angle)
         self.scale_x.setValue(getattr(t, "scale_x", getattr(obj, "scale_x", 1.0)))
         self.scale_y.setValue(getattr(t, "scale_y", getattr(obj, "scale_y", 1.0)))
         self.pivot_x.setValue(getattr(t, "pivot_x", 0.0))
@@ -193,7 +236,7 @@ class PropertyEditor(QWidget):
             if hasattr(self._object, "z"):
                 self._object.z = int(self.z_spin.value())
             if hasattr(t, "angle"):
-                t.angle = float(self.rot_slider.value())
+                t.angle = float(self.rot_spin.value())
             if hasattr(t, "scale_x"):
                 t.scale_x = float(self.scale_x.value())
             if hasattr(t, "scale_y"):
@@ -222,3 +265,35 @@ class PropertyEditor(QWidget):
             self.scale_y.setEnabled(False)
         else:
             self.scale_y.setEnabled(True)
+
+    def _reset_widget(self, widget) -> None:
+        """Reset *widget* to its default value."""
+        default = self._defaults.get(widget)
+        if default is None:
+            return
+        if isinstance(widget, QLineEdit):
+            widget.setText(str(default))
+        else:
+            widget.setValue(default)
+        self._apply()
+
+    def _add_reset_menu(self, widget, default) -> None:
+        """Attach a context menu to reset *widget* to *default*."""
+        try:
+            from PyQt6.QtCore import Qt
+        except Exception:  # pragma: no cover - tests may stub Qt modules
+            return
+        if not hasattr(widget, "setContextMenuPolicy"):
+            return
+        widget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+
+        def show_menu(pos):
+            if QMenu is None:
+                return
+            menu = QMenu(widget)
+            act = menu.addAction("Reset")
+            act.triggered.connect(lambda: self._reset_widget(widget))
+            menu.exec(widget.mapToGlobal(pos))
+
+        if hasattr(widget, "customContextMenuRequested"):
+            widget.customContextMenuRequested.connect(show_menu)

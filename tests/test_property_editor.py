@@ -175,5 +175,23 @@ def test_property_editor_updates_quaternion():
     pe.set_object(obj)
     assert "0.00" in pe.quat_edit.text()
     pe.rot_slider.setValue(180)
+    pe.rot_slider.valueChanged.emit(180)
     pe._apply()
     assert obj.transform.angle == 180
+
+
+def test_rotation_spin_syncs_with_slider():
+    pe = PropertyEditor()
+    pe.rot_slider.setValue(45)
+    pe.rot_slider.valueChanged.emit(45)
+    assert pe.rot_spin.value() == 45
+    pe.rot_spin.setValue(90)
+    pe.rot_spin.valueChanged.emit(90)
+    assert pe.rot_slider.value() == 90
+
+
+def test_reset_widget_restores_default():
+    pe = PropertyEditor()
+    pe.pos_x.setValue(5)
+    pe._reset_widget(pe.pos_x)
+    assert pe.pos_x.value() == 0.0

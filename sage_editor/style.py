@@ -42,8 +42,8 @@ def apply_modern_theme(app: QApplication) -> None:
     # subtle widget borders and headings
     app.setStyleSheet(
         """
-        QGroupBox { font-weight: bold; border: 1px solid #555; margin-top: 8px; }
-        QGroupBox::title { subcontrol-origin: margin; left: 4px; top: -2px; }
+        QGroupBox { font-weight: bold; border: 1px solid #555; margin-top: 12px; }
+        QGroupBox::title { subcontrol-origin: margin; left: 6px; }
         QPlainTextEdit { background: #1e1e1e; color: #dcdcdc; }
         QListWidget { background: #2b2b2b; color: #ddd; }
         QListWidget::item:selected { background: #444; }
