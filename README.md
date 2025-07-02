@@ -230,6 +230,8 @@ Project files store the entire scene so you can share a single file. Use
 **File → Save Project** or **File → Save As…** to write your work. The
 **Recent Projects** submenu lists the last few files you opened for quick
 access. Choose **File → Exit** to close the editor when you are done.
+Scenes themselves use the `.sagescene` extension which is a JSON document
+containing every object, variable and event.
 If you make changes after saving, the window title shows `(unsaved)` so you
 know there are modifications. Closing the editor with unsaved work displays a
 dialog asking whether to save before exiting.

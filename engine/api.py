@@ -1,4 +1,5 @@
 from .core.scenes.scene import Scene
+from .core.scene_file import load_scene_file, save_scene_file
 from .core.project import Project
 from .renderers import get_renderer
 from .core.engine import Engine
@@ -63,12 +64,12 @@ def run_project(path: str, fps: int = 30):
 
 def load_scene(path: str) -> Scene:
     """Load a :class:`Scene` from disk."""
-    return Scene.load(path)
+    return load_scene_file(path)
 
 
 def save_scene(scene: Scene, path: str) -> None:
     """Save a :class:`Scene` to disk."""
-    scene.save(path)
+    save_scene_file(scene, path)
 
 
 def run_scene(path: str, width: int = 640, height: int = 480,

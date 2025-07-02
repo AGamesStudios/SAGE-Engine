@@ -23,6 +23,7 @@ __all__ = [
     'register_post_effect',
     'get_post_effect',
     'POST_EFFECT_REGISTRY',
+    'SceneFile', 'load_scene_file', 'save_scene_file',
     'LibraryLoader', 'DEFAULT_LIBRARY_LOADER', 'load_engine_libraries',
 ]
 
@@ -54,6 +55,9 @@ _lazy = {
     'register_post_effect': ('engine.core.post_effects', 'register_post_effect'),
     'get_post_effect': ('engine.core.post_effects', 'get_post_effect'),
     'POST_EFFECT_REGISTRY': ('engine.core.post_effects', 'POST_EFFECT_REGISTRY'),
+    'SceneFile': ('engine.core.scene_file', 'SceneFile'),
+    'load_scene_file': ('engine.core.scene_file', 'load_scene_file'),
+    'save_scene_file': ('engine.core.scene_file', 'save_scene_file'),
     'LibraryLoader': ('engine.core.library', 'LibraryLoader'),
     'DEFAULT_LIBRARY_LOADER': ('engine.core.library', 'DEFAULT_LIBRARY_LOADER'),
     'load_engine_libraries': ('engine.core.library', 'load_engine_libraries'),
