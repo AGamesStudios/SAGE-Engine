@@ -6,7 +6,11 @@ if not spec or spec.loader is None:
     pytest.skip("engine.mesh_utils unavailable", allow_module_level=True)
 import engine.mesh_utils  # noqa: E402
 importlib.reload(engine.mesh_utils)
-from engine.mesh_utils import create_square_mesh, create_triangle_mesh  # noqa: E402
+from engine.mesh_utils import (  # noqa: E402
+    create_square_mesh,
+    create_triangle_mesh,
+    create_polygon_mesh,
+)
 
 
 def test_square_mesh_center():
@@ -34,3 +38,14 @@ def test_triangle_mesh_centered():
     d2 = math.dist(verts[2], verts[0])
     assert abs(d0 - d1) < 1e-6
     assert abs(d1 - d2) < 1e-6
+
+
+def test_polygon_mesh_and_editing():
+    mesh = create_polygon_mesh([(0, 0), (1, 0), (1, 1), (0, 1)])
+    assert len(mesh.indices) == 6
+    mesh.translate(1, 2)
+    mesh.scale(2)
+    mesh.rotate(math.pi / 2)
+    xs = [v[0] for v in mesh.vertices]
+    ys = [v[1] for v in mesh.vertices]
+    assert len(xs) == 4 and len(ys) == 4

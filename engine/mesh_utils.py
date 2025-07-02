@@ -7,6 +7,7 @@ __all__ = [
     "create_square_mesh",
     "create_triangle_mesh",
     "create_circle_mesh",
+    "create_polygon_mesh",
 ]
 
 
@@ -14,6 +15,25 @@ __all__ = [
 class Mesh:
     vertices: list[tuple[float, float]]
     indices: list[int] | None = None
+
+    def translate(self, dx: float, dy: float) -> None:
+        """Shift all vertices by (dx, dy)."""
+        self.vertices = [(x + dx, y + dy) for x, y in self.vertices]
+
+    def scale(self, sx: float, sy: float | None = None) -> None:
+        """Scale all vertices by (sx, sy)."""
+        if sy is None:
+            sy = sx
+        self.vertices = [(x * sx, y * sy) for x, y in self.vertices]
+
+    def rotate(self, angle: float) -> None:
+        """Rotate all vertices by ``angle`` radians."""
+        cos_a = math.cos(angle)
+        sin_a = math.sin(angle)
+        self.vertices = [
+            (x * cos_a - y * sin_a, x * sin_a + y * cos_a)
+            for x, y in self.vertices
+        ]
 
 
 def create_square_mesh(width: float = 1.0, height: float | None = None) -> Mesh:
@@ -53,3 +73,13 @@ def create_circle_mesh(radius: float = 0.5, segments: int = 32) -> Mesh:
         ang = 2 * math.pi * i / segments
         verts.append((math.cos(ang) * radius, math.sin(ang) * radius))
     return Mesh(verts, None)
+
+
+def create_polygon_mesh(vertices: list[tuple[float, float]]) -> Mesh:
+    """Return a mesh from an arbitrary polygon defined by ``vertices``."""
+    if len(vertices) < 3:
+        raise ValueError("At least three vertices required")
+    inds = []
+    for i in range(1, len(vertices) - 1):
+        inds.extend([0, i, i + 1])
+    return Mesh(list(vertices), inds)

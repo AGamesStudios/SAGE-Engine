@@ -82,6 +82,7 @@ class GameObject(Object):
     smooth: bool = True
     color: tuple[int, int, int, int] | None = None
     alpha: float = 1.0
+    visible: bool = True
     metadata: dict = field(default_factory=dict)
     events: list = field(default_factory=list)
     settings: dict = field(default_factory=dict)

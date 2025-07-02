@@ -10,6 +10,7 @@ except Exception as exc:  # pragma: no cover - optional dependency
     ) from exc
 
 from . import Renderer, register_renderer
+from .opengl.drawing import parse_color
 
 
 class SDLRenderer(Renderer):
@@ -37,6 +38,7 @@ class SDLRenderer(Renderer):
         if not self.renderer:
             err = sdl2.SDL_GetError()
             raise RuntimeError(f"SDL_CreateRenderer failed: {err.decode()}")
+        sdl2.SDL_SetRenderDrawBlendMode(self.renderer, sdl2.SDL_BLENDMODE_BLEND)
         self.widget = None  # compatibility with input backends
 
     # ------------------------------------------------------------------
@@ -53,6 +55,8 @@ class SDLRenderer(Renderer):
 
     def draw_scene(self, scene, camera=None, gizmos=False) -> None:  # noqa: D401
         for obj in getattr(scene, "objects", []):
+            if not getattr(obj, "visible", True):
+                continue
             shape = getattr(obj, "shape", None)
             if isinstance(shape, str):
                 shape = shape.strip().lower()
@@ -61,10 +65,17 @@ class SDLRenderer(Renderer):
                 y = int(getattr(obj, "y", 0))
                 w = int(getattr(obj, "width", 32) * getattr(obj, "scale_x", 1.0))
                 h = int(getattr(obj, "height", 32) * getattr(obj, "scale_y", 1.0))
-                color = getattr(obj, "color", (255, 255, 255, 255))
-                if isinstance(color, tuple) and len(color) == 3:
-                    color = (*color, 255)
-                self._draw_rect(x, y, w, h, color)
+                color = parse_color(getattr(obj, "color", None))
+                alpha = getattr(obj, "alpha", 1.0)
+                if alpha > 1.0:
+                    alpha = alpha / 255.0
+                final = (
+                    color[0],
+                    color[1],
+                    color[2],
+                    min(255, int(color[3] * alpha))
+                )
+                self._draw_rect(x, y, w, h, final)
 
     def present(self) -> None:
         sdl2.SDL_RenderPresent(self.renderer)
