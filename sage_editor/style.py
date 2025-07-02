@@ -24,3 +24,20 @@ def apply_dark_fusion(app: QApplication) -> None:
     palette.setColor(QPalette.ColorRole.HighlightedText, QColor(240, 240, 240))
 
     app.setPalette(palette)
+
+
+def apply_modern_theme(app: QApplication) -> None:
+    """Apply an updated dark theme with a slightly larger font."""
+    try:
+        from PyQt6.QtGui import QFont
+    except Exception:  # pragma: no cover - tests may stub Qt modules
+        QFont = None
+
+    apply_dark_fusion(app)
+    if QFont is not None:
+        font: QFont = app.font()
+        font.setPointSize(font.pointSize() + 1)
+        app.setFont(font)
+
+
+__all__ = ["apply_dark_fusion", "apply_modern_theme"]

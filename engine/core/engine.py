@@ -14,10 +14,13 @@ from ..renderers import (
 )
 from .. import ENGINE_VERSION
 from ..utils.log import logger, init_logger
+from ..utils.diagnostics import analyze_exception
 
 
 def _exception_handler(exc_type, exc, tb):
-    """Log uncaught exceptions."""
+    """Log uncaught exceptions with a short summary."""
+    summary = analyze_exception(exc_type, exc, tb)
+    logger.error(summary)
     logger.error("Uncaught exception", exc_info=(exc_type, exc, tb))
 
 

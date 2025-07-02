@@ -9,7 +9,7 @@ from engine.core.scenes.scene import Scene
 from engine.entities.game_object import GameObject
 
 from .gui import EditorWindow
-from .style import apply_dark_fusion
+from .style import apply_modern_theme
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -20,7 +20,7 @@ def main(argv: list[str] | None = None) -> int:
     ns, qt_args = parser.parse_known_args(args)
 
     app = QApplication([sys.argv[0], *qt_args])
-    apply_dark_fusion(app)
+    apply_modern_theme(app)
 
     if ns.file:
         from engine.api import load_project, load_scene
