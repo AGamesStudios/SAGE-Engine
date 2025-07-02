@@ -9,7 +9,7 @@ description = "SAGE 2D game engine"
 authors = [{name = "SAGE Team"}]
 license = {file = "LICENSE"}
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 classifiers = [
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
@@ -26,12 +26,12 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://example.com/sage-engine"
-Repository = "https://github.com/example/SAGE-Engine"
+Homepage = "https://github.com/AGamesStudios/SAGE-Engine"
+Repository = "https://github.com/AGamesStudios/SAGE-Engine"
 [project.scripts]
 sage-editor = "sage_editor.app:main"
 sage-runtime = "engine.runtime.__main__:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["engine*", "sage_editor*", "sage_runtime*", "sage_paint*", "sage_sdk*"]
+include = ["engine*", "sage_editor*", "sage_paint*", "sage_sdk*"]

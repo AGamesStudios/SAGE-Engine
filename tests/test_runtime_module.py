@@ -39,9 +39,7 @@ sys.modules['PIL.Image'] = stub_image
 def test_runtime_aliases():
     import engine
     import engine.runtime as er
-    import sage_runtime as sr
     assert er.Engine is engine.Engine
-    assert sr.Scene is engine.Scene
 
 
 def test_runtime_entrypoints():
@@ -50,17 +48,13 @@ def test_runtime_entrypoints():
         called.append(argv)
     sys.modules['engine.core.engine'] = types.ModuleType('engine.core.engine')
     sys.modules['engine.core.engine'].main = fake_main
-    import sage_runtime.__main__ as srm
     import engine.runtime.__main__ as erm
-    srm.main(['one'])
     erm.main(['two'])
-    assert called == [['one'], ['two']]
+    assert called == [['two']]
 
 
 def test_versions_match_and_paint_dir():
     import engine
     import engine.runtime as er
-    import sage_runtime as sr
     assert er.__version__ == engine.__version__
-    assert sr.__version__ == engine.__version__
     assert 'paint' in dir(engine)
