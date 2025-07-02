@@ -77,8 +77,9 @@ def test_app_loads_scene(tmp_path, monkeypatch):
     created = {}
 
     class DummyWindow:
-        def __init__(self, scene):
+        def __init__(self, scene, path):
             self.scene = scene
+            assert path == str(scene_file)
             self.resized = []
             created['window'] = self
 

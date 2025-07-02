@@ -27,7 +27,8 @@ class ObjectListWidget(QListWidget):
         """Rebuild the list from ``scene`` objects."""
         self.clear()
         for obj in self.scene.objects:
-            desc = f"{obj.name} ({getattr(obj, 'type', 'object')})"
+            role = getattr(obj, 'role', getattr(obj, 'type', 'object'))
+            desc = f"{obj.name}#{getattr(obj, 'id', '?')} ({role})"
             QListWidgetItem(desc, self)
 
     def select_object(self, obj) -> None:
@@ -44,8 +45,10 @@ class ObjectListWidget(QListWidget):
 
     def _on_current_changed(self, current, previous) -> None:  # noqa: D401
         if current is not None:
-            name = current.text().split(" (")[0]
-            obj = self.scene.find_object(name)
+            head = current.text().split(" (")[0]
+            name, _, obj_id = head.partition("#")
+            key = int(obj_id) if obj_id.isdigit() else name
+            obj = self.scene.find_object(key)
         else:
             obj = None
         self.objectSelected.emit(obj)

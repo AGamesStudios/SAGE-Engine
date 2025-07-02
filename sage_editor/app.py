@@ -37,7 +37,7 @@ def main(argv: list[str] | None = None) -> int:
         scene = Scene()
         scene.add_object(GameObject(name="origin"))
 
-    window = EditorWindow(scene)
+    window = EditorWindow(scene, ns.file)
     fit_to_screen(window)
     window.show()
     return app.exec()

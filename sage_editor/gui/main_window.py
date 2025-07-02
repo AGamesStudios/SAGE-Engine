@@ -17,16 +17,18 @@ from .console import ConsoleWidget
 from .object_list import ObjectListWidget
 from .property_editor import PropertyEditor
 from engine.utils.log import set_stream
+from engine import ENGINE_VERSION
 
 
 
 class EditorWindow(QMainWindow):
     """Main window hosting only a :class:`Viewport`."""
 
-    def __init__(self, scene: Scene, parent: QWidget | None = None) -> None:
+    def __init__(self, scene: Scene, path: str | None = None, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setWindowTitle("SAGE Editor")
         self.scene = scene
+        self.path = path
         self.viewport = Viewport(scene, self)
         self.console = ConsoleWidget(self)
         self.object_list = ObjectListWidget(scene, self)
@@ -50,6 +52,10 @@ class EditorWindow(QMainWindow):
         self.setCentralWidget(splitter)
 
         set_stream(self.console)
+        if path:
+            self.console.write(f"SAGE Engine {ENGINE_VERSION}\nLoaded: {path}\n")
+        else:
+            self.console.write(f"SAGE Engine {ENGINE_VERSION}\n")
 
         self.object_list.objectSelected.connect(self.viewport.select_object)
         self.object_list.objectSelected.connect(self.prop_editor.set_object)

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from PyQt6.QtWidgets import QPlainTextEdit
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QTextCursor
 
 
@@ -10,6 +11,7 @@ class ConsoleWidget(QPlainTextEdit):
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.setReadOnly(True)
+        self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.setStyleSheet(
             "QPlainTextEdit {background:#1e1e1e;color:#dcdcdc;font-family:monospace;}"
         )
