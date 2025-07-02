@@ -103,6 +103,10 @@ class Renderer(ABC):
         """Shutdown the renderer and free resources."""
         raise NotImplementedError
 
+    def reset(self) -> None:
+        """Reset internal state after an error."""
+        pass
+
     def should_close(self) -> bool:
         return False
 

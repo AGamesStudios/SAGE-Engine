@@ -1,8 +1,8 @@
-"""Compatibility wrapper for the OpenGL renderer."""
+"""OpenGL renderer components."""
 
-from .opengl.core import OpenGLRenderer, register_draw_handler, RENDER_HANDLERS
-from .opengl.glwidget import GLWidget
-from .opengl.textures import (
+from .glwidget import GLWidget
+from .core import OpenGLRenderer, register_draw_handler, RENDER_HANDLERS
+from .textures import (
     get_blank_texture,
     get_texture,
     get_icon_texture,
@@ -10,10 +10,10 @@ from .opengl.textures import (
 )
 
 __all__ = [
+    "GLWidget",
     "OpenGLRenderer",
     "register_draw_handler",
     "RENDER_HANDLERS",
-    "GLWidget",
     "get_blank_texture",
     "get_texture",
     "get_icon_texture",

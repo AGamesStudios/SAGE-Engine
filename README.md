@@ -5,10 +5,10 @@ games.  **SAGE 2D** extends the engine with sprite rendering while **SAGE
 Editor** lets you place objects visually and save projects.  The editor remains
 small so it runs well even on older computers. An additional **SAGE Paint** tool
 provides an experimental sprite editor for drawing 2D graphics. A lightweight
-`sage_runtime` package exposes the core engine for standalone games while common
-utilities live in `sage_sdk`. See the files under `docs/` for detailed
-instructions and tutorials. The new [plugins guide](docs/en/plugins.md) explains
-how to register custom objects, input backends and renderers.
+`sage_runtime` provides the runtime library while common utilities live in
+`sage_sdk`. Detailed guides are kept under `docs/`. Start with
+[`docs/en/index.md`](docs/en/index.md) for an overview and see the
+[plugins guide](docs/en/plugins.md) for extending the engine.
 
 window shows an "EXPERIMENTAL" banner to highlight this status.  SAGE Paint
 supports zooming, right-click panning and an eraser tool so sprites can be

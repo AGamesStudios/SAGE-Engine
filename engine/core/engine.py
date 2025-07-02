@@ -145,6 +145,11 @@ class Engine:
             self.update(dt)
         except Exception:
             logger.exception("Runtime error")
+            if hasattr(self.renderer, "reset"):
+                try:
+                    self.renderer.reset()
+                except Exception:
+                    logger.exception("Renderer recovery failed")
 
     def to_settings(self) -> EngineSettings:
         """Return the current configuration as :class:`EngineSettings`."""
@@ -239,8 +244,6 @@ class Engine:
             try:
                 while not self.renderer.should_close():
                     self.step()
-                    if self._frame_interval:
-                        time.sleep(self._frame_interval)
             except KeyboardInterrupt:
                 pass
             return None

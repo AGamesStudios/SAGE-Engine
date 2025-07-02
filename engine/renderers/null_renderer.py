@@ -24,3 +24,6 @@ class NullRenderer(Renderer):
     def close(self):
         pass
 
+    def reset(self) -> None:  # pragma: no cover - trivial
+        pass
+
