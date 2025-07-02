@@ -80,7 +80,8 @@ and viewport widgets. A vertical splitter places the viewport above a small
 console that displays log output. A second panel on the right lists all
 objects in the current scene with a simple property editor below.
 Startup logic lives in ``sage_editor.app`` which applies a modern dark theme via
-``sage_editor.style.apply_modern_theme``. Plugins registered via ``sage_editor.plugins`` can
+``sage_editor.style.apply_modern_theme`` and sizes the main window to your
+screen using ``sage_editor.style.fit_to_screen``. Plugins registered via ``sage_editor.plugins`` can
 extend the interface with custom actions without changing the core code.
 Embedding the editor in other tools only requires importing these modules.
 

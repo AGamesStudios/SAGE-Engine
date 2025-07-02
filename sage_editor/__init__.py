@@ -11,7 +11,7 @@ import logging
 
 from .gui import EditorWindow, Viewport
 from .app import main
-from .style import apply_dark_fusion, apply_modern_theme
+from .style import apply_dark_fusion, apply_modern_theme, fit_to_screen
 
 logger = logging.getLogger("sage_editor")
 
@@ -22,4 +22,5 @@ __all__ = [
     'logger',
     'apply_dark_fusion',
     'apply_modern_theme',
+    'fit_to_screen',
 ]

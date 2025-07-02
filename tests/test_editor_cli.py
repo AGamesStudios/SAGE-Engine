@@ -16,6 +16,17 @@ def test_app_loads_scene(tmp_path, monkeypatch):
     sys.modules['engine.api'].load_scene = fake_load_scene
 
     qtwidgets = types.ModuleType('PyQt6.QtWidgets')
+    class DummyGeom:
+        def width(self):
+            return 1000
+
+        def height(self):
+            return 800
+
+    class DummyScreen:
+        def availableGeometry(self):
+            return DummyGeom()
+
     qtwidgets.QApplication = type(
         'QApplication',
         (),
@@ -24,6 +35,7 @@ def test_app_loads_scene(tmp_path, monkeypatch):
             'exec': lambda self: 0,
             'setStyle': lambda self, x: None,
             'setPalette': lambda self, p: None,
+            'primaryScreen': staticmethod(lambda: DummyScreen()),
         },
     )
     qtwidgets.QMainWindow = object
@@ -62,11 +74,17 @@ def test_app_loads_scene(tmp_path, monkeypatch):
     monkeypatch.setitem(sys.modules, 'PyQt6.QtWidgets', qtwidgets)
     monkeypatch.setitem(sys.modules, 'PyQt6.QtGui', qtgui)
 
+    created = {}
+
     class DummyWindow:
         def __init__(self, scene):
             self.scene = scene
+            self.resized = []
+            created['window'] = self
+
         def resize(self, w, h):
-            pass
+            self.resized.append((w, h))
+
         def show(self):
             pass
     dummy_mod = types.ModuleType('sage_editor.gui')
@@ -77,3 +95,4 @@ def test_app_loads_scene(tmp_path, monkeypatch):
     from sage_editor import app
     app.main([str(scene_file)])
     assert called == [str(scene_file)]
+    assert created['window'].resized == [(800, 640)]

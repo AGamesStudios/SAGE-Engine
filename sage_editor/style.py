@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from PyQt6.QtWidgets import QApplication, QStyleFactory
+from PyQt6.QtWidgets import QApplication, QStyleFactory, QWidget
 from PyQt6.QtGui import QPalette, QColor
 
 
@@ -40,4 +40,19 @@ def apply_modern_theme(app: QApplication) -> None:
         app.setFont(font)
 
 
-__all__ = ["apply_dark_fusion", "apply_modern_theme"]
+def fit_to_screen(window: QWidget, scale: float = 0.8) -> None:
+    """Resize *window* to a fraction of the primary screen."""
+    screen = QApplication.primaryScreen()
+    if screen is None:
+        return
+    rect = screen.availableGeometry()
+    width = int(rect.width() * scale)
+    height = int(rect.height() * scale)
+    window.resize(width, height)
+
+
+__all__ = [
+    "apply_dark_fusion",
+    "apply_modern_theme",
+    "fit_to_screen",
+]

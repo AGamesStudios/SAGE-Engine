@@ -9,7 +9,7 @@ from engine.core.scenes.scene import Scene
 from engine.entities.game_object import GameObject
 
 from .gui import EditorWindow
-from .style import apply_modern_theme
+from .style import apply_modern_theme, fit_to_screen
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -38,7 +38,7 @@ def main(argv: list[str] | None = None) -> int:
         scene.add_object(GameObject(name="origin"))
 
     window = EditorWindow(scene)
-    window.resize(800, 600)
+    fit_to_screen(window)
     window.show()
     return app.exec()
 
