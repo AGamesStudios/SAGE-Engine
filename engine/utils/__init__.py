@@ -23,6 +23,9 @@ def load_json(path: str):
         return {}
 
     try:
-        return json.loads(cleaned)
+        data = json.loads(cleaned)
     except json.JSONDecodeError as exc:
         raise ValueError(f"Invalid JSON in {path!r}: {exc}") from exc
+    if not isinstance(data, dict):
+        raise ValueError(f"Invalid JSON structure in {path!r}: expected object")
+    return data

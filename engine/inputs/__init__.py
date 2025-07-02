@@ -73,11 +73,11 @@ def _load_entry_points() -> None:
             try:
                 cls = ep.load()
                 register_input(ep.name, cls)
-            except Exception:
-                logger.exception("Failed to load input backend %s", ep.name)
+            except Exception as exc:  # pragma: no cover - plugin may raise anything
+                logger.exception("Failed to load input backend %s: %s", ep.name, exc)
                 failed.append(ep.name)
-    except Exception:
-        logger.exception("Error loading input entry points")
+    except Exception as exc:  # pragma: no cover - metadata issues
+        logger.exception("Error loading input entry points: %s", exc)
     if failed:
         logger.warning("Failed input plugins: %s", ", ".join(failed))
     _PLUGINS_LOADED = True

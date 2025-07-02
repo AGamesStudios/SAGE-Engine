@@ -2,6 +2,8 @@ from __future__ import annotations
 # ruff: noqa: F401,F403,F405
 
 from dataclasses import dataclass
+
+from .. import Renderer
 from typing import Optional, Callable
 import math
 import ctypes
@@ -39,7 +41,7 @@ def register_draw_handler(role: str, func: Callable[["OpenGLRenderer", GameObjec
 
 
 @dataclass
-class OpenGLRenderer:
+class OpenGLRenderer(Renderer):
     """Renderer using PyOpenGL and QOpenGLWidget."""
 
     width: int = 640

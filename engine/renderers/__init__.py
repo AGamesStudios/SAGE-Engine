@@ -46,11 +46,11 @@ def _load_entry_points() -> None:
             try:
                 cls = ep.load()
                 register_renderer(ep.name, cls)
-            except Exception:
-                logger.exception("Failed to load renderer %s", ep.name)
+            except Exception as exc:  # pragma: no cover - plugin may raise anything
+                logger.exception("Failed to load renderer %s: %s", ep.name, exc)
                 failed.append(ep.name)
-    except Exception:
-        logger.exception("Error loading renderer entry points")
+    except Exception as exc:  # pragma: no cover - metadata issues
+        logger.exception("Error loading renderer entry points: %s", exc)
     if failed:
         logger.warning("Failed renderer plugins: %s", ", ".join(failed))
     _PLUGINS_LOADED = True

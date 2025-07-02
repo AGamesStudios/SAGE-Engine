@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from ..utils.log import logger
 from collections import OrderedDict
+from threading import Lock
 from ..core.math2d import (
     angle_to_quat as _angle_to_quat,
     calc_rect as _calc_rect,
@@ -18,11 +19,13 @@ from ..core.effects import get_effect
 
 # LRU cache so repeated sprites don't reload files on low spec machines
 _IMAGE_CACHE: "OrderedDict[str, Image.Image]" = OrderedDict()
+_CACHE_LOCK = Lock()
 _MAX_CACHE = 32
 
 def clear_image_cache():
     """Remove all cached images."""
-    _IMAGE_CACHE.clear()
+    with _CACHE_LOCK:
+        _IMAGE_CACHE.clear()
 
 
 
@@ -252,16 +255,17 @@ class GameObject(Object):
         else:
             from ..core.resources import get_resource_path
             path = get_resource_path(self.image_path)
-            img = _IMAGE_CACHE.get(path)
-            if img is None:
-                try:
-                    img = Image.open(path).convert('RGBA')
-                    _IMAGE_CACHE[path] = img
-                    while len(_IMAGE_CACHE) > _MAX_CACHE:
-                        _IMAGE_CACHE.popitem(last=False)
-                except Exception:
-                    logger.exception('Failed to load image %s', path)
-                    img = Image.new('RGBA', (32, 32), self.color or (255, 255, 255, 255))
+            with _CACHE_LOCK:
+                img = _IMAGE_CACHE.get(path)
+                if img is None:
+                    try:
+                        img = Image.open(path).convert('RGBA')
+                        _IMAGE_CACHE[path] = img
+                        while len(_IMAGE_CACHE) > _MAX_CACHE:
+                            _IMAGE_CACHE.popitem(last=False)
+                    except Exception:
+                        logger.exception('Failed to load image %s', path)
+                        img = Image.new('RGBA', (32, 32), self.color or (255, 255, 255, 255))
         self.image = img
         self.width, self.height = img.size
         self._dirty = True
