@@ -123,8 +123,8 @@ class PropertyEditor(QWidget):
                     if hasattr(w, "setValue"):
                         w.setValue(0)
             return
-        t = obj.transform
-        self.name_edit.setText(obj.name or "")
+        t = getattr(obj, "transform", obj)
+        self.name_edit.setText(getattr(obj, "name", "") or "")
         self.id_edit.setText(str(getattr(obj, "id", "")))
         index = self.role_combo.findText(getattr(obj, "role", ""))
         if index >= 0:
@@ -136,23 +136,32 @@ class PropertyEditor(QWidget):
         else:
             self.z_spin.setValue(0)
         self.rot_slider.setValue(int(getattr(t, "angle", 0)))
-        self.scale_x.setValue(getattr(t, "scale_x", 1.0))
-        self.scale_y.setValue(getattr(t, "scale_y", 1.0))
+        self.scale_x.setValue(getattr(t, "scale_x", getattr(obj, "scale_x", 1.0)))
+        self.scale_y.setValue(getattr(t, "scale_y", getattr(obj, "scale_y", 1.0)))
 
     def _apply(self) -> None:
         if self._object is None or self._creating:
             return
         try:
-            t = self._object.transform
-            t.x = float(self.pos_x.value())
-            t.y = float(self.pos_y.value())
+            t = getattr(self._object, "transform", self._object)
+            if hasattr(t, "x"):
+                t.x = float(self.pos_x.value())
+            if hasattr(t, "y"):
+                t.y = float(self.pos_y.value())
             if hasattr(self._object, "z"):
                 self._object.z = int(self.z_spin.value())
-            t.angle = float(self.rot_slider.value())
-            t.scale_x = float(self.scale_x.value())
-            t.scale_y = float(self.scale_y.value())
-            self._object.name = self.name_edit.text()
-            self._object.role = self.role_combo.currentText() or self._object.role
+            if hasattr(t, "angle"):
+                t.angle = float(self.rot_slider.value())
+            if hasattr(t, "scale_x"):
+                t.scale_x = float(self.scale_x.value())
+            if hasattr(t, "scale_y"):
+                t.scale_y = float(self.scale_y.value())
+            if hasattr(self._object, "name"):
+                self._object.name = self.name_edit.text()
+            if hasattr(self._object, "role"):
+                role = self.role_combo.currentText()
+                if role:
+                    self._object.role = role
             self.objectChanged.emit(self._object)
         except ValueError:
             pass
