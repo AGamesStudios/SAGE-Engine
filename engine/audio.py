@@ -30,12 +30,19 @@ class AudioManager:
         self._sounds: Dict[str, pygame.mixer.Sound] = {}
 
     def load_sound(self, name: str) -> pygame.mixer.Sound:
-        """Load a sound file and return the ``Sound`` object."""
+        """Load a sound file or ``.sageaudio`` descriptor."""
         path = get_resource_path(name)
+        if path.endswith(".sageaudio"):
+            from .formats import load_sageaudio
+
+            meta = load_sageaudio(path)
+            file_path = os.path.join(os.path.dirname(path), meta["file"])
+        else:
+            file_path = path
         try:
-            sound = pygame.mixer.Sound(path)
+            sound = pygame.mixer.Sound(file_path)
         except Exception:
-            logger.exception("Failed to load sound %s", path)
+            logger.exception("Failed to load sound %s", file_path)
             raise
         self._sounds[name] = sound
         return sound

@@ -5,8 +5,8 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "sage-engine"
 version = "0.0.1-alpha"
-description = "SAGE 2D game engine"
-authors = [{name = "Amckinator Games Studios (AGStudios)", email = "amckinatorgamesstudios@gmail.com"}]
+description = "SAGE 2D game engine with compact resource formats"
+authors = [{name = "Amckinator Games Studios (AGStudios)", email = "amckinatorgames@gmail.com"}]
 license = {file = "LICENSE"}
 readme = "README.md"
 requires-python = ">=3.10"
@@ -17,7 +17,7 @@ classifiers = [
     "Intended Audience :: Developers",
     "Topic :: Games/Entertainment",
 ]
-keywords = ["game", "engine", "sage"]
+keywords = ["game", "engine", "sage", "sageaudio", "sagemesh"]
 dependencies = [
     "Pillow",
 ]

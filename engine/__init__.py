@@ -103,6 +103,10 @@ _lazy = {
     'Cache': ('engine.cache', 'Cache'),
     'SAGE_CACHE': ('engine.cache', 'SAGE_CACHE'),
     'AudioManager': ('engine.audio', 'AudioManager'),
+    'load_sageaudio': ('engine.formats', 'load_sageaudio'),
+    'save_sageaudio': ('engine.formats', 'save_sageaudio'),
+    'load_sagemesh': ('engine.formats', 'load_sagemesh'),
+    'save_sagemesh': ('engine.formats', 'save_sagemesh'),
 }
 
 __all__ = sorted(
@@ -203,6 +207,12 @@ if TYPE_CHECKING:  # pragma: no cover - hints for static analyzers
     from .utils import units  # noqa: F401
     from .cache import Cache, SAGE_CACHE  # noqa: F401
     from .audio import AudioManager  # noqa: F401
+    from .formats import (
+        load_sageaudio,  # noqa: F401
+        save_sageaudio,  # noqa: F401
+        load_sagemesh,  # noqa: F401
+        save_sagemesh,  # noqa: F401
+    )
     from . import math2d  # noqa: F401
     paint: _ModuleType
     from .version import require as require_version  # noqa: F401
