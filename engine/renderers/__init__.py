@@ -15,8 +15,12 @@ from .shader import Shader
 def register_draw_handler(
     role: str, func: Callable[["Renderer", "GameObject", "Camera | None"], None]
 ) -> None:
-    """Forward to :func:`engine.renderers.opengl_renderer.register_draw_handler`."""
-    from .opengl_renderer import register_draw_handler as _reg
+    """Register a custom draw callback if the OpenGL renderer is available."""
+    try:
+        from .opengl_renderer import register_draw_handler as _reg
+    except ImportError:
+        logger.warning("Custom draw handlers require the OpenGL renderer")
+        return
     _reg(role, func)
 
 logger = logging.getLogger(__name__)

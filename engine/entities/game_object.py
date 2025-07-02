@@ -11,7 +11,7 @@ from PIL import Image
 from engine.renderers import Shader
 from engine.mesh_utils import Mesh
 from ..core.objects import register_object
-from .object import Object, Transform2D, Material, next_id
+from .object import Object, Transform2D
 from ..logic import EventSystem, event_from_dict
 from .. import units
 from ..core.effects import get_effect
@@ -170,15 +170,7 @@ class GameObject(Object):
         self.scale_x = self.scale_y = value
 
     def __post_init__(self):
-        self.id = next_id()
-        if self.name is None:
-            self.name = self.role
-        if self.role == "camera":
-            self.metadata.setdefault("width", 640)
-            self.metadata.setdefault("height", 480)
-            self.metadata.setdefault("active", False)
-        if self.material is None:
-            self.material = Material()
+        Object.__post_init__(self)
         self.angle = normalize_angle(self.angle)
         self.rotation = _angle_to_quat(self.angle)
         self._load_image()

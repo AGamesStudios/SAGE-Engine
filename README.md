@@ -512,4 +512,5 @@ This project is released under the [MIT License](LICENSE).
 
 Use clear commit messages summarizing your changes so the history stays easy to
 follow. Run `ruff check .` and `PYTHONPATH=. pytest -q` before committing.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for more guidelines.
 
