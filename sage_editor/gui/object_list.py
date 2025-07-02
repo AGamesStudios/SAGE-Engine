@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from PyQt6.QtWidgets import QTreeWidget, QTreeWidgetItem
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import pyqtSignal, Qt
 
 from engine.core.scenes.scene import Scene
 
@@ -28,8 +28,7 @@ class ObjectTreeWidget(QTreeWidget):
             role = getattr(obj, "role", getattr(obj, "type", "object"))
             desc = f"{obj.name}#{getattr(obj, 'id', '?')} ({role})"
             item = QTreeWidgetItem(root, [desc])
-            item.setData(0, 0, obj)
-        self.addTopLevelItem(root)
+            item.setData(0, Qt.ItemDataRole.UserRole, obj)
         self.setCurrentItem(None)
 
     def select_object(self, obj) -> None:
@@ -47,10 +46,10 @@ class ObjectTreeWidget(QTreeWidget):
             return None
         for i in range(root.childCount()):
             ch = root.child(i)
-            if ch.data(0, 0) is obj:
+            if ch.data(0, Qt.ItemDataRole.UserRole) is obj:
                 return ch
         return None
 
     def _on_current_changed(self, current, previous) -> None:  # noqa: D401
-        obj = current.data(0, 0) if current is not None else None
+        obj = current.data(0, Qt.ItemDataRole.UserRole) if current is not None else None
         self.objectSelected.emit(obj)

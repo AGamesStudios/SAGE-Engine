@@ -20,8 +20,8 @@ _PLUGINS_LOADED = False
 # fallback dictionary mapping translated names back to the English
 # identifiers used internally.  This lets old projects saved with
 # localized names continue to load even when the editor is not
-# installed.  ``engine.lang`` ships with a minimal dictionary while
-# ``sage_editor.lang`` provides the full set used by the editor.
+# installed.  ``engine.lang`` ships with basic translations and
+# plugins may provide additional language packs.
 TRANSLATION_LOOKUP: dict[str, str] = {}
 LANGUAGES = {}
 
@@ -31,16 +31,6 @@ try:
 except Exception:
     pass
 
-try:
-    from sage_editor.lang import LANGUAGES as editor_lang
-    for k, v in editor_lang.items():
-        if k not in LANGUAGES:
-            LANGUAGES[k] = v
-        else:
-            LANGUAGES[k].update(v)
-except Exception:
-    # editor may not be installed
-    pass
 
 for entries in LANGUAGES.values():
     for eng, local in entries.items():

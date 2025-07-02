@@ -196,6 +196,7 @@ class PropertyEditor(QWidget):
                 elif isinstance(w, (QSpinBox, QDoubleSpinBox, QSlider)):
                     if hasattr(w, "setValue"):
                         w.setValue(0)
+            self._lock_scale(self.scale_lock.isChecked())
             return
         t = getattr(obj, "transform", obj)
         self.name_edit.setText(getattr(obj, "name", "") or "")
@@ -216,6 +217,7 @@ class PropertyEditor(QWidget):
         self.scale_y.setValue(getattr(t, "scale_y", getattr(obj, "scale_y", 1.0)))
         self.pivot_x.setValue(getattr(t, "pivot_x", 0.0))
         self.pivot_y.setValue(getattr(t, "pivot_y", 0.0))
+        self._lock_scale(self.scale_lock.isChecked())
         quat = getattr(t, "rotation", None)
         if quat is not None:
             self.quat_edit.setText(
@@ -263,8 +265,13 @@ class PropertyEditor(QWidget):
         if checked:
             self.scale_y.setValue(self.scale_x.value())
             self.scale_y.setEnabled(False)
+            self.scale_x.valueChanged.connect(self.scale_y.setValue)
         else:
             self.scale_y.setEnabled(True)
+            try:
+                self.scale_x.valueChanged.disconnect(self.scale_y.setValue)
+            except Exception:  # pragma: no cover - safe disconnect
+                pass
 
     def _reset_widget(self, widget) -> None:
         """Reset *widget* to its default value."""

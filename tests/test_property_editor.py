@@ -7,6 +7,9 @@ class DummySignal:
         self._slots = []
     def connect(self, slot):
         self._slots.append(slot)
+    def disconnect(self, slot):
+        if slot in self._slots:
+            self._slots.remove(slot)
     def emit(self, *args):
         for s in self._slots:
             s(*args)
@@ -82,6 +85,8 @@ class QDoubleSpinBox(Widget):
         self._val = v
     def value(self):
         return self._val
+    def setEnabled(self, e):
+        self.enabled = e
 
 class QSpinBox(QDoubleSpinBox):
     pass
@@ -112,8 +117,14 @@ class QPushButton(Widget):
     def __init__(self, text=''):
         super().__init__()
         self.toggled = DummySignal()
+        self._checked = False
     def setCheckable(self, c):
         pass
+    def setChecked(self, c):
+        self._checked = c
+        self.toggled.emit(c)
+    def isChecked(self):
+        return self._checked
 
 class QLabel(Widget):
     def __init__(self, text=''):
@@ -195,3 +206,15 @@ def test_reset_widget_restores_default():
     pe.pos_x.setValue(5)
     pe._reset_widget(pe.pos_x)
     assert pe.pos_x.value() == 0.0
+
+
+def test_scale_lock_propagates_value():
+    pe = PropertyEditor()
+    pe.scale_lock.setChecked(True)
+    pe.scale_x.setValue(2.5)
+    pe.scale_x.valueChanged.emit(2.5)
+    assert pe.scale_y.value() == 2.5
+    pe.scale_lock.setChecked(False)
+    pe.scale_x.setValue(3.0)
+    pe.scale_x.valueChanged.emit(3.0)
+    assert pe.scale_y.value() != 3.0

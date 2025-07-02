@@ -196,7 +196,7 @@ class GameObject:
             self._cached_matrix = None
             return
         else:
-            from .resources import get_resource_path
+            from ..core.resources import get_resource_path
             path = get_resource_path(self.image_path)
             img = _IMAGE_CACHE.get(path)
             if img is None:
