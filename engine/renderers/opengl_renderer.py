@@ -205,6 +205,8 @@ class OpenGLRenderer:
             self.widget.resize(width, height)
         self.width = width
         self.height = height
+        if width == 0 or height == 0:
+            return
         # only update the GL projection if a valid context exists
         ctx = self.widget.context() if self.widget else None
         if ctx and ctx.isValid():

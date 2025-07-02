@@ -54,7 +54,8 @@ def test_widget_config_and_grab(monkeypatch):
         'glTranslatef','glRotatef','glScalef','glBegin','glEnd','glVertex2f','glColor4f',
         'glTexCoord2f','glBindTexture','glTexParameteri','glTexImage2D','glGenTextures',
         'glLineWidth','glBufferSubData','glGetUniformLocation','glUniform4f','glUseProgram',
-        'glBindBuffer','glBindVertexArray','glDrawArrays','glCopyTexImage2D','glDeleteTextures'
+        'glBindBuffer','glBindVertexArray','glDrawArrays','glCopyTexImage2D','glDeleteTextures',
+        'glViewport'
     ]
     for n in names:
         setattr(gl_mod, n, lambda *a, **k: None)
@@ -86,3 +87,46 @@ def test_widget_config_and_grab(monkeypatch):
     assert r.widget.vsync is True
     img = r.grab_image()
     assert img.size == (2, 2)
+
+
+def test_resize_to_zero(monkeypatch):
+    gl_mod = types.ModuleType('OpenGL.GL')
+    names = [
+        'glEnable','glBlendFunc','glClearColor','glClear','glPushMatrix','glPopMatrix',
+        'glTranslatef','glRotatef','glScalef','glBegin','glEnd','glVertex2f','glColor4f',
+        'glTexCoord2f','glBindTexture','glTexParameteri','glTexImage2D','glGenTextures',
+        'glLineWidth','glBufferSubData','glGetUniformLocation','glUniform4f','glUseProgram',
+        'glBindBuffer','glBindVertexArray','glDrawArrays','glCopyTexImage2D','glDeleteTextures',
+        'glViewport'
+    ]
+    for n in names:
+        setattr(gl_mod, n, lambda *a, **k: None)
+    gl_mod.glReadPixels = lambda x,y,w,h,fmt,tp: b""  # unused
+    consts = [
+        'GL_BLEND','GL_SRC_ALPHA','GL_ONE_MINUS_SRC_ALPHA','GL_COLOR_BUFFER_BIT',
+        'GL_TEXTURE_2D','GL_TEXTURE_MIN_FILTER','GL_TEXTURE_MAG_FILTER','GL_LINEAR','GL_NEAREST',
+        'GL_QUADS','GL_LINES','GL_LINE_LOOP','GL_TRIANGLES','GL_RGBA','GL_UNSIGNED_BYTE',
+        'GL_MULTISAMPLE','GL_LINE_SMOOTH','GL_ARRAY_BUFFER','GL_STATIC_DRAW','GL_FLOAT','GL_TRIANGLE_FAN'
+    ]
+    for c in consts:
+        setattr(gl_mod, c, 0)
+    monkeypatch.setitem(sys.modules, 'OpenGL', types.ModuleType('OpenGL'))
+    monkeypatch.setitem(sys.modules, 'OpenGL.GL', gl_mod)
+    shader_mod = types.ModuleType('engine.renderers.shader')
+    shader_mod.Shader = object
+    monkeypatch.setitem(sys.modules, 'engine.renderers.shader', shader_mod)
+    pil_mod = types.ModuleType('PIL')
+    pil_image = types.ModuleType('PIL.Image')
+    pil_image.Image = type('Image', (), {})
+    pil_mod.Image = pil_image
+    monkeypatch.setitem(sys.modules, 'PIL', pil_mod)
+    monkeypatch.setitem(sys.modules, 'PIL.Image', pil_image)
+    if 'engine.renderers.opengl_renderer' in sys.modules:
+        del sys.modules['engine.renderers.opengl_renderer']
+    import importlib
+    ogl = importlib.import_module('engine.renderers.opengl_renderer')
+    monkeypatch.setattr(ogl, 'GLWidget', DummyWidget)
+    r = ogl.OpenGLRenderer(width=2, height=2)
+    r.set_window_size(0, 0)
+    # should not raise when painting with zero size
+    r.paint()

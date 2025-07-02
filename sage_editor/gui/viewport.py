@@ -69,10 +69,13 @@ class Viewport(QWidget):
     # -------------------------
     def resizeEvent(self, event) -> None:  # type: ignore[override]
         super().resizeEvent(event)
+        w = self.width()
+        h = self.height()
         if self.camera:
-            self.camera.width = self.width()
-            self.camera.height = self.height()
-        self.renderer.set_window_size(self.width(), self.height())
+            self.camera.width = w
+            self.camera.height = h
+        if w > 0 and h > 0:
+            self.renderer.set_window_size(w, h)
 
     def mousePressEvent(self, event) -> None:  # type: ignore[override]
         if event.button() == Qt.MouseButton.LeftButton:
