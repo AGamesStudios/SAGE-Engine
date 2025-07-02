@@ -10,6 +10,9 @@ class ConsoleWidget(QPlainTextEdit):
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.setReadOnly(True)
+        self.setStyleSheet(
+            "QPlainTextEdit {background:#1e1e1e;color:#dcdcdc;font-family:monospace;}"
+        )
 
     def write(self, text: str) -> None:
         """Append *text* to the console."""

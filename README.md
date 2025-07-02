@@ -112,13 +112,12 @@ Rendering now uses an **OpenGLRenderer**. Both the editor viewport and the game
 window share a Qt ``QOpenGLWidget`` so what you see while editing matches the
 running game. A small cross at the origin helps orient
 objects and a green square appears when the scene is empty so the viewport never
-shows a blank screen. Camera frustums are drawn in yellow and each object gets a
-billboard icon pinned to its pivot so items remain visible even without
-textures. A white cross follows the mouse so you can see its world position
+shows a blank screen. Camera frustums are drawn in yellow so you can see where
+each camera points. A white cross follows the mouse so you can see its world position
 and stays aligned even when zooming the viewport.
 These gizmos are shown only in the viewport; the game window draws
 just the scene objects. The viewport has its own camera which can be panned by
-dragging with the left mouse button. Click without moving to select the object
+dragging with the right mouse button. Click without moving to select the object
 under the cursor. Use the mouse wheel to zoom the editor camera in or out.
 The transform gizmo keeps a constant screen size even on high‑DPI displays and
 continues to track the grabbed point while zooming. Its arrows darken when
@@ -204,12 +203,6 @@ The loader always converts localized condition and action names back to their
 English identifiers before resolving them, so translated files remain
 compatible with future releases.
 
-The condition and action lists offer context menus with **Edit**, **Copy**,
-**Paste**, and **Delete** options. Right-click an empty area to add a new block
-or paste the previously copied one. These entries load icons from
-`sage_editor/icons` so **Copy**, **Cut**, **Paste** and **Delete** display
-`copy.png`, `cut.png`, `paste.png` and `delete.png` respectively. Adding a new
-event uses the `add.png` icon for clarity.
 
 The events table now reserves more room for the condition descriptions and
 expands rows to fit their text. Right-click the list itself to add a new event

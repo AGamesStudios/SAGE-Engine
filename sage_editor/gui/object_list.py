@@ -14,6 +14,11 @@ class ObjectListWidget(QListWidget):
     def __init__(self, scene: Scene, parent=None) -> None:
         super().__init__(parent)
         self.scene = scene
+        self.setAlternatingRowColors(True)
+        self.setStyleSheet(
+            "QListWidget {background:#2b2b2b;color:#ddd;}"
+            "QListWidget::item:selected {background:#444;}"
+        )
         self.refresh()
         self.currentItemChanged.connect(self._on_current_changed)
 
@@ -22,22 +27,25 @@ class ObjectListWidget(QListWidget):
         """Rebuild the list from ``scene`` objects."""
         self.clear()
         for obj in self.scene.objects:
-            QListWidgetItem(obj.name, self)
+            desc = f"{obj.name} ({getattr(obj, 'type', 'object')})"
+            QListWidgetItem(desc, self)
 
     def select_object(self, obj) -> None:
         """Highlight *obj* if present."""
         if obj is None:
             self.setCurrentItem(None)
             return
+        name = getattr(obj, "name", str(obj))
         for i in range(self.count()):
             item = self.item(i)
-            if item.text() == getattr(obj, "name", str(obj)):
+            if item.text().startswith(name):
                 self.setCurrentItem(item)
                 break
 
     def _on_current_changed(self, current, previous) -> None:  # noqa: D401
         if current is not None:
-            obj = self.scene.find_object(current.text())
+            name = current.text().split(" (")[0]
+            obj = self.scene.find_object(name)
         else:
             obj = None
         self.objectSelected.emit(obj)

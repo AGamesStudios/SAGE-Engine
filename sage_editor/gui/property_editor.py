@@ -16,6 +16,9 @@ class PropertyEditor(QWidget):
         self._object: Object | None = None
         self._creating = True
         layout = QFormLayout(self)
+        self.setStyleSheet(
+            "QLineEdit{background:#2b2b2b;color:#ddd;border:1px solid #555;}"
+        )
         self.x_edit = QLineEdit()
         self.y_edit = QLineEdit()
         self.angle_edit = QLineEdit()

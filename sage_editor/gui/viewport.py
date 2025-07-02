@@ -7,6 +7,7 @@ from engine import units
 from engine.entities.game_object import GameObject
 
 from engine.core.scenes.scene import Scene
+from engine.core.camera import Camera
 from engine.renderers.opengl_renderer import GLWidget, OpenGLRenderer
 from engine.utils.log import logger
 
@@ -19,10 +20,11 @@ class Viewport(QWidget):
     def __init__(self, scene: Scene, parent: QWidget | None = None):
         super().__init__(parent)
         self.scene = scene
-        # use the scene's active camera or create one sized to this widget
-        self.camera = scene.ensure_active_camera(
+        # standalone camera that is not part of the scene
+        self.camera = Camera(
             width=self.width() or 640,
             height=self.height() or 480,
+            active=True,
         )
 
         self.gl = GLWidget(self)
@@ -95,29 +97,32 @@ class Viewport(QWidget):
             self.renderer.set_window_size(w, h)
 
     def mousePressEvent(self, event) -> None:  # type: ignore[override]
-        if event.button() == Qt.MouseButton.LeftButton:
+        if event.button() == Qt.MouseButton.RightButton:
             self._dragging = True
+            self._last_pos = event.position()
+        elif event.button() == Qt.MouseButton.LeftButton:
             self._moved = False
             self._last_pos = event.position()
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event) -> None:  # type: ignore[override]
-        if self._dragging and event.buttons() & Qt.MouseButton.LeftButton:
+        if self._dragging and event.buttons() & Qt.MouseButton.RightButton:
             delta = event.position() - self._last_pos
-            if delta.manhattanLength() > 2:
-                self._moved = True
             scale = units.UNITS_PER_METER * (self.camera.zoom if self.camera else 1.0)
             sign = 1.0 if units.Y_UP else -1.0
             self.camera.x -= delta.x() / scale
             self.camera.y -= sign * delta.y() / scale
             self._last_pos = event.position()
+        elif event.buttons() & Qt.MouseButton.LeftButton:
+            if (event.position() - self._last_pos).manhattanLength() > 2:
+                self._moved = True
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event) -> None:  # type: ignore[override]
-        if event.button() == Qt.MouseButton.LeftButton:
-            if not self._moved:
-                self.select_object(self._pick_object(event.position()))
+        if event.button() == Qt.MouseButton.RightButton:
             self._dragging = False
+        elif event.button() == Qt.MouseButton.LeftButton and not self._moved:
+            self.select_object(self._pick_object(event.position()))
         super().mouseReleaseEvent(event)
 
     def wheelEvent(self, event) -> None:  # type: ignore[override]
