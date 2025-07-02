@@ -65,5 +65,13 @@ class TestDebugLogging(unittest.TestCase):
         init_logger()
         self.assertEqual(count, len(logger.handlers))
 
+    def test_faulthandler_enabled(self):
+        import faulthandler
+        logger.handlers.clear()
+        if faulthandler.is_enabled():
+            faulthandler.disable()
+        init_logger()
+        self.assertTrue(faulthandler.is_enabled())
+
 if __name__ == '__main__':
     unittest.main()

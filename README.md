@@ -92,9 +92,9 @@ SAGE Engine -> Project -> Scenes -> Objects -> properties
 Projects load resources through `engine.core.resources.ResourceManager` which
 uses a global **SAGE Cache** so data is reused between scenes. Debug messages
 are written to `logs/engine.log` using the helpers in `engine.utils.log`.
-Call `engine.utils.log.init_logger()` once at startup to create this file.
-You can change the verbosity at runtime with
-`engine.utils.log.set_level('DEBUG')`.
+Call `engine.utils.log.init_logger()` once at startup to create this file and
+enable crash reports via Python's `faulthandler`. You can change the verbosity
+at runtime with `engine.utils.log.set_level('DEBUG')`.
 When importing zip archives the resource manager skips entries that would
 extract outside the resources folder so malicious archives cannot overwrite
 arbitrary files.

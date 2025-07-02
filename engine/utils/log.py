@@ -1,6 +1,7 @@
 import logging
 import os
 import atexit
+import faulthandler
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 LOG_DIR = os.path.join(BASE_DIR, 'logs')
@@ -9,7 +10,10 @@ LOG_FILE = os.path.join(LOG_DIR, 'engine.log')
 logger = logging.getLogger('engine')
 
 
-def init_logger() -> logging.Logger:
+_fault_file = None
+
+
+def init_logger(enable_crash_dumps: bool = True) -> logging.Logger:
     """Configure and return the engine logger."""
     if logger.handlers:
         return logger
@@ -25,6 +29,11 @@ def init_logger() -> logging.Logger:
     logger.addHandler(ch)
     logger.info('Logger initialised')
     atexit.register(logging.shutdown)
+    if enable_crash_dumps and not faulthandler.is_enabled():
+        global _fault_file
+        _fault_file = open(LOG_FILE, 'a', encoding='utf-8')
+        faulthandler.enable(file=_fault_file, all_threads=True)
+        atexit.register(_fault_file.close)
     return logger
 
 
