@@ -19,11 +19,13 @@ classifiers = [
 ]
 keywords = ["game", "engine", "sage"]
 dependencies = [
-    "PyQt6>=6.5",
-    "PyOpenGL>=3.1",
     "Pillow",
-    "PySDL2",
 ]
+
+[project.optional-dependencies]
+opengl = ["PyQt6>=6.5", "PyOpenGL>=3.1"]
+sdl = ["PySDL2"]
+qt = ["PyQt6>=6.5"]
 
 [project.urls]
 Homepage = "https://github.com/AGamesStudios/SAGE-Engine"

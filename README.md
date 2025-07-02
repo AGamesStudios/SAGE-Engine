@@ -10,8 +10,12 @@ pip install -r requirements.txt
 ruff check .
 PYTHONPATH=. pytest -q
 ```
+Optional backends can be installed via extras, e.g.:
+```bash
+pip install .[opengl,sdl]
+```
 
-Open `examples/blank.sageproject` with the editor or runtime to see the basic structure. The example scene includes a camera and simple sprite object.
+Open `examples/blank.sageproject` with the editor or runtime to see the basic structure. The sample scene now contains two sprites and a camera.
 
 ## Running
 Use `python -m engine path/to/project.sageproject` to launch a game or `python main.py` for the editor. Both use the OpenGL renderer by default but fall back to the NullRenderer in headless setups. A lightweight SDL renderer is also available when PySDL2 is installed.

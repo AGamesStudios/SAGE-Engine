@@ -18,6 +18,14 @@
       "scale_y": 1.0,
       "name": "Block",
       "color": [0, 128, 255, 255]
+    },
+    {
+      "type": "sprite",
+      "shape": "circle",
+      "x": 200,
+      "y": 150,
+      "name": "Ball",
+      "color": [255, 64, 64, 255]
     }
   ],
   "events": [
