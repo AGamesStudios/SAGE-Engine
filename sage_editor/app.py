@@ -7,6 +7,7 @@ from PyQt6.QtWidgets import QApplication
 
 from engine.core.scenes.scene import Scene
 from engine.entities.game_object import GameObject
+from engine.utils.log import logger
 
 from .gui import EditorWindow
 from .style import apply_modern_theme, fit_to_screen
@@ -30,8 +31,8 @@ def main(argv: list[str] | None = None) -> int:
                 scene = Scene.from_dict(proj.scene) if proj.scene else Scene()
             else:
                 scene = load_scene(ns.file)
-        except Exception as exc:  # pragma: no cover - editor startup
-            print(f"Cannot load {ns.file}: {exc}")
+        except Exception:  # pragma: no cover - editor startup
+            logger.exception("Cannot load %s", ns.file)
             scene = Scene()
     else:
         scene = Scene()

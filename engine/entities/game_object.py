@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from ..utils.log import logger
 from collections import OrderedDict
 from threading import Lock
+import os
 from ..core.math2d import (
     angle_to_quat as _angle_to_quat,
     calc_rect as _calc_rect,
@@ -20,12 +21,21 @@ from ..core.effects import get_effect
 # LRU cache so repeated sprites don't reload files on low spec machines
 _IMAGE_CACHE: "OrderedDict[str, Image.Image]" = OrderedDict()
 _CACHE_LOCK = Lock()
-_MAX_CACHE = 32
+_MAX_CACHE = int(os.environ.get("SAGE_IMAGE_CACHE_LIMIT", "32"))
 
 def clear_image_cache():
     """Remove all cached images."""
     with _CACHE_LOCK:
         _IMAGE_CACHE.clear()
+
+
+def set_image_cache_limit(limit: int) -> None:
+    """Set the maximum number of cached images."""
+    global _MAX_CACHE
+    with _CACHE_LOCK:
+        _MAX_CACHE = int(limit)
+        while len(_IMAGE_CACHE) > _MAX_CACHE:
+            _IMAGE_CACHE.popitem(last=False)
 
 
 

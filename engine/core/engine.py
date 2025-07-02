@@ -55,6 +55,8 @@ class Engine:
             background = settings.background
             input_backend = settings.input_backend
             max_delta = settings.max_delta
+            from ..entities import game_object
+            game_object.set_image_cache_limit(settings.image_cache_limit)
         self.fps = fps
         self._frame_interval = 1.0 / fps if fps else 0
         self.max_delta = max_delta
@@ -153,6 +155,7 @@ class Engine:
 
     def to_settings(self) -> EngineSettings:
         """Return the current configuration as :class:`EngineSettings`."""
+        from ..entities import game_object
         return EngineSettings(
             width=getattr(self.renderer, "width", 640),
             height=getattr(self.renderer, "height", 480),
@@ -166,6 +169,7 @@ class Engine:
             background=getattr(self.renderer, "background", (0, 0, 0)),
             input_backend=type(self.input),
             max_delta=self.max_delta,
+            image_cache_limit=getattr(game_object, "_MAX_CACHE", 32),
         )
 
     def variable(self, name):

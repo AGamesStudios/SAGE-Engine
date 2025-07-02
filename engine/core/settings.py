@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Tuple, Any, TYPE_CHECKING
+import os
 
 from ..inputs import InputBackend
 from ..renderers import Renderer
@@ -27,3 +28,4 @@ class EngineSettings:
     background: Tuple[int, int, int] = (0, 0, 0)
     input_backend: str | type | InputBackend = "sdl"
     max_delta: float = 0.1
+    image_cache_limit: int = int(os.environ.get("SAGE_IMAGE_CACHE_LIMIT", "32"))

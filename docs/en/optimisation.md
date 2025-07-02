@@ -8,4 +8,7 @@ To keep large projects running smoothly consider the following options:
   possible to reduce per-frame work.
 - **Use Numba or Cython** – Installing `numba` or compiling heavy modules with
   Cython can greatly accelerate math-heavy code.
+- **Tune image cache** – Set `SAGE_IMAGE_CACHE_LIMIT` or pass
+  ``image_cache_limit`` via `EngineSettings` to control how many sprites are
+  kept in memory.
 
