@@ -31,3 +31,12 @@ def test_import_zip(tmp_path):
     rel = rm.import_zip(str(zip_path))
     dest = tmp_path / "res" / rel
     assert (dest / "f.txt").read_text() == "z"
+
+
+def test_import_zip_no_traversal(tmp_path):
+    z = tmp_path / "evil.zip"
+    with zipfile.ZipFile(z, "w") as zf:
+        zf.writestr("../evil.txt", "bad")
+    rm = ResourceManager(str(tmp_path / "res"))
+    rm.import_zip(str(z))
+    assert not (tmp_path / "evil.txt").exists()

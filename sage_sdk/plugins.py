@@ -97,8 +97,13 @@ class PluginManager:
             if not os.path.isdir(path):
                 logger.warning("Plugin directory %s does not exist", path)
                 continue
+            base = os.path.realpath(path)
             for name in os.listdir(path):
                 if name.startswith("_") or not name.endswith(".py"):
+                    continue
+                full = os.path.realpath(os.path.join(path, name))
+                if not full.startswith(base + os.sep):
+                    logger.warning("Ignoring plugin outside directory: %s", full)
                     continue
                 mod_name = os.path.splitext(name)[0]
                 if not cfg.get(mod_name, True):
@@ -174,8 +179,12 @@ def list_plugins(paths: list[str] | None = None, *, plugin_dir: str = PLUGIN_DIR
     for path in dirs:
         if not os.path.isdir(path):
             continue
+        base = os.path.realpath(path)
         for name in os.listdir(path):
             if name.startswith('_') or not name.endswith('.py'):
+                continue
+            full = os.path.realpath(os.path.join(path, name))
+            if not full.startswith(base + os.sep):
                 continue
             mod_name = os.path.splitext(name)[0]
             result.append((mod_name, os.path.join(path, name), cfg.get(mod_name, True)))

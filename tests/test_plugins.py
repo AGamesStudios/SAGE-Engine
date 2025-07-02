@@ -1,4 +1,5 @@
 import types
+import pytest
 from sage_sdk.plugins import PluginManager, PluginBase
 
 def test_load_module_plugin(tmp_path):
@@ -27,3 +28,19 @@ def test_load_object_plugin(tmp_path):
     obj = types.SimpleNamespace()
     manager.load(obj)
     assert getattr(obj, 'v', 0) == 1
+
+
+def test_symlink_outside_dir(tmp_path):
+    outside = tmp_path / "outside.py"
+    outside.write_text("flag=True")
+    plugins = tmp_path / "pdir"
+    plugins.mkdir()
+    link = plugins / "evil.py"
+    try:
+        link.symlink_to(outside)
+    except (OSError, NotImplementedError):
+        pytest.skip("symlink unsupported")
+    manager = PluginManager('engine', plugin_dir=str(plugins))
+    ns = types.SimpleNamespace()
+    manager.load(ns)
+    assert not hasattr(ns, 'flag')

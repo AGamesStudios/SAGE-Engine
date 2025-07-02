@@ -91,6 +91,9 @@ are written to `logs/engine.log` using the helpers in `engine.utils.log`.
 Call `engine.utils.log.init_logger()` once at startup to create this file.
 You can change the verbosity at runtime with
 `engine.utils.log.set_level('DEBUG')`.
+When importing zip archives the resource manager skips entries that would
+extract outside the resources folder so malicious archives cannot overwrite
+arbitrary files.
 
 Additional utilities live under ``engine.tools``.  For example the
 ``paint`` submodule exposes **SAGE Paint** so you can open it with
@@ -336,7 +339,9 @@ installed by simply dropping a file into the plugins folder.
 search paths. The editor exposes **Manage Plugins** under the Settings menu
 which copies Python files into ``~/.sage_plugins`` and lets you enable or
 disable them. Plugin installation is entirely local; the editor never downloads
-code automatically.
+code automatically. The plugin loader also checks that every ``.py`` file
+resides within the configured directory, ignoring symlinks that point outside
+to avoid executing unexpected code.
 
 Plugins can also be distributed as standard Python packages. Any entry points
 registered under ``sage_engine.plugins`` or ``sage_editor.plugins`` will be

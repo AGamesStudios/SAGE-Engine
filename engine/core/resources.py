@@ -198,19 +198,23 @@ class ResourceManager:
             with ZipFile(self._win_path(src)) as zf:
                 for info in zf.infolist():
                     out_path = os.path.join(target, info.filename)
-                    if info.is_dir():
-                        os.makedirs(self._win_path(out_path), exist_ok=True)
+                    abs_out = os.path.realpath(out_path)
+                    if not abs_out.startswith(os.path.realpath(target) + os.sep):
+                        logger.warning("Skipping zip entry outside target: %s", info.filename)
                         continue
-                    os.makedirs(self._win_path(os.path.dirname(out_path)), exist_ok=True)
+                    if info.is_dir():
+                        os.makedirs(self._win_path(abs_out), exist_ok=True)
+                        continue
+                    os.makedirs(self._win_path(os.path.dirname(abs_out)), exist_ok=True)
                     try:
-                        with zf.open(info) as fin, open(self._win_path(out_path), "wb") as fout:
+                        with zf.open(info) as fin, open(self._win_path(abs_out), "wb") as fout:
                             while True:
                                 chunk = fin.read(1024 * 1024)
                                 if not chunk:
                                     break
                                 fout.write(chunk)
                                 if progress_cb:
-                                    progress_cb(len(chunk), os.path.relpath(out_path, self.root))
+                                    progress_cb(len(chunk), os.path.relpath(abs_out, self.root))
                     except Exception:
                         logger.exception("Failed extracting %s", info.filename)
             logger.info("Imported zip %s -> %s", src, target)
