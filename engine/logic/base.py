@@ -3,6 +3,7 @@
 
 from ..utils.log import logger
 from importlib import metadata
+from .. import lang as engine_lang
 
 # registries used to map names to classes so new logic blocks can be added
 # without modifying the loader code
@@ -23,13 +24,9 @@ _PLUGINS_LOADED = False
 # installed.  ``engine.lang`` ships with basic translations and
 # plugins may provide additional language packs.
 TRANSLATION_LOOKUP: dict[str, str] = {}
-LANGUAGES = {}
 
-try:
-    from .. import lang as engine_lang
-    LANGUAGES.update(engine_lang.LANGUAGES)
-except Exception:
-    pass
+LANGUAGES = {}
+LANGUAGES.update(engine_lang.LANGUAGES)
 
 
 for entries in LANGUAGES.values():
