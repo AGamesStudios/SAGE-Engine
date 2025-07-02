@@ -76,12 +76,13 @@ projects can depend on the runtime alone while the editor builds entirely on the
 public API.  The ``sage_sdk`` package provides shared
 utilities like the plugin loader used by both components.
 The editor is fully modular. ``sage_editor.gui`` provides the main window
-and viewport widgets. A vertical splitter places the viewport above a small
-console that displays log output. A second panel on the right lists all
-objects in the current scene with a simple property editor below.
-Startup logic lives in ``sage_editor.app`` which applies a modern dark theme via
+and viewport widgets. The interface now uses clearly labelled panels:
+``Viewport`` for the scene view, ``Console`` for log output, ``Objects`` and
+``Properties`` for scene editing. Each panel is wrapped in a ``QGroupBox``
+so it scales cleanly at any screen size.
+Startup logic lives in ``sage_editor.app`` which applies a modern Fusion theme via
 ``sage_editor.style.apply_modern_theme`` and sizes the main window to your
-screen using ``sage_editor.style.fit_to_screen``. The console now prints the
+screen using ``sage_editor.style.fit_to_screen``. The console prints the
 engine version and loaded project path at startup and the property editor groups
 fields under ``Object`` and ``Transform`` categories. Plugins registered via ``sage_editor.plugins`` can
 extend the interface with custom actions without changing the core code.

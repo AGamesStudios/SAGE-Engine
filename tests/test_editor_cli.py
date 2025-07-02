@@ -35,6 +35,7 @@ def test_app_loads_scene(tmp_path, monkeypatch):
             'exec': lambda self: 0,
             'setStyle': lambda self, x: None,
             'setPalette': lambda self, p: None,
+            'setStyleSheet': lambda self, s: None,
             'primaryScreen': staticmethod(lambda: DummyScreen()),
         },
     )

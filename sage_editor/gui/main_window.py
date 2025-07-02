@@ -6,6 +6,8 @@ from PyQt6.QtWidgets import (
     QMenuBar,
     QApplication,
     QSplitter,
+    QGroupBox,
+    QVBoxLayout,
 )
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QAction
@@ -34,14 +36,34 @@ class EditorWindow(QMainWindow):
         self.object_list = ObjectListWidget(scene, self)
         self.prop_editor = PropertyEditor(self)
 
+        self.viewport_box = QGroupBox("Viewport", self)
+        vbox = QVBoxLayout(self.viewport_box)
+        vbox.setContentsMargins(0, 0, 0, 0)
+        vbox.addWidget(self.viewport)
+
+        self.console_box = QGroupBox("Console", self)
+        cbox = QVBoxLayout(self.console_box)
+        cbox.setContentsMargins(0, 0, 0, 0)
+        cbox.addWidget(self.console)
+
+        self.list_box = QGroupBox("Objects", self)
+        lbox = QVBoxLayout(self.list_box)
+        lbox.setContentsMargins(0, 0, 0, 0)
+        lbox.addWidget(self.object_list)
+
+        self.prop_box = QGroupBox("Properties", self)
+        pbox = QVBoxLayout(self.prop_box)
+        pbox.setContentsMargins(0, 0, 0, 0)
+        pbox.addWidget(self.prop_editor)
+
         left = QSplitter(Qt.Orientation.Vertical, self)
-        left.addWidget(self.viewport)
-        left.addWidget(self.console)
+        left.addWidget(self.viewport_box)
+        left.addWidget(self.console_box)
         left.setSizes([480, 120])
 
         right = QSplitter(Qt.Orientation.Vertical, self)
-        right.addWidget(self.object_list)
-        right.addWidget(self.prop_editor)
+        right.addWidget(self.list_box)
+        right.addWidget(self.prop_box)
         right.setSizes([200, 280])
 
         splitter = QSplitter(self)
