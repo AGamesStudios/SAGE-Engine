@@ -98,7 +98,8 @@ class Engine:
         if hasattr(self.renderer, 'apply_effects'):
             self.renderer.apply_effects = True
         self.bg_color = tuple(background)
-        # create the input backend using the registry
+        # create the input backend using the registry. Backends may optionally
+        # accept the renderer widget as their first argument
         if isinstance(input_backend, InputBackend):
             self.input = input_backend
         else:

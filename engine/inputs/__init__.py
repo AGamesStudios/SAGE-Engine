@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 from typing import Dict, Type
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from importlib import metadata
 import logging
 
 
-class InputBackend:
+class InputBackend(ABC):
     """Abstract base class for input backends."""
 
     @abstractmethod

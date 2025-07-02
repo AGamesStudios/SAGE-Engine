@@ -5,7 +5,7 @@ class SDLInput(InputBackend):
     """Keyboard and mouse input using PySDL2."""
     __slots__ = ("_keys", "_buttons")
 
-    def __init__(self):
+    def __init__(self, widget=None):
         sdl2.SDL_Init(sdl2.SDL_INIT_VIDEO)
         self._keys = set()
         self._buttons = set()

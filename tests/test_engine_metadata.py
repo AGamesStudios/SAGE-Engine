@@ -44,18 +44,18 @@ class Camera(GameObject):
 cam_mod.Camera = Camera
 sys.modules.setdefault('engine.core.camera', cam_mod)
 
-from engine.inputs import InputBackend  # noqa: E402
+from engine.inputs import NullInput  # noqa: E402
 
 from engine.core.engine import Engine, ENGINE_VERSION  # noqa: E402
 from engine.core.scenes.scene import Scene  # noqa: E402
 
 
 def test_engine_metadata_defaults():
-    eng = Engine(scene=Scene(with_defaults=False), renderer=DummyRenderer, input_backend=InputBackend)
+    eng = Engine(scene=Scene(with_defaults=False), renderer=DummyRenderer, input_backend=NullInput)
     assert eng.metadata["version"] == ENGINE_VERSION
 
 
 def test_engine_metadata_update():
-    eng = Engine(scene=Scene(with_defaults=False), renderer=DummyRenderer, input_backend=InputBackend, metadata={"level": 1})
+    eng = Engine(scene=Scene(with_defaults=False), renderer=DummyRenderer, input_backend=NullInput, metadata={"level": 1})
     assert eng.metadata["version"] == ENGINE_VERSION
     assert eng.metadata["level"] == 1

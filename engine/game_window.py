@@ -4,6 +4,8 @@ import time
 from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout
 from PyQt6.QtCore import QTimer, Qt, pyqtSignal
 
+from .utils.log import logger
+
 
 
 class GameWindow(QMainWindow):
@@ -38,6 +40,7 @@ class GameWindow(QMainWindow):
         try:
             self.engine.step()
         except Exception:
+            logger.exception("Engine step failed")
             self.timer.stop()
 
     def closeEvent(self, event):  # pragma: no cover - GUI cleanup
