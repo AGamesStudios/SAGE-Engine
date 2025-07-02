@@ -76,7 +76,8 @@ projects can depend on the runtime alone while the editor builds entirely on the
 public API.  The ``sage_sdk`` package provides shared
 utilities like the plugin loader used by both components.
 The editor is fully modular. ``sage_editor.gui`` provides the main window
-and viewport widgets, plus a simple console showing log output beneath the view.
+and viewport widgets. A vertical splitter places the viewport above a small
+console that displays log output.
 Startup logic lives in ``sage_editor.app`` which configures a Qt ``Fusion``
 style for a modern look. Plugins registered via ``sage_editor.plugins`` can
 extend the interface with custom actions without changing the core code.

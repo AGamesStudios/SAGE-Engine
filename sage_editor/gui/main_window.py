@@ -5,8 +5,9 @@ from PyQt6.QtWidgets import (
     QWidget,
     QMenuBar,
     QApplication,
-    QVBoxLayout,
+    QSplitter,
 )
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QAction
 
 from engine.core.scenes.scene import Scene
@@ -27,13 +28,12 @@ class EditorWindow(QMainWindow):
         self.viewport = Viewport(scene, self)
         self.console = ConsoleWidget(self)
 
-        container = QWidget(self)
-        layout = QVBoxLayout(container)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
-        layout.addWidget(self.viewport)
-        layout.addWidget(self.console)
-        self.setCentralWidget(container)
+        splitter = QSplitter(self)
+        splitter.setOrientation(Qt.Orientation.Vertical)
+        splitter.addWidget(self.viewport)
+        splitter.addWidget(self.console)
+        splitter.setSizes([480, 120])
+        self.setCentralWidget(splitter)
 
         set_stream(self.console)
 
