@@ -40,7 +40,8 @@ class Engine:
                  background: tuple[int, int, int] = (0, 0, 0),
                  input_backend: str | type | InputBackend = "qt",
                  max_delta: float = 0.1,
-                 *, settings: "EngineSettings | None" = None):
+                 *, settings: "EngineSettings | None" = None,
+                 metadata: dict | None = None):
         if settings is not None:
             width = settings.width
             height = settings.height
@@ -57,6 +58,9 @@ class Engine:
         self.fps = fps
         self._frame_interval = 1.0 / fps if fps else 0
         self.max_delta = max_delta
+        self.metadata = {"version": ENGINE_VERSION}
+        if metadata:
+            self.metadata.update(metadata)
         self.scene_manager = SceneManager()
         self.scene_manager.add_scene("main", scene or Scene())
         self.scene = self.scene_manager.get_active_scene()

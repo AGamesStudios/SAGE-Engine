@@ -425,6 +425,10 @@ settings = EngineSettings(width=800, height=600, renderer="opengl")
 engine = Engine(settings=settings)
 ```
 
+The constructor accepts an optional ``metadata`` dictionary which is stored on
+``engine.metadata``. It always contains the running engine version under the key
+``"version"`` and can hold any other values useful for diagnostics or plugins.
+
 `Engine` instances expose a ``delta_time`` attribute which stores the time in
 seconds since the last frame. The main loop clamps this value to
 ``max_delta`` (``0.1`` by default) so logic remains stable even when a slow
