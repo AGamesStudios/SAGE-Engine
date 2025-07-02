@@ -317,8 +317,22 @@ class OpenGLRenderer:
 
 
     def _get_icon_texture(self, name: str) -> int:
-        """Load an icon image from ``sage_editor/icons`` respecting the theme."""
-        from sage_editor.icons import ICON_DIR, ICON_THEME, APP_ICON_NAME
+        """Load an icon texture for gizmos.
+
+        The engine tries ``engine.icons`` first so it works without the editor
+        installed. If that fails we fall back to ``sage_editor.icons``.
+        """
+        try:  # engine package may ship its own icons
+            from engine.icons import ICON_DIR, ICON_THEME, APP_ICON_NAME
+        except Exception:  # pragma: no cover - optional
+            try:
+                from sage_editor.icons import (
+                    ICON_DIR,
+                    ICON_THEME,
+                    APP_ICON_NAME,
+                )
+            except Exception:  # pragma: no cover - no icons available
+                return self._get_blank_texture()
         key = f"{ICON_THEME}/{name}"
         tex = self._icon_cache.get(key)
         if tex:

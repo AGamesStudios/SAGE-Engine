@@ -71,7 +71,9 @@ provided in the same package, and the event system lives in
 save and run projects in just a few lines. **SAGE Editor** builds on these pieces
 but remains optional so games can depend on the engine without pulling in the
 editor.  Simply import the engine from `engine` and the editor from
-`sage_editor` to keep them modular.  The ``sage_sdk`` package provides shared
+`sage_editor` to keep them modular.  The engine never imports the editor so
+projects can depend on the runtime alone while the editor builds entirely on the
+public API.  The ``sage_sdk`` package provides shared
 utilities like the plugin loader used by both components.
 The editor is fully modular. ``sage_editor.gui`` provides the main window
 and viewport widgets, plus a simple console showing log output beneath the view.
