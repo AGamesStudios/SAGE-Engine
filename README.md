@@ -78,14 +78,15 @@ utilities like the plugin loader used by both components.
 The editor is fully modular. ``sage_editor.gui`` provides the main window
 and viewport widgets. The interface now presents the scene view inside a
 ``QTabWidget`` labelled ``Viewport`` while ``Console``, ``Objects`` and
-``Properties`` panels sit beside it. Each panel now scrolls vertically so the
-layout stays usable on small screens.
-Startup logic lives in ``sage_editor.app`` which applies a modern Fusion theme via
+``Properties`` panels sit beside it. Tabs can be closed individually and each
+panel scrolls vertically so the layout stays usable on small screens. Startup
+logic lives in ``sage_editor.app`` which applies a dark Fusion palette via
 ``sage_editor.style.apply_modern_theme`` and sizes the main window to your
-screen using ``sage_editor.style.fit_to_screen``. Spin boxes and sliders use
-the same Fusion palette. The console prints the engine version and loaded project
-path at startup and the property editor groups fields under ``Object`` and ``Transform``
-categories. Plugins registered via ``sage_editor.plugins`` can
+screen using ``sage_editor.style.fit_to_screen``. The object list displays a
+``Scene`` root node with each object beneath it. The console prints the engine
+version and loaded project path at startup and the property editor groups fields
+under ``Object`` and ``Transform`` categories. Plugins registered via
+``sage_editor.plugins`` can
 extend the interface with custom actions without changing the core code.
 Transform data now stores a quaternion and pivot so rotations stay within ``0-360`` degrees. Rotation shows its value next to the slider and any field can be reset to its default via a right-click menu.
 Embedding the editor in other tools only requires importing these modules.

@@ -18,7 +18,7 @@ from engine.core.scenes.scene import Scene
 
 from .viewport import Viewport
 from .console import ConsoleWidget
-from .object_list import ObjectListWidget
+from .object_list import ObjectTreeWidget
 from .property_editor import PropertyEditor
 from engine.utils.log import set_stream
 from engine import ENGINE_VERSION
@@ -35,11 +35,15 @@ class EditorWindow(QMainWindow):
         self.path = path
         self.viewport = Viewport(scene, self)
         self.console = ConsoleWidget(self)
-        self.object_list = ObjectListWidget(scene, self)
+        self.object_list = ObjectTreeWidget(scene, self)
         self.prop_editor = PropertyEditor(self)
 
         self.viewport_tabs = QTabWidget(self)
+        self.viewport_tabs.setTabsClosable(True)
         self.viewport_tabs.addTab(self.viewport, "Viewport")
+        self.viewport_tabs.tabCloseRequested.connect(
+            lambda idx: self.viewport_tabs.removeTab(idx)
+        )
 
         self.console_box = QGroupBox("Console", self)
         cbox = QVBoxLayout(self.console_box)

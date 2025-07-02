@@ -27,7 +27,7 @@ def apply_dark_fusion(app: QApplication) -> None:
 
 
 def apply_modern_theme(app: QApplication) -> None:
-    """Apply an updated dark Fusion theme with larger fonts and widget styling."""
+    """Apply the dark Fusion theme with a slightly larger font."""
     try:
         from PyQt6.QtGui import QFont
     except Exception:  # pragma: no cover - tests may stub Qt modules
@@ -39,24 +39,7 @@ def apply_modern_theme(app: QApplication) -> None:
         font.setPointSize(font.pointSize() + 1)
         app.setFont(font)
 
-    # subtle widget borders and headings
-    app.setStyleSheet(
-        """
-        QGroupBox { font-weight: bold; border: 1px solid #555; margin-top: 12px; }
-        QGroupBox::title { subcontrol-origin: margin; left: 6px; }
-        QPlainTextEdit { background: #1e1e1e; color: #dcdcdc; }
-        QListWidget { background: #2b2b2b; color: #ddd; }
-        QListWidget::item:selected { background: #444; }
-        QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox {
-            background: #2b2b2b; color: #ddd; border: 1px solid #555;
-        }
-        QSlider::groove:horizontal { background: #444; height: 6px; }
-        QSlider::handle:horizontal {
-            background: #dcdcdc; border: 1px solid #555; width: 10px; margin: -4px 0;
-        }
-        QPushButton { background: #3c3c3c; color: #ddd; border: 1px solid #555; }
-        """
-    )
+
 
 
 def fit_to_screen(window: QWidget, scale: float = 0.8) -> None:
