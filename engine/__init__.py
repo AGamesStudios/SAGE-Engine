@@ -107,6 +107,10 @@ _lazy = {
     'save_sageaudio': ('engine.formats', 'save_sageaudio'),
     'load_sagemesh': ('engine.formats', 'load_sagemesh'),
     'save_sagemesh': ('engine.formats', 'save_sagemesh'),
+    'Animation': ('engine.animation', 'Animation'),
+    'Frame': ('engine.animation', 'Frame'),
+    'load_sageanimation': ('engine.formats', 'load_sageanimation'),
+    'save_sageanimation': ('engine.formats', 'save_sageanimation'),
 }
 
 __all__ = sorted(
@@ -212,6 +216,8 @@ if TYPE_CHECKING:  # pragma: no cover - hints for static analyzers
         save_sageaudio,  # noqa: F401
         load_sagemesh,  # noqa: F401
         save_sagemesh,  # noqa: F401
+        load_sageanimation,  # noqa: F401
+        save_sageanimation,  # noqa: F401
     )
     from . import math2d  # noqa: F401
     paint: _ModuleType

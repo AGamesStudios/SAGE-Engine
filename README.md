@@ -2,7 +2,7 @@
 
 **SAGE Engine** provides a lightweight runtime and optional Qt based editor. Scenes are stored in the `.sagescene` format and full projects in `.sageproject` files.
 The engine is developed and maintained by **Amckinator Games Studios (AGStudios)**.
-Custom resources use compact `.sageaudio` and `.sagemesh` descriptors for sound and mesh data.
+Custom resources use compact `.sageaudio`, `.sagemesh` and `.sageanimation` descriptors for sound, mesh and animation data.
 
 Documentation lives under `docs/`. Start with [docs/en/index.md](docs/en/index.md) for an overview, see [plugins](docs/en/plugins.md) for extension points and [optimisation tips](docs/en/optimisation.md) for performance advice.
 
@@ -17,7 +17,7 @@ Optional backends, the editor and audio support can be installed via extras, e.g
 pip install .[opengl,sdl,audio,editor]
 ```
 
-Open `examples/blank.sageproject` with the editor or runtime to see the basic structure. The sample scene now contains two sprites and a camera. Additional resources in `examples/Resources/` demonstrate `.sageaudio` and `.sagemesh` files. Example scenes under `examples/Scenes/` showcase animation, audio playback and event logic for reference.
+Open `examples/blank.sageproject` with the editor or runtime to see the basic structure. The sample scene now contains two sprites and a camera. Additional resources in `examples/Resources/` demonstrate `.sageaudio`, `.sagemesh` and `.sageanimation` files. Example scenes under `examples/Scenes/` showcase animation, audio playback and event logic for reference.
 
 ## Running
 Use `python -m engine path/to/project.sageproject` to launch a game or `python main.py` for the editor. The OpenGL backend is used by default, but you can run with SDL or the headless Null renderer:

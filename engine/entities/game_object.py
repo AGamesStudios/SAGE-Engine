@@ -12,6 +12,7 @@ from ..core.math2d import (
 from PIL import Image
 from engine.renderers import Shader
 from engine.mesh_utils import Mesh
+from ..animation import Animation
 from ..core.objects import register_object
 from .object import Object, Transform2D
 from ..logic import EventSystem, event_from_dict
@@ -66,6 +67,7 @@ def set_image_cache_limit(limit: int) -> None:
         ('effects', 'effects'),
         ('shader', 'shader'),
         ('shader_uniforms', 'shader_uniforms'),
+        ('animation', 'animation'),
     ],
 )
 @dataclass(slots=True)
@@ -91,6 +93,7 @@ class GameObject(Object):
     effects: list = field(default_factory=list)
     shader: dict | None = None
     shader_uniforms: dict = field(default_factory=dict)
+    animation: "Animation | None" = None
     event_system: EventSystem | None = field(init=False, default=None)
     rotation: tuple[float, float, float, float] = field(init=False)
     image: Image.Image | None = field(init=False, default=None)
@@ -187,6 +190,16 @@ class GameObject(Object):
         Object.__post_init__(self)
         self.angle = normalize_angle(self.angle)
         self.rotation = _angle_to_quat(self.angle)
+        if isinstance(self.animation, str):
+            from ..formats import load_sageanimation
+
+            try:
+                self.animation = load_sageanimation(self.animation)
+            except Exception:
+                logger.exception("Failed to load animation %s", self.animation)
+                self.animation = None
+        if self.animation and not self.image_path:
+            self.image_path = self.animation.image
         self._load_image()
         if not self.image_path and self.shape is None:
             self.shape = "square"
@@ -201,7 +214,15 @@ class GameObject(Object):
 
 
     def update(self, dt: float):
-        pass
+        if self.animation is not None:
+            image = self.animation.update(dt)
+            if image and image != self.image_path:
+                self.image_path = image
+                try:
+                    self._load_image()
+                except Exception:
+                    logger.exception("Failed to load animation frame %s", image)
+        Object.update(self, dt)
 
     def get_shader(self) -> "Shader | None":
         """Return the compiled :class:`Shader` for this object."""

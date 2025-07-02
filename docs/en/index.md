@@ -6,6 +6,6 @@ Select a topic from the list to learn about the engine and editor features.
 
 Example scenes under `examples/Scenes/` include:
 - `Scene1.sagescene` – basic sprites
-- `Animation.sagescene` – moving objects
+- `Animation.sagescene` – moving objects with sprite animations
 - `Audio.sagescene` – sound playback
 - `Logic.sagescene` – event-driven variables
