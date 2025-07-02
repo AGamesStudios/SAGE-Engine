@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from PyQt6.QtWidgets import QWidget, QVBoxLayout
-from PyQt6.QtCore import QTimer, Qt, QPointF
+from PyQt6.QtCore import QTimer, Qt, QPointF, pyqtSignal
 
 from engine import units
 from engine.entities.game_object import GameObject
@@ -13,6 +13,8 @@ from engine.utils.log import logger
 
 class Viewport(QWidget):
     """Simple viewport widget using ``OpenGLRenderer``."""
+
+    objectSelected = pyqtSignal(object)
 
     def __init__(self, scene: Scene, parent: QWidget | None = None):
         super().__init__(parent)
@@ -75,6 +77,12 @@ class Viewport(QWidget):
             except Exception:
                 logger.exception("Viewport draw failed")
 
+    def select_object(self, obj: GameObject | None) -> None:
+        """Highlight *obj* and emit :attr:`objectSelected`."""
+        self.selected_obj = obj
+        if obj is not None:
+            self.objectSelected.emit(obj)
+
     # -------------------------
     def resizeEvent(self, event) -> None:  # type: ignore[override]
         super().resizeEvent(event)
@@ -108,7 +116,7 @@ class Viewport(QWidget):
     def mouseReleaseEvent(self, event) -> None:  # type: ignore[override]
         if event.button() == Qt.MouseButton.LeftButton:
             if not self._moved:
-                self.selected_obj = self._pick_object(event.position())
+                self.select_object(self._pick_object(event.position()))
             self._dragging = False
         super().mouseReleaseEvent(event)
 
