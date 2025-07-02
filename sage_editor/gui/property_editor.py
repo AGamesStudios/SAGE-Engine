@@ -12,6 +12,7 @@ from PyQt6.QtWidgets import (
     QComboBox,
     QPushButton,
     QLabel,
+    QFrame,
 )
 from PyQt6.QtCore import pyqtSignal, Qt
 
@@ -36,11 +37,14 @@ class PropertyEditor(QWidget):
         self.id_edit = QLineEdit()
         self.id_edit.setReadOnly(True)
         name_layout = QHBoxLayout()
+        name_layout.addWidget(QLabel("Name:"))
         name_layout.addWidget(self.name_edit)
+        name_layout.addSpacing(8)
+        name_layout.addWidget(QLabel("ID:"))
         name_layout.addWidget(self.id_edit)
         self.role_combo = QComboBox()
         self.role_combo.addItems(["", "sprite", "camera"])
-        obj_form.addRow("Name/ID", name_layout)
+        obj_form.addRow(name_layout)
         obj_form.addRow("Role", self.role_combo)
 
         # Transform
@@ -51,7 +55,10 @@ class PropertyEditor(QWidget):
         self.pos_y = QDoubleSpinBox()
         self.pos_y.setRange(-1e6, 1e6)
         pos_layout = QHBoxLayout()
+        pos_layout.addWidget(QLabel("X:"))
         pos_layout.addWidget(self.pos_x)
+        pos_layout.addSpacing(8)
+        pos_layout.addWidget(QLabel("Y:"))
         pos_layout.addWidget(self.pos_y)
         self.z_spin = QSpinBox()
         self.z_spin.setRange(-10000, 10000)
@@ -66,18 +73,24 @@ class PropertyEditor(QWidget):
         self.pivot_y = QDoubleSpinBox()
         self.pivot_y.setRange(-1000.0, 1000.0)
         pivot_layout = QHBoxLayout()
+        pivot_layout.addWidget(QLabel("X:"))
         pivot_layout.addWidget(self.pivot_x)
+        pivot_layout.addSpacing(8)
+        pivot_layout.addWidget(QLabel("Y:"))
         pivot_layout.addWidget(self.pivot_y)
         self.quat_edit = QLineEdit()
         self.quat_edit.setReadOnly(True)
         self.scale_lock = QPushButton("⤒")
         self.scale_lock.setCheckable(True)
         scale_layout = QHBoxLayout()
+        scale_layout.addWidget(QLabel("X:"))
         scale_layout.addWidget(self.scale_x)
+        scale_layout.addSpacing(8)
+        scale_layout.addWidget(QLabel("Y:"))
         scale_layout.addWidget(self.scale_y)
         scale_layout.addWidget(self.scale_lock)
         tr_form.addRow("Position", pos_layout)
-        tr_form.addRow("Z", self.z_spin)
+        tr_form.addRow("Z Order", self.z_spin)
         tr_form.addRow("Rotation", self.rot_slider)
         tr_form.addRow("Pivot", pivot_layout)
         tr_form.addRow("Quaternion", self.quat_edit)
@@ -109,7 +122,15 @@ class PropertyEditor(QWidget):
         self.role_combo.currentTextChanged.connect(self._apply)
 
         vbox.addRow(self.obj_group)
+        line1 = QFrame()
+        line1.setFrameShape(QFrame.Shape.HLine)
+        line1.setFrameShadow(QFrame.Shadow.Sunken)
+        vbox.addRow(line1)
         vbox.addRow(self.tr_group)
+        line2 = QFrame()
+        line2.setFrameShape(QFrame.Shape.HLine)
+        line2.setFrameShadow(QFrame.Shadow.Sunken)
+        vbox.addRow(line2)
         vbox.addRow(self.mat_group)
         self._creating = False
 

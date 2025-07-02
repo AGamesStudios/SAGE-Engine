@@ -42,6 +42,21 @@ class QFormLayout(Widget):
 class QHBoxLayout(Widget):
     def addWidget(self, w):
         pass
+    def addSpacing(self, s):
+        pass
+
+class QFrame(Widget):
+    class Shape:
+        HLine = 0
+
+    class Shadow:
+        Sunken = 0
+
+    def setFrameShape(self, s):
+        self.shape = s
+
+    def setFrameShadow(self, s):
+        self.shadow = s
 
 class QLineEdit(Widget):
     def __init__(self):
@@ -121,6 +136,7 @@ qtwidgets.QSlider = QSlider
 qtwidgets.QComboBox = QComboBox
 qtwidgets.QPushButton = QPushButton
 qtwidgets.QLabel = QLabel
+qtwidgets.QFrame = QFrame
 qtcore = types.ModuleType('PyQt6.QtCore')
 qtcore.pyqtSignal = pyqtSignal
 qtcore.Qt = Qt
