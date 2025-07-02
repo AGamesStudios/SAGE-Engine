@@ -65,19 +65,31 @@ def object_from_dict(data: dict) -> Any | None:
     if cls is None:
         logger.warning('Unknown object type %s', typ)
         return None
-    params = {}
+    params: dict[str, Any] = {}
+    extras: dict[str, Any] = {}
+    init_params = cls.__init__.__code__.co_varnames[1:cls.__init__.__code__.co_argcount]
     for attr, key in OBJECT_META.get(typ, []):
         k = key or attr
-        if k in data:
-            value = data[k]
-            if attr == "color" and isinstance(value, list):
-                value = tuple(value)
+        if k not in data:
+            continue
+        value = data[k]
+        if attr == "color" and isinstance(value, list):
+            value = tuple(value)
+        if attr in init_params:
             params[attr] = value
+        else:
+            extras[attr] = value
     try:
-        return cls(**params)
+        obj = cls(**params)
     except Exception:
         logger.exception('Failed to construct object %s', typ)
         raise
+    for attr, value in extras.items():
+        try:
+            setattr(obj, attr, value)
+        except Exception:
+            logger.exception('Failed to set attribute %s on %s', attr, typ)
+    return obj
 
 
 def object_to_dict(obj: Any) -> dict | None:

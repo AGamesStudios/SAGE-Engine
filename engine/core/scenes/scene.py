@@ -82,7 +82,8 @@ class Scene:
         self.objects.append(obj)
         key = getattr(obj, 'id', id(obj))
         self.object_lookup[key] = obj
-        obj.scene = self
+        if hasattr(obj, "scene"):
+            obj.scene = self
         self.update_object_group(obj, None)
         logger.debug('Added object %s', obj.name)
         if isinstance(obj, Camera):
@@ -101,7 +102,8 @@ class Scene:
                 self.groups[grp].remove(obj)
                 if not self.groups[grp]:
                     del self.groups[grp]
-            obj.scene = None
+            if hasattr(obj, "scene"):
+                obj.scene = None
             logger.debug('Removed object %s', obj.name)
             if obj is self.camera:
                 self.camera = None

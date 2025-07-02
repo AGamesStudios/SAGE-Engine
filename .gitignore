@@ -7,6 +7,7 @@ __pycache__/
 *.log
 .log/
 logs/
+engine/logs/
 .pytest_cache/
 .idea/
 *.png

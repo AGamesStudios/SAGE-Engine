@@ -32,6 +32,7 @@ from . import setcamerazoom  # noqa: F401
 from . import setcamerasize  # noqa: F401
 from . import setactivecamera  # noqa: F401
 from . import setkeepaspect  # noqa: F401
+from . import playsound  # noqa: F401
 
 __all__ = [
     'Action', 'register_action', 'resolve_value', 'logger',
@@ -40,6 +41,7 @@ __all__ = [
     'SetPosition', 'SetRotation', 'SetScale', 'Flip', 'SetAlpha', 'SetColor',
     'SetSprite', 'SetZOrder', 'RenameObject', 'DeleteObject', 'CreateObject',
     'SetCameraZoom', 'SetCameraSize', 'SetActiveCamera', 'SetKeepAspect',
+    'PlaySound',
 ]
 
 # expose action classes at the package level
@@ -66,3 +68,4 @@ from .setcamerazoom import SetCameraZoom
 from .setcamerasize import SetCameraSize
 from .setactivecamera import SetActiveCamera
 from .setkeepaspect import SetKeepAspect
+from .playsound import PlaySound

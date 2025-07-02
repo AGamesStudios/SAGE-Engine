@@ -1,0 +1,30 @@
+{
+  "objects": [
+    {
+      "type": "camera",
+      "x": 0,
+      "y": 0,
+      "width": 640,
+      "height": 480,
+      "active": true,
+      "name": "Camera"
+    }
+  ],
+  "events": [
+    {
+      "name": "InitScore",
+      "conditions": [{"type": "OnStart"}],
+      "actions": [{"type": "SetVariable", "name": "score", "value": 0}]
+    },
+    {
+      "name": "IncreaseScore",
+      "conditions": [{"type": "KeyPressed", "key": 32}],
+      "actions": [{"type": "ModifyVariable", "name": "score", "op": "+", "value": 1}]
+    },
+    {
+      "name": "WinCheck",
+      "conditions": [{"type": "VariableCompare", "name": "score", "op": ">=", "value": 3}],
+      "actions": [{"type": "Print", "text": "Score reached!"}]
+    }
+  ]
+}
