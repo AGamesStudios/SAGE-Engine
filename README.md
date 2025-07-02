@@ -11,10 +11,10 @@ ruff check .
 PYTHONPATH=. pytest -q
 ```
 
-Open `examples/blank.sageproject` with the editor or runtime to see the basic structure.
+Open `examples/blank.sageproject` with the editor or runtime to see the basic structure. The example scene includes a camera and simple sprite object.
 
 ## Running
-Use `python -m engine path/to/project.sageproject` to launch a game or `python main.py` for the editor. Both use the OpenGL renderer by default but fall back to the NullRenderer in headless setups.
+Use `python -m engine path/to/project.sageproject` to launch a game or `python main.py` for the editor. Both use the OpenGL renderer by default but fall back to the NullRenderer in headless setups. A lightweight SDL renderer is also available when PySDL2 is installed.
 Input is handled by the SDL backend unless `qt` is selected to integrate with a Qt event loop.
 
 See the documentation for more details on object types, input backends and renderer options.

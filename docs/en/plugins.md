@@ -61,3 +61,4 @@ class FancyRenderer(Renderer):
 
 register_renderer('fancy', FancyRenderer)
 ```
+The engine provides `opengl`, `null` and `sdl` renderers out of the box. Additional renderers can be installed via plugins.

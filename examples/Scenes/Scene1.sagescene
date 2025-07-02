@@ -1,1 +1,30 @@
-{}
+{
+  "objects": [
+    {
+      "type": "camera",
+      "x": 0,
+      "y": 0,
+      "width": 640,
+      "height": 480,
+      "active": true,
+      "name": "Camera"
+    },
+    {
+      "type": "sprite",
+      "shape": "square",
+      "x": 50,
+      "y": 50,
+      "scale_x": 1.0,
+      "scale_y": 1.0,
+      "name": "Block",
+      "color": [0, 128, 255, 255]
+    }
+  ],
+  "events": [
+    {
+      "name": "Start",
+      "conditions": [{"type": "OnStart"}],
+      "actions": [{"type": "Print", "text": "Welcome to SAGE!"}]
+    }
+  ]
+}

@@ -2,6 +2,7 @@
 # Provides Clickteam-style logic for both 2D and 3D games
 
 from ..utils.log import logger
+from concurrent.futures import ThreadPoolExecutor
 from importlib import metadata
 from .. import lang as engine_lang
 
@@ -410,6 +411,13 @@ class EventSystem:
         """Update only events in ``name``."""
         for evt in list(self.groups.get(name, [])):
             evt.update(engine, scene, dt)
+
+    def update_async(self, engine, scene, dt: float, *, workers: int = 4) -> None:
+        """Update events concurrently using a thread pool."""
+        if self.paused or not self.events:
+            return
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            pool.map(lambda e: e.update(engine, scene, dt), list(self.events))
 
     def update(self, engine, scene, dt):
         if self.paused or not self.events:

@@ -66,6 +66,13 @@ def _ensure_default() -> None:
             register_renderer("opengl", NullRenderer)
         else:
             register_renderer("opengl", OpenGLRenderer)
+    if "sdl" not in RENDERER_REGISTRY:
+        try:
+            from .sdl_renderer import SDLRenderer
+        except Exception as exc:  # pragma: no cover - optional dependency
+            logger.warning("SDL backend unavailable: %s", exc)
+        else:
+            register_renderer("sdl", SDLRenderer)
     if "null" not in RENDERER_REGISTRY:
         from .null_renderer import NullRenderer
         register_renderer("null", NullRenderer)
@@ -132,6 +139,7 @@ class Renderer(ABC):
 __all__ = [
     "Renderer",
     "OpenGLRenderer",
+    "SDLRenderer",
     "NullRenderer",
     "register_renderer",
     "get_renderer",
@@ -145,6 +153,12 @@ def __getattr__(name):
     if name == "OpenGLRenderer":
         _ensure_default()
         return RENDERER_REGISTRY["opengl"]
+    if name == "SDLRenderer":
+        _ensure_default()
+        if "sdl" not in RENDERER_REGISTRY:
+            from .sdl_renderer import SDLRenderer
+            register_renderer("sdl", SDLRenderer)
+        return RENDERER_REGISTRY["sdl"]
     if name == "NullRenderer":
         _ensure_default()
         if "null" not in RENDERER_REGISTRY:
