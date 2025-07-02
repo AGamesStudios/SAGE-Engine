@@ -12,5 +12,19 @@ To keep large projects running smoothly consider the following options:
   ``image_cache_limit`` via `EngineSettings` to control how many sprites are
   kept in memory.
 - **Asynchronous events** – Large scenes can update events concurrently using
-  `EventSystem.update_async(engine, scene, dt)` to reduce frame time.
+  `EventSystem.update_async(engine, scene, dt)` to reduce frame time. Enable
+  asynchronous updates globally with:
+
+  ```python
+  eng = Engine(scene=my_scene, async_events=True, event_workers=8)
+  eng.run()
+  ```
+
+  You can also profile groups of events by priority to identify bottlenecks:
+
+  ```python
+  for name in eng.events.get_group_names():
+      eng.events.update_group(name, eng, eng.scene, 0)
+      # measure time per group here
+  ```
 

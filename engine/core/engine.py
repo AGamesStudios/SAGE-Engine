@@ -40,6 +40,8 @@ class Engine:
                  background: tuple[int, int, int] = (0, 0, 0),
                  input_backend: str | type | InputBackend = "sdl",
                  max_delta: float = 0.1,
+                 async_events: bool = False,
+                 event_workers: int = 4,
                  *, settings: "EngineSettings | None" = None,
                  metadata: dict | None = None):
         if settings is not None:
@@ -55,11 +57,15 @@ class Engine:
             background = settings.background
             input_backend = settings.input_backend
             max_delta = settings.max_delta
+            async_events = settings.async_events
+            event_workers = settings.event_workers
             from ..entities import game_object
             game_object.set_image_cache_limit(settings.image_cache_limit)
         self.fps = fps
         self._frame_interval = 1.0 / fps if fps else 0
         self.max_delta = max_delta
+        self.async_events = async_events
+        self.event_workers = event_workers
         self.metadata = {"version": ENGINE_VERSION}
         if metadata:
             self.metadata.update(metadata)
@@ -170,6 +176,8 @@ class Engine:
             background=getattr(self.renderer, "background", (0, 0, 0)),
             input_backend=type(self.input),
             max_delta=self.max_delta,
+            async_events=self.async_events,
+            event_workers=self.event_workers,
             image_cache_limit=getattr(game_object, "_MAX_CACHE", 32),
         )
 
@@ -225,7 +233,12 @@ class Engine:
     def update(self, dt: float) -> None:
         """Process one frame of logic and rendering."""
         if self.logic_active:
-            self.events.update(self, self.scene, dt)
+            if self.async_events:
+                self.events.update_async(
+                    self, self.scene, dt, workers=self.event_workers
+                )
+            else:
+                self.events.update(self, self.scene, dt)
             self.scene.update_events(self, dt)
         self.scene.update(dt)
         for ext in list(self.extensions):

@@ -12,15 +12,24 @@ pip install -r requirements.txt
 ruff check .
 PYTHONPATH=. pytest -q
 ```
-Optional backends and audio support can be installed via extras, e.g.:
+Optional backends, the editor and audio support can be installed via extras, e.g.:
 ```bash
-pip install .[opengl,sdl,audio]
+pip install .[opengl,sdl,audio,editor]
 ```
 
 Open `examples/blank.sageproject` with the editor or runtime to see the basic structure. The sample scene now contains two sprites and a camera. Additional resources in `examples/Resources/` demonstrate `.sageaudio` and `.sagemesh` files.
 
 ## Running
-Use `python -m engine path/to/project.sageproject` to launch a game or `python main.py` for the editor. Both use the OpenGL renderer by default but fall back to the NullRenderer in headless setups. A lightweight SDL renderer is also available when PySDL2 is installed.
+Use `python -m engine path/to/project.sageproject` to launch a game or `python main.py` for the editor. The OpenGL backend is used by default, but you can run with SDL or the headless Null renderer:
+```bash
+python -m engine --renderer sdl examples/blank.sageproject
+python -m engine --renderer null examples/blank.sageproject
+```
+The editor is packaged separately and installed with the `editor` extra.
+For heavy scenes you can enable asynchronous event updates:
+```python
+Engine(scene=my_scene, async_events=True).run()
+```
 Input is handled by the SDL backend unless `qt` is selected to integrate with a Qt event loop.
 
 Game objects expose a `visible` flag and `alpha` value for transparency. The
