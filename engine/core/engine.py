@@ -230,8 +230,18 @@ class Engine:
         init_logger()
         if install_hook:
             sys.excepthook = _exception_handler
-        from PyQt6.QtWidgets import QApplication
-        from ..game_window import GameWindow
+        try:
+            from PyQt6.QtWidgets import QApplication
+            from ..game_window import GameWindow
+        except Exception as exc:  # pragma: no cover - platform dependent
+            logger.warning("PyQt6 unavailable: %s", exc)
+            self.logic_active = True
+            try:
+                while not self.renderer.should_close():
+                    self.step()
+            except KeyboardInterrupt:
+                pass
+            return None
 
         _log(f"Starting engine version {ENGINE_VERSION}")
         app = QApplication.instance()

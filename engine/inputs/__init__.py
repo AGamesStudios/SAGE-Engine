@@ -38,6 +38,23 @@ INPUT_REGISTRY: Dict[str, Type] = {}
 _PLUGINS_LOADED = False
 
 
+def _ensure_default() -> None:
+    """Register built-in backends, falling back to NullInput."""
+    if "null" not in INPUT_REGISTRY:
+        from .null_input import NullInput
+        register_input("null", NullInput)
+    if "sdl" not in INPUT_REGISTRY:
+        try:
+            from ..core.input_sdl import SDLInput
+        except Exception as exc:  # pragma: no cover - optional dependency
+            logger.warning("SDL backend unavailable: %s", exc)
+            from .null_input import NullInput
+            register_input("sdl", NullInput)
+        else:
+            register_input("sdl", SDLInput)
+    _load_entry_points()
+
+
 def register_input(name: str, cls: Type) -> None:
     """Register an input backend class under ``name``."""
     INPUT_REGISTRY[name] = cls
@@ -64,7 +81,7 @@ def _load_entry_points() -> None:
 
 def get_input(name: str) -> Type | None:
     """Return the input backend class associated with ``name``."""
-    _load_entry_points()
+    _ensure_default()
     return INPUT_REGISTRY.get(name)
 
 

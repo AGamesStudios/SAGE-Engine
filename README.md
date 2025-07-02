@@ -7,7 +7,8 @@ small so it runs well even on older computers. An additional **SAGE Paint** tool
 provides an experimental sprite editor for drawing 2D graphics. A lightweight
 `sage_runtime` package exposes the core engine for standalone games while common
 utilities live in `sage_sdk`. See the files under `docs/` for detailed
-instructions and tutorials.
+instructions and tutorials. The new [plugins guide](docs/en/plugins.md) explains
+how to register custom objects, input backends and renderers.
 
 window shows an "EXPERIMENTAL" banner to highlight this status.  SAGE Paint
 supports zooming, right-click panning and an eraser tool so sprites can be
@@ -382,7 +383,8 @@ are cached after the first load and only the most recent 32 images are kept in
 memory.  A helper `engine.clear_image_cache()` empties this LRU cache if
 memory becomes tight. The `Engine` class accepts an `fps` argument (default 30)
 to control the frame rate. `Engine.run()` opens a Qt window and manages
-the loop itself, keeping CPU usage low. Object
+the loop itself, keeping CPU usage low. If PyQt6 is not available the method
+falls back to a simple sleep loop so headless tests can still run. Object
 lists are sorted only when modified and heavy math dependencies were removed.
 Runtime errors no longer close the game window automatically; they are logged so
 the scene remains visible for inspection.

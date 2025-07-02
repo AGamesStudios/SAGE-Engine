@@ -50,8 +50,14 @@ def _load_entry_points() -> None:
 
 def _ensure_default() -> None:
     if "opengl" not in RENDERER_REGISTRY:
-        from .opengl_renderer import OpenGLRenderer
-        register_renderer("opengl", OpenGLRenderer)
+        try:
+            from .opengl_renderer import OpenGLRenderer
+        except Exception as exc:  # pragma: no cover - optional dependency
+            logger.warning("OpenGL backend unavailable: %s", exc)
+            from .null_renderer import NullRenderer
+            register_renderer("opengl", NullRenderer)
+        else:
+            register_renderer("opengl", OpenGLRenderer)
     if "null" not in RENDERER_REGISTRY:
         from .null_renderer import NullRenderer
         register_renderer("null", NullRenderer)

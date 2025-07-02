@@ -1,4 +1,9 @@
-import sdl2
+try:
+    import sdl2
+except Exception as exc:  # pragma: no cover - optional dependency
+    raise ImportError(
+        "SDLInput requires PySDL2; install it with 'pip install PySDL2'"
+    ) from exc
 from ..inputs import InputBackend, register_input
 
 class SDLInput(InputBackend):

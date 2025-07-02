@@ -11,6 +11,7 @@ from PIL import Image
 from engine.renderers import Shader
 from engine.mesh_utils import Mesh
 from ..core.objects import register_object
+from .object import Object, Transform2D, Material, next_id
 from ..logic import EventSystem, event_from_dict
 from .. import units
 from ..core.effects import get_effect
@@ -55,29 +56,23 @@ def clear_image_cache():
     ],
 )
 @dataclass(slots=True)
-class GameObject:
+class GameObject(Object):
     """Sprite-based object used in scenes."""
+    role: str = "sprite"
     image_path: str = ""
     shape: str | None = None
     mesh: "Mesh | None" = None
-    x: float = 0
-    y: float = 0
-    z: float = 0
-    name: str | None = None
-    scale_x: float = 1.0
-    scale_y: float = 1.0
-    angle: float = 0.0
-    pivot_x: float = 0.5
-    pivot_y: float = 0.5
-    flip_x: bool = False
-    flip_y: bool = False
+    transform: Transform2D = field(
+        default_factory=lambda: Transform2D(pivot_x=0.5, pivot_y=0.5)
+    )
+    z: float = 0.0
     smooth: bool = True
     color: tuple[int, int, int, int] | None = None
     alpha: float = 1.0
     metadata: dict = field(default_factory=dict)
     events: list = field(default_factory=list)
     settings: dict = field(default_factory=dict)
-    variables: dict = field(default_factory=dict)  # name -> value
+    variables: dict = field(default_factory=dict)
     public_vars: set[str] = field(default_factory=set)
     effects: list = field(default_factory=list)
     shader: dict | None = None
@@ -93,18 +88,79 @@ class GameObject:
     _cached_matrix: list[float] | None = field(init=False, default=None)
     _compiled_shader: "Shader | None" = field(init=False, default=None)
 
-    _DIRTY_FIELDS = {
-        'x', 'y', 'z', 'scale_x', 'scale_y', 'angle', 'pivot_x', 'pivot_y',
-        'flip_x', 'flip_y'
-    }
+    _DIRTY_FIELDS = {'z'}
 
     def __setattr__(self, name, value):
         if name in GameObject._DIRTY_FIELDS:
             object.__setattr__(self, '_dirty', True)
-        if name == 'angle':
-            value = normalize_angle(value)
-            object.__setattr__(self, 'rotation', _angle_to_quat(value))
+        if name == 'transform':
+            object.__setattr__(self, '_dirty', True)
         object.__setattr__(self, name, value)
+
+    # ----- transform proxy properties -----------------------------------
+    @property
+    def x(self) -> float:
+        return self.transform.x
+
+    @x.setter
+    def x(self, value: float) -> None:
+        self.transform.x = value
+        self._dirty = True
+
+    @property
+    def y(self) -> float:
+        return self.transform.y
+
+    @y.setter
+    def y(self, value: float) -> None:
+        self.transform.y = value
+        self._dirty = True
+
+    @property
+    def scale_x(self) -> float:
+        return self.transform.scale_x
+
+    @scale_x.setter
+    def scale_x(self, value: float) -> None:
+        self.transform.scale_x = value
+        self._dirty = True
+
+    @property
+    def scale_y(self) -> float:
+        return self.transform.scale_y
+
+    @scale_y.setter
+    def scale_y(self, value: float) -> None:
+        self.transform.scale_y = value
+        self._dirty = True
+
+    @property
+    def angle(self) -> float:
+        return self.transform.angle
+
+    @angle.setter
+    def angle(self, value: float) -> None:
+        self.transform.angle = value
+        self.rotation = _angle_to_quat(self.transform.angle)
+        self._dirty = True
+
+    @property
+    def pivot_x(self) -> float:
+        return self.transform.pivot_x
+
+    @pivot_x.setter
+    def pivot_x(self, value: float) -> None:
+        self.transform.pivot_x = value
+        self._dirty = True
+
+    @property
+    def pivot_y(self) -> float:
+        return self.transform.pivot_y
+
+    @pivot_y.setter
+    def pivot_y(self, value: float) -> None:
+        self.transform.pivot_y = value
+        self._dirty = True
 
     @property
     def scale(self) -> float:
@@ -115,10 +171,17 @@ class GameObject:
         self.scale_x = self.scale_y = value
 
     def __post_init__(self):
+        self.id = next_id()
+        if self.name is None:
+            self.name = self.role
+        if self.role == "camera":
+            self.metadata.setdefault("width", 640)
+            self.metadata.setdefault("height", 480)
+            self.metadata.setdefault("active", False)
+        if self.material is None:
+            self.material = Material()
         self.angle = normalize_angle(self.angle)
         self.rotation = _angle_to_quat(self.angle)
-        if self.name is None:
-            self.name = "New Object"
         self._load_image()
         if not self.image_path and self.shape is None:
             self.shape = "square"

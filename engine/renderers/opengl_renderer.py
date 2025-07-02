@@ -7,19 +7,24 @@ import ctypes
 
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
 from PyQt6.QtGui import QSurfaceFormat
-from OpenGL.GL import (
-    glEnable, glBlendFunc, glClearColor, glClear, glPushMatrix, glPopMatrix,
-    glTranslatef, glRotatef, glScalef, glBegin, glEnd, glVertex2f, glColor4f,
-    glTexCoord2f, glBindTexture, glTexParameteri, glTexImage2D, glGenTextures,
-    glLineWidth, glBufferSubData,
-    glGetUniformLocation, glUniform4f, glUseProgram, glBindBuffer,
-    glBindVertexArray, glDrawArrays,
-    GL_BLEND, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_COLOR_BUFFER_BIT,
-    GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_TEXTURE_MAG_FILTER, GL_LINEAR, GL_NEAREST,
-    GL_QUADS, GL_LINES, GL_LINE_LOOP, GL_TRIANGLES, GL_RGBA, GL_UNSIGNED_BYTE,
-    GL_MULTISAMPLE, GL_LINE_SMOOTH, GL_ARRAY_BUFFER, GL_STATIC_DRAW,
-    GL_FLOAT, GL_TRIANGLE_FAN
-)
+try:
+    from OpenGL.GL import (
+        glEnable, glBlendFunc, glClearColor, glClear, glPushMatrix, glPopMatrix,
+        glTranslatef, glRotatef, glScalef, glBegin, glEnd, glVertex2f, glColor4f,
+        glTexCoord2f, glBindTexture, glTexParameteri, glTexImage2D, glGenTextures,
+        glLineWidth, glBufferSubData,
+        glGetUniformLocation, glUniform4f, glUseProgram, glBindBuffer,
+        glBindVertexArray, glDrawArrays,
+        GL_BLEND, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_COLOR_BUFFER_BIT,
+        GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_TEXTURE_MAG_FILTER, GL_LINEAR, GL_NEAREST,
+        GL_QUADS, GL_LINES, GL_LINE_LOOP, GL_TRIANGLES, GL_RGBA, GL_UNSIGNED_BYTE,
+        GL_MULTISAMPLE, GL_LINE_SMOOTH, GL_ARRAY_BUFFER, GL_STATIC_DRAW,
+        GL_FLOAT, GL_TRIANGLE_FAN
+    )
+except Exception as exc:  # pragma: no cover - optional dependency
+    raise ImportError(
+        "OpenGLRenderer requires PyOpenGL; install it with 'pip install PyOpenGL'"
+    ) from exc
 from .shader import Shader
 from PIL import Image
 
