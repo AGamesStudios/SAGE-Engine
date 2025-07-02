@@ -39,4 +39,4 @@ sage-runtime = "engine.runtime.__main__:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["engine*"]
+include = ["engine*", "sage_sdk*"]
