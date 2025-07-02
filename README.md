@@ -79,7 +79,7 @@ The editor is fully modular. ``sage_editor.gui`` provides the main window
 and viewport widgets. A vertical splitter places the viewport above a small
 console that displays log output. A second panel on the right lists all
 objects in the current scene with a simple property editor below.
-Startup logic lives in ``sage_editor.app`` which configures a Qt ``Fusion``
+Startup logic lives in ``sage_editor.app`` which applies a dark Qt ``Fusion``
 style for a modern look. Plugins registered via ``sage_editor.plugins`` can
 extend the interface with custom actions without changing the core code.
 Embedding the editor in other tools only requires importing these modules.

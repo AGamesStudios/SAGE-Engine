@@ -11,9 +11,14 @@ import logging
 
 from .gui import EditorWindow, Viewport
 from .app import main
+from .style import apply_dark_fusion
 
 logger = logging.getLogger("sage_editor")
 
 __all__ = [
-    'EditorWindow', 'Viewport', 'main', 'logger'
+    'EditorWindow',
+    'Viewport',
+    'main',
+    'logger',
+    'apply_dark_fusion',
 ]

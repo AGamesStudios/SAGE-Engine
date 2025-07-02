@@ -3,12 +3,13 @@ from __future__ import annotations
 import sys
 import argparse
 
-from PyQt6.QtWidgets import QApplication, QStyleFactory
+from PyQt6.QtWidgets import QApplication
 
 from engine.core.scenes.scene import Scene
 from engine.entities.game_object import GameObject
 
 from .gui import EditorWindow
+from .style import apply_dark_fusion
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -19,7 +20,7 @@ def main(argv: list[str] | None = None) -> int:
     ns, qt_args = parser.parse_known_args(args)
 
     app = QApplication([sys.argv[0], *qt_args])
-    app.setStyle(QStyleFactory.create("Fusion"))
+    apply_dark_fusion(app)
 
     if ns.file:
         from engine.api import load_project, load_scene
