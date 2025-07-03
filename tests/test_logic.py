@@ -44,10 +44,12 @@ spec.loader.exec_module(logic_actions)
 VariableCompare = logic_conditions.VariableCompare
 ObjectVisible = logic_conditions.ObjectVisible
 ObjectVariableCompare = logic_conditions.ObjectVariableCompare
+EvalExpr = logic_conditions.EvalExpr
 SetVariable = logic_actions.SetVariable
 ModifyVariable = logic_actions.ModifyVariable
 SetObjectVariable = logic_actions.SetObjectVariable
 ModifyObjectVariable = logic_actions.ModifyObjectVariable
+CallFunction = logic_actions.CallFunction
 ShowObject = logic_actions.ShowObject
 HideObject = logic_actions.HideObject
 
@@ -116,6 +118,23 @@ def test_object_variable_actions_and_condition():
     ModifyObjectVariable(obj, "hp", '-', 3).execute(engine, None, 0)
     assert obj.get_variable("hp") == 7
     cond = ObjectVariableCompare(obj, "hp", '>=', 5)
+    assert cond.check(engine, None, 0)
+
+
+def test_callfunction_and_evalexpr():
+    es = types.SimpleNamespace(variables={"v": 0})
+    engine = types.SimpleNamespace(events=es)
+
+    called = {}
+
+    def foo(x):
+        called["x"] = x
+
+    CallFunction(foo, [5]).execute(engine, None, 0)
+    assert called["x"] == 5
+
+    SetVariable("v", 5).execute(engine, None, 0)
+    cond = EvalExpr('engine.events.variables["v"] == 5')
     assert cond.check(engine, None, 0)
 
 

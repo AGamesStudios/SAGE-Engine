@@ -96,7 +96,14 @@ _ENGINE_REF_RE = re.compile(r"engine((?:\.\w+)+)(?:\((.*)\))?")
 _VAR_SHORT_RE = re.compile(r"\$(\w+)|\{(\w+)\}")
 
 def parse_value(val):
-    """Return ``val`` or an :class:`EngineRef` if it matches the reference syntax."""
+    """Return ``val`` or an :class:`EngineRef` if it matches the reference syntax.
+
+    Lists and dictionaries are processed recursively so nested references work.
+    """
+    if isinstance(val, list):
+        return [parse_value(v) for v in val]
+    if isinstance(val, dict):
+        return {k: parse_value(v) for k, v in val.items()}
     if isinstance(val, str):
         text = val.strip()
         m = _ENGINE_REF_RE.fullmatch(text)
@@ -124,9 +131,17 @@ def parse_value(val):
 
 
 def resolve_value(val, engine):
-    """Return the runtime value for ``val``."""
+    """Return the runtime value for ``val``.
+
+    Lists and dictionaries are expanded recursively so complex parameters can
+    contain references.
+    """
     if isinstance(val, EngineRef):
         return val.get(engine)
+    if isinstance(val, list):
+        return [resolve_value(v, engine) for v in val]
+    if isinstance(val, dict):
+        return {k: resolve_value(v, engine) for k, v in val.items()}
     return val
 
 
