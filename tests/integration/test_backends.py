@@ -1,7 +1,26 @@
 import os
+import sys
+import types
 import pytest
-from engine.core.engine import Engine
-from engine.core.scene_file import SceneFile
+
+sys.modules.setdefault('PIL', types.ModuleType('PIL'))
+img_mod = types.ModuleType('PIL.Image')
+img_mod.Image = type('Image', (), {})
+sys.modules.setdefault('PIL.Image', img_mod)
+sys.modules.setdefault('OpenGL', types.ModuleType('OpenGL'))
+gl_mod = types.ModuleType('OpenGL.GL')
+gl_mod.GL_VERTEX_SHADER = 0
+gl_mod.GL_FRAGMENT_SHADER = 0
+gl_mod.glUseProgram = lambda *a, **k: None
+gl_mod.glGetUniformLocation = lambda *a, **k: 0
+gl_mod.glUniform1f = gl_mod.glUniform2f = gl_mod.glUniform3f = gl_mod.glUniform4f = lambda *a, **k: None
+sys.modules.setdefault('OpenGL.GL', gl_mod)
+sh_mod = types.ModuleType('OpenGL.GL.shaders')
+sh_mod.compileProgram = lambda *a, **k: 1
+sh_mod.compileShader = lambda *a, **k: 1
+sys.modules.setdefault('OpenGL.GL.shaders', sh_mod)
+from engine.core.engine import Engine  # noqa: E402
+from engine.core.scene_file import SceneFile  # noqa: E402
 
 
 def test_sdl_renderer_run():

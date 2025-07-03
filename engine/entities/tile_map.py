@@ -51,8 +51,9 @@ class TileMap:
 
     def load_map(self, path: str) -> None:
         from ..formats import load_sagemap
+        from ..core.resources import get_resource_path
 
-        info = load_sagemap(path)
+        info = load_sagemap(get_resource_path(path))
         self.tileset = info['tileset']
         self.tile_width = info['tile_width']
         self.tile_height = info['tile_height']

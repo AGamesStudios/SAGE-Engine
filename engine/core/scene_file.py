@@ -23,7 +23,7 @@ class SceneFile:
         if not p.endswith(".sagescene"):
             logger.warning("Loading scene with unusual extension: %s", path)
         data = load_json(p)
-        scene = Scene.from_dict(data)
+        scene = Scene.from_dict(data, base_path=os.path.dirname(p))
         return cls(scene)
 
     def save(self, path: str) -> None:

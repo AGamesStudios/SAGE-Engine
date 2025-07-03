@@ -1,4 +1,5 @@
 import json
+import os
 from ...utils import load_json
 
 
@@ -181,8 +182,12 @@ class Scene:
             obj.draw(surface)
 
     @classmethod
-    def from_dict(cls, data: dict) -> "Scene":
-        """Construct a Scene from a plain dictionary."""
+    def from_dict(cls, data: dict, *, base_path: str | None = None) -> "Scene":
+        """Construct a Scene from a plain dictionary.
+
+        When ``base_path`` is provided, logic files and scripts are resolved
+        relative to this directory.
+        """
         scene = cls(with_defaults=False)
         scene.variables = data.get("variables", {})
         scene.metadata = data.get("metadata", {})
@@ -190,13 +195,19 @@ class Scene:
         for lf in data.get("logic_files", []):
             try:
                 from ...formats import load_sagelogic
-                scene.events.extend(load_sagelogic(lf))
+                path = lf
+                if base_path and not os.path.isabs(path):
+                    path = os.path.join(base_path, path)
+                scene.events.extend(load_sagelogic(path))
             except Exception:
                 logger.exception("Failed to load logic file %s", lf)
         for mod_path in data.get("logic_scripts", []):
             try:
                 import importlib.util
-                spec = importlib.util.spec_from_file_location("_scene_logic", mod_path)
+                path = mod_path
+                if base_path and not os.path.isabs(path):
+                    path = os.path.join(base_path, path)
+                spec = importlib.util.spec_from_file_location("_scene_logic", path)
                 if spec and spec.loader:
                     mod = importlib.util.module_from_spec(spec)
                     spec.loader.exec_module(mod)
@@ -245,8 +256,10 @@ class Scene:
 
     @classmethod
     def load(cls, path: str) -> "Scene":
+        from ..resources import set_resource_root
+        set_resource_root(os.path.dirname(path))
         data = load_json(path)
-        return cls.from_dict(data)
+        return cls.from_dict(data, base_path=os.path.dirname(path))
 
     def to_dict(self) -> dict:
         """Return a dictionary representation of the scene."""

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from .core.scenes.scene import Scene
 from .core.engine import Engine
 
@@ -22,7 +23,7 @@ def load_game(engine: Engine, path: str) -> None:
     with open(path, "r", encoding="utf-8") as f:
         data = json.load(f)
     scene_data = data.get("scene", {})
-    engine.scene = Scene.from_dict(scene_data)
+    engine.scene = Scene.from_dict(scene_data, base_path=os.path.dirname(path))
     engine.scene_manager.add_scene("main", engine.scene)
     engine.scene_manager.set_active("main")
     engine.events = engine.scene.build_event_system(aggregate=False)

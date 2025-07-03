@@ -239,6 +239,11 @@ class Engine:
         """Stop all extensions and clear cached data."""
         for ext in list(self.extensions):
             self.remove_extension(ext)
+        if hasattr(self, "events") and hasattr(self.events, "shutdown"):
+            try:
+                self.events.shutdown()
+            except Exception:
+                logger.exception("Event system shutdown failed")
         for scene in getattr(self.scene_manager, "scenes", {}).values():
             for obj in getattr(scene, "objects", []):
                 if hasattr(obj, "clear_cache"):
@@ -364,13 +369,17 @@ def main(argv=None):
         if path.endswith(".sageproject"):
             proj = Project.load(path)
             if proj.scene:
-                scene = Scene.from_dict(proj.scene)
+                scene = Scene.from_dict(
+                    proj.scene, base_path=os.path.dirname(path)
+                )
             width = args.width or proj.width
             height = args.height or proj.height
             title = args.title or proj.title
             from .resources import set_resource_root
             set_resource_root(os.path.join(os.path.dirname(path), proj.resources))
         else:
+            from .resources import set_resource_root
+            set_resource_root(os.path.dirname(path))
             scene = Scene.load(path)
     cls = get_renderer(renderer_name)
     if renderer_name == "opengl":

@@ -1,3 +1,4 @@
+import os
 from .core.scenes.scene import Scene
 from .core.scene_file import load_scene_file, save_scene_file
 from .core.project import Project
@@ -22,7 +23,10 @@ __all__ = [
 
 def load_project(path: str) -> Project:
     """Load a :class:`Project` from disk."""
-    return Project.load(path)
+    proj = Project.load(path)
+    from .core.resources import set_resource_root
+    set_resource_root(os.path.join(os.path.dirname(path), proj.resources))
+    return proj
 
 
 def save_project(project: Project, path: str) -> None:

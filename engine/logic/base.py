@@ -315,6 +315,7 @@ class EventSystem:
         self.groups: dict[str, list[Event]] = {}
         self.engine_version = engine_version or ENGINE_VERSION
         self.paused = False
+        self._executor: ThreadPoolExecutor | None = None
 
     def get_event(self, name):
         for evt in self.events:
@@ -416,8 +417,21 @@ class EventSystem:
         """Update events concurrently using a thread pool."""
         if self.paused or not self.events:
             return
-        with ThreadPoolExecutor(max_workers=workers) as pool:
-            pool.map(lambda e: e.update(engine, scene, dt), list(self.events))
+        if self._executor is None or self._executor._max_workers != workers:
+            if self._executor is not None:
+                self._executor.shutdown(wait=False)
+            self._executor = ThreadPoolExecutor(max_workers=workers)
+        futures = [
+            self._executor.submit(evt.update, engine, scene, dt)
+            for evt in list(self.events)
+        ]
+        for fut in futures:
+            fut.result()
+
+    def shutdown(self) -> None:
+        if self._executor is not None:
+            self._executor.shutdown(wait=False)
+            self._executor = None
 
     def update(self, engine, scene, dt):
         if self.paused or not self.events:
@@ -433,8 +447,7 @@ def condition_from_dict(data, objects, variables):
         typ = TRANSLATION_LOOKUP[typ]
     cls = CONDITION_REGISTRY.get(typ)
     if cls is None:
-        logger.warning('Unknown condition type %s', typ)
-        return None
+        raise ValueError(f'Unknown condition type {typ}')
     params = {}
     for entry in CONDITION_META.get(typ, []):
         arg = entry[0]
@@ -454,16 +467,14 @@ def condition_from_dict(data, objects, variables):
                             obj = candidate
                             break
                 if obj is None:
-                    logger.warning('Condition %s has invalid object index for %s', typ, arg)
-                    return None
+                    raise ValueError(f'Condition {typ} has invalid object index for {arg}')
             else:
                 obj = objects[val]
             if allowed:
                 from ..core.objects import get_object_type
                 typ_name = get_object_type(obj)
                 if typ_name not in allowed:
-                    logger.warning('Condition %s requires %s for %s', typ, allowed, arg)
-                    return None
+                    raise ValueError(f'Condition {typ} requires {allowed} for {arg}')
             params[arg] = obj
         elif kind == 'variable':
             params[arg] = VarRef(val) if isinstance(val, str) else val
@@ -471,9 +482,9 @@ def condition_from_dict(data, objects, variables):
             params[arg] = parse_value(val)
     try:
         return cls(**params)
-    except Exception:
+    except Exception as exc:
         logger.exception('Failed to construct condition %s', typ)
-        return None
+        raise ValueError(f'Failed to construct condition {typ}') from exc
 
 
 def action_from_dict(data, objects):
@@ -483,8 +494,7 @@ def action_from_dict(data, objects):
         typ = TRANSLATION_LOOKUP[typ]
     cls = ACTION_REGISTRY.get(typ)
     if cls is None:
-        logger.warning('Unknown action type %s', typ)
-        return None
+        raise ValueError(f'Unknown action type {typ}')
     params = {}
     for entry in ACTION_META.get(typ, []):
         arg = entry[0]
@@ -503,16 +513,14 @@ def action_from_dict(data, objects):
                             obj = candidate
                             break
                 if obj is None:
-                    logger.warning('Action %s has invalid object index for %s', typ, arg)
-                    return None
+                    raise ValueError(f'Action {typ} has invalid object index for {arg}')
             else:
                 obj = objects[val]
             if allowed:
                 from ..core.objects import get_object_type
                 typ_name = get_object_type(obj)
                 if typ_name not in allowed:
-                    logger.warning('Action %s requires %s for %s', typ, allowed, arg)
-                    return None
+                    raise ValueError(f'Action {typ} requires {allowed} for {arg}')
             params[arg] = obj
         elif kind == 'variable':
             params[arg] = VarRef(val) if isinstance(val, str) else val
@@ -520,9 +528,9 @@ def action_from_dict(data, objects):
             params[arg] = parse_value(val)
     try:
         return cls(**params)
-    except Exception:
+    except Exception as exc:
         logger.exception('Failed to construct action %s', typ)
-        return None
+        raise ValueError(f'Failed to construct action {typ}') from exc
 
 
 def event_from_dict(data, objects, variables):
@@ -531,20 +539,12 @@ def event_from_dict(data, objects, variables):
     for cond in data.get('conditions', []):
         if not isinstance(cond, dict):
             continue
-        obj = condition_from_dict(cond, objects, variables)
-        if obj is not None:
-            conditions.append(obj)
-        else:
-            logger.warning('Skipped invalid condition %s', cond)
+        conditions.append(condition_from_dict(cond, objects, variables))
     actions = []
     for act in data.get('actions', []):
         if not isinstance(act, dict):
             continue
-        obj = action_from_dict(act, objects)
-        if obj is not None:
-            actions.append(obj)
-        else:
-            logger.warning('Skipped invalid action %s', act)
+        actions.append(action_from_dict(act, objects))
     return Event(
         conditions,
         actions,

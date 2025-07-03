@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sys
 import argparse
+import os
 
 from PyQt6.QtWidgets import QApplication
 
@@ -28,7 +29,9 @@ def main(argv: list[str] | None = None) -> int:
         try:
             if ns.file.endswith(".sageproject"):
                 proj = load_project(ns.file)
-                scene = Scene.from_dict(proj.scene) if proj.scene else Scene()
+                scene = Scene.from_dict(
+                    proj.scene, base_path=os.path.dirname(ns.file)
+                ) if proj.scene else Scene()
             else:
                 scene = load_scene(ns.file)
         except Exception:  # pragma: no cover - editor startup
