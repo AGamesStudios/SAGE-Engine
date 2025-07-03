@@ -6,6 +6,8 @@ Custom resources use the following compact formats:
 * `.sageaudio` – JSON descriptor containing a `file` entry pointing to a sound file and optional metadata.
 * `.sagemesh` – JSON mesh data listing `vertices` and optional `indices`.
 * `.sageanimation` – list of image frames with durations used for sprite animation.
-* `.sagemap` – tile map layout referencing a tileset image and color mapping.
+* `.sagemap` – tile map layout referencing a tileset image and color mapping. When
+  loaded, maps are pre-rendered to an internal texture so the entire map is
+  drawn only once for optimal performance.
 
 These text formats keep resources small and easy to edit.

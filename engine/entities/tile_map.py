@@ -3,6 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import List
 
+try:  # optional dependency for caching in SDL renderer
+    import sdl2
+except Exception:  # pragma: no cover - optional
+    sdl2 = None  # type: ignore
+
 from ..core.objects import register_object
 from ..utils.log import logger
 
@@ -34,6 +39,7 @@ class TileMap:
     data: List[int] = field(default_factory=list)
     visible: bool = True
     metadata: dict = field(default_factory=dict)
+    _texture: object | None = field(init=False, default=None, repr=False)
 
     def __post_init__(self) -> None:
         if self.map_file:
@@ -52,4 +58,15 @@ class TileMap:
         self.width = info['width']
         self.height = info['height']
         self.data = list(info['data'])
+        self._texture = None
+
+    # ------------------------------------------------------------------
+    def clear_cache(self) -> None:
+        """Discard any cached renderer data."""
+        if self._texture and sdl2 is not None:
+            try:
+                sdl2.SDL_DestroyTexture(self._texture)
+            except Exception:  # pragma: no cover - SDL may be stubbed
+                pass
+        self._texture = None
 

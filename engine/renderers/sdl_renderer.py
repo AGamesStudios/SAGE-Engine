@@ -53,7 +53,24 @@ class SDLRenderer(Renderer):
         rect = sdl2.SDL_Rect(x, y, w, h)
         sdl2.SDL_RenderFillRect(self.renderer, rect)
 
-    def _draw_map(self, tilemap) -> None:
+    def _build_map_texture(self, tilemap) -> None:
+        w = tilemap.width * tilemap.tile_width
+        h = tilemap.height * tilemap.tile_height
+        tex = sdl2.SDL_CreateTexture(
+            self.renderer,
+            sdl2.SDL_PIXELFORMAT_RGBA8888,
+            sdl2.SDL_TEXTUREACCESS_TARGET,
+            w,
+            h,
+        )
+        if not tex:
+            err = sdl2.SDL_GetError()
+            raise RuntimeError(f"SDL_CreateTexture failed: {err.decode()}")
+        sdl2.SDL_SetTextureBlendMode(tex, sdl2.SDL_BLENDMODE_BLEND)
+        prev = sdl2.SDL_GetRenderTarget(self.renderer)
+        sdl2.SDL_SetRenderTarget(self.renderer, tex)
+        sdl2.SDL_SetRenderDrawColor(self.renderer, 0, 0, 0, 0)
+        sdl2.SDL_RenderClear(self.renderer)
         tw = tilemap.tile_width
         th = tilemap.tile_height
         colors = tilemap.metadata.get("colors", {})
@@ -64,6 +81,19 @@ class SDLRenderer(Renderer):
                     continue
                 color = parse_color(colors.get(str(idx), (200, 200, 200, 255)))
                 self._draw_rect(x * tw, y * th, tw, th, color)
+        sdl2.SDL_SetRenderTarget(self.renderer, prev)
+        tilemap._texture = tex
+
+    def _draw_map(self, tilemap) -> None:
+        if getattr(tilemap, "_texture", None) is None:
+            self._build_map_texture(tilemap)
+        rect = sdl2.SDL_Rect(
+            0,
+            0,
+            tilemap.width * tilemap.tile_width,
+            tilemap.height * tilemap.tile_height,
+        )
+        sdl2.SDL_RenderCopy(self.renderer, tilemap._texture, None, rect)
 
     def draw_scene(self, scene, camera=None, gizmos=False) -> None:  # noqa: D401
         for obj in getattr(scene, "objects", []):
