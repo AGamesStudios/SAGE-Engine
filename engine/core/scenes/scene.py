@@ -307,7 +307,10 @@ class Scene:
         vars_dict = dict(self.variables)
         for obj in self.objects:
             if hasattr(obj, 'variables'):
+                pub = getattr(obj, 'public_vars', None)
                 for k, v in getattr(obj, 'variables', {}).items():
+                    if pub is not None and k not in pub:
+                        continue
                     if k not in vars_dict:
                         vars_dict[k] = v
         es = EventSystem(variables=vars_dict)

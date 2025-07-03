@@ -12,6 +12,9 @@ When running events concurrently, pass a ``VariableStore`` instance to
 from engine.logic.base import VariableStore, EventSystem
 es = EventSystem(variables=VariableStore())
 ```
+Variables can be marked as private when set with ``SetVariable`` or
+``SetObjectVariable``. Private variables are excluded when a scene aggregates
+object variables into the main event system.
 
 Actions are just callable objects with an ``execute`` method.  The built-in
 actions are implemented as simple functions, making it easy to create new ones

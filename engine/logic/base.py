@@ -5,7 +5,6 @@ from ..utils.log import logger
 from concurrent.futures import ThreadPoolExecutor
 from importlib import metadata
 from .. import lang as engine_lang
-from collections import defaultdict
 from threading import Lock
 
 # registries used to map names to classes so new logic blocks can be added
@@ -92,12 +91,24 @@ class VarRef(EngineRef):
         super().__init__(['variable'], [name], call=True)
 
 
-class VariableStore(defaultdict):
-    """Thread-safe mapping for event variables."""
+class VariableStore(dict):
+    """Thread-safe mapping for event variables with privacy flags."""
 
     def __init__(self):
-        super().__init__(int)
+        super().__init__()
         self.lock = Lock()
+        self.private: set[str] = set()
+
+    def set(self, name: str, value, private: bool = False) -> None:
+        with self.lock:
+            self[name] = value
+            if private:
+                self.private.add(name)
+            else:
+                self.private.discard(name)
+
+    def is_private(self, name: str) -> bool:
+        return name in self.private
 
 
 # support engine attribute references like ``engine.attr`` or ``engine.method(args)``

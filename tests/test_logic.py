@@ -73,7 +73,7 @@ class DummyObj:
         self.visible = True
         self.variables = {}
 
-    def add_variable(self, name, value=None, typ='any'):
+    def add_variable(self, name, value=None, typ='any', public=True):
         self.variables[name] = value
 
     def get_variable(self, name, default=None):
@@ -137,6 +137,15 @@ def test_callfunction_and_evalexpr():
     SetVariable("v", 5).execute(engine, None, 0)
     cond = EvalExpr('engine.events.variables["v"] == 5')
     assert cond.check(engine, None, 0)
+
+
+def test_private_variable_support():
+    es = types.SimpleNamespace(variables=logic_base.VariableStore())
+    engine = types.SimpleNamespace(events=es)
+
+    SetVariable("secret", 42, private=True).execute(engine, None, 0)
+    assert es.variables["secret"] == 42
+    assert es.variables.is_private("secret")
 
 
 def test_input_axis_condition():

@@ -38,7 +38,9 @@ For heavy scenes you can enable asynchronous event updates (experimental):
 Engine(scene=my_scene, async_events=True).run()
 ```
 Use a ``VariableStore`` for thread-safe variables when running asynchronously.
-Input is handled by the SDL backend unless `qt` is selected to integrate with a Qt event loop.
+Variables may be marked as private so only selected values are shared between
+events. Input is handled by the SDL backend unless `qt` is selected to integrate
+with a Qt event loop.
 Gamepad input can be enabled with the `gamepad` backend if SDL2 supports controllers.
 Analog sticks expose axis values that can be combined with key bindings using
 `InputManager.bind_axis('move', axis_id=0, positive=K_RIGHT, negative=K_LEFT)`.

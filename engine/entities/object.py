@@ -73,6 +73,7 @@ class Variable:
 
     type: str = "any"
     value: Any = None
+    public: bool = True
 
 
 @dataclass(slots=True)
@@ -163,19 +164,40 @@ class Object:
             self.logic.remove(func)
 
     # --- variable helpers ---
-    def add_variable(self, name: str, value: Any = None, typ: str = "any") -> None:
-        """Create or update a typed variable."""
-        self.variables[name] = Variable(type=typ, value=value)
+    def add_variable(self, name: str, value: Any = None, typ: str = "any", public: bool = True) -> None:
+        """Create or update a typed variable.
+
+        ``public`` indicates whether the variable should be visible to the
+        scene event system when building events.
+        """
+        self.variables[name] = Variable(type=typ, value=value, public=public)
+        if hasattr(self, "public_vars"):
+            if public:
+                self.public_vars.add(name)
+            else:
+                self.public_vars.discard(name)
 
     def get_variable(self, name: str, default: Any = None) -> Any:
         var = self.variables.get(name)
         return var.value if var is not None else default
 
-    def set_variable(self, name: str, value: Any) -> None:
+    def set_variable(self, name: str, value: Any, public: bool | None = None) -> None:
+        """Update ``name`` with ``value``.
+
+        If ``public`` is not ``None`` the visibility of the variable is
+        adjusted accordingly.
+        """
         if name in self.variables:
             self.variables[name].value = value
+            if public is not None:
+                self.variables[name].public = public
         else:
-            self.variables[name] = Variable(value=value)
+            self.variables[name] = Variable(value=value, public=public if public is not None else True)
+        if hasattr(self, "public_vars") and public is not None:
+            if public:
+                self.public_vars.add(name)
+            else:
+                self.public_vars.discard(name)
 
     # --- transformation helpers ---
     def move(self, dx: float, dy: float) -> None:
