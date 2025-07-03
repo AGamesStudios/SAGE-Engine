@@ -4,7 +4,7 @@ import pytest
 
 
 def test_install_invokes_pip(monkeypatch):
-    import sage_setup.__main__ as setup
+    import sage_setup as setup
 
     called = {}
 
@@ -30,7 +30,7 @@ def test_install_invokes_pip(monkeypatch):
 
 
 def test_install_default_path(monkeypatch):
-    import sage_setup.__main__ as setup
+    import sage_setup as setup
 
     called = {}
 
@@ -56,7 +56,7 @@ def test_install_default_path(monkeypatch):
 
 
 def test_install_with_version(monkeypatch):
-    import sage_setup.__main__ as setup
+    import sage_setup as setup
 
     called = {}
 
@@ -121,7 +121,7 @@ def test_create_project(tmp_path):
 
 
 def test_available_extras_pyproject(tmp_path, monkeypatch):
-    import sage_setup.__main__ as setup
+    import sage_setup as setup
 
     py = tmp_path / "pyproject.toml"
     py.write_text("""[project.optional-dependencies]\nfoo = []\nbar = []\n""")
@@ -130,7 +130,7 @@ def test_available_extras_pyproject(tmp_path, monkeypatch):
 
 
 def test_available_extras_metadata(monkeypatch):
-    import sage_setup.__main__ as setup
+    import sage_setup as setup
     class DummyMsg:
         def get_all(self, key):
             return ["baz", "foo"] if key == "Provides-Extra" else []
@@ -142,7 +142,7 @@ def test_available_extras_metadata(monkeypatch):
 
 
 def test_install_no_target(monkeypatch):
-    import sage_setup.__main__ as setup
+    import sage_setup as setup
 
     called = {}
 
@@ -165,7 +165,7 @@ def test_install_no_target(monkeypatch):
 
 
 def test_install_error_output(monkeypatch):
-    import sage_setup.__main__ as setup
+    import sage_setup as setup
 
     class DummyProc:
         def __init__(self):
@@ -186,7 +186,7 @@ def test_install_error_output(monkeypatch):
 
 
 def test_installed_versions(tmp_path, monkeypatch):
-    import sage_setup.__main__ as setup
+    import sage_setup as setup
 
     v1 = tmp_path / "1.0"
     v2 = tmp_path / "2.0"
@@ -233,7 +233,7 @@ def test_settings_round_trip(monkeypatch):
 
 def test_install_dialog_appends_output(monkeypatch):
     import types
-    import sage_setup.__main__ as setup
+    import sage_setup as setup
 
     outputs = []
 

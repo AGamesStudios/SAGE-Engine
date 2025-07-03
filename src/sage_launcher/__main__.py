@@ -3,7 +3,7 @@ import subprocess
 import sys
 import webbrowser
 from pathlib import Path
-from sage_setup.__main__ import installed_versions, DEFAULT_PATH
+from sage_setup import installed_versions, DEFAULT_PATH
 
 DOC_URL = "https://github.com/AGamesStudios/SAGE-Engine"
 
