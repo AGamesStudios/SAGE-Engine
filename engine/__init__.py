@@ -9,7 +9,7 @@ from .utils.diagnostics import warn, error, exception  # noqa: F401
 
 ENGINE_VERSION = __version__
 try:
-    from sage_sdk.plugins import PluginManager  # noqa: E402
+    from sage_sdk.plugins import PluginManager
 except Exception:  # pragma: no cover - sdk optional
     class PluginManager:  # type: ignore[override]
         """Fallback plugin manager when ``sage_sdk`` is missing."""

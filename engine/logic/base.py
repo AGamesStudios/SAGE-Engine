@@ -7,6 +7,7 @@ from importlib import metadata
 from .. import lang as engine_lang
 from threading import Lock
 import asyncio
+import re
 
 # registries used to map names to classes so new logic blocks can be added
 # without modifying the loader code
@@ -64,8 +65,6 @@ def load_logic_plugins(*modules) -> None:
             logger.exception('Error loading logic entry points')
             raise
         _PLUGINS_LOADED = True
-
-import re  # noqa: E402
 
 class EngineRef:
     """Reference to an engine attribute or helper function."""

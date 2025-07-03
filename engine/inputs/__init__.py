@@ -4,7 +4,9 @@
 from typing import Dict, Type
 from abc import ABC, abstractmethod
 from importlib import metadata
+import importlib
 import logging
+
 
 
 class InputBackend(ABC):
@@ -200,12 +202,12 @@ __all__ = [
     "INPUT_REGISTRY",
 ]
 
-from .null_input import NullInput  # noqa: E402
-try:  # noqa: E402 - optional dependency
-    from .qt_input import QtInput
+NullInput = importlib.import_module(".null_input", __name__).NullInput
+try:
+    QtInput = importlib.import_module(".qt_input", __name__).QtInput
 except Exception:  # pragma: no cover - PyQt6 missing
-    pass
-try:  # noqa: E402 - optional dependency
-    from .gamepad import GamepadInput
+    QtInput = None  # type: ignore
+try:
+    GamepadInput = importlib.import_module(".gamepad", __name__).GamepadInput
 except Exception:  # pragma: no cover - SDL2 missing
-    pass
+    GamepadInput = None  # type: ignore

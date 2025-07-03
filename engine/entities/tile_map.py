@@ -68,6 +68,6 @@ class TileMap:
             try:
                 sdl2.SDL_DestroyTexture(self._texture)
             except Exception:  # pragma: no cover - SDL may be stubbed
-                pass
+                logger.exception("SDL_DestroyTexture failed")
         self._texture = None
 

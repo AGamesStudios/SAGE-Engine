@@ -1,7 +1,7 @@
 
 """Qt event based input backend."""
 
-from . import InputBackend, register_input  # noqa: E402
+from . import InputBackend, register_input
 
 try:
     from PyQt6.QtCore import QObject, QEvent

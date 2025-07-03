@@ -15,12 +15,14 @@ from .base import (
 from . import conditions  # noqa: F401
 from . import actions     # noqa: F401
 
+import importlib
+import pkgutil
+from ..utils.diagnostics import warn
+
 # load plugins registered via entry points
 load_logic_plugins()
 
 # Automatically import all submodules so built-ins register themselves
-import importlib  # noqa: E402
-import pkgutil  # noqa: E402
 
 for mod in pkgutil.iter_modules(__path__):
     if mod.name not in {"base", "actions", "conditions", "__pycache__"}:
@@ -43,7 +45,6 @@ __all__ = [
 
 # warn about any missing exports at import time
 _missing = [name for name in __all__ if name not in globals()]
-from ..utils.diagnostics import warn  # noqa: E402
 for _name in _missing:
     warn("Missing reference %s in logic.__init__", _name)
 del _missing

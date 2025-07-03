@@ -1,5 +1,6 @@
 import types
 import sys
+import pytest
 
 qtwidgets = types.ModuleType('PyQt6.QtWidgets')
 qtcore = types.ModuleType('PyQt6.QtCore')
@@ -74,7 +75,8 @@ def test_step_logs_exception(monkeypatch):
     logger = DummyLogger()
     monkeypatch.setattr(game_window, 'logger', logger)
     win = game_window.GameWindow(DummyEngine())
-    win._step()
+    with pytest.raises(RuntimeError):
+        win._step()
     assert logger.called
     assert 'Engine step failed' in logger.msg
     assert win.timer.stopped

@@ -41,6 +41,7 @@ class GameWindow(QMainWindow):
         except Exception:
             logger.exception("Engine step failed")
             self.timer.stop()
+            raise
 
     def closeEvent(self, event):  # pragma: no cover - GUI cleanup
         self.closed.emit()
