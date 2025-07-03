@@ -56,3 +56,17 @@ def test_gameobject_animation(monkeypatch):
     obj.update(0.05)
     assert obj.image_path == 'a.png'
 
+
+def test_animation_speed_pause_reverse():
+    anim = Animation([Frame('a.png', 0.1), Frame('b.png', 0.1)], loop=False)
+    anim.speed = 2.0
+    anim.update(0.05)
+    assert anim.image == 'b.png'
+    anim.pause()
+    anim.update(1.0)
+    assert anim.image == 'b.png'
+    anim.play()
+    anim.reverse = True
+    anim.update(0.1)
+    assert anim.image == 'a.png'
+

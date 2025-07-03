@@ -24,9 +24,29 @@ if "pygame" not in sys.modules:
         def set_volume(self, vol):
             self.volume = vol
 
+    class _DummyMusic:
+        def load(self, *a, **k):
+            pass
+
+        def play(self, *a, **k):
+            pass
+
+        def stop(self):
+            pass
+
+        def pause(self):
+            pass
+
+        def unpause(self):
+            pass
+
+        def set_volume(self, vol):
+            self.volume = vol
+
     class _DummyMixer:
         def __init__(self):
             self._init = False
+            self.music = _DummyMusic()
 
         def init(self):
             self._init = True
@@ -94,4 +114,17 @@ def test_volume_metadata(tmp_path):
         assert vol_attr == 0.7
     else:
         assert abs(snd.get_volume() - 0.7) < 0.01
+    audio.shutdown()
+
+
+def test_music_controls(tmp_path):
+    wav = tmp_path / 'tone.wav'
+    _make_wave(str(wav))
+    audio = AudioManager()
+    audio.load_music(str(wav))
+    audio.play_music(loops=1)
+    audio.set_music_volume(0.5)
+    audio.pause_music()
+    audio.unpause_music()
+    audio.stop_music()
     audio.shutdown()

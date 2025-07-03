@@ -20,6 +20,9 @@ class Animation:
 
     frames: List[Frame]
     loop: bool = True
+    speed: float = 1.0
+    playing: bool = True
+    reverse: bool = False
     _index: int = field(init=False, default=0, repr=False)
     _time: float = field(init=False, default=0.0, repr=False)
 
@@ -35,18 +38,37 @@ class Animation:
         self._index = 0
         self._time = 0.0
 
+    def play(self) -> None:
+        """Resume playback."""
+        self.playing = True
+
+    def pause(self) -> None:
+        """Pause playback without resetting."""
+        self.playing = False
+
+    def stop(self) -> None:
+        """Stop and reset the animation."""
+        self.pause()
+        self.reset()
+
     def update(self, dt: float) -> str:
         """Advance the animation by ``dt`` seconds and return the new image."""
         if not self.frames:
             return ""
-        self._time += dt
+        if not self.playing:
+            return self.frames[self._index].image
+        self._time += dt * max(self.speed, 0.0)
         while self._time >= self.frames[self._index].duration:
             self._time -= self.frames[self._index].duration
-            self._index += 1
-            if self._index >= len(self.frames):
+            step = -1 if self.reverse else 1
+            self._index += step
+            if self._index >= len(self.frames) or self._index < 0:
                 if self.loop:
-                    self._index = 0
+                    self._index %= len(self.frames)
                 else:
-                    self._index = len(self.frames) - 1
+                    self._index = (
+                        0 if self.reverse else len(self.frames) - 1
+                    )
+                    self.playing = False
                     break
         return self.frames[self._index].image
