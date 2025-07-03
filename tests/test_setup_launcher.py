@@ -1,4 +1,5 @@
 import sys
+import io
 import pytest
 
 
@@ -7,16 +8,20 @@ def test_install_invokes_pip(monkeypatch):
 
     called = {}
 
-    def fake_run(cmd, capture_output=False, text=False):
-        called['cmd'] = cmd
-        class Res:
-            returncode = 0
-            stdout = ''
-            stderr = ''
-        return Res()
+    class DummyProc:
+        def __init__(self, cmd):
+            called['cmd'] = cmd
+            self.returncode = 0
+            self.stdout = io.StringIO()
+
+        def wait(self):
+            return 0
+
+    def fake_popen(cmd, stdout=None, stderr=None, text=False):
+        return DummyProc(cmd)
 
     monkeypatch.setattr(setup, 'REPO_ROOT', '/tmp/repo')
-    monkeypatch.setattr(setup.subprocess, 'run', fake_run)
+    monkeypatch.setattr(setup.subprocess, 'Popen', fake_popen)
     setup.install('/dest', 'sdl')
     assert '--target' in called['cmd']
     assert '/dest' in called['cmd']
@@ -28,16 +33,20 @@ def test_install_default_path(monkeypatch):
 
     called = {}
 
-    def fake_run(cmd, capture_output=False, text=False):
-        called['cmd'] = cmd
-        class Res:
-            returncode = 0
-            stdout = ''
-            stderr = ''
-        return Res()
+    class DummyProc:
+        def __init__(self, cmd):
+            called['cmd'] = cmd
+            self.returncode = 0
+            self.stdout = io.StringIO()
+
+        def wait(self):
+            return 0
+
+    def fake_popen(cmd, stdout=None, stderr=None, text=False):
+        return DummyProc(cmd)
 
     monkeypatch.setattr(setup, 'REPO_ROOT', '/tmp/repo')
-    monkeypatch.setattr(setup.subprocess, 'run', fake_run)
+    monkeypatch.setattr(setup.subprocess, 'Popen', fake_popen)
     monkeypatch.setattr(setup, 'DEFAULT_PATH', '/def')
     setup.install.__defaults__ = ('/def', None)
     setup.install()
@@ -49,13 +58,14 @@ def test_launcher_runs_engine(monkeypatch):
 
     proc = {}
 
-    def fake_run(cmd):
-        proc['cmd'] = cmd
-        class Res:
-            returncode = 0
-        return Res()
+    class DummyProc:
+        def __init__(self, cmd):
+            proc['cmd'] = cmd
 
-    monkeypatch.setattr(launcher.subprocess, 'run', fake_run)
+    def fake_popen(cmd, start_new_session=True):
+        return DummyProc(cmd)
+
+    monkeypatch.setattr(launcher.subprocess, 'Popen', fake_popen)
     launcher.launch('demo.sageproject')
     assert proc['cmd'][0] == sys.executable
     assert proc['cmd'][-1] == 'demo.sageproject'
@@ -107,15 +117,19 @@ def test_install_no_target(monkeypatch):
 
     called = {}
 
-    def fake_run(cmd, capture_output=False, text=False):
-        called["cmd"] = cmd
-        class Res:
-            returncode = 0
-            stdout = ""
-            stderr = ""
-        return Res()
+    class DummyProc:
+        def __init__(self, cmd):
+            called["cmd"] = cmd
+            self.returncode = 0
+            self.stdout = io.StringIO()
 
-    monkeypatch.setattr(setup.subprocess, "run", fake_run)
+        def wait(self):
+            return 0
+
+    def fake_popen(cmd, stdout=None, stderr=None, text=False):
+        return DummyProc(cmd)
+
+    monkeypatch.setattr(setup.subprocess, "Popen", fake_popen)
     setup.install(None)
     assert "--target" not in called["cmd"]
 
@@ -123,14 +137,18 @@ def test_install_no_target(monkeypatch):
 def test_install_error_output(monkeypatch):
     import sage_setup.__main__ as setup
 
-    def fake_run(cmd, capture_output=False, text=False):
-        class Res:
-            returncode = 1
-            stdout = "out"
-            stderr = "err"
-        return Res()
+    class DummyProc:
+        def __init__(self):
+            self.stdout = io.StringIO("out\nerr")
+            self.returncode = 1
 
-    monkeypatch.setattr(setup.subprocess, "run", fake_run)
+        def wait(self):
+            return 1
+
+    def fake_popen(cmd, stdout=None, stderr=None, text=False):
+        return DummyProc()
+
+    monkeypatch.setattr(setup.subprocess, "Popen", fake_popen)
     with pytest.raises(RuntimeError) as exc:
         setup.install("/t")
     assert "err" in str(exc.value)
@@ -158,7 +176,7 @@ def test_settings_round_trip(monkeypatch):
             self._org = org
             self._name = name
 
-        def value(self, key, default=None):
+        def value(self, key, default=None, type=None):
             return store.get(key, default)
 
         def setValue(self, key, value):
@@ -166,7 +184,9 @@ def test_settings_round_trip(monkeypatch):
 
     monkeypatch.setattr(launcher, "QSettings", DummySettings)
     launcher.save_last_dir("/x")
-    assert launcher.load_last_dir() == "/x"
+    launcher.save_last_dir("/y")
+    assert launcher.load_last_dir() == "/y"
+    assert launcher.load_recent_dirs() == ["/y", "/x"]
 
 
 def test_install_dialog_appends_output(monkeypatch):
@@ -232,10 +252,11 @@ def test_install_dialog_appends_output(monkeypatch):
     monkeypatch.setitem(sys.modules, "PyQt6.QtWidgets", qtwidgets)
     monkeypatch.setitem(sys.modules, "PyQt6.QtCore", qtcore)
 
-    def fake_install(path, extras):
-        return "ok"
+    def fake_install_iter(path, extras):
+        yield "line1\n"
+        yield "line2\n"
 
-    monkeypatch.setattr(setup, "install", fake_install)
+    monkeypatch.setattr(setup, "install_iter", fake_install_iter)
     txt = setup.run_install_dialog(None, None, qtwidgets.QWidget())
-    assert "ok" in txt
+    assert "line1" in txt and "line2" in txt
 

@@ -9,11 +9,11 @@ except Exception:  # pragma: no cover - PyQt6 optional
     QSettings = None
 
 
-def launch(path: str) -> None:
-    """Launch the engine with the given project or scene path."""
-    result = subprocess.run([sys.executable, "-m", "engine", path])
-    if result.returncode != 0:
-        raise RuntimeError(f"Engine exited with code {result.returncode}")
+def launch(path: str) -> subprocess.Popen[str]:
+    """Launch the engine with the given project or scene path and return the process."""
+    return subprocess.Popen(
+        [sys.executable, "-m", "engine", path], start_new_session=True
+    )
 
 
 def list_projects(base: str, *, recursive: bool = True) -> list[str]:
@@ -38,7 +38,20 @@ def save_last_dir(path: str) -> None:
     if QSettings is None:
         return
     settings = QSettings("AGStudios", "sage_launcher")
+    dirs = settings.value("recent_dirs", [], list) or []
+    if path in dirs:
+        dirs.remove(path)
+    dirs.insert(0, path)
+    settings.setValue("recent_dirs", dirs[:5])
     settings.setValue("last_dir", path)
+
+
+def load_recent_dirs() -> list[str]:
+    """Return a list of recently used directories."""
+    if QSettings is None:
+        return []
+    settings = QSettings("AGStudios", "sage_launcher")
+    return settings.value("recent_dirs", [], list) or []
 
 
 def create_project(path: str) -> None:

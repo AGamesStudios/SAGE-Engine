@@ -27,16 +27,17 @@ python scripts/install.py --extras opengl sdl audio
 If you specify ``--target`` you must add that directory to ``PYTHONPATH`` so the
 engine can be imported.
 You can also use **SAGE Setup** (requires PyQt6) for a graphical installer.
-It defaults to installing under ``~/sage_engine`` when a path is provided. If
-the field is left blank the engine installs to your Python site-packages.
-Extras are listed automatically from ``pyproject.toml``:
+Pip output is streamed to the dialog so you can follow progress. It defaults
+to installing under ``~/sage_engine`` when a path is provided. If the field is
+left blank the engine installs to your Python site-packages. Extras are listed
+automatically from ``pyproject.toml``:
 ```bash
 python -m sage_setup
 ```
 Optional tools such as the editor and development SDK are distributed
 separately so the engine can be used standalone. ``SAGE Launcher`` is
-installed alongside the engine and now lists recent projects with options
-to create or open them.
+installed alongside the engine and tracks recent project directories. Games
+are started in a separate process so the launcher stays open while they run.
 
 Runtime state can be saved and loaded with `engine.save_game` and
 `engine.load_game`, producing `.sagesave` files.

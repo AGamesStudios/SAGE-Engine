@@ -2,6 +2,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+from typing import Iterable
 try:
     import tomllib
 except ImportError:  # pragma: no cover - Python<3.11
@@ -29,17 +30,32 @@ def available_extras() -> list[str]:
     return sorted(meta.get_all("Provides-Extra") or [])
 
 
-def install(target: str | None = DEFAULT_PATH, extras: str | None = None) -> str:
-    """Run ``pip install`` for the engine in ``target`` with optional extras."""
+def install_iter(target: str | None = DEFAULT_PATH, extras: str | None = None) -> Iterable[str]:
+    """Yield pip output while installing the engine."""
     command = [sys.executable, "-m", "pip", "install", REPO_ROOT]
     if extras:
         command[-1] += f"[{extras}]"
     if target is not None:
         command += ["--target", target]
-    result = subprocess.run(command, capture_output=True, text=True)
-    output = (result.stdout or "") + (result.stderr or "")
-    if result.returncode != 0:
+    proc = subprocess.Popen(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+    )
+    output = ""
+    assert proc.stdout is not None
+    for line in proc.stdout:
+        output += line
+        yield line
+    proc.wait()
+    if proc.returncode != 0:
         raise RuntimeError(output)
+
+
+def install(target: str | None = DEFAULT_PATH, extras: str | None = None) -> str:
+    """Run ``pip install`` for the engine in ``target`` with optional extras."""
+    output = "".join(install_iter(target, extras))
     return output
 
 
@@ -54,9 +70,9 @@ def run_install_dialog(path: str | None, extras: str | None, win) -> str:
     progress.show()
     QApplication.processEvents()
     try:
-        output = install(path, extras)
-        if output:
-            progress.setLabelText(progress.labelText() + "\n" + output)
+        for line in install_iter(path, extras):
+            progress.setLabelText(progress.labelText() + line)
+            QApplication.processEvents()
     except Exception as exc:  # pragma: no cover - GUI feedback only
         progress.setLabelText(progress.labelText() + "\n" + str(exc))
         progress.close()
