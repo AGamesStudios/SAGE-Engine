@@ -7,7 +7,15 @@ from pathlib import Path
 if __package__ is None or __package__ == "":
     sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from sage_setup import installed_versions, DEFAULT_PATH, DEFAULT_PROJECTS
+try:
+    from sage_setup import installed_versions, DEFAULT_PATH, DEFAULT_PROJECTS
+except Exception as exc:  # pragma: no cover - missing dependency
+    print(
+        "SAGE Setup is required to run the launcher.\n"
+        "Install the engine with `python -m pip install .` or `python -m sage_setup`.",
+        file=sys.stderr,
+    )
+    raise SystemExit(exc)
 
 DOC_URL = "https://github.com/AGamesStudios/SAGE-Engine"
 
