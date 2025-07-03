@@ -299,3 +299,31 @@ def test_install_dialog_appends_output(monkeypatch):
     txt = setup.run_install_dialog(None, None, qtwidgets.QWidget())
     assert "line1" in txt and "line2" in txt
 
+
+def test_run_setup_starts_process(monkeypatch):
+    import sage_launcher.__main__ as launcher
+
+    called = {}
+
+    def fake_popen(cmd):
+        called["cmd"] = cmd
+        return None
+
+    monkeypatch.setattr(launcher.subprocess, "Popen", fake_popen)
+    launcher.run_setup()
+    assert called["cmd"] == [sys.executable, "-m", "sage_setup"]
+
+
+def test_open_docs(monkeypatch):
+    import sage_launcher.__main__ as launcher
+
+    urls = []
+
+    def fake_open(url):
+        urls.append(url)
+        return True
+
+    monkeypatch.setattr(launcher.webbrowser, "open", fake_open)
+    launcher.open_docs()
+    assert urls[0] == launcher.DOC_URL
+

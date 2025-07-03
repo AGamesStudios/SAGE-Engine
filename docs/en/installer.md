@@ -31,9 +31,9 @@ python -m sage_setup
 ```
 After installation you can open projects with ``SAGE Launcher`` (also PyQt6-based).
 The launcher lets you choose a directory to scan for projects, create new ones
-and even run ``SAGE Setup`` again with different extras. Games are started in
-a separate process so the launcher stays open, and any start errors are
-reported:
+and even run ``SAGE Setup`` again with different extras. Tabs provide buttons to
+update the engine or open this documentation. Games are started in a separate
+process so the launcher stays open, and any start errors are reported:
 ```bash
 python -m sage_launcher
 ```

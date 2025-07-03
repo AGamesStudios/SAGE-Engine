@@ -51,7 +51,7 @@ Use `python -m engine path/to/project.sageproject` to launch a game. Running `py
 python -m engine --renderer sdl examples/blank.sageproject
 python -m engine --renderer null examples/blank.sageproject
 ```
-The optional **SAGE Launcher** (requires PyQt6) lets you choose a directory and lists any projects it finds. It also reports errors if a project fails to run:
+The optional **SAGE Launcher** (requires PyQt6) lets you choose a directory and lists any projects it finds. It now includes tabs for updating the engine or opening the documentation. Games run in a separate process so the launcher stays open and reports errors if a project fails to start:
 ```bash
 python -m sage_launcher
 ```

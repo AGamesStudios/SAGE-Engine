@@ -1,7 +1,10 @@
 import os
 import subprocess
 import sys
+import webbrowser
 from pathlib import Path
+
+DOC_URL = "https://github.com/AGamesStudios/SAGE-Engine"
 
 try:
     from PyQt6.QtCore import QSettings  # type: ignore
@@ -66,6 +69,11 @@ def run_setup() -> None:
     subprocess.Popen([sys.executable, "-m", "sage_setup"])
 
 
+def open_docs() -> None:
+    """Open the SAGE documentation URL."""
+    webbrowser.open(DOC_URL)
+
+
 def main() -> None:
     try:
         from PyQt6.QtWidgets import (
@@ -78,6 +86,8 @@ def main() -> None:
             QWidget,
             QLineEdit,
             QMessageBox,
+            QTabWidget,
+            QLabel,
         )
     except Exception as exc:  # pragma: no cover - GUI import feedback
         print("PyQt6 is required to run SAGE Launcher", file=sys.stderr)
@@ -88,6 +98,11 @@ def main() -> None:
 
     win = QWidget()
     win.setWindowTitle("SAGE Launcher")
+    win.setFixedSize(500, 300)
+    tabs = QTabWidget()
+
+    # --- Projects tab ---
+    project_tab = QWidget()
     dir_edit = QLineEdit(load_last_dir())
     browse_btn = QPushButton("Browse")
     project_list = QListWidget()
@@ -101,7 +116,7 @@ def main() -> None:
 
     open_btn = QPushButton("Open")
     create_btn = QPushButton("Create")
-    install_btn = QPushButton("Install Engine")
+    install_btn = QPushButton("Install/Update Engine")
 
     def choose_dir() -> None:
         path = QFileDialog.getExistingDirectory(
@@ -145,11 +160,38 @@ def main() -> None:
     btn_row.addWidget(create_btn)
     btn_row.addWidget(install_btn)
 
+    proj_layout = QVBoxLayout(project_tab)
+    proj_layout.addLayout(dir_row)
+    proj_layout.addWidget(project_list)
+    proj_layout.addLayout(btn_row)
+
+    # --- Engine tab ---
+    engine_tab = QWidget()
+    update_btn = QPushButton("Install/Update Engine")
+    update_btn.clicked.connect(run_setup)
+    engine_layout = QVBoxLayout(engine_tab)
+    engine_layout.addWidget(update_btn)
+    engine_layout.addStretch()
+
+    # --- Info tab ---
+    info_tab = QWidget()
+    docs_btn = QPushButton("Open Documentation")
+    docs_btn.clicked.connect(open_docs)
+    info_layout = QVBoxLayout(info_tab)
+    info_layout.addWidget(QLabel("Documentation and tools"))
+    info_layout.addWidget(docs_btn)
+    info_layout.addStretch()
+
+    tabs.addTab(project_tab, "Projects")
+    tabs.addTab(engine_tab, "Engine")
+    tabs.addTab(info_tab, "Info")
+
     layout = QVBoxLayout(win)
-    layout.addLayout(dir_row)
-    layout.addWidget(project_list)
-    layout.addLayout(btn_row)
+    layout.addWidget(tabs)
     win.show()
+    fg = win.frameGeometry()
+    fg.moveCenter(app.primaryScreen().availableGeometry().center())
+    win.move(fg.topLeft())
     app.exec()
     save_last_dir(dir_edit.text())
 
