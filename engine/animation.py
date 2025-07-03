@@ -35,7 +35,10 @@ class Animation:
 
     def reset(self) -> None:
         """Restart the animation from the first frame."""
-        self._index = 0
+        if self.reverse and self.frames:
+            self._index = len(self.frames) - 1
+        else:
+            self._index = 0
         self._time = 0.0
 
     def play(self) -> None:
@@ -66,9 +69,8 @@ class Animation:
                 if self.loop:
                     self._index %= len(self.frames)
                 else:
-                    self._index = (
-                        0 if self.reverse else len(self.frames) - 1
-                    )
+                    self._index = 0 if self.reverse else len(self.frames) - 1
                     self.playing = False
+                    self._time = 0.0
                     break
         return self.frames[self._index].image

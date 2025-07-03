@@ -1,4 +1,5 @@
 import types
+import pytest
 from engine.core.library import LibraryLoader
 
 
@@ -19,3 +20,11 @@ def test_load_by_name(tmp_path):
     mod = loader.load('lib2')
     assert mod.value == 42
     assert loader.get('lib2') is mod
+
+
+def test_load_all_error(tmp_path):
+    bad = tmp_path / 'bad.py'
+    bad.write_text('raise RuntimeError("boom")')
+    loader = LibraryLoader(search_paths=[str(tmp_path)])
+    with pytest.raises(RuntimeError):
+        loader.load_all(None)

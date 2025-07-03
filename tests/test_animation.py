@@ -70,3 +70,26 @@ def test_animation_speed_pause_reverse():
     anim.update(0.1)
     assert anim.image == 'a.png'
 
+
+def test_reverse_non_looping():
+    anim = Animation([Frame('a.png', 0.1), Frame('b.png', 0.1)], loop=False)
+    anim.reverse = True
+    anim.reset()
+    assert anim.image == 'b.png'
+    anim.update(0.1)
+    assert anim.image == 'a.png'
+    anim.update(0.1)
+    assert anim.image == 'a.png'
+    assert not anim.playing
+
+
+def test_reverse_looping():
+    anim = Animation([Frame('a.png', 0.1), Frame('b.png', 0.1)])
+    anim.reverse = True
+    anim.reset()
+    assert anim.image == 'b.png'
+    anim.update(0.1)
+    assert anim.image == 'a.png'
+    anim.update(0.1)
+    assert anim.image == 'b.png'
+

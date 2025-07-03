@@ -45,12 +45,24 @@ def test_asyncio_update_called(monkeypatch):
     called = {}
 
     async def fake_update_asyncio(self, eng, scene, dt):
-        called['yes'] = True
+        called['yes'] = called.get('yes', 0) + 1
 
     monkeypatch.setattr('engine.logic.base.EventSystem.update_asyncio', fake_update_asyncio)
     scene = Scene(with_defaults=False)
+    count = {'loops': 0}
+    orig_new_loop = asyncio.new_event_loop
+
+    def new_loop():
+        count['loops'] += 1
+        return orig_new_loop()
+
+    monkeypatch.setattr(asyncio, 'new_event_loop', new_loop)
+    monkeypatch.setattr(asyncio, 'run', lambda coro: (_ for _ in ()).throw(RuntimeError('no run')))
+
     eng = Engine(scene=scene, renderer=NullRenderer, input_backend=NullInput,
                  asyncio_events=True)
     eng.logic_active = True
-    asyncio.run(eng.update_async(0.0))
-    assert called['yes']
+    eng.update(0.0)
+    eng.update(0.0)
+    assert called['yes'] == 2
+    assert count['loops'] == 1

@@ -80,6 +80,9 @@ class Engine:
                 "Using asyncio_events overrides thread-based async_events"
             )
             self.async_events = False
+        if self.asyncio_events:
+            logger.warning("asyncio_events are experimental")
+            self._loop = asyncio.new_event_loop()
         self.event_workers = event_workers
         self.metadata = {"version": ENGINE_VERSION}
         if metadata:
@@ -168,13 +171,15 @@ class Engine:
         try:
             from .. import load_engine_plugins
             load_engine_plugins(self)
-        except ImportError:
+        except Exception:
             logger.exception("Failed to load engine plugins")
+            raise
         try:
             from .. import load_engine_libraries
             load_engine_libraries(self)
-        except ImportError:
+        except Exception:
             logger.exception("Failed to load engine libraries")
+            raise
 
     def step(self) -> None:
         """Advance the engine by one frame respecting the target FPS."""
@@ -316,7 +321,9 @@ class Engine:
         """Process one frame of logic and rendering."""
         if self.logic_active:
             if self.asyncio_events:
-                asyncio.run(self.events.update_asyncio(self, self.scene, dt))
+                self._loop.run_until_complete(
+                    self.events.update_asyncio(self, self.scene, dt)
+                )
             elif self.async_events:
                 self.events.update_async(
                     self, self.scene, dt, workers=self.event_workers

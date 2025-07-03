@@ -52,6 +52,7 @@ class LibraryLoader:
                 init(instance)
             except Exception:
                 logger.exception("Library init failed for %s", getattr(lib, "__name__", lib))
+                raise
 
     # public API -----------------------------------------------------------
     def load(self, name: str, instance: object | None = None):
@@ -89,6 +90,7 @@ class LibraryLoader:
                     self._init_library(lib, instance)
                 except Exception:
                     logger.exception("Failed to load library %s", file_path)
+                    raise
 
     def get(self, name: str) -> object | None:
         """Return a previously loaded library or ``None``."""

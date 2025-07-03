@@ -15,6 +15,7 @@ To keep large projects running smoothly consider the following options:
   ``EngineSettings`` on older machines to reduce rendering overhead.
 - **Asynchronous events** – Large scenes can update events concurrently using `EventSystem.update_async(engine, scene, dt)` or `await EventSystem.update_asyncio(engine, scene, dt)`
   to reduce frame time. Use a thread-safe variable store when events modify shared data.
+  When enabling ``asyncio_events`` the engine keeps a single event loop for updates.
   Enable concurrent updates globally with:
 
   ```python

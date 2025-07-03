@@ -45,6 +45,8 @@ or use the asyncio variant:
 ```python
 await Engine(scene=my_scene, asyncio_events=True).update_async(0.0)
 ```
+The engine creates a dedicated event loop when ``asyncio_events`` is enabled.
+This mode is experimental and may not integrate with other loops.
 Use a ``VariableStore`` for thread-safe variables when running asynchronously.
 Variables may be marked as private so only selected values are shared between
 events. Input is handled by the SDL backend unless `qt` is selected to integrate

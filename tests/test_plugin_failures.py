@@ -1,5 +1,6 @@
 import logging
 from importlib import metadata
+import pytest
 
 # helper entry point list
 class _EP:
@@ -41,3 +42,19 @@ def test_renderer_plugin_warning(monkeypatch, caplog):
     renderers._PLUGINS_LOADED = False
     renderers._load_entry_points()
     assert 'Failed renderer plugins: bad1, bad2' in caplog.text
+
+
+def test_engine_plugin_error(monkeypatch):
+    from engine.core.scenes.scene import Scene
+    from engine.core.engine import Engine
+    from engine.renderers.null_renderer import NullRenderer
+    from engine.inputs.null_input import NullInput
+
+    def bad_loader(engine, paths=None):
+        raise RuntimeError('boom')
+
+    monkeypatch.setattr('engine.load_engine_plugins', bad_loader)
+
+    with pytest.raises(RuntimeError):
+        Engine(scene=Scene(with_defaults=False), renderer=NullRenderer,
+               input_backend=NullInput)
