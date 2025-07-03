@@ -32,6 +32,7 @@ class AudioManager:
     def load_sound(self, name: str) -> pygame.mixer.Sound:
         """Load a sound file or ``.sageaudio`` descriptor."""
         path = get_resource_path(name)
+        meta = None
         if path.endswith(".sageaudio"):
             from .formats import load_sageaudio
 
@@ -44,6 +45,11 @@ class AudioManager:
         except Exception:
             logger.exception("Failed to load sound %s", file_path)
             raise
+        if meta and "volume" in meta:
+            try:
+                sound.set_volume(float(meta["volume"]))
+            except Exception:
+                logger.exception("Invalid volume value: %s", meta["volume"])
         self._sounds[name] = sound
         return sound
 

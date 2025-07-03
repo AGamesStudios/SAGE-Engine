@@ -21,6 +21,9 @@ if "pygame" not in sys.modules:
         def get_length(self):
             return 1
 
+        def set_volume(self, vol):
+            self.volume = vol
+
     class _DummyMixer:
         def __init__(self):
             self._init = False
@@ -76,4 +79,15 @@ def test_load_descriptor(tmp_path):
     audio = AudioManager()
     snd = audio.load_sound(str(desc))
     assert snd.get_length() > 0
+    audio.shutdown()
+
+
+def test_volume_metadata(tmp_path):
+    wav = tmp_path / 'tone.wav'
+    desc = tmp_path / 'tone.sageaudio'
+    _make_wave(str(wav))
+    desc.write_text('{"file": "tone.wav", "volume": 0.7}')
+    audio = AudioManager()
+    snd = audio.load_sound(str(desc))
+    assert getattr(snd, "volume", None) == 0.7
     audio.shutdown()

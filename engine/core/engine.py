@@ -82,10 +82,18 @@ class Engine:
         self.camera = camera
         self.events = events if events is not None else self.scene.build_event_system(aggregate=False)
         if renderer is None:
-            cls = get_renderer("opengl")
-            if cls is None:
-                from ..renderers.opengl_renderer import OpenGLRenderer
-                cls = OpenGLRenderer
+            opengl_ok = True
+            try:
+                import PyQt6.QtOpenGLWidgets  # noqa: F401
+                import OpenGL.GL  # noqa: F401
+            except Exception:
+                opengl_ok = False
+            if opengl_ok:
+                cls = get_renderer("opengl")
+            else:
+                cls = None
+            if not opengl_ok or cls is None or cls.__name__ == "NullRenderer":
+                cls = get_renderer("sdl") or get_renderer("null")
             self.renderer = cls(width, height, title)
         elif isinstance(renderer, str):
             cls = get_renderer(renderer)
@@ -321,9 +329,17 @@ def main(argv=None):
         else:
             scene = Scene.load(path)
     cls = get_renderer(renderer_name)
-    if cls is None:
-        from ..renderers.opengl_renderer import OpenGLRenderer
-        cls = OpenGLRenderer
+    if renderer_name == "opengl":
+        opengl_ok = True
+        try:
+            import PyQt6.QtOpenGLWidgets  # noqa: F401
+            import OpenGL.GL  # noqa: F401
+        except Exception:
+            opengl_ok = False
+        if not opengl_ok or cls is None or cls.__name__ == "NullRenderer":
+            cls = get_renderer("sdl") or get_renderer("null")
+    elif cls is None:
+        raise ValueError(f"Unknown renderer: {renderer_name}")
     renderer = cls(width, height, title)
     camera = scene.ensure_active_camera(width, height)
     Engine(

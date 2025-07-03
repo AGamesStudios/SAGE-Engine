@@ -14,10 +14,13 @@ def load_sageanimation(path: str) -> Animation:
     """Load an animation from ``path``."""
     with open(path, "r", encoding="utf-8") as fh:
         data = json.load(fh)
-    frames = [
-        Frame(f["image"], f.get("duration", 0.1))
-        for f in data.get("frames", [])
-    ]
+    if "frames" not in data:
+        raise ValueError("Missing 'frames' list")
+    frames = []
+    for f in data["frames"]:
+        if "image" not in f:
+            raise ValueError("Frame missing 'image' field")
+        frames.append(Frame(f["image"], f.get("duration", 0.1)))
     loop = data.get("loop", True)
     return Animation(frames, loop)
 

@@ -9,7 +9,21 @@ ENGINE_VERSION = __version__
 
 from .utils.log import logger  # noqa: E402,F401
 from .utils.diagnostics import warn, error, exception  # noqa: E402,F401
-from sage_sdk.plugins import PluginManager  # noqa: E402
+try:
+    from sage_sdk.plugins import PluginManager  # noqa: E402
+except Exception:  # pragma: no cover - sdk optional
+    class PluginManager:  # type: ignore[override]
+        """Fallback plugin manager when ``sage_sdk`` is missing."""
+
+        def __init__(self, *a, **k):
+            pass
+
+        def register(self, func):
+            pass
+
+        def load(self, obj, paths=None):  # noqa: D401
+            """No-op plugin loader."""
+            return
 
 ENGINE_PLUGINS = PluginManager('engine')
 

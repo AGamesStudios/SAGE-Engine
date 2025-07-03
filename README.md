@@ -12,12 +12,12 @@ pip install -r requirements.txt
 ruff check .
 PYTHONPATH=. pytest -q
 ```
-Optional renderers, audio drivers and the editor can be installed via extras, e.g.:
+Optional renderers, audio drivers, the editor and SDK can be installed via extras:
 ```bash
-pip install .[opengl,sdl,audio,editor]
+pip install .[opengl,sdl,audio,editor,sdk]
 ```
-The editor (`sage_editor`) and painting tool (`sage_paint`) are distributed as
-separate optional packages so the engine can be used standalone.
+The editor (`sage_editor`), painting tool (`sage_paint`) and development SDK
+are distributed as optional packages so the engine can be used standalone.
 
 Runtime state can be saved and loaded with `engine.save_game` and
 `engine.load_game`, producing `.sagesave` files.
@@ -25,7 +25,7 @@ Runtime state can be saved and loaded with `engine.save_game` and
 Open `examples/blank.sageproject` with the editor or runtime to see the basic structure. The sample scene now contains two sprites and a camera. Additional resources in `examples/Resources/` demonstrate `.sageaudio`, `.sagemesh` and `.sageanimation` files. Example scenes under `examples/Scenes/` showcase animation, audio playback and event logic for reference.
 
 ## Running
-Use `python -m engine path/to/project.sageproject` to launch a game. Running `python main.py` will start the editor if installed, otherwise it behaves the same as the engine runtime. The OpenGL backend is used by default, but you can run with SDL or the headless Null renderer:
+Use `python -m engine path/to/project.sageproject` to launch a game. Running `python main.py` will start the editor if installed, otherwise it behaves the same as the engine runtime. The engine tries to use the OpenGL backend first but falls back to SDL or the headless Null renderer when dependencies are missing:
 ```bash
 python -m engine --renderer sdl examples/blank.sageproject
 python -m engine --renderer null examples/blank.sageproject

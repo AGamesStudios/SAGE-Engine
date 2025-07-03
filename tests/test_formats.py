@@ -1,8 +1,16 @@
 import importlib
 import sys
+import pytest
 import engine
 
-from engine.formats import load_sageaudio, save_sageaudio, load_sagemesh, save_sagemesh
+from engine.formats import (
+    load_sageaudio,
+    save_sageaudio,
+    load_sagemesh,
+    save_sagemesh,
+    load_sageanimation,
+    save_sageanimation,
+)
 
 engine_mesh_utils = importlib.import_module('engine.mesh_utils')
 engine_mesh_utils = importlib.reload(engine_mesh_utils)
@@ -28,3 +36,17 @@ def test_sagemesh(tmp_path):
     loaded = load_sagemesh(path)
     assert loaded.vertices == mesh.vertices
     assert loaded.indices == mesh.indices
+
+
+def test_invalid_animation(tmp_path):
+    path = tmp_path / 'bad.sageanimation'
+    path.write_text('{}')
+    with pytest.raises(ValueError):
+        load_sageanimation(path)
+
+
+def test_invalid_mesh(tmp_path):
+    path = tmp_path / 'bad.sagemesh'
+    path.write_text('{}')
+    with pytest.raises(ValueError):
+        load_sagemesh(path)

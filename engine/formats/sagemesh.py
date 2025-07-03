@@ -10,7 +10,9 @@ def load_sagemesh(path: str) -> Mesh:
     """Load a mesh from a .sagemesh file."""
     with open(path, 'r', encoding='utf-8') as fh:
         data = json.load(fh)
-    vertices = [tuple(v) for v in data.get('vertices', [])]
+    if 'vertices' not in data:
+        raise ValueError("Missing 'vertices' list")
+    vertices = [tuple(v) for v in data['vertices']]
     indices = data.get('indices')
     return Mesh(vertices, indices)
 
