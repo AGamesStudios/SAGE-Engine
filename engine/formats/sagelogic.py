@@ -1,15 +1,17 @@
 from __future__ import annotations
 
-import json
 import os
+
+import json
+
+from ..utils import load_json
 
 __all__ = ["load_sagelogic", "save_sagelogic"]
 
 
 def load_sagelogic(path: str) -> list[dict]:
-    """Load event logic from ``path``."""
-    with open(path, "r", encoding="utf-8") as fh:
-        data = json.load(fh)
+    """Load event logic from ``path`` allowing comments."""
+    data = load_json(path)
     events = data.get("events") if isinstance(data, dict) else data
     if not isinstance(events, list):
         raise ValueError("Logic file must contain an 'events' list or be a list itself")

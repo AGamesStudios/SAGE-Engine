@@ -19,3 +19,19 @@ def test_logic_script(tmp_path):
     )
     scene = Scene.from_dict({"logic_scripts": [str(logic_script)]}, base_path=str(tmp_path))
     assert any(evt["name"] == "B" for evt in scene.events)
+
+
+def test_sagelogic_with_comments(tmp_path):
+    path = tmp_path / "logic.sagelogic"
+    path.write_text(
+        """
+        {
+          // example event
+          "events": [
+            {"name": "C", "conditions": [], "actions": []},
+          ]
+        }
+        """
+    )
+    events = load_sagelogic(path)
+    assert events[0]["name"] == "C"

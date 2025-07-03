@@ -16,6 +16,6 @@ Example scenes under `examples/Scenes/` include:
 - `Physics.sagescene` – two layered maps with simple movement
 - `advanced.sageproject` – project linking multiple scenes with animations, physics and large tile maps
 - `.sagemap` files define tile-based maps
-- `.sagelogic` files store event logic used by scenes
+- `.sagelogic` files store event logic with optional `#` or `//` comments
 - `.sagesave` files store saved game state via `engine.save_game`.
 - Use `--vsync/--no-vsync` when running projects to toggle vertical sync.

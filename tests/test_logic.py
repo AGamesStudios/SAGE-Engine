@@ -138,6 +138,16 @@ def test_callfunction_and_evalexpr():
     assert cond.check(engine, None, 0)
 
 
+def test_input_axis_condition():
+    class DummyBackend:
+        def get_axis_value(self, aid):
+            return 0.7
+
+    engine = types.SimpleNamespace(input=DummyBackend())
+    cond = logic_conditions.InputAxis(axis_id=0, threshold=0.5, comparison='>=')
+    assert cond.check(engine, None, 0)
+
+
 def teardown_module(module):
     import importlib
     for name in [

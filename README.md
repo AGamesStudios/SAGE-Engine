@@ -44,8 +44,10 @@ Analog sticks expose axis values that can be combined with key bindings using
 
 Event logic can be stored separately in `.sagelogic` files or generated via
 Python scripts referenced by a scene using the `logic_scripts` field. The
-event system resolves variables using `$name` shorthand and supports the
-`CallFunction` action and `EvalExpr` condition for custom Python behaviour.
+logic loader allows `#` or `//` comments so complex behaviour can be organised
+comfortably. The event system resolves variables using `$name` shorthand and
+supports the `CallFunction` action, `InputAxis` condition and `EvalExpr`
+condition for custom Python behaviour.
 
 Game objects expose a `visible` flag and `alpha` value for transparency. The
 `engine.mesh_utils` module includes helpers for creating and editing meshes,

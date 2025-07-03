@@ -10,6 +10,7 @@ Custom resources use the following compact formats:
   loaded, maps are pre-rendered to an internal texture so the entire map is
   drawn only once for optimal performance.
 * `.sagelogic` – list of event dictionaries or `{ "events": [...] }` stored separately
-  from scenes. Useful for visual or scripted logic workflows.
+  from scenes. The loader allows `#` or `//` comments and trailing commas so
+  files remain easy to edit for visual or scripted workflows.
 
 These text formats keep resources small and easy to edit.
