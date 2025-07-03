@@ -34,5 +34,6 @@
       "conditions": [{"type": "OnStart"}],
       "actions": [{"type": "Print", "text": "Welcome to SAGE!"}]
     }
-  ]
+  ],
+  "logic_scripts": ["logic_script.py"]
 }

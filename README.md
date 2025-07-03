@@ -22,7 +22,7 @@ are distributed as optional packages so the engine can be used standalone.
 Runtime state can be saved and loaded with `engine.save_game` and
 `engine.load_game`, producing `.sagesave` files.
 
-Open `examples/blank.sageproject` with the editor or runtime to see the basic structure. The sample scene now contains two sprites and a camera. Additional resources in `examples/Resources/` demonstrate `.sageaudio`, `.sagemesh`, `.sageanimation` and `.sagemap` files. Tile maps are pre‑rendered to textures so large maps draw efficiently. Example scenes under `examples/Scenes/` showcase animation, audio playback, event groups, multiple tile maps and basic physics (`Physics.sagescene`).
+Open `examples/blank.sageproject` with the editor or runtime to see the basic structure. The sample scene now contains two sprites and a camera. Additional resources in `examples/Resources/` demonstrate `.sageaudio`, `.sagemesh`, `.sageanimation`, `.sagemap` and `.sagelogic` files. Tile maps are pre‑rendered to textures so large maps draw efficiently. Example scenes under `examples/Scenes/` showcase animation, audio playback, event groups, multiple tile maps and basic physics (`Physics.sagescene`).
 For a larger demonstration use `examples/advanced.sageproject`, which links several scenes to show animations, physics and large tile maps.
 
 ## Running
@@ -41,6 +41,9 @@ Input is handled by the SDL backend unless `qt` is selected to integrate with a 
 Gamepad input can be enabled with the `gamepad` backend if SDL2 supports controllers.
 Analog sticks expose axis values that can be combined with key bindings using
 `InputManager.bind_axis('move', axis_id=0, positive=K_RIGHT, negative=K_LEFT)`.
+
+Event logic can be stored separately in `.sagelogic` files or generated via
+Python scripts referenced by a scene using the `logic_scripts` field.
 
 Game objects expose a `visible` flag and `alpha` value for transparency. The
 `engine.mesh_utils` module includes helpers for creating and editing meshes,

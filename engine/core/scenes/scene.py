@@ -187,6 +187,23 @@ class Scene:
         scene.variables = data.get("variables", {})
         scene.metadata = data.get("metadata", {})
         scene.events = data.get("events", [])
+        for lf in data.get("logic_files", []):
+            try:
+                from ...formats import load_sagelogic
+                scene.events.extend(load_sagelogic(lf))
+            except Exception:
+                logger.exception("Failed to load logic file %s", lf)
+        for mod_path in data.get("logic_scripts", []):
+            try:
+                import importlib.util
+                spec = importlib.util.spec_from_file_location("_scene_logic", mod_path)
+                if spec and spec.loader:
+                    mod = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(mod)
+                    if hasattr(mod, "register"):
+                        mod.register(scene)
+            except Exception:
+                logger.exception("Failed to execute logic script %s", mod_path)
         scene.active_camera = data.get("active_camera")
         for entry in data.get("objects", []):
             obj = object_from_dict(entry)

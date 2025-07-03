@@ -8,6 +8,7 @@ from .sageaudio import load_sageaudio, save_sageaudio
 from .sagemesh import load_sagemesh, save_sagemesh
 from .sageanimation import load_sageanimation, save_sageanimation
 from .sagemap import load_sagemap, save_sagemap
+from .sagelogic import load_sagelogic, save_sagelogic
 
 logger = logging.getLogger(__name__)
 
@@ -76,12 +77,14 @@ register_format('sageaudio', loader=load_sageaudio, saver=save_sageaudio)
 register_format('sagemesh', loader=load_sagemesh, saver=save_sagemesh)
 register_format('sageanimation', loader=load_sageanimation, saver=save_sageanimation)
 register_format('sagemap', loader=load_sagemap, saver=save_sagemap)
+register_format('sagelogic', loader=load_sagelogic, saver=save_sagelogic)
 
 __all__ = [
     'load_sageaudio', 'save_sageaudio',
     'load_sagemesh', 'save_sagemesh',
     'load_sageanimation', 'save_sageanimation',
     'load_sagemap', 'save_sagemap',
+    'load_sagelogic', 'save_sagelogic',
     'register_format',
     'load_resource',
     'save_resource',

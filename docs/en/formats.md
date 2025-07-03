@@ -9,5 +9,7 @@ Custom resources use the following compact formats:
 * `.sagemap` – tile map layout referencing a tileset image and color mapping. When
   loaded, maps are pre-rendered to an internal texture so the entire map is
   drawn only once for optimal performance.
+* `.sagelogic` – list of event dictionaries or `{ "events": [...] }` stored separately
+  from scenes. Useful for visual or scripted logic workflows.
 
 These text formats keep resources small and easy to edit.

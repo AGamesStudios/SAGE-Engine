@@ -124,6 +124,8 @@ _lazy = {
     'Frame': ('engine.animation', 'Frame'),
     'load_sageanimation': ('engine.formats', 'load_sageanimation'),
     'save_sageanimation': ('engine.formats', 'save_sageanimation'),
+    'load_sagelogic': ('engine.formats', 'load_sagelogic'),
+    'save_sagelogic': ('engine.formats', 'save_sagelogic'),
     'load_resource': ('engine.formats', 'load_resource'),
     'save_resource': ('engine.formats', 'save_resource'),
     'TextureAtlas': ('engine.texture_atlas', 'TextureAtlas'),
