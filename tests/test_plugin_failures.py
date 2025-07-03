@@ -77,3 +77,18 @@ def test_logic_plugin_error(monkeypatch):
     monkeypatch.setattr(builtins, '__import__', fake_import)
     with pytest.raises(RuntimeError):
         logic_base.load_logic_plugins('bad_logic')
+
+
+def test_print_action_skips_none(caplog):
+    from engine.logic.actions.print import Print
+    from engine.core.scenes.scene import Scene
+    from engine.core.engine import Engine
+    from engine.renderers.null_renderer import NullRenderer
+    from engine.inputs.null_input import NullInput
+
+    scene = Scene(with_defaults=False)
+    eng = Engine(scene=scene, renderer=NullRenderer, input_backend=NullInput)
+    caplog.set_level(logging.INFO)
+    caplog.clear()
+    Print(None).execute(eng, scene, 0.0)
+    assert caplog.text == ""

@@ -47,7 +47,9 @@ def set_stream(stream) -> None:
     """Redirect console output to the given stream without affecting the log file."""
     for handler in logger.handlers:
         # Skip FileHandler so logs continue to write to disk
-        if isinstance(handler, logging.StreamHandler) and not isinstance(handler, logging.FileHandler):
+        if isinstance(handler, logging.StreamHandler) and not isinstance(
+            handler, logging.FileHandler
+        ):
             handler.setStream(stream)
 
 __all__ = ['logger', 'LOG_FILE', 'set_stream', 'set_level', 'init_logger']

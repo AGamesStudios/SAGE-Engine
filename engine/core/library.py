@@ -50,7 +50,9 @@ class LibraryLoader:
             try:
                 init(instance)
             except Exception:
-                logger.exception("Library init failed for %s", getattr(lib, "__name__", lib))
+                logger.exception(
+                    "Library init failed for %s", getattr(lib, "__name__", lib)
+                )
                 raise
 
     # public API -----------------------------------------------------------
@@ -61,7 +63,11 @@ class LibraryLoader:
         else:
             path = self._find_file(name)
             try:
-                lib = self._load_from_path(path) if path else importlib.import_module(name)
+                lib = (
+                    self._load_from_path(path)
+                    if path
+                    else importlib.import_module(name)
+                )
             except Exception:
                 logger.exception("Failed to load library %s", name)
                 raise

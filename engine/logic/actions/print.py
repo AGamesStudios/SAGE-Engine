@@ -11,7 +11,6 @@ class Print(Action):
     def execute(self, engine, scene, dt):
         value = resolve_value(self.text, engine)
         if value is None:
-            logger.info('')
             return
         if not isinstance(value, str):
             value = str(value)

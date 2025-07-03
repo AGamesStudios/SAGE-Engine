@@ -300,7 +300,11 @@ class Engine:
             clear_image_cache()
         except Exception:
             logger.exception("Failed to clear image cache")
-        if self.asyncio_events and hasattr(self, "_loop"):
+        if (
+            self.asyncio_events
+            and hasattr(self, "_loop")
+            and not self._loop.is_closed()
+        ):
             try:
                 self._loop.close()
             except Exception:
@@ -393,7 +397,11 @@ class Engine:
             finally:
                 self.shutdown()
                 self.input.shutdown()
-                if self.asyncio_events and hasattr(self, "_loop"):
+                if (
+                    self.asyncio_events
+                    and hasattr(self, "_loop")
+                    and not self._loop.is_closed()
+                ):
                     try:
                         self._loop.close()
                     except Exception:
@@ -412,7 +420,11 @@ class Engine:
         finally:
             self.shutdown()
             self.input.shutdown()
-            if self.asyncio_events and hasattr(self, "_loop"):
+            if (
+                self.asyncio_events
+                and hasattr(self, "_loop")
+                and not self._loop.is_closed()
+            ):
                 try:
                     self._loop.close()
                 except Exception:

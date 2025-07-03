@@ -5,8 +5,8 @@ Running on older Python versions is not supported. Some modules log and ignore
 errors, especially during renderer setup. Engine plugins and libraries now
 re-raise failures after logging so configuration issues surface immediately.
 Use a debug build to catch problems early.
-When ``sage_sdk`` is not installed plugin loading is skipped and a warning is
-emitted so custom plugins will be ignored.
+When ``sage_sdk`` is not installed entry point plugins are skipped and a
+warning notes that only manually registered plugins will run.
 
 The OpenGL and SDL backends require external libraries (`PyOpenGL`, `PySDL2` and
 SDL2). On lightweight systems you may prefer the `NullRenderer` which has no

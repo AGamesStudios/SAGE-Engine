@@ -1,6 +1,7 @@
 import sys
 import types
 import asyncio
+import logging
 
 sys.modules.setdefault('PIL', types.ModuleType('PIL'))
 sys.modules.setdefault('PIL.Image', types.ModuleType('PIL.Image'))
@@ -73,3 +74,37 @@ def test_loop_closed_after_shutdown():
                  asyncio_events=True)
     eng.shutdown()
     assert eng._loop.is_closed()
+
+
+def test_loop_closed_after_run(monkeypatch, caplog):
+    import builtins
+
+    orig_import = builtins.__import__
+
+    def fake_import(name, *a, **k):
+        if name.startswith("PyQt6"):
+            raise ImportError
+        return orig_import(name, *a, **k)
+
+    monkeypatch.setattr(builtins, "__import__", fake_import)
+
+    called = {"n": 0}
+
+    def stop(self):
+        called["n"] += 1
+        return called["n"] > 1
+
+    monkeypatch.setattr(NullRenderer, "should_close", stop, raising=False)
+
+    scene = Scene(with_defaults=False)
+    eng = Engine(
+        scene=scene,
+        renderer=NullRenderer,
+        input_backend=NullInput,
+        asyncio_events=True,
+    )
+    caplog.set_level(logging.ERROR)
+    caplog.clear()
+    eng.run(install_hook=False)
+    assert eng._loop.is_closed()
+    assert "Event loop close failed" not in caplog.text

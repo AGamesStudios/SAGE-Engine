@@ -160,7 +160,12 @@ def draw_shape(renderer, obj: GameObject, camera: Camera | None, shape: str) -> 
     draw_mesh(renderer, obj, camera, mesh)
 
 
-def draw_frustum(renderer, cam: Camera, color=(1.0, 1.0, 0.0, 1.0), width: float = 1.0) -> None:
+def draw_frustum(
+    renderer,
+    cam: Camera,
+    color: tuple[float, float, float, float] = (1.0, 1.0, 0.0, 1.0),
+    width: float = 1.0,
+) -> None:
     left, bottom, w, h = cam.view_rect()
     sign = 1.0 if units.Y_UP else -1.0
     glBindTexture(GL_TEXTURE_2D, 0)
