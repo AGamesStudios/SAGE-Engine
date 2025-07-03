@@ -1,6 +1,6 @@
 
 try:
-    import sdl2
+    import sdl2  # type: ignore[import-not-found]
 except Exception as exc:  # pragma: no cover - optional dependency
     raise ImportError(
         "SDLInput requires PySDL2; install it with 'pip install PySDL2'"

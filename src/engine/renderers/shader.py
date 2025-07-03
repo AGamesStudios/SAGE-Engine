@@ -10,8 +10,8 @@ from OpenGL.GL import (
     glUniform2f,
     glUniform3f,
     glUniform4f,
-)
-from OpenGL.GL.shaders import compileProgram, compileShader
+)  # type: ignore[import-not-found]
+from OpenGL.GL.shaders import compileProgram, compileShader  # type: ignore[import-not-found]
 
 from ..utils.log import logger
 

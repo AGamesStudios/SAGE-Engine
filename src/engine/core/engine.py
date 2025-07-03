@@ -106,8 +106,8 @@ class Engine:
         if renderer is None:
             opengl_ok = True
             try:
-                import PyQt6.QtOpenGLWidgets  # noqa: F401
-                import OpenGL.GL  # noqa: F401
+                import PyQt6.QtOpenGLWidgets  # type: ignore[import-not-found]  # noqa: F401
+                import OpenGL.GL  # type: ignore[import-not-found]  # noqa: F401
             except Exception:
                 opengl_ok = False
             if opengl_ok:
@@ -383,7 +383,7 @@ class Engine:
         if install_hook:
             sys.excepthook = _exception_handler
         try:
-            from PyQt6.QtWidgets import QApplication
+            from PyQt6.QtWidgets import QApplication  # type: ignore[import-not-found]
             from ..game_window import GameWindow
         except ImportError as exc:  # pragma: no cover - platform dependent
             logger.warning("PyQt6 unavailable: %s", exc)
@@ -487,8 +487,8 @@ def main(argv=None):
     if renderer_name == "opengl":
         opengl_ok = True
         try:
-            import PyQt6.QtOpenGLWidgets  # noqa: F401
-            import OpenGL.GL  # noqa: F401
+            import PyQt6.QtOpenGLWidgets  # type: ignore[import-not-found]  # noqa: F401
+            import OpenGL.GL  # type: ignore[import-not-found]  # noqa: F401
         except Exception:
             opengl_ok = False
         if not opengl_ok or cls is None or cls.__name__ == "NullRenderer":

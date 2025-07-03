@@ -2,7 +2,7 @@
 import math
 
 try:
-    from numba import njit
+    from numba import njit  # type: ignore[import-not-found]
 except Exception:  # pragma: no cover - numba optional
     def njit(*args, **kwargs):
         def wrap(func):

@@ -1,7 +1,7 @@
 
 import time
-from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout
-from PyQt6.QtCore import QTimer, Qt, pyqtSignal
+from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout  # type: ignore[import-not-found]
+from PyQt6.QtCore import QTimer, Qt, pyqtSignal  # type: ignore[import-not-found]
 
 from .utils.log import logger
 

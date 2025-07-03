@@ -10,7 +10,7 @@ from ..core.math2d import (
     calc_matrix as _calc_matrix,
     normalize_angle,
 )
-from PIL import Image
+from PIL import Image  # type: ignore[import-not-found]
 from engine.renderers import Shader
 from engine.mesh_utils import Mesh
 from ..animation import Animation

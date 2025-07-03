@@ -10,13 +10,13 @@ import ctypes
 from .glwidget import GLWidget
 from .textures import get_blank_texture, get_texture
 try:
-    from OpenGL.GL import *  # noqa: F401,F403
+    from OpenGL.GL import *  # type: ignore[import-not-found,F401,F403]
 except Exception as exc:  # pragma: no cover - optional dependency
     raise ImportError(
         "OpenGLRenderer requires PyOpenGL; install it with 'pip install PyOpenGL'"
     ) from exc
 from ..shader import Shader
-from PIL import Image
+from PIL import Image  # type: ignore[import-not-found]
 
 from engine.core.camera import Camera
 from engine.entities.game_object import GameObject
@@ -131,7 +131,7 @@ class OpenGLRenderer(Renderer):
 
     def grab_image(self) -> Image.Image:
         """Return the current frame buffer as a :class:`PIL.Image.Image`."""
-        from OpenGL.GL import glReadPixels, GL_RGBA, GL_UNSIGNED_BYTE
+        from OpenGL.GL import glReadPixels, GL_RGBA, GL_UNSIGNED_BYTE  # type: ignore[import-not-found]
         self.widget.makeCurrent()
         data = glReadPixels(0, 0, self.width, self.height, GL_RGBA, GL_UNSIGNED_BYTE)
         self.widget.doneCurrent()
@@ -144,7 +144,7 @@ class OpenGLRenderer(Renderer):
 
     def setup_view(self):
         """Configure the OpenGL projection and store it for later."""
-        from OpenGL.GL import glMatrixMode, glLoadIdentity, glOrtho, GL_PROJECTION, GL_MODELVIEW
+        from OpenGL.GL import glMatrixMode, glLoadIdentity, glOrtho, GL_PROJECTION, GL_MODELVIEW  # type: ignore[import-not-found]
         from engine.core import math2d
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
@@ -190,7 +190,7 @@ class OpenGLRenderer(Renderer):
             GL_NEAREST,
             GL_RGBA,
             GL_UNSIGNED_BYTE,
-        )
+        )  # type: ignore[import-not-found]
         w = tilemap.width * tilemap.tile_width
         h = tilemap.height * tilemap.tile_height
         data = bytearray(b"\x00" * (w * h * 4))
@@ -222,7 +222,7 @@ class OpenGLRenderer(Renderer):
             glVertex2f,
             GL_TEXTURE_2D,
             GL_QUADS,
-        )
+        )  # type: ignore[import-not-found]
         if getattr(tilemap, "_texture", None) is None:
             self._build_map_texture(tilemap)
         w = tilemap.width * tilemap.tile_width
@@ -265,7 +265,7 @@ class OpenGLRenderer(Renderer):
             return
         from OpenGL.GL import (
             glBindTexture
-        )
+        )  # type: ignore[import-not-found]
         custom_shader = obj.get_shader() if hasattr(obj, "get_shader") else None
         if custom_shader:
             shader = custom_shader
@@ -427,7 +427,7 @@ class OpenGLRenderer(Renderer):
         can optionally restrict further operations to this area using scissor
         tests.
         """
-        from OpenGL.GL import glViewport
+        from OpenGL.GL import glViewport  # type: ignore[import-not-found]
         w = self.widget.width() if self.widget else self.width
         h = self.widget.height() if self.widget else self.height
         if not self.keep_aspect or camera is None:
@@ -449,7 +449,7 @@ class OpenGLRenderer(Renderer):
         return x, y, vp_w, vp_h
 
     def _apply_projection(self, camera: Camera | None) -> None:
-        from OpenGL.GL import glMatrixMode, glLoadIdentity, glOrtho, GL_PROJECTION, GL_MODELVIEW
+        from OpenGL.GL import glMatrixMode, glLoadIdentity, glOrtho, GL_PROJECTION, GL_MODELVIEW  # type: ignore[import-not-found]
         w = (camera.width if (self.keep_aspect and camera) else self.width)
         h = (camera.height if (self.keep_aspect and camera) else self.height)
         sign = 1.0 if units.Y_UP else -1.0
@@ -468,7 +468,7 @@ class OpenGLRenderer(Renderer):
         ctx = self.widget.context()
         if ctx is None or not ctx.isValid():
             return
-        from OpenGL.GL import glViewport
+        from OpenGL.GL import glViewport  # type: ignore[import-not-found]
         glViewport(0, 0, self.widget.width(), self.widget.height())
         self.clear((0, 0, 0))
         if self._scene:
@@ -493,7 +493,7 @@ class OpenGLRenderer(Renderer):
 
     def _render_scene(self, scene, camera: Camera | None):
         x, y, vp_w, vp_h = self._apply_viewport(camera)
-        from OpenGL.GL import glEnable, glDisable, glScissor, GL_SCISSOR_TEST
+        from OpenGL.GL import glEnable, glDisable, glScissor, GL_SCISSOR_TEST  # type: ignore[import-not-found]
         glEnable(GL_SCISSOR_TEST)
         glScissor(x, y, vp_w, vp_h)
         self.clear(self.background)
@@ -576,7 +576,7 @@ class OpenGLRenderer(Renderer):
         self._should_close = True
         if self.widget:
             try:
-                from OpenGL.GL import glDeleteTextures
+                from OpenGL.GL import glDeleteTextures  # type: ignore[import-not-found]
                 tex_ids = list(self.textures.values())
                 if self._blank_texture:
                     tex_ids.append(self._blank_texture)

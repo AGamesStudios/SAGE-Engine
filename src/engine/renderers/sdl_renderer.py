@@ -5,14 +5,14 @@ import ctypes
 import logging
 import math
 
-from PIL import Image
+from PIL import Image  # type: ignore[import-not-found]
 
 from . import Renderer, register_renderer
 from .opengl.drawing import parse_color
 from ..mesh_utils import Mesh
 
 try:
-    import sdl2
+    import sdl2  # type: ignore[import-not-found]
 except Exception as exc:  # pragma: no cover - optional dependency
     raise ImportError(
         "SDLRenderer requires PySDL2 and SDL2 libraries"

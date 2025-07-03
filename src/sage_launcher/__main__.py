@@ -69,7 +69,7 @@ def tr(key: str) -> str:
     return STRINGS.get(lang, STRINGS["en"]).get(key, key)
 
 try:
-    from PyQt6.QtCore import QSettings  # type: ignore
+    from PyQt6.QtCore import QSettings  # type: ignore[import-not-found]
 except Exception:  # pragma: no cover - PyQt6 optional
     QSettings = None
 
@@ -168,7 +168,7 @@ def main() -> None:
             QMessageBox,
             QTabWidget,
             QLabel,
-        )
+        )  # type: ignore[import-not-found]
     except Exception as exc:  # pragma: no cover - GUI import feedback
         print("PyQt6 is required to run SAGE Launcher", file=sys.stderr)
         raise SystemExit(exc)
@@ -242,14 +242,14 @@ def main() -> None:
         if not versions:
             version = "dev"
         else:
-            from PyQt6.QtWidgets import QInputDialog
+            from PyQt6.QtWidgets import QInputDialog  # type: ignore[import-not-found]
 
             version, ok = QInputDialog.getItem(
                 win, tr("create"), "Version", versions, 0, False
             )
             if not ok:
                 return
-        from PyQt6.QtWidgets import QInputDialog
+        from PyQt6.QtWidgets import QInputDialog  # type: ignore[import-not-found]
         templates = [d.name for d in Path(TEMPLATE_DIR).iterdir() if d.is_dir()]
         tmpl, ok = QInputDialog.getItem(
             win, tr("create"), "Template", templates, 0, False

@@ -10,7 +10,7 @@ if __package__ is None or __package__ == "":
 try:
     import tomllib
 except ImportError:  # pragma: no cover - Python<3.11
-    import tomli as tomllib  # type: ignore[no-redef]
+    import tomli as tomllib  # type: ignore[import-not-found,no-redef]
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 DEFAULT_PATH = os.path.join(Path.home(), "sage_engine")
@@ -19,7 +19,7 @@ DEFAULT_PROJECTS = os.path.join(Path.home(), "SAGE Projects")
 
 # --- simple localisation ---------------------------------------------
 try:
-    from PyQt6.QtCore import QSettings  # type: ignore
+    from PyQt6.QtCore import QSettings  # type: ignore[import-not-found]
 except Exception:  # pragma: no cover - PyQt6 optional
     QSettings = None
 
@@ -188,8 +188,8 @@ def run_install_dialog(path: str | None, extras: str | None, version: str | None
         QProgressBar,
         QVBoxLayout,
         QMessageBox,
-    )
-    from PyQt6.QtCore import Qt
+    )  # type: ignore[import-not-found]
+    from PyQt6.QtCore import Qt  # type: ignore[import-not-found]
 
     progress = QDialog(win)
     progress.setWindowTitle("SAGE Setup")
@@ -256,7 +256,7 @@ def main() -> None:
             QWidget,
             QCheckBox,
             QGridLayout,
-        )
+        )  # type: ignore[import-not-found]
     except Exception as exc:  # pragma: no cover - GUI import feedback
         print("PyQt6 is required to run SAGE Setup", file=sys.stderr)
         raise SystemExit(exc)

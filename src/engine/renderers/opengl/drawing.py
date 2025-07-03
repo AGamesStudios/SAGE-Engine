@@ -8,7 +8,7 @@ from OpenGL.GL import (
     glUseProgram,
     GL_LINES, GL_LINE_LOOP, GL_TRIANGLES, GL_TRIANGLE_FAN,
     GL_TEXTURE_2D,
-)
+)  # type: ignore[import-not-found]
 
 from engine.core.camera import Camera
 from engine.entities.game_object import GameObject

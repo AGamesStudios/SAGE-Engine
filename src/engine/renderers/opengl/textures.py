@@ -1,7 +1,7 @@
 """Utility functions for texture and icon handling."""
 
 
-from PIL import Image
+from PIL import Image  # type: ignore[import-not-found]
 from OpenGL.GL import (
     glGenTextures,
     glBindTexture,
@@ -14,7 +14,7 @@ from OpenGL.GL import (
     GL_NEAREST,
     GL_RGBA,
     GL_UNSIGNED_BYTE,
-)
+)  # type: ignore[import-not-found]
 
 
 def get_blank_texture(renderer, smooth: bool = True) -> int:

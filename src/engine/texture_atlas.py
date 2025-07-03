@@ -1,6 +1,6 @@
 """Simple texture atlas for sprite sheets."""
 
-from PIL import Image
+from PIL import Image  # type: ignore[import-not-found]
 
 from .core.resources import get_resource_path
 

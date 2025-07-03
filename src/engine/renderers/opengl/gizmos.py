@@ -6,7 +6,7 @@ from OpenGL.GL import (
     glBindTexture, glColor4f, glBegin, glEnd, glVertex2f, glLineWidth,
     glPushMatrix, glPopMatrix, glTranslatef, glRotatef,
     GL_LINES, GL_TRIANGLES, GL_QUADS, GL_LINE_LOOP, GL_TEXTURE_2D,
-)
+)  # type: ignore[import-not-found]
 
 from engine.core.camera import Camera
 from engine.entities.game_object import GameObject

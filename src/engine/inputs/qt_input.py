@@ -4,7 +4,7 @@
 from . import InputBackend, register_input
 
 try:
-    from PyQt6.QtCore import QObject, QEvent
+    from PyQt6.QtCore import QObject, QEvent  # type: ignore[import-not-found]
 except Exception as exc:  # pragma: no cover - optional dependency
     raise ImportError(
         "QtInput requires PyQt6; install it with 'pip install PyQt6'"

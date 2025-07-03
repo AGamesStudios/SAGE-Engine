@@ -4,8 +4,8 @@ import logging
 
 if TYPE_CHECKING:  # pragma: no cover - type hints
     from .core import OpenGLRenderer
-from PyQt6.QtOpenGLWidgets import QOpenGLWidget
-from PyQt6.QtGui import QSurfaceFormat
+from PyQt6.QtOpenGLWidgets import QOpenGLWidget  # type: ignore[import-not-found]
+from PyQt6.QtGui import QSurfaceFormat  # type: ignore[import-not-found]
 from OpenGL.GL import (
     glEnable,
     glBlendFunc,
@@ -15,7 +15,7 @@ from OpenGL.GL import (
     GL_MULTISAMPLE,
     GL_LINE_SMOOTH,
     GL_TEXTURE_2D,
-)
+)  # type: ignore[import-not-found]
 
 logger = logging.getLogger(__name__)
 
