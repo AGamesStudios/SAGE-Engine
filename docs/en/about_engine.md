@@ -9,3 +9,8 @@ projects remain portable and easy to extend.
 Thanks to this approach the engine also runs on **PyPy 3.10+**. Using PyPy can
 speed up CPU heavy logic thanks to its Just-In-Time compiler while keeping the
 same Python API.
+
+The event system optionally updates in parallel. Enable ``async_events`` or
+``asyncio_events`` on :class:`Engine` to process event logic concurrently.
+When integrating with other :mod:`asyncio` code use ``await Engine.run_async()``
+to run the engine without blocking the calling loop.

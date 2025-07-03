@@ -23,7 +23,7 @@ To keep large projects running smoothly consider the following options:
 
   ```python
   eng = Engine(scene=my_scene, async_events=True, event_workers=8)
-  eng.run()
+  await eng.run_async()
   ```
 
   You can also profile groups of events by priority to identify bottlenecks:

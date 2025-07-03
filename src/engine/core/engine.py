@@ -346,7 +346,12 @@ class Engine:
         self.scene.update(dt)
         for ext in list(self.extensions):
             try:
-                ext.update(self, dt)
+                res = ext.update(self, dt)
+                if asyncio.iscoroutine(res):
+                    if self.asyncio_events:
+                        self._loop.run_until_complete(res)
+                    else:  # pragma: no cover - rarely used
+                        asyncio.run(res)
             except Exception:
                 logger.exception("Extension %s failed during update", ext)
                 raise
@@ -369,7 +374,9 @@ class Engine:
         self.scene.update(dt)
         for ext in list(self.extensions):
             try:
-                ext.update(self, dt)
+                res = ext.update(self, dt)
+                if asyncio.iscoroutine(res):
+                    await res
             except Exception:
                 logger.exception("Extension %s failed during update", ext)
                 raise
@@ -416,6 +423,65 @@ class Engine:
         window.show()
         try:
             app.exec()
+        finally:
+            self.shutdown()
+            self.input.shutdown()
+            if (
+                self.asyncio_events
+                and hasattr(self, "_loop")
+                and not self._loop.is_closed()
+            ):
+                try:
+                    self._loop.close()
+                except Exception:
+                    logger.exception("Event loop close failed")
+            self.renderer.close()
+        return window
+
+    async def run_async(self, *, install_hook: bool = True):
+        """Asynchronous variant of :meth:`run`."""
+        init_logger()
+        if install_hook:
+            sys.excepthook = _exception_handler
+        try:
+            from PyQt6.QtWidgets import QApplication  # type: ignore[import-not-found]
+            from ..game_window import GameWindow
+        except ImportError as exc:  # pragma: no cover - platform dependent
+            logger.warning("PyQt6 unavailable: %s", exc)
+            self.logic_active = True
+            try:
+                while not self.renderer.should_close():
+                    await self.step_async()
+            except KeyboardInterrupt:
+                logger.info("Engine run interrupted")
+            finally:
+                self.shutdown()
+                self.input.shutdown()
+                if (
+                    self.asyncio_events
+                    and hasattr(self, "_loop")
+                    and not self._loop.is_closed()
+                ):
+                    try:
+                        self._loop.close()
+                    except Exception:
+                        logger.exception("Event loop close failed")
+                self.renderer.close()
+            return None
+
+        _log(f"Starting engine version {ENGINE_VERSION}")
+        loop = asyncio.get_running_loop()
+        app = QApplication.instance()
+        if app is None:
+            app = QApplication(sys.argv)
+        window = GameWindow(self)
+        window.show()
+
+        def run_qt() -> None:
+            app.exec()
+
+        try:
+            await loop.run_in_executor(None, run_qt)
         finally:
             self.shutdown()
             self.input.shutdown()

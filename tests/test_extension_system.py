@@ -143,6 +143,22 @@ def test_extension_hooks():
     assert ext.stopped
 
 
+class AsyncExt(EngineExtension):
+    async def update(self, eng, dt):
+        eng.flag = dt
+
+
+def test_async_extension_update():
+    settings = EngineSettings(renderer=DummyRenderer, input_backend=DummyInput)
+    eng = Engine(settings=settings, asyncio_events=True)
+    ext = AsyncExt()
+    eng.flag = None
+    eng.add_extension(ext)
+    eng.logic_active = True
+    eng.step()
+    assert eng.flag is not None
+
+
 def teardown_module(module):
     import sys
     for name in [
