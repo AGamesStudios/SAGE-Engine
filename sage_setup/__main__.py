@@ -11,6 +11,58 @@ except ImportError:  # pragma: no cover - Python<3.11
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 DEFAULT_PATH = os.path.join(Path.home(), "sage_engine")
 
+# --- simple localisation ---------------------------------------------
+try:
+    from PyQt6.QtCore import QSettings  # type: ignore
+except Exception:  # pragma: no cover - PyQt6 optional
+    QSettings = None
+
+LANG = os.environ.get("SAGE_LANG")
+
+
+def load_language() -> str:
+    if QSettings is None:
+        return LANG or "en"
+    settings = QSettings("AGStudios", "sage_setup")
+    return settings.value("language", LANG or "en")
+
+
+def save_language(lang: str) -> None:
+    if QSettings is None:
+        return
+    settings = QSettings("AGStudios", "sage_setup")
+    settings.setValue("language", lang)
+
+
+STRINGS: dict[str, dict[str, str]] = {
+    "en": {
+        "browse": "Browse",
+        "install": "Install",
+        "install_loc": "Install location:",
+        "extras": "Extras:",
+        "version": "Version:",
+    },
+    "ru": {
+        "browse": "Обзор",
+        "install": "Установить",
+        "install_loc": "Путь установки:",
+        "extras": "Дополнения:",
+        "version": "Версия:",
+    },
+}
+
+
+def installed_versions(path: str = DEFAULT_PATH) -> list[str]:
+    """Return installed engine versions under ``path``."""
+    if not os.path.isdir(path):
+        return []
+    return sorted([d.name for d in Path(path).iterdir() if d.is_dir()])
+
+
+def tr(key: str) -> str:
+    lang = load_language()
+    return STRINGS.get(lang, STRINGS["en"]).get(key, key)
+
 
 def available_extras() -> list[str]:
     """Return extras defined for the package."""
@@ -30,12 +82,19 @@ def available_extras() -> list[str]:
     return sorted(meta.get_all("Provides-Extra") or [])
 
 
-def install_iter(target: str | None = DEFAULT_PATH, extras: str | None = None) -> Iterable[str]:
+def install_iter(
+    target: str | None = DEFAULT_PATH,
+    extras: str | None = None,
+    version: str | None = None,
+) -> Iterable[str]:
     """Yield pip output while installing the engine."""
-    command = [sys.executable, "-m", "pip", "install", REPO_ROOT]
+    package = REPO_ROOT if version is None else f"sage-engine=={version}"
+    command = [sys.executable, "-m", "pip", "install", package]
     if extras:
         command[-1] += f"[{extras}]"
     if target is not None:
+        if version is not None:
+            target = os.path.join(target, version)
         command += ["--target", target]
     proc = subprocess.Popen(
         command,
@@ -53,13 +112,17 @@ def install_iter(target: str | None = DEFAULT_PATH, extras: str | None = None) -
         raise RuntimeError(output)
 
 
-def install(target: str | None = DEFAULT_PATH, extras: str | None = None) -> str:
+def install(
+    target: str | None = DEFAULT_PATH,
+    extras: str | None = None,
+    version: str | None = None,
+) -> str:
     """Run ``pip install`` for the engine in ``target`` with optional extras."""
-    output = "".join(install_iter(target, extras))
+    output = "".join(install_iter(target, extras, version))
     return output
 
 
-def run_install_dialog(path: str | None, extras: str | None, win) -> str:
+def run_install_dialog(path: str | None, extras: str | None, version: str | None, win) -> str:
     """Run install and display progress output."""
     from PyQt6.QtWidgets import (
         QApplication,
@@ -88,7 +151,7 @@ def run_install_dialog(path: str | None, extras: str | None, win) -> str:
     progress.show()
     QApplication.processEvents()
     try:
-        for line in install_iter(path, extras):
+        for line in install_iter(path, extras, version):
             output.appendPlainText(line.rstrip())
             QApplication.processEvents()
     except Exception as exc:  # pragma: no cover - GUI feedback only
@@ -131,7 +194,9 @@ def main() -> None:
     win.setFixedSize(500, 250)
     path_edit = QLineEdit()
     path_edit.setPlaceholderText(DEFAULT_PATH)
-    browse_btn = QPushButton("Browse")
+    browse_btn = QPushButton(tr("browse"))
+    version_edit = QLineEdit()
+    version_edit.setPlaceholderText("dev")
     extras_boxes = {name: QCheckBox(name) for name in available_extras()}
 
     def browse() -> None:
@@ -142,23 +207,24 @@ def main() -> None:
     def run_install() -> None:
         selected = [n for n, box in extras_boxes.items() if box.isChecked()]
         extras = ",".join(selected) or None
-        run_install_dialog(path_edit.text() or None, extras, win)
+        run_install_dialog(path_edit.text() or None, extras, version_edit.text() or None, win)
 
     browse_btn.clicked.connect(browse)
-    install_btn = QPushButton("Install")
+    install_btn = QPushButton(tr("install"))
     install_btn.clicked.connect(run_install)
 
     form = QFormLayout()
     path_row = QHBoxLayout()
     path_row.addWidget(path_edit)
     path_row.addWidget(browse_btn)
-    form.addRow("Install location:", path_row)
+    form.addRow(tr("install_loc"), path_row)
+    form.addRow(tr("version"), version_edit)
     extras_layout = QGridLayout()
     for i, box in enumerate(extras_boxes.values()):
         row = i // 6
         col = i % 6
         extras_layout.addWidget(box, row, col)
-    form.addRow("Extras:", extras_layout)
+    form.addRow(tr("extras"), extras_layout)
 
     layout = QVBoxLayout(win)
     layout.addLayout(form)

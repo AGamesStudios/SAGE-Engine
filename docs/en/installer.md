@@ -26,6 +26,9 @@ Leave the location field blank to install to site-packages or type a folder
 such as ``~/sage_engine``. Extras are read from ``pyproject.toml`` so new
 options appear automatically. Install the ``qt`` extra or PyQt6 separately to
 use it.
+Specify a version to install multiple copies under ``~/sage_engine/<version>``.
+The interface supports English and Russian depending on the ``SAGE_LANG``
+environment variable.
 ```bash
 python -m sage_setup
 ```

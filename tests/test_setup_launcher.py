@@ -48,9 +48,32 @@ def test_install_default_path(monkeypatch):
     monkeypatch.setattr(setup, 'REPO_ROOT', '/tmp/repo')
     monkeypatch.setattr(setup.subprocess, 'Popen', fake_popen)
     monkeypatch.setattr(setup, 'DEFAULT_PATH', '/def')
-    setup.install.__defaults__ = ('/def', None)
+    setup.install.__defaults__ = ('/def', None, None)
     setup.install()
     assert '/def' in called['cmd']
+
+
+def test_install_with_version(monkeypatch):
+    import sage_setup.__main__ as setup
+
+    called = {}
+
+    class DummyProc:
+        def __init__(self, cmd):
+            called['cmd'] = cmd
+            self.returncode = 0
+            self.stdout = io.StringIO()
+
+        def wait(self):
+            return 0
+
+    def fake_popen(cmd, stdout=None, stderr=None, text=False):
+        return DummyProc(cmd)
+
+    monkeypatch.setattr(setup.subprocess, 'Popen', fake_popen)
+    setup.install('/base', version='1.2')
+    assert 'sage-engine==1.2' in called['cmd']
+    assert '/base/1.2' in called['cmd']
 
 
 def test_launcher_runs_engine(monkeypatch):
@@ -87,8 +110,11 @@ def test_create_project(tmp_path):
     import sage_launcher.__main__ as launcher
 
     p = tmp_path / 'new.sageproject'
-    launcher.create_project(str(p))
+    launcher.create_project(str(p), version="1.0")
     assert p.exists()
+    import json
+    data = json.loads(p.read_text())
+    assert data["metadata"]["engine_version"] == "1.0"
 
 
 def test_available_extras_pyproject(tmp_path, monkeypatch):
@@ -152,6 +178,17 @@ def test_install_error_output(monkeypatch):
     with pytest.raises(RuntimeError) as exc:
         setup.install("/t")
     assert "err" in str(exc.value)
+
+
+def test_installed_versions(tmp_path, monkeypatch):
+    import sage_setup.__main__ as setup
+
+    v1 = tmp_path / "1.0"
+    v2 = tmp_path / "2.0"
+    v1.mkdir()
+    v2.mkdir()
+    monkeypatch.setattr(setup, "DEFAULT_PATH", str(tmp_path))
+    assert setup.installed_versions(str(tmp_path)) == ["1.0", "2.0"]
 
 
 def test_list_projects_non_recursive(tmp_path):
@@ -307,12 +344,12 @@ def test_install_dialog_appends_output(monkeypatch):
     monkeypatch.setitem(sys.modules, "PyQt6.QtWidgets", qtwidgets)
     monkeypatch.setitem(sys.modules, "PyQt6.QtCore", qtcore)
 
-    def fake_install_iter(path, extras):
+    def fake_install_iter(path, extras, version):
         yield "line1\n"
         yield "line2\n"
 
     monkeypatch.setattr(setup, "install_iter", fake_install_iter)
-    txt = setup.run_install_dialog(None, None, qtwidgets.QWidget())
+    txt = setup.run_install_dialog(None, None, None, qtwidgets.QWidget())
     assert "line1" in txt and "line2" in txt
 
 
@@ -342,4 +379,28 @@ def test_open_docs(monkeypatch):
     monkeypatch.setattr(launcher.webbrowser, "open", fake_open)
     launcher.open_docs()
     assert urls[0] == launcher.DOC_URL
+
+
+def test_open_docs_local(monkeypatch, tmp_path):
+    import sage_launcher.__main__ as launcher
+
+    urls = []
+
+    def fake_open(url):
+        urls.append(url)
+        return True
+
+    monkeypatch.setattr(launcher.webbrowser, "open", fake_open)
+    doc = tmp_path / "index.html"
+    doc.write_text("hi")
+    monkeypatch.setenv("SAGE_DOC_PATH", str(doc))
+    launcher.open_docs()
+    assert urls[-1].startswith("file://")
+
+
+def test_translation_env(monkeypatch):
+    monkeypatch.setenv("SAGE_LANG", "ru")
+    import importlib
+    launcher = importlib.reload(__import__("sage_launcher.__main__", fromlist=["tr"]))
+    assert launcher.tr("open").startswith("О")
 

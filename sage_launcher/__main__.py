@@ -3,8 +3,58 @@ import subprocess
 import sys
 import webbrowser
 from pathlib import Path
+from sage_setup.__main__ import installed_versions, DEFAULT_PATH
 
 DOC_URL = "https://github.com/AGamesStudios/SAGE-Engine"
+
+# --- simple localisation ---------------------------------------------
+LANG = os.environ.get("SAGE_LANG")
+
+def load_language() -> str:
+    if QSettings is None:
+        return LANG or "en"
+    settings = QSettings("AGStudios", "sage_launcher")
+    return settings.value("language", LANG or "en")
+
+
+def save_language(lang: str) -> None:
+    if QSettings is None:
+        return
+    settings = QSettings("AGStudios", "sage_launcher")
+    settings.setValue("language", lang)
+
+
+STRINGS: dict[str, dict[str, str]] = {
+    "en": {
+        "browse": "Browse",
+        "open": "Open",
+        "create": "Create",
+        "install": "Install/Update Engine",
+        "projects": "Projects",
+        "engine": "Engine",
+        "info": "Info",
+        "docs": "Open Documentation",
+        "docs_label": "Documentation and tools",
+        "language": "Language:",
+    },
+    "ru": {
+        "browse": "Обзор",
+        "open": "Открыть",
+        "create": "Создать",
+        "install": "Установить/Обновить Движок",
+        "projects": "Проекты",
+        "engine": "Движок",
+        "info": "Инфо",
+        "docs": "Открыть Документацию",
+        "docs_label": "Документация и инструменты",
+        "language": "Язык:",
+    },
+}
+
+
+def tr(key: str) -> str:
+    lang = load_language()
+    return STRINGS.get(lang, STRINGS["en"]).get(key, key)
 
 try:
     from PyQt6.QtCore import QSettings  # type: ignore
@@ -57,7 +107,7 @@ def load_recent_dirs() -> list[str]:
     return settings.value("recent_dirs", [], list) or []
 
 
-def create_project(path: str) -> None:
+def create_project(path: str, version: str = "dev") -> None:
     """Create a minimal project with a camera."""
     from engine.core.project import Project
 
@@ -66,7 +116,8 @@ def create_project(path: str) -> None:
             {"type": "camera", "width": 640, "height": 480, "active": True}
         ]
     }
-    Project(scene=scene).save(path)
+    proj = Project(scene=scene, metadata={"engine_version": version})
+    proj.save(path)
 
 
 def run_setup() -> None:
@@ -75,8 +126,14 @@ def run_setup() -> None:
 
 
 def open_docs() -> None:
-    """Open the SAGE documentation URL."""
-    webbrowser.open(DOC_URL)
+    """Open local documentation or fallback to the online URL."""
+    local = os.environ.get("SAGE_DOC_PATH")
+    if local and os.path.exists(local):
+        if not local.startswith("file://"):
+            local = "file://" + local
+        webbrowser.open(local)
+    else:
+        webbrowser.open(DOC_URL)
 
 
 def main() -> None:
@@ -109,7 +166,7 @@ def main() -> None:
     # --- Projects tab ---
     project_tab = QWidget()
     dir_edit = QLineEdit(load_last_dir())
-    browse_btn = QPushButton("Browse")
+    browse_btn = QPushButton(tr("browse"))
     project_list = QListWidget()
 
     def refresh() -> None:
@@ -119,13 +176,15 @@ def main() -> None:
 
     refresh()
 
-    open_btn = QPushButton("Open")
-    create_btn = QPushButton("Create")
-    install_btn = QPushButton("Install/Update Engine")
+    open_btn = QPushButton(tr("open"))
+    create_btn = QPushButton(tr("create"))
+    install_btn = QPushButton(tr("install"))
 
     def choose_dir() -> None:
         path = QFileDialog.getExistingDirectory(
-            win, "Select projects directory", dir_edit.text()
+            win,
+            tr("browse"),
+            dir_edit.text(),
         )
         if path:
             dir_edit.setText(path)
@@ -156,12 +215,24 @@ def main() -> None:
     def create_dialog() -> None:
         path, _ = QFileDialog.getSaveFileName(
             win,
-            "Create project",
+            tr("create"),
             filter="SAGE Project (*.sageproject)",
         )
-        if path:
-            create_project(path)
-            refresh()
+        if not path:
+            return
+        versions = installed_versions(DEFAULT_PATH)
+        if not versions:
+            version = "dev"
+        else:
+            from PyQt6.QtWidgets import QInputDialog
+
+            version, ok = QInputDialog.getItem(
+                win, tr("create"), "Version", versions, 0, False
+            )
+            if not ok:
+                return
+        create_project(path, version)
+        refresh()
 
     browse_btn.clicked.connect(choose_dir)
     open_btn.clicked.connect(open_selected)
@@ -184,7 +255,7 @@ def main() -> None:
 
     # --- Engine tab ---
     engine_tab = QWidget()
-    update_btn = QPushButton("Install/Update Engine")
+    update_btn = QPushButton(tr("install"))
     update_btn.clicked.connect(run_setup)
     engine_layout = QVBoxLayout(engine_tab)
     engine_layout.addWidget(update_btn)
@@ -192,16 +263,29 @@ def main() -> None:
 
     # --- Info tab ---
     info_tab = QWidget()
-    docs_btn = QPushButton("Open Documentation")
+    docs_btn = QPushButton(tr("docs"))
     docs_btn.clicked.connect(open_docs)
+    lang_label = QLabel(tr("language"))
+    lang_box = QListWidget()
+    lang_box.addItems(["English", "Русский"])
+    current = 0 if load_language() == "en" else 1
+    lang_box.setCurrentRow(current)
+
+    def set_lang() -> None:
+        save_language("en" if lang_box.currentRow() == 0 else "ru")
+
+    lang_box.currentRowChanged.connect(lambda _: set_lang())
+
     info_layout = QVBoxLayout(info_tab)
-    info_layout.addWidget(QLabel("Documentation and tools"))
+    info_layout.addWidget(QLabel(tr("docs_label")))
     info_layout.addWidget(docs_btn)
+    info_layout.addWidget(lang_label)
+    info_layout.addWidget(lang_box)
     info_layout.addStretch()
 
-    tabs.addTab(project_tab, "Projects")
-    tabs.addTab(engine_tab, "Engine")
-    tabs.addTab(info_tab, "Info")
+    tabs.addTab(project_tab, tr("projects"))
+    tabs.addTab(engine_tab, tr("engine"))
+    tabs.addTab(info_tab, tr("info"))
 
     layout = QVBoxLayout(win)
     layout.addWidget(tabs)

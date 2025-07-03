@@ -55,6 +55,10 @@ The optional **SAGE Launcher** (requires PyQt6) lets you choose a directory and 
 ```bash
 python -m sage_launcher
 ```
+The launcher and installer support English and Russian via the `SAGE_LANG` environment
+variable or the language picker in the "Info" tab. Documentation can be opened from a
+local `SAGE_DOC_PATH` if provided. When creating a project you may select which installed
+engine version to use.
 Use `--vsync` or `--no-vsync` to toggle vertical sync on supporting renderers.
 For heavy scenes you can enable asynchronous event updates:
 ```python
