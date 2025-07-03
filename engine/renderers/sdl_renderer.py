@@ -22,13 +22,21 @@ from ..mesh_utils import Mesh
 class SDLRenderer(Renderer):
     """Lightweight renderer based on PySDL2."""
 
-    def __init__(self, width: int = 640, height: int = 480, title: str = "SAGE 2D"):
+    def __init__(
+        self,
+        width: int = 640,
+        height: int = 480,
+        title: str = "SAGE 2D",
+        *,
+        vsync: bool | None = None,
+    ) -> None:
         super().__init__()
         if sdl2.SDL_Init(sdl2.SDL_INIT_VIDEO) != 0:
             raise RuntimeError("SDL_Init failed")
         self.width = width
         self.height = height
         self.title = title
+        self.vsync = vsync
         self.window = sdl2.SDL_CreateWindow(
             title.encode(),
             sdl2.SDL_WINDOWPOS_CENTERED,
@@ -40,7 +48,12 @@ class SDLRenderer(Renderer):
         if not self.window:
             err = sdl2.SDL_GetError()
             raise RuntimeError(f"SDL_CreateWindow failed: {err.decode()}")
-        self.renderer = sdl2.SDL_CreateRenderer(self.window, -1, 0)
+        flags = 0
+        if hasattr(sdl2, "SDL_RENDERER_ACCELERATED"):
+            flags |= sdl2.SDL_RENDERER_ACCELERATED
+        if vsync and hasattr(sdl2, "SDL_RENDERER_PRESENTVSYNC"):
+            flags |= sdl2.SDL_RENDERER_PRESENTVSYNC
+        self.renderer = sdl2.SDL_CreateRenderer(self.window, -1, flags)
         if not self.renderer:
             err = sdl2.SDL_GetError()
             raise RuntimeError(f"SDL_CreateRenderer failed: {err.decode()}")

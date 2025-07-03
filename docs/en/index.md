@@ -14,3 +14,4 @@ Example scenes under `examples/Scenes/` include:
 - `Map.sagescene` – large tile map with event groups
 - `.sagemap` files define tile-based maps
 - `.sagesave` files store saved game state via `engine.save_game`.
+- Use `--vsync/--no-vsync` when running projects to toggle vertical sync.

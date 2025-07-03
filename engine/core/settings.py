@@ -30,4 +30,5 @@ class EngineSettings:
     max_delta: float = 0.1
     async_events: bool = False
     event_workers: int = 4
+    vsync: bool | None = None
     image_cache_limit: int = int(os.environ.get("SAGE_IMAGE_CACHE_LIMIT", "32"))

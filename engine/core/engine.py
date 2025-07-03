@@ -2,6 +2,7 @@ import sys
 import argparse
 import time
 import os
+import inspect
 from .scenes import Scene, SceneManager
 from .extensions import EngineExtension
 from .project import Project
@@ -42,6 +43,7 @@ class Engine:
                  max_delta: float = 0.1,
                  async_events: bool = False,
                  event_workers: int = 4,
+                 vsync: bool | None = None,
                  *, settings: "EngineSettings | None" = None,
                  metadata: dict | None = None):
         if settings is not None:
@@ -59,10 +61,12 @@ class Engine:
             max_delta = settings.max_delta
             async_events = settings.async_events
             event_workers = settings.event_workers
+            vsync = settings.vsync
             from ..entities import game_object
             game_object.set_image_cache_limit(settings.image_cache_limit)
         self.fps = fps
-        self._frame_interval = 1.0 / fps if fps else 0
+        self.vsync = vsync
+        self._frame_interval = 0 if vsync else (1.0 / fps if fps else 0)
         self.max_delta = max_delta
         self.async_events = async_events
         self.event_workers = event_workers
@@ -94,16 +98,33 @@ class Engine:
                 cls = None
             if not opengl_ok or cls is None or cls.__name__ == "NullRenderer":
                 cls = get_renderer("sdl") or get_renderer("null")
-            self.renderer = cls(width, height, title)
+            params = inspect.signature(cls.__init__).parameters
+            if "vsync" in params:
+                self.renderer = cls(width, height, title, vsync=vsync)
+            else:
+                self.renderer = cls(width, height, title)
         elif isinstance(renderer, str):
             cls = get_renderer(renderer)
             if cls is None:
                 raise ValueError(f"Unknown renderer: {renderer}")
-            self.renderer = cls(width, height, title)
+            params = inspect.signature(cls.__init__).parameters
+            if "vsync" in params:
+                self.renderer = cls(width, height, title, vsync=vsync)
+            else:
+                self.renderer = cls(width, height, title)
         elif isinstance(renderer, type):
-            self.renderer = renderer(width, height, title)
+            params = inspect.signature(renderer.__init__).parameters
+            if "vsync" in params:
+                self.renderer = renderer(width, height, title, vsync=vsync)
+            else:
+                self.renderer = renderer(width, height, title)
         else:
             self.renderer = renderer
+        if vsync is not None and hasattr(self.renderer, "vsync"):
+            try:
+                self.renderer.vsync = vsync
+            except Exception:
+                pass
         self.renderer.keep_aspect = keep_aspect
         self.renderer.background = tuple(background)
         # hide editor-only gizmos in the game window
@@ -186,6 +207,7 @@ class Engine:
             max_delta=self.max_delta,
             async_events=self.async_events,
             event_workers=self.event_workers,
+            vsync=self.vsync,
             image_cache_limit=getattr(game_object, "_MAX_CACHE", 32),
         )
 
@@ -308,6 +330,19 @@ def main(argv=None):
         default="opengl",
         help="Rendering backend (opengl, sdl or null)",
     )
+    parser.add_argument(
+        "--vsync",
+        dest="vsync",
+        action="store_true",
+        help="Enable VSync if supported",
+    )
+    parser.add_argument(
+        "--no-vsync",
+        dest="vsync",
+        action="store_false",
+        help="Disable VSync",
+    )
+    parser.set_defaults(vsync=None)
     args = parser.parse_args(argv)
 
     scene = Scene()
@@ -340,7 +375,11 @@ def main(argv=None):
             cls = get_renderer("sdl") or get_renderer("null")
     elif cls is None:
         raise ValueError(f"Unknown renderer: {renderer_name}")
-    renderer = cls(width, height, title)
+    params = inspect.signature(cls.__init__).parameters
+    if "vsync" in params:
+        renderer = cls(width, height, title, vsync=args.vsync)
+    else:
+        renderer = cls(width, height, title)
     camera = scene.ensure_active_camera(width, height)
     Engine(
         width=width,
@@ -350,4 +389,5 @@ def main(argv=None):
         events=scene.build_event_system(aggregate=False),
         renderer=renderer,
         camera=camera,
+        vsync=args.vsync,
     ).run()

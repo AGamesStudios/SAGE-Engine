@@ -13,6 +13,8 @@ def _stub_sdl(monkeypatch, calls):
     mod.SDL_FLIP_HORIZONTAL = 1
     mod.SDL_FLIP_VERTICAL = 2
     mod.SDL_WINDOWPOS_CENTERED = 0
+    mod.SDL_RENDERER_ACCELERATED = 1
+    mod.SDL_RENDERER_PRESENTVSYNC = 2
     mod.SDL_Rect = lambda x, y, w, h: (x, y, w, h)
     class P(ctypes.Structure):
         _fields_ = [('x', ctypes.c_int), ('y', ctypes.c_int)]
@@ -20,7 +22,10 @@ def _stub_sdl(monkeypatch, calls):
     mod.SDL_GetError = lambda: b""
     mod.SDL_Init = lambda flag: 0
     mod.SDL_CreateWindow = lambda *a, **k: object()
-    mod.SDL_CreateRenderer = lambda *a, **k: object()
+    def create_renderer(window, index, flags):
+        calls['flags'] = flags
+        return object()
+    mod.SDL_CreateRenderer = create_renderer
     mod.SDL_SetRenderDrawBlendMode = lambda *a, **k: None
     mod.SDL_SetRenderTarget = lambda *a, **k: None
     mod.SDL_GetRenderTarget = lambda *a, **k: None
@@ -84,3 +89,11 @@ def test_sprite_and_mesh(monkeypatch):
     obj.mesh = DummyMesh()
     r._draw_mesh(obj, obj.mesh)
     assert calls['copy'] == 1 and calls['lines'] == 1 and calls['tex'] >= 1
+
+
+def test_vsync_flag(monkeypatch):
+    calls = {'tex': 0, 'copy': 0, 'lines': 0, 'flags': 0}
+    _stub_sdl(monkeypatch, calls)
+    from engine.renderers.sdl_renderer import SDLRenderer
+    SDLRenderer(2, 2, 't', vsync=True)
+    assert calls['flags'] & 2

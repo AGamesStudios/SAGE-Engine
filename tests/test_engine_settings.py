@@ -44,9 +44,11 @@ class DummyInput(InputBackend):
 def test_engine_from_settings():
     settings = EngineSettings(width=320, height=240, fps=60,
                               renderer=DummyRenderer,
-                              input_backend=DummyInput)
+                              input_backend=DummyInput,
+                              vsync=True)
     engine = Engine(settings=settings)
     assert engine.fps == 60
+    assert engine.vsync is True
     assert isinstance(engine.renderer, DummyRenderer)
     assert isinstance(engine.input, DummyInput)
     assert engine.max_delta == settings.max_delta

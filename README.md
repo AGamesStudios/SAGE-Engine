@@ -30,6 +30,7 @@ Use `python -m engine path/to/project.sageproject` to launch a game. Running `py
 python -m engine --renderer sdl examples/blank.sageproject
 python -m engine --renderer null examples/blank.sageproject
 ```
+Use `--vsync` or `--no-vsync` to toggle vertical sync on supporting renderers.
 The editor is packaged separately and installed with the `editor` extra.
 For heavy scenes you can enable asynchronous event updates:
 ```python
