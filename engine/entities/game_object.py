@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from ..utils.log import logger
 from collections import OrderedDict

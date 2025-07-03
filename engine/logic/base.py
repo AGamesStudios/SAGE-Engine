@@ -1,5 +1,6 @@
 # SAGE Logic - a simple condition/action event system
 # Provides Clickteam-style logic for both 2D and 3D games
+from __future__ import annotations
 
 from ..utils.log import logger
 from concurrent.futures import ThreadPoolExecutor

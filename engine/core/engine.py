@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import sys
 import argparse
 import time
@@ -69,6 +71,10 @@ class Engine:
         self._frame_interval = 0 if vsync else (1.0 / fps if fps else 0)
         self.max_delta = max_delta
         self.async_events = async_events
+        if self.async_events:
+            logger.warning(
+                "Asynchronous event updates are experimental and may require a VariableStore"
+            )
         self.event_workers = event_workers
         self.metadata = {"version": ENGINE_VERSION}
         if metadata:

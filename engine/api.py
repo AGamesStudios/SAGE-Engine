@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 from .core.scenes.scene import Scene
 from .core.scene_file import load_scene_file, save_scene_file

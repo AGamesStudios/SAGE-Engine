@@ -6,6 +6,8 @@ The engine is developed and maintained by **Amckinator Games Studios (AGStudios)
 Custom resources use compact `.sageaudio`, `.sagemesh` and `.sageanimation` descriptors for sound, mesh and animation data.
 
 Documentation lives under `docs/`. Start with [docs/en/index.md](docs/en/index.md) for an overview, see [plugins](docs/en/plugins.md) for extension points and [optimisation tips](docs/en/optimisation.md) for performance advice.
+For known caveats such as dependency requirements and experimental features see
+[limitations](docs/en/limitations.md).
 
 ## Quick start
 ```bash

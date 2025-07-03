@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 try:
     import sdl2
 except Exception as exc:  # pragma: no cover - optional dependency

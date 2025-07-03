@@ -1,4 +1,6 @@
 # Simple resource management for SAGE Engine
+from __future__ import annotations
+
 import os
 from typing import Callable
 from ..utils.log import logger
