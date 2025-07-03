@@ -17,12 +17,16 @@ python scripts/install.py --package sage-editor
 The script invokes ``pip`` under the hood. Extras can also be installed
 directly with ``pip install .[opengl,sdl,audio]``.
 
-``SAGE Setup`` offers the same functionality with a PyQt6 interface:
-Install the ``qt`` extra or PyQt6 separately to use it.
+``SAGE Setup`` offers the same functionality with a PyQt6 interface. It
+defaults to installing under ``~/sage_engine`` and provides check boxes for
+extras like ``opengl``, ``sdl``, ``audio``, ``qt`` and ``sdk``. Install the
+``qt`` extra or PyQt6 separately to use it.
 ```bash
 python -m sage_setup
 ```
-After installation you can open projects with ``SAGE Launcher`` (also PyQt6-based):
+After installation you can open projects with ``SAGE Launcher`` (also PyQt6-based).
+The launcher lists known projects, lets you create new ones and even runs
+``SAGE Setup`` to install the engine again with different extras:
 ```bash
 python -m sage_launcher
 ```

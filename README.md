@@ -24,12 +24,16 @@ Alternatively run the installer to choose extras interactively:
 ```bash
 python scripts/install.py --extras opengl sdl audio
 ```
-You can also use **SAGE Setup** (requires PyQt6) for a graphical installer:
+You can also use **SAGE Setup** (requires PyQt6) for a graphical installer.
+It defaults to installing under ``~/sage_engine`` and lets you pick extras
+like ``opengl``, ``sdl``, ``audio``, ``qt`` and ``sdk``:
 ```bash
 python -m sage_setup
 ```
-Optional tools such as the editor and development SDK
-are distributed separately so the engine can be used standalone.
+Optional tools such as the editor and development SDK are distributed
+separately so the engine can be used standalone. ``SAGE Launcher`` is
+installed alongside the engine and now lists recent projects with options
+to create or open them.
 
 Runtime state can be saved and loaded with `engine.save_game` and
 `engine.load_game`, producing `.sagesave` files.
