@@ -3,6 +3,10 @@ import subprocess
 import sys
 import webbrowser
 from pathlib import Path
+
+if __package__ is None or __package__ == "":
+    sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 from sage_setup import installed_versions, DEFAULT_PATH
 
 DOC_URL = "https://github.com/AGamesStudios/SAGE-Engine"

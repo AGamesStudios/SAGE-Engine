@@ -4,6 +4,9 @@ import sys
 import select
 from pathlib import Path
 from typing import Iterable
+
+if __package__ is None or __package__ == "":
+    sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 try:
     import tomllib
 except ImportError:  # pragma: no cover - Python<3.11
