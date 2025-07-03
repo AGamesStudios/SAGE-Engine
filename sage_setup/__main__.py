@@ -66,7 +66,14 @@ def run_install_dialog(path: str | None, extras: str | None, win) -> str:
 
     progress = QProgressDialog("Installing...", "", 0, 0, win)
     progress.setWindowTitle("SAGE Setup")
+    progress.setCancelButton(None)
     progress.setWindowModality(Qt.WindowModality.WindowModal)
+    progress.setRange(0, 0)
+    progress.setValue(0)
+    progress.setFixedSize(400, 150)
+    pg = progress.frameGeometry()
+    pg.moveCenter(win.frameGeometry().center())
+    progress.move(pg.topLeft())
     progress.show()
     QApplication.processEvents()
     try:
@@ -95,6 +102,7 @@ def main() -> None:
             QVBoxLayout,
             QWidget,
             QCheckBox,
+            QGridLayout,
         )
     except Exception as exc:  # pragma: no cover - GUI import feedback
         print("PyQt6 is required to run SAGE Setup", file=sys.stderr)
@@ -105,6 +113,7 @@ def main() -> None:
 
     win = QWidget()
     win.setWindowTitle("SAGE Setup")
+    win.setFixedSize(500, 250)
     path_edit = QLineEdit(DEFAULT_PATH)
     browse_btn = QPushButton("Browse")
     extras_boxes = {name: QCheckBox(name) for name in available_extras()}
@@ -128,9 +137,11 @@ def main() -> None:
     path_row.addWidget(path_edit)
     path_row.addWidget(browse_btn)
     form.addRow("Install location:", path_row)
-    extras_layout = QVBoxLayout()
-    for box in extras_boxes.values():
-        extras_layout.addWidget(box)
+    extras_layout = QGridLayout()
+    for i, box in enumerate(extras_boxes.values()):
+        row = i // 6
+        col = i % 6
+        extras_layout.addWidget(box, row, col)
     form.addRow("Extras:", extras_layout)
 
     layout = QVBoxLayout(win)
@@ -138,6 +149,10 @@ def main() -> None:
     layout.addWidget(install_btn)
 
     win.show()
+    fg = win.frameGeometry()
+    center = app.primaryScreen().availableGeometry().center()
+    fg.moveCenter(center)
+    win.move(fg.topLeft())
     app.exec()
 
 

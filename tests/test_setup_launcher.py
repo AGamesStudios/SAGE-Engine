@@ -199,6 +199,31 @@ def test_install_dialog_appends_output(monkeypatch):
         def __init__(self, *a, **k):
             self._text = ""
 
+        def setRange(self, a, b):
+            pass
+
+        def setValue(self, v):
+            pass
+
+        def setCancelButton(self, btn):
+            pass
+
+        def setFixedSize(self, w, h):
+            pass
+
+        class Rect:
+            def moveCenter(self, p):
+                pass
+
+            def topLeft(self):
+                return 0
+
+        def frameGeometry(self):
+            return self.Rect()
+
+        def move(self, p):
+            pass
+
         def setWindowTitle(self, t):
             pass
 
@@ -246,7 +271,21 @@ def test_install_dialog_appends_output(monkeypatch):
     qtwidgets.QProgressDialog = DummyDialog
     qtwidgets.QApplication = DummyApp
     qtwidgets.QMessageBox = DummyMsgBox
-    qtwidgets.QWidget = type("QWidget", (), {})
+    class DummyWidget:
+        class Rect:
+            def center(self):
+                return 0
+
+            def moveCenter(self, p):
+                pass
+
+            def topLeft(self):
+                return 0
+
+        def frameGeometry(self):
+            return self.Rect()
+
+    qtwidgets.QWidget = DummyWidget
     qtcore = types.ModuleType("PyQt6.QtCore")
     qtcore.Qt = types.SimpleNamespace(WindowModality=types.SimpleNamespace(WindowModal=0))
     monkeypatch.setitem(sys.modules, "PyQt6.QtWidgets", qtwidgets)
