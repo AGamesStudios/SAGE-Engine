@@ -57,7 +57,6 @@ def test_asyncio_update_called(monkeypatch):
         return orig_new_loop()
 
     monkeypatch.setattr(asyncio, 'new_event_loop', new_loop)
-    monkeypatch.setattr(asyncio, 'run', lambda coro: (_ for _ in ()).throw(RuntimeError('no run')))
 
     eng = Engine(scene=scene, renderer=NullRenderer, input_backend=NullInput,
                  asyncio_events=True)

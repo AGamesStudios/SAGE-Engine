@@ -4,11 +4,10 @@ from importlib import import_module
 from typing import TYPE_CHECKING
 
 from .version import __version__, require as require_version
+from .utils.log import logger
+from .utils.diagnostics import warn, error, exception  # noqa: F401
 
 ENGINE_VERSION = __version__
-
-from .utils.log import logger  # noqa: E402,F401
-from .utils.diagnostics import warn, error, exception  # noqa: E402,F401
 try:
     from sage_sdk.plugins import PluginManager  # noqa: E402
 except Exception:  # pragma: no cover - sdk optional

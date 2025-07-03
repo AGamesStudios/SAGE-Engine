@@ -82,6 +82,7 @@ class Engine:
         if self.asyncio_events:
             logger.warning("asyncio_events are experimental")
             self._loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(self._loop)
         self.event_workers = event_workers
         self.metadata = {"version": ENGINE_VERSION}
         if metadata:
@@ -97,7 +98,11 @@ class Engine:
                     self.scene.add_object(camera)
             self.scene.set_active_camera(camera)
         self.camera = camera
-        self.events = events if events is not None else self.scene.build_event_system(aggregate=False)
+        self.events = (
+            events
+            if events is not None
+            else self.scene.build_event_system(aggregate=False)
+        )
         if renderer is None:
             opengl_ok = True
             try:
@@ -137,7 +142,7 @@ class Engine:
             try:
                 self.renderer.vsync = vsync
             except Exception:
-                pass
+                logger.exception("Failed to set vsync")
         self.renderer.keep_aspect = keep_aspect
         self.renderer.background = tuple(background)
         # hide editor-only gizmos in the game window

@@ -12,7 +12,9 @@ logger = logging.getLogger(__name__)
 class Effect:
     """Base effect applying optional transformations."""
 
-    def apply_position(self, obj, camera, params: dict, pos: Tuple[float, float]) -> Tuple[float, float]:
+    def apply_position(
+        self, obj, camera, params: dict, pos: Tuple[float, float]
+    ) -> Tuple[float, float]:
         return pos
 
     def apply_scale(self, obj, camera, params: dict, scale: float) -> float:
