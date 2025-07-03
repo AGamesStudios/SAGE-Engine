@@ -54,17 +54,5 @@ class OffsetEffect(Effect):
 register_effect("offset", OffsetEffect())
 
 
-class OutlineEffect(Effect):
-    """Placeholder for an outline post effect.
-
-    This effect is registered so scenes can reference ``"outline"`` but it does
-    not yet implement any drawing logic.
-    """
-
-    # actual outline rendering would depend on the active renderer
-    # and is therefore left for future work
-
-
-register_effect("outline", OutlineEffect())
 
 __all__ = ["Effect", "register_effect", "get_effect", "EFFECT_REGISTRY"]

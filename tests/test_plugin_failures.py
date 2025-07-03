@@ -21,7 +21,8 @@ def test_object_plugin_warning(monkeypatch, caplog):
     eps = _EPS('sage_engine.objects')
     monkeypatch.setattr(metadata, 'entry_points', lambda: eps)
     objects._PLUGINS_LOADED = False
-    objects.load_object_plugins()
+    with pytest.raises(RuntimeError):
+        objects.load_object_plugins()
     assert 'Failed object plugins: bad1, bad2' in caplog.text
 
 def test_input_plugin_error(monkeypatch, caplog):

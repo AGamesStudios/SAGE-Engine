@@ -13,7 +13,6 @@ SDL2). On lightweight systems you may prefer the `NullRenderer` which has no
 extra dependencies. When distributing binaries consider providing wheels for
 these packages.
 
-The built-in ``OutlineEffect`` is currently a stub and does not draw an outline.
 
 The event system supports concurrent updates via a thread pool or
 ``asyncio`` tasks. When ``asyncio_events`` is enabled the engine creates a

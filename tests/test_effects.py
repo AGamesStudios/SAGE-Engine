@@ -2,7 +2,7 @@ import pytest
 pytest.importorskip("PIL.Image")
 from engine.entities.game_object import GameObject
 from engine.core.camera import Camera
-from engine.core.effects import register_effect, Effect, EFFECT_REGISTRY
+from engine.core.effects import register_effect, Effect
 
 def test_offset_position():
     obj = GameObject(effects=[{"type": "offset", "dx": 5, "dy": -3}])
@@ -28,6 +28,3 @@ def test_custom_effect_registration():
     obj = GameObject(effects=[{"type": "dummy"}])
     assert obj.render_scale(Camera()) == 2.0
 
-
-def test_outline_registered():
-    assert "outline" in EFFECT_REGISTRY

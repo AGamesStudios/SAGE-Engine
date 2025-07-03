@@ -48,6 +48,7 @@ def _load_entry_points() -> None:
         logger.exception("Error loading object entry points: %s", exc)
     if failed:
         logger.warning("Failed object plugins: %s", ", ".join(failed))
+        raise RuntimeError("Failed object plugins: " + ", ".join(failed))
     _PLUGINS_LOADED = True
 
 
