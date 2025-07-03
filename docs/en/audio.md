@@ -15,3 +15,11 @@ from engine.audio import AudioManager
 am = AudioManager()
 am.play('sounds/jump.wav')
 ```
+
+You can also load a `.sageaudio` descriptor containing metadata:
+
+```python
+snd = am.load_sound("jump.sageaudio")
+```
+
+If the descriptor specifies a `volume` key the sound is automatically scaled.
