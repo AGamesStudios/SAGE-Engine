@@ -53,8 +53,8 @@ def test_runtime_entrypoints():
     assert called == [['two']]
 
 
-def test_versions_match_and_paint_dir():
+def test_versions_match():
     import engine
     import engine.runtime as er
     assert er.__version__ == engine.__version__
-    assert 'paint' in dir(engine)
+    assert 'paint' not in dir(engine)

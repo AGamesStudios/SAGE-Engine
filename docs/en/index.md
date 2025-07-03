@@ -3,9 +3,11 @@
 Select a topic from the list to learn about the engine and editor features.
 * [Audio Support](audio.md)
 * [File Formats](formats.md)
+* [Saving and Loading](save_load.md)
 
 Example scenes under `examples/Scenes/` include:
 - `Scene1.sagescene` – basic sprites
 - `Animation.sagescene` – moving objects with sprite animations
 - `Audio.sagescene` – sound playback
 - `Logic.sagescene` – event-driven variables
+- `.sagesave` files store saved game state via `engine.save_game`.

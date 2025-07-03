@@ -98,8 +98,6 @@ _lazy = {
     'DEFAULT_LIBRARY_LOADER': ('engine.core.library', 'DEFAULT_LIBRARY_LOADER'),
     'load_engine_libraries': ('engine.core.library', 'load_engine_libraries'),
     'register_draw_handler': ('engine.renderers', 'register_draw_handler'),
-    'tools': ('engine.tools', None),
-    'paint': ('engine.tools', 'paint'),
     'Cache': ('engine.cache', 'Cache'),
     'SAGE_CACHE': ('engine.cache', 'SAGE_CACHE'),
     'AudioManager': ('engine.audio', 'AudioManager'),
@@ -111,6 +109,8 @@ _lazy = {
     'Frame': ('engine.animation', 'Frame'),
     'load_sageanimation': ('engine.formats', 'load_sageanimation'),
     'save_sageanimation': ('engine.formats', 'save_sageanimation'),
+    'save_game': ('engine.savegame', 'save_game'),
+    'load_game': ('engine.savegame', 'load_game'),
 }
 
 __all__ = sorted(
@@ -138,7 +138,6 @@ def __dir__():
     return sorted(list(globals().keys()) + list(_lazy.keys()))
 
 if TYPE_CHECKING:  # pragma: no cover - hints for static analyzers
-    from types import ModuleType as _ModuleType
     from .entities.game_object import GameObject, clear_image_cache  # noqa: F401
     from .core.scenes.scene import Scene  # noqa: F401
     from .core.engine import Engine  # noqa: F401
@@ -218,7 +217,8 @@ if TYPE_CHECKING:  # pragma: no cover - hints for static analyzers
         save_sagemesh,  # noqa: F401
         load_sageanimation,  # noqa: F401
         save_sageanimation,  # noqa: F401
+        save_game,  # noqa: F401
+        load_game,  # noqa: F401
     )
     from . import math2d  # noqa: F401
-    paint: _ModuleType
     from .version import require as require_version  # noqa: F401

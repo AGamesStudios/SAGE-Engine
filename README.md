@@ -16,6 +16,11 @@ Optional renderers, audio drivers and the editor can be installed via extras, e.
 ```bash
 pip install .[opengl,sdl,audio,editor]
 ```
+The editor (`sage_editor`) and painting tool (`sage_paint`) are distributed as
+separate optional packages so the engine can be used standalone.
+
+Runtime state can be saved and loaded with `engine.save_game` and
+`engine.load_game`, producing `.sagesave` files.
 
 Open `examples/blank.sageproject` with the editor or runtime to see the basic structure. The sample scene now contains two sprites and a camera. Additional resources in `examples/Resources/` demonstrate `.sageaudio`, `.sagemesh` and `.sageanimation` files. Example scenes under `examples/Scenes/` showcase animation, audio playback and event logic for reference.
 

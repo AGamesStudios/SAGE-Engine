@@ -54,8 +54,6 @@ def set_image_cache_limit(limit: int) -> None:
         ('angle', None),
         ('pivot_x', None),
         ('pivot_y', None),
-        ('flip_x', None),
-        ('flip_y', None),
         ('smooth', None),
         ('color', None),
         ('alpha', None),
