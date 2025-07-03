@@ -6,11 +6,16 @@ def test_install_invokes_pip(monkeypatch):
 
     called = {}
 
-    def fake_call(cmd):
+    def fake_run(cmd, capture_output=False, text=False):
         called['cmd'] = cmd
+        class Res:
+            returncode = 0
+            stdout = ''
+            stderr = ''
+        return Res()
 
     monkeypatch.setattr(setup, 'REPO_ROOT', '/tmp/repo')
-    monkeypatch.setattr(setup.subprocess, 'check_call', fake_call)
+    monkeypatch.setattr(setup.subprocess, 'run', fake_run)
     setup.install('/dest', 'sdl')
     assert '--target' in called['cmd']
     assert '/dest' in called['cmd']
@@ -22,11 +27,16 @@ def test_install_default_path(monkeypatch):
 
     called = {}
 
-    def fake_call(cmd):
+    def fake_run(cmd, capture_output=False, text=False):
         called['cmd'] = cmd
+        class Res:
+            returncode = 0
+            stdout = ''
+            stderr = ''
+        return Res()
 
     monkeypatch.setattr(setup, 'REPO_ROOT', '/tmp/repo')
-    monkeypatch.setattr(setup.subprocess, 'check_call', fake_call)
+    monkeypatch.setattr(setup.subprocess, 'run', fake_run)
     monkeypatch.setattr(setup, 'DEFAULT_PATH', '/def')
     setup.install.__defaults__ = ('/def', None)
     setup.install()
@@ -38,10 +48,13 @@ def test_launcher_runs_engine(monkeypatch):
 
     proc = {}
 
-    def fake_popen(cmd):
+    def fake_run(cmd):
         proc['cmd'] = cmd
+        class Res:
+            returncode = 0
+        return Res()
 
-    monkeypatch.setattr(launcher.subprocess, 'Popen', fake_popen)
+    monkeypatch.setattr(launcher.subprocess, 'run', fake_run)
     launcher.launch('demo.sageproject')
     assert proc['cmd'][0] == sys.executable
     assert proc['cmd'][-1] == 'demo.sageproject'

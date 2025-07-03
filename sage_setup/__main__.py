@@ -2,9 +2,18 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+import tomllib
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 DEFAULT_PATH = os.path.join(Path.home(), "sage_engine")
+
+
+def available_extras() -> list[str]:
+    """Return extras defined in ``pyproject.toml``."""
+    pyproject = os.path.join(REPO_ROOT, "pyproject.toml")
+    with open(pyproject, "rb") as f:
+        data = tomllib.load(f)
+    return sorted(data.get("project", {}).get("optional-dependencies", {}).keys())
 
 
 def install(target: str | None = DEFAULT_PATH, extras: str | None = None) -> None:
@@ -14,24 +23,30 @@ def install(target: str | None = DEFAULT_PATH, extras: str | None = None) -> Non
         command[-1] += f"[{extras}]"
     if target is not None:
         command += ["--target", target]
-    subprocess.check_call(command)
+    result = subprocess.run(command, capture_output=True, text=True)
+    if result.returncode != 0:
+        raise RuntimeError(result.stderr or result.stdout)
 
 
 def main() -> None:
-    from PyQt6.QtCore import Qt
-    from PyQt6.QtWidgets import (
-        QApplication,
-        QFileDialog,
-        QFormLayout,
-        QHBoxLayout,
-        QLineEdit,
-        QMessageBox,
-        QPushButton,
-        QVBoxLayout,
-        QWidget,
-        QCheckBox,
-        QProgressDialog,
-    )
+    try:
+        from PyQt6.QtCore import Qt
+        from PyQt6.QtWidgets import (
+            QApplication,
+            QFileDialog,
+            QFormLayout,
+            QHBoxLayout,
+            QLineEdit,
+            QMessageBox,
+            QPushButton,
+            QVBoxLayout,
+            QWidget,
+            QCheckBox,
+            QProgressDialog,
+        )
+    except Exception as exc:  # pragma: no cover - GUI import feedback
+        print("PyQt6 is required to run SAGE Setup", file=sys.stderr)
+        raise SystemExit(exc)
 
     app = QApplication(sys.argv)
     app.setStyle("Fusion")
@@ -40,10 +55,7 @@ def main() -> None:
     win.setWindowTitle("SAGE Setup")
     path_edit = QLineEdit(DEFAULT_PATH)
     browse_btn = QPushButton("Browse")
-    extras_boxes = {
-        name: QCheckBox(name)
-        for name in ("opengl", "sdl", "audio", "qt", "sdk")
-    }
+    extras_boxes = {name: QCheckBox(name) for name in available_extras()}
 
     def browse() -> None:
         path = QFileDialog.getExistingDirectory(win, "Select install location")
@@ -62,7 +74,7 @@ def main() -> None:
             install(path_edit.text() or None, extras)
         except Exception as exc:  # pragma: no cover - GUI feedback only
             progress.close()
-            QMessageBox.critical(win, "SAGE Setup", f"Install failed: {exc}")
+            QMessageBox.critical(win, "SAGE Setup", f"Install failed:\n{exc}")
         else:
             progress.close()
             QMessageBox.information(win, "SAGE Setup", "Installation complete")
