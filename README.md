@@ -22,7 +22,7 @@ are distributed as optional packages so the engine can be used standalone.
 Runtime state can be saved and loaded with `engine.save_game` and
 `engine.load_game`, producing `.sagesave` files.
 
-Open `examples/blank.sageproject` with the editor or runtime to see the basic structure. The sample scene now contains two sprites and a camera. Additional resources in `examples/Resources/` demonstrate `.sageaudio`, `.sagemesh`, `.sageanimation` and `.sagemap` files. Tile maps are pre‑rendered to textures so large maps draw efficiently. Example scenes under `examples/Scenes/` showcase animation, audio playback, event groups and a scrolling map (`Map.sagescene`).
+Open `examples/blank.sageproject` with the editor or runtime to see the basic structure. The sample scene now contains two sprites and a camera. Additional resources in `examples/Resources/` demonstrate `.sageaudio`, `.sagemesh`, `.sageanimation` and `.sagemap` files. Tile maps are pre‑rendered to textures so large maps draw efficiently. Example scenes under `examples/Scenes/` showcase animation, audio playback, event groups, multiple tile maps and basic physics (`Physics.sagescene`).
 
 ## Running
 Use `python -m engine path/to/project.sageproject` to launch a game. Running `python main.py` will start the editor if installed, otherwise it behaves the same as the engine runtime. The engine tries to use the OpenGL backend first but falls back to SDL or the headless Null renderer when dependencies are missing:
@@ -38,6 +38,8 @@ Engine(scene=my_scene, async_events=True).run()
 ```
 Input is handled by the SDL backend unless `qt` is selected to integrate with a Qt event loop.
 Gamepad input can be enabled with the `gamepad` backend if SDL2 supports controllers.
+Analog sticks expose axis values that can be combined with key bindings using
+`InputManager.bind_axis('move', axis_id=0, positive=K_RIGHT, negative=K_LEFT)`.
 
 Game objects expose a `visible` flag and `alpha` value for transparency. The
 `engine.mesh_utils` module includes helpers for creating and editing meshes,

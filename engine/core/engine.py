@@ -236,9 +236,16 @@ class Engine:
                 raise
 
     def shutdown(self) -> None:
-        """Stop all extensions."""
+        """Stop all extensions and clear cached data."""
         for ext in list(self.extensions):
             self.remove_extension(ext)
+        for scene in getattr(self.scene_manager, "scenes", {}).values():
+            for obj in getattr(scene, "objects", []):
+                if hasattr(obj, "clear_cache"):
+                    try:
+                        obj.clear_cache()
+                    except Exception:
+                        logger.exception("Cache cleanup failed")
 
     def change_scene(self, name: str, scene: Scene | None = None) -> None:
         """Replace or switch the active scene."""
@@ -305,14 +312,16 @@ class Engine:
 
         _log(f"Starting engine version {ENGINE_VERSION}")
         app = QApplication.instance()
-        created = False
         if app is None:
             app = QApplication(sys.argv)
-            created = True
         window = GameWindow(self)
         window.show()
-        if created:
+        try:
             app.exec()
+        finally:
+            self.shutdown()
+            self.input.shutdown()
+            self.renderer.close()
         return window
 
 

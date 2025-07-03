@@ -29,4 +29,10 @@ To keep large projects running smoothly consider the following options:
       eng.events.update_group(name, eng, eng.scene, 0)
       # measure time per group here
   ```
+  Event priority can also be used to batch expensive actions:
+
+  ```python
+  eng.events.add_event(Event([...], [...], priority=10, groups=["physics"]))
+  eng.events.update_group("physics", eng, eng.scene, dt)
+  ```
 

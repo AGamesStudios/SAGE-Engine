@@ -15,6 +15,9 @@ class NullInput(InputBackend):
     def is_button_down(self, button: int) -> bool:
         return False
 
+    def get_axis_value(self, axis_id: int) -> float:
+        return 0.0
+
     def shutdown(self) -> None:
         pass
 

@@ -12,6 +12,7 @@ Example scenes under `examples/Scenes/` include:
 - `Audio.sagescene` – sound playback
 - `Logic.sagescene` – event-driven variables
 - `Map.sagescene` – large tile map with event groups
+- `Physics.sagescene` – two layered maps with simple movement
 - `.sagemap` files define tile-based maps
 - `.sagesave` files store saved game state via `engine.save_game`.
 - Use `--vsync/--no-vsync` when running projects to toggle vertical sync.

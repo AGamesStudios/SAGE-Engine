@@ -104,6 +104,11 @@ class Scene:
                     del self.groups[grp]
             if hasattr(obj, "scene"):
                 obj.scene = None
+            if hasattr(obj, "clear_cache"):
+                try:
+                    obj.clear_cache()
+                except Exception:
+                    logger.exception("Failed to clear cache for %s", obj.name)
             logger.debug('Removed object %s', obj.name)
             if obj is self.camera:
                 self.camera = None

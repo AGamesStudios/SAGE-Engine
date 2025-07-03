@@ -15,7 +15,7 @@ from ..utils.log import logger
 @register_object(
     'map',
     [
-        ('map_file', 'map'),
+        ('map_file', 'map_file'),
         ('tileset', None),
         ('tile_width', None),
         ('tile_height', None),
@@ -31,6 +31,7 @@ class TileMap:
     """Tile map composed of a grid of tiles."""
 
     map_file: str = ''
+    name: str = "TileMap"
     tileset: str = ''
     tile_width: int = 32
     tile_height: int = 32

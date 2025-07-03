@@ -1,0 +1,15 @@
+{
+  "objects": [
+    {"type": "camera", "x": 0, "y": 0, "width": 640, "height": 480, "active": true, "name": "Camera"},
+    {"type": "map", "map_file": "../Resources/map.sagemap", "visible": true, "name": "Background"},
+    {"type": "map", "map_file": "../Resources/map.sagemap", "visible": true, "y": 256, "name": "Foreground"},
+    {"type": "sprite", "animation": "../Resources/walk.sageanimation", "x": 32, "y": 32, "name": "Hero"}
+  ],
+  "events": [
+    {
+      "name": "MovePhysics",
+      "groups": ["physics"],
+      "actions": [{"type": "MoveDirection", "target": 3, "direction": 0, "speed": 100}]
+    }
+  ]
+}

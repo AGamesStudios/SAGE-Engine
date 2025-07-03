@@ -26,6 +26,10 @@ class InputBackend(ABC):
         """Return True if *button* is currently pressed."""
         raise NotImplementedError
 
+    def get_axis_value(self, axis_id: int) -> float:
+        """Return the current analog value for ``axis_id``."""
+        return 0.0
+
     @abstractmethod
     def shutdown(self) -> None:
         """Clean up any resources used by the backend."""
@@ -103,7 +107,7 @@ class InputManager:
         self.backend = backend
         self._key_map: dict[str, int] = {}
         self._btn_map: dict[str, int] = {}
-        self._axes: dict[str, tuple[int | None, int | None, float]] = {}
+        self._axes: dict[str, tuple[int | None, int | None, float, int | None]] = {}
         self._press: dict[str, list[callable]] = {}
         self._release: dict[str, list[callable]] = {}
         self._state: set[str] = set()
@@ -116,10 +120,17 @@ class InputManager:
         if button is not None:
             self._btn_map[action] = button
 
-    def bind_axis(self, axis: str, *, positive: int | None = None,
-                  negative: int | None = None, scale: float = 1.0) -> None:
-        """Map ``axis`` to positive/negative keys."""
-        self._axes[axis] = (positive, negative, scale)
+    def bind_axis(
+        self,
+        axis: str,
+        *,
+        positive: int | None = None,
+        negative: int | None = None,
+        axis_id: int | None = None,
+        scale: float = 1.0,
+    ) -> None:
+        """Map ``axis`` to keys/buttons or an analog ``axis_id``."""
+        self._axes[axis] = (positive, negative, scale, axis_id)
 
     def unbind_axis(self, axis: str) -> None:
         self._axes.pop(axis, None)
@@ -154,8 +165,8 @@ class InputManager:
         return False
 
     def get_axis(self, axis: str) -> float:
-        pos, neg, scale = self._axes.get(axis, (None, None, 1.0))
-        value = 0.0
+        pos, neg, scale, aid = self._axes.get(axis, (None, None, 1.0, None))
+        value = self.backend.get_axis_value(aid) if aid is not None else 0.0
         if pos is not None and self.backend.is_key_down(pos):
             value += scale
         if neg is not None and self.backend.is_key_down(neg):

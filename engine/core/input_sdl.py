@@ -34,6 +34,9 @@ class SDLInput(InputBackend):
     def is_button_down(self, button):
         return button in self._buttons
 
+    def get_axis_value(self, axis_id: int) -> float:
+        return 0.0
+
     def shutdown(self):
         sdl2.SDL_Quit()
 

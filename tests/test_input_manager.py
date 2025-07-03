@@ -5,6 +5,7 @@ class DummyBackend:
     def __init__(self):
         self.keys = set()
         self.buttons = set()
+        self.axes = {}
 
     def poll(self):
         pass
@@ -14,6 +15,9 @@ class DummyBackend:
 
     def is_button_down(self, button):
         return button in self.buttons
+
+    def get_axis_value(self, aid):
+        return self.axes.get(aid, 0.0)
 
     def shutdown(self):
         self.keys.clear()
@@ -33,7 +37,7 @@ def test_action_binding():
 def test_axis_and_callbacks():
     backend = DummyBackend()
     m = InputManager(backend)
-    m.bind_axis('move', positive=1, negative=2)
+    m.bind_axis('move', positive=1, negative=2, axis_id=0)
     events = []
     m.bind_action('fire', key=3)
     m.on_press('fire', lambda: events.append('press'))
@@ -41,10 +45,13 @@ def test_axis_and_callbacks():
     backend.keys.update({1, 3})
     m.poll()
     assert m.get_axis('move') == 1
+    backend.axes[0] = 0.5
+    assert m.get_axis('move') == 1.5
     backend.keys.discard(1)
     backend.keys.add(2)
     m.poll()
-    assert m.get_axis('move') == -1
+    backend.axes[0] = -0.5
+    assert m.get_axis('move') == -1.5
     backend.keys.discard(3)
     m.poll()
     assert events == ['press', 'release']

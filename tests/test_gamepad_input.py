@@ -10,6 +10,7 @@ def _stub_sdl(monkeypatch):
     mod.SDL_GameControllerOpen = lambda i: object()
     mod.SDL_GameControllerUpdate = lambda: None
     mod.SDL_GameControllerGetButton = lambda c, b: 1
+    mod.SDL_GameControllerGetAxis = lambda c, a: 16384
     mod.SDL_GameControllerClose = lambda c: None
     mod.SDL_Quit = lambda: None
     mod.SDL_Init = lambda f: 0
@@ -22,4 +23,5 @@ def test_gamepad_backend(monkeypatch):
     gp = GamepadInput()
     gp.poll()
     assert gp.is_button_down(0)
+    assert 0.4 < gp.get_axis_value(0) < 0.6
     gp.shutdown()

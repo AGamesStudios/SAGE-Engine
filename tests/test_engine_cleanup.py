@@ -15,6 +15,7 @@ sys.modules['PyQt6.QtWidgets'] = types.ModuleType('PyQt6.QtWidgets')
 
 from engine.core.engine import Engine  # noqa: E402
 from engine.core.scenes.scene import Scene  # noqa: E402
+from engine.entities.tile_map import TileMap  # noqa: E402
 from engine.inputs import InputBackend  # noqa: E402
 
 
@@ -70,5 +71,25 @@ def test_fallback_cleanup(monkeypatch):
     assert eng.cleaned
     assert eng.input.shutdown_called
     assert eng.renderer.closed
+
+
+def test_tilemap_cleanup(monkeypatch):
+    class DummyMap(TileMap):
+        def __init__(self):
+            super().__init__()
+            self.cleaned = False
+            self.name = "Map"
+        def clear_cache(self):
+            self.cleaned = True
+
+    scene = Scene(with_defaults=False)
+    m = DummyMap()
+    scene.add_object(m)
+    scene.remove_object(m)
+    assert m.cleaned
+    scene.add_object(m)
+    eng = DemoEngine(scene=scene, renderer=DummyRenderer, input_backend=DummyInput)
+    eng.shutdown()
+    assert m.cleaned
 
 
