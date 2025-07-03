@@ -124,6 +124,10 @@ _lazy = {
     'Frame': ('engine.animation', 'Frame'),
     'load_sageanimation': ('engine.formats', 'load_sageanimation'),
     'save_sageanimation': ('engine.formats', 'save_sageanimation'),
+    'load_resource': ('engine.formats', 'load_resource'),
+    'save_resource': ('engine.formats', 'save_resource'),
+    'TextureAtlas': ('engine.texture_atlas', 'TextureAtlas'),
+    'GamepadInput': ('engine.inputs.gamepad', 'GamepadInput'),
     'save_game': ('engine.savegame', 'save_game'),
     'load_game': ('engine.savegame', 'load_game'),
 }
@@ -238,5 +242,7 @@ if TYPE_CHECKING:  # pragma: no cover - hints for static analyzers
         save_game,  # noqa: F401
         load_game,  # noqa: F401
     )
+    from .formats import load_resource, save_resource  # noqa: F401
+    from .texture_atlas import TextureAtlas  # noqa: F401
     from . import math2d  # noqa: F401
     from .version import require as require_version  # noqa: F401

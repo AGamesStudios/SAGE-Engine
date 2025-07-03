@@ -64,7 +64,7 @@ def object_from_dict(data: dict) -> Any | None:
     cls = OBJECT_REGISTRY.get(typ)
     if cls is None:
         logger.warning('Unknown object type %s', typ)
-        return None
+        raise ValueError(f"Unknown object type {typ}")
     params: dict[str, Any] = {}
     extras: dict[str, Any] = {}
     init_params = cls.__init__.__code__.co_varnames[1:cls.__init__.__code__.co_argcount]

@@ -177,6 +177,7 @@ __all__ = [
     "InputManager",
     "NullInput",
     "QtInput",
+    "GamepadInput",
     "register_input",
     "get_input",
     "INPUT_REGISTRY",
@@ -186,4 +187,8 @@ from .null_input import NullInput  # noqa: E402
 try:  # noqa: E402 - optional dependency
     from .qt_input import QtInput
 except Exception:  # pragma: no cover - PyQt6 missing
+    pass
+try:  # noqa: E402 - optional dependency
+    from .gamepad import GamepadInput
+except Exception:  # pragma: no cover - SDL2 missing
     pass

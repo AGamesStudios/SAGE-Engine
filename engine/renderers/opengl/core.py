@@ -24,6 +24,7 @@ from engine.entities.game_object import GameObject
 from engine import units
 from engine.utils.log import logger
 from engine.mesh_utils import Mesh
+from engine.entities.tile_map import TileMap
 from . import drawing, gizmos, shaders
 
 # role-specific draw callbacks
@@ -194,6 +195,67 @@ class OpenGLRenderer(Renderer):
     def _get_texture(self, obj) -> int:
         return get_texture(self, obj)
 
+    def _build_map_texture(self, tilemap: TileMap) -> None:
+        from OpenGL.GL import (
+            glGenTextures,
+            glBindTexture,
+            glTexParameteri,
+            glTexImage2D,
+            GL_TEXTURE_2D,
+            GL_TEXTURE_MIN_FILTER,
+            GL_TEXTURE_MAG_FILTER,
+            GL_NEAREST,
+            GL_RGBA,
+            GL_UNSIGNED_BYTE,
+        )
+        w = tilemap.width * tilemap.tile_width
+        h = tilemap.height * tilemap.tile_height
+        data = bytearray(b"\x00" * (w * h * 4))
+        colors = tilemap.metadata.get("colors", {})
+        for y in range(tilemap.height):
+            for x in range(tilemap.width):
+                idx = tilemap.data[y * tilemap.width + x]
+                if idx == 0:
+                    continue
+                rgba = drawing.parse_color(colors.get(str(idx), (200, 200, 200, 255)))
+                for py in range(tilemap.tile_height):
+                    for px in range(tilemap.tile_width):
+                        off = ((y * tilemap.tile_height + py) * w + (x * tilemap.tile_width + px)) * 4
+                        data[off:off+4] = bytes(rgba)
+        arr = (ctypes.c_ubyte * len(data)).from_buffer(data)
+        tex = glGenTextures(1)
+        glBindTexture(GL_TEXTURE_2D, tex)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, arr)
+        tilemap._texture = tex
+
+    def _draw_map(self, tilemap: TileMap) -> None:
+        from OpenGL.GL import (
+            glBindTexture,
+            glBegin,
+            glEnd,
+            glTexCoord2f,
+            glVertex2f,
+            GL_TEXTURE_2D,
+            GL_QUADS,
+        )
+        if getattr(tilemap, "_texture", None) is None:
+            self._build_map_texture(tilemap)
+        w = tilemap.width * tilemap.tile_width
+        h = tilemap.height * tilemap.tile_height
+        glBindTexture(GL_TEXTURE_2D, tilemap._texture)
+        glBegin(GL_QUADS)
+        glTexCoord2f(0, 0)
+        glVertex2f(0, 0)
+        glTexCoord2f(1, 0)
+        glVertex2f(w, 0)
+        glTexCoord2f(1, 1)
+        glVertex2f(w, h)
+        glTexCoord2f(0, 1)
+        glVertex2f(0, h)
+        glEnd()
+
 
 
     def _parse_color(self, value) -> tuple[int, int, int, int]:
@@ -210,6 +272,13 @@ class OpenGLRenderer(Renderer):
         handler = RENDER_HANDLERS.get(getattr(obj, "role", ""))
         if handler:
             handler(self, obj, camera)
+            return
+        if isinstance(obj, TileMap):
+            if shader:
+                Shader.stop()
+            else:
+                glUseProgram(0)
+            self._draw_map(obj)
             return
         from OpenGL.GL import (
             glBindTexture

@@ -11,7 +11,7 @@
     },
     {
       "type": "sprite",
-      "shape": "square",
+      "animation": "../Resources/walk.sageanimation",
       "x": 50,
       "y": 240,
       "name": "Mover",
