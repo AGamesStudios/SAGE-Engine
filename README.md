@@ -24,6 +24,10 @@ Alternatively run the installer to choose extras interactively:
 ```bash
 python scripts/install.py --extras opengl sdl audio
 ```
+You can also use **SAGE Setup** for a graphical installer:
+```bash
+python -m sage_setup
+```
 Optional tools such as the editor and development SDK
 are distributed separately so the engine can be used standalone.
 
@@ -38,6 +42,10 @@ Use `python -m engine path/to/project.sageproject` to launch a game. Running `py
 ```bash
 python -m engine --renderer sdl examples/blank.sageproject
 python -m engine --renderer null examples/blank.sageproject
+```
+The optional **SAGE Launcher** provides a simple GUI for opening projects:
+```bash
+python -m sage_launcher
 ```
 Use `--vsync` or `--no-vsync` to toggle vertical sync on supporting renderers.
 For heavy scenes you can enable asynchronous event updates:

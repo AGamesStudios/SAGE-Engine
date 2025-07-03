@@ -34,7 +34,9 @@ Homepage = "https://github.com/AGamesStudios/SAGE-Engine"
 Repository = "https://github.com/AGamesStudios/SAGE-Engine"
 [project.scripts]
 sage-runtime = "engine.runtime.__main__:main"
+sage-setup = "sage_setup.__main__:main"
+sage-launcher = "sage_launcher.__main__:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["engine*"]
+include = ["engine*", "sage_setup*", "sage_launcher*"]
