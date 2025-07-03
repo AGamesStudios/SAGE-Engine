@@ -21,9 +21,9 @@ import the engine. Leaving the path blank installs to the default site-packages
 location.
 
 ``SAGE Setup`` offers the same functionality with a PyQt6 interface. Pip output
-is streamed to the progress dialog. It defaults to installing under
-``~/sage_engine`` when a path is provided. If the path field is left empty the
-engine installs to site-packages. Extras are read from ``pyproject.toml`` so new
+is streamed to a scrollable text window with an indeterminate progress bar.
+Leave the location field blank to install to site-packages or type a folder
+such as ``~/sage_engine``. Extras are read from ``pyproject.toml`` so new
 options appear automatically. Install the ``qt`` extra or PyQt6 separately to
 use it.
 ```bash

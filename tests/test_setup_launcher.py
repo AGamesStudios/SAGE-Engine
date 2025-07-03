@@ -197,15 +197,13 @@ def test_install_dialog_appends_output(monkeypatch):
 
     class DummyDialog:
         def __init__(self, *a, **k):
-            self._text = ""
+            self.text = DummyText()
+            self.bar = DummyBar()
 
-        def setRange(self, a, b):
+        def setWindowTitle(self, t):
             pass
 
-        def setValue(self, v):
-            pass
-
-        def setCancelButton(self, btn):
+        def setWindowModality(self, m):
             pass
 
         def setFixedSize(self, w, h):
@@ -224,24 +222,32 @@ def test_install_dialog_appends_output(monkeypatch):
         def move(self, p):
             pass
 
-        def setWindowTitle(self, t):
-            pass
-
-        def setWindowModality(self, m):
-            pass
-
         def show(self):
             pass
 
         def close(self):
             pass
 
-        def labelText(self):
-            return self._text
+    class DummyText:
+        def __init__(self):
+            self.data = ""
 
-        def setLabelText(self, t):
-            self._text = t
-            outputs.append(t)
+        def setReadOnly(self, b):
+            pass
+
+        def appendPlainText(self, t):
+            self.data += t + "\n"
+            outputs.append(self.data)
+
+        def toPlainText(self):
+            return self.data
+
+    class DummyBar:
+        def setRange(self, a, b):
+            pass
+
+        def setValue(self, v):
+            pass
 
     class DummyApp:
         def __init__(self, *a, **k):
@@ -268,7 +274,17 @@ def test_install_dialog_appends_output(monkeypatch):
 
     monkeypatch.setitem(sys.modules, "PyQt6", types.ModuleType("PyQt6"))
     qtwidgets = types.ModuleType("PyQt6.QtWidgets")
-    qtwidgets.QProgressDialog = DummyDialog
+    qtwidgets.QDialog = DummyDialog
+    qtwidgets.QPlainTextEdit = DummyText
+    qtwidgets.QProgressBar = DummyBar
+    class DummyLayout:
+        def __init__(self, *a, **k):
+            pass
+
+        def addWidget(self, w):
+            pass
+
+    qtwidgets.QVBoxLayout = DummyLayout
     qtwidgets.QApplication = DummyApp
     qtwidgets.QMessageBox = DummyMsgBox
     class DummyWidget:

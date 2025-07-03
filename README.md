@@ -27,10 +27,10 @@ python scripts/install.py --extras opengl sdl audio
 If you specify ``--target`` you must add that directory to ``PYTHONPATH`` so the
 engine can be imported.
 You can also use **SAGE Setup** (requires PyQt6) for a graphical installer.
-Pip output is streamed to the dialog so you can follow progress. It defaults
-to installing under ``~/sage_engine`` when a path is provided. If the field is
-left blank the engine installs to your Python site-packages. Extras are listed
-automatically from ``pyproject.toml``:
+Pip output is streamed to a scrollable window with an indeterminate progress
+bar. The install location field is optional – leave it empty to install to
+the default site-packages or enter a folder such as ``~/sage_engine``.
+Extras are listed automatically from ``pyproject.toml``:
 ```bash
 python -m sage_setup
 ```

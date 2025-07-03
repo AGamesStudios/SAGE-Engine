@@ -58,10 +58,15 @@ def load_recent_dirs() -> list[str]:
 
 
 def create_project(path: str) -> None:
-    """Create an empty project file at ``path``."""
+    """Create a minimal project with a camera."""
     from engine.core.project import Project
 
-    Project(scene={}).save(path)
+    scene = {
+        "objects": [
+            {"type": "camera", "width": 640, "height": 480, "active": True}
+        ]
+    }
+    Project(scene=scene).save(path)
 
 
 def run_setup() -> None:
@@ -132,7 +137,19 @@ def main() -> None:
         if not item:
             return
         try:
-            launch(item.text())
+            proc = launch(item.text())
+            def wait_and_report() -> None:
+                rc = proc.wait()
+                if rc != 0:
+                    QMessageBox.warning(
+                        win,
+                        "Game exited",
+                        f"Process returned code {rc}",
+                    )
+
+            import threading
+
+            threading.Thread(target=wait_and_report, daemon=True).start()
         except Exception as exc:
             QMessageBox.critical(win, "Launch failed", str(exc))
 

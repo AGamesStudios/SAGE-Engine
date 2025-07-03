@@ -61,16 +61,27 @@ def install(target: str | None = DEFAULT_PATH, extras: str | None = None) -> str
 
 def run_install_dialog(path: str | None, extras: str | None, win) -> str:
     """Run install and display progress output."""
-    from PyQt6.QtWidgets import QApplication, QProgressDialog, QMessageBox
+    from PyQt6.QtWidgets import (
+        QApplication,
+        QDialog,
+        QPlainTextEdit,
+        QProgressBar,
+        QVBoxLayout,
+        QMessageBox,
+    )
     from PyQt6.QtCore import Qt
 
-    progress = QProgressDialog("Installing...", "", 0, 0, win)
+    progress = QDialog(win)
     progress.setWindowTitle("SAGE Setup")
-    progress.setCancelButton(None)
     progress.setWindowModality(Qt.WindowModality.WindowModal)
-    progress.setRange(0, 0)
-    progress.setValue(0)
-    progress.setFixedSize(400, 150)
+    layout = QVBoxLayout(progress)
+    output = QPlainTextEdit()
+    output.setReadOnly(True)
+    bar = QProgressBar()
+    bar.setRange(0, 0)
+    layout.addWidget(output)
+    layout.addWidget(bar)
+    progress.setFixedSize(500, 300)
     pg = progress.frameGeometry()
     pg.moveCenter(win.frameGeometry().center())
     progress.move(pg.topLeft())
@@ -78,16 +89,20 @@ def run_install_dialog(path: str | None, extras: str | None, win) -> str:
     QApplication.processEvents()
     try:
         for line in install_iter(path, extras):
-            progress.setLabelText(progress.labelText() + line)
+            output.appendPlainText(line.rstrip())
             QApplication.processEvents()
     except Exception as exc:  # pragma: no cover - GUI feedback only
-        progress.setLabelText(progress.labelText() + "\n" + str(exc))
+        output.appendPlainText(str(exc))
+        bar.setRange(0, 1)
+        bar.setValue(1)
         progress.close()
         QMessageBox.critical(win, "SAGE Setup", f"Install failed:\n{exc}")
     else:
+        bar.setRange(0, 1)
+        bar.setValue(1)
         progress.close()
         QMessageBox.information(win, "SAGE Setup", "Installation complete")
-    return progress.labelText()
+    return output.toPlainText()
 
 
 def main() -> None:
@@ -114,7 +129,8 @@ def main() -> None:
     win = QWidget()
     win.setWindowTitle("SAGE Setup")
     win.setFixedSize(500, 250)
-    path_edit = QLineEdit(DEFAULT_PATH)
+    path_edit = QLineEdit()
+    path_edit.setPlaceholderText(DEFAULT_PATH)
     browse_btn = QPushButton("Browse")
     extras_boxes = {name: QCheckBox(name) for name in available_extras()}
 
