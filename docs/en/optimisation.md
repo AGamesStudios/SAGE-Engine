@@ -8,6 +8,9 @@ To keep large projects running smoothly consider the following options:
   possible to reduce per-frame work.
 - **Use Numba or Cython** – Installing `numba` or compiling heavy modules with
   Cython can greatly accelerate math-heavy code.
+- **Run on PyPy** – The engine is pure Python and works on PyPy 3.10+. PyPy's
+  JIT compiler can improve performance for CPU bound projects without any
+  code changes.
 - **Tune image cache** – Set `SAGE_IMAGE_CACHE_LIMIT` or pass
   ``image_cache_limit`` via `EngineSettings` to control how many sprites are
   kept in memory.

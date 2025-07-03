@@ -1,7 +1,8 @@
 # SAGE Engine
 
 **SAGE Engine** provides a lightweight runtime that can be extended with optional tools such as the Qt based editor. Scenes are stored in the `.sagescene` format and full projects in `.sageproject` files.
-This project requires Python 3.10 or newer.
+This project requires Python 3.10 or newer. The engine is written in pure
+Python and also runs on **PyPy 3.10+** for extra performance.
 The engine is developed and maintained by **Amckinator Games Studios (AGStudios)**.
 Custom resources use compact `.sageaudio`, `.sagemesh` and `.sageanimation` descriptors for sound, mesh and animation data.
 Sprite animations expose speed, pause and reverse options while ``AudioManager`` supports simple music playback.
