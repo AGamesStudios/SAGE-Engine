@@ -36,9 +36,13 @@ python -m engine --renderer null examples/blank.sageproject
 ```
 Use `--vsync` or `--no-vsync` to toggle vertical sync on supporting renderers.
 The editor is packaged separately and installed with the `editor` extra.
-For heavy scenes you can enable asynchronous event updates (experimental):
+For heavy scenes you can enable asynchronous event updates:
 ```python
 Engine(scene=my_scene, async_events=True).run()
+```
+or use the asyncio variant:
+```python
+await Engine(scene=my_scene, asyncio_events=True).update_async(0.0)
 ```
 Use a ``VariableStore`` for thread-safe variables when running asynchronously.
 Variables may be marked as private so only selected values are shared between

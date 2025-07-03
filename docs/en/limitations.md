@@ -11,9 +11,9 @@ SDL2). On lightweight systems you may prefer the `NullRenderer` which has no
 extra dependencies. When distributing binaries consider providing wheels for
 these packages.
 
-The asynchronous event system can update events on worker threads. This feature
-is experimental and should be enabled with care. Use a `VariableStore` with
-locks for any shared data.
+The event system supports concurrent updates via a thread pool or
+``asyncio`` tasks. Use a `VariableStore` with locks for any shared data to
+ensure thread safety.
 
 Example projects cover basic features. Complex physics and UI widgets are not
 yet demonstrated.

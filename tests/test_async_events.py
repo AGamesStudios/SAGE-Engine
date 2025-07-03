@@ -1,5 +1,6 @@
 import sys
 import types
+import asyncio
 
 sys.modules.setdefault('PIL', types.ModuleType('PIL'))
 sys.modules.setdefault('PIL.Image', types.ModuleType('PIL.Image'))
@@ -38,3 +39,18 @@ def test_async_update_called(monkeypatch):
     eng.logic_active = True
     eng.update(0.0)
     assert called['workers'] == 2
+
+
+def test_asyncio_update_called(monkeypatch):
+    called = {}
+
+    async def fake_update_asyncio(self, eng, scene, dt):
+        called['yes'] = True
+
+    monkeypatch.setattr('engine.logic.base.EventSystem.update_asyncio', fake_update_asyncio)
+    scene = Scene(with_defaults=False)
+    eng = Engine(scene=scene, renderer=NullRenderer, input_backend=NullInput,
+                 asyncio_events=True)
+    eng.logic_active = True
+    asyncio.run(eng.update_async(0.0))
+    assert called['yes']

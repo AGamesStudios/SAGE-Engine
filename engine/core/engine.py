@@ -5,6 +5,7 @@ import argparse
 import time
 import os
 import inspect
+import asyncio
 from .scenes import Scene, SceneManager
 from .extensions import EngineExtension
 from .project import Project
@@ -44,6 +45,7 @@ class Engine:
                  input_backend: str | type | InputBackend = "sdl",
                  max_delta: float = 0.1,
                  async_events: bool = False,
+                 asyncio_events: bool = False,
                  event_workers: int = 4,
                  vsync: bool | None = None,
                  *, settings: "EngineSettings | None" = None,
@@ -62,6 +64,7 @@ class Engine:
             input_backend = settings.input_backend
             max_delta = settings.max_delta
             async_events = settings.async_events
+            asyncio_events = getattr(settings, "asyncio_events", False)
             event_workers = settings.event_workers
             vsync = settings.vsync
             from ..entities import game_object
@@ -71,10 +74,12 @@ class Engine:
         self._frame_interval = 0 if vsync else (1.0 / fps if fps else 0)
         self.max_delta = max_delta
         self.async_events = async_events
-        if self.async_events:
+        self.asyncio_events = asyncio_events
+        if self.asyncio_events and self.async_events:
             logger.warning(
-                "Asynchronous event updates are experimental and may require a VariableStore"
+                "Using asyncio_events overrides thread-based async_events"
             )
+            self.async_events = False
         self.event_workers = event_workers
         self.metadata = {"version": ENGINE_VERSION}
         if metadata:
@@ -195,6 +200,30 @@ class Engine:
                     logger.exception("Renderer recovery failed")
             raise
 
+    async def step_async(self) -> None:
+        """Asynchronous version of :meth:`step`."""
+        now = time.perf_counter()
+        dt = now - self.last_time
+        if self._frame_interval and dt < self._frame_interval:
+            await asyncio.sleep(self._frame_interval - dt)
+            now = time.perf_counter()
+            dt = now - self.last_time
+        if self.max_delta and dt > self.max_delta:
+            dt = self.max_delta
+        self.last_time = now
+        self.delta_time = dt
+        self.input.poll()
+        try:
+            await self.update_async(dt)
+        except Exception:
+            logger.exception("Runtime error")
+            if hasattr(self.renderer, "reset"):
+                try:
+                    self.renderer.reset()
+                except Exception:
+                    logger.exception("Renderer recovery failed")
+            raise
+
     def to_settings(self) -> EngineSettings:
         """Return the current configuration as :class:`EngineSettings`."""
         from ..entities import game_object
@@ -286,7 +315,32 @@ class Engine:
     def update(self, dt: float) -> None:
         """Process one frame of logic and rendering."""
         if self.logic_active:
-            if self.async_events:
+            if self.asyncio_events:
+                asyncio.run(self.events.update_asyncio(self, self.scene, dt))
+            elif self.async_events:
+                self.events.update_async(
+                    self, self.scene, dt, workers=self.event_workers
+                )
+            else:
+                self.events.update(self, self.scene, dt)
+            self.scene.update_events(self, dt)
+        self.scene.update(dt)
+        for ext in list(self.extensions):
+            try:
+                ext.update(self, dt)
+            except Exception:
+                logger.exception("Extension %s failed during update", ext)
+                raise
+        cam = self.camera or self.scene.get_active_camera()
+        self.renderer.draw_scene(self.scene, cam, gizmos=False)
+        self.renderer.present()
+
+    async def update_async(self, dt: float) -> None:
+        """Asynchronous variant of :meth:`update`."""
+        if self.logic_active:
+            if self.asyncio_events:
+                await self.events.update_asyncio(self, self.scene, dt)
+            elif self.async_events:
                 self.events.update_async(
                     self, self.scene, dt, workers=self.event_workers
                 )

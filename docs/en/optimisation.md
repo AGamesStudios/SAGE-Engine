@@ -13,10 +13,9 @@ To keep large projects running smoothly consider the following options:
   kept in memory.
 - **Adjust VSync/FPS** – Disable VSync (`--no-vsync`) or lower ``fps`` in
   ``EngineSettings`` on older machines to reduce rendering overhead.
-- **Asynchronous events** (experimental) – Large scenes can update events
-  concurrently using `EventSystem.update_async(engine, scene, dt)` to reduce
-  frame time. Use a thread-safe variable store when events modify shared data.
-  Enable asynchronous updates globally with:
+- **Asynchronous events** – Large scenes can update events concurrently using `EventSystem.update_async(engine, scene, dt)` or `await EventSystem.update_asyncio(engine, scene, dt)`
+  to reduce frame time. Use a thread-safe variable store when events modify shared data.
+  Enable concurrent updates globally with:
 
   ```python
   eng = Engine(scene=my_scene, async_events=True, event_workers=8)

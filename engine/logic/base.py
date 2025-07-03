@@ -7,6 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 from importlib import metadata
 from .. import lang as engine_lang
 from threading import Lock
+import asyncio
 
 # registries used to map names to classes so new logic blocks can be added
 # without modifying the loader code
@@ -468,6 +469,21 @@ class EventSystem:
         ]
         for fut in futures:
             fut.result()
+
+    async def update_asyncio(self, engine, scene, dt: float) -> None:
+        """Update events concurrently using :mod:`asyncio`."""
+        if self.paused or not self.events:
+            return
+
+        async def run(evt):
+            try:
+                res = evt.update(engine, scene, dt)
+                if asyncio.iscoroutine(res):
+                    await res
+            except Exception:
+                logger.exception("Event async error")
+
+        await asyncio.gather(*(run(evt) for evt in list(self.events)))
 
     def shutdown(self) -> None:
         if self._executor is not None:
