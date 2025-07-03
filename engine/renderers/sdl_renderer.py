@@ -53,9 +53,24 @@ class SDLRenderer(Renderer):
         rect = sdl2.SDL_Rect(x, y, w, h)
         sdl2.SDL_RenderFillRect(self.renderer, rect)
 
+    def _draw_map(self, tilemap) -> None:
+        tw = tilemap.tile_width
+        th = tilemap.tile_height
+        colors = tilemap.metadata.get("colors", {})
+        for y in range(tilemap.height):
+            for x in range(tilemap.width):
+                idx = tilemap.data[y * tilemap.width + x]
+                if idx == 0:
+                    continue
+                color = parse_color(colors.get(str(idx), (200, 200, 200, 255)))
+                self._draw_rect(x * tw, y * th, tw, th, color)
+
     def draw_scene(self, scene, camera=None, gizmos=False) -> None:  # noqa: D401
         for obj in getattr(scene, "objects", []):
             if not getattr(obj, "visible", True):
+                continue
+            if getattr(obj, "role", "") == "map":
+                self._draw_map(obj)
                 continue
             shape = getattr(obj, "shape", None)
             if isinstance(shape, str):

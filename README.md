@@ -22,7 +22,7 @@ are distributed as optional packages so the engine can be used standalone.
 Runtime state can be saved and loaded with `engine.save_game` and
 `engine.load_game`, producing `.sagesave` files.
 
-Open `examples/blank.sageproject` with the editor or runtime to see the basic structure. The sample scene now contains two sprites and a camera. Additional resources in `examples/Resources/` demonstrate `.sageaudio`, `.sagemesh` and `.sageanimation` files. Example scenes under `examples/Scenes/` showcase animation, audio playback and event logic for reference.
+Open `examples/blank.sageproject` with the editor or runtime to see the basic structure. The sample scene now contains two sprites and a camera. Additional resources in `examples/Resources/` demonstrate `.sageaudio`, `.sagemesh`, `.sageanimation` and `.sagemap` files. Example scenes under `examples/Scenes/` showcase animation, audio playback and event logic for reference.
 
 ## Running
 Use `python -m engine path/to/project.sageproject` to launch a game. Running `python main.py` will start the editor if installed, otherwise it behaves the same as the engine runtime. The engine tries to use the OpenGL backend first but falls back to SDL or the headless Null renderer when dependencies are missing:

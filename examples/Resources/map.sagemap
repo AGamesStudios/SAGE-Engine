@@ -1,0 +1,12 @@
+{
+  "tileset": "tiles.png",
+  "tile_width": 16,
+  "tile_height": 16,
+  "width": 2,
+  "height": 2,
+  "data": [1, 0, 0, 1],
+  "metadata": {
+    "colors": {"1": "#008000"}
+  }
+}
+

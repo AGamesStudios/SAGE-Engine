@@ -40,6 +40,7 @@ def load_engine_plugins(engine, paths=None):
 
 _lazy = {
     'GameObject': ('engine.entities.game_object', 'GameObject'),
+    'TileMap': ('engine.entities.tile_map', 'TileMap'),
     'Scene': ('engine.core.scenes.scene', 'Scene'),
     'Project': ('engine.core.project', 'Project'),
     'Camera': ('engine.core.camera', 'Camera'),
@@ -153,6 +154,7 @@ def __dir__():
 
 if TYPE_CHECKING:  # pragma: no cover - hints for static analyzers
     from .entities.game_object import GameObject, clear_image_cache  # noqa: F401
+    from .entities.tile_map import TileMap  # noqa: F401
     from .core.scenes.scene import Scene  # noqa: F401
     from .core.engine import Engine  # noqa: F401
     from .core.scene_graph import SceneGraph, SceneNode, BaseGraph, BaseNode  # noqa: F401
@@ -231,6 +233,8 @@ if TYPE_CHECKING:  # pragma: no cover - hints for static analyzers
         save_sagemesh,  # noqa: F401
         load_sageanimation,  # noqa: F401
         save_sageanimation,  # noqa: F401
+        load_sagemap,  # noqa: F401
+        save_sagemap,  # noqa: F401
         save_game,  # noqa: F401
         load_game,  # noqa: F401
     )

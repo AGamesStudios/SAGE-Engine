@@ -9,7 +9,6 @@ from engine.formats import (
     load_sagemesh,
     save_sagemesh,
     load_sageanimation,
-    save_sageanimation,
 )
 
 engine_mesh_utils = importlib.import_module('engine.mesh_utils')
