@@ -17,7 +17,6 @@ from engine.renderers import Shader
         ('zoom', None),
         ('name', None),
         ('active', 'active'),
-        ('post_effects', 'post_effects'),
         ('metadata', 'metadata'),
         ('variables', 'variables'),
         ('public_vars', 'public_vars'),
@@ -40,7 +39,6 @@ class Camera:
     type: str = "camera"
     shader: dict | None = None
     shader_uniforms: dict = field(default_factory=dict)
-    post_effects: list = field(default_factory=list)
     metadata: dict = field(default_factory=dict)
     variables: dict = field(default_factory=dict)
     public_vars: set[str] = field(default_factory=set)

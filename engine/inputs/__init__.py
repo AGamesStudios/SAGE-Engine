@@ -103,6 +103,7 @@ def _load_entry_points() -> None:
         logger.warning("Failed input plugins: %s", msg)
         raise RuntimeError(f"Failed input plugins: {msg}")
     _PLUGINS_LOADED = True
+    logger.info("Input backends available: %d", len(INPUT_REGISTRY))
 
 
 def get_input(name: str) -> Type | None:

@@ -91,8 +91,6 @@ class OpenGLRenderer(Renderer):
         self._cursor_pos: tuple[float, float] | None = None
         self._transform_mode: str = 'pan'
         self._local_coords: bool = False
-        # apply sprite effects during rendering
-        self.apply_effects: bool = True
         self.show_axes = True
         self.show_grid = False
         self.grid_size = 1.0
@@ -105,8 +103,6 @@ class OpenGLRenderer(Renderer):
         self._vbo = None
         self._quad_vao = None
         self._quad_vbo = None
-        self._post_tex = None
-        self._post_fbo = None
         self._projection: list[float] | None = None
 
     def set_window_size(self, width: int, height: int):
@@ -132,18 +128,6 @@ class OpenGLRenderer(Renderer):
         """Return the engine's current Y-axis orientation."""
         return units.Y_UP
 
-    def _capture_screen(self) -> int:
-        """Copy the current frame buffer to ``_post_tex`` and return the texture id."""
-        from OpenGL.GL import (
-            glBindTexture, glCopyTexImage2D, glGenTextures,
-            GL_TEXTURE_2D, GL_RGBA
-        )
-        if self._post_tex is None:
-            self._post_tex = glGenTextures(1)
-        glBindTexture(GL_TEXTURE_2D, self._post_tex)
-        glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 0, 0, self.width, self.height, 0)
-        glBindTexture(GL_TEXTURE_2D, 0)
-        return self._post_tex
 
     def grab_image(self) -> Image.Image:
         """Return the current frame buffer as a :class:`PIL.Image.Image`."""
@@ -334,28 +318,12 @@ class OpenGLRenderer(Renderer):
             self._draw_shape(obj, camera, shape)
             return
 
-        if self.apply_effects:
-            for eff in getattr(obj, "effects", []):
-                if eff.get("type") == "outline":
-                    color = eff.get("color", (255, 128, 0, 255))
-                    if isinstance(color, str):
-                        try:
-                            parts = [int(p) for p in color.split(",")]
-                            while len(parts) < 4:
-                                parts.append(255)
-                            color = tuple(parts[:4])
-                        except Exception:
-                            color = (255, 128, 0, 255)
-                    color = tuple(color)
-                    width = float(eff.get("width", 3.0))
-                    self._draw_outline(obj, camera, color=color, width=width)
-                    break
         unit_scale = units.UNITS_PER_METER
         sign = 1.0 if units.Y_UP else -1.0
         ang = math.radians(getattr(obj, 'angle', 0.0))
         cos_a = math.cos(ang)
         sin_a = math.sin(ang)
-        scale_mul = obj.render_scale(camera, apply_effects=self.apply_effects)
+        scale_mul = obj.render_scale(camera)
         sx = -1.0 if getattr(obj, "flip_x", False) else 1.0
         sy = -1.0 if getattr(obj, "flip_y", False) else 1.0
         w = obj.width * obj.scale_x * scale_mul
@@ -369,7 +337,7 @@ class OpenGLRenderer(Renderer):
             (-px, h - py),
         ]
         data = []
-        obj_x, obj_y = obj.render_position(camera, apply_effects=self.apply_effects)
+        obj_x, obj_y = obj.render_position(camera)
         for cx, cy in corners:
             vx = (cx - px) * sx + px
             vy = (cy - py) * sy + py
@@ -378,7 +346,7 @@ class OpenGLRenderer(Renderer):
             world_x = (rx + obj_x) * unit_scale
             world_y = (ry + obj_y) * unit_scale * sign
             data.extend([world_x, world_y])
-        uvs = obj.texture_coords(camera, apply_effects=self.apply_effects)
+        uvs = obj.texture_coords(camera)
         arr = (ctypes.c_float * 16)(
             data[0], data[1], uvs[0], uvs[1],
             data[2], data[3], uvs[2], uvs[3],
@@ -599,14 +567,6 @@ class OpenGLRenderer(Renderer):
                 Shader.stop()
             glPopMatrix()
 
-        if camera and getattr(camera, "post_effects", None):
-            tex = self._capture_screen()
-            self.clear(self.background)
-            from engine.core.post_effects import get_post_effect
-            for eff in camera.post_effects:
-                handler = get_post_effect(eff.get("type"))
-                if handler:
-                    handler.apply(self, tex, self.width, self.height, camera, eff)
 
     def present(self):
         self.widget.update()

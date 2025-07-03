@@ -150,8 +150,6 @@ class Engine:
             self.renderer.show_axes = False
         if hasattr(self.renderer, 'show_grid'):
             self.renderer.show_grid = False
-        if hasattr(self.renderer, 'apply_effects'):
-            self.renderer.apply_effects = True
         self.bg_color = tuple(background)
         # create the input backend using the registry. Backends may optionally
         # accept the renderer widget as their first argument
@@ -309,6 +307,7 @@ class Engine:
                 self._loop.close()
             except Exception:
                 logger.exception("Event loop close failed")
+        logger.info("Engine shutdown complete")
 
     def change_scene(self, name: str, scene: Scene | None = None) -> None:
         """Replace or switch the active scene."""

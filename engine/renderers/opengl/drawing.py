@@ -67,8 +67,8 @@ def draw_outline(renderer, obj: GameObject, camera: Camera | None,
         return
     unit_scale = units.UNITS_PER_METER
     sign = 1.0 if units.Y_UP else -1.0
-    scale_mul = obj.render_scale(camera, apply_effects=renderer.apply_effects)
-    obj_x, obj_y = obj.render_position(camera, apply_effects=renderer.apply_effects)
+    scale_mul = obj.render_scale(camera)
+    obj_x, obj_y = obj.render_position(camera)
     ang = math.radians(getattr(obj, "angle", 0.0))
     cos_a = math.cos(ang)
     sin_a = math.sin(ang)
@@ -104,7 +104,7 @@ def draw_mesh(renderer, obj: GameObject, camera: Camera | None, mesh: Mesh) -> N
     """Render a custom Mesh with the object's transform."""
     unit_scale = units.UNITS_PER_METER
     sign = 1.0 if units.Y_UP else -1.0
-    scale_mul = obj.render_scale(camera, apply_effects=renderer.apply_effects)
+    scale_mul = obj.render_scale(camera)
     glUseProgram(0)
     glBindTexture(GL_TEXTURE_2D, 0)
 
@@ -129,7 +129,7 @@ def draw_mesh(renderer, obj: GameObject, camera: Camera | None, mesh: Mesh) -> N
     h = obj.height * obj.scale_y * scale_mul
 
     mode = GL_TRIANGLES if mesh.indices else GL_TRIANGLE_FAN
-    obj_x, obj_y = obj.render_position(camera, apply_effects=renderer.apply_effects)
+    obj_x, obj_y = obj.render_position(camera)
     px = w * obj.pivot_x
     py = h * obj.pivot_y
     sx = -1.0 if flip_x else 1.0

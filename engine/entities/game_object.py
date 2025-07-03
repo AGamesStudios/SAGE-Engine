@@ -18,7 +18,6 @@ from ..core.objects import register_object
 from .object import Object, Transform2D
 from ..logic import EventSystem, event_from_dict
 from .. import units
-from ..core.effects import get_effect
 
 # LRU cache so repeated sprites don't reload files on low spec machines
 _IMAGE_CACHE: "OrderedDict[str, Image.Image]" = OrderedDict()
@@ -63,7 +62,6 @@ def set_image_cache_limit(limit: int) -> None:
         ('metadata', 'metadata'),
         ('variables', 'variables'),
         ('public_vars', 'public_vars'),
-        ('effects', 'effects'),
         ('shader', 'shader'),
         ('shader_uniforms', 'shader_uniforms'),
         ('animation', 'animation'),
@@ -89,7 +87,6 @@ class GameObject(Object):
     settings: dict = field(default_factory=dict)
     variables: dict = field(default_factory=dict)
     public_vars: set[str] = field(default_factory=set)
-    effects: list = field(default_factory=list)
     shader: dict | None = None
     shader_uniforms: dict = field(default_factory=dict)
     animation: "Animation | None" = None
@@ -235,40 +232,17 @@ class GameObject(Object):
                     logger.exception("Failed to load shader %s/%s", vert, frag)
         return self._compiled_shader
 
-    def render_position(
-        self, camera, apply_effects: bool = True
-    ) -> tuple[float, float]:
-        """Return the on-screen position with optional effects."""
-        x = self.x
-        y = self.y
-        if apply_effects and camera:
-            for eff in getattr(self, "effects", []):
-                etype = eff.get("type")
-                handler = get_effect(etype)
-                if handler:
-                    x, y = handler.apply_position(self, camera, eff, (x, y))
-        return x, y
+    def render_position(self, camera) -> tuple[float, float]:
+        """Return the on-screen position."""
+        return self.x, self.y
 
-    def render_scale(self, camera, apply_effects: bool = True) -> float:
-        """Return an additional scale factor from active effects."""
-        scale = 1.0
-        if apply_effects and camera:
-            for eff in getattr(self, "effects", []):
-                handler = get_effect(eff.get("type"))
-                if handler:
-                    scale = handler.apply_scale(self, camera, eff, scale)
-        return scale
+    def render_scale(self, camera) -> float:
+        """Return a scale factor for rendering."""
+        return 1.0
 
-    def texture_coords(self, camera, apply_effects: bool = True) -> list[float]:
-        """Return texture coordinates adjusted by active effects."""
-        coords = [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0]
-        if not (apply_effects and camera):
-            return coords
-        for eff in getattr(self, "effects", []):
-            handler = get_effect(eff.get("type"))
-            if handler:
-                coords = handler.apply_uvs(self, camera, eff, coords)
-        return coords
+    def texture_coords(self, camera) -> list[float]:
+        """Return default texture coordinates."""
+        return [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0]
 
 
     def _load_image(self):
