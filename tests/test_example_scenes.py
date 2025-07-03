@@ -11,3 +11,12 @@ def test_example_scenes_load():
     ]:
         scene = SceneFile.load(name).scene
         assert scene.objects
+
+
+def test_advanced_project_scenes():
+    from engine.core.project import Project
+    proj = Project.load('examples/advanced.sageproject')
+    for node in proj.scene_graph.get('nodes', {}).values():
+        path = 'examples/' + node['scene_file']
+        scene = SceneFile.load(path).scene
+        assert scene.objects

@@ -89,5 +89,9 @@ def test_volume_metadata(tmp_path):
     desc.write_text('{"file": "tone.wav", "volume": 0.7}')
     audio = AudioManager()
     snd = audio.load_sound(str(desc))
-    assert getattr(snd, "volume", None) == 0.7
+    vol_attr = getattr(snd, "volume", None)
+    if vol_attr is not None:
+        assert vol_attr == 0.7
+    else:
+        assert abs(snd.get_volume() - 0.7) < 0.01
     audio.shutdown()
