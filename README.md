@@ -34,6 +34,8 @@ Extras are listed automatically from ``pyproject.toml``:
 ```bash
 python -m sage_setup
 ```
+Pass ``--launcher-only`` to install just ``sage-launcher``. The GUI provides
+buttons to upgrade or uninstall the engine when needed.
 Optional tools such as the editor and development SDK are distributed
 separately so the engine can be used standalone. ``SAGE Launcher`` is
 installed alongside the engine and tracks recent project directories. Games

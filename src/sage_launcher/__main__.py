@@ -30,6 +30,7 @@ STRINGS: dict[str, dict[str, str]] = {
         "open": "Open",
         "create": "Create",
         "install": "Install/Update Engine",
+        "uninstall": "Uninstall Engine",
         "projects": "Projects",
         "engine": "Engine",
         "info": "Info",
@@ -42,6 +43,7 @@ STRINGS: dict[str, dict[str, str]] = {
         "open": "Открыть",
         "create": "Создать",
         "install": "Установить/Обновить Движок",
+        "uninstall": "Удалить Движок",
         "projects": "Проекты",
         "engine": "Движок",
         "info": "Инфо",
@@ -107,22 +109,28 @@ def load_recent_dirs() -> list[str]:
     return settings.value("recent_dirs", [], list) or []
 
 
-def create_project(path: str, version: str = "dev") -> None:
-    """Create a minimal project with a camera."""
-    from engine.core.project import Project
-
-    scene = {
-        "objects": [
-            {"type": "camera", "width": 640, "height": 480, "active": True}
-        ]
-    }
-    proj = Project(scene=scene, metadata={"engine_version": version})
-    proj.save(path)
+TEMPLATE_DIR = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "..", "examples", "templates")
+)
 
 
-def run_setup() -> None:
+def create_project(path: str, version: str = "dev", template: str = "blank") -> None:
+    """Create a new project from ``template`` and set the engine version."""
+    import json
+    import shutil
+
+    tmpl_dir = os.path.join(TEMPLATE_DIR, template)
+    shutil.copytree(tmpl_dir, os.path.dirname(path), dirs_exist_ok=True)
+    src_proj = os.path.join(os.path.dirname(path), "project.sageproject")
+    os.replace(src_proj, path)
+    data = json.loads(Path(path).read_text())
+    data.setdefault("metadata", {})["engine_version"] = version
+    Path(path).write_text(json.dumps(data, indent=2))
+
+
+def run_setup(*args: str) -> None:
     """Open the SAGE Setup application in a separate process."""
-    subprocess.Popen([sys.executable, "-m", "sage_setup"])
+    subprocess.Popen([sys.executable, "-m", "sage_setup", *args])
 
 
 def open_docs() -> None:
@@ -231,7 +239,14 @@ def main() -> None:
             )
             if not ok:
                 return
-        create_project(path, version)
+        from PyQt6.QtWidgets import QInputDialog
+        templates = [d.name for d in Path(TEMPLATE_DIR).iterdir() if d.is_dir()]
+        tmpl, ok = QInputDialog.getItem(
+            win, tr("create"), "Template", templates, 0, False
+        )
+        if not ok:
+            return
+        create_project(path, version, tmpl)
         refresh()
 
     browse_btn.clicked.connect(choose_dir)
@@ -256,9 +271,12 @@ def main() -> None:
     # --- Engine tab ---
     engine_tab = QWidget()
     update_btn = QPushButton(tr("install"))
-    update_btn.clicked.connect(run_setup)
+    uninstall_btn = QPushButton(tr("uninstall"))
+    update_btn.clicked.connect(lambda: run_setup())
+    uninstall_btn.clicked.connect(lambda: run_setup("--uninstall"))
     engine_layout = QVBoxLayout(engine_tab)
     engine_layout.addWidget(update_btn)
+    engine_layout.addWidget(uninstall_btn)
     engine_layout.addStretch()
 
     # --- Info tab ---

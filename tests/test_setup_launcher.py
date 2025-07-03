@@ -13,6 +13,7 @@ def test_install_invokes_pip(monkeypatch):
             called['cmd'] = cmd
             self.returncode = 0
             self.stdout = io.StringIO()
+            self.stderr = io.StringIO()
 
         def wait(self):
             return 0
@@ -37,6 +38,7 @@ def test_install_default_path(monkeypatch):
         def __init__(self, cmd):
             called['cmd'] = cmd
             self.returncode = 0
+            self.stderr = io.StringIO()
             self.stdout = io.StringIO()
 
         def wait(self):
@@ -61,6 +63,7 @@ def test_install_with_version(monkeypatch):
     class DummyProc:
         def __init__(self, cmd):
             called['cmd'] = cmd
+            self.stderr = io.StringIO()
             self.returncode = 0
             self.stdout = io.StringIO()
 
@@ -145,6 +148,7 @@ def test_install_no_target(monkeypatch):
 
     class DummyProc:
         def __init__(self, cmd):
+            self.stderr = io.StringIO()
             called["cmd"] = cmd
             self.returncode = 0
             self.stdout = io.StringIO()
@@ -166,6 +170,7 @@ def test_install_error_output(monkeypatch):
     class DummyProc:
         def __init__(self):
             self.stdout = io.StringIO("out\nerr")
+            self.stderr = io.StringIO("E")
             self.returncode = 1
 
         def wait(self):
@@ -344,9 +349,9 @@ def test_install_dialog_appends_output(monkeypatch):
     monkeypatch.setitem(sys.modules, "PyQt6.QtWidgets", qtwidgets)
     monkeypatch.setitem(sys.modules, "PyQt6.QtCore", qtcore)
 
-    def fake_install_iter(path, extras, version):
-        yield "line1\n"
-        yield "line2\n"
+    def fake_install_iter(path, extras, version, *, launcher_only=False):
+        yield "line1\n", 10
+        yield "line2\n", 100
 
     monkeypatch.setattr(setup, "install_iter", fake_install_iter)
     txt = setup.run_install_dialog(None, None, None, qtwidgets.QWidget())

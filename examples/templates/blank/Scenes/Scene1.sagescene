@@ -1,0 +1,39 @@
+{
+  "objects": [
+    {
+      "type": "camera",
+      "x": 0,
+      "y": 0,
+      "width": 640,
+      "height": 480,
+      "active": true,
+      "name": "Camera"
+    },
+    {
+      "type": "sprite",
+      "shape": "square",
+      "x": 50,
+      "y": 50,
+      "scale_x": 1.0,
+      "scale_y": 1.0,
+      "name": "Block",
+      "color": [0, 128, 255, 255]
+    },
+    {
+      "type": "sprite",
+      "shape": "circle",
+      "x": 200,
+      "y": 150,
+      "name": "Ball",
+      "color": [255, 64, 64, 255]
+    }
+  ],
+  "events": [
+    {
+      "name": "Start",
+      "conditions": [{"type": "OnStart"}],
+      "actions": [{"type": "Print", "text": "Welcome to SAGE!"}]
+    }
+  ],
+  "logic_scripts": ["logic_script.py"]
+}
