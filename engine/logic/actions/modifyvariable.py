@@ -13,7 +13,7 @@ class ModifyVariable(Action):
 
     def execute(self, engine, scene, dt):
         val = resolve_value(self.value, engine)
-        current = engine.events.variables.get(self.name, 0)
+        vars_dict = engine.events.variables
         ops = {
             '+': operator.add,
             '-': operator.sub,
@@ -22,7 +22,13 @@ class ModifyVariable(Action):
         }
         func = ops.get(self.op, operator.add)
         try:
-            engine.events.variables[self.name] = func(current, val)
+            if hasattr(vars_dict, "lock"):
+                with vars_dict.lock:
+                    current = vars_dict.get(self.name, 0)
+                    vars_dict[self.name] = func(current, val)
+            else:
+                current = vars_dict.get(self.name, 0)
+                vars_dict[self.name] = func(current, val)
         except Exception:
             logger.exception('ModifyVariable error')
 

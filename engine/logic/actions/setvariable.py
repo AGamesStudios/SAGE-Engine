@@ -11,6 +11,11 @@ class SetVariable(Action):
 
     def execute(self, engine, scene, dt):
         val = resolve_value(self.value, engine)
-        engine.events.variables[self.name] = val
+        vars_dict = engine.events.variables
+        if hasattr(vars_dict, "lock"):
+            with vars_dict.lock:
+                vars_dict[self.name] = val
+        else:
+            vars_dict[self.name] = val
 
 

@@ -26,9 +26,12 @@ class InputBackend(ABC):
         """Return True if *button* is currently pressed."""
         raise NotImplementedError
 
-    def get_axis_value(self, axis_id: int) -> float:
-        """Return the current analog value for ``axis_id``."""
-        return 0.0
+    def get_axis_value(self, axis_id: int) -> float | None:
+        """Return the current analog value for ``axis_id`` in the range ``-1.0`` to ``1.0``.
+
+        Return ``None`` if the backend does not provide the requested axis.
+        """
+        return None
 
     @abstractmethod
     def shutdown(self) -> None:
@@ -166,7 +169,11 @@ class InputManager:
 
     def get_axis(self, axis: str) -> float:
         pos, neg, scale, aid = self._axes.get(axis, (None, None, 1.0, None))
-        value = self.backend.get_axis_value(aid) if aid is not None else 0.0
+        value = 0.0
+        if aid is not None:
+            res = self.backend.get_axis_value(aid)
+            if res is not None:
+                value = res
         if pos is not None and self.backend.is_key_down(pos):
             value += scale
         if neg is not None and self.backend.is_key_down(neg):

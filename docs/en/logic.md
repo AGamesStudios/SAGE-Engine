@@ -5,6 +5,14 @@ live on ``engine.events.variables`` and may be referenced inside events using th
 ``$name`` shorthand or ``engine.variable('name')``.  Additional actions and
 conditions can be registered via plugins.
 
+When running events concurrently, pass a ``VariableStore`` instance to
+``EventSystem`` so variable access is guarded by a lock:
+
+```python
+from engine.logic.base import VariableStore, EventSystem
+es = EventSystem(variables=VariableStore())
+```
+
 Actions are just callable objects with an ``execute`` method.  The built-in
 actions are implemented as simple functions, making it easy to create new ones
 for custom behaviour.

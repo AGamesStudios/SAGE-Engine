@@ -11,6 +11,8 @@ class InputAxis(Condition):
 
     def check(self, engine, scene, dt):
         val = engine.input.get_axis_value(self.axis_id)
+        if val is None:
+            raise ValueError(f"Axis {self.axis_id} not supported")
         if self.comparison == '>':
             return val > self.threshold
         if self.comparison == '>=':

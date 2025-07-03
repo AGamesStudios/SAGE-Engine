@@ -5,6 +5,8 @@ from ..utils.log import logger
 from concurrent.futures import ThreadPoolExecutor
 from importlib import metadata
 from .. import lang as engine_lang
+from collections import defaultdict
+from threading import Lock
 
 # registries used to map names to classes so new logic blocks can be added
 # without modifying the loader code
@@ -88,6 +90,14 @@ class VarRef(EngineRef):
 
     def __init__(self, name: str):
         super().__init__(['variable'], [name], call=True)
+
+
+class VariableStore(defaultdict):
+    """Thread-safe mapping for event variables."""
+
+    def __init__(self):
+        super().__init__(int)
+        self.lock = Lock()
 
 
 # support engine attribute references like ``engine.attr`` or ``engine.method(args)``
@@ -326,11 +336,14 @@ class EventSystem:
     def __init__(self, variables=None, engine_version: str | None = None):
         from .. import ENGINE_VERSION
         self.events: list[Event] = []
-        self.variables = variables if variables is not None else {}
+        if variables is None:
+            variables = VariableStore()
+        self.variables = variables
         self.groups: dict[str, list[Event]] = {}
         self.engine_version = engine_version or ENGINE_VERSION
         self.paused = False
         self._executor: ThreadPoolExecutor | None = None
+        self._worker_count = 0
 
     def get_event(self, name):
         for evt in self.events:
@@ -432,10 +445,11 @@ class EventSystem:
         """Update events concurrently using a thread pool."""
         if self.paused or not self.events:
             return
-        if self._executor is None or self._executor._max_workers != workers:
+        if self._executor is None or self._worker_count != workers:
             if self._executor is not None:
                 self._executor.shutdown(wait=False)
             self._executor = ThreadPoolExecutor(max_workers=workers)
+            self._worker_count = workers
         futures = [
             self._executor.submit(evt.update, engine, scene, dt)
             for evt in list(self.events)
@@ -447,6 +461,7 @@ class EventSystem:
         if self._executor is not None:
             self._executor.shutdown(wait=False)
             self._executor = None
+            self._worker_count = 0
 
     def update(self, engine, scene, dt):
         if self.paused or not self.events:

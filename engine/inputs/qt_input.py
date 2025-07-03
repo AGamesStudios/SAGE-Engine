@@ -46,8 +46,8 @@ class QtInput(InputBackend, QObject):
     def is_button_down(self, button: int) -> bool:
         return button in self._buttons
 
-    def get_axis_value(self, axis_id: int) -> float:
-        return 0.0
+    def get_axis_value(self, axis_id: int) -> float | None:
+        return None
 
     def shutdown(self) -> None:
         if self._widget is not None:

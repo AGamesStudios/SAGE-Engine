@@ -33,10 +33,11 @@ python -m engine --renderer null examples/blank.sageproject
 ```
 Use `--vsync` or `--no-vsync` to toggle vertical sync on supporting renderers.
 The editor is packaged separately and installed with the `editor` extra.
-For heavy scenes you can enable asynchronous event updates:
+For heavy scenes you can enable asynchronous event updates (experimental):
 ```python
 Engine(scene=my_scene, async_events=True).run()
 ```
+Use a ``VariableStore`` for thread-safe variables when running asynchronously.
 Input is handled by the SDL backend unless `qt` is selected to integrate with a Qt event loop.
 Gamepad input can be enabled with the `gamepad` backend if SDL2 supports controllers.
 Analog sticks expose axis values that can be combined with key bindings using

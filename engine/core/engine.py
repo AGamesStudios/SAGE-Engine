@@ -251,6 +251,11 @@ class Engine:
                         obj.clear_cache()
                     except Exception:
                         logger.exception("Cache cleanup failed")
+        try:
+            from ..entities.game_object import clear_image_cache
+            clear_image_cache()
+        except Exception:
+            logger.exception("Failed to clear image cache")
 
     def change_scene(self, name: str, scene: Scene | None = None) -> None:
         """Replace or switch the active scene."""

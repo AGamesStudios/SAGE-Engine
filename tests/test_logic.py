@@ -3,6 +3,7 @@ import importlib.util
 import importlib
 import pathlib
 import sys
+import pytest
 
 # Create minimal engine package so logic modules with relative imports load.
 _orig_engine = sys.modules.get('engine')
@@ -146,6 +147,15 @@ def test_input_axis_condition():
     engine = types.SimpleNamespace(input=DummyBackend())
     cond = logic_conditions.InputAxis(axis_id=0, threshold=0.5, comparison='>=')
     assert cond.check(engine, None, 0)
+
+    class BadBackend:
+        def get_axis_value(self, aid):
+            return None
+
+    engine_bad = types.SimpleNamespace(input=BadBackend())
+    cond_bad = logic_conditions.InputAxis(axis_id=1, threshold=0.5)
+    with pytest.raises(ValueError):
+        cond_bad.check(engine_bad, None, 0)
 
 
 def teardown_module(module):

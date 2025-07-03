@@ -30,9 +30,12 @@ class GamepadInput(InputBackend):
             return False
         return bool(sdl2.SDL_GameControllerGetButton(self._controller, button))
 
-    def get_axis_value(self, axis_id: int) -> float:
+    def get_axis_value(self, axis_id: int) -> float | None:
         if self._controller is None:
-            return 0.0
+            return None
+        axis_max = getattr(sdl2, "SDL_CONTROLLER_AXIS_MAX", 6)
+        if axis_id < 0 or axis_id >= axis_max:
+            return None
         val = sdl2.SDL_GameControllerGetAxis(self._controller, axis_id)
         return float(val) / 32768.0
 
