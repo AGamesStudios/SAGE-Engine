@@ -97,3 +97,19 @@ def test_vsync_flag(monkeypatch):
     from engine.renderers.sdl_renderer import SDLRenderer
     SDLRenderer(2, 2, 't', vsync=True)
     assert calls['flags'] & 2
+
+
+def test_close_logs_cleanup(monkeypatch, caplog):
+    calls = {'tex': 0, 'copy': 0, 'lines': 0, 'flags': 0}
+    _stub_sdl(monkeypatch, calls)
+    import engine.renderers.sdl_renderer as mod
+
+    def destroy(tex):
+        raise RuntimeError('bad')
+
+    mod.sdl2.SDL_DestroyTexture = destroy
+    caplog.set_level('ERROR')
+    r = mod.SDLRenderer(2, 2, 't')
+    r.textures[('a', False)] = object()
+    r.close()
+    assert 'SDL_DestroyTexture failed' in caplog.text

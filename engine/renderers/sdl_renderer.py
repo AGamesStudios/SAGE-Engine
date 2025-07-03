@@ -1,14 +1,8 @@
 """Simple SDL renderer using PySDL2."""
 
 
-try:
-    import sdl2
-except Exception as exc:  # pragma: no cover - optional dependency
-    raise ImportError(
-        "SDLRenderer requires PySDL2 and SDL2 libraries"
-    ) from exc
-
 import ctypes
+import logging
 import math
 
 from PIL import Image
@@ -16,6 +10,15 @@ from PIL import Image
 from . import Renderer, register_renderer
 from .opengl.drawing import parse_color
 from ..mesh_utils import Mesh
+
+try:
+    import sdl2
+except Exception as exc:  # pragma: no cover - optional dependency
+    raise ImportError(
+        "SDLRenderer requires PySDL2 and SDL2 libraries"
+    ) from exc
+
+logger = logging.getLogger(__name__)
 
 
 class SDLRenderer(Renderer):
@@ -252,7 +255,7 @@ class SDLRenderer(Renderer):
                 try:
                     sdl2.SDL_DestroyTexture(tex)
                 except Exception:  # pragma: no cover - cleanup
-                    pass
+                    logger.exception("SDL_DestroyTexture failed")
             self.textures.clear()
             sdl2.SDL_DestroyRenderer(self.renderer)
             self.renderer = None

@@ -1,5 +1,6 @@
 
 from typing import Optional, TYPE_CHECKING
+import logging
 
 if TYPE_CHECKING:  # pragma: no cover - type hints
     from .core import OpenGLRenderer
@@ -16,6 +17,8 @@ from OpenGL.GL import (
     GL_TEXTURE_2D,
 )
 
+logger = logging.getLogger(__name__)
+
 
 class GLWidget(QOpenGLWidget):
     """Qt OpenGL widget used by the renderer."""
@@ -31,7 +34,7 @@ class GLWidget(QOpenGLWidget):
             from PyQt6.QtCore import Qt
             self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         except Exception:
-            pass
+            logger.exception("Failed to set FocusPolicy")
         self.renderer: Optional["OpenGLRenderer"] = None
 
     def initializeGL(self) -> None:

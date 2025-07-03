@@ -51,6 +51,14 @@ class TestObject(unittest.TestCase):
         obj.update(0.5)
         self.assertEqual(calls, [("sprite", 0.5)])
 
+    def test_logic_error_propagates(self):
+        def boom(obj, dt):
+            raise RuntimeError("fail")
+
+        obj = Object(role="sprite", logic=[boom])
+        with self.assertRaises(RuntimeError):
+            obj.update(0.1)
+
     def test_transform_matrix(self):
         t = Transform2D(x=1, y=2, scale_x=3, scale_y=4, angle=0)
         mat = t.matrix()

@@ -41,7 +41,11 @@ def _load_entry_points() -> None:
     failed: list[str] = []
     try:
         eps = metadata.entry_points()
-        entries = eps.select(group="sage_engine.renderers") if hasattr(eps, "select") else eps.get("sage_engine.renderers", [])
+        entries = (
+            eps.select(group="sage_engine.renderers")
+            if hasattr(eps, "select")
+            else eps.get("sage_engine.renderers", [])
+        )
         for ep in entries:
             try:
                 cls = ep.load()
@@ -51,8 +55,11 @@ def _load_entry_points() -> None:
                 failed.append(ep.name)
     except Exception as exc:  # pragma: no cover - metadata issues
         logger.exception("Error loading renderer entry points: %s", exc)
+        raise
     if failed:
-        logger.warning("Failed renderer plugins: %s", ", ".join(failed))
+        msg = ", ".join(failed)
+        logger.warning("Failed renderer plugins: %s", msg)
+        raise RuntimeError(f"Failed renderer plugins: {msg}")
     _PLUGINS_LOADED = True
 
 

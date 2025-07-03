@@ -151,6 +151,7 @@ class Object:
                 func(self, dt)
             except Exception:
                 logger.exception("Logic error in %s", self.role)
+                raise
 
     def add_logic(self, func: Callable[["Object", float], Any]) -> None:
         """Attach a logic callback if not already present."""

@@ -24,23 +24,25 @@ def test_object_plugin_warning(monkeypatch, caplog):
     objects.load_object_plugins()
     assert 'Failed object plugins: bad1, bad2' in caplog.text
 
-def test_input_plugin_warning(monkeypatch, caplog):
+def test_input_plugin_error(monkeypatch, caplog):
     from engine import inputs
     caplog.set_level(logging.WARNING)
     eps = _EPS('sage_engine.inputs')
     monkeypatch.setattr(metadata, 'entry_points', lambda: eps)
     inputs._PLUGINS_LOADED = False
-    inputs._load_entry_points()
+    with pytest.raises(RuntimeError):
+        inputs._load_entry_points()
     assert 'Failed input plugins: bad1, bad2' in caplog.text
 
-def test_renderer_plugin_warning(monkeypatch, caplog):
+def test_renderer_plugin_error(monkeypatch, caplog):
     from engine import renderers
     caplog.set_level(logging.WARNING)
     eps = _EPS('sage_engine.renderers')
     monkeypatch.setattr(metadata, 'entry_points', lambda: eps)
     renderers.RENDERER_REGISTRY.clear()
     renderers._PLUGINS_LOADED = False
-    renderers._load_entry_points()
+    with pytest.raises(RuntimeError):
+        renderers._load_entry_points()
     assert 'Failed renderer plugins: bad1, bad2' in caplog.text
 
 

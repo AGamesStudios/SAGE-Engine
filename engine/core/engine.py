@@ -389,7 +389,7 @@ class Engine:
                 while not self.renderer.should_close():
                     self.step()
             except KeyboardInterrupt:
-                pass
+                logger.info("Engine run interrupted")
             finally:
                 self.shutdown()
                 self.input.shutdown()
