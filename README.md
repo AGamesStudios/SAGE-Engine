@@ -20,6 +20,10 @@ Optional renderers, audio drivers and the SDK can be installed via extras:
 ```bash
 pip install .[opengl,sdl,audio,sdk]
 ```
+Alternatively run the installer to choose extras interactively:
+```bash
+python scripts/install.py --extras opengl sdl audio
+```
 Optional tools such as the editor and development SDK
 are distributed separately so the engine can be used standalone.
 
