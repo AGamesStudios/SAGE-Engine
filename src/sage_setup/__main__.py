@@ -168,102 +168,6 @@ def install(
     return output
 
 
-def uninstall_iter() -> Iterable[tuple[str, int | None]]:
-    """Yield pip output while uninstalling the engine."""
-    command = [sys.executable, "-m", "pip", "uninstall", "-y", "sage-engine"]
-    proc = subprocess.Popen(
-        command,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-    )
-    output = ""
-    assert proc.stdout is not None and proc.stderr is not None
-    use_select = True
-    try:
-        proc.stdout.fileno()
-        proc.stderr.fileno()
-    except Exception:
-        use_select = False
-
-    if use_select:
-        streams = [proc.stdout, proc.stderr]
-        while streams:
-            ready, _, _ = select.select(streams, [], [], 0.1)
-            for r in ready:
-                line = r.readline()
-                if line:
-                    output += line
-                    yield line, _parse_progress(line)
-                elif proc.poll() is not None:
-                    streams.remove(r)
-    else:
-        out = proc.stdout.read()
-        err = proc.stderr.read()
-        for line in (out + err).splitlines(True):
-            output += line
-            yield line, _parse_progress(line)
-    if proc.returncode != 0:
-        raise RuntimeError(output)
-
-
-def upgrade_iter() -> Iterable[tuple[str, int | None]]:
-    """Yield pip output while upgrading the engine."""
-    command = [
-        sys.executable,
-        "-m",
-        "pip",
-        "install",
-        "--upgrade",
-        "sage-engine",
-        "--progress-bar",
-        "off",
-        "--verbose",
-    ]
-    proc = subprocess.Popen(
-        command,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-    )
-    output = ""
-    assert proc.stdout is not None and proc.stderr is not None
-    use_select = True
-    try:
-        proc.stdout.fileno()
-        proc.stderr.fileno()
-    except Exception:
-        use_select = False
-
-    if use_select:
-        streams = [proc.stdout, proc.stderr]
-        while streams:
-            ready, _, _ = select.select(streams, [], [], 0.1)
-            for r in ready:
-                line = r.readline()
-                if line:
-                    output += line
-                    yield line, _parse_progress(line)
-                elif proc.poll() is not None:
-                    streams.remove(r)
-    else:
-        out = proc.stdout.read()
-        err = proc.stderr.read()
-        for line in (out + err).splitlines(True):
-            output += line
-            yield line, _parse_progress(line)
-    if proc.returncode != 0:
-        raise RuntimeError(output)
-
-
-def uninstall() -> str:
-    """Uninstall the engine using pip."""
-    return "".join(line for line, _ in uninstall_iter())
-
-
-def upgrade() -> str:
-    """Upgrade the engine using pip."""
-    return "".join(line for line, _ in upgrade_iter())
 
 
 def run_install_dialog(path: str | None, extras: str | None, version: str | None, win, *, launcher_only: bool = False) -> str:
@@ -318,94 +222,6 @@ def run_install_dialog(path: str | None, extras: str | None, version: str | None
     return output.toPlainText()
 
 
-def run_uninstall_dialog(win) -> str:
-    """Run uninstall and display progress."""
-    from PyQt6.QtWidgets import QApplication, QMessageBox, QDialog, QPlainTextEdit, QProgressBar, QVBoxLayout
-    from PyQt6.QtCore import Qt
-
-    progress = QDialog(win)
-    progress.setWindowTitle("SAGE Setup")
-    progress.setWindowModality(Qt.WindowModality.WindowModal)
-    layout = QVBoxLayout(progress)
-    output = QPlainTextEdit()
-    output.setReadOnly(True)
-    bar = QProgressBar()
-    bar.setRange(0, 0)
-    layout.addWidget(output)
-    layout.addWidget(bar)
-    progress.setFixedSize(500, 300)
-    pg = progress.frameGeometry()
-    pg.moveCenter(win.frameGeometry().center())
-    progress.move(pg.topLeft())
-    progress.show()
-    QApplication.processEvents()
-    determinate = False
-    try:
-        for line, prog in uninstall_iter():
-            output.appendPlainText(line.rstrip())
-            if prog is not None:
-                if not determinate:
-                    bar.setRange(0, 100)
-                    determinate = True
-                bar.setValue(prog)
-            QApplication.processEvents()
-    except Exception as exc:  # pragma: no cover - GUI feedback only
-        output.appendPlainText(str(exc))
-        bar.setRange(0, 1)
-        bar.setValue(1)
-        progress.close()
-        QMessageBox.critical(win, "SAGE Setup", f"Uninstall failed:\n{exc}")
-    else:
-        bar.setRange(0, 1)
-        bar.setValue(1)
-        progress.close()
-        QMessageBox.information(win, "SAGE Setup", "Uninstall complete")
-    return output.toPlainText()
-
-
-def run_upgrade_dialog(win) -> str:
-    """Run upgrade and display progress."""
-    from PyQt6.QtWidgets import QApplication, QMessageBox, QDialog, QPlainTextEdit, QProgressBar, QVBoxLayout
-    from PyQt6.QtCore import Qt
-
-    progress = QDialog(win)
-    progress.setWindowTitle("SAGE Setup")
-    progress.setWindowModality(Qt.WindowModality.WindowModal)
-    layout = QVBoxLayout(progress)
-    output = QPlainTextEdit()
-    output.setReadOnly(True)
-    bar = QProgressBar()
-    bar.setRange(0, 0)
-    layout.addWidget(output)
-    layout.addWidget(bar)
-    progress.setFixedSize(500, 300)
-    pg = progress.frameGeometry()
-    pg.moveCenter(win.frameGeometry().center())
-    progress.move(pg.topLeft())
-    progress.show()
-    QApplication.processEvents()
-    determinate = False
-    try:
-        for line, prog in upgrade_iter():
-            output.appendPlainText(line.rstrip())
-            if prog is not None:
-                if not determinate:
-                    bar.setRange(0, 100)
-                    determinate = True
-                bar.setValue(prog)
-            QApplication.processEvents()
-    except Exception as exc:  # pragma: no cover - GUI feedback only
-        output.appendPlainText(str(exc))
-        bar.setRange(0, 1)
-        bar.setValue(1)
-        progress.close()
-        QMessageBox.critical(win, "SAGE Setup", f"Upgrade failed:\n{exc}")
-    else:
-        bar.setRange(0, 1)
-        bar.setValue(1)
-        progress.close()
-        QMessageBox.information(win, "SAGE Setup", "Upgrade complete")
-    return output.toPlainText()
 
 
 def main() -> None:
@@ -413,16 +229,8 @@ def main() -> None:
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--launcher-only", action="store_true")
-    parser.add_argument("--uninstall", action="store_true")
-    parser.add_argument("--upgrade", action="store_true")
     args, _ = parser.parse_known_args()
 
-    if args.uninstall:
-        print(uninstall())
-        return
-    if args.upgrade:
-        print(upgrade())
-        return
     if args.launcher_only:
         print(install(launcher_only=True))
         return
@@ -472,19 +280,9 @@ def main() -> None:
             win,
         )
 
-    def run_uninstall() -> None:
-        run_uninstall_dialog(win)
-
-    def run_upgrade() -> None:
-        run_upgrade_dialog(win)
-
     browse_btn.clicked.connect(browse)
     install_btn = QPushButton(tr("install"))
     install_btn.clicked.connect(run_install)
-    uninstall_btn = QPushButton("Uninstall")
-    uninstall_btn.clicked.connect(lambda: run_uninstall_dialog(win))
-    upgrade_btn = QPushButton("Upgrade")
-    upgrade_btn.clicked.connect(lambda: run_upgrade_dialog(win))
 
     form = QFormLayout()
     path_row = QHBoxLayout()
@@ -502,8 +300,6 @@ def main() -> None:
     layout = QVBoxLayout(win)
     layout.addLayout(form)
     layout.addWidget(install_btn)
-    layout.addWidget(upgrade_btn)
-    layout.addWidget(uninstall_btn)
 
     win.show()
     fg = win.frameGeometry()

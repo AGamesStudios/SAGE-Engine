@@ -29,8 +29,7 @@ STRINGS: dict[str, dict[str, str]] = {
         "browse": "Browse",
         "open": "Open",
         "create": "Create",
-        "install": "Install/Update Engine",
-        "uninstall": "Uninstall Engine",
+        "install": "Install Engine",
         "projects": "Projects",
         "engine": "Engine",
         "info": "Info",
@@ -42,8 +41,7 @@ STRINGS: dict[str, dict[str, str]] = {
         "browse": "Обзор",
         "open": "Открыть",
         "create": "Создать",
-        "install": "Установить/Обновить Движок",
-        "uninstall": "Удалить Движок",
+        "install": "Установить Движок",
         "projects": "Проекты",
         "engine": "Движок",
         "info": "Инфо",
@@ -271,12 +269,9 @@ def main() -> None:
     # --- Engine tab ---
     engine_tab = QWidget()
     update_btn = QPushButton(tr("install"))
-    uninstall_btn = QPushButton(tr("uninstall"))
     update_btn.clicked.connect(lambda: run_setup())
-    uninstall_btn.clicked.connect(lambda: run_setup("--uninstall"))
     engine_layout = QVBoxLayout(engine_tab)
     engine_layout.addWidget(update_btn)
-    engine_layout.addWidget(uninstall_btn)
     engine_layout.addStretch()
 
     # --- Info tab ---

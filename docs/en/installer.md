@@ -27,7 +27,7 @@ such as ``~/sage_engine``. Extras are read from ``pyproject.toml`` so new
 options appear automatically. Install the ``qt`` extra or PyQt6 separately to
 use it.
 Pass ``--launcher-only`` to install just ``sage-launcher`` without the engine
-package. The GUI includes buttons to uninstall or upgrade an existing copy.
+package.
 Specify a version to install multiple copies under ``~/sage_engine/<version>``.
 The interface supports English and Russian depending on the ``SAGE_LANG``
 environment variable.
@@ -36,8 +36,8 @@ python -m sage_setup
 ```
 After installation you can open projects with ``SAGE Launcher`` (also PyQt6-based).
 The launcher lets you choose a directory to scan for projects, create new ones
-and even run ``SAGE Setup`` again with different extras. Tabs provide buttons to
-update the engine or open this documentation. Games are started in a separate
+and even run ``SAGE Setup`` again with different extras. A button opens this
+documentation. Games are started in a separate
 process so the launcher stays open, and any start errors are reported:
 ```bash
 python -m sage_launcher
