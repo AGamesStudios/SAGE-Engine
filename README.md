@@ -16,12 +16,12 @@ pip install -r requirements.txt
 ruff check .
 PYTHONPATH=. pytest -q
 ```
-Optional renderers, audio drivers, the editor and SDK can be installed via extras:
+Optional renderers, audio drivers and the SDK can be installed via extras:
 ```bash
-pip install .[opengl,sdl,audio,editor,sdk]
+pip install .[opengl,sdl,audio,sdk]
 ```
-The editor (`sage_editor`), painting tool (`sage_paint`) and development SDK
-are distributed as optional packages so the engine can be used standalone.
+Optional tools such as the editor and development SDK
+are distributed separately so the engine can be used standalone.
 
 Runtime state can be saved and loaded with `engine.save_game` and
 `engine.load_game`, producing `.sagesave` files.
@@ -36,7 +36,6 @@ python -m engine --renderer sdl examples/blank.sageproject
 python -m engine --renderer null examples/blank.sageproject
 ```
 Use `--vsync` or `--no-vsync` to toggle vertical sync on supporting renderers.
-The editor is packaged separately and installed with the `editor` extra.
 For heavy scenes you can enable asynchronous event updates:
 ```python
 Engine(scene=my_scene, async_events=True).run()

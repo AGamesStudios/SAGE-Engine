@@ -27,8 +27,6 @@ opengl = ["PyQt6>=6.5", "PyOpenGL>=3.1"]
 sdl = ["PySDL2"]
 qt = ["PyQt6>=6.5"]
 audio = ["pygame>=2.6"]
-editor = ["PyQt6>=6.5"]
-paint = []
 sdk = []
 
 [project.urls]
