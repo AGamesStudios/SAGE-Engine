@@ -14,7 +14,7 @@ For known caveats such as dependency requirements and experimental features see
 ```bash
 pip install -r requirements.txt
 ruff check .
-PYTHONPATH=. pytest -q
+PYTHONPATH=src pytest -q
 ```
 Optional renderers, audio drivers and the SDK can be installed via extras:
 ```bash
@@ -38,6 +38,14 @@ Optional tools such as the editor and development SDK are distributed
 separately so the engine can be used standalone. ``SAGE Launcher`` is
 installed alongside the engine and tracks recent project directories. Games
 are started in a separate process so the launcher stays open while they run.
+
+## Repository layout
+``src/`` contains the engine libraries and tools. Most users only need the
+``examples/`` directory to explore sample projects or start their own.
+Scripts for packaging and installation live under ``scripts/`` while
+documentation is stored in ``docs/``.
+Both ``SAGE Setup`` and ``SAGE Launcher`` can be packaged with PyInstaller to
+create Windows ``.exe`` files if Python is not available.
 
 Runtime state can be saved and loaded with `engine.save_game` and
 `engine.load_game`, producing `.sagesave` files.

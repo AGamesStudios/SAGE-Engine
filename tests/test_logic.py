@@ -25,7 +25,8 @@ lang_mod = types.ModuleType('engine.lang')
 lang_mod.LANGUAGES = {}
 sys.modules['engine.lang'] = lang_mod
 
-base_path = pathlib.Path('engine/logic')
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+base_path = ROOT / 'src' / 'engine' / 'logic'
 
 spec = importlib.util.spec_from_file_location('engine.logic.base', base_path / 'base.py')
 logic_base = importlib.util.module_from_spec(spec)

@@ -39,5 +39,5 @@ sage-setup = "sage_setup.__main__:main"
 sage-launcher = "sage_launcher.__main__:main"
 
 [tool.setuptools.packages.find]
-where = ["."]
-include = ["engine*", "sage_setup*", "sage_launcher*"]
+where = ["src"]
+include = ["engine*", "sage_setup*", "sage_launcher*", "sage_sdk*"]

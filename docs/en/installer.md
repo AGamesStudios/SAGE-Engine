@@ -1,7 +1,7 @@
 # Installation Helper
 
 The ``scripts/install.py`` utility installs the engine with selected extras.
-Run it from the repository root:
+Run it from the repository root (``src/`` contains the packages):
 
 ```bash
 python scripts/install.py --extras opengl sdl audio
@@ -39,4 +39,9 @@ update the engine or open this documentation. Games are started in a separate
 process so the launcher stays open, and any start errors are reported:
 ```bash
 python -m sage_launcher
+```
+Both tools can be packaged into standalone executables using PyInstaller:
+```bash
+pyinstaller -F -n sage-launcher src/sage_launcher/__main__.py
+pyinstaller -F -n sage-setup src/sage_setup/__main__.py
 ```
