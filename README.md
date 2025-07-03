@@ -24,7 +24,7 @@ Alternatively run the installer to choose extras interactively:
 ```bash
 python scripts/install.py --extras opengl sdl audio
 ```
-You can also use **SAGE Setup** for a graphical installer:
+You can also use **SAGE Setup** (requires PyQt6) for a graphical installer:
 ```bash
 python -m sage_setup
 ```
@@ -43,7 +43,7 @@ Use `python -m engine path/to/project.sageproject` to launch a game. Running `py
 python -m engine --renderer sdl examples/blank.sageproject
 python -m engine --renderer null examples/blank.sageproject
 ```
-The optional **SAGE Launcher** provides a simple GUI for opening projects:
+The optional **SAGE Launcher** (requires PyQt6) provides a simple GUI for opening projects:
 ```bash
 python -m sage_launcher
 ```

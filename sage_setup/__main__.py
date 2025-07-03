@@ -1,8 +1,6 @@
 import os
 import subprocess
 import sys
-import tkinter as tk
-from tkinter import ttk, filedialog, messagebox
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
@@ -18,35 +16,63 @@ def install(target: str | None = None, extras: str | None = None) -> None:
 
 
 def main() -> None:
-    root = tk.Tk()
-    root.title("SAGE Setup")
-    path_var = tk.StringVar()
-    extras_var = tk.StringVar()
+    from PyQt6.QtWidgets import (
+        QApplication,
+        QFileDialog,
+        QFormLayout,
+        QHBoxLayout,
+        QLineEdit,
+        QMessageBox,
+        QPushButton,
+        QVBoxLayout,
+        QWidget,
+        QCheckBox,
+    )
+
+    app = QApplication(sys.argv)
+    app.setStyle("Fusion")
+
+    win = QWidget()
+    win.setWindowTitle("SAGE Setup")
+    path_edit = QLineEdit()
+    browse_btn = QPushButton("Browse")
+    extras_boxes = {name: QCheckBox(name) for name in ("opengl", "sdl", "audio")}
 
     def browse() -> None:
-        path = filedialog.askdirectory(title="Select install location")
+        path = QFileDialog.getExistingDirectory(win, "Select install location")
         if path:
-            path_var.set(path)
+            path_edit.setText(path)
 
     def run_install() -> None:
+        selected = [n for n, box in extras_boxes.items() if box.isChecked()]
+        extras = ",".join(selected) or None
         try:
-            install(path_var.get() or None, extras_var.get() or None)
+            install(path_edit.text() or None, extras)
         except Exception as exc:  # pragma: no cover - GUI feedback only
-            messagebox.showerror("SAGE Setup", f"Install failed: {exc}")
+            QMessageBox.critical(win, "SAGE Setup", f"Install failed: {exc}")
         else:
-            messagebox.showinfo("SAGE Setup", "Installation complete")
+            QMessageBox.information(win, "SAGE Setup", "Installation complete")
 
-    frame = ttk.Frame(root, padding=10)
-    frame.pack(fill="both", expand=True)
-    ttk.Label(frame, text="Install location:").grid(row=0, column=0, sticky="w")
-    ttk.Entry(frame, textvariable=path_var, width=40).grid(row=0, column=1)
-    ttk.Button(frame, text="Browse", command=browse).grid(row=0, column=2, padx=5)
+    browse_btn.clicked.connect(browse)
+    install_btn = QPushButton("Install")
+    install_btn.clicked.connect(run_install)
 
-    ttk.Label(frame, text="Extras (comma separated):").grid(row=1, column=0, sticky="w")
-    ttk.Entry(frame, textvariable=extras_var, width=40).grid(row=1, column=1, columnspan=2)
+    form = QFormLayout()
+    path_row = QHBoxLayout()
+    path_row.addWidget(path_edit)
+    path_row.addWidget(browse_btn)
+    form.addRow("Install location:", path_row)
+    extras_layout = QVBoxLayout()
+    for box in extras_boxes.values():
+        extras_layout.addWidget(box)
+    form.addRow("Extras:", extras_layout)
 
-    ttk.Button(frame, text="Install", command=run_install).grid(row=2, column=0, columnspan=3, pady=10)
-    root.mainloop()
+    layout = QVBoxLayout(win)
+    layout.addLayout(form)
+    layout.addWidget(install_btn)
+
+    win.show()
+    app.exec()
 
 
 if __name__ == "__main__":  # pragma: no cover - CLI entry point

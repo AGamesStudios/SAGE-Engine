@@ -1,7 +1,5 @@
 import subprocess
 import sys
-import tkinter as tk
-from tkinter import ttk, filedialog
 
 
 def launch(path: str) -> None:
@@ -11,21 +9,35 @@ def launch(path: str) -> None:
 
 
 def main() -> None:
-    root = tk.Tk()
-    root.title("SAGE Launcher")
+    from PyQt6.QtWidgets import (
+        QApplication,
+        QFileDialog,
+        QPushButton,
+        QVBoxLayout,
+        QWidget,
+    )
+
+    app = QApplication(sys.argv)
+    app.setStyle("Fusion")
+
+    win = QWidget()
+    win.setWindowTitle("SAGE Launcher")
+    open_btn = QPushButton("Open Project")
 
     def pick_and_launch() -> None:
-        file = filedialog.askopenfilename(
-            title="Select project or scene",
-            filetypes=[("SAGE files", "*.sageproject *.sagescene")],
+        file, _ = QFileDialog.getOpenFileName(
+            win,
+            "Select project or scene",
+            filter="SAGE files (*.sageproject *.sagescene)",
         )
         if file:
             launch(file)
 
-    ttk.Button(root, text="Open Project", command=pick_and_launch).pack(
-        padx=20, pady=20
-    )
-    root.mainloop()
+    open_btn.clicked.connect(pick_and_launch)
+    layout = QVBoxLayout(win)
+    layout.addWidget(open_btn)
+    win.show()
+    app.exec()
 
 
 if __name__ == "__main__":  # pragma: no cover - CLI entry point
