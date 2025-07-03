@@ -6,6 +6,7 @@ from . import __main__ as _m
 
 # Expose useful functions and constants so tests and callers can access them
 DEFAULT_PATH = _m.DEFAULT_PATH
+DEFAULT_PROJECTS = _m.DEFAULT_PROJECTS
 REPO_ROOT = _m.REPO_ROOT
 subprocess = _m.subprocess
 
@@ -64,6 +65,7 @@ __all__ = [
     "main",
     "REPO_ROOT",
     "DEFAULT_PATH",
+    "DEFAULT_PROJECTS",
     "installed_versions",
     "available_extras",
     "install_iter",

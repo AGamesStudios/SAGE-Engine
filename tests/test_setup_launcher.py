@@ -164,6 +164,21 @@ def test_install_no_target(monkeypatch):
     assert "--target" not in called["cmd"]
 
 
+def test_install_creates_projects_dir(monkeypatch, tmp_path):
+    import sage_setup as setup
+
+    monkeypatch.setattr(setup._m, "install_iter", lambda *a, **k: iter([]))
+    created = []
+
+    def fake_makedirs(path, exist_ok=False):
+        created.append(path)
+
+    monkeypatch.setattr(setup._m.os, "makedirs", fake_makedirs)
+    monkeypatch.setattr(setup, "DEFAULT_PROJECTS", str(tmp_path / "SAGE Projects"))
+    setup.install("/tmp")
+    assert created and created[0].endswith("SAGE Projects")
+
+
 def test_install_error_output(monkeypatch):
     import sage_setup as setup
 
@@ -229,6 +244,15 @@ def test_settings_round_trip(monkeypatch):
     launcher.save_last_dir("/y")
     assert launcher.load_last_dir() == "/y"
     assert launcher.load_recent_dirs() == ["/y", "/x"]
+
+
+def test_load_last_dir_default(monkeypatch, tmp_path):
+    import importlib
+    monkeypatch.setenv("SAGE_LANG", "en")
+    launcher = importlib.reload(__import__("sage_launcher.__main__", fromlist=["load_last_dir"]))
+    monkeypatch.setattr(launcher, "QSettings", None)
+    monkeypatch.setattr(launcher, "DEFAULT_PROJECTS", str(tmp_path))
+    assert launcher.load_last_dir() == str(tmp_path)
 
 
 def test_install_dialog_appends_output(monkeypatch):

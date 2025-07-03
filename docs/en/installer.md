@@ -28,6 +28,8 @@ options appear automatically. Install the ``qt`` extra or PyQt6 separately to
 use it.
 Pass ``--launcher-only`` to install just ``sage-launcher`` without the engine
 package.
+The installer also creates ``~/SAGE Projects`` for your game projects. This path
+is used by ``SAGE Launcher`` when choosing a directory.
 Specify a version to install multiple copies under ``~/sage_engine/<version>``.
 The interface supports English and Russian depending on the ``SAGE_LANG``
 environment variable.

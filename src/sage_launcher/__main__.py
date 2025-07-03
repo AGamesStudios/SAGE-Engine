@@ -7,7 +7,7 @@ from pathlib import Path
 if __package__ is None or __package__ == "":
     sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from sage_setup import installed_versions, DEFAULT_PATH
+from sage_setup import installed_versions, DEFAULT_PATH, DEFAULT_PROJECTS
 
 DOC_URL = "https://github.com/AGamesStudios/SAGE-Engine"
 
@@ -85,9 +85,9 @@ def list_projects(base: str, *, recursive: bool = True) -> list[str]:
 def load_last_dir() -> str:
     """Return last directory stored in ``QSettings`` or ``os.getcwd``."""
     if QSettings is None:
-        return os.getcwd()
+        return DEFAULT_PROJECTS
     settings = QSettings("AGStudios", "sage_launcher")
-    return settings.value("last_dir", os.getcwd())
+    return settings.value("last_dir", DEFAULT_PROJECTS)
 
 
 def save_last_dir(path: str) -> None:

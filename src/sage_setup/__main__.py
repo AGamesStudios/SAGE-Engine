@@ -14,6 +14,8 @@ except ImportError:  # pragma: no cover - Python<3.11
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 DEFAULT_PATH = os.path.join(Path.home(), "sage_engine")
+# Default directory to store user projects
+DEFAULT_PROJECTS = os.path.join(Path.home(), "SAGE Projects")
 
 # --- simple localisation ---------------------------------------------
 try:
@@ -167,7 +169,11 @@ def install(
     launcher_only: bool = False,
 ) -> str:
     """Run ``pip install`` for the engine in ``target`` with optional extras."""
-    output = "".join(line for line, _ in install_iter(target, extras, version, launcher_only=launcher_only))
+    output = "".join(
+        line for line, _ in install_iter(target, extras, version, launcher_only=launcher_only)
+    )
+    if not launcher_only:
+        os.makedirs(DEFAULT_PROJECTS, exist_ok=True)
     return output
 
 

@@ -35,6 +35,8 @@ Extras are listed automatically from ``pyproject.toml``:
 python -m sage_setup
 ```
 Pass ``--launcher-only`` to install just ``sage-launcher``.
+``SAGE Setup`` also creates ``~/SAGE Projects`` where new projects are stored by
+default.
 Optional tools such as the editor and development SDK are distributed
 separately so the engine can be used standalone. ``SAGE Launcher`` is
 installed alongside the engine and tracks recent project directories. Games
