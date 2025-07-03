@@ -1,7 +1,7 @@
 """Input backend registry and interface for the engine."""
 
 
-from typing import Dict, Type
+from typing import Dict, Type, Callable, Any
 from abc import ABC, abstractmethod
 from importlib import metadata
 import importlib
@@ -86,7 +86,7 @@ def _load_entry_points() -> None:
         entries = (
             eps.select(group="sage_engine.inputs")
             if hasattr(eps, "select")
-            else eps.get("sage_engine.inputs", [])
+            else eps.get("sage_engine.inputs", [])  # type: ignore[attr-defined]
         )
         for ep in entries:
             try:
@@ -120,8 +120,8 @@ class InputManager:
         self._key_map: dict[str, int] = {}
         self._btn_map: dict[str, int] = {}
         self._axes: dict[str, tuple[int | None, int | None, float, int | None]] = {}
-        self._press: dict[str, list[callable]] = {}
-        self._release: dict[str, list[callable]] = {}
+        self._press: dict[str, list[Callable[[], Any]]] = {}
+        self._release: dict[str, list[Callable[[], Any]]] = {}
         self._state: set[str] = set()
 
     def bind_action(self, action: str, *, key: int | None = None,

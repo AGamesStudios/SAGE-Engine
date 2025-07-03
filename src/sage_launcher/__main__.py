@@ -74,7 +74,7 @@ except Exception:  # pragma: no cover - PyQt6 optional
     QSettings = None
 
 
-def launch(path: str) -> subprocess.Popen[str]:
+def launch(path: str) -> subprocess.Popen[bytes]:
     """Launch the engine with the given project or scene path and return the process."""
     return subprocess.Popen(
         [sys.executable, "-m", "engine", path], start_new_session=True

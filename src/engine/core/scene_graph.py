@@ -105,7 +105,8 @@ class SceneGraph(BaseGraph):
             position=position,
             metadata=metadata or {},
         )
-        return self.add_node(node)  # type: ignore[arg-type]
+        self.add_node(node)
+        return node
 
     @classmethod
     def from_dict(cls, data: dict) -> "SceneGraph":

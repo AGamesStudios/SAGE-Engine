@@ -10,7 +10,7 @@ if __package__ is None or __package__ == "":
 try:
     import tomllib
 except ImportError:  # pragma: no cover - Python<3.11
-    import tomli as tomllib
+    import tomli as tomllib  # type: ignore[no-redef]
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 DEFAULT_PATH = os.path.join(Path.home(), "sage_engine")

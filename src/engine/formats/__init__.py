@@ -1,6 +1,7 @@
 
 import logging
 import os
+from typing import Callable, Any
 from importlib import metadata
 
 from .sageaudio import load_sageaudio, save_sageaudio
@@ -11,8 +12,8 @@ from .sagelogic import load_sagelogic, save_sagelogic
 
 logger = logging.getLogger(__name__)
 
-FORMAT_LOADERS: dict[str, callable] = {}
-FORMAT_SAVERS: dict[str, callable] = {}
+FORMAT_LOADERS: dict[str, Callable[..., Any]] = {}
+FORMAT_SAVERS: dict[str, Callable[..., Any]] = {}
 _PLUGINS_LOADED = False
 
 
@@ -34,7 +35,7 @@ def _load_plugins() -> None:
         entries = (
             eps.select(group="sage_engine.formats")
             if hasattr(eps, "select")
-            else eps.get("sage_engine.formats", [])
+            else eps.get("sage_engine.formats", [])  # type: ignore[attr-defined]
         )
         for ep in entries:
             try:

@@ -8,6 +8,7 @@ import logging
 import os
 import sys
 import json
+from typing import Callable, Any
 
 # default plugin directory in the user's home
 PLUGIN_DIR = os.path.join(os.path.expanduser('~'), '.sage_plugins')
@@ -44,9 +45,9 @@ class PluginManager:
         self.config_file = config_file
         self.entry_point_group = (
             entry_point_group or f"sage_{target}.plugins")
-        self._funcs: list[callable] = []
+        self._funcs: list[Callable[[Any], Any]] = []
 
-    def register(self, func) -> None:
+    def register(self, func: Callable[[Any], Any]) -> None:
         """Register a plugin initialization function."""
         self._funcs.append(func)
 
@@ -54,11 +55,12 @@ class PluginManager:
         if isinstance(mod_or_obj, PluginBase):
             if self.target == "engine":
                 mod_or_obj.init_engine(instance)
-                mod_or_obj.register_logic = getattr(
-                    mod_or_obj, "register_logic", lambda *a: None)
-                mod_or_obj.register_logic(
-                    getattr(instance, "register_condition", None),
-                    getattr(instance, "register_action", None))
+                reg = getattr(mod_or_obj, "register_logic", None)
+                if callable(reg):
+                    reg(
+                        getattr(instance, "register_condition", None),
+                        getattr(instance, "register_action", None),
+                    )
             else:
                 mod_or_obj.init_editor(instance)
             return
@@ -118,9 +120,11 @@ class PluginManager:
 
         try:
             eps = metadata.entry_points()
-            entries = (eps.select(group=self.entry_point_group)
-                       if hasattr(eps, "select")
-                       else eps.get(self.entry_point_group, []))
+            entries = (
+                eps.select(group=self.entry_point_group)
+                if hasattr(eps, "select")
+                else eps.get(self.entry_point_group, [])  # type: ignore[attr-defined]
+            )
             for ep in entries:
                 try:
                     mod = ep.load()

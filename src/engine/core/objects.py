@@ -35,7 +35,7 @@ def _load_entry_points() -> None:
         entries = (
             eps.select(group="sage_engine.objects")
             if hasattr(eps, "select")
-            else eps.get("sage_engine.objects", [])
+            else eps.get("sage_engine.objects", [])  # type: ignore[attr-defined]
         )
         for ep in entries:
             try:
@@ -61,9 +61,12 @@ def object_from_dict(data: dict) -> Any | None:
     """Instantiate a registered object from ``data``."""
     _load_entry_points()
     typ = data.get("type")
+    if not isinstance(typ, str):
+        logger.warning("Unknown object type %s", typ)
+        raise ValueError(f"Unknown object type {typ}")
     cls = OBJECT_REGISTRY.get(typ)
     if cls is None:
-        logger.warning('Unknown object type %s', typ)
+        logger.warning("Unknown object type %s", typ)
         raise ValueError(f"Unknown object type {typ}")
     params: dict[str, Any] = {}
     extras: dict[str, Any] = {}

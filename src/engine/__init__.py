@@ -10,7 +10,7 @@ ENGINE_VERSION = __version__
 try:
     from sage_sdk.plugins import PluginManager
 except Exception:  # pragma: no cover - sdk optional
-    class PluginManager:  # type: ignore[override]
+    class PluginManager:  # type: ignore[override, no-redef]
         """Fallback plugin manager when ``sage_sdk`` is missing."""
 
         def __init__(self, *a, **k):

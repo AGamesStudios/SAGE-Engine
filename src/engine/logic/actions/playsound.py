@@ -1,10 +1,13 @@
+from typing import Any
 from ..base import Action, register_action, resolve_value
 from ...utils.log import logger
 
 try:
-    from ...audio import AudioManager
+    from ...audio import AudioManager as _AudioManager
 except Exception:  # pragma: no cover - optional dependency may be missing
-    AudioManager = None
+    AudioManager: Any = None
+else:
+    AudioManager = _AudioManager
 
 
 @register_action('PlaySound', [('name', 'value')])

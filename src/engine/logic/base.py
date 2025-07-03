@@ -53,7 +53,7 @@ def load_logic_plugins(*modules) -> None:
             entries = (
                 eps.select(group="sage_engine.logic")
                 if hasattr(eps, "select")
-                else eps.get("sage_engine.logic", [])
+                else eps.get("sage_engine.logic", [])  # type: ignore[attr-defined]
             )
             for ep in entries:
                 try:

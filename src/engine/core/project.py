@@ -60,7 +60,7 @@ class Project:
             os.makedirs(os.path.dirname(scene_path), exist_ok=True)
             with open(scene_path, 'w') as sf:
                 json.dump(self.scene, sf, indent=2)
-            scene_entry = self.scene_file
+            scene_entry: str | dict = self.scene_file
         else:
             scene_entry = self.scene
         with open(path, 'w') as f:
