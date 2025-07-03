@@ -4,6 +4,7 @@ import struct
 import math
 import sys
 import types
+import pytest
 
 os.environ.setdefault('SDL_AUDIODRIVER', 'dummy')
 
@@ -128,3 +129,24 @@ def test_music_controls(tmp_path):
     audio.unpause_music()
     audio.stop_music()
     audio.shutdown()
+
+
+def test_invalid_music_path(tmp_path):
+    audio = AudioManager()
+    bad = tmp_path / "missing.wav"
+
+    class Boom(Exception):
+        pass
+
+    def fail(path):
+        raise Boom(path)
+
+    import pygame
+
+    old_load = pygame.mixer.music.load
+    pygame.mixer.music.load = fail
+    try:
+        with pytest.raises(Boom):
+            audio.play_music(str(bad))
+    finally:
+        pygame.mixer.music.load = old_load

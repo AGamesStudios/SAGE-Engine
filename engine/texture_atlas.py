@@ -1,5 +1,4 @@
 """Simple texture atlas for sprite sheets."""
-from __future__ import annotations
 
 from PIL import Image
 

@@ -1,6 +1,5 @@
 """Input backend registry and interface for the engine."""
 
-from __future__ import annotations
 
 from typing import Dict, Type
 from abc import ABC, abstractmethod

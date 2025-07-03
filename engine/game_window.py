@@ -1,4 +1,3 @@
-from __future__ import annotations
 
 import time
 from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout

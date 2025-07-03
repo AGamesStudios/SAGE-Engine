@@ -1,5 +1,4 @@
 """Helper functions for drawing primitives with OpenGLRenderer."""
-from __future__ import annotations
 
 import math
 

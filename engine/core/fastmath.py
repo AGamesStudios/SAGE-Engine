@@ -1,5 +1,4 @@
 """Compatibility wrapper for legacy imports."""
-from __future__ import annotations
 
 from .math2d import (
     angle_to_quat,

@@ -1,4 +1,3 @@
-from __future__ import annotations
 
 """Simple library loader for the SAGE engine."""
 

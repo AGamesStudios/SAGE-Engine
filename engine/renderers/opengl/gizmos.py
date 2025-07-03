@@ -1,5 +1,4 @@
 """Gizmo rendering helpers for the OpenGL renderer."""
-from __future__ import annotations
 
 import math
 

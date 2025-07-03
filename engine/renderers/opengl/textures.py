@@ -1,6 +1,5 @@
 """Utility functions for texture and icon handling."""
 
-from __future__ import annotations
 
 from PIL import Image
 from OpenGL.GL import (

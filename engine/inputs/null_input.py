@@ -1,4 +1,3 @@
-from __future__ import annotations
 
 from . import InputBackend, register_input
 

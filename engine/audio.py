@@ -1,6 +1,5 @@
 """Simple audio playback using pygame."""
 
-from __future__ import annotations
 
 import os
 from typing import Dict
@@ -74,6 +73,7 @@ class AudioManager:
             self._music_path = path
         except Exception:
             logger.exception("Failed to load music %s", path)
+            raise
 
     def play_music(self, path: str | None = None, *, loops: int = 0) -> None:
         """Play music once loaded."""

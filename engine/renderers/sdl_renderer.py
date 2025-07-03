@@ -1,6 +1,5 @@
 """Simple SDL renderer using PySDL2."""
 
-from __future__ import annotations
 
 try:
     import sdl2

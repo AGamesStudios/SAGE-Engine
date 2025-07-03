@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: MIT
 """Registry for post-processing effects."""
-from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Dict

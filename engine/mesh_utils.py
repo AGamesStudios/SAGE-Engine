@@ -1,5 +1,4 @@
 """Utilities for generating simple 2D meshes."""
-from __future__ import annotations
 
 import math
 from dataclasses import dataclass

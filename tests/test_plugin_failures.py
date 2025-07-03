@@ -58,3 +58,19 @@ def test_engine_plugin_error(monkeypatch):
     with pytest.raises(RuntimeError):
         Engine(scene=Scene(with_defaults=False), renderer=NullRenderer,
                input_backend=NullInput)
+
+
+def test_logic_plugin_error(monkeypatch):
+    from engine.logic import base as logic_base
+    import builtins
+
+    orig_import = builtins.__import__
+
+    def fake_import(name, *a, **k):
+        if name == 'bad_logic':
+            raise RuntimeError('boom')
+        return orig_import(name, *a, **k)
+
+    monkeypatch.setattr(builtins, '__import__', fake_import)
+    with pytest.raises(RuntimeError):
+        logic_base.load_logic_plugins('bad_logic')

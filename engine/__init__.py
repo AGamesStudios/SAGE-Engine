@@ -23,6 +23,9 @@ except Exception:  # pragma: no cover - sdk optional
 
         def load(self, obj, paths=None):  # noqa: D401
             """No-op plugin loader."""
+            logger.warning(
+                "Plugins ignored because sage_sdk is unavailable"
+            )
             return
 
 ENGINE_PLUGINS = PluginManager('engine')

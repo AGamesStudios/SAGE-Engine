@@ -1,4 +1,3 @@
-from __future__ import annotations
 
 import sys
 import argparse
@@ -296,6 +295,11 @@ class Engine:
             clear_image_cache()
         except Exception:
             logger.exception("Failed to clear image cache")
+        if self.asyncio_events and hasattr(self, "_loop"):
+            try:
+                self._loop.close()
+            except Exception:
+                logger.exception("Event loop close failed")
 
     def change_scene(self, name: str, scene: Scene | None = None) -> None:
         """Replace or switch the active scene."""
@@ -384,6 +388,11 @@ class Engine:
             finally:
                 self.shutdown()
                 self.input.shutdown()
+                if self.asyncio_events and hasattr(self, "_loop"):
+                    try:
+                        self._loop.close()
+                    except Exception:
+                        logger.exception("Event loop close failed")
                 self.renderer.close()
             return None
 
@@ -398,6 +407,11 @@ class Engine:
         finally:
             self.shutdown()
             self.input.shutdown()
+            if self.asyncio_events and hasattr(self, "_loop"):
+                try:
+                    self._loop.close()
+                except Exception:
+                    logger.exception("Event loop close failed")
             self.renderer.close()
         return window
 

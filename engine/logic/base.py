@@ -1,6 +1,5 @@
 # SAGE Logic - a simple condition/action event system
 # Provides Clickteam-style logic for both 2D and 3D games
-from __future__ import annotations
 
 from ..utils.log import logger
 from concurrent.futures import ThreadPoolExecutor
@@ -46,6 +45,7 @@ def load_logic_plugins(*modules) -> None:
             __import__(name)
         except Exception:
             logger.exception('Failed to load logic plugin %s', name)
+            raise
     if not _PLUGINS_LOADED:
         try:
             eps = metadata.entry_points()
@@ -59,8 +59,10 @@ def load_logic_plugins(*modules) -> None:
                     ep.load()
                 except Exception:
                     logger.exception('Failed to load logic plugin %s', ep.name)
+                    raise
         except Exception:
             logger.exception('Error loading logic entry points')
+            raise
         _PLUGINS_LOADED = True
 
 import re  # noqa: E402

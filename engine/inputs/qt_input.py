@@ -1,4 +1,3 @@
-from __future__ import annotations
 
 """Qt event based input backend."""
 

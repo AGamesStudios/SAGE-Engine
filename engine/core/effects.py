@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: MIT
 """Registry and helpers for sprite effects."""
-from __future__ import annotations
 
 from typing import Dict, List, Tuple
 from dataclasses import dataclass

@@ -1,6 +1,5 @@
 """Object registry for SAGE Engine."""
 
-from __future__ import annotations
 from typing import Any, Callable, Type
 from importlib import metadata
 from ..utils.log import logger

@@ -66,3 +66,11 @@ def test_asyncio_update_called(monkeypatch):
     eng.update(0.0)
     assert called['yes'] == 2
     assert count['loops'] == 1
+
+
+def test_loop_closed_after_shutdown():
+    scene = Scene(with_defaults=False)
+    eng = Engine(scene=scene, renderer=NullRenderer, input_backend=NullInput,
+                 asyncio_events=True)
+    eng.shutdown()
+    assert eng._loop.is_closed()

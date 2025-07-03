@@ -1,6 +1,5 @@
 """Loader for .sageanimation files."""
 
-from __future__ import annotations
 
 import json
 import os

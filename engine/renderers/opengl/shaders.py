@@ -1,5 +1,4 @@
 """Shader utilities for the OpenGL renderer."""
-from __future__ import annotations
 
 
 import ctypes
