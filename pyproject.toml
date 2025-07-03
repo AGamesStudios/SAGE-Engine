@@ -20,6 +20,7 @@ classifiers = [
 keywords = ["game", "engine", "sage", "sageaudio", "sagemesh"]
 dependencies = [
     "Pillow",
+    "tomli; python_version < '3.11'",
 ]
 
 [project.optional-dependencies]

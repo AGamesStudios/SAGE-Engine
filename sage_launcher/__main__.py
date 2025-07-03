@@ -3,6 +3,11 @@ import subprocess
 import sys
 from pathlib import Path
 
+try:
+    from PyQt6.QtCore import QSettings  # type: ignore
+except Exception:  # pragma: no cover - PyQt6 optional
+    QSettings = None
+
 
 def launch(path: str) -> None:
     """Launch the engine with the given project or scene path."""
@@ -11,9 +16,29 @@ def launch(path: str) -> None:
         raise RuntimeError(f"Engine exited with code {result.returncode}")
 
 
-def list_projects(base: str) -> list[str]:
-    """Return all ``.sageproject`` files under ``base``."""
-    return [str(p) for p in Path(base).rglob("*.sageproject")]
+def list_projects(base: str, *, recursive: bool = True) -> list[str]:
+    """Return ``.sageproject`` files under ``base``."""
+    if recursive:
+        paths = Path(base).rglob("*.sageproject")
+    else:
+        paths = Path(base).glob("*.sageproject")
+    return [str(p) for p in paths]
+
+
+def load_last_dir() -> str:
+    """Return last directory stored in ``QSettings`` or ``os.getcwd``."""
+    if QSettings is None:
+        return os.getcwd()
+    settings = QSettings("AGStudios", "sage_launcher")
+    return settings.value("last_dir", os.getcwd())
+
+
+def save_last_dir(path: str) -> None:
+    """Persist ``path`` using ``QSettings``."""
+    if QSettings is None:
+        return
+    settings = QSettings("AGStudios", "sage_launcher")
+    settings.setValue("last_dir", path)
 
 
 def create_project(path: str) -> None:
@@ -50,7 +75,7 @@ def main() -> None:
 
     win = QWidget()
     win.setWindowTitle("SAGE Launcher")
-    dir_edit = QLineEdit(os.getcwd())
+    dir_edit = QLineEdit(load_last_dir())
     browse_btn = QPushButton("Browse")
     project_list = QListWidget()
 
@@ -71,6 +96,7 @@ def main() -> None:
         )
         if path:
             dir_edit.setText(path)
+            save_last_dir(path)
             refresh()
 
     def open_selected() -> None:
@@ -112,6 +138,7 @@ def main() -> None:
     layout.addLayout(btn_row)
     win.show()
     app.exec()
+    save_last_dir(dir_edit.text())
 
 
 if __name__ == "__main__":  # pragma: no cover - CLI entry point

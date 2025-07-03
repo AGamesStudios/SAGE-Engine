@@ -16,11 +16,15 @@ python scripts/install.py --package sage-editor
 
 The script invokes ``pip`` under the hood. Extras can also be installed
 directly with ``pip install .[opengl,sdl,audio]``.
+When passing ``--target`` you must add that directory to ``PYTHONPATH`` to
+import the engine. Leaving the path blank installs to the default site-packages
+location.
 
 ``SAGE Setup`` offers the same functionality with a PyQt6 interface. It
-defaults to installing under ``~/sage_engine`` and reads the list of extras
-from ``pyproject.toml`` so new options appear automatically. Install the
-``qt`` extra or PyQt6 separately to use it.
+defaults to installing under ``~/sage_engine`` when a path is provided. If the
+path field is left empty the engine installs to site-packages. Extras are read
+from ``pyproject.toml`` so new options appear automatically. Install the ``qt``
+extra or PyQt6 separately to use it.
 ```bash
 python -m sage_setup
 ```
