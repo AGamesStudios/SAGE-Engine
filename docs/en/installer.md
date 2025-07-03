@@ -36,6 +36,11 @@ environment variable.
 ```bash
 python -m sage_setup
 ```
+If running from the repository without installing, remember to add ``src`` to
+``PYTHONPATH``:
+```bash
+PYTHONPATH=src python -m sage_setup
+```
 After installation you can open projects with ``SAGE Launcher`` (also PyQt6-based).
 The launcher lets you choose a directory to scan for projects, create new ones
 and even run ``SAGE Setup`` again with different extras. A button opens this
@@ -43,6 +48,10 @@ documentation. Games are started in a separate
 process so the launcher stays open, and any start errors are reported:
 ```bash
 python -m sage_launcher
+```
+When using the repository directly, add ``src`` to ``PYTHONPATH``:
+```bash
+PYTHONPATH=src python -m sage_launcher
 ```
 Both tools can be packaged into standalone executables using PyInstaller:
 ```bash

@@ -34,6 +34,11 @@ Extras are listed automatically from ``pyproject.toml``:
 ```bash
 python -m sage_setup
 ```
+When running from the source tree you may need to add ``src`` to ``PYTHONPATH``
+so the modules can be found:
+```bash
+PYTHONPATH=src python -m sage_setup
+```
 Pass ``--launcher-only`` to install just ``sage-launcher``.
 ``SAGE Setup`` also creates ``~/SAGE Projects`` where new projects are stored by
 default.
@@ -61,6 +66,11 @@ Use `python -m engine path/to/project.sageproject` to launch a game. Running `py
 ```bash
 python -m engine --renderer sdl examples/blank.sageproject
 python -m engine --renderer null examples/blank.sageproject
+```
+When running from the repository without installing first, add ``src`` to
+``PYTHONPATH`` so Python can locate the packages:
+```bash
+PYTHONPATH=src python -m engine examples/blank.sageproject
 ```
 The optional **SAGE Launcher** (requires PyQt6) lets you choose a directory and lists any projects it finds. It now includes tabs for updating the engine or opening the documentation. Games run in a separate process so the launcher stays open and reports errors if a project fails to start:
 ```bash
