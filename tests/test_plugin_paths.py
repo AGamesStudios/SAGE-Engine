@@ -18,3 +18,11 @@ def test_plugin_rejects_outside_relative(tmp_path):
     PluginManager("engine", plugin_dir=str(plugins)).load(obj)
     assert not hasattr(obj, "bad")
 
+
+def test_plugin_with_stdlib_name(tmp_path):
+    plugin = tmp_path / "json.py"
+    plugin.write_text("def init_engine(engine): engine.loaded = 'plugin'")
+    obj = types.SimpleNamespace()
+    PluginManager("engine", plugin_dir=str(tmp_path)).load(obj)
+    assert getattr(obj, "loaded", "") == "plugin"
+

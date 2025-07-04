@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import importlib
+import importlib.util
 from importlib import metadata
 import logging
 import os
@@ -134,8 +135,15 @@ class PluginManager:
                 if not cfg.get(mod_name, True):
                     continue
                 try:
-                    module = importlib.import_module(mod_name)
-                    self._call_init(module, instance)
+                    unique = f"sage_plugins.{mod_name}"
+                    spec = importlib.util.spec_from_file_location(unique, full)
+                    if spec and spec.loader:
+                        module = importlib.util.module_from_spec(spec)
+                        spec.loader.exec_module(module)
+                        sys.modules[unique] = module
+                        self._call_init(module, instance)
+                    else:
+                        logger.warning("Could not load plugin spec for %s", full)
                 except Exception:
                     logger.exception(
                         "Failed to load plugin %s at %s", mod_name,
