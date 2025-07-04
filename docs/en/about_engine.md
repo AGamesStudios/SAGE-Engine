@@ -15,5 +15,7 @@ The event system optionally updates in parallel. Enable ``async_events`` or
 When integrating with other :mod:`asyncio` code use ``await Engine.run_async()``
 to run the engine without blocking the calling loop. High level helpers
 ``run_project_async`` and ``run_scene_async`` mirror the synchronous API.
+Each function returns the :class:`~engine.game_window.GameWindow` when the Qt
+backend is available so the window can be controlled programmatically.
 Extension hooks can be coroutines and ``Object.update`` may yield a coroutine
 when using ``run_async``.

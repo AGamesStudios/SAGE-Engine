@@ -66,13 +66,13 @@ def create_engine(project: Project, fps: int = 30) -> Engine:
 def run_project(path: str, fps: int = 30):
     """Load a project file and run it directly."""
     engine = create_engine(load_project(path), fps=fps)
-    engine.run()
+    return engine.run()
 
 
-async def run_project_async(path: str, fps: int = 30) -> None:
+async def run_project_async(path: str, fps: int = 30):
     """Asynchronous version of :func:`run_project`."""
     engine = create_engine(load_project(path), fps=fps)
-    await engine.run_async()
+    return await engine.run_async()
 
 
 def load_scene(path: str) -> Scene:
@@ -85,10 +85,15 @@ def save_scene(scene: Scene, path: str) -> None:
     save_scene_file(scene, path)
 
 
-def run_scene(path: str, width: int = 640, height: int = 480,
-              title: str | None = None, fps: int = 30,
-              keep_aspect: bool = True,
-              background: tuple[int, int, int] = (0, 0, 0)) -> None:
+def run_scene(
+    path: str,
+    width: int = 640,
+    height: int = 480,
+    title: str | None = None,
+    fps: int = 30,
+    keep_aspect: bool = True,
+    background: tuple[int, int, int] = (0, 0, 0),
+) -> None:
     """Run a single scene file directly."""
     scene = load_scene(path)
     camera = scene.ensure_active_camera(width, height)
@@ -111,7 +116,7 @@ def run_scene(path: str, width: int = 640, height: int = 480,
         keep_aspect=keep_aspect,
         background=background,
     )
-    Engine(settings=settings).run()
+    return Engine(settings=settings).run()
 
 
 async def run_scene_async(
@@ -144,4 +149,4 @@ async def run_scene_async(
         keep_aspect=keep_aspect,
         background=background,
     )
-    await Engine(settings=settings).run_async()
+    return await Engine(settings=settings).run_async()

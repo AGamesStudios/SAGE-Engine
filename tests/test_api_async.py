@@ -6,14 +6,16 @@ class DummyEngine:
         self.called = False
     async def run_async(self):
         self.called = True
+        return "window"
 
 
 def test_run_project_async(monkeypatch):
     dummy = DummyEngine()
     monkeypatch.setattr(api, 'load_project', lambda p: 'proj')
     monkeypatch.setattr(api, 'create_engine', lambda proj, fps=30: dummy)
-    asyncio.run(api.run_project_async('foo'))
+    result = asyncio.run(api.run_project_async('foo'))
     assert dummy.called
+    assert result == 'window'
 
 
 def test_run_scene_async(monkeypatch):
@@ -34,5 +36,6 @@ def test_run_scene_async(monkeypatch):
     monkeypatch.setattr(api, 'load_scene', fake_load_scene)
     monkeypatch.setattr(api, 'get_renderer', lambda name: DummyRenderer)
     monkeypatch.setattr(api, 'Engine', lambda settings: dummy)
-    asyncio.run(api.run_scene_async('scene'))
+    result = asyncio.run(api.run_scene_async('scene'))
     assert dummy.called
+    assert result == 'window'
