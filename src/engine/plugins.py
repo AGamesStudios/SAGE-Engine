@@ -118,8 +118,6 @@ class PluginManager:
         for path in dirs:
             if not path:
                 continue
-            if os.path.isdir(path) and path not in sys.path:
-                sys.path.append(path)
             if not os.path.isdir(path):
                 logger.warning("Plugin directory %s does not exist", path)
                 continue
@@ -195,8 +193,8 @@ def read_config(config_file: str | None = None, *, plugin_dir: str | None = None
             data = json.load(f)
             if isinstance(data, dict):
                 return data
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.warning("Failed to read plugin config %s: %s", config_file, exc)
     return {}
 
 

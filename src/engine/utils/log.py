@@ -32,9 +32,13 @@ def init_logger(enable_crash_dumps: bool = True) -> logging.Logger:
     atexit.register(logging.shutdown)
     if enable_crash_dumps and not faulthandler.is_enabled():
         global _fault_file
-        _fault_file = open(LOG_FILE, 'a', encoding='utf-8')
-        faulthandler.enable(file=_fault_file, all_threads=True)
-        atexit.register(_fault_file.close)
+        try:
+            _fault_file = open(LOG_FILE, 'a', encoding='utf-8')
+        except OSError as exc:
+            logger.error("Failed to open log file for crash dumps: %s", exc)
+        else:
+            faulthandler.enable(file=_fault_file, all_threads=True)
+            atexit.register(_fault_file.close)
     return logger
 
 
