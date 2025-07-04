@@ -12,10 +12,12 @@ __all__ = [
     "load_project",
     "save_project",
     "run_project",
+    "run_project_async",
     "create_engine",
     "load_scene",
     "save_scene",
     "run_scene",
+    "run_scene_async",
     "register_object",
     "object_from_dict",
     "object_to_dict",
@@ -67,6 +69,12 @@ def run_project(path: str, fps: int = 30):
     engine.run()
 
 
+async def run_project_async(path: str, fps: int = 30) -> None:
+    """Asynchronous version of :func:`run_project`."""
+    engine = create_engine(load_project(path), fps=fps)
+    await engine.run_async()
+
+
 def load_scene(path: str) -> Scene:
     """Load a :class:`Scene` from disk."""
     return load_scene_file(path)
@@ -104,3 +112,36 @@ def run_scene(path: str, width: int = 640, height: int = 480,
         background=background,
     )
     Engine(settings=settings).run()
+
+
+async def run_scene_async(
+    path: str,
+    width: int = 640,
+    height: int = 480,
+    title: str | None = None,
+    fps: int = 30,
+    keep_aspect: bool = True,
+    background: tuple[int, int, int] = (0, 0, 0),
+) -> None:
+    """Asynchronous variant of :func:`run_scene`."""
+    scene = load_scene(path)
+    camera = scene.ensure_active_camera(width, height)
+    rcls = get_renderer("opengl")
+    if rcls is None:
+        from .renderers.opengl_renderer import OpenGLRenderer
+        rcls = OpenGLRenderer
+    renderer = rcls(width, height, title or "SAGE 2D", background=background)
+    events = scene.build_event_system(aggregate=False)
+    settings = EngineSettings(
+        width=width,
+        height=height,
+        scene=scene,
+        events=events,
+        title=title or "SAGE 2D",
+        renderer=renderer,
+        camera=camera,
+        fps=fps,
+        keep_aspect=keep_aspect,
+        background=background,
+    )
+    await Engine(settings=settings).run_async()

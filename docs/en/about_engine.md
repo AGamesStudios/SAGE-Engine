@@ -13,6 +13,7 @@ same Python API.
 The event system optionally updates in parallel. Enable ``async_events`` or
 ``asyncio_events`` on :class:`Engine` to process event logic concurrently.
 When integrating with other :mod:`asyncio` code use ``await Engine.run_async()``
-to run the engine without blocking the calling loop. Extension hooks can be
-coroutines and ``Object.update`` may yield a coroutine when using
-``run_async``.
+to run the engine without blocking the calling loop. High level helpers
+``run_project_async`` and ``run_scene_async`` mirror the synchronous API.
+Extension hooks can be coroutines and ``Object.update`` may yield a coroutine
+when using ``run_async``.
