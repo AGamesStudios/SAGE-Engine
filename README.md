@@ -27,34 +27,16 @@ python scripts/install.py --extras opengl sdl audio
 ```
 If you specify ``--target`` you must add that directory to ``PYTHONPATH`` so the
 engine can be imported.
-You can also use **SAGE Setup** (requires PyQt6) for a graphical installer.
-Pip output is streamed to a scrollable window with an indeterminate progress
-bar. The install location field is optional – leave it empty to install to
-the default site-packages or enter a folder such as ``~/sage_engine``.
-Extras are listed automatically from ``pyproject.toml``:
-```bash
-python -m sage_setup
-```
-When running from the source tree you may need to add ``src`` to ``PYTHONPATH``
-so the modules can be found:
-```bash
-PYTHONPATH=src python -m sage_setup
-```
-Pass ``--launcher-only`` to install just ``sage-launcher``.
-``SAGE Setup`` also creates ``~/SAGE Projects`` where new projects are stored by
-default.
-Optional tools such as the editor and development SDK are distributed
-separately so the engine can be used standalone. ``SAGE Launcher`` is
-installed alongside the engine and tracks recent project directories. Games
-are started in a separate process so the launcher stays open while they run.
+Extras are listed automatically in ``pyproject.toml`` and can be supplied with
+``--extras`` as needed.
 
 ## Repository layout
 ``src/`` contains the engine libraries and tools. Most users only need the
 ``examples/`` directory to explore sample projects or start their own.
 Scripts for packaging and installation live under ``scripts/`` while
 documentation is stored in ``docs/``.
-Both ``SAGE Setup`` and ``SAGE Launcher`` can be packaged with PyInstaller to
-create Windows ``.exe`` files if Python is not available.
+Optional tools such as the editor can be packaged with PyInstaller to create
+Windows executables if Python is not available.
 
 Runtime state can be saved and loaded with `engine.save_game` and
 `engine.load_game`, producing `.sagesave` files.
@@ -73,14 +55,6 @@ When running from the repository without installing first, add ``src`` to
 ```bash
 PYTHONPATH=src python -m engine examples/blank.sageproject
 ```
-The optional **SAGE Launcher** (requires PyQt6) lets you choose a directory and lists any projects it finds. It now includes tabs for updating the engine or opening the documentation. Games run in a separate process so the launcher stays open and reports errors if a project fails to start:
-```bash
-python -m sage_launcher
-```
-The launcher and installer support English and Russian via the `SAGE_LANG` environment
-variable or the language picker in the "Info" tab. Documentation can be opened from a
-local `SAGE_DOC_PATH` if provided. When creating a project you may select which installed
-engine version to use.
 Use `--vsync` or `--no-vsync` to toggle vertical sync on supporting renderers.
 For heavy scenes you can enable asynchronous event updates:
 ```python
