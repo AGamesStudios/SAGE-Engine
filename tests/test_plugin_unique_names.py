@@ -18,3 +18,11 @@ def test_plugins_same_filename(tmp_path):
     mgr.load(obj, paths=[str(d2)])
     assert getattr(obj, "one", False) and getattr(obj, "two", False)
 
+
+def test_plugin_hyphen_name(tmp_path):
+    plugin = tmp_path / "my-plugin.py"
+    plugin.write_text("def init_engine(engine): engine.hy = True")
+    obj = types.SimpleNamespace()
+    PluginManager("engine", plugin_dir=str(tmp_path)).load(obj)
+    assert getattr(obj, "hy", False)
+

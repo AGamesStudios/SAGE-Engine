@@ -11,6 +11,7 @@ import logging
 import os
 import sys
 import json
+import re
 from typing import Callable, Any
 
 # name of the environment variable overriding the default plugin directory
@@ -141,7 +142,8 @@ class PluginManager:
                     continue
                 try:
                     digest = hashlib.sha1(full.encode("utf-8")).hexdigest()[:8]
-                    unique = f"sage_plugins.{mod_name}_{digest}"
+                    safe_name = re.sub(r"[^0-9A-Za-z_]", "_", mod_name)
+                    unique = f"sage_plugins.{safe_name}_{digest}"
                     spec = importlib.util.spec_from_file_location(unique, full)
                     if spec and spec.loader:
                         module = importlib.util.module_from_spec(spec)
