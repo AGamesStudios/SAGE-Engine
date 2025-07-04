@@ -5,7 +5,7 @@ import math
 from OpenGL.GL import (
     glBindTexture, glColor4f, glBegin, glEnd, glVertex2f, glLineWidth,
     glPushMatrix, glPopMatrix, glTranslatef, glRotatef,
-    GL_LINES, GL_TRIANGLES, GL_QUADS, GL_LINE_LOOP, GL_TEXTURE_2D,
+    GL_LINES, GL_TRIANGLES, GL_QUADS, GL_LINE_LOOP, GL_LINE_STRIP, GL_TEXTURE_2D,
 )  # type: ignore[import-not-found]
 
 from engine.core.camera import Camera
@@ -129,9 +129,6 @@ def draw_gizmo(
     glPopMatrix()
 
 
-__all__ = ["draw_gizmo", "draw_basic_gizmo"]
-
-
 def draw_basic_gizmo(renderer, gizmo: Gizmo, camera: Camera | None) -> None:
     """Draw a simple gizmo shape using OpenGL primitives."""
     zoom = camera.zoom if camera else 1.0
@@ -140,11 +137,17 @@ def draw_basic_gizmo(renderer, gizmo: Gizmo, camera: Camera | None) -> None:
     sign = 1.0 if units.Y_UP else -1.0
     glBindTexture(GL_TEXTURE_2D, 0)
     glPushMatrix()
-    glTranslatef(gizmo.x * scale, gizmo.y * scale * sign, 0)
+    if gizmo.shape.lower() != "polyline":
+        glTranslatef(gizmo.x * scale, gizmo.y * scale * sign, 0)
     glColor4f(*gizmo.color)
-    glLineWidth(2.0)
+    glLineWidth(gizmo.thickness)
     shape = gizmo.shape.lower()
-    if shape == "square":
+    if shape == "polyline" and gizmo.vertices:
+        glBegin(GL_LINE_STRIP)
+        for vx, vy in gizmo.vertices:
+            glVertex2f(vx * scale, vy * scale * sign)
+        glEnd()
+    elif shape == "square":
         glBegin(GL_LINE_LOOP)
         glVertex2f(-size, -size)
         glVertex2f(size, -size)

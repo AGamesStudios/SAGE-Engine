@@ -43,6 +43,7 @@ _lazy = {
     'cross_gizmo': ('engine.gizmos', 'cross_gizmo'),
     'circle_gizmo': ('engine.gizmos', 'circle_gizmo'),
     'square_gizmo': ('engine.gizmos', 'square_gizmo'),
+    'polyline_gizmo': ('engine.gizmos', 'polyline_gizmo'),
     'clear_image_cache': ('engine.entities.game_object', 'clear_image_cache'),
     '__version__': ('engine.version', '__version__'),
     'register_object': ('engine.core.objects', 'register_object'),

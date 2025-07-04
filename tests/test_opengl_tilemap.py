@@ -18,7 +18,7 @@ def _stub_gl(monkeypatch, calls):
     constants = [
         'GL_TEXTURE_2D','GL_TEXTURE_MIN_FILTER','GL_TEXTURE_MAG_FILTER','GL_NEAREST','GL_LINEAR','GL_RGBA','GL_UNSIGNED_BYTE','GL_QUADS',
         'GL_BLEND','GL_SRC_ALPHA','GL_ONE_MINUS_SRC_ALPHA','GL_MULTISAMPLE','GL_LINE_SMOOTH',
-        'GL_LINES','GL_LINE_LOOP','GL_TRIANGLES','GL_TRIANGLE_FAN'
+        'GL_LINES','GL_LINE_LOOP','GL_LINE_STRIP','GL_TRIANGLES','GL_TRIANGLE_FAN'
     ]
     for c in constants:
         setattr(gl, c, 0)
