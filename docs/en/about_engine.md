@@ -19,3 +19,6 @@ Each function returns the :class:`~engine.game_window.GameWindow` when the Qt
 backend is available so the window can be controlled programmatically.
 Extension hooks can be coroutines and ``Object.update`` may yield a coroutine
 when using ``run_async``.
+
+The ``ResourceManager`` includes asynchronous variants of its import and load
+methods so resources can be processed without blocking the event loop.

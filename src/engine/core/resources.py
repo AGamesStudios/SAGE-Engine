@@ -246,3 +246,49 @@ class ResourceManager:
     def clear_cache(self) -> None:
         """Empty the internal resource cache."""
         self._cache.clear()
+
+    # --------------------------------------------------------------
+    async def import_file_async(
+        self,
+        src: str,
+        dest: str | None = None,
+        progress_cb: Callable[[int, str | None], None] | None = None,
+    ) -> str:
+        """Asynchronous variant of :meth:`import_file`."""
+        import asyncio
+
+        return await asyncio.to_thread(
+            self.import_file, src, dest, progress_cb
+        )
+
+    async def import_folder_async(
+        self,
+        src: str,
+        dest: str | None = None,
+        progress_cb: Callable[[int, str | None], None] | None = None,
+    ) -> str:
+        """Asynchronous variant of :meth:`import_folder`."""
+        import asyncio
+
+        return await asyncio.to_thread(
+            self.import_folder, src, dest, progress_cb
+        )
+
+    async def import_zip_async(
+        self,
+        src: str,
+        dest: str | None = None,
+        progress_cb: Callable[[int, str | None], None] | None = None,
+    ) -> str:
+        """Asynchronous variant of :meth:`import_zip`."""
+        import asyncio
+
+        return await asyncio.to_thread(
+            self.import_zip, src, dest, progress_cb
+        )
+
+    async def load_data_async(self, rel_path: str) -> bytes:
+        """Asynchronous variant of :meth:`load_data`."""
+        import asyncio
+
+        return await asyncio.to_thread(self.load_data, rel_path)

@@ -6,6 +6,7 @@ Python and also runs on **PyPy 3.10+** for extra performance.
 The engine is developed and maintained by **Amckinator Games Studios (AGStudios)**.
 Custom resources use compact `.sageaudio`, `.sagemesh` and `.sageanimation` descriptors for sound, mesh and animation data.
 Sprite animations expose speed, pause and reverse options while ``AudioManager`` supports simple music playback.
+``ResourceManager`` can load and import files asynchronously to avoid blocking the event loop when using ``asyncio``.
 
 Documentation lives under `docs/`. Start with [docs/en/index.md](docs/en/index.md) for an overview, see [plugins](docs/en/plugins.md) for extension points and [optimisation tips](docs/en/optimisation.md) for performance advice.
 For known caveats such as dependency requirements and experimental features see
