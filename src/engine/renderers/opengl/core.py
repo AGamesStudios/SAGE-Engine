@@ -408,6 +408,10 @@ class OpenGLRenderer(Renderer):
     def _draw_cursor(self, x: float, y: float, camera: Camera | None):
         drawing.draw_cursor(self, x, y, camera)
 
+    def _draw_basic_gizmos(self, camera: Camera | None) -> None:
+        for gizmo in self.gizmos:
+            gizmos.draw_basic_gizmo(self, gizmo, camera)
+
 
     def _draw_gizmo(
         self,
@@ -558,6 +562,8 @@ class OpenGLRenderer(Renderer):
                 self._draw_grid(camera)
             if self.show_axes:
                 self._draw_origin(camera)
+            if self.gizmos:
+                self._draw_basic_gizmos(camera)
             if self._cursor_pos is not None:
                 self._draw_cursor(
                     self._cursor_pos[0], self._cursor_pos[1], camera

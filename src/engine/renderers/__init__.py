@@ -8,6 +8,7 @@ from typing import Callable, TYPE_CHECKING
 if TYPE_CHECKING:  # pragma: no cover
     from ..entities.game_object import GameObject
     from ..core.camera import Camera
+    from ..gizmos import Gizmo
 
 from .shader import Shader
 
@@ -126,6 +127,16 @@ class Renderer(ABC):
 
     def __init__(self, *args, **kwargs):
         self.post_hooks: list[Callable[["Renderer"], None]] = []
+        self.gizmos: list["Gizmo"] = []
+
+    # gizmo management --------------------------------------------------
+    def add_gizmo(self, gizmo: "Gizmo") -> None:
+        """Display ``gizmo`` during the next frame."""
+        self.gizmos.append(gizmo)
+
+    def clear_gizmos(self) -> None:
+        """Remove all queued gizmos."""
+        self.gizmos.clear()
 
     # hook management ---------------------------------------------------
     def add_post_hook(self, func: Callable[["Renderer"], None]) -> None:

@@ -96,6 +96,9 @@ condition for custom Python behaviour.
 Game objects expose a `visible` flag and `alpha` value for transparency. The
 `engine.mesh_utils` module includes helpers for creating and editing meshes,
 including polygons.
+Debug overlays can be drawn with helpers from `engine.gizmos`. Call
+`renderer.add_gizmo(gizmos.cross_gizmo(x, y))` to show crosses, circles or
+squares in world space.
 
 See the documentation for more details on object types, input backends and renderer options.
 

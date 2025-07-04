@@ -11,6 +11,7 @@ from OpenGL.GL import (
 from engine.core.camera import Camera
 from engine.entities.game_object import GameObject
 from engine import units
+from engine.gizmos import Gizmo
 
 
 def draw_gizmo(
@@ -126,3 +127,45 @@ def draw_gizmo(
     glEnd()
     glLineWidth(ring_w)
     glPopMatrix()
+
+
+__all__ = ["draw_gizmo", "draw_basic_gizmo"]
+
+
+def draw_basic_gizmo(renderer, gizmo: Gizmo, camera: Camera | None) -> None:
+    """Draw a simple gizmo shape using OpenGL primitives."""
+    zoom = camera.zoom if camera else 1.0
+    size = gizmo.size / zoom
+    scale = units.UNITS_PER_METER
+    sign = 1.0 if units.Y_UP else -1.0
+    glBindTexture(GL_TEXTURE_2D, 0)
+    glPushMatrix()
+    glTranslatef(gizmo.x * scale, gizmo.y * scale * sign, 0)
+    glColor4f(*gizmo.color)
+    glLineWidth(2.0)
+    shape = gizmo.shape.lower()
+    if shape == "square":
+        glBegin(GL_LINE_LOOP)
+        glVertex2f(-size, -size)
+        glVertex2f(size, -size)
+        glVertex2f(size, size)
+        glVertex2f(-size, size)
+        glEnd()
+    elif shape == "circle":
+        steps = 16
+        glBegin(GL_LINE_LOOP)
+        for i in range(steps):
+            ang = math.radians(i * 360.0 / steps)
+            glVertex2f(math.cos(ang) * size, math.sin(ang) * size * sign)
+        glEnd()
+    else:  # cross
+        glBegin(GL_LINES)
+        glVertex2f(-size, 0.0)
+        glVertex2f(size, 0.0)
+        glVertex2f(0.0, -size)
+        glVertex2f(0.0, size)
+        glEnd()
+    glLineWidth(1.0)
+    glPopMatrix()
+
+__all__ = ['draw_gizmo', 'draw_basic_gizmo']
