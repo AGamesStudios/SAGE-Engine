@@ -66,10 +66,10 @@ The engine provides `opengl`, `null` and `sdl` renderers out of the box. Additio
 ## Loading Plugins
 
 Plugin modules placed in `~/.sage_plugins` are discovered automatically. Set
-`SAGE_PLUGIN_DIR` to change this default directory. Extra directories may be
-supplied with the `SAGE_PLUGINS` environment variable. The variables
-`SAGE_ENGINE_PLUGINS` and `SAGE_EDITOR_PLUGINS` override or supplement the
-search path for engine and editor plugins respectively. A module
+`SAGE_PLUGIN_DIR` to change this location or list extra directories with
+`SAGE_PLUGINS`. The variables `SAGE_ENGINE_PLUGINS` and `SAGE_EDITOR_PLUGINS`
+override or supplement the search path for engine and editor plugins
+respectively. A module
 can export an object named `plugin` deriving from `PluginBase` or define
 `init_engine(engine)` and `init_editor(editor)` functions. These hooks may be
 coroutines and are awaited when loaded.

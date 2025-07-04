@@ -11,6 +11,8 @@ class EditorInterface(Protocol):
 
     def add_menu(self, name: str, callback: Callable[..., Any]) -> None:
         """Add a menu item."""
+        ...
 
     def add_toolbar_button(self, name: str, callback: Callable[..., Any]) -> None:
         """Add a toolbar button."""
+        ...

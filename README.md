@@ -21,8 +21,10 @@ Install optional extras via:
 ```bash
 pip install .[opengl,sdl,qt,audio]
 ```
-Plugin modules live in `~/.sage_plugins` by default. Set `SAGE_PLUGIN_DIR` to use
-a different directory or list additional paths with `SAGE_PLUGINS`.
+Plugin modules live in `~/.sage_plugins` by default. Set `SAGE_PLUGIN_DIR` to
+change this location or list extra directories with `SAGE_PLUGINS`. The
+variables `SAGE_ENGINE_PLUGINS` and `SAGE_EDITOR_PLUGINS` override or extend the
+search path for engine and editor plugins.
 If you specify ``--target`` you must add that directory to ``PYTHONPATH`` so the
 engine can be imported.
 Extras are listed in ``pyproject.toml`` and can be supplied with ``--extras``.
@@ -30,10 +32,8 @@ Extras are listed in ``pyproject.toml`` and can be supplied with ``--extras``.
 ## Repository layout
 ``src/`` contains the engine libraries and tools. Most users only need the
 ``examples/`` directory to explore sample projects or start their own.
-Scripts for packaging and installation live under ``scripts/`` while
-documentation is stored in ``docs/``.
-Optional tools such as the editor can be packaged with PyInstaller to create
-Windows executables if Python is not available.
+Documentation is stored in ``docs/``. Optional tools such as the editor can be
+packaged with PyInstaller if standalone executables are required.
 
 Runtime state can be saved and loaded with `engine.save_game` and
 `engine.load_game`, producing `.sagesave` files.
