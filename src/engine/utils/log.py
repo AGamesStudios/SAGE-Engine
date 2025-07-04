@@ -3,8 +3,9 @@ import os
 import atexit
 import faulthandler
 
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
-LOG_DIR = os.path.join(BASE_DIR, 'logs')
+LOG_DIR = os.path.expanduser(
+    os.environ.get('SAGE_LOG_DIR', os.path.join('~', '.cache', 'sage', 'logs'))
+)
 LOG_FILE = os.path.join(LOG_DIR, 'engine.log')
 
 logger = logging.getLogger('engine')

@@ -10,7 +10,11 @@ class EvalExpr(Condition):
 
     def check(self, engine, scene, dt):
         env = {'engine': engine, 'scene': scene, 'dt': dt}
-        env.update(getattr(engine, 'events', {}).variables)
+        variables = getattr(engine, 'events', {}).variables
+        if isinstance(variables, dict):
+            env.update({k: v for k, v in variables.items() if k != '__builtins__'})
+        else:
+            env.update(variables)
         try:
             return bool(eval(self.expr, {'__builtins__': {}}, env))
         except Exception:
