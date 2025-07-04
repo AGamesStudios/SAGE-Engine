@@ -1,5 +1,6 @@
 import types
 import sys
+import asyncio
 import importlib.machinery
 
 # Stub heavy modules so engine.core.engine imports without optional deps
@@ -157,6 +158,49 @@ def test_async_extension_update():
     eng.logic_active = True
     eng.step()
     assert eng.flag is not None
+
+
+class StartStopExt(EngineExtension):
+    def __init__(self):
+        self.started = False
+        self.stopped = False
+
+    async def start(self, eng):
+        self.started = True
+
+    async def stop(self, eng):
+        self.stopped = True
+
+
+def test_async_extension_start_stop():
+    settings = EngineSettings(renderer=DummyRenderer, input_backend=DummyInput)
+    eng = Engine(settings=settings, asyncio_events=True)
+    ext = StartStopExt()
+    eng.add_extension(ext)
+    eng.remove_extension(ext)
+    assert ext.started and ext.stopped
+
+
+class AsyncObj(GameObject):
+    async def update(self, dt):
+        self.flag = dt
+
+
+def test_async_object_update():
+    from engine.core.scenes.scene import Scene
+
+    scene = Scene(with_defaults=False)
+    obj = AsyncObj()
+    scene.add_object(obj)
+    settings = EngineSettings(
+        renderer=DummyRenderer,
+        input_backend=DummyInput,
+        scene=scene,
+    )
+    eng = Engine(settings=settings, asyncio_events=True)
+    eng.logic_active = True
+    asyncio.run(eng.step_async())
+    assert getattr(obj, "flag", None) is not None
 
 
 def teardown_module(module):

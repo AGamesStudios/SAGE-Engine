@@ -93,6 +93,9 @@ await Engine(scene=my_scene, asyncio_events=True).update_async(0.0)
 The engine creates a dedicated event loop when ``asyncio_events`` is enabled.
 This mode is experimental and may not integrate with other loops.
 Use a ``VariableStore`` for thread-safe variables when running asynchronously.
+Extension hooks ``start`` and ``stop`` may also be coroutine functions and are
+awaited automatically. When running with ``Engine.run_async`` object ``update``
+methods can yield coroutines that will execute without blocking the loop.
 Variables may be marked as private so only selected values are shared between
 events. Input is handled by the SDL backend unless `qt` is selected to integrate
 with a Qt event loop.

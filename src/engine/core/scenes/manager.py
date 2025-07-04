@@ -35,6 +35,11 @@ class SceneManager:
         if scene is not None:
             scene.update(dt)
 
+    async def update_async(self, dt: float) -> None:
+        scene = self.get_active_scene()
+        if scene is not None:
+            await scene.update_async(dt)
+
     def draw(self, renderer) -> None:
         scene = self.get_active_scene()
         if scene is not None:

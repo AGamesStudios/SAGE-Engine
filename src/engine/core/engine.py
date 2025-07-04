@@ -262,7 +262,12 @@ class Engine:
         """Attach an :class:`EngineExtension` and call its ``start`` hook."""
         self.extensions.append(ext)
         try:
-            ext.start(self)
+            res = ext.start(self)
+            if asyncio.iscoroutine(res):
+                if self.asyncio_events:
+                    self._loop.run_until_complete(res)
+                else:  # pragma: no cover - rarely used
+                    asyncio.run(res)
         except Exception:
             logger.exception("Extension %s failed during start", ext)
             raise
@@ -272,7 +277,12 @@ class Engine:
         if ext in self.extensions:
             self.extensions.remove(ext)
             try:
-                ext.stop(self)
+                res = ext.stop(self)
+                if asyncio.iscoroutine(res):
+                    if self.asyncio_events:
+                        self._loop.run_until_complete(res)
+                    else:  # pragma: no cover - rarely used
+                        asyncio.run(res)
             except Exception:
                 logger.exception("Extension %s failed during stop", ext)
                 raise
@@ -370,8 +380,8 @@ class Engine:
                 )
             else:
                 self.events.update(self, self.scene, dt)
-            self.scene.update_events(self, dt)
-        self.scene.update(dt)
+            await self.scene.update_events_async(self, dt)
+        await self.scene.update_async(dt)
         for ext in list(self.extensions):
             try:
                 res = ext.update(self, dt)

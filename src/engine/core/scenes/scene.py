@@ -1,6 +1,7 @@
 
 import json
 import os
+import asyncio
 from ...utils import load_json
 
 
@@ -177,6 +178,14 @@ class Scene:
         for obj in self.objects:
             obj.update(dt)
 
+    async def update_async(self, dt: float):
+        """Asynchronous variant of :meth:`update`."""
+        self.sort_objects()
+        for obj in self.objects:
+            res = obj.update(dt)
+            if asyncio.iscoroutine(res):
+                await res
+
     def draw(self, surface):
         self.sort_objects()
         for obj in self.objects:
@@ -333,6 +342,19 @@ class Scene:
         for obj in self.objects:
             es = getattr(obj, "event_system", None)
             if es is not None:
+                es.update(engine, self, dt)
+
+    async def update_events_async(self, engine, dt: float) -> None:
+        """Asynchronous variant of :meth:`update_events`."""
+        for obj in self.objects:
+            es = getattr(obj, "event_system", None)
+            if es is None:
+                continue
+            if engine.asyncio_events:
+                await es.update_asyncio(engine, self, dt)
+            elif engine.async_events:
+                es.update_async(engine, self, dt, workers=engine.event_workers)
+            else:
                 es.update(engine, self, dt)
 
     def iter_group(self, group: str):
