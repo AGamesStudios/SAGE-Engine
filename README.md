@@ -22,11 +22,12 @@ Install optional extras via:
 ```bash
 pip install .[opengl,sdl,qt,audio]
 ```
-Plugin modules live in `~/.sage_plugins` by default. Set `SAGE_PLUGIN_DIR` to
-change this location or list extra directories with `SAGE_PLUGINS`. The
-variables `SAGE_ENGINE_PLUGINS` and `SAGE_EDITOR_PLUGINS` override or extend the
-search path for engine and editor plugins. These environment variables are read
-when plugins are loaded (usually when the engine or editor starts), so set them
+Plugin modules live in `~/.sage_plugins` by default. Set `SAGE_PLUGIN_DIR` or
+`SAGE_ENGINE_PLUGIN_DIR` / `SAGE_EDITOR_PLUGIN_DIR` to change this location.
+Additional directories can be listed with `SAGE_PLUGINS`. The variables
+`SAGE_ENGINE_PLUGINS` and `SAGE_EDITOR_PLUGINS` override or extend the search
+path for engine and editor plugins. These environment variables are read when
+plugins are loaded (usually when the engine or editor starts), so set them
 before launching:
 ```bash
 SAGE_ENGINE_PLUGINS=~/my_plugins python -m engine game.sageproject

@@ -1,3 +1,4 @@
+import os
 import types
 from pathlib import Path
 import shutil
@@ -13,6 +14,37 @@ def test_plugin_dir_env(monkeypatch, tmp_path):
     obj = types.SimpleNamespace()
     manager.load(obj)
     assert getattr(obj, "flag", False)
+
+
+def test_engine_plugin_dir_env(monkeypatch, tmp_path):
+    plugin = tmp_path / "env_dir.py"
+    plugin.write_text("def init_engine(e): e.d=True")
+    monkeypatch.setenv("SAGE_ENGINE_PLUGIN_DIR", str(tmp_path))
+    mgr = engine.plugins.PluginManager("engine")
+    obj = types.SimpleNamespace()
+    mgr.load(obj)
+    assert getattr(obj, "d", False)
+
+
+def test_editor_plugin_dir_env(monkeypatch, tmp_path):
+    plugin = tmp_path / "env_dir_ed.py"
+    plugin.write_text("def init_editor(e): e.d=True")
+    monkeypatch.setenv("SAGE_EDITOR_PLUGIN_DIR", str(tmp_path))
+    mgr = engine.plugins.PluginManager("editor")
+    obj = types.SimpleNamespace()
+    mgr.load(obj)
+    assert getattr(obj, "d", False)
+
+
+def test_plugin_deduped_dirs(monkeypatch, tmp_path):
+    plugin = tmp_path / "mod.py"
+    plugin.write_text("def init_engine(e): e.count = getattr(e,'count',0) + 1")
+    paths = os.pathsep.join([str(tmp_path), str(tmp_path)])
+    monkeypatch.setenv("SAGE_ENGINE_PLUGINS", paths)
+    mgr = engine.plugins.PluginManager("engine", plugin_dir=str(tmp_path))
+    obj = types.SimpleNamespace()
+    mgr.load(obj)
+    assert getattr(obj, "count", 0) == 1
 
 
 def test_engine_plugins_env(monkeypatch, tmp_path):

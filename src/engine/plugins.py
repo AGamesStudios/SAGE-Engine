@@ -73,8 +73,11 @@ class PluginManager:
         if target not in ("engine", "editor"):
             raise ValueError(f"Unknown plugin target: {target}")
         self.target = target
+        env_dir = os.environ.get(
+            "SAGE_EDITOR_PLUGIN_DIR" if target == "editor" else "SAGE_ENGINE_PLUGIN_DIR"
+        )
         self.plugin_dir = os.path.expanduser(
-            plugin_dir or _default_plugin_dir()
+            plugin_dir or env_dir or _default_plugin_dir()
         )
         self.config_file = os.path.expanduser(
             config_file or _default_config_file(self.plugin_dir)
@@ -106,6 +109,9 @@ class PluginManager:
             dirs.append(self.plugin_dir)
         if paths:
             dirs.extend(os.path.expanduser(p) for p in paths)
+
+        seen = set()
+        dirs = [d for d in dirs if not (d in seen or seen.add(d))]
 
         cfg = read_config(self.config_file)
 
