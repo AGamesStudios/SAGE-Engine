@@ -28,7 +28,6 @@ opengl = ["PyQt6>=6.5", "PyOpenGL>=3.1"]
 sdl = ["PySDL2"]
 qt = ["PyQt6>=6.5"]
 audio = ["pygame>=2.6"]
-sdk = []
 
 [project.urls]
 Homepage = "https://github.com/AGamesStudios/SAGE-Engine"
@@ -38,4 +37,4 @@ sage-runtime = "engine.runtime.__main__:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["engine*", "sage_sdk*"]
+include = ["engine*"]

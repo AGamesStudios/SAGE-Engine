@@ -3,38 +3,11 @@
 from importlib import import_module
 
 from .version import __version__, require as require_version  # noqa: F401
-from .utils.log import logger
+from .utils.log import logger  # noqa: F401
 from .utils.diagnostics import warn, error, exception  # noqa: F401
+from .plugins import PluginManager
 
 ENGINE_VERSION = __version__
-try:
-    from sage_sdk.plugins import PluginManager
-except Exception:  # pragma: no cover - sdk optional
-    class PluginManager:  # type: ignore[override, no-redef]
-        """Fallback plugin manager when ``sage_sdk`` is missing."""
-
-        def __init__(self, *a, **k):
-            self._funcs = []
-
-        def register(self, func):
-            """Store ``func`` and return it for decorator usage."""
-            self._funcs.append(func)
-            return func
-
-        def load(self, obj, paths=None):  # noqa: D401
-            """No-op plugin loader."""
-            logger.warning(
-                "Entry point plugins ignored because sage_sdk is unavailable; "
-                "only manually registered plugins will run",
-            )
-            for func in list(self._funcs):
-                try:
-                    func(obj)
-                except Exception:
-                    logger.exception(
-                        "Plugin function %s failed",
-                        getattr(func, "__name__", func),
-                    )
 
 ENGINE_PLUGINS = PluginManager('engine')
 

@@ -17,18 +17,13 @@ pip install -r requirements.txt
 ruff check .
 PYTHONPATH=src pytest -q
 ```
-Optional renderers, audio drivers and the SDK can be installed via extras:
+Install optional extras via:
 ```bash
 pip install .[opengl,sdl,audio,sdk]
 ```
-Alternatively run the installer to choose extras interactively:
-```bash
-python scripts/install.py --extras opengl sdl audio
-```
 If you specify ``--target`` you must add that directory to ``PYTHONPATH`` so the
 engine can be imported.
-Extras are listed automatically in ``pyproject.toml`` and can be supplied with
-``--extras`` as needed.
+Extras are listed in ``pyproject.toml`` and can be supplied with ``--extras``.
 
 ## Repository layout
 ``src/`` contains the engine libraries and tools. Most users only need the

@@ -8,7 +8,6 @@ Select a topic from the list to learn about the engine and editor features.
 * [Saving and Loading](save_load.md)
 * [Installation Helper](installer.md) – CLI and GUI installers (supports EN/RU)
 * [Limitations and Caveats](limitations.md)
-The optional SDK can be installed via `pip install .[sdk]`.
 
 Example scenes under `examples/Scenes/` include:
 - `Scene1.sagescene` – basic sprites

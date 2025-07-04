@@ -1,6 +1,6 @@
 import types
 import pytest
-from sage_sdk.plugins import PluginManager, PluginBase
+from engine.plugins import PluginManager, PluginBase
 
 def test_load_module_plugin(tmp_path):
     p = tmp_path / "p1.py"
@@ -18,7 +18,7 @@ class MyPlugin(PluginBase):
 def test_load_object_plugin(tmp_path):
     p = tmp_path / "p2.py"
     p.write_text(
-        "from sage_sdk.plugins import PluginBase\n"
+        "from engine.plugins import PluginBase\n"
         "class P(PluginBase):\n"
         "    def init_engine(self, engine):\n"
         "        engine.v = 1\n"
