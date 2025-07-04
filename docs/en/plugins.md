@@ -62,3 +62,15 @@ class FancyRenderer(Renderer):
 register_renderer('fancy', FancyRenderer)
 ```
 The engine provides `opengl`, `null` and `sdl` renderers out of the box. Additional renderers can be installed via plugins.
+
+## Loading Plugins
+
+Plugin modules placed in `~/.sage_plugins` are discovered automatically. Extra
+directories may be supplied with the `SAGE_PLUGINS` environment variable. A
+module can export an object named `plugin` deriving from `PluginBase` or define
+`init_engine(engine)` and `init_editor(editor)` functions. These hooks may be
+coroutines and are awaited when loaded.
+
+Plugins can also be installed via Python entry points. Call
+`engine.plugins.load_plugins('engine', engine_instance)` to initialise them
+manually if needed.

@@ -6,7 +6,6 @@ Select a topic from the list to learn about the engine and editor features.
 * [File Formats](formats.md)
 * [Logic and Scripting](logic.md)
 * [Saving and Loading](save_load.md)
-* [Installation Helper](installer.md) – CLI and GUI installers (supports EN/RU)
 * [Limitations and Caveats](limitations.md)
 
 Example scenes under `examples/Scenes/` include:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import importlib
 from importlib import metadata
 import logging
@@ -16,6 +17,19 @@ CONFIG_FILE = os.path.join(PLUGIN_DIR, 'plugins.json')
 
 
 logger = logging.getLogger('sage.plugins')
+
+
+def _run_sync_or_async(func: Callable, *args: Any) -> None:
+    """Run *func* and await the result if it returns a coroutine."""
+    res = func(*args)
+    if asyncio.iscoroutine(res):
+        try:
+            asyncio.run(res)
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.run_until_complete(res)
+            loop.close()
 
 
 class PluginBase:
@@ -54,15 +68,16 @@ class PluginManager:
     def _call_init(self, mod_or_obj, instance) -> None:
         if isinstance(mod_or_obj, PluginBase):
             if self.target == "engine":
-                mod_or_obj.init_engine(instance)
+                _run_sync_or_async(mod_or_obj.init_engine, instance)
                 reg = getattr(mod_or_obj, "register_logic", None)
                 if callable(reg):
-                    reg(
+                    _run_sync_or_async(
+                        reg,
                         getattr(instance, "register_condition", None),
                         getattr(instance, "register_action", None),
                     )
             else:
-                mod_or_obj.init_editor(instance)
+                _run_sync_or_async(mod_or_obj.init_editor, instance)
             return
 
         _call_init(mod_or_obj, self.target, instance)
@@ -86,7 +101,7 @@ class PluginManager:
 
         for func in list(self._funcs):
             try:
-                func(instance)
+                _run_sync_or_async(func, instance)
             except Exception:
                 logger.exception(
                     "Plugin function %s failed", getattr(func, "__name__", func))
@@ -128,7 +143,10 @@ class PluginManager:
             for ep in entries:
                 try:
                     mod = ep.load()
-                    self._call_init(mod, instance) if not callable(mod) else mod(instance)
+                    if callable(mod):
+                        _run_sync_or_async(mod, instance)
+                    else:
+                        self._call_init(mod, instance)
                 except Exception:
                     logger.exception("Failed to load entry point %s", ep.name)
         except Exception:
@@ -207,32 +225,32 @@ def _call_init(module, target, instance):
     plugin_obj = getattr(module, 'plugin', None)
     if isinstance(plugin_obj, PluginBase):
         if target == 'engine':
-            plugin_obj.init_engine(instance)
+            _run_sync_or_async(plugin_obj.init_engine, instance)
         else:
-            plugin_obj.init_editor(instance)
+            _run_sync_or_async(plugin_obj.init_editor, instance)
         if target == 'engine':
             reg = getattr(plugin_obj, 'register_logic', None)
             if callable(reg):
                 try:
                     from engine.logic import register_condition, register_action
-                    reg(register_condition, register_action)
+                    _run_sync_or_async(reg, register_condition, register_action)
                 except Exception:
                     logger.exception('register_logic failed in %s', module.__name__)
         return
     init_name = f'init_{target}'
     func = getattr(module, init_name, None)
     if callable(func):
-        func(instance)
+        _run_sync_or_async(func, instance)
     else:
         generic = getattr(module, 'init', None)
         if callable(generic):
-            generic(instance)
+            _run_sync_or_async(generic, instance)
     if target == 'engine':
         reg = getattr(module, 'register_logic', None)
         if callable(reg):
             try:
                 from engine.logic import register_condition, register_action
-                reg(register_condition, register_action)
+                _run_sync_or_async(reg, register_condition, register_action)
             except Exception:
                 logger.exception('register_logic failed in %s', module.__name__)
 
