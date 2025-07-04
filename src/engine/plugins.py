@@ -14,11 +14,18 @@ from typing import Callable, Any
 # name of the environment variable overriding the default plugin directory
 PLUGIN_DIR_ENV = "SAGE_PLUGIN_DIR"
 
-# default plugin directory in the user's home, overridable via ``SAGE_PLUGIN_DIR``
-PLUGIN_DIR = os.path.expanduser(
-    os.environ.get(PLUGIN_DIR_ENV, os.path.join("~", ".sage_plugins"))
-)
-CONFIG_FILE = os.path.join(PLUGIN_DIR, "plugins.json")
+# default plugin directory in the user's home
+DEFAULT_PLUGIN_DIR = os.path.join("~", ".sage_plugins")
+
+
+def _default_plugin_dir() -> str:
+    """Return the plugin directory from ``SAGE_PLUGIN_DIR`` or the default."""
+    return os.path.expanduser(os.environ.get(PLUGIN_DIR_ENV, DEFAULT_PLUGIN_DIR))
+
+
+def _default_config_file(plugin_dir: str | None = None) -> str:
+    """Return the path to the plugin configuration file."""
+    return os.path.join(plugin_dir or _default_plugin_dir(), "plugins.json")
 
 
 logger = logging.getLogger('sage.plugins')
@@ -53,15 +60,19 @@ class PluginBase:
 class PluginManager:
     """Load and register plugins for a specific target."""
 
-    def __init__(self, target: str,
-                 *, plugin_dir: str = PLUGIN_DIR,
-                 config_file: str = CONFIG_FILE,
-                 entry_point_group: str | None = None) -> None:
+    def __init__(
+        self,
+        target: str,
+        *,
+        plugin_dir: str | None = None,
+        config_file: str | None = None,
+        entry_point_group: str | None = None,
+    ) -> None:
         if target not in ("engine", "editor"):
             raise ValueError(f"Unknown plugin target: {target}")
         self.target = target
-        self.plugin_dir = plugin_dir
-        self.config_file = config_file
+        self.plugin_dir = plugin_dir or _default_plugin_dir()
+        self.config_file = config_file or _default_config_file(self.plugin_dir)
         self.entry_point_group = (
             entry_point_group or f"sage_{target}.plugins")
         self._funcs: list[Callable[[Any], Any]] = []
@@ -85,7 +96,7 @@ class PluginManager:
                 _run_sync_or_async(mod_or_obj.init_editor, instance)
             return
 
-        _call_init(mod_or_obj, self.target, instance)
+        _call_plugin_init(mod_or_obj, self.target, instance)
 
     def load(self, instance, paths: list[str] | None = None) -> None:
         """Load plugins and initialize them with ``instance``."""
@@ -167,8 +178,10 @@ _MANAGERS = {
 }
 
 
-def read_config(config_file: str = CONFIG_FILE) -> dict:
+def read_config(config_file: str | None = None, *, plugin_dir: str | None = None) -> dict:
     """Return the plugin enabled state dictionary."""
+    if config_file is None:
+        config_file = _default_config_file(plugin_dir)
     try:
         with open(config_file, 'r', encoding='utf-8') as f:
             data = json.load(f)
@@ -179,14 +192,19 @@ def read_config(config_file: str = CONFIG_FILE) -> dict:
     return {}
 
 
-def write_config(cfg: dict, *, config_file: str = CONFIG_FILE) -> None:
+def write_config(cfg: dict, *, config_file: str | None = None, plugin_dir: str | None = None) -> None:
+    config_file = config_file or _default_config_file(plugin_dir)
     os.makedirs(os.path.dirname(config_file), exist_ok=True)
     with open(config_file, 'w', encoding='utf-8') as f:
         json.dump(cfg, f, indent=2)
 
 
-def list_plugins(paths: list[str] | None = None, *, plugin_dir: str = PLUGIN_DIR,
-                 config_file: str = CONFIG_FILE) -> list[tuple[str, str, bool]]:
+def list_plugins(
+    paths: list[str] | None = None,
+    *,
+    plugin_dir: str | None = None,
+    config_file: str | None = None,
+) -> list[tuple[str, str, bool]]:
     """Return a list of (module name, path, enabled)."""
     dirs: list[str] = []
     env_all = os.environ.get('SAGE_PLUGINS')
@@ -194,9 +212,10 @@ def list_plugins(paths: list[str] | None = None, *, plugin_dir: str = PLUGIN_DIR
         dirs.extend(env_all.split(os.pathsep))
     if paths:
         dirs.extend(paths)
+    plugin_dir = plugin_dir or _default_plugin_dir()
     dirs.append(plugin_dir)
 
-    cfg = read_config(config_file)
+    cfg = read_config(config_file, plugin_dir=plugin_dir)
     result = []
     for path in dirs:
         if not os.path.isdir(path):
@@ -220,7 +239,7 @@ def register_plugin(target: str, func):
     _MANAGERS[target].register(func)
 
 
-def _call_init(module, target, instance):
+def _call_plugin_init(module, target, instance):
     """Call the init function for the requested target if present."""
     plugin_obj = getattr(module, 'plugin', None)
     if isinstance(plugin_obj, PluginBase):
