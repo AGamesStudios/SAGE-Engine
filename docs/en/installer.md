@@ -3,7 +3,7 @@
 Install the engine with selected extras using ``pip`` from the repository root:
 
 ```bash
-pip install .[opengl,sdl,audio,sdk]
+pip install .[opengl,sdl,qt,audio]
 ```
 
 Use ``--editable`` to install in development mode or ``--package`` to install

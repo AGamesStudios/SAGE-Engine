@@ -161,11 +161,6 @@ _MANAGERS = {
     'editor': PluginManager('editor'),
 }
 
-_PLUGIN_FUNCS = {
-    'engine': _MANAGERS['engine']._funcs,
-    'editor': _MANAGERS['editor']._funcs,
-}
-
 
 def read_config(config_file: str = CONFIG_FILE) -> dict:
     """Return the plugin enabled state dictionary."""

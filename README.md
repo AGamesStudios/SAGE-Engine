@@ -19,7 +19,7 @@ PYTHONPATH=src pytest -q
 ```
 Install optional extras via:
 ```bash
-pip install .[opengl,sdl,audio,sdk]
+pip install .[opengl,sdl,qt,audio]
 ```
 If you specify ``--target`` you must add that directory to ``PYTHONPATH`` so the
 engine can be imported.
