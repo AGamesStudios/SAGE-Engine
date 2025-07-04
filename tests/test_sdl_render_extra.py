@@ -32,9 +32,16 @@ def _stub_sdl(monkeypatch, calls):
     mod.SDL_RenderClear = lambda *a, **k: None
     mod.SDL_SetRenderDrawColor = lambda *a, **k: None
     mod.SDL_RenderFillRect = lambda *a, **k: None
+    class DummySurf(ctypes.Structure):
+        _fields_ = [('format', ctypes.c_void_p), ('pixels', ctypes.c_void_p)]
     def create_tex(*a, **k):
         calls['tex'] += 1
         return object()
+    mod.SDL_CreateRGBSurfaceWithFormat = lambda *a, **k: ctypes.pointer(DummySurf())
+    mod.SDL_MapRGBA = lambda fmt, r, g, b, a: 0
+    mod.SDL_FillRect = lambda *a, **k: None
+    mod.SDL_CreateTextureFromSurface = create_tex
+    mod.SDL_FreeSurface = lambda s: None
     mod.SDL_CreateTexture = create_tex
     mod.SDL_UpdateTexture = lambda *a, **k: None
     mod.SDL_SetTextureBlendMode = lambda *a, **k: None

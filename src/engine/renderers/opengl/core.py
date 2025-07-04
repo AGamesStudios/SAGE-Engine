@@ -464,7 +464,9 @@ class OpenGLRenderer(Renderer):
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
         glOrtho(-w / 2, w / 2, -h / 2 * sign, h / 2 * sign, -1, 1)
-        self._projection = math2d.make_ortho(-w / 2, w / 2, -h / 2, h / 2)
+        self._projection = math2d.make_ortho(
+            -w / 2, w / 2, -h / 2 * sign, h / 2 * sign
+        )
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
 

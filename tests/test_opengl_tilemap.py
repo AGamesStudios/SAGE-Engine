@@ -145,3 +145,39 @@ def test_apply_projection_updates(monkeypatch):
     proj = r.get_projection()
     from engine.core import math2d
     assert proj == math2d.make_ortho(-320.0, 320.0, -240.0, 240.0)
+
+
+def test_projection_orientation(monkeypatch):
+    calls = {}
+    _stub_gl(monkeypatch, calls)
+    import importlib
+    ogl = importlib.import_module('engine.renderers.opengl_renderer')
+
+    class DummyWidget:
+        def __init__(self, *a, **k):
+            pass
+
+        def resize(self, w, h):
+            pass
+
+        def context(self):
+            class Ctx:
+                def isValid(self):
+                    return False
+
+            return Ctx()
+
+        def update(self):
+            pass
+
+    from engine import units
+    units.set_y_up(True)
+    monkeypatch.setattr(ogl, 'GLWidget', DummyWidget)
+    r = ogl.OpenGLRenderer(width=640, height=480)
+    r._apply_projection(None)
+    from engine.core import math2d
+    assert r.get_projection() == math2d.make_ortho(-320.0, 320.0, -240.0, 240.0)
+    units.set_y_up(False)
+    r._apply_projection(None)
+    assert r.get_projection() == math2d.make_ortho(-320.0, 320.0, 240.0, -240.0)
+    units.set_y_up(True)

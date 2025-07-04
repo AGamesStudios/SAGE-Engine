@@ -79,7 +79,7 @@ class SDLRenderer(Renderer):
             return
         if gizmo.shape.lower() == "square":
             half = int(size)
-            thick = max(1, int(gizmo.thickness))
+            thick = max(1, int(gizmo.thickness / zoom))
             for i in range(thick):
                 rect = sdl2.SDL_Rect(
                     cx - half + i,
@@ -103,7 +103,7 @@ class SDLRenderer(Renderer):
             return
         # cross or unknown
         half = int(size)
-        thick = max(1, int(gizmo.thickness))
+        thick = max(1, int(gizmo.thickness / zoom))
         for i in range(-(thick // 2), thick - thick // 2):
             sdl2.SDL_RenderDrawLine(self.renderer, cx - half, cy + i, cx + half, cy + i)
             sdl2.SDL_RenderDrawLine(self.renderer, cx + i, cy - half, cx + i, cy + half)
@@ -163,6 +163,16 @@ class SDLRenderer(Renderer):
         self.textures[key] = tex
         return tex
 
+    def unload_texture(self, obj) -> None:
+        """Remove ``obj``'s texture from the cache."""
+        key = (0, True) if obj.image is None else (id(obj.image), bool(getattr(obj, "smooth", True)))
+        tex = self.textures.pop(key, None)
+        if tex:
+            try:
+                sdl2.SDL_DestroyTexture(tex)
+            except Exception:  # pragma: no cover - cleanup
+                logger.exception("SDL_DestroyTexture failed")
+
     def _draw_sprite(self, obj) -> None:
         tex = self._get_texture(obj)
         w = int(obj.width * obj.scale_x)
@@ -218,21 +228,12 @@ class SDLRenderer(Renderer):
     def _build_map_texture(self, tilemap) -> None:
         w = tilemap.width * tilemap.tile_width
         h = tilemap.height * tilemap.tile_height
-        tex = sdl2.SDL_CreateTexture(
-            self.renderer,
-            sdl2.SDL_PIXELFORMAT_RGBA8888,
-            sdl2.SDL_TEXTUREACCESS_TARGET,
-            w,
-            h,
+        surf = sdl2.SDL_CreateRGBSurfaceWithFormat(
+            0, w, h, 32, sdl2.SDL_PIXELFORMAT_RGBA8888
         )
-        if not tex:
+        if not surf:
             err = sdl2.SDL_GetError()
-            raise RuntimeError(f"SDL_CreateTexture failed: {err.decode()}")
-        sdl2.SDL_SetTextureBlendMode(tex, sdl2.SDL_BLENDMODE_BLEND)
-        prev = sdl2.SDL_GetRenderTarget(self.renderer)
-        sdl2.SDL_SetRenderTarget(self.renderer, tex)
-        sdl2.SDL_SetRenderDrawColor(self.renderer, 0, 0, 0, 0)
-        sdl2.SDL_RenderClear(self.renderer)
+            raise RuntimeError(f"SDL_CreateRGBSurfaceWithFormat failed: {err.decode()}")
         tw = tilemap.tile_width
         th = tilemap.tile_height
         colors = tilemap.metadata.get("colors", {})
@@ -241,9 +242,17 @@ class SDLRenderer(Renderer):
                 idx = tilemap.data[y * tilemap.width + x]
                 if idx == 0:
                     continue
-                color = parse_color(colors.get(str(idx), (200, 200, 200, 255)))
-                self._draw_rect(x * tw, y * th, tw, th, color)
-        sdl2.SDL_SetRenderTarget(self.renderer, prev)
+                rgba = parse_color(colors.get(str(idx), (200, 200, 200, 255)))
+                rect = sdl2.SDL_Rect(x * tw, y * th, tw, th)
+                mapped = sdl2.SDL_MapRGBA(surf.contents.format, *rgba)
+                sdl2.SDL_FillRect(surf, rect, mapped)
+        tex = sdl2.SDL_CreateTextureFromSurface(self.renderer, surf)
+        if not tex:
+            err = sdl2.SDL_GetError()
+            sdl2.SDL_FreeSurface(surf)
+            raise RuntimeError(f"SDL_CreateTextureFromSurface failed: {err.decode()}")
+        sdl2.SDL_SetTextureBlendMode(tex, sdl2.SDL_BLENDMODE_BLEND)
+        sdl2.SDL_FreeSurface(surf)
         tilemap._texture = tex
 
     def _draw_map(self, tilemap) -> None:

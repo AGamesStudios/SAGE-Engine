@@ -2,49 +2,38 @@ import sys
 import types
 import ctypes
 
-from engine.entities.tile_map import TileMap
+from engine import gizmos
 
 
-def _stub_sdl(monkeypatch):
+def _stub_sdl(monkeypatch, calls):
     mod = types.SimpleNamespace()
     mod.SDL_INIT_VIDEO = 0
     mod.SDL_BLENDMODE_BLEND = 1
-    mod.SDL_TEXTUREACCESS_TARGET = 1
     mod.SDL_TEXTUREACCESS_STATIC = 0
     mod.SDL_PIXELFORMAT_RGBA8888 = 0
     mod.SDL_WINDOWPOS_CENTERED = 0
     mod.SDL_Rect = lambda x, y, w, h: (x, y, w, h)
+    mod.SDL_Point = type('P', (ctypes.Structure,), {'_fields_': [('x', ctypes.c_int), ('y', ctypes.c_int)]})
     mod.SDL_GetError = lambda: b""
-    calls = {"texture": 0}
     mod.SDL_Init = lambda flag: 0
     mod.SDL_CreateWindow = lambda *a, **k: object()
     mod.SDL_CreateRenderer = lambda *a, **k: object()
     mod.SDL_SetRenderDrawBlendMode = lambda *a, **k: None
-    mod.SDL_SetRenderTarget = lambda *a, **k: None
-    mod.SDL_GetRenderTarget = lambda *a, **k: None
-    mod.SDL_RenderClear = lambda *a, **k: None
     mod.SDL_SetRenderDrawColor = lambda *a, **k: None
-    mod.SDL_RenderFillRect = lambda *a, **k: None
-    class DummySurf(ctypes.Structure):
-        _fields_ = [('format', ctypes.c_void_p), ('pixels', ctypes.c_void_p)]
-    def create_texture(*a, **k):
-        calls["texture"] += 1
-        return object()
-    mod.SDL_CreateRGBSurfaceWithFormat = lambda *a, **k: ctypes.pointer(DummySurf())
-    mod.SDL_MapRGBA = lambda fmt, r, g, b, a: 0
-    mod.SDL_FillRect = lambda *a, **k: None
-    mod.SDL_CreateTextureFromSurface = create_texture
-    mod.SDL_FreeSurface = lambda s: None
-    mod.SDL_CreateTexture = create_texture
-    mod.SDL_SetTextureBlendMode = lambda *a, **k: None
-    mod.SDL_UpdateTexture = lambda *a, **k: None
-    mod.SDL_RenderCopy = lambda *a, **k: None
-    mod.SDL_RenderPresent = lambda r: None
     mod.SDL_DestroyRenderer = lambda r: None
     mod.SDL_DestroyWindow = lambda w: None
     mod.SDL_Quit = lambda: None
-    if 'engine.renderers.sdl_renderer' in sys.modules:
-        del sys.modules['engine.renderers.sdl_renderer']
+    mod.SDL_CreateTexture = lambda *a, **k: ctypes.c_void_p(1)
+    mod.SDL_UpdateTexture = lambda *a, **k: None
+    mod.SDL_SetTextureBlendMode = lambda *a, **k: None
+    mod.SDL_DestroyTexture = lambda *a, **k: None
+    mod.SDL_RenderFillRect = lambda *a, **k: None
+    def draw_line(r, x1, y1, x2, y2):
+        calls['lines'] += 1
+    mod.SDL_RenderDrawLine = draw_line
+    mod.SDL_RenderDrawRect = lambda *a, **k: None
+    mod.SDL_RenderCopyEx = lambda *a, **k: None
+    mod.SDL_RenderPresent = lambda *a, **k: None
     gl = types.ModuleType('OpenGL.GL')
     gl.GL_VERTEX_SHADER = 0
     gl.GL_FRAGMENT_SHADER = 0
@@ -57,8 +46,10 @@ def _stub_sdl(monkeypatch):
     monkeypatch.setitem(sys.modules, 'OpenGL', types.ModuleType('OpenGL'))
     monkeypatch.setitem(sys.modules, 'OpenGL.GL', gl)
     monkeypatch.setitem(sys.modules, 'OpenGL.GL.shaders', shaders_mod)
-    monkeypatch.setitem(sys.modules, "sdl2", mod)
-    # minimal Pillow stub
+    monkeypatch.setitem(sys.modules, 'sdl2', mod)
+    if 'engine.renderers.sdl_renderer' in sys.modules:
+        del sys.modules['engine.renderers.sdl_renderer']
+    monkeypatch.setitem(sys.modules, 'engine.renderers.opengl.drawing', types.SimpleNamespace(parse_color=lambda c: (255,0,0,255)))
     pil = types.ModuleType('PIL')
     img_mod = types.ModuleType('PIL.Image')
     img_mod.Image = type('Image', (), {})
@@ -68,22 +59,20 @@ def _stub_sdl(monkeypatch):
     img_mod.Image.transpose = lambda self, t: self
     monkeypatch.setitem(sys.modules, 'PIL', pil)
     monkeypatch.setitem(sys.modules, 'PIL.Image', img_mod)
-    return calls
 
 
-def test_tilemap_render_cached(monkeypatch):
-    calls = _stub_sdl(monkeypatch)
-    monkeypatch.setitem(sys.modules, 'engine.renderers.opengl.drawing', types.SimpleNamespace(parse_color=lambda c: (255,0,0,255)))
+def test_gizmo_thickness_scales(monkeypatch):
+    calls = {'lines': 0}
+    _stub_sdl(monkeypatch, calls)
     from engine.renderers.sdl_renderer import SDLRenderer
 
-    tm = TileMap()
-    tm.width = tm.height = 1
-    tm.tile_width = tm.tile_height = 8
-    tm.data = [1]
-    tm.metadata = {'colors': {'1': '#ff0000'}}
-
-    r = SDLRenderer(8, 8, 't')
-    r._draw_map(tm)
-    r._draw_map(tm)
-    assert calls['texture'] == 1
-
+    cam = types.SimpleNamespace(zoom=1.0)
+    r = SDLRenderer(2, 2, 't')
+    g = gizmos.cross_gizmo(0, 0, thickness=2)
+    r._draw_basic_gizmo(g, cam)
+    first = calls['lines']
+    calls['lines'] = 0
+    cam.zoom = 2.0
+    r._draw_basic_gizmo(g, cam)
+    second = calls['lines']
+    assert first > second
