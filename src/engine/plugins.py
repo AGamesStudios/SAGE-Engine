@@ -71,8 +71,12 @@ class PluginManager:
         if target not in ("engine", "editor"):
             raise ValueError(f"Unknown plugin target: {target}")
         self.target = target
-        self.plugin_dir = plugin_dir or _default_plugin_dir()
-        self.config_file = config_file or _default_config_file(self.plugin_dir)
+        self.plugin_dir = os.path.expanduser(
+            plugin_dir or _default_plugin_dir()
+        )
+        self.config_file = os.path.expanduser(
+            config_file or _default_config_file(self.plugin_dir)
+        )
         self.entry_point_group = (
             entry_point_group or f"sage_{target}.plugins")
         self._funcs: list[Callable[[Any], Any]] = []
@@ -90,15 +94,16 @@ class PluginManager:
         dirs: list[str] = []
         env_all = os.environ.get("SAGE_PLUGINS")
         if env_all:
-            dirs.extend(env_all.split(os.pathsep))
+            dirs.extend(os.path.expanduser(p) for p in env_all.split(os.pathsep))
         env_specific = os.environ.get(
             "SAGE_EDITOR_PLUGINS" if self.target == "editor" else "SAGE_ENGINE_PLUGINS"
         )
         if env_specific:
-            dirs.extend(env_specific.split(os.pathsep))
+            dirs.extend(os.path.expanduser(p) for p in env_specific.split(os.pathsep))
+        else:
+            dirs.append(self.plugin_dir)
         if paths:
-            dirs.extend(paths)
-        dirs.append(self.plugin_dir)
+            dirs.extend(os.path.expanduser(p) for p in paths)
 
         cfg = read_config(self.config_file)
 
@@ -204,10 +209,10 @@ def list_plugins(
     dirs: list[str] = []
     env_all = os.environ.get('SAGE_PLUGINS')
     if env_all:
-        dirs.extend(env_all.split(os.pathsep))
+        dirs.extend(os.path.expanduser(p) for p in env_all.split(os.pathsep))
     if paths:
-        dirs.extend(paths)
-    plugin_dir = plugin_dir or _default_plugin_dir()
+        dirs.extend(os.path.expanduser(p) for p in paths)
+    plugin_dir = os.path.expanduser(plugin_dir or _default_plugin_dir())
     dirs.append(plugin_dir)
 
     cfg = read_config(config_file, plugin_dir=plugin_dir)

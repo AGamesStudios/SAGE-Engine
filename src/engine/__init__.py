@@ -5,21 +5,27 @@ from importlib import import_module
 from .version import __version__, require as require_version  # noqa: F401
 from .utils.log import logger  # noqa: F401
 from .utils.diagnostics import warn, error, exception  # noqa: F401
-from .plugins import PluginManager
+from .plugins import _get_manager
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:  # pragma: no cover - imported for type hints
+    from .plugins import PluginManager
 
 ENGINE_VERSION = __version__
 
-ENGINE_PLUGINS = PluginManager('engine')
+def _engine_plugins() -> "PluginManager":
+    """Return the engine plugin manager."""
+    return _get_manager('engine')
 
 
 def register_engine_plugin(func):
     """Register an engine plugin programmatically."""
-    ENGINE_PLUGINS.register(func)
+    _engine_plugins().register(func)
 
 
 def load_engine_plugins(engine, paths=None):
     """Load plugins targeting the engine."""
-    ENGINE_PLUGINS.load(engine, paths)
+    _engine_plugins().load(engine, paths)
 
 
 _lazy = {

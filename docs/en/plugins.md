@@ -69,7 +69,13 @@ Plugin modules placed in `~/.sage_plugins` are discovered automatically. Set
 `SAGE_PLUGIN_DIR` to change this location or list extra directories with
 `SAGE_PLUGINS`. The variables `SAGE_ENGINE_PLUGINS` and `SAGE_EDITOR_PLUGINS`
 override or supplement the search path for engine and editor plugins
-respectively. A module
+respectively. These environment variables are consulted when plugins are loaded
+(typically when the engine or editor initialises), so set them before launching
+the application:
+```bash
+SAGE_EDITOR_PLUGINS=~/editor_plugins python -m sage_editor
+```
+A module
 can export an object named `plugin` deriving from `PluginBase` or define
 `init_engine(engine)` and `init_editor(editor)` functions. These hooks may be
 coroutines and are awaited when loaded.
