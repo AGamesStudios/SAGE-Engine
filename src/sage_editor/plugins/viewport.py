@@ -9,7 +9,11 @@ from engine.renderers.opengl.glwidget import GLWidget
 
 def init_editor(editor) -> None:
     """Add a simple OpenGL viewport window to the editor."""
-    app = QApplication.instance() or QApplication([])
+    app = QApplication.instance()
+    created = False
+    if app is None:
+        app = QApplication([])
+        created = True
     widget = GLWidget()
     window = QWidget()
     window.setWindowTitle("SAGE Viewport")
@@ -19,5 +23,5 @@ def init_editor(editor) -> None:
     window.resize(640, 480)
     window.show()
     editor.viewport = window
-    if not QApplication.instance():
+    if created:
         app.exec()
