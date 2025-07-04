@@ -35,6 +35,10 @@ If you specify ``--target`` you must add that directory to ``PYTHONPATH`` so the
 engine can be imported.
 Extras are listed in ``pyproject.toml`` and can be supplied with ``--extras``.
 
+## Logs
+Log files are written to `~/.cache/sage/logs/engine.log` by default. Set the
+`SAGE_LOG_DIR` environment variable to change this location if needed.
+
 ## Repository layout
 ``src/`` contains the engine libraries and tools. Most users only need the
 ``examples/`` directory to explore sample projects or start their own.

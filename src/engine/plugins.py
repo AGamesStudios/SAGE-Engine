@@ -6,6 +6,7 @@ import asyncio
 import importlib
 import importlib.util
 from importlib import metadata
+import hashlib
 import logging
 import os
 import sys
@@ -133,7 +134,8 @@ class PluginManager:
                 if not cfg.get(mod_name, True):
                     continue
                 try:
-                    unique = f"sage_plugins.{mod_name}"
+                    digest = hashlib.sha1(full.encode("utf-8")).hexdigest()[:8]
+                    unique = f"sage_plugins.{mod_name}_{digest}"
                     spec = importlib.util.spec_from_file_location(unique, full)
                     if spec and spec.loader:
                         module = importlib.util.module_from_spec(spec)
