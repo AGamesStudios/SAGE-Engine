@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Callable, Any
 
+from pathlib import Path
+
 from engine.editor_api import EditorInterface
 from engine.plugins import PluginManager
 
@@ -14,7 +16,8 @@ class Editor(EditorInterface):
     def __init__(self) -> None:
         self._menus: list[tuple[str, Callable[..., Any]]] = []
         self._toolbar: list[tuple[str, Callable[..., Any]]] = []
-        self.plugins = PluginManager("editor")
+        default_dir = Path(__file__).resolve().parent / "plugins"
+        self.plugins = PluginManager("editor", plugin_dir=str(default_dir))
 
     def add_menu(self, name: str, callback: Callable[..., Any]) -> None:
         self._menus.append((name, callback))
