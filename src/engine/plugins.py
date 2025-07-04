@@ -82,20 +82,7 @@ class PluginManager:
         self._funcs.append(func)
 
     def _call_init(self, mod_or_obj, instance) -> None:
-        if isinstance(mod_or_obj, PluginBase):
-            if self.target == "engine":
-                _run_sync_or_async(mod_or_obj.init_engine, instance)
-                reg = getattr(mod_or_obj, "register_logic", None)
-                if callable(reg):
-                    _run_sync_or_async(
-                        reg,
-                        getattr(instance, "register_condition", None),
-                        getattr(instance, "register_action", None),
-                    )
-            else:
-                _run_sync_or_async(mod_or_obj.init_editor, instance)
-            return
-
+        """Delegate to :func:`_call_plugin_init` for consistent behaviour."""
         _call_plugin_init(mod_or_obj, self.target, instance)
 
     def load(self, instance, paths: list[str] | None = None) -> None:
@@ -172,10 +159,18 @@ class PluginManager:
 
 
 # store plugin functions registered programmatically
-_MANAGERS = {
-    'engine': PluginManager('engine'),
-    'editor': PluginManager('editor'),
-}
+_MANAGERS: dict[str, PluginManager] = {}
+
+
+def _get_manager(target: str) -> PluginManager:
+    """Return the cached :class:`PluginManager` for *target* or create it."""
+    if target not in ("engine", "editor"):
+        raise ValueError(f"Unknown plugin target: {target}")
+    mgr = _MANAGERS.get(target)
+    if mgr is None:
+        mgr = PluginManager(target)
+        _MANAGERS[target] = mgr
+    return mgr
 
 
 def read_config(config_file: str | None = None, *, plugin_dir: str | None = None) -> dict:
@@ -232,11 +227,9 @@ def list_plugins(
     return result
 
 
-def register_plugin(target: str, func):
+def register_plugin(target: str, func) -> None:
     """Register a plugin for the given target ('engine' or 'editor')."""
-    if target not in _MANAGERS:
-        raise ValueError(f'Unknown plugin target: {target}')
-    _MANAGERS[target].register(func)
+    _get_manager(target).register(func)
 
 
 def _call_plugin_init(module, target, instance):
@@ -274,9 +267,7 @@ def _call_plugin_init(module, target, instance):
                 logger.exception('register_logic failed in %s', module.__name__)
 
 
-def load_plugins(target: str, instance, paths=None):
+def load_plugins(target: str, instance, paths=None) -> None:
     """Load plugins for the given target and initialize them with *instance*."""
-    if target not in _MANAGERS:
-        raise ValueError(f'Unknown plugin target: {target}')
-    _MANAGERS[target].load(instance, paths)
+    _get_manager(target).load(instance, paths)
 
