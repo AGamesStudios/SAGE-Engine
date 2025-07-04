@@ -12,6 +12,7 @@ renderer.add_gizmo(polyline_gizmo([(0, 0), (1, 1), (2, 0)],
 ```
 
 Available shapes are **cross**, **circle**, **square** and custom
-**polylines**. Gizmos are drawn in world coordinates by the active renderer and
-cleared with `renderer.clear_gizmos()`. The `color` parameter is an RGBA tuple
-and `thickness` controls line width.
+**polylines**. Gizmos are drawn in world coordinates by the active renderer.
+They normally disappear after one frame but set ``frames`` to keep them longer.
+Call ``renderer.clear_gizmos()`` to remove them immediately. The ``color``
+parameter is an RGBA tuple and ``thickness`` controls line width.

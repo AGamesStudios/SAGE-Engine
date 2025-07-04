@@ -13,6 +13,7 @@ class Gizmo:
     thickness: float = 2.0
     shape: str = "cross"
     vertices: Iterable[Tuple[float, float]] | None = None
+    frames: int | None = 1
 
 
 def cross_gizmo(
@@ -22,9 +23,10 @@ def cross_gizmo(
     size: float = 10.0,
     color: Tuple[float, float, float, float] = (1.0, 1.0, 1.0, 1.0),
     thickness: float = 2.0,
+    frames: int | None = 1,
 ) -> Gizmo:
     """Return a cross shaped gizmo."""
-    return Gizmo(x, y, size, color, thickness, "cross")
+    return Gizmo(x, y, size, color, thickness, "cross", None, frames)
 
 
 def circle_gizmo(
@@ -34,9 +36,10 @@ def circle_gizmo(
     size: float = 10.0,
     color: Tuple[float, float, float, float] = (1.0, 1.0, 1.0, 1.0),
     thickness: float = 2.0,
+    frames: int | None = 1,
 ) -> Gizmo:
     """Return a circular gizmo."""
-    return Gizmo(x, y, size, color, thickness, "circle")
+    return Gizmo(x, y, size, color, thickness, "circle", None, frames)
 
 
 def square_gizmo(
@@ -46,9 +49,10 @@ def square_gizmo(
     size: float = 10.0,
     color: Tuple[float, float, float, float] = (1.0, 1.0, 1.0, 1.0),
     thickness: float = 2.0,
+    frames: int | None = 1,
 ) -> Gizmo:
     """Return a square gizmo."""
-    return Gizmo(x, y, size, color, thickness, "square")
+    return Gizmo(x, y, size, color, thickness, "square", None, frames)
 
 
 def polyline_gizmo(
@@ -56,9 +60,10 @@ def polyline_gizmo(
     *,
     color: Tuple[float, float, float, float] = (1.0, 1.0, 1.0, 1.0),
     thickness: float = 2.0,
+    frames: int | None = 1,
 ) -> Gizmo:
     """Return a polyline gizmo defined by ``points`` in world units."""
-    g = Gizmo(0.0, 0.0, 0.0, color, thickness, "polyline", points)
+    g = Gizmo(0.0, 0.0, 0.0, color, thickness, "polyline", points, frames)
     return g
 
 

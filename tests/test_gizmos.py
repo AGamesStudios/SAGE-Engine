@@ -33,3 +33,13 @@ def test_add_and_clear_gizmos():
     assert r.gizmos == [g]
     r.clear_gizmos()
     assert r.gizmos == []
+
+
+def test_gizmo_lifetime():
+    r = DummyRenderer()
+    g = Gizmo(0.0, 0.0, frames=2)
+    r.add_gizmo(g)
+    r._advance_gizmos()
+    assert r.gizmos == [g]
+    r._advance_gizmos()
+    assert r.gizmos == []

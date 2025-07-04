@@ -79,8 +79,15 @@ class SDLRenderer(Renderer):
             return
         if gizmo.shape.lower() == "square":
             half = int(size)
-            rect = sdl2.SDL_Rect(cx - half, cy - half, half * 2, half * 2)
-            sdl2.SDL_RenderDrawRect(self.renderer, rect)
+            thick = max(1, int(gizmo.thickness))
+            for i in range(thick):
+                rect = sdl2.SDL_Rect(
+                    cx - half + i,
+                    cy - half + i,
+                    half * 2 - i * 2,
+                    half * 2 - i * 2,
+                )
+                sdl2.SDL_RenderDrawRect(self.renderer, rect)
             return
         if gizmo.shape.lower() == "circle":
             steps = max(16, int(size))
@@ -96,8 +103,10 @@ class SDLRenderer(Renderer):
             return
         # cross or unknown
         half = int(size)
-        sdl2.SDL_RenderDrawLine(self.renderer, cx - half, cy, cx + half, cy)
-        sdl2.SDL_RenderDrawLine(self.renderer, cx, cy - half, cx, cy + half)
+        thick = max(1, int(gizmo.thickness))
+        for i in range(-(thick // 2), thick - thick // 2):
+            sdl2.SDL_RenderDrawLine(self.renderer, cx - half, cy + i, cx + half, cy + i)
+            sdl2.SDL_RenderDrawLine(self.renderer, cx + i, cy - half, cx + i, cy + half)
 
     # ------------------------------------------------------------------
     def clear(self, color=(0, 0, 0)) -> None:
@@ -284,7 +293,7 @@ class SDLRenderer(Renderer):
         if gizmos or self.gizmos:
             for g in list(self.gizmos):
                 self._draw_basic_gizmo(g, camera)
-            self.clear_gizmos()
+            self._advance_gizmos()
 
     def present(self) -> None:
         sdl2.SDL_RenderPresent(self.renderer)

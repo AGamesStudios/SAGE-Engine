@@ -138,6 +138,17 @@ class Renderer(ABC):
         """Remove all queued gizmos."""
         self.gizmos.clear()
 
+    def _advance_gizmos(self) -> None:
+        remaining = []
+        for g in self.gizmos:
+            if g.frames is not None:
+                g.frames -= 1
+                if g.frames > 0:
+                    remaining.append(g)
+            else:
+                remaining.append(g)
+        self.gizmos = remaining
+
     # hook management ---------------------------------------------------
     def add_post_hook(self, func: Callable[["Renderer"], None]) -> None:
         self.post_hooks.append(func)

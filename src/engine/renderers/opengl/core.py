@@ -411,8 +411,9 @@ class OpenGLRenderer(Renderer):
         drawing.draw_cursor(self, x, y, camera)
 
     def _draw_basic_gizmos(self, camera: Camera | None) -> None:
-        for gizmo in self.gizmos:
+        for gizmo in list(self.gizmos):
             gizmos.draw_basic_gizmo(self, gizmo, camera)
+        self._advance_gizmos()
 
 
     def _draw_gizmo(
