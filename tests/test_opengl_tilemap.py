@@ -8,7 +8,8 @@ def _stub_gl(monkeypatch, calls):
     names = [
         'glGenTextures','glBindTexture','glTexParameteri','glTexImage2D','glBegin','glEnd',
         'glTexCoord2f','glVertex2f','glEnable','glBlendFunc','glDisable','glColor4f','glLineWidth',
-        'glPushMatrix','glPopMatrix','glTranslatef','glUseProgram','glRotatef'
+        'glPushMatrix','glPopMatrix','glTranslatef','glUseProgram','glRotatef','glDeleteTextures',
+        'glMatrixMode','glLoadIdentity','glOrtho'
     ]
     for n in names:
         if n == 'glGenTextures':
@@ -18,7 +19,8 @@ def _stub_gl(monkeypatch, calls):
     constants = [
         'GL_TEXTURE_2D','GL_TEXTURE_MIN_FILTER','GL_TEXTURE_MAG_FILTER','GL_NEAREST','GL_LINEAR','GL_RGBA','GL_UNSIGNED_BYTE','GL_QUADS',
         'GL_BLEND','GL_SRC_ALPHA','GL_ONE_MINUS_SRC_ALPHA','GL_MULTISAMPLE','GL_LINE_SMOOTH',
-        'GL_LINES','GL_LINE_LOOP','GL_LINE_STRIP','GL_TRIANGLES','GL_TRIANGLE_FAN'
+        'GL_LINES','GL_LINE_LOOP','GL_LINE_STRIP','GL_TRIANGLES','GL_TRIANGLE_FAN',
+        'GL_PROJECTION','GL_MODELVIEW'
     ]
     for c in constants:
         setattr(gl, c, 0)
@@ -77,3 +79,69 @@ def test_tilemap_opengl(monkeypatch):
     r = ogl.OpenGLRenderer(width=2, height=2)
     r._draw_map(tm)
     assert calls.get('glGenTextures') == 1
+
+
+def test_draw_object_tilemap(monkeypatch):
+    calls = {}
+    _stub_gl(monkeypatch, calls)
+    import importlib
+    ogl = importlib.import_module('engine.renderers.opengl_renderer')
+
+    class DummyWidget:
+        def __init__(self, *a, **k):
+            pass
+
+        def resize(self, w, h):
+            pass
+
+        def context(self):
+            class Ctx:
+                def isValid(self):
+                    return False
+
+            return Ctx()
+
+        def update(self):
+            pass
+
+    monkeypatch.setattr(ogl, 'GLWidget', DummyWidget)
+    tm = TileMap()
+    tm.width = tm.height = 1
+    tm.tile_width = tm.tile_height = 8
+    tm.data = [1]
+    tm.metadata = {'colors': {'1': '#ffffff'}}
+    r = ogl.OpenGLRenderer(width=2, height=2)
+    r._program = 1
+    r._draw_object(tm, None)
+    assert calls.get('glUseProgram') == 1
+
+
+def test_apply_projection_updates(monkeypatch):
+    calls = {}
+    _stub_gl(monkeypatch, calls)
+    import importlib
+    ogl = importlib.import_module('engine.renderers.opengl_renderer')
+
+    class DummyWidget:
+        def __init__(self, *a, **k):
+            pass
+
+        def resize(self, w, h):
+            pass
+
+        def context(self):
+            class Ctx:
+                def isValid(self):
+                    return False
+
+            return Ctx()
+
+        def update(self):
+            pass
+
+    monkeypatch.setattr(ogl, 'GLWidget', DummyWidget)
+    r = ogl.OpenGLRenderer(width=640, height=480)
+    r._apply_projection(None)
+    proj = r.get_projection()
+    from engine.core import math2d
+    assert proj == math2d.make_ortho(-320.0, 320.0, -240.0, 240.0)

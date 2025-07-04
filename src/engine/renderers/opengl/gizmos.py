@@ -139,8 +139,9 @@ def draw_basic_gizmo(renderer, gizmo: Gizmo, camera: Camera | None) -> None:
     glPushMatrix()
     if gizmo.shape.lower() != "polyline":
         glTranslatef(gizmo.x * scale, gizmo.y * scale * sign, 0)
-    glColor4f(*gizmo.color)
-    glLineWidth(gizmo.thickness)
+    color = tuple(max(0.0, min(1.0, c)) for c in gizmo.color)
+    glColor4f(*color)
+    glLineWidth(max(1.0, gizmo.thickness))
     shape = gizmo.shape.lower()
     if shape == "polyline" and gizmo.vertices:
         glBegin(GL_LINE_STRIP)
@@ -155,7 +156,7 @@ def draw_basic_gizmo(renderer, gizmo: Gizmo, camera: Camera | None) -> None:
         glVertex2f(-size, size)
         glEnd()
     elif shape == "circle":
-        steps = 16
+        steps = max(16, int(size))
         glBegin(GL_LINE_LOOP)
         for i in range(steps):
             ang = math.radians(i * 360.0 / steps)

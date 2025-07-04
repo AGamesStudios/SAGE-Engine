@@ -64,6 +64,42 @@ class SDLRenderer(Renderer):
         self.textures: dict[tuple[int, bool], ctypes.c_void_p] = {}
 
     # ------------------------------------------------------------------
+    def _draw_basic_gizmo(self, gizmo, camera=None) -> None:
+        """Draw a simple gizmo using SDL lines."""
+        zoom = camera.zoom if camera else 1.0
+        size = gizmo.size / zoom
+        r, g, b, a = [int(max(0, min(255, c * 255))) for c in gizmo.color]
+        sdl2.SDL_SetRenderDrawColor(self.renderer, r, g, b, a)
+        cx = int(gizmo.x)
+        cy = int(gizmo.y)
+        if gizmo.shape.lower() == "polyline" and gizmo.vertices:
+            points = [sdl2.SDL_Point(int(vx), int(vy)) for vx, vy in gizmo.vertices]
+            arr = (sdl2.SDL_Point * len(points))(*points)
+            sdl2.SDL_RenderDrawLines(self.renderer, arr, len(points))
+            return
+        if gizmo.shape.lower() == "square":
+            half = int(size)
+            rect = sdl2.SDL_Rect(cx - half, cy - half, half * 2, half * 2)
+            sdl2.SDL_RenderDrawRect(self.renderer, rect)
+            return
+        if gizmo.shape.lower() == "circle":
+            steps = max(16, int(size))
+            angle = 360.0 / steps
+            prev_x = cx + int(size)
+            prev_y = cy
+            for i in range(1, steps + 1):
+                ang = math.radians(i * angle)
+                nx = cx + int(math.cos(ang) * size)
+                ny = cy + int(math.sin(ang) * size)
+                sdl2.SDL_RenderDrawLine(self.renderer, prev_x, prev_y, nx, ny)
+                prev_x, prev_y = nx, ny
+            return
+        # cross or unknown
+        half = int(size)
+        sdl2.SDL_RenderDrawLine(self.renderer, cx - half, cy, cx + half, cy)
+        sdl2.SDL_RenderDrawLine(self.renderer, cx, cy - half, cx, cy + half)
+
+    # ------------------------------------------------------------------
     def clear(self, color=(0, 0, 0)) -> None:
         r, g, b = [int(c) for c in color]
         sdl2.SDL_SetRenderDrawColor(self.renderer, r, g, b, 255)
@@ -245,6 +281,10 @@ class SDLRenderer(Renderer):
                 continue
             if obj.image is not None:
                 self._draw_sprite(obj)
+        if gizmos or self.gizmos:
+            for g in list(self.gizmos):
+                self._draw_basic_gizmo(g, camera)
+            self.clear_gizmos()
 
     def present(self) -> None:
         sdl2.SDL_RenderPresent(self.renderer)

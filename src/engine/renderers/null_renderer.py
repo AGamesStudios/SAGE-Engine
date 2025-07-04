@@ -16,7 +16,8 @@ class NullRenderer(Renderer):
         pass
 
     def draw_scene(self, scene, camera=None, gizmos=False):
-        pass
+        if gizmos or self.gizmos:
+            self.clear_gizmos()
 
     def present(self):
         pass

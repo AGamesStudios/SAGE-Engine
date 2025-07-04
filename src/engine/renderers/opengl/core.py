@@ -8,7 +8,7 @@ import math
 import ctypes
 
 from .glwidget import GLWidget
-from .textures import get_blank_texture, get_texture
+from .textures import get_blank_texture, get_texture, unload_texture
 try:
     from OpenGL.GL import *  # type: ignore[import-not-found,F401,F403]
 except Exception as exc:  # pragma: no cover - optional dependency
@@ -178,6 +178,9 @@ class OpenGLRenderer(Renderer):
     def _get_texture(self, obj) -> int:
         return get_texture(self, obj)
 
+    def unload_texture(self, obj) -> None:
+        unload_texture(self, obj)
+
     def _build_map_texture(self, tilemap: TileMap) -> None:
         from OpenGL.GL import (
             glGenTextures,
@@ -252,15 +255,14 @@ class OpenGLRenderer(Renderer):
     ) -> None:
         if self._program is None:
             return
+        shader = None
         handler = RENDER_HANDLERS.get(getattr(obj, "role", ""))
         if handler:
             handler(self, obj, camera)
             return
         if isinstance(obj, TileMap):
-            if shader:
-                Shader.stop()
-            else:
-                glUseProgram(0)
+            from OpenGL.GL import glUseProgram  # type: ignore[import-not-found]
+            glUseProgram(0)
             self._draw_map(obj)
             return
         from OpenGL.GL import (
@@ -454,12 +456,14 @@ class OpenGLRenderer(Renderer):
 
     def _apply_projection(self, camera: Camera | None) -> None:
         from OpenGL.GL import glMatrixMode, glLoadIdentity, glOrtho, GL_PROJECTION, GL_MODELVIEW  # type: ignore[import-not-found]
+        from engine.core import math2d
         w = (camera.width if (self.keep_aspect and camera) else self.width)
         h = (camera.height if (self.keep_aspect and camera) else self.height)
         sign = 1.0 if units.Y_UP else -1.0
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
         glOrtho(-w / 2, w / 2, -h / 2 * sign, h / 2 * sign, -1, 1)
+        self._projection = math2d.make_ortho(-w / 2, w / 2, -h / 2, h / 2)
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
 

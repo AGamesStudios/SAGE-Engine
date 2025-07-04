@@ -7,6 +7,7 @@ from OpenGL.GL import (
     glBindTexture,
     glTexParameteri,
     glTexImage2D,
+    glDeleteTextures,
     GL_TEXTURE_2D,
     GL_TEXTURE_MIN_FILTER,
     GL_TEXTURE_MAG_FILTER,
@@ -70,5 +71,13 @@ def get_texture(renderer, obj) -> int:
     )
     renderer.textures[key] = tex_id
     return tex_id
+
+
+def unload_texture(renderer, obj) -> None:
+    """Remove ``obj``'s texture from the cache."""
+    key = (id(obj.image), bool(getattr(obj, "smooth", True)))
+    tex = renderer.textures.pop(key, None)
+    if tex:
+        glDeleteTextures([tex])
 
 
