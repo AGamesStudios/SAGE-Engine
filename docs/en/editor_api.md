@@ -12,4 +12,6 @@ Editors are free to expose additional functionality as needed. The optional
 each other.
 
 Install the ``sage_editor`` package to try the reference editor and run it with
-``python -m sage_editor`` or the ``sage-editor`` command.
+``python -m sage_editor`` or the ``sage-editor`` command. When running from the
+repository without installing first, prefix with ``PYTHONPATH=src`` so Python can
+find the package.

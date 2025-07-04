@@ -51,6 +51,7 @@ When running from the repository without installing first, add ``src`` to
 ``PYTHONPATH`` so Python can locate the packages:
 ```bash
 PYTHONPATH=src python -m engine examples/blank.sageproject
+PYTHONPATH=src python -m sage_editor
 ```
 Use `--vsync` or `--no-vsync` to toggle vertical sync on supporting renderers.
 For heavy scenes you can enable asynchronous event updates:
