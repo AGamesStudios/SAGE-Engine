@@ -11,9 +11,14 @@ import sys
 import json
 from typing import Callable, Any
 
-# default plugin directory in the user's home
-PLUGIN_DIR = os.path.join(os.path.expanduser('~'), '.sage_plugins')
-CONFIG_FILE = os.path.join(PLUGIN_DIR, 'plugins.json')
+# name of the environment variable overriding the default plugin directory
+PLUGIN_DIR_ENV = "SAGE_PLUGIN_DIR"
+
+# default plugin directory in the user's home, overridable via ``SAGE_PLUGIN_DIR``
+PLUGIN_DIR = os.path.expanduser(
+    os.environ.get(PLUGIN_DIR_ENV, os.path.join("~", ".sage_plugins"))
+)
+CONFIG_FILE = os.path.join(PLUGIN_DIR, "plugins.json")
 
 
 logger = logging.getLogger('sage.plugins')

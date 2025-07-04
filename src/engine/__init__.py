@@ -110,6 +110,7 @@ _lazy = {
     'GamepadInput': ('engine.inputs.gamepad', 'GamepadInput'),
     'save_game': ('engine.savegame', 'save_game'),
     'load_game': ('engine.savegame', 'load_game'),
+    'EditorInterface': ('engine.editor_api', 'EditorInterface'),
 }
 
 __all__ = sorted(

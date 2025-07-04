@@ -21,6 +21,8 @@ Install optional extras via:
 ```bash
 pip install .[opengl,sdl,qt,audio]
 ```
+Plugin modules live in `~/.sage_plugins` by default. Set `SAGE_PLUGIN_DIR` to use
+a different directory or list additional paths with `SAGE_PLUGINS`.
 If you specify ``--target`` you must add that directory to ``PYTHONPATH`` so the
 engine can be imported.
 Extras are listed in ``pyproject.toml`` and can be supplied with ``--extras``.
