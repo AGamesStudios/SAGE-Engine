@@ -125,6 +125,6 @@ class SceneGraph(BaseGraph):
     def to_dict(self) -> dict:
         data = super().to_dict()
         for name, node in self.nodes.items():
-                if isinstance(node, SceneNode):
-                    data["nodes"][name]["scene_file"] = node.scene_file
+            if isinstance(node, SceneNode):
+                data["nodes"][name]["scene_file"] = node.scene_file
         return data

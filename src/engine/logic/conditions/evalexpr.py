@@ -12,7 +12,7 @@ class EvalExpr(Condition):
         env = {'engine': engine, 'scene': scene, 'dt': dt}
         env.update(getattr(engine, 'events', {}).variables)
         try:
-            return bool(eval(self.expr, env))
+            return bool(eval(self.expr, {'__builtins__': {}}, env))
         except Exception:
             logger.exception('EvalExpr error')
             return False
