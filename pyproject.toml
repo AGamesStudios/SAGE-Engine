@@ -34,6 +34,7 @@ Homepage = "https://github.com/AGamesStudios/SAGE-Engine"
 Repository = "https://github.com/AGamesStudios/SAGE-Engine"
 [project.scripts]
 sage-runtime = "engine.runtime.__main__:main"
+sage-editor = "sage_editor:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

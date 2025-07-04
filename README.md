@@ -42,7 +42,7 @@ Open `examples/blank.sageproject` with the editor or runtime to see the basic st
 For a larger demonstration use `examples/advanced.sageproject`, which links several scenes to show animations, physics and large tile maps.
 
 ## Running
-Use `python -m engine path/to/project.sageproject` to launch a game. Running `python main.py` will start the editor if installed, otherwise it behaves the same as the engine runtime. The engine tries to use the OpenGL backend first but falls back to SDL or the headless Null renderer when dependencies are missing:
+Use `python -m engine path/to/project.sageproject` to launch a game. Running `python main.py` will start the editor if installed, otherwise it behaves the same as the engine runtime. The optional editor can also be launched directly with `python -m sage_editor` or the `sage-editor` script when installed. The engine tries to use the OpenGL backend first but falls back to SDL or the headless Null renderer when dependencies are missing:
 ```bash
 python -m engine --renderer sdl examples/blank.sageproject
 python -m engine --renderer null examples/blank.sageproject

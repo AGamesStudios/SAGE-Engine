@@ -10,3 +10,6 @@ Editors are free to expose additional functionality as needed. The optional
 ``sage_editor`` package implements this interface and loads plugins using
 ``PluginManager('editor')``. Other editors can do the same without depending on
 each other.
+
+Install the ``sage_editor`` package to try the reference editor and run it with
+``python -m sage_editor`` or the ``sage-editor`` command.
