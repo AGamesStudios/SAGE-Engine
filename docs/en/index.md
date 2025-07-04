@@ -8,7 +8,7 @@ Select a topic from the list to learn about the engine and editor features.
 * [Saving and Loading](save_load.md)
 * [Limitations and Caveats](limitations.md)
 * [Plugins](plugins.md)
-* [Editor API](editor_api.md)
+* [Editor API](editor_api.md) – building editors with the optional ``sage_editor`` package
 
 Example scenes under `examples/Scenes/` include:
 - `Scene1.sagescene` – basic sprites

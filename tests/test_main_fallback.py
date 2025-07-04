@@ -8,8 +8,8 @@ def test_main_falls_back_to_runtime(monkeypatch):
     runtime_mod = types.ModuleType('engine.runtime')
     runtime_mod.main = lambda argv=None: calls.append(argv)
     monkeypatch.setitem(sys.modules, 'engine.runtime', runtime_mod)
-    sys.modules.pop('sage_editor', None)
     import main
     importlib.reload(main)
+    monkeypatch.setattr(main, '_load_editor_main', lambda: None)
     main.main(['data'])
     assert calls == [['data']]
