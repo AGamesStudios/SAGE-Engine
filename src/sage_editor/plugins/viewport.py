@@ -13,6 +13,7 @@ from PyQt6.QtWidgets import (
     QToolBar,
     QWidget,
     QSizePolicy,
+    QSplitter,
 )
 from PyQt6.QtGui import QAction
 from PyQt6.QtCore import Qt
@@ -36,8 +37,12 @@ class EditorWindow(QMainWindow):
         self.properties = QPlainTextEdit(self)
         self.resources = QListWidget()
 
-        dummy = QWidget(self)
-        self.setCentralWidget(dummy)
+        splitter = QSplitter(Qt.Orientation.Vertical, self)
+        splitter.addWidget(self.viewport)
+        splitter.addWidget(self.console)
+        splitter.setStretchFactor(0, 3)
+        splitter.setStretchFactor(1, 1)
+        self.setCentralWidget(splitter)
 
         menubar = QMenuBar(self)
         self.setMenuBar(menubar)
@@ -76,26 +81,12 @@ class EditorWindow(QMainWindow):
         prop_dock.setObjectName("PropertiesDock")
         prop_dock.setWidget(self.properties)
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, prop_dock)
+        self.splitDockWidget(obj_dock, prop_dock, Qt.Orientation.Vertical)
 
         res_dock = QDockWidget("Resources", self)
         res_dock.setObjectName("ResourcesDock")
         res_dock.setWidget(self.resources)
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, res_dock)
-
-        viewport_dock = QDockWidget("Viewport", self)
-        viewport_dock.setObjectName("ViewportDock")
-        viewport_dock.setWidget(self.viewport)
-        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, viewport_dock)
-
-        con_dock = QDockWidget("Console", self)
-        con_dock.setObjectName("ConsoleDock")
-        con_dock.setWidget(self.console)
-        self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, con_dock)
-
-        self.splitDockWidget(viewport_dock, res_dock, Qt.Orientation.Horizontal)
-        self.splitDockWidget(viewport_dock, obj_dock, Qt.Orientation.Horizontal)
-        self.splitDockWidget(obj_dock, prop_dock, Qt.Orientation.Vertical)
-        self.splitDockWidget(viewport_dock, con_dock, Qt.Orientation.Vertical)
 
         self.objects.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.objects.customContextMenuRequested.connect(self._context_menu)
