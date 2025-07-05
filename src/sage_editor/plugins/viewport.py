@@ -11,6 +11,8 @@ from PyQt6.QtWidgets import (
     QPlainTextEdit,
     QMenuBar,
     QToolBar,
+    QWidget,
+    QSizePolicy,
 )
 from PyQt6.QtGui import QAction
 from PyQt6.QtCore import Qt
@@ -25,6 +27,8 @@ class EditorWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("SAGE Editor")
 
+        self._engine = None
+        self._game_window = None
         self.viewport = GLWidget(self)
         self.console = QPlainTextEdit(self)
         self.properties = QPlainTextEdit(self)
@@ -42,6 +46,17 @@ class EditorWindow(QMainWindow):
 
         tbar = QToolBar(self)
         self.addToolBar(tbar)
+        left_spacer = QWidget(self)
+        left_spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        tbar.addWidget(left_spacer)
+
+        run_action = QAction("Run", self)
+        run_action.triggered.connect(self.start_game)
+        tbar.addAction(run_action)
+
+        right_spacer = QWidget(self)
+        right_spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        tbar.addWidget(right_spacer)
         if toolbar:
             for title, cb in toolbar:
                 action = QAction(title, self)
@@ -72,6 +87,20 @@ class EditorWindow(QMainWindow):
 
         self.objects.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.objects.customContextMenuRequested.connect(self._context_menu)
+
+    def set_renderer(self, renderer):
+        self.viewport.renderer = renderer
+
+    def set_objects(self, names):
+        self.objects.clear()
+        self.objects.addItems(list(names))
+
+    def start_game(self):
+        from engine.core.engine import Engine
+        from engine.game_window import GameWindow
+        self._engine = Engine()
+        self._game_window = GameWindow(self._engine)
+        self._game_window.show()
 
     def _context_menu(self, point):
         menu = QMenu(self.objects)
