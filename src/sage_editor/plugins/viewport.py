@@ -11,8 +11,8 @@ from PyQt6.QtWidgets import (
     QPlainTextEdit,
     QMenuBar,
     QToolBar,
-    QAction,
 )
+from PyQt6.QtGui import QAction
 from PyQt6.QtCore import Qt
 
 from engine.renderers.opengl.glwidget import GLWidget
