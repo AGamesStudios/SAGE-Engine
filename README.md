@@ -33,6 +33,8 @@ editor = ["~/editor_plugins"]
 ```
 Environment variables such as `SAGE_PLUGIN_DIR` or `SAGE_PLUGINS` are still
 honoured for compatibility.
+Set `SAGE_GLWIDGET` to ``module:Class`` if a custom Qt OpenGL widget should be
+used by the renderer.
 If you specify ``--target`` you must add that directory to ``PYTHONPATH`` so the
 engine can be imported.
 Extras are listed in ``pyproject.toml`` and can be supplied with ``--extras``.
