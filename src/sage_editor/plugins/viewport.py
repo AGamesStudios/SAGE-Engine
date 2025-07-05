@@ -13,7 +13,6 @@ from PyQt6.QtWidgets import (
     QToolBar,
     QWidget,
     QSizePolicy,
-    QSplitter,
 )
 from PyQt6.QtGui import QAction
 from PyQt6.QtCore import Qt
@@ -31,14 +30,11 @@ class EditorWindow(QMainWindow):
         self._engine = None
         self._game_window = None
         self.viewport = GLWidget(self)
+        self.setCentralWidget(self.viewport)
+
         self.console = QPlainTextEdit(self)
         self.properties = QPlainTextEdit(self)
         self.resources = QListWidget()
-
-        splitter = QSplitter(Qt.Orientation.Vertical, self)
-        splitter.addWidget(self.viewport)
-        splitter.addWidget(self.console)
-        self.setCentralWidget(splitter)
 
         menubar = QMenuBar(self)
         self.setMenuBar(menubar)
@@ -81,7 +77,13 @@ class EditorWindow(QMainWindow):
         prop_dock = QDockWidget("Properties", self)
         prop_dock.setObjectName("PropertiesDock")
         prop_dock.setWidget(self.properties)
-        self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, prop_dock)
+        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, prop_dock)
+        self.splitDockWidget(obj_dock, prop_dock, Qt.Orientation.Vertical)
+
+        con_dock = QDockWidget("Console", self)
+        con_dock.setObjectName("ConsoleDock")
+        con_dock.setWidget(self.console)
+        self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, con_dock)
 
         self.objects.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.objects.customContextMenuRequested.connect(self._context_menu)
