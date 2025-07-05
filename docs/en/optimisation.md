@@ -11,9 +11,9 @@ To keep large projects running smoothly consider the following options:
 - **Run on PyPy** – The engine is pure Python and works on PyPy 3.10+. PyPy's
   JIT compiler can improve performance for CPU bound projects without any
   code changes.
-- **Tune image cache** – Set `SAGE_IMAGE_CACHE_LIMIT` or pass
-  ``image_cache_limit`` via `EngineSettings` to control how many sprites are
-  kept in memory.
+- **Tune image cache** – Set ``image_cache_limit`` in `sage.toml` or pass
+  the option via `EngineSettings` to control how many sprites are kept in
+  memory.
 - **Adjust VSync/FPS** – Disable VSync (`--no-vsync`) or lower ``fps`` in
   ``EngineSettings`` on older machines to reduce rendering overhead.
 - **Asynchronous events** – Large scenes can update events concurrently using `EventSystem.update_async(engine, scene, dt)` or `await EventSystem.update_asyncio(engine, scene, dt)`

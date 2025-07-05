@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Protocol, Callable, Any, runtime_checkable
 
+EDITOR_API_VERSION = (1, 0)
+
 
 @runtime_checkable
 class EditorInterface(Protocol):

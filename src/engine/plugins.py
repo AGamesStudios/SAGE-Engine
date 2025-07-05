@@ -14,6 +14,8 @@ import json
 import re
 from typing import Callable, Any
 
+from engine.utils.config import get as cfg_get
+
 # name of the environment variable overriding the default plugin directory
 PLUGIN_DIR_ENV = "SAGE_PLUGIN_DIR"
 
@@ -22,7 +24,10 @@ DEFAULT_PLUGIN_DIR = os.path.join("~", ".sage_plugins")
 
 
 def _default_plugin_dir() -> str:
-    """Return the plugin directory from ``SAGE_PLUGIN_DIR`` or the default."""
+    """Return the plugin directory from configuration or ``SAGE_PLUGIN_DIR``."""
+    cfg_dir = cfg_get('plugins.dir')
+    if cfg_dir:
+        return os.path.expanduser(str(cfg_dir))
     return os.path.expanduser(os.environ.get(PLUGIN_DIR_ENV, DEFAULT_PLUGIN_DIR))
 
 
@@ -98,6 +103,12 @@ class PluginManager:
     def load(self, instance, paths: list[str] | None = None) -> None:
         """Load plugins and initialize them with ``instance``."""
         dirs: list[str] = []
+        cfg_paths = cfg_get('plugins.extra', [])
+        if cfg_paths:
+            dirs.extend(os.path.expanduser(p) for p in cfg_paths)
+        cfg_target = cfg_get(f'plugins.{self.target}', [])
+        if cfg_target:
+            dirs.extend(os.path.expanduser(p) for p in cfg_target)
         env_all = os.environ.get("SAGE_PLUGINS")
         if env_all:
             dirs.extend(os.path.expanduser(p) for p in env_all.split(os.pathsep))

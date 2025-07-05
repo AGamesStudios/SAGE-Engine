@@ -7,7 +7,12 @@ from typing import Optional, Callable
 import math
 import ctypes
 
-from .glwidget import GLWidget
+try:  # optional Qt widget provided by the editor package
+    from importlib import import_module
+    GLWidget = import_module("sage_editor.qt").GLWidget  # type: ignore
+except Exception:  # pragma: no cover - editor not installed
+    class GLWidget:  # type: ignore
+        pass
 from .textures import get_blank_texture, get_texture, unload_texture
 try:
     from OpenGL.GL import *  # type: ignore[import-not-found,F401,F403]

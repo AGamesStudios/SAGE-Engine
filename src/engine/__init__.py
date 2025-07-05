@@ -124,6 +124,7 @@ _lazy = {
     'save_game': ('engine.savegame', 'save_game'),
     'load_game': ('engine.savegame', 'load_game'),
     'EditorInterface': ('engine.editor_api', 'EditorInterface'),
+    'EDITOR_API_VERSION': ('engine.editor_api', 'EDITOR_API_VERSION'),
 }
 
 __all__ = sorted(
@@ -132,7 +133,7 @@ __all__ = sorted(
         '__version__', 'ENGINE_VERSION', 'logger',
         'warn', 'error', 'exception',
         'register_engine_plugin', 'load_engine_plugins',
-        'require_version',
+        'require_version', 'EDITOR_API_VERSION',
     ]
 )
 

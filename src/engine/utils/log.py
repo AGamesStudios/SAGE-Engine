@@ -2,9 +2,10 @@ import logging
 import os
 import atexit
 import faulthandler
+from engine.utils.config import get as cfg_get
 
 LOG_DIR = os.path.expanduser(
-    os.environ.get('SAGE_LOG_DIR', os.path.join('~', '.cache', 'sage', 'logs'))
+    str(cfg_get('logs.dir', os.path.join('~', '.cache', 'sage', 'logs')))
 )
 LOG_FILE = os.path.join(LOG_DIR, 'engine.log')
 
@@ -19,7 +20,7 @@ def init_logger(enable_crash_dumps: bool = True) -> logging.Logger:
     if logger.handlers:
         return logger
     os.makedirs(LOG_DIR, exist_ok=True)
-    level = os.environ.get('SAGE_LOG_LEVEL', 'INFO').upper()
+    level = str(cfg_get('logs.level', os.environ.get('SAGE_LOG_LEVEL', 'INFO'))).upper()
     logger.setLevel(getattr(logging, level, logging.INFO))
     fmt = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
     fh = logging.FileHandler(LOG_FILE, encoding='utf-8')

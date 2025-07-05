@@ -4,12 +4,15 @@ from pathlib import Path
 import shutil
 
 import engine.plugins
+import engine.utils.config as cfgmod
 
 
 def test_plugin_dir_env(monkeypatch, tmp_path):
     plugin = tmp_path / "plg_mod.py"
     plugin.write_text("def init_engine(engine): engine.flag = True")
     monkeypatch.setenv("SAGE_PLUGIN_DIR", str(tmp_path))
+    import engine.utils.config as cfgmod
+    cfgmod._config_cache = None
     manager = engine.plugins.PluginManager("engine")
     obj = types.SimpleNamespace()
     manager.load(obj)
@@ -20,6 +23,7 @@ def test_engine_plugin_dir_env(monkeypatch, tmp_path):
     plugin = tmp_path / "env_dir.py"
     plugin.write_text("def init_engine(e): e.d=True")
     monkeypatch.setenv("SAGE_ENGINE_PLUGIN_DIR", str(tmp_path))
+    cfgmod._config_cache = None
     mgr = engine.plugins.PluginManager("engine")
     obj = types.SimpleNamespace()
     mgr.load(obj)
@@ -30,6 +34,7 @@ def test_editor_plugin_dir_env(monkeypatch, tmp_path):
     plugin = tmp_path / "env_dir_ed.py"
     plugin.write_text("def init_editor(e): e.d=True")
     monkeypatch.setenv("SAGE_EDITOR_PLUGIN_DIR", str(tmp_path))
+    cfgmod._config_cache = None
     mgr = engine.plugins.PluginManager("editor")
     obj = types.SimpleNamespace()
     mgr.load(obj)
@@ -51,6 +56,8 @@ def test_engine_plugins_env(monkeypatch, tmp_path):
     plugin = tmp_path / "env_engine.py"
     plugin.write_text("def init_engine(engine): engine.flag = True")
     monkeypatch.setenv("SAGE_ENGINE_PLUGINS", str(tmp_path))
+    import engine.utils.config as cfgmod
+    cfgmod._config_cache = None
     manager = engine.plugins.PluginManager("engine")
     ns = types.SimpleNamespace()
     manager.load(ns)
@@ -61,6 +68,7 @@ def test_editor_plugins_env(monkeypatch, tmp_path):
     plugin = tmp_path / "env_editor.py"
     plugin.write_text("def init_editor(editor): editor.flag = True")
     monkeypatch.setenv("SAGE_EDITOR_PLUGINS", str(tmp_path))
+    cfgmod._config_cache = None
     manager = engine.plugins.PluginManager("editor")
     ed = types.SimpleNamespace()
     manager.load(ed)
@@ -76,6 +84,7 @@ def test_engine_plugins_override(monkeypatch, tmp_path):
     (d2 / "b.py").write_text("def init_engine(engine): engine.b=True")
     manager = engine.plugins.PluginManager("engine", plugin_dir=str(d1))
     monkeypatch.setenv("SAGE_ENGINE_PLUGINS", str(d2))
+    cfgmod._config_cache = None
     ns = types.SimpleNamespace()
     manager.load(ns)
     assert hasattr(ns, "b") and not hasattr(ns, "a")
@@ -87,6 +96,8 @@ def test_expanduser_env(monkeypatch, tmp_path):
     test_dir.mkdir(exist_ok=True)
     (test_dir / "u.py").write_text("def init_engine(e): e.x=True")
     monkeypatch.setenv("SAGE_PLUGIN_DIR", f"~/{test_dir.name}")
+    import engine.utils.config as cfgmod
+    cfgmod._config_cache = None
     manager = engine.plugins.PluginManager("engine")
     obj = types.SimpleNamespace()
     manager.load(obj)
@@ -100,6 +111,7 @@ def test_expanduser_engine_env(monkeypatch, tmp_path):
     test_dir.mkdir(exist_ok=True)
     (test_dir / "u2.py").write_text("def init_engine(e): e.y=True")
     monkeypatch.setenv("SAGE_ENGINE_PLUGINS", f"~/{test_dir.name}")
+    cfgmod._config_cache = None
     mgr = engine.plugins.PluginManager("engine")
     obj = types.SimpleNamespace()
     mgr.load(obj)

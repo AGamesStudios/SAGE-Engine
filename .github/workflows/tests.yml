@@ -21,3 +21,13 @@ jobs:
       - run: pip install ruff pytest PySDL2 PyQt6 -r requirements.txt
       - run: ruff check .
       - run: PYTHONPATH=. pytest -q
+  engine-only:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - run: pip install ruff pytest
+      - run: ruff check src/engine tests
+      - run: PYTHONPATH=. pytest -q -k "not editor_plugins"

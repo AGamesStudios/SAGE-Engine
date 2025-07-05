@@ -49,7 +49,7 @@ def test_focus_policy_logs(monkeypatch, caplog):
     import importlib.util
     import pathlib
     spec = importlib.util.spec_from_file_location(
-        'gw', pathlib.Path('src/engine/renderers/opengl/glwidget.py')
+        'gw', pathlib.Path('src/sage_editor/qt/glwidget.py')
     )
     gw = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(gw)  # type: ignore[arg-type]
