@@ -9,6 +9,9 @@ from PyQt6.QtWidgets import (
     QDockWidget,
     QMenu,
     QPlainTextEdit,
+    QMenuBar,
+    QToolBar,
+    QAction,
 )
 from PyQt6.QtCore import Qt
 
@@ -18,12 +21,30 @@ from engine.renderers.opengl.glwidget import GLWidget
 class EditorWindow(QMainWindow):
     """Main editor window with dockable widgets."""
 
-    def __init__(self) -> None:
+    def __init__(self, menus=None, toolbar=None) -> None:
         super().__init__()
         self.setWindowTitle("SAGE Editor")
 
         self.viewport = GLWidget(self)
         self.console = QPlainTextEdit(self)
+        self.properties = QPlainTextEdit(self)
+        self.resources = QListWidget()
+
+        menubar = QMenuBar(self)
+        self.setMenuBar(menubar)
+        if menus:
+            for title, cb in menus:
+                action = QAction(title, self)
+                action.triggered.connect(cb)
+                menubar.addAction(action)
+
+        tbar = QToolBar(self)
+        self.addToolBar(tbar)
+        if toolbar:
+            for title, cb in toolbar:
+                action = QAction(title, self)
+                action.triggered.connect(cb)
+                tbar.addAction(action)
 
         self.setCentralWidget(self.viewport)
 
@@ -33,10 +54,21 @@ class EditorWindow(QMainWindow):
         obj_dock.setWidget(self.objects)
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, obj_dock)
 
+        res_dock = QDockWidget("Resources", self)
+        res_dock.setObjectName("ResourcesDock")
+        res_dock.setWidget(self.resources)
+        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, res_dock)
+
         con_dock = QDockWidget("Console", self)
         con_dock.setObjectName("ConsoleDock")
         con_dock.setWidget(self.console)
         self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, con_dock)
+
+        prop_dock = QDockWidget("Properties", self)
+        prop_dock.setObjectName("PropertiesDock")
+        prop_dock.setWidget(self.properties)
+        self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, prop_dock)
+        self.splitDockWidget(con_dock, prop_dock, Qt.Orientation.Horizontal)
 
         self.objects.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.objects.customContextMenuRequested.connect(self._context_menu)
@@ -61,7 +93,7 @@ def init_editor(editor) -> None:
         app = QApplication([])
         created = True
 
-    window = EditorWindow()
+    window = EditorWindow(editor._menus, editor._toolbar)
     window.resize(800, 600)
     window.show()
 
