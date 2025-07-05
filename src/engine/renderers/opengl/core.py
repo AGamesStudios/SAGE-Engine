@@ -16,7 +16,7 @@ except Exception as exc:  # pragma: no cover - optional dependency
         "OpenGLRenderer requires PyOpenGL; install it with 'pip install PyOpenGL'"
     ) from exc
 from ..shader import Shader
-from PIL import Image  # type: ignore[import-not-found]
+from PIL import Image, ImageDraw  # type: ignore[import-not-found]
 
 from engine.core.camera import Camera
 from engine.entities.game_object import GameObject
@@ -196,7 +196,10 @@ class OpenGLRenderer(Renderer):
         )  # type: ignore[import-not-found]
         w = tilemap.width * tilemap.tile_width
         h = tilemap.height * tilemap.tile_height
-        data = bytearray(b"\x00" * (w * h * 4))
+        img = Image.new("RGBA", (w, h))
+        draw_img = ImageDraw.Draw(img)
+        tw = tilemap.tile_width
+        th = tilemap.tile_height
         colors = tilemap.metadata.get("colors", {})
         for y in range(tilemap.height):
             for x in range(tilemap.width):
@@ -204,11 +207,10 @@ class OpenGLRenderer(Renderer):
                 if idx == 0:
                     continue
                 rgba = drawing.parse_color(colors.get(str(idx), (200, 200, 200, 255)))
-                for py in range(tilemap.tile_height):
-                    for px in range(tilemap.tile_width):
-                        off = ((y * tilemap.tile_height + py) * w + (x * tilemap.tile_width + px)) * 4
-                        data[off:off+4] = bytes(rgba)
-        arr = (ctypes.c_ubyte * len(data)).from_buffer(data)
+                rect = [x * tw, y * th, x * tw + tw - 1, y * th + th - 1]
+                draw_img.rectangle(rect, fill=rgba)
+        arr_bytes = img.tobytes()
+        arr = (ctypes.c_ubyte * len(arr_bytes)).from_buffer_copy(arr_bytes)
         tex = glGenTextures(1)
         glBindTexture(GL_TEXTURE_2D, tex)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)

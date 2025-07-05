@@ -40,17 +40,23 @@ def _stub_gl(monkeypatch, calls):
     sys.modules['PyQt6.QtOpenGLWidgets'] = opengl_widgets
     pil = types.ModuleType('PIL')
     img_mod = types.ModuleType('PIL.Image')
+    draw_mod = types.ModuleType('PIL.ImageDraw')
     class DummyImg:
         def __init__(self, size=(2,2)):
             self.size = size
         def transpose(self, t):
             return self
+        def tobytes(self):
+            return b""
     img_mod.Image = DummyImg
     img_mod.Transpose = types.SimpleNamespace(FLIP_TOP_BOTTOM=0)
     img_mod.open = lambda p: DummyImg()
     img_mod.frombytes = lambda *a, **k: DummyImg()
+    img_mod.new = lambda *a, **k: DummyImg()
+    draw_mod.Draw = lambda img: types.SimpleNamespace(rectangle=lambda *a, **k: None)
     monkeypatch.setitem(sys.modules, 'PIL', pil)
     monkeypatch.setitem(sys.modules, 'PIL.Image', img_mod)
+    monkeypatch.setitem(sys.modules, 'PIL.ImageDraw', draw_mod)
 
 
 def test_tilemap_opengl(monkeypatch):
