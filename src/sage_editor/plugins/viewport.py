@@ -11,7 +11,6 @@ from PyQt6.QtWidgets import (
     QPlainTextEdit,
     QMenuBar,
     QToolBar,
-    QSplitter,
 )
 from PyQt6.QtGui import QAction
 from PyQt6.QtCore import Qt
@@ -31,10 +30,7 @@ class EditorWindow(QMainWindow):
         self.properties = QPlainTextEdit(self)
         self.resources = QListWidget()
 
-        self.splitter = QSplitter(Qt.Orientation.Vertical, self)
-        self.splitter.addWidget(self.viewport)
-        self.splitter.addWidget(self.console)
-        self.setCentralWidget(self.splitter)
+        self.setCentralWidget(self.viewport)
 
         menubar = QMenuBar(self)
         self.setMenuBar(menubar)
@@ -62,6 +58,12 @@ class EditorWindow(QMainWindow):
         res_dock.setObjectName("ResourcesDock")
         res_dock.setWidget(self.resources)
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, res_dock)
+
+        console_dock = QDockWidget("Console", self)
+        console_dock.setObjectName("ConsoleDock")
+        console_dock.setWidget(self.console)
+        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, console_dock)
+        self.splitDockWidget(res_dock, console_dock, Qt.Orientation.Horizontal)
 
         prop_dock = QDockWidget("Properties", self)
         prop_dock.setObjectName("PropertiesDock")
