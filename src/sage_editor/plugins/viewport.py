@@ -76,7 +76,6 @@ class EditorWindow(QMainWindow):
         prop_dock.setObjectName("PropertiesDock")
         prop_dock.setWidget(self.properties)
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, prop_dock)
-        self.splitDockWidget(obj_dock, prop_dock, Qt.Orientation.Vertical)
 
         res_dock = QDockWidget("Resources", self)
         res_dock.setObjectName("ResourcesDock")
@@ -93,10 +92,10 @@ class EditorWindow(QMainWindow):
         con_dock.setWidget(self.console)
         self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, con_dock)
 
-        self.splitDockWidget(viewport_dock, con_dock, Qt.Orientation.Vertical)
+        self.splitDockWidget(viewport_dock, res_dock, Qt.Orientation.Horizontal)
         self.splitDockWidget(viewport_dock, obj_dock, Qt.Orientation.Horizontal)
         self.splitDockWidget(obj_dock, prop_dock, Qt.Orientation.Vertical)
-        self.splitDockWidget(viewport_dock, res_dock, Qt.Orientation.Horizontal)
+        self.splitDockWidget(viewport_dock, con_dock, Qt.Orientation.Vertical)
 
         self.objects.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.objects.customContextMenuRequested.connect(self._context_menu)
