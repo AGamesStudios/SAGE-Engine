@@ -3,6 +3,10 @@
 from __future__ import annotations
 
 from typing import Callable, Any
+import sys
+
+from engine.core.engine import _exception_handler
+from engine.utils.log import init_logger
 
 from pathlib import Path
 
@@ -32,6 +36,8 @@ class Editor(EditorInterface):
 
 def main(argv: list[str] | None = None) -> int:
     """Entry point for the default editor implementation."""
+    init_logger()
+    sys.excepthook = _exception_handler
     editor = Editor()
     editor.load_plugins()
     if not getattr(editor, "window", None):
