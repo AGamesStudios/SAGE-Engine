@@ -605,6 +605,8 @@ class OpenGLRenderer(Renderer):
             except Exception:
                 logger.exception("Failed to delete GL textures")
             self.widget.close()
+            self.widget = None
+            self._program = None
 
     def reset(self) -> None:
         self.textures.clear()

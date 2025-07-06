@@ -320,7 +320,9 @@ class SDLRenderer(Renderer):
         if self.window:
             sdl2.SDL_DestroyWindow(self.window)
             self.window = None
-        sdl2.SDL_Quit()
+        was_init = getattr(sdl2, "SDL_WasInit", lambda flag: 1)(0)
+        if was_init != 0:
+            sdl2.SDL_Quit()
 
     def reset(self) -> None:  # pragma: no cover - trivial
         pass
