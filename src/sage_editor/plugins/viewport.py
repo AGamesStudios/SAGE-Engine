@@ -18,6 +18,11 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtGui import QAction
 from PyQt6.QtCore import Qt
 
+from engine.renderers.opengl.core import OpenGLRenderer
+from engine.core.scenes.scene import Scene
+from engine.core.camera import Camera
+from engine.entities.game_object import GameObject
+
 from sage_editor.qt import GLWidget
 
 
@@ -36,6 +41,17 @@ class EditorWindow(QMainWindow):
         self.console = QPlainTextEdit(self)
         self.properties = QPlainTextEdit(self)
         self.resources = QListWidget()
+
+        # minimal scene used for previewing objects
+        w = self.viewport.width() or 640
+        h = self.viewport.height() or 480
+        self.renderer = OpenGLRenderer(width=w, height=h, widget=self.viewport, vsync=False)
+        self.camera = Camera(width=w, height=h, active=True)
+        self.scene = Scene()
+        self.scene.add_object(self.camera)
+        self.renderer.show_grid = True
+        self.set_renderer(self.renderer)
+        self.draw_scene()
 
         splitter = QSplitter(Qt.Orientation.Vertical, self)
         splitter.addWidget(self.viewport)
@@ -98,6 +114,10 @@ class EditorWindow(QMainWindow):
         self.objects.clear()
         self.objects.addItems(list(names))
 
+    def draw_scene(self) -> None:
+        """Render the current scene to the viewport."""
+        self.renderer.draw_scene(self.scene, self.camera)
+
     def start_game(self):
         from engine.core.engine import Engine
         from engine.game_window import GameWindow
@@ -111,7 +131,10 @@ class EditorWindow(QMainWindow):
 
         def create_object() -> None:
             count = self.objects.count() + 1
-            self.objects.addItem(f"Object {count}")
+            obj = GameObject(name=f"Object {count}")
+            self.scene.add_object(obj)
+            self.objects.addItem(obj.name)
+            self.draw_scene()
 
         action.triggered.connect(create_object)
         menu.exec(self.objects.mapToGlobal(point))
