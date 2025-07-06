@@ -1,3 +1,5 @@
 # Viewport
 
-The viewport shows the contents of the current scene. Use the mouse and keyboard shortcuts to move the camera and edit objects directly in this view. The preview window relies on the OpenGL renderer, providing hardware accelerated rendering when possible.
+The viewport shows the current scene using the OpenGL renderer.  Drag with the
+left mouse button to pan the camera, use the mouse wheel to zoom and right click
+to open a menu for creating objects at the cursor position.

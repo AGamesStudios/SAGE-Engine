@@ -21,6 +21,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import QAction
 from PyQt6.QtCore import Qt
+from engine.utils import units
 
 from engine.renderers.opengl.core import OpenGLRenderer
 from engine.core.scenes.scene import Scene
@@ -29,6 +30,75 @@ from engine.entities.game_object import GameObject
 from engine import gizmos
 
 from sage_editor.qt import GLWidget
+
+
+class ViewportWidget(GLWidget):
+    """GL widget with basic panning and zoom controls."""
+
+    def __init__(self, window: "EditorWindow", *a, **k) -> None:
+        super().__init__(window, *a, **k)
+        self._window = window
+        self._last_pos = None
+        if hasattr(self, "setContextMenuPolicy"):
+            self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        if hasattr(self, "customContextMenuRequested"):
+            self.customContextMenuRequested.connect(self._context_menu)
+
+    def mousePressEvent(self, ev):  # pragma: no cover - gui interaction
+        if ev.button() == Qt.MouseButton.LeftButton:
+            self._last_pos = ev.position() if hasattr(ev, "position") else ev.pos()
+            try:
+                from PyQt6.QtGui import QCursor
+                self.setCursor(QCursor(Qt.CursorShape.ClosedHandCursor))
+            except Exception:
+                pass
+
+    def mouseMoveEvent(self, ev):  # pragma: no cover - gui interaction
+        if self._last_pos is not None and ev.buttons() & Qt.MouseButton.LeftButton:
+            pos = ev.position() if hasattr(ev, "position") else ev.pos()
+            dx = pos.x() - self._last_pos.x()
+            dy = pos.y() - self._last_pos.y()
+            cam = self._window.camera
+            scale = units.UNITS_PER_METER
+            sign = -1 if units.Y_UP else 1
+            cam.x -= dx / (scale * cam.zoom)
+            cam.y += dy * sign / (scale * cam.zoom)
+            self._window.draw_scene()
+            self._last_pos = pos
+
+    def mouseReleaseEvent(self, ev):  # pragma: no cover - gui interaction
+        if ev.button() == Qt.MouseButton.LeftButton:
+            self._last_pos = None
+            try:
+                self.unsetCursor()
+            except Exception:
+                pass
+
+    def wheelEvent(self, ev):  # pragma: no cover - gui interaction
+        delta = 0
+        if hasattr(ev, "angleDelta"):
+            delta = ev.angleDelta().y()
+        elif hasattr(ev, "delta"):
+            delta = ev.delta()
+        if delta:
+            factor = 1.1 ** (delta / 120)
+            cam = self._window.camera
+            cam.zoom *= factor
+            if cam.zoom <= 0:
+                cam.zoom = 0.1
+            self._window.draw_scene()
+
+    def _context_menu(self, point):  # pragma: no cover - gui interaction
+        menu = QMenu(self)
+        action = menu.addAction("Create Object")
+        wx, wy = self._window.screen_to_world(point)
+
+        def cb():
+            self._window.create_object(wx, wy)
+
+        action.triggered.connect(cb)
+        menu.exec(self.mapToGlobal(point))
+
 
 
 class EditorWindow(QMainWindow):
@@ -42,7 +112,7 @@ class EditorWindow(QMainWindow):
 
         self._engine = None
         self._game_window = None
-        self.viewport = GLWidget(self)
+        self.viewport = ViewportWidget(self)
         self.console = QPlainTextEdit(self)
         self.properties = QPlainTextEdit(self)
         self.resources = QListWidget()
@@ -112,11 +182,23 @@ class EditorWindow(QMainWindow):
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, res_dock)
 
         self.objects.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.objects.customContextMenuRequested.connect(self._context_menu)
+        self.objects.customContextMenuRequested.connect(self._list_context_menu)
         self.objects.currentItemChanged.connect(self._object_selected)
 
         self.selected_obj = None
         self.update_object_list()
+
+    # coordinate helpers -------------------------------------------------
+
+    def screen_to_world(self, point):
+        w = self.viewport.width() or 1
+        h = self.viewport.height() or 1
+        cam = self.camera
+        scale = units.UNITS_PER_METER
+        sign = -1 if units.Y_UP else 1
+        x = cam.x + (point.x() - w / 2) / (scale * cam.zoom)
+        y = cam.y + (point.y() - h / 2) * sign / (scale * cam.zoom)
+        return x, y
 
     def set_renderer(self, renderer):
         self.viewport.renderer = renderer
@@ -140,15 +222,17 @@ class EditorWindow(QMainWindow):
         self._game_window = GameWindow(self._engine)
         self._game_window.show()
 
-    def create_object(self) -> GameObject:
+    def create_object(self, x: float = 0.0, y: float = 0.0) -> GameObject:
         count = len([o for o in self.scene.objects if not isinstance(o, Camera)])
         obj = GameObject(name=f"Object {count}")
+        obj.transform.x = x
+        obj.transform.y = y
         self.scene.add_object(obj)
         self.update_object_list()
         self.draw_scene()
         return obj
 
-    def _context_menu(self, point):
+    def _list_context_menu(self, point):
         menu = QMenu(self.objects)
         action = menu.addAction("Create Object")
         action.triggered.connect(self.create_object)
