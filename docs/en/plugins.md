@@ -71,7 +71,8 @@ Additional search paths can be specified in `sage.toml`:
 [plugins]
 extra = ["~/editor_plugins"]
 ```
-Environment variables such as `SAGE_PLUGIN_DIR` or `SAGE_PLUGINS` are still
+Environment variables such as `SAGE_PLUGIN_DIR`, `SAGE_PLUGINS`,
+`SAGE_ENGINE_PLUGIN_DIR` and `SAGE_EDITOR_PLUGIN_DIR` are still
 supported but no longer required.
 A module
 can export an object named `plugin` deriving from `PluginBase` or define

@@ -6,7 +6,7 @@ from typing import Callable, Any
 import sys
 
 from engine.core.engine import _exception_handler
-from engine.utils.log import init_logger
+from engine.utils.log import init_logger, logger
 
 from pathlib import Path
 
@@ -41,12 +41,12 @@ def main(argv: list[str] | None = None) -> int:
     editor = Editor()
     editor.load_plugins()
     if not getattr(editor, "window", None):
-        print(
+        logger.error(
             "No editor window was created. "
             "Ensure PyQt6 is installed and plugins are enabled."
         )
         return 1
-    print("SAGE Editor started")
+    logger.info("SAGE Editor started")
     return 0
 
 

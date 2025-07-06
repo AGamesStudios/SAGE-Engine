@@ -31,7 +31,8 @@ extra = ["/opt/sage_plugins"]
 engine = ["~/engine_plugins"]
 editor = ["~/editor_plugins"]
 ```
-Environment variables such as `SAGE_PLUGIN_DIR` or `SAGE_PLUGINS` are still
+Environment variables such as `SAGE_PLUGIN_DIR`, `SAGE_PLUGINS`,
+`SAGE_ENGINE_PLUGIN_DIR` and `SAGE_EDITOR_PLUGIN_DIR` are still
 honoured for compatibility.
 Set `SAGE_GLWIDGET` to ``module:Class`` if a custom Qt OpenGL widget should be
 used by the renderer.

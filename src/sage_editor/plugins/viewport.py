@@ -230,11 +230,16 @@ class EditorWindow(QMainWindow):
     def close_game(self):
         """Close the running game window and shut down its engine."""
         if self._game_window is not None:
+            win = self._game_window
+            self._game_window = None
             try:
-                self._game_window.close()
+                win.closed.disconnect(self.close_game)
+            except Exception:
+                pass
+            try:
+                win.close()
             except Exception:
                 log.exception("Failed to close game window")
-            self._game_window = None
         if self._engine is not None:
             try:
                 self._engine.shutdown()
