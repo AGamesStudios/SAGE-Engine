@@ -26,6 +26,7 @@ from engine.renderers.opengl.core import OpenGLRenderer
 from engine.core.scenes.scene import Scene
 from engine.core.camera import Camera
 from engine.entities.game_object import GameObject
+from engine import gizmos
 
 from sage_editor.qt import GLWidget
 
@@ -112,6 +113,10 @@ class EditorWindow(QMainWindow):
 
         self.objects.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.objects.customContextMenuRequested.connect(self._context_menu)
+        self.objects.currentItemChanged.connect(self._object_selected)
+
+        self.selected_obj = None
+        self.update_object_list()
 
     def set_renderer(self, renderer):
         self.viewport.renderer = renderer
@@ -119,6 +124,10 @@ class EditorWindow(QMainWindow):
     def set_objects(self, names):
         self.objects.clear()
         self.objects.addItems(list(names))
+
+    def update_object_list(self):
+        names = [obj.name for obj in self.scene.objects]
+        self.set_objects(names)
 
     def draw_scene(self) -> None:
         """Render the current scene to the viewport."""
@@ -131,19 +140,32 @@ class EditorWindow(QMainWindow):
         self._game_window = GameWindow(self._engine)
         self._game_window.show()
 
+    def create_object(self) -> GameObject:
+        count = len([o for o in self.scene.objects if not isinstance(o, Camera)])
+        obj = GameObject(name=f"Object {count}")
+        self.scene.add_object(obj)
+        self.update_object_list()
+        self.draw_scene()
+        return obj
+
     def _context_menu(self, point):
         menu = QMenu(self.objects)
         action = menu.addAction("Create Object")
-
-        def create_object() -> None:
-            count = self.objects.count() + 1
-            obj = GameObject(name=f"Object {count}")
-            self.scene.add_object(obj)
-            self.objects.addItem(obj.name)
-            self.draw_scene()
-
-        action.triggered.connect(create_object)
+        action.triggered.connect(self.create_object)
         menu.exec(self.objects.mapToGlobal(point))
+
+    def _object_selected(self, current, _prev):
+        self.renderer.clear_gizmos()
+        if current is not None:
+            name = current.text()
+            obj = self.scene.find_object(name)
+            self.selected_obj = obj
+            if obj is not None:
+                g = gizmos.square_gizmo(obj.x, obj.y, size=20, color=(1, 0, 0, 1), frames=None)
+                self.renderer.add_gizmo(g)
+        else:
+            self.selected_obj = None
+        self.draw_scene()
 
 
 def init_editor(editor) -> None:
