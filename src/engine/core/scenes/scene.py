@@ -48,7 +48,7 @@ class Scene:
         if with_defaults:
             # default camera and sprite for new scenes
             try:
-                cam = Camera(0.0, 0.0, 640, 480, active=True)
+                cam = Camera(0.0, 0.0, 0.0, 640, 480, active=True)
                 self.add_object(cam)
                 obj = GameObject(image_path='', shape='square', name='Sprite')
                 obj.x = 0
