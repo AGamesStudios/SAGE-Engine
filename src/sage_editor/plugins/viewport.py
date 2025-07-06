@@ -6,6 +6,7 @@ objects are drawn with hardware acceleration by default.
 
 from __future__ import annotations
 
+import logging
 from PyQt6.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -31,6 +32,8 @@ from engine import gizmos
 
 from sage_editor.qt import GLWidget
 
+log = logging.getLogger(__name__)
+
 
 class ViewportWidget(GLWidget):
     """GL widget with basic panning and zoom controls."""
@@ -51,7 +54,7 @@ class ViewportWidget(GLWidget):
                 from PyQt6.QtGui import QCursor
                 self.setCursor(QCursor(Qt.CursorShape.ClosedHandCursor))
             except Exception:
-                pass
+                log.exception("Failed to set cursor")
 
     def mouseMoveEvent(self, ev):  # pragma: no cover - gui interaction
         if self._last_pos is not None and ev.buttons() & Qt.MouseButton.LeftButton:
@@ -72,7 +75,7 @@ class ViewportWidget(GLWidget):
             try:
                 self.unsetCursor()
             except Exception:
-                pass
+                log.exception("Failed to unset cursor")
 
     def wheelEvent(self, ev):  # pragma: no cover - gui interaction
         delta = 0
@@ -218,9 +221,28 @@ class EditorWindow(QMainWindow):
     def start_game(self):
         from engine.core.engine import Engine
         from engine.game_window import GameWindow
+        self.close_game()
         self._engine = Engine()
         self._game_window = GameWindow(self._engine)
+        self._game_window.closed.connect(self.close_game)
         self._game_window.show()
+
+    def close_game(self):
+        """Close the running game window and shut down its engine."""
+        if self._game_window is not None:
+            try:
+                self._game_window.close()
+            except Exception:
+                log.exception("Failed to close game window")
+            self._game_window = None
+        if self._engine is not None:
+            try:
+                self._engine.shutdown()
+                if hasattr(self._engine, "renderer"):
+                    self._engine.renderer.close()
+            except Exception:
+                log.exception("Failed to shut down engine")
+            self._engine = None
 
     def create_object(self, x: float = 0.0, y: float = 0.0) -> GameObject:
         count = len([o for o in self.scene.objects if not isinstance(o, Camera)])
@@ -261,6 +283,15 @@ class EditorWindow(QMainWindow):
         else:
             self.selected_obj = None
         self.draw_scene()
+
+    def closeEvent(self, event):  # pragma: no cover - gui cleanup
+        if self.renderer is not None:
+            try:
+                self.renderer.close()
+            except Exception:
+                log.exception("Renderer close failed")
+        self.close_game()
+        super().closeEvent(event)
 
 
 def init_editor(editor) -> None:

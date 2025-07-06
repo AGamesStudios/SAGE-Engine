@@ -17,3 +17,8 @@ Install the ``sage_editor`` package to try the reference editor and run it with
 ``python -m sage_editor`` or the ``sage-editor`` command. When running from the
 repository without installing first, prefix with ``PYTHONPATH=src`` so Python can
 find the package.
+
+``EditorWindow.start_game()`` creates a ``GameWindow`` and ``Engine`` to preview
+projects. Calling ``close_game()`` or closing the game window cleans up the
+engine. The editor's ``closeEvent`` shuts down any running game and closes the
+renderer so resources are freed.
