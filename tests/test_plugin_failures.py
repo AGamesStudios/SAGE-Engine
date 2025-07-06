@@ -92,3 +92,15 @@ def test_print_action_skips_none(caplog):
     caplog.clear()
     Print(None).execute(eng, scene, 0.0)
     assert caplog.text == ""
+
+
+def test_plugin_missing_dependency(tmp_path, caplog):
+    from engine.plugins import PluginManager
+
+    bad = tmp_path / "bad.py"
+    bad.write_text("import nonexistent\n")
+
+    caplog.set_level(logging.WARNING)
+    mgr = PluginManager("engine", plugin_dir=str(tmp_path))
+    mgr.load(object())
+    assert "missing dependency" in caplog.text.lower()

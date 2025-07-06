@@ -163,6 +163,10 @@ class PluginManager:
                         self._call_init(module, instance)
                     else:
                         logger.warning("Could not load plugin spec for %s", full)
+                except ModuleNotFoundError as exc:
+                    logger.warning(
+                        "Plugin %s requires missing dependency %s", mod_name, exc.name
+                    )
                 except Exception:
                     logger.exception(
                         "Failed to load plugin %s at %s", mod_name,

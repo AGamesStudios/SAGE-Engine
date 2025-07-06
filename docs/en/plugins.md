@@ -77,6 +77,8 @@ A module
 can export an object named `plugin` deriving from `PluginBase` or define
 `init_engine(engine)` and `init_editor(editor)` functions. These hooks may be
 coroutines and are awaited when loaded.
+Missing dependencies raise a warning so the plugin is skipped instead of
+crashing the engine.
 
 Plugins can also be installed via Python entry points. Call
 `engine.plugins.load_plugins('engine', engine_instance)` to initialise them
