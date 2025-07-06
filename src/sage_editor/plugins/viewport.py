@@ -45,7 +45,9 @@ class EditorWindow(QMainWindow):
         # minimal scene used for previewing objects
         w = self.viewport.width() or 640
         h = self.viewport.height() or 480
-        self.renderer = OpenGLRenderer(width=w, height=h, widget=self.viewport, vsync=False)
+        self.renderer = OpenGLRenderer(
+            width=w, height=h, widget=self.viewport, vsync=False, keep_aspect=False
+        )
         self.camera = Camera(width=w, height=h, active=True)
         self.scene = Scene()
         self.scene.add_object(self.camera)
