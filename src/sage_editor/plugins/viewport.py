@@ -125,7 +125,7 @@ class EditorWindow(QMainWindow):
         )
         self.camera = Camera(width=w, height=h, active=True)
         self.scene = Scene(with_defaults=False)
-        self.scene.add_object(self.camera)
+        # keep the viewport camera separate from scene objects
         self.renderer.show_grid = True
         self.set_renderer(self.renderer)
         self.draw_scene()
