@@ -11,6 +11,7 @@ from .glwidget import GLWidget
 from .textures import get_blank_texture, get_texture, unload_texture
 try:
     from OpenGL.GL import *  # type: ignore[import-not-found,F401,F403]
+    import OpenGL.GL as gl
 except Exception as exc:  # pragma: no cover - optional dependency
     raise ImportError(
         "OpenGLRenderer requires PyOpenGL; install it with 'pip install PyOpenGL'"
@@ -261,19 +262,17 @@ class OpenGLRenderer(Renderer):
     ) -> None:
         if self._program is None:
             return
+        import OpenGL.GL as GL  # local import for test stubbing
         shader = None
         handler = RENDER_HANDLERS.get(getattr(obj, "role", ""))
         if handler:
             handler(self, obj, camera)
             return
         if isinstance(obj, TileMap):
-            from OpenGL.GL import glUseProgram  # type: ignore[import-not-found]
-            glUseProgram(0)
+            GL.glUseProgram(0)
             self._draw_map(obj)
             return
-        from OpenGL.GL import (
-            glBindTexture
-        )  # type: ignore[import-not-found]
+        glBindTexture = GL.glBindTexture
         custom_shader = obj.get_shader() if hasattr(obj, "get_shader") else None
         if custom_shader:
             shader = custom_shader
@@ -289,7 +288,7 @@ class OpenGLRenderer(Renderer):
             program = shader.program
         else:
             program = self._program
-            glUseProgram(program)
+            GL.glUseProgram(program)
             loc_color = glGetUniformLocation(program, "color")
             rgba = self._parse_color(obj.color)
             scale = 1 / 255.0 if max(rgba) > 1.0 else 1.0
@@ -309,7 +308,7 @@ class OpenGLRenderer(Renderer):
             if shader:
                 Shader.stop()
             else:
-                glUseProgram(0)
+                GL.glUseProgram(0)
             self._draw_mesh(obj, camera, mesh)
             return
 
@@ -322,7 +321,7 @@ class OpenGLRenderer(Renderer):
             if shader:
                 Shader.stop()
             else:
-                glUseProgram(0)
+                GL.glUseProgram(0)
             self._draw_shape(obj, camera, shape)
             return
 
@@ -371,7 +370,7 @@ class OpenGLRenderer(Renderer):
         if shader:
             Shader.stop()
         else:
-            glUseProgram(0)
+            GL.glUseProgram(0)
 
     def _draw_outline(
         self,
