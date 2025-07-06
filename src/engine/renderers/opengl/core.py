@@ -132,9 +132,13 @@ class OpenGLRenderer(Renderer):
     def grab_image(self) -> Image.Image:
         """Return the current frame buffer as a :class:`PIL.Image.Image`."""
         from OpenGL.GL import glReadPixels, GL_RGBA, GL_UNSIGNED_BYTE  # type: ignore[import-not-found]
-        self.widget.makeCurrent()
-        data = glReadPixels(0, 0, self.width, self.height, GL_RGBA, GL_UNSIGNED_BYTE)
-        self.widget.doneCurrent()
+        ctx = self.widget.context()
+        if ctx and ctx.isValid():
+            self.widget.makeCurrent()
+            data = glReadPixels(0, 0, self.width, self.height, GL_RGBA, GL_UNSIGNED_BYTE)
+            self.widget.doneCurrent()
+        else:  # pragma: no cover - invalid context during shutdown
+            data = bytes(self.width * self.height * 4)
         img = Image.frombytes("RGBA", (self.width, self.height), data)
         return img.transpose(Image.Transpose.FLIP_TOP_BOTTOM)
 
@@ -599,9 +603,11 @@ class OpenGLRenderer(Renderer):
                     tex_ids.append(self._blank_nearest_texture)
                 if tex_ids:
                     arr = (ctypes.c_uint * len(tex_ids))(*tex_ids)
-                    self.widget.makeCurrent()
-                    glDeleteTextures(len(tex_ids), arr)
-                    self.widget.doneCurrent()
+                    ctx = self.widget.context()
+                    if ctx and ctx.isValid():
+                        self.widget.makeCurrent()
+                        glDeleteTextures(len(tex_ids), arr)
+                        self.widget.doneCurrent()
             except Exception:
                 logger.exception("Failed to delete GL textures")
             self.widget.close()
