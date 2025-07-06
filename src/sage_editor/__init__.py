@@ -34,6 +34,12 @@ def main(argv: list[str] | None = None) -> int:
     """Entry point for the default editor implementation."""
     editor = Editor()
     editor.load_plugins()
+    if not getattr(editor, "window", None):
+        print(
+            "No editor window was created. "
+            "Ensure PyQt6 is installed and plugins are enabled."
+        )
+        return 1
     print("SAGE Editor started")
     return 0
 
