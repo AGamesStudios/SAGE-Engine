@@ -1,4 +1,8 @@
-"""Qt editor window with dockable viewport, object list and console."""
+"""Qt editor window with dockable viewport, object list and console.
+
+The widget preview uses :class:`~engine.renderers.opengl.core.OpenGLRenderer` so
+objects are drawn with hardware acceleration by default.
+"""
 
 from __future__ import annotations
 
