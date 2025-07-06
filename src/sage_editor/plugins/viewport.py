@@ -62,7 +62,7 @@ class ViewportWidget(GLWidget):
             scale = units.UNITS_PER_METER
             sign = -1 if units.Y_UP else 1
             cam.x -= dx / (scale * cam.zoom)
-            cam.y += dy * sign / (scale * cam.zoom)
+            cam.y -= dy * sign / (scale * cam.zoom)
             self._window.draw_scene()
             self._last_pos = pos
 
@@ -124,7 +124,7 @@ class EditorWindow(QMainWindow):
             width=w, height=h, widget=self.viewport, vsync=False, keep_aspect=False
         )
         self.camera = Camera(width=w, height=h, active=True)
-        self.scene = Scene()
+        self.scene = Scene(with_defaults=False)
         self.scene.add_object(self.camera)
         self.renderer.show_grid = True
         self.set_renderer(self.renderer)
@@ -245,7 +245,18 @@ class EditorWindow(QMainWindow):
             obj = self.scene.find_object(name)
             self.selected_obj = obj
             if obj is not None:
-                g = gizmos.square_gizmo(obj.x, obj.y, size=20, color=(1, 0, 0, 1), frames=None)
+                if isinstance(obj, Camera):
+                    left, bottom, w, h = obj.view_rect()
+                    points = [
+                        (left, bottom),
+                        (left + w, bottom),
+                        (left + w, bottom + h),
+                        (left, bottom + h),
+                        (left, bottom),
+                    ]
+                    g = gizmos.polyline_gizmo(points, color=(1, 0, 0, 1), frames=None)
+                else:
+                    g = gizmos.square_gizmo(obj.x, obj.y, size=20, color=(1, 0, 0, 1), frames=None)
                 self.renderer.add_gizmo(g)
         else:
             self.selected_obj = None

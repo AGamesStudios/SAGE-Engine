@@ -196,6 +196,12 @@ def test_object_list_sync(monkeypatch):
     assert win.objects.count() == len(win.scene.objects)
     win.create_object()
     assert win.objects.count() == len(win.scene.objects)
+    item = win.objects.item(0)
+    win.objects.setCurrentItem(item)
+    assert len(win.renderer.gizmos) == 1
+    g0 = win.renderer.gizmos[0]
+    assert g0.shape == "polyline"
+    assert len(list(g0.vertices)) == 5
     item = win.objects.item(1)
     win.objects.setCurrentItem(item)
     assert len(win.renderer.gizmos) == 1
