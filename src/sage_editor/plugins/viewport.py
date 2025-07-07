@@ -53,8 +53,7 @@ class _ViewportMixin:
     DRAG_THRESHOLD = 5
 
     def __init__(self, window: "EditorWindow", *a, **k) -> None:
-        # parent widget initialisation is handled by subclasses
-        super().__init__()
+        """Initialise mixin state without touching QWidget internals."""
         self._window = window
         self._last_pos = None
         self._press_pos = None
@@ -147,7 +146,7 @@ class _ViewportMixin:
         menu.exec(cast(QWidget, self).mapToGlobal(point))
 
 
-class ViewportWidget(GLWidget, _ViewportMixin):
+class ViewportWidget(_ViewportMixin, GLWidget):
     """OpenGL viewport widget."""
 
     def __init__(self, window: "EditorWindow") -> None:
@@ -155,7 +154,7 @@ class ViewportWidget(GLWidget, _ViewportMixin):
         _ViewportMixin.__init__(self, window)
 
 
-class SDLViewportWidget(SDLWidget, _ViewportMixin):
+class SDLViewportWidget(_ViewportMixin, SDLWidget):
     """SDL viewport widget."""
 
     def __init__(self, window: "EditorWindow") -> None:
