@@ -57,6 +57,8 @@ def set_image_cache_limit(limit: int) -> None:
         ('smooth', None),
         ('color', None),
         ('alpha', None),
+        ('flip_x', None),
+        ('flip_y', None),
         ('visible', None),
         ('mesh', 'mesh'),
         ('metadata', 'metadata'),
@@ -81,6 +83,8 @@ class GameObject(Object):
     smooth: bool = True
     color: tuple[int, int, int, int] | None = None
     alpha: float = 1.0
+    flip_x: bool = False
+    flip_y: bool = False
     visible: bool = True
     metadata: dict = field(default_factory=dict)
     events: list = field(default_factory=list)

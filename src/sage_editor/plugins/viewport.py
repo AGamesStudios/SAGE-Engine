@@ -7,7 +7,6 @@ objects are drawn with hardware acceleration by default.
 from __future__ import annotations
 
 import logging
-import json
 from PyQt6.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -22,6 +21,14 @@ from PyQt6.QtWidgets import (
     QSplitter,
     QPushButton,
     QVBoxLayout,
+    QGroupBox,
+    QFormLayout,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QSlider,
+    QCheckBox,
+    QStyleFactory,
 )
 from PyQt6.QtGui import QAction
 from PyQt6.QtCore import Qt
@@ -32,6 +39,7 @@ from engine.core.scenes.scene import Scene
 from engine.core.camera import Camera
 from engine.entities.game_object import GameObject
 from engine import gizmos
+from engine.core.objects import get_object_type
 
 from sage_editor.qt import GLWidget
 
@@ -136,6 +144,133 @@ class ViewportWidget(GLWidget):
         menu.exec(self.mapToGlobal(point))
 
 
+class PropertiesWidget(QWidget):
+    """Widget for editing object properties."""
+
+    def __init__(self, parent=None) -> None:
+        super().__init__(parent)
+        layout = QVBoxLayout(self)
+
+        self.object_group = QGroupBox("Object", self)
+        obj_form = QFormLayout(self.object_group)
+        self.name_edit = QLineEdit(self)
+        obj_form.addRow("Name", self.name_edit)
+        self.type_edit = QLineEdit(self)
+        self.type_edit.setReadOnly(True)
+        obj_form.addRow("Type", self.type_edit)
+        self.tags_edit = QLineEdit(self)
+        obj_form.addRow("Tags", self.tags_edit)
+        self.visible_check = QCheckBox("Visible", self)
+        obj_form.addRow(self.visible_check)
+        layout.addWidget(self.object_group)
+
+        self.transform_group = QGroupBox("Transform", self)
+        trans_form = QFormLayout(self.transform_group)
+        pos_widget = QWidget(self)
+        pos_layout = QHBoxLayout(pos_widget)
+        self.pos_x = QLineEdit(self)
+        self.pos_y = QLineEdit(self)
+        pos_layout.addWidget(QLabel("X", self))
+        pos_layout.addWidget(self.pos_x)
+        pos_layout.addWidget(QLabel("Y", self))
+        pos_layout.addWidget(self.pos_y)
+        trans_form.addRow("Position", pos_widget)
+
+        self.rot_slider = QSlider(Qt.Orientation.Horizontal, self)
+        self.rot_slider.setRange(0, 360)
+        trans_form.addRow("Rotation", self.rot_slider)
+
+        scale_widget = QWidget(self)
+        scale_layout = QHBoxLayout(scale_widget)
+        self.scale_x = QLineEdit(self)
+        self.scale_y = QLineEdit(self)
+        self.link_scale = QCheckBox("Link", self)
+        scale_layout.addWidget(QLabel("X", self))
+        scale_layout.addWidget(self.scale_x)
+        scale_layout.addWidget(QLabel("Y", self))
+        scale_layout.addWidget(self.scale_y)
+        scale_layout.addWidget(self.link_scale)
+        trans_form.addRow("Scale", scale_widget)
+
+        flip_widget = QWidget(self)
+        flip_layout = QHBoxLayout(flip_widget)
+        self.flip_x = QCheckBox("X", self)
+        self.flip_y = QCheckBox("Y", self)
+        flip_layout.addWidget(self.flip_x)
+        flip_layout.addWidget(self.flip_y)
+        trans_form.addRow("Flip", flip_widget)
+
+        self.scale_x.editingFinished.connect(self._sync_scale_x)
+        self.scale_y.editingFinished.connect(self._sync_scale_y)
+
+        layout.addWidget(self.transform_group)
+
+        self.apply_btn = QPushButton("Apply", self)
+        layout.addWidget(self.apply_btn)
+        layout.addStretch()
+
+    def set_object(self, obj: GameObject | None) -> None:
+        if obj is None:
+            self.name_edit.setText("")
+            self.type_edit.setText("")
+            self.tags_edit.setText("")
+            self.visible_check.setChecked(False)
+            self.pos_x.setText("")
+            self.pos_y.setText("")
+            self.rot_slider.setValue(0)
+            self.scale_x.setText("")
+            self.scale_y.setText("")
+            self.flip_x.setChecked(False)
+            self.flip_y.setChecked(False)
+            return
+        self.name_edit.setText(obj.name or "")
+        typ = getattr(obj, "role", None) or getattr(obj, "type", None) or get_object_type(obj) or type(obj).__name__
+        self.type_edit.setText(str(typ))
+        tags = obj.metadata.get("tags", [])
+        if isinstance(tags, (list, set)):
+            tags = ",".join(tags)
+        self.tags_edit.setText(str(tags))
+        self.visible_check.setChecked(bool(getattr(obj, "visible", True)))
+        self.pos_x.setText(str(getattr(obj, "x", 0.0)))
+        self.pos_y.setText(str(getattr(obj, "y", 0.0)))
+        self.rot_slider.setValue(int(getattr(obj, "angle", 0.0) % 360))
+        self.scale_x.setText(str(getattr(obj, "scale_x", 1.0)))
+        self.scale_y.setText(str(getattr(obj, "scale_y", 1.0)))
+        self.flip_x.setChecked(bool(getattr(obj, "flip_x", False)))
+        self.flip_y.setChecked(bool(getattr(obj, "flip_y", False)))
+
+    def apply_to_object(self, obj: GameObject) -> None:
+        obj.name = self.name_edit.text()
+        tags = [t.strip() for t in self.tags_edit.text().split(',') if t.strip()]
+        if tags:
+            obj.metadata["tags"] = tags
+        obj.visible = self.visible_check.isChecked()
+        try:
+            obj.x = float(self.pos_x.text())
+            obj.y = float(self.pos_y.text())
+        except ValueError:
+            log.warning("Invalid position")
+        obj.angle = float(self.rot_slider.value())
+        try:
+            sx = float(self.scale_x.text())
+            sy = float(self.scale_y.text())
+            if self.link_scale.isChecked():
+                sy = sx
+            obj.scale_x = sx
+            obj.scale_y = sy
+        except ValueError:
+            log.warning("Invalid scale")
+        obj.flip_x = self.flip_x.isChecked()
+        obj.flip_y = self.flip_y.isChecked()
+
+    def _sync_scale_x(self):
+        if self.link_scale.isChecked():
+            self.scale_y.setText(self.scale_x.text())
+
+    def _sync_scale_y(self):
+        if self.link_scale.isChecked():
+            self.scale_x.setText(self.scale_y.text())
+
 
 class EditorWindow(QMainWindow):
     """Main editor window with dockable widgets."""
@@ -150,13 +285,8 @@ class EditorWindow(QMainWindow):
         self._game_window = None
         self.viewport = ViewportWidget(self)
         self.console = QPlainTextEdit(self)
-        self.properties = QPlainTextEdit(self)
-        self.prop_apply = QPushButton("Apply", self)
-        prop_wrap = QWidget(self)
-        prop_layout = QVBoxLayout(prop_wrap)
-        prop_layout.setContentsMargins(0, 0, 0, 0)
-        prop_layout.addWidget(self.properties)
-        prop_layout.addWidget(self.prop_apply)
+        self.properties = PropertiesWidget(self)
+        self.prop_apply = self.properties.apply_btn
         self.resources = QListWidget()
 
         # minimal scene used for previewing objects
@@ -215,7 +345,7 @@ class EditorWindow(QMainWindow):
 
         prop_dock = QDockWidget("Properties", self)
         prop_dock.setObjectName("PropertiesDock")
-        prop_dock.setWidget(prop_wrap)
+        prop_dock.setWidget(self.properties)
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, prop_dock)
         self.splitDockWidget(obj_dock, prop_dock, Qt.Orientation.Vertical)
 
@@ -268,51 +398,15 @@ class EditorWindow(QMainWindow):
                     break
 
     def update_properties(self):
-        if self.selected_obj is None:
-            self.properties.setPlainText("")
-            return
-        from engine.core.objects import object_to_dict
-        try:
-            data = object_to_dict(self.selected_obj) or {}
-            def _default(obj):
-                if isinstance(obj, set):
-                    return list(obj)
-                return str(obj)
-            self.properties.setPlainText(json.dumps(data, indent=2, default=_default))
-        except Exception:
-            log.exception("Failed to display properties")
+        self.properties.set_object(self.selected_obj)
 
     def apply_properties(self):
         if self.selected_obj is None:
             return
-        text = self.properties.toPlainText()
         try:
-            data = json.loads(text)
+            self.properties.apply_to_object(self.selected_obj)
         except Exception:
-            log.exception("Invalid property data")
-            return
-        for k, v in data.items():
-            if not hasattr(self.selected_obj, k):
-                continue
-            try:
-                cur = getattr(self.selected_obj, k)
-                if isinstance(cur, set) and isinstance(v, list):
-                    v = set(v)
-                if isinstance(cur, float) and isinstance(v, (int, float)):
-                    setattr(self.selected_obj, k, float(v))
-                elif isinstance(cur, int) and isinstance(v, int):
-                    setattr(self.selected_obj, k, v)
-                elif isinstance(v, type(cur)):
-                    setattr(self.selected_obj, k, v)
-                else:
-                    log.warning(
-                        "Type mismatch for %s: expected %s got %s",
-                        k,
-                        type(cur).__name__,
-                        type(v).__name__,
-                    )
-            except Exception:
-                log.exception("Failed to set %s", k)
+            log.exception("Failed to apply properties")
         self.draw_scene()
 
     def find_object_at(self, x: float, y: float) -> GameObject | None:
@@ -488,6 +582,8 @@ def init_editor(editor) -> None:
     if app is None:
         app = QApplication([])
         created = True
+    if hasattr(QApplication, "setStyle"):
+        QApplication.setStyle(QStyleFactory.create("Fusion"))
 
     window = EditorWindow(editor._menus, editor._toolbar)
     window.resize(800, 600)

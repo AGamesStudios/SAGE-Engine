@@ -62,6 +62,8 @@ def _setup_qt(monkeypatch):
             pass
         def addWidget(self, w):
             pass
+        def addStretch(self):
+            pass
 
     class QMainWindow(QWidget):
         def __init__(self, *a, **k):
@@ -96,6 +98,66 @@ def _setup_qt(monkeypatch):
         def toPlainText(self):
             return self._text
 
+    class QLineEdit(QWidget):
+        def __init__(self, *a, **k):
+            super().__init__(*a, **k)
+            self._text = ""
+            self._ro = False
+            self.editingFinished = DummySignal()
+        def setText(self, text):
+            self._text = text
+        def text(self):
+            return self._text
+        def setReadOnly(self, ro):
+            self._ro = ro
+
+    class QCheckBox(QWidget):
+        def __init__(self, *a, **k):
+            super().__init__(*a, **k)
+            self._checked = False
+        def setChecked(self, b):
+            self._checked = b
+        def isChecked(self):
+            return self._checked
+
+    class QSlider(QWidget):
+        def __init__(self, orientation=None, *a, **k):
+            super().__init__(*a, **k)
+            self._value = 0
+            self.orientation = orientation
+        def setRange(self, a, b):
+            self._min = a
+            self._max = b
+        def value(self):
+            return self._value
+        def setValue(self, v):
+            self._value = v
+
+    class QGroupBox(QWidget):
+        def __init__(self, *a, **k):
+            super().__init__(*a, **k)
+
+    class QFormLayout:
+        def __init__(self, *a, **k):
+            pass
+        def addRow(self, *a):
+            pass
+
+    class QHBoxLayout:
+        def __init__(self, *a, **k):
+            pass
+        def addWidget(self, w):
+            pass
+
+    class QLabel(QWidget):
+        def __init__(self, *a, **k):
+            super().__init__(*a, **k)
+
+    class QStyleFactory:
+        @staticmethod
+        def create(style):
+            return style
+
     class QMenuBar(QWidget):
         def addAction(self, a):
             pass
@@ -125,6 +187,9 @@ def _setup_qt(monkeypatch):
             return cls._inst
         def exec(self):
             pass
+        @staticmethod
+        def setStyle(style):
+            pass
 
     class QMenu(QWidget):
         def addAction(self, title):
@@ -147,6 +212,7 @@ def _setup_qt(monkeypatch):
             LeftDockWidgetArea = 1
         class Orientation:
             Vertical = 0
+            Horizontal = 1
         class FocusPolicy:
             StrongFocus = 1
 
@@ -157,6 +223,13 @@ def _setup_qt(monkeypatch):
     qtwidgets.QDockWidget = QDockWidget
     qtwidgets.QMenu = QMenu
     qtwidgets.QPlainTextEdit = QPlainTextEdit
+    qtwidgets.QLineEdit = QLineEdit
+    qtwidgets.QCheckBox = QCheckBox
+    qtwidgets.QSlider = QSlider
+    qtwidgets.QGroupBox = QGroupBox
+    qtwidgets.QFormLayout = QFormLayout
+    qtwidgets.QHBoxLayout = QHBoxLayout
+    qtwidgets.QLabel = QLabel
     qtwidgets.QMenuBar = QMenuBar
     qtwidgets.QToolBar = QToolBar
     qtwidgets.QWidget = QWidget
@@ -164,6 +237,7 @@ def _setup_qt(monkeypatch):
     qtwidgets.QVBoxLayout = QVBoxLayout
     qtwidgets.QSizePolicy = QSizePolicy
     qtwidgets.QSplitter = QSplitter
+    qtwidgets.QStyleFactory = QStyleFactory
 
     qtgui = types.ModuleType('PyQt6.QtGui')
     qtgui.QAction = QAction
@@ -273,9 +347,9 @@ def test_apply_properties_validation(monkeypatch):
     win = viewport.EditorWindow()
     obj = win.create_object()
     win.select_object(obj)
-    win.properties.setPlainText('{"z": "bad"}')
+    win.properties.pos_x.setText("bad")
     win.apply_properties()
-    assert isinstance(obj.z, float) and obj.z == 0.0
+    assert obj.x == 0.0
 
 
 def test_selection_persists(monkeypatch):
