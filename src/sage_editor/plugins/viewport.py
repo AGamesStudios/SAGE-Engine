@@ -53,7 +53,8 @@ class _ViewportMixin:
     DRAG_THRESHOLD = 5
 
     def __init__(self, window: "EditorWindow", *a, **k) -> None:
-        super().__init__(window, *a, **k)  # pyright: ignore[reportCallIssue]
+        # parent widget initialisation is handled by subclasses
+        super().__init__()
         self._window = window
         self._last_pos = None
         self._press_pos = None
@@ -149,11 +150,17 @@ class _ViewportMixin:
 class ViewportWidget(GLWidget, _ViewportMixin):
     """OpenGL viewport widget."""
 
+    def __init__(self, window: "EditorWindow") -> None:
+        GLWidget.__init__(self, window)
+        _ViewportMixin.__init__(self, window)
+
 
 class SDLViewportWidget(SDLWidget, _ViewportMixin):
     """SDL viewport widget."""
 
-    pass
+    def __init__(self, window: "EditorWindow") -> None:
+        SDLWidget.__init__(self, window)
+        _ViewportMixin.__init__(self, window)
 
     def mousePressEvent(self, ev):  # pragma: no cover - gui interaction
         if ev.button() == Qt.MouseButton.LeftButton:
