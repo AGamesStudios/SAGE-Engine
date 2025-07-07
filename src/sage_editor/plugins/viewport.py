@@ -224,16 +224,16 @@ class EditorWindow(QMainWindow):
             return
         if isinstance(obj, Camera):
             left, bottom, w, h = obj.view_rect()
-            points = [
-                (left, bottom),
-                (left + w, bottom),
-                (left + w, bottom + h),
-                (left, bottom + h),
-                (left, bottom),
-            ]
-            g = gizmos.polyline_gizmo(points, color=(1, 0, 0, 1), frames=None)
         else:
-            g = gizmos.square_gizmo(obj.x, obj.y, size=20, color=(1, 0, 0, 1), frames=None)
+            left, bottom, w, h = obj.rect()
+        points = [
+            (left, bottom),
+            (left + w, bottom),
+            (left + w, bottom + h),
+            (left, bottom + h),
+            (left, bottom),
+        ]
+        g = gizmos.polyline_gizmo(points, color=(1, 0, 0, 1), frames=None)
         if hasattr(self.renderer, "add_gizmo"):
             self.renderer.add_gizmo(g)
 
