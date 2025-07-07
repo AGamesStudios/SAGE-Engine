@@ -318,6 +318,7 @@ class EditorWindow(QMainWindow):
         return None
 
     def select_object(self, obj: GameObject | None) -> None:
+        self.selected_obj = obj
         if obj is None:
             self.objects.setCurrentItem(None)
         else:
@@ -326,6 +327,8 @@ class EditorWindow(QMainWindow):
                 if item.text() == obj.name:
                     self.objects.setCurrentItem(item)
                     break
+        self.update_properties()
+        self.draw_scene()
 
     def _update_selection_gizmo(self) -> None:
         """Refresh gizmo highlighting the currently selected object."""
