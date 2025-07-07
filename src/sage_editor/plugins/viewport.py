@@ -230,13 +230,19 @@ class PropertiesWidget(QWidget):
             self.rot_slider.setValue(0)
             self.scale_x.setText("")
             self.scale_y.setText("")
-        self.flip_x.setChecked(False)
-        self.flip_y.setChecked(False)
-        self.pivot_x.setText("")
-        self.pivot_y.setText("")
-        return
+            self.flip_x.setChecked(False)
+            self.flip_y.setChecked(False)
+            self.pivot_x.setText("")
+            self.pivot_y.setText("")
+            return
+
         self.name_edit.setText(obj.name or "")
-        typ = getattr(obj, "role", None) or getattr(obj, "type", None) or get_object_type(obj) or type(obj).__name__
+        typ = (
+            getattr(obj, "role", None)
+            or getattr(obj, "type", None)
+            or get_object_type(obj)
+            or type(obj).__name__
+        )
         self.type_edit.setText(str(typ))
         tags = obj.metadata.get("tags", [])
         if isinstance(tags, (list, set)):

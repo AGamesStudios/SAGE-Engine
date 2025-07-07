@@ -389,3 +389,25 @@ def test_selection_persists(monkeypatch):
 
     win.draw_scene()
     assert win.selected_obj is obj
+
+
+def test_properties_populated_on_select(monkeypatch):
+    _stub_gl(monkeypatch, {})
+    _setup_qt(monkeypatch)
+
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    viewport = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(viewport)
+
+    win = viewport.EditorWindow()
+    obj = win.create_object()
+    obj.x = 10
+    obj.y = -5
+    obj.pivot_x = 0.25
+    obj.pivot_y = 0.75
+    win.select_object(obj)
+
+    assert float(win.properties.pos_x.text()) == 10
+    assert float(win.properties.pos_y.text()) == -5
+    assert float(win.properties.pivot_x.text()) == 0.25
+    assert float(win.properties.pivot_y.text()) == 0.75
