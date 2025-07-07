@@ -7,7 +7,7 @@ objects are drawn with hardware acceleration by default.
 from __future__ import annotations
 
 import logging
-from PyQt6.QtWidgets import (
+from PyQt6.QtWidgets import (  # type: ignore[import-not-found]
     QApplication,
     QMainWindow,
     QListWidget,
@@ -16,7 +16,6 @@ from PyQt6.QtWidgets import (
     QPlainTextEdit,
     QMenuBar,
     QToolBar,
-    QWidget,
     QSizePolicy,
     QSplitter,
     QPushButton,
@@ -30,8 +29,10 @@ from PyQt6.QtWidgets import (
     QCheckBox,
     QStyleFactory,
 )
-from PyQt6.QtGui import QAction
-from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QAction  # type: ignore[import-not-found]
+from PyQt6.QtCore import Qt  # type: ignore[import-not-found]
+from typing import Optional, cast
+from PyQt6.QtWidgets import QWidget  # type: ignore[import-not-found]
 from engine.utils import units
 
 from engine.renderers.opengl.core import OpenGLRenderer
@@ -52,15 +53,15 @@ class _ViewportMixin:
     DRAG_THRESHOLD = 5
 
     def __init__(self, window: "EditorWindow", *a, **k) -> None:
-        super().__init__(window, *a, **k)
+        super().__init__(window, *a, **k)  # pyright: ignore[reportCallIssue]
         self._window = window
         self._last_pos = None
         self._press_pos = None
         self._dragging = False
         if hasattr(self, "setContextMenuPolicy"):
-            self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+            cast(QWidget, self).setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         if hasattr(self, "customContextMenuRequested"):
-            self.customContextMenuRequested.connect(self._context_menu)
+            cast(QWidget, self).customContextMenuRequested.connect(self._context_menu)
 
     # event handlers are same as before
     def mousePressEvent(self, ev):  # pragma: no cover - gui interaction
@@ -69,8 +70,8 @@ class _ViewportMixin:
             self._press_pos = self._last_pos
             self._dragging = False
             try:
-                from PyQt6.QtGui import QCursor
-                self.setCursor(QCursor(Qt.CursorShape.ClosedHandCursor))
+                from PyQt6.QtGui import QCursor  # type: ignore[import-not-found]
+                cast(QWidget, self).setCursor(QCursor(Qt.CursorShape.ClosedHandCursor))
             except Exception:
                 log.exception("Failed to set cursor")
 
@@ -105,7 +106,7 @@ class _ViewportMixin:
             self._dragging = False
             self._last_pos = None
             try:
-                self.unsetCursor()
+                cast(QWidget, self).unsetCursor()
             except Exception:
                 log.exception("Failed to unset cursor")
 
@@ -142,7 +143,7 @@ class _ViewportMixin:
                 self._window.create_object(wx, wy)
 
             action.triggered.connect(cb)
-        menu.exec(self.mapToGlobal(point))
+        menu.exec(cast(QWidget, self).mapToGlobal(point))
 
 
 class ViewportWidget(GLWidget, _ViewportMixin):
@@ -160,8 +161,8 @@ class SDLViewportWidget(SDLWidget, _ViewportMixin):
             self._press_pos = self._last_pos
             self._dragging = False
             try:
-                from PyQt6.QtGui import QCursor
-                self.setCursor(QCursor(Qt.CursorShape.ClosedHandCursor))
+                from PyQt6.QtGui import QCursor  # type: ignore[import-not-found]
+                cast(QWidget, self).setCursor(QCursor(Qt.CursorShape.ClosedHandCursor))
             except Exception:
                 log.exception("Failed to set cursor")
 
@@ -196,7 +197,7 @@ class SDLViewportWidget(SDLWidget, _ViewportMixin):
             self._dragging = False
             self._last_pos = None
             try:
-                self.unsetCursor()
+                cast(QWidget, self).unsetCursor()
             except Exception:
                 log.exception("Failed to unset cursor")
 
@@ -233,7 +234,7 @@ class SDLViewportWidget(SDLWidget, _ViewportMixin):
                 self._window.create_object(wx, wy)
 
             action.triggered.connect(cb)
-        menu.exec(self.mapToGlobal(point))
+        menu.exec(cast(QWidget, self).mapToGlobal(point))
 
 
 class PropertiesWidget(QWidget):
@@ -311,7 +312,7 @@ class PropertiesWidget(QWidget):
         layout.addWidget(self.apply_btn)
         layout.addStretch()
 
-    def set_object(self, obj: GameObject | None) -> None:
+    def set_object(self, obj: Optional[GameObject]) -> None:
         if obj is None:
             self.name_edit.setText("")
             self.type_edit.setText("")
@@ -435,7 +436,7 @@ class EditorWindow(QMainWindow):
         # keep the viewport camera separate from scene objects
         self.renderer.show_grid = True
         self.set_renderer(self.renderer)
-        self.selected_obj: GameObject | None = None
+        self.selected_obj: Optional[GameObject] = None
         self._clipboard: dict | None = None
 
         splitter = QSplitter(Qt.Orientation.Vertical, self)
@@ -583,7 +584,7 @@ class EditorWindow(QMainWindow):
             log.exception("Failed to apply properties")
         self.draw_scene()
 
-    def find_object_at(self, x: float, y: float) -> GameObject | None:
+    def find_object_at(self, x: float, y: float) -> Optional[GameObject]:
         for obj in reversed(self.scene.objects):
             if isinstance(obj, Camera):
                 continue
@@ -592,7 +593,7 @@ class EditorWindow(QMainWindow):
                 return obj
         return None
 
-    def select_object(self, obj: GameObject | None) -> None:
+    def select_object(self, obj: Optional[GameObject]) -> None:
         self.selected_obj = obj
         if obj is None:
             self.objects.setCurrentItem(None)
@@ -702,12 +703,12 @@ class EditorWindow(QMainWindow):
         from engine.core.objects import object_to_dict
         self._clipboard = object_to_dict(self.selected_obj)
 
-    def paste_object(self) -> GameObject | None:
+    def paste_object(self) -> Optional[GameObject]:
         if not self._clipboard:
             return None
         from engine.core.objects import object_from_dict
         try:
-            obj = object_from_dict(dict(self._clipboard))
+            obj = cast(GameObject, object_from_dict(dict(self._clipboard)))
         except Exception:
             log.exception("Failed to paste object")
             return None

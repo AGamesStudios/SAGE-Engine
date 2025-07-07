@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 
 from PyQt6.QtWidgets import QWidget  # type: ignore[import-not-found]
-from PyQt6.QtCore import QEvent
+from PyQt6.QtCore import QEvent  # type: ignore[import-not-found]
 
 from engine.renderers.sdl_widget import register_sdlwidget
 
@@ -16,8 +16,19 @@ class SDLWidget(QWidget):
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.renderer = None
-        self._w = 640
-        self._h = 480
+        if hasattr(self, "size"):
+            sz = self.size()
+            self._w = sz.width()
+            self._h = sz.height()
+        else:  # pragma: no cover - minimal stub during tests
+            self._w = 640
+            self._h = 480
+
+    def resizeEvent(self, event) -> None:  # pragma: no cover - gui interaction
+        size = event.size()
+        self._w = size.width()
+        self._h = size.height()
+        super().resizeEvent(event)
 
     def event(self, ev: QEvent):  # pragma: no cover - gui interaction
         if ev.type() == QEvent.Type.Paint and self.renderer:

@@ -84,3 +84,9 @@ crashing the engine.
 Plugins can also be installed via Python entry points. Call
 `engine.plugins.load_plugins('engine', engine_instance)` to initialise them
 manually if needed.
+
+### Plugin Execution
+
+Initialization functions may be synchronous or return a coroutine. If an
+`asyncio` event loop is already running, coroutines are scheduled with
+`asyncio.create_task`. Otherwise a new loop is started via `asyncio.run`.
