@@ -89,8 +89,8 @@ def draw_outline(renderer, obj: GameObject, camera: Camera | None,
     glLineWidth(width)
     glBegin(GL_LINE_LOOP)
     for cx, cy in corners:
-        vx = (cx - px) * sx + px
-        vy = (cy - py) * sy + py
+        vx = cx * sx
+        vy = cy * sy
         rx = vx * cos_a - vy * sin_a
         ry = vx * sin_a + vy * cos_a
         world_x = (rx + obj_x) * unit_scale

@@ -346,8 +346,8 @@ class OpenGLRenderer(Renderer):
         data = []
         obj_x, obj_y = obj.render_position(camera)
         for cx, cy in corners:
-            vx = (cx - px) * sx + px
-            vy = (cy - py) * sy + py
+            vx = cx * sx
+            vy = cy * sy
             rx = vx * cos_a - vy * sin_a
             ry = vx * sin_a + vy * cos_a
             world_x = (rx + obj_x) * unit_scale
