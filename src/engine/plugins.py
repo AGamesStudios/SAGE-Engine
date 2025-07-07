@@ -38,15 +38,34 @@ def _default_config_file(plugin_dir: str | None = None) -> str:
 
 logger = logging.getLogger('sage.plugins')
 
+# tasks started via ``_run_sync_or_async`` to be awaited on shutdown
+_PENDING: set[asyncio.Task] = set()
+
+
+async def wait_plugin_tasks() -> None:
+    """Wait for all pending plugin tasks to finish."""
+    if _PENDING:
+        tasks = list(_PENDING)
+        _PENDING.clear()
+        await asyncio.gather(*tasks, return_exceptions=True)
+
+
+def cancel_plugin_tasks() -> None:
+    """Cancel all pending plugin tasks."""
+    for task in list(_PENDING):
+        task.cancel()
+
 
 def _log_async_result(task: asyncio.Task) -> None:
     """Log exceptions raised by async plugin tasks."""
     try:
         exc = task.exception()
     except asyncio.CancelledError:
+        _PENDING.discard(task)
         return
     if exc is not None:
         logger.error("Async plugin task failed", exc_info=exc)
+    _PENDING.discard(task)
 
 
 def _run_sync_or_async(func: Callable[..., Coroutine | Any], *args: Any) -> None:
@@ -59,6 +78,7 @@ def _run_sync_or_async(func: Callable[..., Coroutine | Any], *args: Any) -> None
             asyncio.run(res)
         else:
             task = loop.create_task(res)
+            _PENDING.add(task)
             task.add_done_callback(_log_async_result)
 
 

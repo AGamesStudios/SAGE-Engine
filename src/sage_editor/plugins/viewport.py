@@ -544,6 +544,8 @@ class EditorWindow(QMainWindow):
                 self.renderer.close()
             except Exception:
                 log.exception("Renderer close failed")
+        old_view = self.viewport
+        old_splitter = self._splitter
         w = self.viewport.width() or 640
         h = self.viewport.height() or 480
         if (backend == "sdl" and not isinstance(self.viewport, SDLViewportWidget)) or (
@@ -558,6 +560,10 @@ class EditorWindow(QMainWindow):
             self._splitter = splitter
             self.setCentralWidget(splitter)
             self.viewport = new_view
+            if old_view is not None and hasattr(old_view, "deleteLater"):
+                old_view.deleteLater()
+            if old_splitter is not None and hasattr(old_splitter, "deleteLater"):
+                old_splitter.deleteLater()
         self.renderer = rcls(width=w, height=h, widget=self.viewport, vsync=False, keep_aspect=False)
         self.renderer_backend = backend if rcls is not OpenGLRenderer else "opengl"
         self.set_renderer(self.renderer)

@@ -5,6 +5,7 @@ import time
 import os
 import inspect
 import asyncio
+from typing import cast, Any
 from .scenes import Scene, SceneManager
 from .extensions import EngineExtension
 from .project import Project
@@ -42,7 +43,7 @@ class Engine:
                  title="SAGE 2D", renderer: Renderer | str | None = None,
                  camera: Camera | None = None, keep_aspect: bool = True,
                  background: tuple[int, int, int] = (0, 0, 0),
-                 input_backend: str | type | InputBackend = "sdl",
+                 input_backend: str | type[InputBackend] | InputBackend = "sdl",
                  max_delta: float = 0.1,
                  async_events: bool = False,
                  asyncio_events: bool = False,
@@ -96,7 +97,7 @@ class Engine:
             self.metadata.update(metadata)
         self.scene_manager = SceneManager()
         self.scene_manager.add_scene("main", scene or Scene())
-        self.scene = self.scene_manager.get_active_scene()
+        self.scene = cast(Scene, self.scene_manager.get_active_scene())
         if camera is None:
             camera = self.scene.ensure_active_camera(width, height)
         else:
@@ -125,38 +126,38 @@ class Engine:
                 cls = get_renderer("sdl") or get_renderer("null")
             params = inspect.signature(cls.__init__).parameters
             if "vsync" in params:
-                self.renderer = cls(width, height, title, vsync=vsync)
+                self.renderer = cls(width, height, title, vsync=vsync)  # pyright: ignore[reportOptionalCall]
             else:
-                self.renderer = cls(width, height, title)
+                self.renderer = cls(width, height, title)  # pyright: ignore[reportOptionalCall]
         elif isinstance(renderer, str):
             cls = get_renderer(renderer)
             if cls is None:
                 raise ValueError(f"Unknown renderer: {renderer}")
             params = inspect.signature(cls.__init__).parameters
             if "vsync" in params:
-                self.renderer = cls(width, height, title, vsync=vsync)
+                self.renderer = cls(width, height, title, vsync=vsync)  # pyright: ignore[reportOptionalCall]
             else:
-                self.renderer = cls(width, height, title)
+                self.renderer = cls(width, height, title)  # pyright: ignore[reportOptionalCall]
         elif isinstance(renderer, type):
             params = inspect.signature(renderer.__init__).parameters
             if "vsync" in params:
-                self.renderer = renderer(width, height, title, vsync=vsync)
+                self.renderer = renderer(width, height, title, vsync=vsync)  # pyright: ignore[reportOptionalCall]
             else:
-                self.renderer = renderer(width, height, title)
+                self.renderer = renderer(width, height, title)  # pyright: ignore[reportOptionalCall]
         else:
             self.renderer = renderer
         if vsync is not None and hasattr(self.renderer, "vsync"):
             try:
-                self.renderer.vsync = vsync
+                cast(Any, self.renderer).vsync = vsync
             except Exception:
                 logger.exception("Failed to set vsync")
-        self.renderer.keep_aspect = keep_aspect
-        self.renderer.background = tuple(background)
+        cast(Any, self.renderer).keep_aspect = keep_aspect
+        cast(Any, self.renderer).background = tuple(background)
         # hide editor-only gizmos in the game window
         if hasattr(self.renderer, 'show_axes'):
-            self.renderer.show_axes = False
+            cast(Any, self.renderer).show_axes = False
         if hasattr(self.renderer, 'show_grid'):
-            self.renderer.show_grid = False
+            cast(Any, self.renderer).show_grid = False
         self.bg_color = tuple(background)
         # create the input backend using the registry. Backends may optionally
         # accept the renderer widget as their first argument
@@ -170,7 +171,7 @@ class Engine:
             else:
                 cls = input_backend
             try:
-                self.input = cls(self.renderer.widget)
+                self.input = cls(cast(Any, self.renderer).widget)
             except TypeError:
                 self.input = cls()
         self.last_time = time.perf_counter()
@@ -185,7 +186,7 @@ class Engine:
             raise
         try:
             from .. import load_engine_libraries
-            load_engine_libraries(self)
+            load_engine_libraries(self)  # pyright: ignore[reportCallIssue]
         except Exception:
             logger.exception("Failed to load engine libraries")
             raise
@@ -246,7 +247,7 @@ class Engine:
             height=getattr(self.renderer, "height", 480),
             title=getattr(self.renderer, "title", "SAGE 2D"),
             fps=self.fps,
-            renderer=type(self.renderer),
+            renderer=cast(Renderer | str | None, type(self.renderer)),
             camera=self.camera,
             scene=self.scene,
             events=self.events,
@@ -317,6 +318,20 @@ class Engine:
             clear_image_cache()
         except Exception:
             logger.exception("Failed to clear image cache")
+        try:
+            from ..plugins import wait_plugin_tasks, cancel_plugin_tasks
+            if self.asyncio_events and hasattr(self, "_loop") and not self._loop.is_closed():
+                self._loop.run_until_complete(wait_plugin_tasks())
+            else:
+                try:
+                    loop = asyncio.get_running_loop()
+                except RuntimeError:
+                    asyncio.run(wait_plugin_tasks())
+                else:
+                    loop.run_until_complete(wait_plugin_tasks())
+        except Exception:
+            logger.exception("Failed to wait for plugin tasks")
+            cancel_plugin_tasks()
         if (
             self.asyncio_events
             and hasattr(self, "_loop")
