@@ -285,14 +285,27 @@ class EditorWindow(QMainWindow):
             log.exception("Invalid property data")
             return
         for k, v in data.items():
-            if hasattr(self.selected_obj, k):
-                try:
-                    cur = getattr(self.selected_obj, k)
-                    if isinstance(cur, set) and isinstance(v, list):
-                        v = set(v)
+            if not hasattr(self.selected_obj, k):
+                continue
+            try:
+                cur = getattr(self.selected_obj, k)
+                if isinstance(cur, set) and isinstance(v, list):
+                    v = set(v)
+                if isinstance(cur, float) and isinstance(v, (int, float)):
+                    setattr(self.selected_obj, k, float(v))
+                elif isinstance(cur, int) and isinstance(v, int):
                     setattr(self.selected_obj, k, v)
-                except Exception:
-                    log.exception("Failed to set %s", k)
+                elif isinstance(v, type(cur)):
+                    setattr(self.selected_obj, k, v)
+                else:
+                    log.warning(
+                        "Type mismatch for %s: expected %s got %s",
+                        k,
+                        type(cur).__name__,
+                        type(v).__name__,
+                    )
+            except Exception:
+                log.exception("Failed to set %s", k)
         self.draw_scene()
 
     def find_object_at(self, x: float, y: float) -> GameObject | None:

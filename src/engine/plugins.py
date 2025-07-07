@@ -91,6 +91,7 @@ class PluginManager:
         self.entry_point_group = (
             entry_point_group or f"sage_{target}.plugins")
         self._funcs: list[Callable[[Any], Any]] = []
+        self.loaded_modules: list[str] = []
 
     def register(self, func: Callable[[Any], Any]) -> None:
         """Register a plugin initialization function."""
@@ -102,6 +103,7 @@ class PluginManager:
 
     def load(self, instance, paths: list[str] | None = None) -> None:
         """Load plugins and initialize them with ``instance``."""
+        importlib.invalidate_caches()
         dirs: list[str] = []
         cfg_paths = cfg_get('plugins.extra', [])
         if cfg_paths:
@@ -160,6 +162,7 @@ class PluginManager:
                         module = importlib.util.module_from_spec(spec)
                         spec.loader.exec_module(module)
                         sys.modules[unique] = module
+                        self.loaded_modules.append(unique)
                         self._call_init(module, instance)
                     else:
                         logger.warning("Could not load plugin spec for %s", full)
@@ -199,6 +202,12 @@ class PluginManager:
         except Exception:
             logger.exception(
                 "Error loading entry points for %s", self.entry_point_group)
+
+    def unload_all(self) -> None:
+        """Unload all previously loaded modules."""
+        for name in self.loaded_modules:
+            sys.modules.pop(name, None)
+        self.loaded_modules.clear()
 
 
 

@@ -1,3 +1,5 @@
+import ast
+
 from ..base import Condition, register_condition
 from ...utils.log import logger
 
@@ -16,7 +18,14 @@ class EvalExpr(Condition):
         else:
             env.update(variables)
         try:
-            return bool(eval(self.expr, {'__builtins__': {}}, env))
+            tree = ast.parse(self.expr, mode='eval')
+            for node in ast.walk(tree):
+                if isinstance(node, (ast.Call, ast.Import, ast.ImportFrom, ast.Lambda, ast.FunctionDef, ast.AsyncFunctionDef)):
+                    raise ValueError('unsafe expression')
+                if isinstance(node, ast.Attribute) and node.attr.startswith('_'):
+                    raise ValueError('unsafe attribute')
+            code = compile(tree, '<EvalExpr>', 'eval')
+            return bool(eval(code, {'__builtins__': {}}, env))
         except Exception:
             logger.exception('EvalExpr error')
             return False

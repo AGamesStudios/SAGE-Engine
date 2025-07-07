@@ -13,3 +13,15 @@ def test_evalexpr_variable_injection_blocked():
     engine = types.SimpleNamespace(events=types.SimpleNamespace(variables=vars))
     cond = EvalExpr('__import__("os")')
     assert cond.check(engine, None, 0) is False
+
+
+def test_evalexpr_rejects_attribute_access():
+    engine = types.SimpleNamespace(events=types.SimpleNamespace(variables={}))
+    cond = EvalExpr('engine.__class__')
+    assert cond.check(engine, None, 0) is False
+
+
+def test_evalexpr_rejects_function_call():
+    engine = types.SimpleNamespace(events=types.SimpleNamespace(variables={}))
+    cond = EvalExpr('open("file")')
+    assert cond.check(engine, None, 0) is False

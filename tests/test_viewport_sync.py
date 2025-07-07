@@ -86,7 +86,15 @@ def _setup_qt(monkeypatch):
             pass
 
     class QPlainTextEdit(QWidget):
-        pass
+        def __init__(self, *a, **k):
+            super().__init__(*a, **k)
+            self._text = ""
+
+        def setPlainText(self, text):
+            self._text = text
+
+        def toPlainText(self):
+            return self._text
 
     class QMenuBar(QWidget):
         def addAction(self, a):
@@ -252,3 +260,19 @@ def test_viewport_click_and_context_menu(monkeypatch):
     pasted = win.paste_object()
     assert pasted is not None
     assert win.scene.find_object(pasted.name) is pasted
+
+
+def test_apply_properties_validation(monkeypatch):
+    _stub_gl(monkeypatch, {})
+    _setup_qt(monkeypatch)
+
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    viewport = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(viewport)
+
+    win = viewport.EditorWindow()
+    obj = win.create_object()
+    win.select_object(obj)
+    win.properties.setPlainText('{"z": "bad"}')
+    win.apply_properties()
+    assert isinstance(obj.z, float) and obj.z == 0.0
