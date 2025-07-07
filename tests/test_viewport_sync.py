@@ -301,14 +301,16 @@ def test_object_list_sync(monkeypatch):
 
     item = win.objects.item(0)
     win.objects.setCurrentItem(item)
-    assert len(win.renderer.gizmos) == 1
+    assert len(win.renderer.gizmos) == 2
     g0 = win.renderer.gizmos[0]
+    pivot = win.renderer.gizmos[1]
     assert g0.shape == "polyline"
     assert len(list(g0.vertices)) == 5
+    assert pivot.shape == "circle"
 
     item = win.objects.item(1)
     win.objects.setCurrentItem(item)
-    assert len(win.renderer.gizmos) == 1
+    assert len(win.renderer.gizmos) == 2
     g1 = win.renderer.gizmos[0]
     assert g1 is not g0
 
@@ -348,8 +350,28 @@ def test_apply_properties_validation(monkeypatch):
     obj = win.create_object()
     win.select_object(obj)
     win.properties.pos_x.setText("bad")
+    win.properties.pivot_x.setText("bad")
     win.apply_properties()
     assert obj.x == 0.0
+    assert obj.pivot_x == 0.5
+
+
+def test_pivot_edit(monkeypatch):
+    _stub_gl(monkeypatch, {})
+    _setup_qt(monkeypatch)
+
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    viewport = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(viewport)
+
+    win = viewport.EditorWindow()
+    obj = win.create_object()
+    win.select_object(obj)
+    win.properties.pivot_x.setText("0.25")
+    win.properties.pivot_y.setText("0.75")
+    win.apply_properties()
+    assert obj.pivot_x == 0.25
+    assert obj.pivot_y == 0.75
 
 
 def test_selection_persists(monkeypatch):

@@ -192,6 +192,16 @@ class PropertiesWidget(QWidget):
         scale_layout.addWidget(self.link_scale)
         trans_form.addRow("Scale", scale_widget)
 
+        pivot_widget = QWidget(self)
+        pivot_layout = QHBoxLayout(pivot_widget)
+        self.pivot_x = QLineEdit(self)
+        self.pivot_y = QLineEdit(self)
+        pivot_layout.addWidget(QLabel("X", self))
+        pivot_layout.addWidget(self.pivot_x)
+        pivot_layout.addWidget(QLabel("Y", self))
+        pivot_layout.addWidget(self.pivot_y)
+        trans_form.addRow("Pivot", pivot_widget)
+
         flip_widget = QWidget(self)
         flip_layout = QHBoxLayout(flip_widget)
         self.flip_x = QCheckBox("X", self)
@@ -220,9 +230,11 @@ class PropertiesWidget(QWidget):
             self.rot_slider.setValue(0)
             self.scale_x.setText("")
             self.scale_y.setText("")
-            self.flip_x.setChecked(False)
-            self.flip_y.setChecked(False)
-            return
+        self.flip_x.setChecked(False)
+        self.flip_y.setChecked(False)
+        self.pivot_x.setText("")
+        self.pivot_y.setText("")
+        return
         self.name_edit.setText(obj.name or "")
         typ = getattr(obj, "role", None) or getattr(obj, "type", None) or get_object_type(obj) or type(obj).__name__
         self.type_edit.setText(str(typ))
@@ -238,6 +250,8 @@ class PropertiesWidget(QWidget):
         self.scale_y.setText(str(getattr(obj, "scale_y", 1.0)))
         self.flip_x.setChecked(bool(getattr(obj, "flip_x", False)))
         self.flip_y.setChecked(bool(getattr(obj, "flip_y", False)))
+        self.pivot_x.setText(str(getattr(obj, "pivot_x", 0.0)))
+        self.pivot_y.setText(str(getattr(obj, "pivot_y", 0.0)))
 
     def apply_to_object(self, obj: GameObject) -> None:
         obj.name = self.name_edit.text()
@@ -262,6 +276,11 @@ class PropertiesWidget(QWidget):
             log.warning("Invalid scale")
         obj.flip_x = self.flip_x.isChecked()
         obj.flip_y = self.flip_y.isChecked()
+        try:
+            obj.pivot_x = float(self.pivot_x.text())
+            obj.pivot_y = float(self.pivot_y.text())
+        except ValueError:
+            log.warning("Invalid pivot")
 
     def _sync_scale_x(self):
         if self.link_scale.isChecked():
@@ -452,6 +471,16 @@ class EditorWindow(QMainWindow):
         g = gizmos.polyline_gizmo(points, color=(1, 0, 0, 1), frames=None)
         if hasattr(self.renderer, "add_gizmo"):
             self.renderer.add_gizmo(g)
+            self.renderer.add_gizmo(
+                gizmos.circle_gizmo(
+                    obj.x,
+                    obj.y,
+                    size=4,
+                    color=(0.5, 0.5, 0.5, 1),
+                    thickness=1,
+                    frames=None,
+                )
+            )
 
     def draw_scene(self, update_list: bool = True) -> None:
         """Render the current scene and refresh selection gizmos."""
