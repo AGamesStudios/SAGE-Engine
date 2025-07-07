@@ -78,6 +78,8 @@ def object_from_dict(data: dict) -> Any | None:
         value = data[k]
         if attr == "color" and isinstance(value, list):
             value = tuple(value)
+        if attr == "public_vars" and isinstance(value, list):
+            value = set(value)
         if attr in init_params:
             params[attr] = value
         else:
@@ -106,6 +108,8 @@ def object_to_dict(obj: Any) -> dict | None:
                 val = getattr(obj, attr)
                 if attr == "metadata" and not val:
                     continue
+                if isinstance(val, set):
+                    val = list(val)
                 data[key or attr] = val
             return data
     logger.warning('Attempted to serialize unregistered object %s', type(obj).__name__)

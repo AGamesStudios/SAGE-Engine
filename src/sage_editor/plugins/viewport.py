@@ -267,7 +267,11 @@ class EditorWindow(QMainWindow):
         from engine.core.objects import object_to_dict
         try:
             data = object_to_dict(self.selected_obj) or {}
-            self.properties.setPlainText(json.dumps(data, indent=2))
+            def _default(obj):
+                if isinstance(obj, set):
+                    return list(obj)
+                return str(obj)
+            self.properties.setPlainText(json.dumps(data, indent=2, default=_default))
         except Exception:
             log.exception("Failed to display properties")
 
@@ -283,6 +287,9 @@ class EditorWindow(QMainWindow):
         for k, v in data.items():
             if hasattr(self.selected_obj, k):
                 try:
+                    cur = getattr(self.selected_obj, k)
+                    if isinstance(cur, set) and isinstance(v, list):
+                        v = set(v)
                     setattr(self.selected_obj, k, v)
                 except Exception:
                     log.exception("Failed to set %s", k)
