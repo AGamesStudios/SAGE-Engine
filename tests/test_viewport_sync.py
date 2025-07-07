@@ -161,6 +161,8 @@ def _setup_qt(monkeypatch):
     class QMenuBar(QWidget):
         def addAction(self, a):
             pass
+        def addMenu(self, title):
+            return QMenu()
 
     class QToolBar(QWidget):
         def addWidget(self, w):
@@ -267,6 +269,8 @@ def _setup_qt(monkeypatch):
             self.fmt = fmt
         def setFocusPolicy(self, policy):
             self.policy = policy
+        def close(self):
+            pass
         def context(self):
             class Ctx:
                 def isValid(self):

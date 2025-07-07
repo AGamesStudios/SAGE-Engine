@@ -300,7 +300,7 @@ class PropertiesWidget(QWidget):
 class EditorWindow(QMainWindow):
     """Main editor window with dockable widgets."""
 
-    def __init__(self, menus=None, toolbar=None) -> None:
+    def __init__(self, menus=None, toolbar=None, *, backend: str = "opengl") -> None:
         super().__init__()
         self.setWindowTitle("SAGE Editor")
 
@@ -317,8 +317,21 @@ class EditorWindow(QMainWindow):
         # minimal scene used for previewing objects
         w = self.viewport.width() or 640
         h = self.viewport.height() or 480
-        self.renderer = OpenGLRenderer(
-            width=w, height=h, widget=self.viewport, vsync=False, keep_aspect=False
+        if backend == "opengl":
+            rcls = OpenGLRenderer
+        else:
+            from engine.renderers import get_renderer
+            rcls = get_renderer(backend)
+            if rcls is None:
+                self.log_warning(f"Renderer '{backend}' unavailable; falling back to OpenGL")
+                rcls = OpenGLRenderer
+        self.renderer_backend = backend if rcls is not OpenGLRenderer else "opengl"
+        self.renderer = rcls(
+            width=w,
+            height=h,
+            widget=self.viewport,
+            vsync=False,
+            keep_aspect=False,
         )
         self.camera = Camera(width=w, height=h, active=True)
         self.scene = Scene(with_defaults=False)
@@ -337,6 +350,11 @@ class EditorWindow(QMainWindow):
 
         menubar = QMenuBar(self)
         self.setMenuBar(menubar)
+        renderer_menu = menubar.addMenu("Renderer")
+        ogl_action = renderer_menu.addAction("OpenGL")
+        sdl_action = renderer_menu.addAction("SDL")
+        ogl_action.triggered.connect(lambda: self.change_renderer("opengl"))
+        sdl_action.triggered.connect(lambda: self.change_renderer("sdl"))
         if menus:
             for title, cb in menus:
                 action = QAction(title, self)
@@ -406,6 +424,27 @@ class EditorWindow(QMainWindow):
 
     def set_renderer(self, renderer):
         self.viewport.renderer = renderer
+
+    def change_renderer(self, backend: str) -> None:
+        if backend == "opengl":
+            rcls = OpenGLRenderer
+        else:
+            from engine.renderers import get_renderer
+            rcls = get_renderer(backend)
+            if rcls is None:
+                self.log_warning(f"Renderer '{backend}' unavailable; falling back to OpenGL")
+                rcls = OpenGLRenderer
+        if self.renderer is not None:
+            try:
+                self.renderer.close()
+            except Exception:
+                log.exception("Renderer close failed")
+        w = self.viewport.width() or 640
+        h = self.viewport.height() or 480
+        self.renderer = rcls(width=w, height=h, widget=self.viewport, vsync=False, keep_aspect=False)
+        self.renderer_backend = backend if rcls is not OpenGLRenderer else "opengl"
+        self.set_renderer(self.renderer)
+        self.draw_scene()
 
     def set_objects(self, names):
         self.objects.clear()
@@ -506,7 +545,7 @@ class EditorWindow(QMainWindow):
             height=h,
             scene=self.scene,
             camera=self.camera,
-            renderer="opengl",
+            renderer=self.renderer_backend,
             keep_aspect=self.renderer.keep_aspect,
         )
         self._game_window = GameWindow(self._engine)
