@@ -30,7 +30,9 @@ class SDLRenderer(Renderer):
         height: int = 480,
         title: str = "SAGE 2D",
         *,
+        widget=None,
         vsync: bool | None = None,
+        keep_aspect: bool = True,
     ) -> None:
         super().__init__()
         if sdl2.SDL_Init(sdl2.SDL_INIT_VIDEO) != 0:
@@ -60,7 +62,8 @@ class SDLRenderer(Renderer):
             err = sdl2.SDL_GetError()
             raise RuntimeError(f"SDL_CreateRenderer failed: {err.decode()}")
         sdl2.SDL_SetRenderDrawBlendMode(self.renderer, sdl2.SDL_BLENDMODE_BLEND)
-        self.widget = None  # compatibility with input backends
+        self.widget = widget  # compatibility with input backends
+        self.keep_aspect = keep_aspect
         self.textures: dict[tuple[int, bool], ctypes.c_void_p] = {}
 
     # ------------------------------------------------------------------
