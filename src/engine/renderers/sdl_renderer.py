@@ -175,11 +175,11 @@ class SDLRenderer(Renderer):
 
     def _draw_sprite(self, obj) -> None:
         tex = self._get_texture(obj)
-        w = int(obj.width * obj.scale_x)
-        h = int(obj.height * obj.scale_y)
+        w = int(round(obj.width * obj.scale_x))
+        h = int(round(obj.height * obj.scale_y))
         rect = sdl2.SDL_Rect(
-            int(obj.x - w * obj.pivot_x),
-            int(obj.y - h * obj.pivot_y),
+            int(round(obj.x - w * obj.pivot_x)),
+            int(round(obj.y - h * obj.pivot_y)),
             w,
             h,
         )
