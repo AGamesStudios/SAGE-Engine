@@ -131,6 +131,7 @@ class EditorWindow(QMainWindow):
         # keep the viewport camera separate from scene objects
         self.renderer.show_grid = True
         self.set_renderer(self.renderer)
+        self.selected_obj: GameObject | None = None
         self.draw_scene()
 
         splitter = QSplitter(Qt.Orientation.Vertical, self)
@@ -214,8 +215,31 @@ class EditorWindow(QMainWindow):
         names = [obj.name for obj in self.scene.objects]
         self.set_objects(names)
 
+    def _update_selection_gizmo(self) -> None:
+        """Refresh gizmo highlighting the currently selected object."""
+        if hasattr(self.renderer, "clear_gizmos"):
+            self.renderer.clear_gizmos()
+        obj = self.selected_obj
+        if obj is None:
+            return
+        if isinstance(obj, Camera):
+            left, bottom, w, h = obj.view_rect()
+            points = [
+                (left, bottom),
+                (left + w, bottom),
+                (left + w, bottom + h),
+                (left, bottom + h),
+                (left, bottom),
+            ]
+            g = gizmos.polyline_gizmo(points, color=(1, 0, 0, 1), frames=None)
+        else:
+            g = gizmos.square_gizmo(obj.x, obj.y, size=20, color=(1, 0, 0, 1), frames=None)
+        if hasattr(self.renderer, "add_gizmo"):
+            self.renderer.add_gizmo(g)
+
     def draw_scene(self) -> None:
-        """Render the current scene to the viewport."""
+        """Render the current scene and refresh selection gizmos."""
+        self._update_selection_gizmo()
         self.renderer.draw_scene(self.scene, self.camera)
 
     def start_game(self):
@@ -266,25 +290,9 @@ class EditorWindow(QMainWindow):
         menu.exec(self.objects.mapToGlobal(point))
 
     def _object_selected(self, current, _prev):
-        self.renderer.clear_gizmos()
         if current is not None:
             name = current.text()
-            obj = self.scene.find_object(name)
-            self.selected_obj = obj
-            if obj is not None:
-                if isinstance(obj, Camera):
-                    left, bottom, w, h = obj.view_rect()
-                    points = [
-                        (left, bottom),
-                        (left + w, bottom),
-                        (left + w, bottom + h),
-                        (left, bottom + h),
-                        (left, bottom),
-                    ]
-                    g = gizmos.polyline_gizmo(points, color=(1, 0, 0, 1), frames=None)
-                else:
-                    g = gizmos.square_gizmo(obj.x, obj.y, size=20, color=(1, 0, 0, 1), frames=None)
-                self.renderer.add_gizmo(g)
+            self.selected_obj = self.scene.find_object(name)
         else:
             self.selected_obj = None
         self.draw_scene()
