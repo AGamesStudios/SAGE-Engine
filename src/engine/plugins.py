@@ -167,10 +167,18 @@ class PluginManager:
                     logger.warning(
                         "Plugin %s requires missing dependency %s", mod_name, exc.name
                     )
-                except Exception:
+                    if hasattr(instance, "log_warning"):
+                        instance.log_warning(
+                            f"Plugin {mod_name} requires missing dependency {exc.name}"
+                        )
+                except Exception as exc:
                     logger.exception(
                         "Failed to load plugin %s at %s", mod_name,
                         os.path.join(path, name))
+                    if hasattr(instance, "log_warning"):
+                        instance.log_warning(
+                            f"Failed to load plugin {mod_name}: {exc}"
+                        )
 
         try:
             eps = metadata.entry_points()

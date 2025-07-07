@@ -50,6 +50,19 @@ def _setup_qt(monkeypatch):
         def setSizePolicy(self, *a, **k):
             pass
 
+    class QPushButton(QWidget):
+        def __init__(self, *a, **k):
+            super().__init__(*a, **k)
+            self.clicked = DummySignal()
+
+    class QVBoxLayout:
+        def __init__(self, *a, **k):
+            pass
+        def setContentsMargins(self, *a):
+            pass
+        def addWidget(self, w):
+            pass
+
     class QMainWindow(QWidget):
         def __init__(self, *a, **k):
             super().__init__()
@@ -139,6 +152,8 @@ def _setup_qt(monkeypatch):
     qtwidgets.QMenuBar = QMenuBar
     qtwidgets.QToolBar = QToolBar
     qtwidgets.QWidget = QWidget
+    qtwidgets.QPushButton = QPushButton
+    qtwidgets.QVBoxLayout = QVBoxLayout
     qtwidgets.QSizePolicy = QSizePolicy
     qtwidgets.QSplitter = QSplitter
 

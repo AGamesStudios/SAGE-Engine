@@ -20,7 +20,7 @@ def test_start_game_twice(monkeypatch):
 
     engines = []
     class DummyEngine:
-        def __init__(self):
+        def __init__(self, *a, **k):
             engines.append(self)
             self.renderer = types.SimpleNamespace(close=lambda: None)
         def shutdown(self):
@@ -65,7 +65,7 @@ def test_close_game_on_window_close(monkeypatch):
     spec.loader.exec_module(viewport)
 
     class DummyEngine:
-        def __init__(self):
+        def __init__(self, *a, **k):
             self.renderer = types.SimpleNamespace(close=lambda: None)
         def shutdown(self):
             pass

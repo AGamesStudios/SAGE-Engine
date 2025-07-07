@@ -7,6 +7,7 @@ objects are drawn with hardware acceleration by default.
 from __future__ import annotations
 
 import logging
+import json
 from PyQt6.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -19,6 +20,8 @@ from PyQt6.QtWidgets import (
     QWidget,
     QSizePolicy,
     QSplitter,
+    QPushButton,
+    QVBoxLayout,
 )
 from PyQt6.QtGui import QAction
 from PyQt6.QtCore import Qt
@@ -148,6 +151,12 @@ class EditorWindow(QMainWindow):
         self.viewport = ViewportWidget(self)
         self.console = QPlainTextEdit(self)
         self.properties = QPlainTextEdit(self)
+        self.prop_apply = QPushButton("Apply", self)
+        prop_wrap = QWidget(self)
+        prop_layout = QVBoxLayout(prop_wrap)
+        prop_layout.setContentsMargins(0, 0, 0, 0)
+        prop_layout.addWidget(self.properties)
+        prop_layout.addWidget(self.prop_apply)
         self.resources = QListWidget()
 
         # minimal scene used for previewing objects
@@ -157,13 +166,12 @@ class EditorWindow(QMainWindow):
             width=w, height=h, widget=self.viewport, vsync=False, keep_aspect=False
         )
         self.camera = Camera(width=w, height=h, active=True)
-        self.scene = Scene(with_defaults=True)
+        self.scene = Scene(with_defaults=False)
         # keep the viewport camera separate from scene objects
         self.renderer.show_grid = True
         self.set_renderer(self.renderer)
         self.selected_obj: GameObject | None = None
         self._clipboard: dict | None = None
-        self.draw_scene()
 
         splitter = QSplitter(Qt.Orientation.Vertical, self)
         splitter.addWidget(self.viewport)
@@ -207,7 +215,7 @@ class EditorWindow(QMainWindow):
 
         prop_dock = QDockWidget("Properties", self)
         prop_dock.setObjectName("PropertiesDock")
-        prop_dock.setWidget(self.properties)
+        prop_dock.setWidget(prop_wrap)
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, prop_dock)
         self.splitDockWidget(obj_dock, prop_dock, Qt.Orientation.Vertical)
 
@@ -222,6 +230,12 @@ class EditorWindow(QMainWindow):
 
         self.selected_obj = None
         self.update_object_list()
+        self.prop_apply.clicked.connect(self.apply_properties)
+        self.draw_scene()
+
+    def log_warning(self, text: str) -> None:
+        """Display *text* in the console dock."""
+        self.console.appendPlainText(text)
 
     # coordinate helpers -------------------------------------------------
 
@@ -245,6 +259,34 @@ class EditorWindow(QMainWindow):
     def update_object_list(self):
         names = [obj.name for obj in self.scene.objects]
         self.set_objects(names)
+
+    def update_properties(self):
+        if self.selected_obj is None:
+            self.properties.setPlainText("")
+            return
+        from engine.core.objects import object_to_dict
+        try:
+            data = object_to_dict(self.selected_obj) or {}
+            self.properties.setPlainText(json.dumps(data, indent=2))
+        except Exception:
+            log.exception("Failed to display properties")
+
+    def apply_properties(self):
+        if self.selected_obj is None:
+            return
+        text = self.properties.toPlainText()
+        try:
+            data = json.loads(text)
+        except Exception:
+            log.exception("Invalid property data")
+            return
+        for k, v in data.items():
+            if hasattr(self.selected_obj, k):
+                try:
+                    setattr(self.selected_obj, k, v)
+                except Exception:
+                    log.exception("Failed to set %s", k)
+        self.draw_scene()
 
     def find_object_at(self, x: float, y: float) -> GameObject | None:
         for obj in reversed(self.scene.objects):
@@ -290,13 +332,23 @@ class EditorWindow(QMainWindow):
     def draw_scene(self) -> None:
         """Render the current scene and refresh selection gizmos."""
         self._update_selection_gizmo()
+        self.update_object_list()
         self.renderer.draw_scene(self.scene, self.camera)
 
     def start_game(self):
         from engine.core.engine import Engine
         from engine.game_window import GameWindow
         self.close_game()
-        self._engine = Engine()
+        w = self.renderer.width
+        h = self.renderer.height
+        self._engine = Engine(
+            width=w,
+            height=h,
+            scene=self.scene,
+            camera=self.camera,
+            renderer="opengl",
+            keep_aspect=self.renderer.keep_aspect,
+        )
         self._game_window = GameWindow(self._engine)
         self._game_window.closed.connect(self.close_game)
         self._game_window.show()
@@ -385,6 +437,7 @@ class EditorWindow(QMainWindow):
             self.selected_obj = self.scene.find_object(name)
         else:
             self.selected_obj = None
+        self.update_properties()
         self.draw_scene()
 
     def closeEvent(self, event):  # pragma: no cover - gui cleanup

@@ -22,6 +22,9 @@ Install optional extras via:
 ```bash
 pip install .[opengl,sdl,qt,audio]
 ```
+The Qt based editor requires the `PyQt6` and `PyOpenGL` packages. If these
+dependencies are missing the editor will not start and a message is written to
+the log file.
 Plugin modules live in `~/.sage_plugins` by default. Configure a different
 location or extra search paths in `sage.toml` under the `[plugins]` table:
 ```toml
