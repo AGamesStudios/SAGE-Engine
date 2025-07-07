@@ -42,6 +42,8 @@ class ViewportWidget(GLWidget):
         super().__init__(window, *a, **k)
         self._window = window
         self._last_pos = None
+        self._press_pos = None
+        self._dragging = False
         if hasattr(self, "setContextMenuPolicy"):
             self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         if hasattr(self, "customContextMenuRequested"):
@@ -50,6 +52,8 @@ class ViewportWidget(GLWidget):
     def mousePressEvent(self, ev):  # pragma: no cover - gui interaction
         if ev.button() == Qt.MouseButton.LeftButton:
             self._last_pos = ev.position() if hasattr(ev, "position") else ev.pos()
+            self._press_pos = self._last_pos
+            self._dragging = False
             try:
                 from PyQt6.QtGui import QCursor
                 self.setCursor(QCursor(Qt.CursorShape.ClosedHandCursor))
@@ -61,6 +65,8 @@ class ViewportWidget(GLWidget):
             pos = ev.position() if hasattr(ev, "position") else ev.pos()
             dx = pos.x() - self._last_pos.x()
             dy = pos.y() - self._last_pos.y()
+            if abs(dx) > 1 or abs(dy) > 1:
+                self._dragging = True
             cam = self._window.camera
             scale = units.UNITS_PER_METER
             sign = -1 if units.Y_UP else 1
@@ -71,6 +77,13 @@ class ViewportWidget(GLWidget):
 
     def mouseReleaseEvent(self, ev):  # pragma: no cover - gui interaction
         if ev.button() == Qt.MouseButton.LeftButton:
+            pos = ev.position() if hasattr(ev, "position") else ev.pos()
+            if self._press_pos is not None and not self._dragging:
+                wx, wy = self._window.screen_to_world(pos)
+                obj = self._window.find_object_at(wx, wy)
+                self._window.select_object(obj)
+            self._press_pos = None
+            self._dragging = False
             self._last_pos = None
             try:
                 self.unsetCursor()
@@ -93,13 +106,23 @@ class ViewportWidget(GLWidget):
 
     def _context_menu(self, point):  # pragma: no cover - gui interaction
         menu = QMenu(self)
-        action = menu.addAction("Create Object")
         wx, wy = self._window.screen_to_world(point)
+        obj = self._window.find_object_at(wx, wy)
+        if obj is not None:
+            self._window.select_object(obj)
+            copy_a = menu.addAction("Copy")
+            paste_a = menu.addAction("Paste")
+            del_a = menu.addAction("Delete")
+            copy_a.triggered.connect(self._window.copy_selected)
+            paste_a.triggered.connect(self._window.paste_object)
+            del_a.triggered.connect(self._window.delete_selected)
+        else:
+            action = menu.addAction("Create Object")
 
-        def cb():
-            self._window.create_object(wx, wy)
+            def cb():
+                self._window.create_object(wx, wy)
 
-        action.triggered.connect(cb)
+            action.triggered.connect(cb)
         menu.exec(self.mapToGlobal(point))
 
 
@@ -132,6 +155,7 @@ class EditorWindow(QMainWindow):
         self.renderer.show_grid = True
         self.set_renderer(self.renderer)
         self.selected_obj: GameObject | None = None
+        self._clipboard: dict | None = None
         self.draw_scene()
 
         splitter = QSplitter(Qt.Orientation.Vertical, self)
@@ -215,6 +239,25 @@ class EditorWindow(QMainWindow):
         names = [obj.name for obj in self.scene.objects]
         self.set_objects(names)
 
+    def find_object_at(self, x: float, y: float) -> GameObject | None:
+        for obj in reversed(self.scene.objects):
+            if isinstance(obj, Camera):
+                continue
+            left, bottom, w, h = obj.rect()
+            if left <= x <= left + w and bottom <= y <= bottom + h:
+                return obj
+        return None
+
+    def select_object(self, obj: GameObject | None) -> None:
+        if obj is None:
+            self.objects.setCurrentItem(None)
+        else:
+            for i in range(self.objects.count()):
+                item = self.objects.item(i)
+                if item.text() == obj.name:
+                    self.objects.setCurrentItem(item)
+                    break
+
     def _update_selection_gizmo(self) -> None:
         """Refresh gizmo highlighting the currently selected object."""
         if hasattr(self.renderer, "clear_gizmos"):
@@ -283,8 +326,48 @@ class EditorWindow(QMainWindow):
         self.draw_scene()
         return obj
 
+    # clipboard and selection helpers ----------------------------------
+
+    def copy_selected(self) -> None:
+        if self.selected_obj is None:
+            return
+        from engine.core.objects import object_to_dict
+        self._clipboard = object_to_dict(self.selected_obj)
+
+    def paste_object(self) -> GameObject | None:
+        if not self._clipboard:
+            return None
+        from engine.core.objects import object_from_dict
+        try:
+            obj = object_from_dict(dict(self._clipboard))
+        except Exception:
+            log.exception("Failed to paste object")
+            return None
+        base = obj.name
+        idx = 1
+        while self.scene.find_object(obj.name):
+            obj.name = f"{base}_{idx}"
+            idx += 1
+        self.scene.add_object(obj)
+        self.update_object_list()
+        self.select_object(obj)
+        return obj
+
+    def delete_selected(self) -> None:
+        if self.selected_obj is None:
+            return
+        self.scene.remove_object(self.selected_obj)
+        self.selected_obj = None
+        self.update_object_list()
+        self.draw_scene()
+
     def _list_context_menu(self, point):
         menu = QMenu(self.objects)
+        if self.selected_obj is not None:
+            menu.addAction("Copy").triggered.connect(self.copy_selected)
+            menu.addAction("Paste").triggered.connect(self.paste_object)
+            menu.addAction("Delete").triggered.connect(self.delete_selected)
+            menu.addSeparator()
         action = menu.addAction("Create Object")
         action.triggered.connect(self.create_object)
         menu.exec(self.objects.mapToGlobal(point))

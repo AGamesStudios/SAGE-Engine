@@ -212,3 +212,28 @@ def test_object_list_sync(monkeypatch):
     item = win.objects.item(1)
     win.objects.setCurrentItem(item)
     assert len(win.renderer.gizmos) == 1
+    g1 = win.renderer.gizmos[0]
+    assert g1 is not g0
+
+
+def test_viewport_click_and_context_menu(monkeypatch):
+    _stub_gl(monkeypatch, {})
+    _setup_qt(monkeypatch)
+
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    viewport = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(viewport)
+
+    win = viewport.EditorWindow()
+    obj = win.create_object()
+    found = win.find_object_at(0, 0)
+    assert found is obj
+    win.select_object(found)
+    assert win.selected_obj is obj
+
+    win.copy_selected()
+    win.delete_selected()
+    assert win.scene.find_object(obj.name) is None
+    pasted = win.paste_object()
+    assert pasted is not None
+    assert win.scene.find_object(pasted.name) is pasted
