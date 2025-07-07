@@ -82,7 +82,7 @@ class ViewportWidget(GLWidget):
                 sign = -1 if units.Y_UP else 1
                 cam.x -= dx / (scale * cam.zoom)
                 cam.y -= dy * sign / (scale * cam.zoom)
-                self._window.draw_scene()
+                self._window.draw_scene(update_list=False)
                 self._last_pos = pos
 
     def mouseReleaseEvent(self, ev):  # pragma: no cover - gui interaction
@@ -112,7 +112,7 @@ class ViewportWidget(GLWidget):
             cam.zoom *= factor
             if cam.zoom <= 0:
                 cam.zoom = 0.1
-            self._window.draw_scene()
+            self._window.draw_scene(update_list=False)
 
     def _context_menu(self, point):  # pragma: no cover - gui interaction
         menu = QMenu(self)
@@ -256,9 +256,16 @@ class EditorWindow(QMainWindow):
         self.objects.clear()
         self.objects.addItems(list(names))
 
-    def update_object_list(self):
+    def update_object_list(self, preserve: bool = True):
+        current = self.selected_obj.name if preserve and self.selected_obj else None
         names = [obj.name for obj in self.scene.objects]
         self.set_objects(names)
+        if current:
+            for i in range(self.objects.count()):
+                item = self.objects.item(i)
+                if item.text() == current:
+                    self.objects.setCurrentItem(item)
+                    break
 
     def update_properties(self):
         if self.selected_obj is None:
@@ -328,7 +335,7 @@ class EditorWindow(QMainWindow):
                     self.objects.setCurrentItem(item)
                     break
         self.update_properties()
-        self.draw_scene()
+        self.draw_scene(update_list=False)
 
     def _update_selection_gizmo(self) -> None:
         """Refresh gizmo highlighting the currently selected object."""
@@ -352,10 +359,11 @@ class EditorWindow(QMainWindow):
         if hasattr(self.renderer, "add_gizmo"):
             self.renderer.add_gizmo(g)
 
-    def draw_scene(self) -> None:
+    def draw_scene(self, update_list: bool = True) -> None:
         """Render the current scene and refresh selection gizmos."""
         self._update_selection_gizmo()
-        self.update_object_list()
+        if update_list:
+            self.update_object_list()
         self.renderer.draw_scene(self.scene, self.camera)
 
     def start_game(self):
@@ -461,7 +469,7 @@ class EditorWindow(QMainWindow):
         else:
             self.selected_obj = None
         self.update_properties()
-        self.draw_scene()
+        self.draw_scene(update_list=False)
 
     def closeEvent(self, event):  # pragma: no cover - gui cleanup
         if self.renderer is not None:

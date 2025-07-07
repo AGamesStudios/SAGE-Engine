@@ -276,3 +276,20 @@ def test_apply_properties_validation(monkeypatch):
     win.properties.setPlainText('{"z": "bad"}')
     win.apply_properties()
     assert isinstance(obj.z, float) and obj.z == 0.0
+
+
+def test_selection_persists(monkeypatch):
+    _stub_gl(monkeypatch, {})
+    _setup_qt(monkeypatch)
+
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    viewport = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(viewport)
+
+    win = viewport.EditorWindow()
+    obj = win.create_object()
+    win.select_object(obj)
+    assert win.selected_obj is obj
+
+    win.draw_scene()
+    assert win.selected_obj is obj
