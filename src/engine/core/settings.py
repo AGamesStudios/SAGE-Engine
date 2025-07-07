@@ -32,3 +32,5 @@ class EngineSettings:
     event_workers: int = 4
     vsync: bool | None = None
     image_cache_limit: int = int(os.environ.get("SAGE_IMAGE_CACHE_LIMIT", "32"))
+    max_angle: float = 360.0
+    rotate_bbox: bool = False

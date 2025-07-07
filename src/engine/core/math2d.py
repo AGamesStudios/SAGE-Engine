@@ -18,6 +18,8 @@ __all__ = [
     "transform_point",
     "make_ortho",
     "normalize_angle",
+    "set_max_angle",
+    "get_max_angle",
 ]
 
 
@@ -32,11 +34,26 @@ def quat_to_angle(z: float, w: float) -> float:
     return math.degrees(2.0 * math.atan2(z, w))
 
 
+# maximum angle used by :func:`normalize_angle`
+_MAX_ANGLE = 360.0
+
+
+def set_max_angle(value: float) -> None:
+    """Set the maximum angle used for wrapping."""
+    global _MAX_ANGLE
+    _MAX_ANGLE = 360.0 if value <= 0 else float(value)
+
+
+def get_max_angle() -> float:
+    """Return the current ``MAX_ANGLE`` value."""
+    return _MAX_ANGLE
+
+
 def normalize_angle(angle: float) -> float:
-    """Return *angle* wrapped into the ``0-360`` range."""
-    value = angle % 360.0
+    """Return *angle* wrapped into the ``0``–``MAX_ANGLE`` range."""
+    value = angle % _MAX_ANGLE
     if value < 0:
-        value += 360.0
+        value += _MAX_ANGLE
     return value
 
 

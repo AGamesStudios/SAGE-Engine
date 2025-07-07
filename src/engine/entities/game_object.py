@@ -248,6 +248,27 @@ class GameObject(Object):
         """Return default texture coordinates."""
         return [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0]
 
+    def rotate(self, da: float, around_bbox: bool = False) -> None:
+        """Rotate the object by ``da`` degrees.
+
+        When ``around_bbox`` is ``True`` the object's position is adjusted so the
+        centre of its axis-aligned bounding box remains in place.
+        """
+        if around_bbox:
+            import math
+
+            left, bottom, width, height = self.rect()
+            cx = left + width / 2
+            cy = bottom + height / 2
+            dx = self.transform.x - cx
+            dy = self.transform.y - cy
+            rad = math.radians(da)
+            cos_a = math.cos(rad)
+            sin_a = math.sin(rad)
+            self.transform.x = cx + dx * cos_a - dy * sin_a
+            self.transform.y = cy + dx * sin_a + dy * cos_a
+        self.transform.angle += da
+
 
     def _load_image(self):
         """Load the object's image with Pillow."""

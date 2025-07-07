@@ -100,6 +100,11 @@ class TestObject(unittest.TestCase):
         self.assertEqual(t.angle, 10)
         t.angle = -45
         self.assertEqual(t.angle, 315)
+        from engine.core.math2d import set_max_angle
+        set_max_angle(180)
+        t.angle = 190
+        self.assertEqual(t.angle, 10)
+        set_max_angle(360)
 
 
 if __name__ == "__main__":

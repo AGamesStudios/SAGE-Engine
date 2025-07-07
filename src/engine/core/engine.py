@@ -18,6 +18,7 @@ from ..renderers import (
 from .. import ENGINE_VERSION
 from ..utils.log import logger, init_logger
 from ..utils.diagnostics import analyze_exception
+from .math2d import set_max_angle, get_max_angle
 
 
 def _exception_handler(exc_type, exc, tb):
@@ -47,6 +48,8 @@ class Engine:
                  asyncio_events: bool = False,
                  event_workers: int = 4,
                  vsync: bool | None = None,
+                 max_angle: float = 360.0,
+                 rotate_bbox: bool = False,
                  *, settings: "EngineSettings | None" = None,
                  metadata: dict | None = None):
         if settings is not None:
@@ -66,12 +69,16 @@ class Engine:
             asyncio_events = getattr(settings, "asyncio_events", False)
             event_workers = settings.event_workers
             vsync = settings.vsync
+            max_angle = getattr(settings, "max_angle", 360.0)
+            rotate_bbox = getattr(settings, "rotate_bbox", False)
             from ..entities import game_object
             game_object.set_image_cache_limit(settings.image_cache_limit)
         self.fps = fps
         self.vsync = vsync
         self._frame_interval = 0 if vsync else (1.0 / fps if fps else 0)
         self.max_delta = max_delta
+        self.rotate_bbox = rotate_bbox
+        set_max_angle(max_angle)
         self.async_events = async_events
         self.asyncio_events = asyncio_events
         if self.asyncio_events and self.async_events:
@@ -250,6 +257,8 @@ class Engine:
             async_events=self.async_events,
             event_workers=self.event_workers,
             vsync=self.vsync,
+            max_angle=get_max_angle(),
+            rotate_bbox=self.rotate_bbox,
             image_cache_limit=getattr(game_object, "_MAX_CACHE", 32),
         )
 
