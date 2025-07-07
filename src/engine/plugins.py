@@ -12,7 +12,7 @@ import os
 import sys
 import json
 import re
-from typing import Callable, Any
+from typing import Callable, Any, Coroutine
 
 from engine.utils.config import get as cfg_get
 
@@ -39,7 +39,17 @@ def _default_config_file(plugin_dir: str | None = None) -> str:
 logger = logging.getLogger('sage.plugins')
 
 
-def _run_sync_or_async(func: Callable, *args: Any) -> None:
+def _log_async_result(task: asyncio.Task) -> None:
+    """Log exceptions raised by async plugin tasks."""
+    try:
+        exc = task.exception()
+    except asyncio.CancelledError:
+        return
+    if exc is not None:
+        logger.error("Async plugin task failed", exc_info=exc)
+
+
+def _run_sync_or_async(func: Callable[..., Coroutine | Any], *args: Any) -> None:
     """Run *func* and await the result if it returns a coroutine."""
     res = func(*args)
     if asyncio.iscoroutine(res):
@@ -48,7 +58,8 @@ def _run_sync_or_async(func: Callable, *args: Any) -> None:
         except RuntimeError:
             asyncio.run(res)
         else:
-            loop.create_task(res)
+            task = loop.create_task(res)
+            task.add_done_callback(_log_async_result)
 
 
 class PluginBase:

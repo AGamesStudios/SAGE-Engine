@@ -317,6 +317,8 @@ class Engine:
                 self._loop.close()
             except Exception:
                 logger.exception("Event loop close failed")
+            finally:
+                asyncio.set_event_loop(None)
         logger.info("Engine shutdown complete")
 
     def change_scene(self, name: str, scene: Scene | None = None) -> None:

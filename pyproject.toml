@@ -39,3 +39,10 @@ sage-editor = "sage_editor:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["engine*", "sage_editor*"]
+
+[tool.pyright]
+include = ["src"]
+typeCheckingMode = "basic"
+reportMissingImports = false
+reportMissingModuleSource = false
+reportUnsupportedDunderAll = false

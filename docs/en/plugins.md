@@ -89,4 +89,5 @@ manually if needed.
 
 Initialization functions may be synchronous or return a coroutine. If an
 `asyncio` event loop is already running, coroutines are scheduled with
-`asyncio.create_task`. Otherwise a new loop is started via `asyncio.run`.
+`asyncio.create_task` and any exception is logged. Otherwise a new loop is
+started via `asyncio.run`.
