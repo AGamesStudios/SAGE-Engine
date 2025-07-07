@@ -11,6 +11,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from ..gizmos import Gizmo
 
 from .shader import Shader
+from .sdl_widget import SDLWidget, register_sdlwidget
 
 
 def register_draw_handler(
@@ -170,6 +171,8 @@ __all__ = [
     "OpenGLRenderer",
     "SDLRenderer",
     "NullRenderer",
+    "SDLWidget",
+    "register_sdlwidget",
     "register_renderer",
     "get_renderer",
     "RENDERER_REGISTRY",

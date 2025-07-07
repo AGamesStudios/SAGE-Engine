@@ -41,13 +41,13 @@ from engine.entities.game_object import GameObject
 from engine import gizmos
 from engine.core.objects import get_object_type
 
-from sage_editor.qt import GLWidget
+from sage_editor.qt import GLWidget, SDLWidget
 
 log = logging.getLogger(__name__)
 
 
-class ViewportWidget(GLWidget):
-    """GL widget with basic panning and zoom controls."""
+class _ViewportMixin:
+    """Input helpers shared between OpenGL and SDL widgets."""
 
     DRAG_THRESHOLD = 5
 
@@ -61,6 +61,98 @@ class ViewportWidget(GLWidget):
             self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         if hasattr(self, "customContextMenuRequested"):
             self.customContextMenuRequested.connect(self._context_menu)
+
+    # event handlers are same as before
+    def mousePressEvent(self, ev):  # pragma: no cover - gui interaction
+        if ev.button() == Qt.MouseButton.LeftButton:
+            self._last_pos = ev.position() if hasattr(ev, "position") else ev.pos()
+            self._press_pos = self._last_pos
+            self._dragging = False
+            try:
+                from PyQt6.QtGui import QCursor
+                self.setCursor(QCursor(Qt.CursorShape.ClosedHandCursor))
+            except Exception:
+                log.exception("Failed to set cursor")
+
+    def mouseMoveEvent(self, ev):  # pragma: no cover - gui interaction
+        if self._press_pos is not None and ev.buttons() & Qt.MouseButton.LeftButton:
+            pos = ev.position() if hasattr(ev, "position") else ev.pos()
+            if not self._dragging:
+                dx = pos.x() - self._press_pos.x()
+                dy = pos.y() - self._press_pos.y()
+                if abs(dx) > self.DRAG_THRESHOLD or abs(dy) > self.DRAG_THRESHOLD:
+                    self._dragging = True
+                    self._last_pos = pos
+            if self._dragging and self._last_pos is not None:
+                dx = pos.x() - self._last_pos.x()
+                dy = pos.y() - self._last_pos.y()
+                cam = self._window.camera
+                scale = units.UNITS_PER_METER
+                sign = -1 if units.Y_UP else 1
+                cam.x -= dx / (scale * cam.zoom)
+                cam.y -= dy * sign / (scale * cam.zoom)
+                self._window.draw_scene(update_list=False)
+                self._last_pos = pos
+
+    def mouseReleaseEvent(self, ev):  # pragma: no cover - gui interaction
+        if ev.button() == Qt.MouseButton.LeftButton:
+            pos = ev.position() if hasattr(ev, "position") else ev.pos()
+            if self._press_pos is not None and not self._dragging:
+                wx, wy = self._window.screen_to_world(pos)
+                obj = self._window.find_object_at(wx, wy)
+                self._window.select_object(obj)
+            self._press_pos = None
+            self._dragging = False
+            self._last_pos = None
+            try:
+                self.unsetCursor()
+            except Exception:
+                log.exception("Failed to unset cursor")
+
+    def wheelEvent(self, ev):  # pragma: no cover - gui interaction
+        delta = 0
+        if hasattr(ev, "angleDelta"):
+            delta = ev.angleDelta().y()
+        elif hasattr(ev, "delta"):
+            delta = ev.delta()
+        if delta:
+            factor = 1.1 ** (delta / 120)
+            cam = self._window.camera
+            cam.zoom *= factor
+            if cam.zoom <= 0:
+                cam.zoom = 0.1
+            self._window.draw_scene(update_list=False)
+
+    def _context_menu(self, point):  # pragma: no cover - gui interaction
+        menu = QMenu(self)
+        wx, wy = self._window.screen_to_world(point)
+        obj = self._window.find_object_at(wx, wy)
+        if obj is not None:
+            self._window.select_object(obj)
+            copy_a = menu.addAction("Copy")
+            paste_a = menu.addAction("Paste")
+            del_a = menu.addAction("Delete")
+            copy_a.triggered.connect(self._window.copy_selected)
+            paste_a.triggered.connect(self._window.paste_object)
+            del_a.triggered.connect(self._window.delete_selected)
+        else:
+            action = menu.addAction("Create Object")
+
+            def cb():
+                self._window.create_object(wx, wy)
+
+            action.triggered.connect(cb)
+        menu.exec(self.mapToGlobal(point))
+
+
+class ViewportWidget(GLWidget, _ViewportMixin):
+    """OpenGL viewport widget."""
+
+
+class SDLViewportWidget(SDLWidget, _ViewportMixin):
+    """SDL viewport widget."""
+
+    pass
 
     def mousePressEvent(self, ev):  # pragma: no cover - gui interaction
         if ev.button() == Qt.MouseButton.LeftButton:
@@ -300,6 +392,11 @@ class PropertiesWidget(QWidget):
 class EditorWindow(QMainWindow):
     """Main editor window with dockable widgets."""
 
+    def _create_viewport_widget(self, backend: str):
+        if backend == "sdl":
+            return SDLViewportWidget(self)
+        return ViewportWidget(self)
+
     def __init__(self, menus=None, toolbar=None, *, backend: str = "opengl") -> None:
         super().__init__()
         self.setWindowTitle("SAGE Editor")
@@ -308,7 +405,7 @@ class EditorWindow(QMainWindow):
 
         self._engine = None
         self._game_window = None
-        self.viewport = ViewportWidget(self)
+        self.viewport = self._create_viewport_widget(backend)
         self.console = QPlainTextEdit(self)
         self.properties = PropertiesWidget(self)
         self.prop_apply = self.properties.apply_btn
@@ -346,6 +443,7 @@ class EditorWindow(QMainWindow):
         splitter.addWidget(self.console)
         splitter.setStretchFactor(0, 3)
         splitter.setStretchFactor(1, 1)
+        self._splitter = splitter
         self.setCentralWidget(splitter)
 
         menubar = QMenuBar(self)
@@ -441,6 +539,18 @@ class EditorWindow(QMainWindow):
                 log.exception("Renderer close failed")
         w = self.viewport.width() or 640
         h = self.viewport.height() or 480
+        if (backend == "sdl" and not isinstance(self.viewport, SDLViewportWidget)) or (
+            backend != "sdl" and isinstance(self.viewport, SDLViewportWidget)
+        ):
+            new_view = self._create_viewport_widget(backend)
+            splitter = QSplitter(Qt.Orientation.Vertical, self)
+            splitter.addWidget(new_view)
+            splitter.addWidget(self.console)
+            splitter.setStretchFactor(0, 3)
+            splitter.setStretchFactor(1, 1)
+            self._splitter = splitter
+            self.setCentralWidget(splitter)
+            self.viewport = new_view
         self.renderer = rcls(width=w, height=h, widget=self.viewport, vsync=False, keep_aspect=False)
         self.renderer_backend = backend if rcls is not OpenGLRenderer else "opengl"
         self.set_renderer(self.renderer)

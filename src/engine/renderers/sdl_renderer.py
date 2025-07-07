@@ -9,6 +9,7 @@ from PIL import Image  # type: ignore[import-not-found]
 
 from . import Renderer, register_renderer
 from .opengl.drawing import parse_color
+from .sdl_widget import SDLWidget
 from ..mesh_utils import Mesh
 
 try:
@@ -41,14 +42,25 @@ class SDLRenderer(Renderer):
         self.height = height
         self.title = title
         self.vsync = vsync
-        self.window = sdl2.SDL_CreateWindow(
-            title.encode(),
-            sdl2.SDL_WINDOWPOS_CENTERED,
-            sdl2.SDL_WINDOWPOS_CENTERED,
-            width,
-            height,
-            0,
-        )
+        self.widget = widget
+        if widget is not None and hasattr(widget, "winId"):
+            handle = int(widget.winId())
+            self.window = sdl2.SDL_CreateWindowFrom(ctypes.c_void_p(handle))
+            self.own_window = False
+            if not self.window:
+                err = sdl2.SDL_GetError()
+                raise RuntimeError(f"SDL_CreateWindowFrom failed: {err.decode()}")
+            sdl2.SDL_SetWindowTitle(self.window, title.encode())
+        else:
+            self.window = sdl2.SDL_CreateWindow(
+                title.encode(),
+                sdl2.SDL_WINDOWPOS_CENTERED,
+                sdl2.SDL_WINDOWPOS_CENTERED,
+                width,
+                height,
+                0,
+            )
+            self.own_window = True
         if not self.window:
             err = sdl2.SDL_GetError()
             raise RuntimeError(f"SDL_CreateWindow failed: {err.decode()}")
@@ -62,7 +74,8 @@ class SDLRenderer(Renderer):
             err = sdl2.SDL_GetError()
             raise RuntimeError(f"SDL_CreateRenderer failed: {err.decode()}")
         sdl2.SDL_SetRenderDrawBlendMode(self.renderer, sdl2.SDL_BLENDMODE_BLEND)
-        self.widget = widget  # compatibility with input backends
+        if isinstance(self.widget, SDLWidget):
+            self.widget.renderer = self
         self.keep_aspect = keep_aspect
         self.textures: dict[tuple[int, bool], ctypes.c_void_p] = {}
 
@@ -320,9 +333,9 @@ class SDLRenderer(Renderer):
             self.textures.clear()
             sdl2.SDL_DestroyRenderer(self.renderer)
             self.renderer = None
-        if self.window:
+        if self.window and getattr(self, "own_window", True):
             sdl2.SDL_DestroyWindow(self.window)
-            self.window = None
+        self.window = None
         was_init = getattr(sdl2, "SDL_WasInit", lambda flag: 1)(0)
         if was_init != 0:
             sdl2.SDL_Quit()

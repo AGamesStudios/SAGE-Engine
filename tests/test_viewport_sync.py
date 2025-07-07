@@ -49,6 +49,8 @@ def _setup_qt(monkeypatch):
             pass
         def setSizePolicy(self, *a, **k):
             pass
+        def winId(self):
+            return 1
 
     class QPushButton(QWidget):
         def __init__(self, *a, **k):
@@ -247,6 +249,10 @@ def _setup_qt(monkeypatch):
 
     qtcore = types.ModuleType('PyQt6.QtCore')
     qtcore.Qt = Qt
+    class QEvent:
+        class Type:
+            Paint = 0
+    qtcore.QEvent = QEvent
 
     qtopen = types.ModuleType('PyQt6.QtOpenGLWidgets')
     class DummyWidget:
