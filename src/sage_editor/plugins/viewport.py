@@ -38,6 +38,8 @@ log = logging.getLogger(__name__)
 class ViewportWidget(GLWidget):
     """GL widget with basic panning and zoom controls."""
 
+    DRAG_THRESHOLD = 5
+
     def __init__(self, window: "EditorWindow", *a, **k) -> None:
         super().__init__(window, *a, **k)
         self._window = window
@@ -61,19 +63,24 @@ class ViewportWidget(GLWidget):
                 log.exception("Failed to set cursor")
 
     def mouseMoveEvent(self, ev):  # pragma: no cover - gui interaction
-        if self._last_pos is not None and ev.buttons() & Qt.MouseButton.LeftButton:
+        if self._press_pos is not None and ev.buttons() & Qt.MouseButton.LeftButton:
             pos = ev.position() if hasattr(ev, "position") else ev.pos()
-            dx = pos.x() - self._last_pos.x()
-            dy = pos.y() - self._last_pos.y()
-            if abs(dx) > 1 or abs(dy) > 1:
-                self._dragging = True
-            cam = self._window.camera
-            scale = units.UNITS_PER_METER
-            sign = -1 if units.Y_UP else 1
-            cam.x -= dx / (scale * cam.zoom)
-            cam.y -= dy * sign / (scale * cam.zoom)
-            self._window.draw_scene()
-            self._last_pos = pos
+            if not self._dragging:
+                dx = pos.x() - self._press_pos.x()
+                dy = pos.y() - self._press_pos.y()
+                if abs(dx) > self.DRAG_THRESHOLD or abs(dy) > self.DRAG_THRESHOLD:
+                    self._dragging = True
+                    self._last_pos = pos
+            if self._dragging and self._last_pos is not None:
+                dx = pos.x() - self._last_pos.x()
+                dy = pos.y() - self._last_pos.y()
+                cam = self._window.camera
+                scale = units.UNITS_PER_METER
+                sign = -1 if units.Y_UP else 1
+                cam.x -= dx / (scale * cam.zoom)
+                cam.y -= dy * sign / (scale * cam.zoom)
+                self._window.draw_scene()
+                self._last_pos = pos
 
     def mouseReleaseEvent(self, ev):  # pragma: no cover - gui interaction
         if ev.button() == Qt.MouseButton.LeftButton:
