@@ -97,6 +97,7 @@ _lazy = {
     'Transform2D': ('engine.entities.object', 'Transform2D'),
     'Material': ('engine.entities.object', 'Material'),
     'create_role': ('engine.entities.object', 'create_role'),
+    'register_role': ('engine.entities.object', 'register_role'),
     'SceneManager': ('engine.core.scenes.manager', 'SceneManager'),
     'EngineExtension': ('engine.core.extensions', 'EngineExtension'),
     'InputManager': ('engine.inputs', 'InputManager'),

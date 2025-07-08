@@ -36,7 +36,13 @@ class Camera(GameObject):
 cam_mod.Camera = Camera
 sys.modules.setdefault('engine.core.camera', cam_mod)
 
-from engine.entities.object import Object, Transform2D, Material, create_role  # noqa: E402
+from engine.entities.object import (  # noqa: E402
+    Object,
+    Transform2D,
+    Material,
+    create_role,
+    register_role,
+)
 from engine.core.scenes.scene import Scene  # noqa: E402
 
 
@@ -94,6 +100,18 @@ class TestObject(unittest.TestCase):
         cam = create_role("camera", metadata={"active": True})
         self.assertEqual(cam.metadata["width"], 640)
         self.assertTrue(cam.metadata["active"])
+
+    def test_register_role(self):
+        calls = []
+
+        def spin(obj, dt):
+            calls.append(obj.name)
+
+        register_role("spinner", logic=[spin], metadata={"speed": 5})
+        obj = create_role("spinner", name="r1")
+        obj.update(0.1)
+        self.assertEqual(calls, ["r1"])
+        self.assertEqual(obj.metadata["speed"], 5)
 
     def test_transform_angle_clamped(self):
         t = Transform2D(angle=370)

@@ -30,3 +30,19 @@ to spin objects around their bounding box centre instead of their pivot.
 Complex shapes can be built by combining multiple meshes with
 ``engine.mesh_utils.union_meshes`` before assigning them to an object's ``mesh``
 attribute.
+
+## Object Roles
+
+Objects carry a ``role`` string instead of a fixed class type. Register new
+roles with :func:`engine.entities.object.register_role` to provide default
+logic, materials or metadata. Built-in roles ``empty``, ``sprite`` and
+``camera`` can be used directly with :func:`engine.entities.object.create_role`.
+```python
+from engine.entities.object import register_role, create_role
+
+def spinner(obj, dt):
+    obj.rotate(90 * dt)
+
+register_role('spinner', logic=[spinner])
+spin_obj = create_role('spinner')
+```

@@ -277,11 +277,27 @@ class Object:
             ch.destroy()
 
 
-ROLE_DEFAULTS = {
-    "empty": {},
-    "sprite": {"material": Material()},
-    "camera": {"metadata": {"width": 640, "height": 480, "active": False}},
-}
+ROLE_REGISTRY: dict[str, dict[str, Any]] = {}
+
+
+def register_role(
+    name: str,
+    *,
+    logic: list[Callable[[Object, float], Any]] | None = None,
+    material: Material | None = None,
+    metadata: dict | None = None,
+) -> None:
+    """Register ``name`` with optional default attributes."""
+    ROLE_REGISTRY[name] = {
+        "logic": list(logic) if logic else [],
+        "material": material,
+        "metadata": dict(metadata) if metadata else {},
+    }
+
+
+register_role("empty")
+register_role("sprite", material=Material())
+register_role("camera", metadata={"width": 640, "height": 480, "active": False})
 
 
 def create_role(
@@ -293,8 +309,11 @@ def create_role(
     material: Material | None = None,
     metadata: dict | None = None,
 ) -> Object:
-    """Return an :class:`Object` with defaults for ``role``."""
-    defaults = ROLE_DEFAULTS.get(role, {})
+    """Return an :class:`Object` initialised for ``role``."""
+    defaults = ROLE_REGISTRY.get(role, {})
+    all_logic = list(defaults.get("logic", []))
+    if logic:
+        all_logic.extend(logic)
     if material is None:
         material = defaults.get("material")
     meta = dict(defaults.get("metadata", {}))
@@ -304,7 +323,7 @@ def create_role(
         role=role,
         name=name,
         transform=transform or Transform2D(),
-        logic=list(logic) if logic else [],
+        logic=all_logic,
         material=material,
         metadata=meta,
     )
