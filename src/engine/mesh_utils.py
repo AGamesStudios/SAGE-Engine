@@ -9,6 +9,7 @@ __all__ = [
     "create_triangle_mesh",
     "create_circle_mesh",
     "create_polygon_mesh",
+    "union_meshes",
 ]
 
 
@@ -84,3 +85,18 @@ def create_polygon_mesh(vertices: list[tuple[float, float]]) -> Mesh:
     for i in range(1, len(vertices) - 1):
         inds.extend([0, i, i + 1])
     return Mesh(list(vertices), inds)
+
+
+def union_meshes(meshes: list[Mesh]) -> Mesh:
+    """Return a new :class:`Mesh` containing all *meshes* combined."""
+    vertices: list[tuple[float, float]] = []
+    indices: list[int] = []
+    offset = 0
+    for mesh in meshes:
+        vertices.extend(list(mesh.vertices))
+        if mesh.indices is None:
+            indices.extend(range(offset, offset + len(mesh.vertices)))
+        else:
+            indices.extend(i + offset for i in mesh.indices)
+        offset += len(mesh.vertices)
+    return Mesh(vertices, indices)

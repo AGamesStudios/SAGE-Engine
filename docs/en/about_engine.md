@@ -26,3 +26,7 @@ methods so resources can be processed without blocking the event loop.
 Rotation angles wrap by default once they exceed ``360`` degrees. Configure the
 limit with ``EngineSettings.max_angle`` and use ``Object.rotate(da, around_bbox=True)``
 to spin objects around their bounding box centre instead of their pivot.
+
+Complex shapes can be built by combining multiple meshes with
+``engine.mesh_utils.union_meshes`` before assigning them to an object's ``mesh``
+attribute.

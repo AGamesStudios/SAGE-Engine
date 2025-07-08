@@ -10,6 +10,7 @@ from engine.mesh_utils import (  # noqa: E402
     create_square_mesh,
     create_triangle_mesh,
     create_polygon_mesh,
+    union_meshes,
 )
 
 
@@ -49,3 +50,12 @@ def test_polygon_mesh_and_editing():
     xs = [v[0] for v in mesh.vertices]
     ys = [v[1] for v in mesh.vertices]
     assert len(xs) == 4 and len(ys) == 4
+
+
+def test_union_meshes():
+    square = create_square_mesh()
+    tri = create_triangle_mesh()
+    combo = union_meshes([square, tri])
+    assert len(combo.vertices) == len(square.vertices) + len(tri.vertices)
+    assert combo.indices is not None
+    assert max(combo.indices) < len(combo.vertices)
