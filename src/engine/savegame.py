@@ -9,8 +9,9 @@ __all__ = ["save_game", "load_game"]
 
 def save_game(engine: Engine, path: str) -> None:
     """Serialize the current engine state to ``path``."""
+    scene = engine.scene
     data = {
-        "scene": engine.scene.to_dict(),
+        "scene": scene.to_dict() if scene is not None else {},
         "metadata": engine.metadata,
     }
     with open(path, "w", encoding="utf-8") as f:

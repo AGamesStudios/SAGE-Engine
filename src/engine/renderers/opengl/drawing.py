@@ -10,6 +10,8 @@ from OpenGL.GL import (
     GL_TEXTURE_2D,
 )  # type: ignore[import-not-found]
 
+from typing import Optional, cast
+
 from engine.core.camera import Camera
 from engine.entities.game_object import GameObject
 from engine import units
@@ -45,7 +47,8 @@ def parse_color(value) -> tuple[int, int, int, int]:
                 parts = [int(p) for p in text.split(",") if p]
             while len(parts) < 4:
                 parts.append(255)
-            return tuple(int(p) for p in parts[:4])
+            tup = tuple(int(p) for p in parts[:4])
+            return cast(tuple[int, int, int, int], tup)
         except Exception:
             return 255, 255, 255, 255
     if isinstance(value, (list, tuple)):
@@ -59,7 +62,7 @@ def parse_color(value) -> tuple[int, int, int, int]:
 # ---------------------------------------------------------------------------
 # Drawing helpers
 # ---------------------------------------------------------------------------
-def draw_outline(renderer, obj: GameObject, camera: Camera | None,
+def draw_outline(renderer, obj: GameObject, camera: Optional[Camera],
                  color: tuple[float, float, float, float] = (1.0, 0.5, 0.0, 1.0),
                  width: float = 3.0) -> None:
     """Draw a bright outline around ``obj`` in world coordinates."""
@@ -100,7 +103,7 @@ def draw_outline(renderer, obj: GameObject, camera: Camera | None,
     glLineWidth(1.0)
 
 
-def draw_mesh(renderer, obj: GameObject, camera: Camera | None, mesh: Mesh) -> None:
+def draw_mesh(renderer, obj: GameObject, camera: Optional[Camera], mesh: Mesh) -> None:
     """Render a custom Mesh with the object's transform."""
     unit_scale = units.UNITS_PER_METER
     sign = 1.0 if units.Y_UP else -1.0
@@ -150,7 +153,7 @@ def draw_mesh(renderer, obj: GameObject, camera: Camera | None, mesh: Mesh) -> N
     glEnd()
 
 
-def draw_shape(renderer, obj: GameObject, camera: Camera | None, shape: str) -> None:
+def draw_shape(renderer, obj: GameObject, camera: Optional[Camera], shape: str) -> None:
     if shape == "triangle":
         mesh = create_triangle_mesh()
     elif shape == "square":
@@ -180,7 +183,7 @@ def draw_frustum(
     glLineWidth(1.0)
 
 
-def draw_origin(renderer, camera: Camera | None) -> None:
+def draw_origin(renderer, camera: Optional[Camera]) -> None:
     if not camera:
         zoom = 1.0
         cam_x = cam_y = 0.0
@@ -207,7 +210,7 @@ def draw_origin(renderer, camera: Camera | None) -> None:
     glEnd()
 
 
-def draw_grid(renderer, camera: Camera | None) -> None:
+def draw_grid(renderer, camera: Optional[Camera]) -> None:
     if not camera:
         zoom = 1.0
         cam_x = cam_y = 0.0
@@ -250,7 +253,7 @@ def draw_grid(renderer, camera: Camera | None) -> None:
     glEnd()
 
 
-def draw_cursor(renderer, x: float, y: float, camera: Camera | None) -> None:
+def draw_cursor(renderer, x: float, y: float, camera: Optional[Camera]) -> None:
     if camera is None:
         zoom = 1.0
     else:

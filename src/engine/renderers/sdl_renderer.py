@@ -4,6 +4,7 @@
 import ctypes
 import logging
 import math
+from typing import Any, cast
 
 from PIL import Image  # type: ignore[import-not-found]
 
@@ -75,7 +76,7 @@ class SDLRenderer(Renderer):
             raise RuntimeError(f"SDL_CreateRenderer failed: {err.decode()}")
         sdl2.SDL_SetRenderDrawBlendMode(self.renderer, sdl2.SDL_BLENDMODE_BLEND)
         if isinstance(self.widget, SDLWidget):
-            self.widget.renderer = self
+            cast(Any, self.widget).renderer = self
         self.keep_aspect = keep_aspect
         self.textures: dict[tuple[int, bool], ctypes.c_void_p] = {}
 

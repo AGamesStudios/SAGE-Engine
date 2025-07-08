@@ -1,5 +1,6 @@
 
 from dataclasses import dataclass
+from typing import cast
 
 from OpenGL.GL import (
     GL_VERTEX_SHADER,
@@ -29,9 +30,12 @@ class Shader:
         if self.program is not None:
             return self.program
         logger.debug("Compiling shader program")
-        self.program = compileProgram(
-            compileShader(self.vertex_source, GL_VERTEX_SHADER),
-            compileShader(self.fragment_source, GL_FRAGMENT_SHADER),
+        self.program = cast(
+            int,
+            compileProgram(
+                compileShader(self.vertex_source, GL_VERTEX_SHADER),
+                compileShader(self.fragment_source, GL_FRAGMENT_SHADER),
+            ),
         )
         logger.info("Shader compiled: %s", self.program)
         return self.program

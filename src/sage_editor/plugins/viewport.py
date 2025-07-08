@@ -551,6 +551,10 @@ class EditorWindow(QMainWindow):
         if (backend == "sdl" and not isinstance(self.viewport, SDLViewportWidget)) or (
             backend != "sdl" and isinstance(self.viewport, SDLViewportWidget)
         ):
+            if old_view is not None and hasattr(old_view, "deleteLater"):
+                old_view.deleteLater()
+            if old_splitter is not None and hasattr(old_splitter, "deleteLater"):
+                old_splitter.deleteLater()
             new_view = self._create_viewport_widget(backend)
             splitter = QSplitter(Qt.Orientation.Vertical, self)
             splitter.addWidget(new_view)
@@ -560,10 +564,6 @@ class EditorWindow(QMainWindow):
             self._splitter = splitter
             self.setCentralWidget(splitter)
             self.viewport = new_view
-            if old_view is not None and hasattr(old_view, "deleteLater"):
-                old_view.deleteLater()
-            if old_splitter is not None and hasattr(old_splitter, "deleteLater"):
-                old_splitter.deleteLater()
         self.renderer = rcls(width=w, height=h, widget=self.viewport, vsync=False, keep_aspect=False)
         self.renderer_backend = backend if rcls is not OpenGLRenderer else "opengl"
         self.set_renderer(self.renderer)

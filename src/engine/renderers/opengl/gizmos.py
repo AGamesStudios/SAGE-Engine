@@ -8,6 +8,8 @@ from OpenGL.GL import (
     GL_LINES, GL_TRIANGLES, GL_QUADS, GL_LINE_LOOP, GL_LINE_STRIP, GL_TEXTURE_2D,
 )  # type: ignore[import-not-found]
 
+from typing import Optional
+
 from engine.core.camera import Camera
 from engine.entities.game_object import GameObject
 from engine import units
@@ -17,7 +19,7 @@ from engine.gizmos import Gizmo
 def draw_gizmo(
     renderer,
     obj: GameObject,
-    camera: Camera | None,
+    camera: Optional[Camera],
     hover: str | None = None,
     dragging: str | None = None,
     mode: str = "move",
@@ -129,7 +131,7 @@ def draw_gizmo(
     glPopMatrix()
 
 
-def draw_basic_gizmo(renderer, gizmo: Gizmo, camera: Camera | None) -> None:
+def draw_basic_gizmo(renderer, gizmo: Gizmo, camera: Optional[Camera]) -> None:
     """Draw a simple gizmo shape using OpenGL primitives."""
     zoom = camera.zoom if camera else 1.0
     size = gizmo.size / zoom
