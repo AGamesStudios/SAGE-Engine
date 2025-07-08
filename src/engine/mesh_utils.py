@@ -2,6 +2,17 @@
 
 import math
 from dataclasses import dataclass
+from typing import cast
+
+try:  # optional, used for boolean mesh operations
+    from shapely.geometry import Polygon
+    from shapely.geometry.base import BaseGeometry
+    from shapely.ops import unary_union
+except Exception:  # pragma: no cover - shapely missing
+    Polygon = None  # type: ignore
+    unary_union = None  # type: ignore
+    from typing import Any
+    BaseGeometry = Any  # type: ignore
 
 __all__ = [
     "Mesh",
@@ -10,6 +21,7 @@ __all__ = [
     "create_circle_mesh",
     "create_polygon_mesh",
     "union_meshes",
+    "difference_meshes",
 ]
 
 
@@ -87,8 +99,20 @@ def create_polygon_mesh(vertices: list[tuple[float, float]]) -> Mesh:
     return Mesh(list(vertices), inds)
 
 
-def union_meshes(meshes: list[Mesh]) -> Mesh:
-    """Return a new :class:`Mesh` containing all *meshes* combined."""
+def union_meshes(
+    meshes: list[Mesh], negatives: list[Mesh] | None = None
+) -> Mesh:
+    """Return a new :class:`Mesh` from ``meshes`` optionally subtracting ``negatives``."""
+    if negatives and Polygon is not None and unary_union is not None:
+        geom = unary_union([Polygon(m.vertices) for m in meshes])  # pyright: ignore[reportOptionalCall]
+        for neg in negatives:
+            geom = geom.difference(Polygon(neg.vertices))
+        if isinstance(geom, Polygon):
+            vertices = cast(list[tuple[float, float]], list(geom.exterior.coords)[:-1])
+            inds: list[int] = []
+            for i in range(1, len(vertices) - 1):
+                inds.extend([0, i, i + 1])
+            return Mesh(vertices, inds)
     vertices: list[tuple[float, float]] = []
     indices: list[int] = []
     offset = 0
@@ -100,3 +124,19 @@ def union_meshes(meshes: list[Mesh]) -> Mesh:
             indices.extend(i + offset for i in mesh.indices)
         offset += len(mesh.vertices)
     return Mesh(vertices, indices)
+
+
+def difference_meshes(base: Mesh, subtract: list[Mesh]) -> Mesh:
+    """Return ``base`` minus all meshes in ``subtract`` using shapely when available."""
+    if Polygon is None:
+        raise ImportError("shapely is required for difference_meshes")
+    geom = Polygon(base.vertices)
+    for neg in subtract:
+        geom = geom.difference(Polygon(neg.vertices))
+    if isinstance(geom, Polygon):
+        vertices = cast(list[tuple[float, float]], list(geom.exterior.coords)[:-1])
+        inds: list[int] = []
+        for i in range(1, len(vertices) - 1):
+            inds.extend([0, i, i + 1])
+        return Mesh(vertices, inds)
+    raise ValueError("Difference produced unsupported geometry")

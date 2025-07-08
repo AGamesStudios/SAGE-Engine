@@ -40,6 +40,7 @@ _lazy = {
     'create_triangle_mesh': ('engine.mesh_utils', 'create_triangle_mesh'),
     'create_circle_mesh': ('engine.mesh_utils', 'create_circle_mesh'),
     'union_meshes': ('engine.mesh_utils', 'union_meshes'),
+    'difference_meshes': ('engine.mesh_utils', 'difference_meshes'),
     'Gizmo': ('engine.gizmos', 'Gizmo'),
     'cross_gizmo': ('engine.gizmos', 'cross_gizmo'),
     'circle_gizmo': ('engine.gizmos', 'circle_gizmo'),

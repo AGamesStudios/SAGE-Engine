@@ -11,6 +11,7 @@ from engine.mesh_utils import (  # noqa: E402
     create_triangle_mesh,
     create_polygon_mesh,
     union_meshes,
+    difference_meshes,
 )
 
 
@@ -59,3 +60,12 @@ def test_union_meshes():
     assert len(combo.vertices) == len(square.vertices) + len(tri.vertices)
     assert combo.indices is not None
     assert max(combo.indices) < len(combo.vertices)
+
+
+def test_difference_meshes():
+    pytest.importorskip("shapely")
+    square = create_square_mesh()
+    tri = create_triangle_mesh()
+    union = union_meshes([square])
+    result = difference_meshes(union, [tri])
+    assert len(result.vertices) < len(union.vertices)

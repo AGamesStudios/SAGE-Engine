@@ -28,8 +28,10 @@ limit with ``EngineSettings.max_angle`` and use ``Object.rotate(da, around_bbox=
 to spin objects around their bounding box centre instead of their pivot.
 
 Complex shapes can be built by combining multiple meshes with
-``engine.mesh_utils.union_meshes`` before assigning them to an object's ``mesh``
-attribute.
+``engine.mesh_utils.union_meshes`` before assigning them to an object's
+``mesh`` attribute. When :mod:`shapely` is available, ``union_meshes`` can also
+subtract ``negatives`` from the positive shapes. Alternatively use
+``engine.mesh_utils.difference_meshes`` to remove one mesh from another.
 
 Materials describe the appearance of a sprite. A :class:`~engine.entities.object.Material`
 defines a base ``color`` (RGBA tuple), optional ``texture`` path and ``opacity``
