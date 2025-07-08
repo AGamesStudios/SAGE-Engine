@@ -90,5 +90,6 @@ manually if needed.
 Initialization functions may be synchronous or return a coroutine. If an
 `asyncio` event loop is already running, coroutines are scheduled with
 `asyncio.create_task` and any exception is logged. Otherwise a new loop is
-started via `asyncio.run`. Pending tasks are tracked and waited for during
-engine shutdown so plugins can clean up resources.
+started via `asyncio.run`. Pending tasks are stored per event loop and can be
+waited on or cancelled using `wait_plugin_tasks()` and `cancel_plugin_tasks()`
+during shutdown so plugins can clean up resources.

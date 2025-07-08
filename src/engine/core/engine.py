@@ -321,14 +321,14 @@ class Engine:
         try:
             from ..plugins import wait_plugin_tasks, cancel_plugin_tasks
             if self.asyncio_events and hasattr(self, "_loop") and not self._loop.is_closed():
-                self._loop.run_until_complete(wait_plugin_tasks())
+                self._loop.run_until_complete(wait_plugin_tasks(self._loop))
             else:
                 try:
                     loop = asyncio.get_running_loop()
                 except RuntimeError:
                     asyncio.run(wait_plugin_tasks())
                 else:
-                    loop.run_until_complete(wait_plugin_tasks())
+                    loop.run_until_complete(wait_plugin_tasks(loop))
         except Exception:
             logger.exception("Failed to wait for plugin tasks")
             cancel_plugin_tasks()

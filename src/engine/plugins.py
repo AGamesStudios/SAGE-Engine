@@ -13,6 +13,7 @@ import sys
 import json
 import re
 from typing import Callable, Any, Coroutine
+import weakref
 
 from engine.utils.config import get as cfg_get
 
@@ -38,22 +39,43 @@ def _default_config_file(plugin_dir: str | None = None) -> str:
 
 logger = logging.getLogger('sage.plugins')
 
-# tasks started via ``_run_sync_or_async`` to be awaited on shutdown
-_PENDING: set[asyncio.Task] = set()
+# tasks started via ``_run_sync_or_async`` mapped per event loop
+_PENDING: dict[asyncio.AbstractEventLoop, weakref.WeakSet[asyncio.Task]] = {}
 
 
-async def wait_plugin_tasks() -> None:
-    """Wait for all pending plugin tasks to finish."""
-    if _PENDING:
-        tasks = list(_PENDING)
-        _PENDING.clear()
-        await asyncio.gather(*tasks, return_exceptions=True)
+def _pending_for_loop(loop: asyncio.AbstractEventLoop) -> weakref.WeakSet[asyncio.Task]:
+    """Return the task set for *loop*, creating it if needed."""
+    s = _PENDING.get(loop)
+    if s is None:
+        s = weakref.WeakSet()
+        _PENDING[loop] = s
+    return s
 
 
-def cancel_plugin_tasks() -> None:
-    """Cancel all pending plugin tasks."""
-    for task in list(_PENDING):
-        task.cancel()
+async def wait_plugin_tasks(loop: asyncio.AbstractEventLoop | None = None) -> None:
+    """Wait for all pending plugin tasks."""
+    if loop is None:
+        loops = list(_PENDING.keys())
+    else:
+        loops = [loop]
+    all_tasks: list[asyncio.Task] = []
+    for lp in loops:
+        all_tasks.extend(list(_PENDING.get(lp, [])))
+        _PENDING.pop(lp, None)
+    if all_tasks:
+        await asyncio.gather(*all_tasks, return_exceptions=True)
+
+
+def cancel_plugin_tasks(loop: asyncio.AbstractEventLoop | None = None) -> None:
+    """Cancel pending plugin tasks."""
+    if loop is None:
+        loops = list(_PENDING.keys())
+    else:
+        loops = [loop]
+    for lp in loops:
+        for task in list(_PENDING.get(lp, [])):
+            task.cancel()
+        _PENDING.pop(lp, None)
 
 
 def _log_async_result(task: asyncio.Task) -> None:
@@ -61,11 +83,13 @@ def _log_async_result(task: asyncio.Task) -> None:
     try:
         exc = task.exception()
     except asyncio.CancelledError:
-        _PENDING.discard(task)
+        for tasks in _PENDING.values():
+            tasks.discard(task)
         return
     if exc is not None:
         logger.error("Async plugin task failed", exc_info=exc)
-    _PENDING.discard(task)
+    for tasks in _PENDING.values():
+        tasks.discard(task)
 
 
 def _run_sync_or_async(func: Callable[..., Coroutine | Any], *args: Any) -> None:
@@ -78,7 +102,7 @@ def _run_sync_or_async(func: Callable[..., Coroutine | Any], *args: Any) -> None
             asyncio.run(res)
         else:
             task = loop.create_task(res)
-            _PENDING.add(task)
+            _pending_for_loop(loop).add(task)
             task.add_done_callback(_log_async_result)
 
 
