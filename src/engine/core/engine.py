@@ -41,7 +41,7 @@ class Engine:
 
     def __init__(self, width=640, height=480, scene=None, events=None, fps=30,
                  title="SAGE 2D", renderer: Renderer | str | None = None,
-                 camera: Camera | None = None, keep_aspect: bool = True,
+                 camera: Camera | None = None, keep_aspect: bool = True,  # pyright: ignore[reportGeneralTypeIssues]
                  background: tuple[int, int, int] = (0, 0, 0),
                  input_backend: str | type[InputBackend] | InputBackend = "sdl",
                  max_delta: float = 0.1,
@@ -169,11 +169,11 @@ class Engine:
                 if cls is None:
                     raise ValueError(f"Unknown input backend: {input_backend}")
             else:
-                cls = input_backend
+                cls = cast(type[InputBackend], input_backend)
             try:
-                self.input = cls(cast(Any, self.renderer).widget)
+                self.input = cls(cast(Any, self.renderer).widget)  # pyright: ignore[reportCallIssue]
             except TypeError:
-                self.input = cls()
+                self.input = cls()  # pyright: ignore[reportCallIssue]
         self.last_time = time.perf_counter()
         self.delta_time = 0.0
         self.logic_active = False
@@ -350,7 +350,7 @@ class Engine:
         if scene is not None:
             self.scene_manager.add_scene(name, scene)
         self.scene_manager.set_active(name)
-        self.scene = self.scene_manager.get_active_scene()
+        self.scene = cast(Scene, self.scene_manager.get_active_scene())
         if self.scene:
             self.camera = self.scene.ensure_active_camera(
                 getattr(self.renderer, "width", 640),
@@ -358,7 +358,7 @@ class Engine:
             )
             self.events = self.scene.build_event_system(aggregate=False)
 
-    def set_camera(self, camera: Camera | str | None):
+    def set_camera(self, camera: Camera | str | None) -> None:  # pyright: ignore[reportGeneralTypeIssues]
         """Switch the camera used for rendering."""
         if isinstance(camera, str):
             camera = next((o for o in self.scene.objects
@@ -367,22 +367,23 @@ class Engine:
 
     def update(self, dt: float) -> None:
         """Process one frame of logic and rendering."""
+        scene = cast(Scene, self.scene)
         if self.logic_active:
             if self.asyncio_events:
                 self._loop.run_until_complete(
                     self.events.update_asyncio(self, self.scene, dt)
                 )
             elif self.async_events:
-                self.events.update_async(
-                    self, self.scene, dt, workers=self.event_workers
-                )
+                    self.events.update_async(
+                        self, scene, dt, workers=self.event_workers
+                    )
             else:
-                self.events.update(self, self.scene, dt)
-            self.scene.update_events(self, dt)
-        self.scene.update(dt)
+                self.events.update(self, scene, dt)
+            scene.update_events(self, dt)
+        scene.update(dt)
         for ext in list(self.extensions):
             try:
-                res = ext.update(self, dt)
+                res: Any = ext.update(self, dt)
                 if asyncio.iscoroutine(res):
                     if self.asyncio_events:
                         self._loop.run_until_complete(res)
@@ -392,32 +393,33 @@ class Engine:
                 logger.exception("Extension %s failed during update", ext)
                 raise
         cam = self.camera or self.scene.get_active_camera()
-        self.renderer.draw_scene(self.scene, cam, gizmos=False)
+        self.renderer.draw_scene(self.scene, cam, gizmos=False)  # pyright: ignore[reportCallIssue]
         self.renderer.present()
 
     async def update_async(self, dt: float) -> None:
         """Asynchronous variant of :meth:`update`."""
+        scene = cast(Scene, self.scene)
         if self.logic_active:
             if self.asyncio_events:
                 await self.events.update_asyncio(self, self.scene, dt)
             elif self.async_events:
                 self.events.update_async(
-                    self, self.scene, dt, workers=self.event_workers
+                    self, scene, dt, workers=self.event_workers
                 )
             else:
-                self.events.update(self, self.scene, dt)
-            await self.scene.update_events_async(self, dt)
-        await self.scene.update_async(dt)
+                self.events.update(self, scene, dt)
+            await scene.update_events_async(self, dt)
+        await scene.update_async(dt)
         for ext in list(self.extensions):
             try:
-                res = ext.update(self, dt)
+                res: Any = ext.update(self, dt)
                 if asyncio.iscoroutine(res):
                     await res
             except Exception:
                 logger.exception("Extension %s failed during update", ext)
                 raise
-        cam = self.camera or self.scene.get_active_camera()
-        self.renderer.draw_scene(self.scene, cam, gizmos=False)
+        cam = self.camera or scene.get_active_camera()
+        self.renderer.draw_scene(self.scene, cam, gizmos=False)  # pyright: ignore[reportCallIssue]
         self.renderer.present()
 
     def run(self, *, install_hook: bool = True):
@@ -597,6 +599,7 @@ def main(argv=None):
             cls = get_renderer("sdl") or get_renderer("null")
     elif cls is None:
         raise ValueError(f"Unknown renderer: {renderer_name}")
+    assert cls is not None
     params = inspect.signature(cls.__init__).parameters
     if "vsync" in params:
         renderer = cls(width, height, title, vsync=args.vsync)
