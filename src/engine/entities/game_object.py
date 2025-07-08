@@ -301,7 +301,9 @@ class GameObject(Object):
                 img = _IMAGE_CACHE.get(path)
                 if img is None:
                     try:
-                        img = Image.open(path).convert('RGBA')
+                        img = Image.open(path)
+                        if hasattr(img, 'convert'):
+                            img = img.convert('RGBA')
                         _IMAGE_CACHE[path] = img
                         while len(_IMAGE_CACHE) > _MAX_CACHE:
                             _IMAGE_CACHE.popitem(last=False)

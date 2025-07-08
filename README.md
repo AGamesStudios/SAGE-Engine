@@ -22,9 +22,9 @@ Install optional extras via:
 ```bash
 pip install .[opengl,sdl,qt,audio]
 ```
-The Qt based editor requires the `PyQt6` and `PyOpenGL` packages. If these
-dependencies are missing the editor will not start and a message is written to
-the log file.
+The Qt based editor requires `PyQt6` and `PyOpenGL`. The SDL renderer depends on
+`PySDL2` while boolean mesh utilities rely on `shapely`. When these optional
+packages are missing the related features are disabled and a warning is logged.
 Plugin modules live in `~/.sage_plugins` by default. Configure a different
 location or extra search paths in `sage.toml` under the `[plugins]` table:
 ```toml

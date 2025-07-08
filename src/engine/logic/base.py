@@ -8,6 +8,7 @@ from .. import lang as engine_lang
 from threading import Lock
 import asyncio
 import re
+from typing import Any
 
 # registries used to map names to classes so new logic blocks can be added
 # without modifying the loader code
@@ -154,7 +155,9 @@ def parse_value(val):
     return val
 
 
-def resolve_value(val, engine):
+
+
+def resolve_value(val: Any, engine) -> Any:
     """Return the runtime value for ``val``.
 
     Lists and dictionaries are expanded recursively so complex parameters can

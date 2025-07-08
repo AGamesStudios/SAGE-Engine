@@ -1,17 +1,17 @@
 # ruff: noqa: F401,F403,F405
+from __future__ import annotations
 
 from dataclasses import dataclass
 
 from .. import Renderer
-from typing import Optional, Callable
+from typing import Optional, Callable, Any
 import math
 import ctypes
 
 from .glwidget import GLWidget
 from .textures import get_blank_texture, get_texture, unload_texture
 try:
-    from OpenGL.GL import *  # type: ignore[import-not-found,F401,F403]
-    import OpenGL.GL as gl
+    import OpenGL.GL as GL  # type: ignore[import-not-found]
 except Exception as exc:  # pragma: no cover - optional dependency
     raise ImportError(
         "OpenGLRenderer requires PyOpenGL; install it with 'pip install PyOpenGL'"
@@ -28,10 +28,10 @@ from engine.entities.tile_map import TileMap
 from . import drawing, gizmos, shaders
 
 # role-specific draw callbacks
-RENDER_HANDLERS: dict[str, Callable[["OpenGLRenderer", GameObject, Camera | None], None]] = {}
+RENDER_HANDLERS: dict[str, Callable[[OpenGLRenderer, GameObject, Optional[Camera]], None]] = {}
 
 
-def register_draw_handler(role: str, func: Callable[["OpenGLRenderer", GameObject, Camera | None], None]) -> None:
+def register_draw_handler(role: str, func: Callable[[OpenGLRenderer, GameObject, Optional[Camera]], None]) -> None:
     """Register a custom draw handler for ``role``."""
     RENDER_HANDLERS[role] = func
 
@@ -45,11 +45,11 @@ class OpenGLRenderer(Renderer):
     title: str = "SAGE 2D"
     samples: int = 4
     vsync: bool | None = None
-    widget: Optional[GLWidget] = None
+    widget: Optional[Any] = None
     keep_aspect: bool = True
     background: tuple[int, int, int] = (0, 0, 0)
 
-    def create_widget(self) -> GLWidget:
+    def create_widget(self) -> Any:
         """Return the :class:`GLWidget` used for rendering."""
         from .. import opengl_renderer
         return opengl_renderer.GLWidget(samples=self.samples, vsync=self.vsync)
@@ -64,21 +64,23 @@ class OpenGLRenderer(Renderer):
         self._vao, self._vbo = shaders.setup_sprite_vao(self._sprite_shader)
 
         # full screen quad for post processing
-        self._quad_vao = glGenVertexArrays(1)
-        glBindVertexArray(self._quad_vao)
-        self._quad_vbo = glGenBuffers(1)
-        glBindBuffer(GL_ARRAY_BUFFER, self._quad_vbo)
+        self._quad_vao = GL.glGenVertexArrays(1)
+        GL.glBindVertexArray(self._quad_vao)
+        self._quad_vbo = GL.glGenBuffers(1)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self._quad_vbo)
         quad_data = (ctypes.c_float * 8)(-1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0)
-        glBufferData(GL_ARRAY_BUFFER, ctypes.sizeof(quad_data), quad_data, GL_STATIC_DRAW)
-        glBindBuffer(GL_ARRAY_BUFFER, 0)
-        glBindVertexArray(0)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, ctypes.sizeof(quad_data), quad_data, GL.GL_STATIC_DRAW)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
+        GL.glBindVertexArray(0)
 
     def __post_init__(self):
         super().__init__()
         if self.widget is None:
             self.widget = self.create_widget()
-        self.widget.renderer = self
-        self.widget.resize(self.width, self.height)
+        widget = self.widget
+        assert widget is not None
+        widget.renderer = self
+        widget.resize(self.width, self.height)
         self._should_close = False
         self.textures: dict[tuple[int, bool], int] = {}
         self._blank_texture: int | None = None
@@ -97,7 +99,7 @@ class OpenGLRenderer(Renderer):
         self.grid_size = 1.0
         self.grid_color = (0.3, 0.3, 0.3, 1.0)
         self.keep_aspect = bool(self.keep_aspect)
-        self.background = tuple(self.background)
+        self.background = tuple(self.background)  # type: ignore[assignment]
         self._program = None
         self._sprite_shader: Shader | None = None
         self._vao = None
@@ -122,8 +124,8 @@ class OpenGLRenderer(Renderer):
         return self._should_close
 
     def clear(self, color=(0, 0, 0)):
-        glClearColor(color[0]/255.0, color[1]/255.0, color[2]/255.0, 1.0)
-        glClear(GL_COLOR_BUFFER_BIT)
+        GL.glClearColor(color[0] / 255.0, color[1] / 255.0, color[2] / 255.0, 1.0)
+        GL.glClear(GL.GL_COLOR_BUFFER_BIT)
 
     def units_y_up(self) -> bool:
         """Return the engine's current Y-axis orientation."""
@@ -132,12 +134,21 @@ class OpenGLRenderer(Renderer):
 
     def grab_image(self) -> Image.Image:
         """Return the current frame buffer as a :class:`PIL.Image.Image`."""
-        from OpenGL.GL import glReadPixels, GL_RGBA, GL_UNSIGNED_BYTE  # type: ignore[import-not-found]
-        ctx = self.widget.context()
+        widget = self.widget
+        if widget is None:
+            return Image.new("RGBA", (self.width, self.height))
+        ctx = widget.context()
         if ctx and ctx.isValid():
-            self.widget.makeCurrent()
-            data = glReadPixels(0, 0, self.width, self.height, GL_RGBA, GL_UNSIGNED_BYTE)
-            self.widget.doneCurrent()
+            widget.makeCurrent()
+            data = GL.glReadPixels(
+                0,
+                0,
+                self.width,
+                self.height,
+                GL.GL_RGBA,
+                GL.GL_UNSIGNED_BYTE,
+            )
+            widget.doneCurrent()
         else:  # pragma: no cover - invalid context during shutdown
             data = bytes(self.width * self.height * 4)
         img = Image.frombytes("RGBA", (self.width, self.height), data)
@@ -149,12 +160,11 @@ class OpenGLRenderer(Renderer):
 
     def setup_view(self):
         """Configure the OpenGL projection and store it for later."""
-        from OpenGL.GL import glMatrixMode, glLoadIdentity, glOrtho, GL_PROJECTION, GL_MODELVIEW  # type: ignore[import-not-found]
         from engine.core import math2d
-        glMatrixMode(GL_PROJECTION)
-        glLoadIdentity()
+        GL.glMatrixMode(GL.GL_PROJECTION)
+        GL.glLoadIdentity()
         # center the origin so camera transforms are stable
-        glOrtho(
+        GL.glOrtho(
             -self.width / 2,
             self.width / 2,
             -self.height / 2,
@@ -168,8 +178,8 @@ class OpenGLRenderer(Renderer):
             -self.height / 2,
             self.height / 2,
         )
-        glMatrixMode(GL_MODELVIEW)
-        glLoadIdentity()
+        GL.glMatrixMode(GL.GL_MODELVIEW)
+        GL.glLoadIdentity()
 
     def get_projection(self) -> list[float] | None:
         """Return the current orthographic projection matrix."""
@@ -187,18 +197,6 @@ class OpenGLRenderer(Renderer):
         unload_texture(self, obj)
 
     def _build_map_texture(self, tilemap: TileMap) -> None:
-        from OpenGL.GL import (
-            glGenTextures,
-            glBindTexture,
-            glTexParameteri,
-            glTexImage2D,
-            GL_TEXTURE_2D,
-            GL_TEXTURE_MIN_FILTER,
-            GL_TEXTURE_MAG_FILTER,
-            GL_NEAREST,
-            GL_RGBA,
-            GL_UNSIGNED_BYTE,
-        )  # type: ignore[import-not-found]
         w = tilemap.width * tilemap.tile_width
         h = tilemap.height * tilemap.tile_height
         img = Image.new("RGBA", (w, h))
@@ -216,38 +214,39 @@ class OpenGLRenderer(Renderer):
                 draw_img.rectangle(rect, fill=rgba)
         arr_bytes = img.tobytes()
         arr = (ctypes.c_ubyte * len(arr_bytes)).from_buffer_copy(arr_bytes)
-        tex = glGenTextures(1)
-        glBindTexture(GL_TEXTURE_2D, tex)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, arr)
+        tex = GL.glGenTextures(1)
+        GL.glBindTexture(GL.GL_TEXTURE_2D, tex)
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
+        GL.glTexImage2D(
+            GL.GL_TEXTURE_2D,
+            0,
+            GL.GL_RGBA,
+            w,
+            h,
+            0,
+            GL.GL_RGBA,
+            GL.GL_UNSIGNED_BYTE,
+            arr,
+        )
         tilemap._texture = tex
 
     def _draw_map(self, tilemap: TileMap) -> None:
-        from OpenGL.GL import (
-            glBindTexture,
-            glBegin,
-            glEnd,
-            glTexCoord2f,
-            glVertex2f,
-            GL_TEXTURE_2D,
-            GL_QUADS,
-        )  # type: ignore[import-not-found]
         if getattr(tilemap, "_texture", None) is None:
             self._build_map_texture(tilemap)
         w = tilemap.width * tilemap.tile_width
         h = tilemap.height * tilemap.tile_height
-        glBindTexture(GL_TEXTURE_2D, tilemap._texture)
-        glBegin(GL_QUADS)
-        glTexCoord2f(0, 0)
-        glVertex2f(0, 0)
-        glTexCoord2f(1, 0)
-        glVertex2f(w, 0)
-        glTexCoord2f(1, 1)
-        glVertex2f(w, h)
-        glTexCoord2f(0, 1)
-        glVertex2f(0, h)
-        glEnd()
+        GL.glBindTexture(GL.GL_TEXTURE_2D, tilemap._texture)
+        GL.glBegin(GL.GL_QUADS)
+        GL.glTexCoord2f(0, 0)
+        GL.glVertex2f(0, 0)
+        GL.glTexCoord2f(1, 0)
+        GL.glVertex2f(w, 0)
+        GL.glTexCoord2f(1, 1)
+        GL.glVertex2f(w, h)
+        GL.glTexCoord2f(0, 1)
+        GL.glVertex2f(0, h)
+        GL.glEnd()
 
 
 
@@ -257,12 +256,11 @@ class OpenGLRenderer(Renderer):
     def _draw_object(
         self,
         obj: GameObject,
-        camera: Camera | None,
+        camera: Optional[Camera],
         cam_shader: Shader | None = None,
     ) -> None:
         if self._program is None:
             return
-        import OpenGL.GL as GL  # local import for test stubbing
         shader = None
         handler = RENDER_HANDLERS.get(getattr(obj, "role", ""))
         if handler:
@@ -272,7 +270,6 @@ class OpenGLRenderer(Renderer):
             GL.glUseProgram(0)
             self._draw_map(obj)
             return
-        glBindTexture = GL.glBindTexture
         custom_shader = obj.get_shader() if hasattr(obj, "get_shader") else None
         if custom_shader:
             shader = custom_shader
@@ -289,7 +286,7 @@ class OpenGLRenderer(Renderer):
         else:
             program = self._program
             GL.glUseProgram(program)
-            loc_color = glGetUniformLocation(program, "color")
+            loc_color = GL.glGetUniformLocation(program, "color")
             rgba = self._parse_color(obj.color)
             scale = 1 / 255.0 if max(rgba) > 1.0 else 1.0
             alpha = getattr(obj, 'alpha', 1.0)
@@ -301,7 +298,7 @@ class OpenGLRenderer(Renderer):
                 rgba[2] * scale,
                 min(1.0, rgba[3] * scale * alpha),
             )
-            glUniform4f(loc_color, *norm)
+            GL.glUniform4f(loc_color, *norm)
 
         mesh = getattr(obj, "mesh", None)
         if isinstance(mesh, Mesh):
@@ -360,13 +357,13 @@ class OpenGLRenderer(Renderer):
             data[4], data[5], uvs[4], uvs[5],
             data[6], data[7], uvs[6], uvs[7],
         )
-        glBindBuffer(GL_ARRAY_BUFFER, self._vbo)
-        glBufferSubData(GL_ARRAY_BUFFER, 0, ctypes.sizeof(arr), arr)
-        glBindTexture(GL_TEXTURE_2D, self._get_texture(obj))
-        glBindVertexArray(self._vao)
-        glDrawArrays(GL_TRIANGLE_FAN, 0, 4)
-        glBindVertexArray(0)
-        glBindBuffer(GL_ARRAY_BUFFER, 0)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self._vbo)
+        GL.glBufferSubData(GL.GL_ARRAY_BUFFER, 0, ctypes.sizeof(arr), arr)
+        GL.glBindTexture(GL.GL_TEXTURE_2D, self._get_texture(obj))
+        GL.glBindVertexArray(self._vao)
+        GL.glDrawArrays(GL.GL_TRIANGLE_FAN, 0, 4)
+        GL.glBindVertexArray(0)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
         if shader:
             Shader.stop()
         else:
@@ -375,7 +372,7 @@ class OpenGLRenderer(Renderer):
     def _draw_outline(
         self,
         obj: GameObject,
-        camera: Camera | None,
+        camera: Optional[Camera],
         color: tuple[float, float, float, float] = (1.0, 0.5, 0.0, 1.0),
         width: float = 3.0,
     ) -> None:
@@ -384,7 +381,7 @@ class OpenGLRenderer(Renderer):
     def _draw_mesh(
         self,
         obj: GameObject,
-        camera: Camera | None,
+        camera: Optional[Camera],
         mesh: Mesh,
     ) -> None:
         drawing.draw_mesh(self, obj, camera, mesh)
@@ -392,7 +389,7 @@ class OpenGLRenderer(Renderer):
     def _draw_shape(
         self,
         obj: GameObject,
-        camera: Camera | None,
+        camera: Optional[Camera],
         shape: str,
     ) -> None:
         drawing.draw_shape(self, obj, camera, shape)
@@ -405,17 +402,17 @@ class OpenGLRenderer(Renderer):
     ) -> None:
         drawing.draw_frustum(self, cam, color=color, width=width)
 
-    def _draw_origin(self, camera: Camera | None):
+    def _draw_origin(self, camera: Optional[Camera]):
         drawing.draw_origin(self, camera)
 
-    def _draw_grid(self, camera: Camera | None):
+    def _draw_grid(self, camera: Optional[Camera]):
         drawing.draw_grid(self, camera)
 
 
-    def _draw_cursor(self, x: float, y: float, camera: Camera | None):
+    def _draw_cursor(self, x: float, y: float, camera: Optional[Camera]):
         drawing.draw_cursor(self, x, y, camera)
 
-    def _draw_basic_gizmos(self, camera: Camera | None) -> None:
+    def _draw_basic_gizmos(self, camera: Optional[Camera]) -> None:
         for gizmo in list(self.gizmos):
             gizmos.draw_basic_gizmo(self, gizmo, camera)
         self._advance_gizmos()
@@ -423,8 +420,8 @@ class OpenGLRenderer(Renderer):
 
     def _draw_gizmo(
         self,
-        obj: "GameObject",
-        camera: Camera | None,
+        obj: GameObject,
+        camera: Optional[Camera],
         hover: str | None = None,
         dragging: str | None = None,
         mode: str = 'move',
@@ -432,18 +429,17 @@ class OpenGLRenderer(Renderer):
     ):
         gizmos.draw_gizmo(self, obj, camera, hover, dragging, mode, local)
 
-    def _apply_viewport(self, camera: Camera | None) -> tuple[int, int, int, int]:
+    def _apply_viewport(self, camera: Optional[Camera]) -> tuple[int, int, int, int]:
         """Set GL viewport respecting the camera aspect ratio.
 
         Returns the viewport rectangle ``(x, y, width, height)`` so the caller
         can optionally restrict further operations to this area using scissor
         tests.
         """
-        from OpenGL.GL import glViewport  # type: ignore[import-not-found]
         w = self.widget.width() if self.widget else self.width
         h = self.widget.height() if self.widget else self.height
         if not self.keep_aspect or camera is None:
-            glViewport(0, 0, w, h)
+            GL.glViewport(0, 0, w, h)
             return 0, 0, w, h
         cam_ratio = camera.width / camera.height if camera.height else 1.0
         win_ratio = w / h if h else cam_ratio
@@ -457,23 +453,22 @@ class OpenGLRenderer(Renderer):
             vp_w = int(h * cam_ratio)
             x = int((w - vp_w) / 2)
             y = 0
-        glViewport(x, y, vp_w, vp_h)
+        GL.glViewport(x, y, vp_w, vp_h)
         return x, y, vp_w, vp_h
 
-    def _apply_projection(self, camera: Camera | None) -> None:
-        from OpenGL.GL import glMatrixMode, glLoadIdentity, glOrtho, GL_PROJECTION, GL_MODELVIEW  # type: ignore[import-not-found]
+    def _apply_projection(self, camera: Optional[Camera]) -> None:
         from engine.core import math2d
         w = (camera.width if (self.keep_aspect and camera) else self.width)
         h = (camera.height if (self.keep_aspect and camera) else self.height)
         sign = 1.0 if units.Y_UP else -1.0
-        glMatrixMode(GL_PROJECTION)
-        glLoadIdentity()
-        glOrtho(-w / 2, w / 2, -h / 2 * sign, h / 2 * sign, -1, 1)
+        GL.glMatrixMode(GL.GL_PROJECTION)
+        GL.glLoadIdentity()
+        GL.glOrtho(-w / 2, w / 2, -h / 2 * sign, h / 2 * sign, -1, 1)
         self._projection = math2d.make_ortho(
             -w / 2, w / 2, -h / 2 * sign, h / 2 * sign
         )
-        glMatrixMode(GL_MODELVIEW)
-        glLoadIdentity()
+        GL.glMatrixMode(GL.GL_MODELVIEW)
+        GL.glLoadIdentity()
 
     def paint(self):
         """Draw the current scene to the widget."""
@@ -484,14 +479,13 @@ class OpenGLRenderer(Renderer):
         ctx = self.widget.context()
         if ctx is None or not ctx.isValid():
             return
-        from OpenGL.GL import glViewport  # type: ignore[import-not-found]
-        glViewport(0, 0, self.widget.width(), self.widget.height())
+        GL.glViewport(0, 0, self.widget.width(), self.widget.height())
         self.clear((0, 0, 0))
         if self._scene:
             self._render_scene(self._scene, self._camera)
 
-    def draw_scene(self, scene, camera: Camera | None = None, gizmos: bool = True,
-                   selected: GameObject | None = None,
+    def draw_scene(self, scene, camera: Optional[Camera] = None, gizmos: bool = True,
+                   selected: Optional[GameObject] = None,
                    hover: str | None = None, dragging: str | None = None,
                    cursor: tuple[float, float] | None = None,
                    mode: str = 'pan', local: bool = False):
@@ -505,26 +499,28 @@ class OpenGLRenderer(Renderer):
         self._cursor_pos = cursor
         self._transform_mode = mode
         self._local_coords = local
-        self.widget.update()
+        if self.widget:
+            self.widget.update()
 
-    def _render_scene(self, scene, camera: Camera | None):
+    def _render_scene(self, scene, camera: Optional[Camera]):
         x, y, vp_w, vp_h = self._apply_viewport(camera)
-        from OpenGL.GL import glEnable, glDisable, glScissor, GL_SCISSOR_TEST  # type: ignore[import-not-found]
-        glEnable(GL_SCISSOR_TEST)
-        glScissor(x, y, vp_w, vp_h)
+        GL.glEnable(GL.GL_SCISSOR_TEST)
+        GL.glScissor(x, y, vp_w, vp_h)
         self.clear(self.background)
-        glDisable(GL_SCISSOR_TEST)
+        GL.glDisable(GL.GL_SCISSOR_TEST)
         self._apply_projection(camera)
-        cam_shader = camera.get_shader() if hasattr(camera, "get_shader") else None
-        glPushMatrix()
+        cam_shader = camera.get_shader() if camera and hasattr(camera, "get_shader") else None
+        GL.glPushMatrix()
         try:
             scale = units.UNITS_PER_METER
             sign = 1.0 if units.Y_UP else -1.0
             if camera:
-                glScalef(camera.zoom, camera.zoom, 1.0)
-                glTranslatef(-camera.x * scale,
-                             -camera.y * scale * sign,
-                             0)
+                GL.glScalef(camera.zoom, camera.zoom, 1.0)
+                GL.glTranslatef(
+                    -camera.x * scale,
+                    -camera.y * scale * sign,
+                    0,
+                )
             if cam_shader:
                 cam_shader.use(getattr(camera, "shader_uniforms", {}))
             scene.sort_objects()
@@ -583,18 +579,18 @@ class OpenGLRenderer(Renderer):
         finally:
             if cam_shader:
                 Shader.stop()
-            glPopMatrix()
+            GL.glPopMatrix()
 
 
     def present(self):
-        self.widget.update()
+        if self.widget:
+            self.widget.update()
         self.run_post_hooks()
 
     def close(self):
         self._should_close = True
         if self.widget:
             try:
-                from OpenGL.GL import glDeleteTextures  # type: ignore[import-not-found]
                 tex_ids = list(self.textures.values())
                 if self._blank_texture:
                     tex_ids.append(self._blank_texture)
@@ -605,7 +601,7 @@ class OpenGLRenderer(Renderer):
                     ctx = self.widget.context()
                     if ctx and ctx.isValid():
                         self.widget.makeCurrent()
-                        glDeleteTextures(len(tex_ids), arr)
+                        GL.glDeleteTextures(len(tex_ids), arr)
                         self.widget.doneCurrent()
             except Exception:
                 logger.exception("Failed to delete GL textures")

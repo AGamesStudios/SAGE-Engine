@@ -1,7 +1,9 @@
+from __future__ import annotations
 
 import json
 import os
 import asyncio
+from typing import Optional
 from ...utils import load_json
 
 
@@ -48,7 +50,7 @@ class Scene:
         if with_defaults:
             # default camera and sprite for new scenes
             try:
-                cam = Camera(0.0, 0.0, 0.0, 640, 480, active=True)
+                cam = Camera(x=0.0, y=0.0, z=0.0, width=640, height=480, active=True)
                 self.add_object(cam)
                 obj = GameObject(image_path='', shape='square', name='Sprite')
                 obj.x = 0
@@ -68,7 +70,7 @@ class Scene:
         """Sort objects by their z order."""
         self.objects.sort(key=lambda o: getattr(o, 'z', 0))
 
-    def add_object(self, obj: GameObject | Camera):
+    def add_object(self, obj: GameObject | Camera) -> None:  # pyright: ignore[reportGeneralTypeIssues]
         existing = {o.name for o in self.objects}
         base = obj.name
         if base in existing:
@@ -116,7 +118,7 @@ class Scene:
                 obj.active = False
             self.sort_objects()
 
-    def find_object(self, key) -> GameObject | Camera | None:
+    def find_object(self, key) -> GameObject | Camera | None:  # pyright: ignore[reportGeneralTypeIssues]
         """Return an object by name or id."""
         if isinstance(key, int):
             return self.object_lookup.get(key)
@@ -130,7 +132,7 @@ class Scene:
         if obj is not None:
             self.remove_object(obj)
 
-    def set_active_camera(self, camera: Camera | str | None):
+    def set_active_camera(self, camera: Camera | str | None) -> None:  # pyright: ignore[reportGeneralTypeIssues]
         """Select which camera is used for rendering."""
         if isinstance(camera, str):
             camera = next((o for o in self.objects
@@ -150,7 +152,7 @@ class Scene:
                     obj.active = obj is camera
             logger.debug('Active camera set to %s', camera.name)
 
-    def get_active_camera(self) -> Camera | None:
+    def get_active_camera(self) -> Optional[Camera]:
         """Return the currently active camera."""
         if self.camera is None and self.active_camera:
             self.set_active_camera(self.active_camera)

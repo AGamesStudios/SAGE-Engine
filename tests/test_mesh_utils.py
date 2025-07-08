@@ -1,5 +1,6 @@
 import math
 import importlib
+import sys
 import pytest
 spec = importlib.util.find_spec("engine.mesh_utils")
 if not spec or spec.loader is None:
@@ -69,3 +70,13 @@ def test_difference_meshes():
     union = union_meshes([square])
     result = difference_meshes(union, [tri])
     assert len(result.vertices) < len(union.vertices)
+
+
+def test_difference_requires_shapely(monkeypatch):
+    monkeypatch.setitem(sys.modules, "shapely", None)
+    import importlib
+    import engine.mesh_utils as mu
+    importlib.reload(mu)
+    square = create_square_mesh()
+    with pytest.raises(ImportError):
+        mu.difference_meshes(square, [])

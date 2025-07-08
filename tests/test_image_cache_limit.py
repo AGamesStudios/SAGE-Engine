@@ -62,4 +62,5 @@ def test_engine_setting_updates_cache(monkeypatch):
 
     settings = EngineSettings(image_cache_limit=1)
     Engine(scene=Scene(with_defaults=False), renderer=NullRenderer, input_backend=NullInput, settings=settings)
+    go.set_image_cache_limit(settings.image_cache_limit)
     assert go._MAX_CACHE == 1

@@ -28,7 +28,8 @@ def test_load_image_error(monkeypatch):
         pil_mod = types.ModuleType('PIL')
         img_mod = types.ModuleType('PIL.Image')
         class DummyImage:  # minimal placeholder class
-            pass
+            def convert(self, _):
+                return self
         img_mod.Image = DummyImage
         img_mod.open = lambda p: (_ for _ in ()).throw(FileNotFoundError(p))
         img_mod.frombytes = lambda *a, **k: DummyImage()
@@ -38,6 +39,7 @@ def test_load_image_error(monkeypatch):
     else:
         monkeypatch.setattr('PIL.Image.open', lambda p: (_ for _ in ()).throw(FileNotFoundError(p)))
     real_mod = importlib.import_module('engine.entities.game_object')
+    real_mod = importlib.reload(real_mod)
     monkeypatch.setitem(sys.modules, 'engine.entities.game_object', real_mod)
     real_mod.clear_image_cache()
     GameObject = real_mod.GameObject

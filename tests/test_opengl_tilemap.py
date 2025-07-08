@@ -4,6 +4,8 @@ from engine.entities.tile_map import TileMap
 
 
 def _stub_gl(monkeypatch, calls):
+    for name in ['engine.renderers.opengl_renderer', 'engine.renderers.opengl.core']:
+        sys.modules.pop(name, None)
     gl = types.ModuleType('OpenGL.GL')
     names = [
         'glGenTextures','glBindTexture','glTexParameteri','glTexImage2D','glBegin','glEnd',

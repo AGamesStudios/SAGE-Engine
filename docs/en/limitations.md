@@ -12,6 +12,8 @@ The OpenGL and SDL backends require external libraries (`PyOpenGL`, `PySDL2` and
 SDL2). On lightweight systems you may prefer the `NullRenderer` which has no
 extra dependencies. When distributing binaries consider providing wheels for
 these packages.
+Mesh boolean operations such as unions and subtractions need `shapely` installed
+or they will raise an ``ImportError``.
 
 The core engine code is pure Python and also works with **PyPy 3.10+**. Running
 under PyPy can improve execution speed for heavy logic while keeping full
