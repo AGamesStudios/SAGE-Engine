@@ -31,6 +31,12 @@ Complex shapes can be built by combining multiple meshes with
 ``engine.mesh_utils.union_meshes`` before assigning them to an object's ``mesh``
 attribute.
 
+Materials describe the appearance of a sprite. A :class:`~engine.entities.object.Material`
+defines a base ``color`` (RGBA tuple), optional ``texture`` path and ``opacity``
+value. When creating a :class:`~engine.entities.game_object.GameObject`, any missing
+``color``, ``image_path`` or ``alpha`` fields are taken from the material so roles
+can provide consistent defaults.
+
 ## Object Roles
 
 Objects carry a ``role`` string instead of a fixed class type. Register new

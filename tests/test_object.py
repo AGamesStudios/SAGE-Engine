@@ -124,6 +124,18 @@ class TestObject(unittest.TestCase):
         self.assertEqual(t.angle, 10)
         set_max_angle(360)
 
+    def test_material_defaults_applied(self):
+        from engine.entities.object import Material
+        from engine.entities.game_object import GameObject
+        from unittest.mock import patch
+
+        with patch.object(GameObject, '_load_image', lambda self: None):
+            mat = Material(color=(10, 20, 30, 40), texture='img.png', opacity=0.5)
+            obj = GameObject(material=mat)
+        self.assertEqual(obj.color, (10, 20, 30, 40))
+        self.assertEqual(obj.alpha, 0.5)
+        self.assertEqual(obj.image_path, 'img.png')
+
 
 if __name__ == "__main__":
     unittest.main()

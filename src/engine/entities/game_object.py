@@ -186,10 +186,22 @@ class GameObject(Object):
     def scale(self, value: float):
         self.scale_x = self.scale_y = value
 
+    def _apply_material_defaults(self) -> None:
+        """Override attributes with values from ``material`` when unset."""
+        if self.material is None:
+            return
+        if self.color is None:
+            self.color = self.material.color
+        if not self.image_path and self.material.texture:
+            self.image_path = self.material.texture
+        if abs(self.alpha - 1.0) < 1e-6:
+            self.alpha = self.material.opacity
+
     def __post_init__(self):
         Object.__post_init__(self)
         self.angle = normalize_angle(self.angle)
         self.rotation = _angle_to_quat(self.angle)
+        self._apply_material_defaults()
         if isinstance(self.animation, str):
             from ..formats import load_sageanimation
 
