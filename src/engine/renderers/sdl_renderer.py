@@ -16,9 +16,10 @@ from ..mesh_utils import Mesh
 try:
     import sdl2  # type: ignore[import-not-found]
 except Exception as exc:  # pragma: no cover - optional dependency
-    raise ImportError(
-        "SDLRenderer requires PySDL2 and SDL2 libraries"
-    ) from exc
+    sdl2: Any = None
+    SDL_IMPORT_ERROR = exc
+else:
+    SDL_IMPORT_ERROR = None
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +38,11 @@ class SDLRenderer(Renderer):
         keep_aspect: bool = True,
     ) -> None:
         super().__init__()
+        if sdl2 is None:
+            logger.error("SDLRenderer unavailable: %s", SDL_IMPORT_ERROR)
+            raise ImportError(
+                "SDLRenderer requires PySDL2 and SDL2 libraries"
+            ) from SDL_IMPORT_ERROR
         if sdl2.SDL_Init(sdl2.SDL_INIT_VIDEO) != 0:
             raise RuntimeError("SDL_Init failed")
         self.width = width
@@ -345,7 +351,8 @@ class SDLRenderer(Renderer):
         pass
 
 
-register_renderer("sdl", SDLRenderer)
+if sdl2 is not None:
+    register_renderer("sdl", SDLRenderer)
 
 __all__ = ["SDLRenderer"]
 

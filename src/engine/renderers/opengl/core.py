@@ -13,9 +13,10 @@ from .textures import get_blank_texture, get_texture, unload_texture
 try:
     import OpenGL.GL as GL  # type: ignore[import-not-found]
 except Exception as exc:  # pragma: no cover - optional dependency
-    raise ImportError(
-        "OpenGLRenderer requires PyOpenGL; install it with 'pip install PyOpenGL'"
-    ) from exc
+    GL: Any = None
+    OPENGL_IMPORT_ERROR = exc
+else:
+    OPENGL_IMPORT_ERROR = None
 from ..shader import Shader
 from PIL import Image, ImageDraw  # type: ignore[import-not-found]
 
@@ -75,6 +76,11 @@ class OpenGLRenderer(Renderer):
 
     def __post_init__(self):
         super().__init__()
+        if GL is None:
+            logger.error("OpenGLRenderer unavailable: %s", OPENGL_IMPORT_ERROR)
+            raise ImportError(
+                "OpenGLRenderer requires PyOpenGL; install it with 'pip install PyOpenGL'"
+            ) from OPENGL_IMPORT_ERROR
         if self.widget is None:
             self.widget = self.create_widget()
         widget = self.widget

@@ -1,8 +1,9 @@
 """Simple audio playback using pygame."""
+from __future__ import annotations
 
 
 import os
-from typing import Dict, cast
+from typing import Dict, cast, Any
 
 from .core.resources import get_resource_path
 from .utils.log import logger
@@ -10,15 +11,27 @@ from .utils.log import logger
 try:
     import pygame
 except Exception as exc:  # pragma: no cover - optional dependency
-    raise ImportError(
-        "Audio features require pygame; install with 'pip install pygame'"
-    ) from exc
+    pygame: Any = None
+    PYGAME_IMPORT_ERROR = exc
+else:
+    PYGAME_IMPORT_ERROR = None
+
 
 
 class AudioManager:
     """Load and play sound effects using ``pygame.mixer``."""
 
     def __init__(self) -> None:
+        global pygame
+        if pygame is None:
+            try:
+                import pygame as _pg
+                pygame = _pg
+            except Exception:
+                logger.error("AudioManager unavailable: %s", PYGAME_IMPORT_ERROR)
+                raise ImportError(
+                    "Audio features require pygame; install with 'pip install pygame'"
+                ) from PYGAME_IMPORT_ERROR
         os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
         if not pygame.mixer.get_init():
             try:
@@ -26,10 +39,10 @@ class AudioManager:
             except Exception:
                 logger.exception("Failed to initialise audio")
                 raise
-        self._sounds: Dict[str, pygame.mixer.Sound] = {}
+        self._sounds: Dict[str, Any] = {}
         self._music_path: str | None = None
 
-    def load_sound(self, name: str) -> pygame.mixer.Sound:
+    def load_sound(self, name: str) -> Any:
         """Load a sound file or ``.sageaudio`` descriptor."""
         path = get_resource_path(name)
         meta = None
