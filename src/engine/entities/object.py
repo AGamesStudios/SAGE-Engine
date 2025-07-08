@@ -173,9 +173,9 @@ class Object:
         self.variables[name] = Variable(type=typ, value=value, public=public)
         if hasattr(self, "public_vars"):
             if public:
-                self.public_vars.add(name)
+                self.public_vars.add(name)  # pyright: ignore[reportAttributeAccessIssue]
             else:
-                self.public_vars.discard(name)
+                self.public_vars.discard(name)  # pyright: ignore[reportAttributeAccessIssue]
 
     def get_variable(self, name: str, default: Any = None) -> Any:
         var = self.variables.get(name)
@@ -195,9 +195,9 @@ class Object:
             self.variables[name] = Variable(value=value, public=public if public is not None else True)
         if hasattr(self, "public_vars") and public is not None:
             if public:
-                self.public_vars.add(name)
+                self.public_vars.add(name)  # pyright: ignore[reportAttributeAccessIssue]
             else:
-                self.public_vars.discard(name)
+                self.public_vars.discard(name)  # pyright: ignore[reportAttributeAccessIssue]
 
     # --- transformation helpers ---
     def move(self, dx: float, dy: float) -> None:

@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Tuple, Any, TYPE_CHECKING
 import os
@@ -20,8 +22,8 @@ class EngineSettings:
     title: str = "SAGE 2D"
     fps: int = 30
     renderer: Renderer | str | None = None
-    camera: "Camera | None" = None
-    scene: "Scene | None" = None
+    camera: Camera | None = None  # pyright: ignore[reportGeneralTypeIssues]
+    scene: Scene | None = None
     events: Any = None
     keep_aspect: bool = True
     background: Tuple[int, int, int] = (0, 0, 0)

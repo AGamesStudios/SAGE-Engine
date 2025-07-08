@@ -46,7 +46,8 @@ class Project:
         resources = data.get('resources', 'resources')
         metadata = data.get('metadata', {})
         scene_graph = data.get('scene_graph', {})
-        return cls(scene or {}, renderer, width, height, keep_aspect,
+        scene_data: dict = scene if isinstance(scene, dict) else {}
+        return cls(scene_data, renderer, width, height, keep_aspect,
                    background, title, version, resources, scenes_dir,
                    scene_file or 'Scenes/Scene1.sagescene', metadata,
                    scene_graph)

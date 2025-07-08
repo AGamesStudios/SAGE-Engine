@@ -1,9 +1,11 @@
 """Renderer interface and registry."""
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 import logging
 from importlib import metadata
-from typing import Callable, TYPE_CHECKING
+from typing import Callable, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover
     from ..entities.game_object import GameObject
@@ -15,7 +17,7 @@ from .sdl_widget import SDLWidget, register_sdlwidget
 
 
 def register_draw_handler(
-    role: str, func: Callable[["Renderer", "GameObject", "Camera | None"], None]
+    role: str, func: Callable[[Renderer, GameObject, Optional[Camera]], None]
 ) -> None:
     """Register a custom draw callback if the OpenGL renderer is available."""
     try:
@@ -46,7 +48,7 @@ def _load_entry_points() -> None:
         entries = (
             eps.select(group="sage_engine.renderers")
             if hasattr(eps, "select")
-            else eps.get("sage_engine.renderers", [])
+            else eps.get("sage_engine.renderers", [])  # pyright: ignore[reportAttributeAccessIssue]
         )
         for ep in entries:
             try:

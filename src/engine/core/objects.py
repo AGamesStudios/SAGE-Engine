@@ -103,7 +103,7 @@ def object_to_dict(obj: Any) -> dict | None:
     for name, cls in OBJECT_REGISTRY.items():
         if isinstance(obj, cls):
             params = OBJECT_META.get(name, [])
-            data = {"type": name}
+            data: dict[str, Any] = {"type": name}
             for attr, key in params:
                 val = getattr(obj, attr)
                 if attr == "metadata" and not val:

@@ -2,7 +2,7 @@
 
 
 import os
-from typing import Dict
+from typing import Dict, cast
 
 from .core.resources import get_resource_path
 from .utils.log import logger
@@ -37,7 +37,9 @@ class AudioManager:
             from .formats import load_sageaudio
 
             meta = load_sageaudio(path)
-            file_path = os.path.join(os.path.dirname(path), meta["file"])
+            file_path = os.path.join(
+                os.path.dirname(path), cast(str, meta["file"])  # pyright: ignore[reportTypedDictNotRequiredAccess]
+            )
         else:
             file_path = path
         try:
