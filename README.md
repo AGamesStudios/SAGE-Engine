@@ -106,7 +106,8 @@ Game objects expose a `visible` flag and `alpha` value for transparency. The
 including polygons.
 Rotations wrap once they exceed `360` degrees (configurable via
 `EngineSettings.max_angle`) and objects may rotate around their
-bounding-box centre when `rotate_bbox` is enabled.
+bounding-box centre when `rotate_bbox` is enabled. The `rotate` method uses this
+setting when `around_bbox` isn't specified.
 Debug overlays can be drawn with helpers from `engine.gizmos`. Call
 `renderer.add_gizmo(gizmos.cross_gizmo(x, y, color=(1,0,0,1), thickness=3))`
 to show crosses, circles or squares in world space or use

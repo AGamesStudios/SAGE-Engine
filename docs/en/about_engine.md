@@ -28,6 +28,8 @@ limit with ``EngineSettings.max_angle`` and use ``Object.rotate(da, around_bbox=
 to spin objects around their bounding box centre instead of their pivot.
 Set ``EngineSettings.rotate_bbox`` to ``True`` if objects should rotate around
 their bounding box centre by default when calling ``Object.rotate``.
+When ``around_bbox`` is omitted, :class:`GameObject.rotate` uses this setting to
+decide whether the bounding box or pivot should stay fixed.
 
 Complex shapes can be built by combining multiple meshes with
 ``engine.mesh_utils.union_meshes`` before assigning them to an object's

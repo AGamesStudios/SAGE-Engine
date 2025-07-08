@@ -83,13 +83,14 @@ def _log_async_result(task: asyncio.Task) -> None:
     try:
         exc = task.exception()
     except asyncio.CancelledError:
-        for tasks in _PENDING.values():
-            tasks.discard(task)
-        return
-    if exc is not None:
-        logger.error("Async plugin task failed", exc_info=exc)
-    for tasks in _PENDING.values():
+        pass
+    else:
+        if exc is not None:
+            logger.error("Async plugin task failed", exc_info=exc)
+    for loop, tasks in list(_PENDING.items()):
         tasks.discard(task)
+        if not tasks:
+            _PENDING.pop(loop, None)
 
 
 def _run_sync_or_async(func: Callable[..., Coroutine | Any], *args: Any) -> None:

@@ -93,3 +93,4 @@ Initialization functions may be synchronous or return a coroutine. If an
 started via `asyncio.run`. Pending tasks are stored per event loop and can be
 waited on or cancelled using `wait_plugin_tasks()` and `cancel_plugin_tasks()`
 during shutdown so plugins can clean up resources.
+When a loop has no remaining tasks its entry is removed from the internal map.

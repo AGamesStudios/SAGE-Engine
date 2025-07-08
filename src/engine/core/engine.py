@@ -5,7 +5,7 @@ import time
 import os
 import inspect
 import asyncio
-from typing import cast, Any
+from typing import cast, Any, Optional
 from .scenes import Scene, SceneManager
 from .extensions import EngineExtension
 from .project import Project
@@ -20,6 +20,7 @@ from .. import ENGINE_VERSION
 from ..utils.log import logger, init_logger
 from ..utils.diagnostics import analyze_exception
 from .math2d import set_max_angle, get_max_angle
+from ..entities.game_object import SpriteCache
 
 
 def _exception_handler(exc_type, exc, tb):
@@ -53,6 +54,7 @@ class Engine:
                  rotate_bbox: bool = False,
                  *, settings: "EngineSettings | None" = None,
                  metadata: dict | None = None):
+        self.sprite_cache: Optional[SpriteCache] = None
         if settings is not None:
             width = settings.width
             height = settings.height
@@ -73,12 +75,21 @@ class Engine:
             max_angle = getattr(settings, "max_angle", 360.0)
             rotate_bbox = getattr(settings, "rotate_bbox", False)
             from ..entities import game_object
-            game_object.set_image_cache_limit(settings.image_cache_limit)
+            cache = game_object.SpriteCache(settings.image_cache_limit)
+            game_object.set_sprite_cache(cache)
+            self.sprite_cache = cache
+        else:
+            from ..entities import game_object
+            cache = game_object.SpriteCache()
+            game_object.set_sprite_cache(cache)
+            self.sprite_cache = cache
         self.fps = fps
         self.vsync = vsync
         self._frame_interval = 0 if vsync else (1.0 / fps if fps else 0)
         self.max_delta = max_delta
         self.rotate_bbox = rotate_bbox
+        from ..entities import game_object
+        game_object.set_default_rotate_bbox(rotate_bbox)
         set_max_angle(max_angle)
         self.async_events = async_events
         self.asyncio_events = asyncio_events
@@ -241,7 +252,6 @@ class Engine:
 
     def to_settings(self) -> EngineSettings:
         """Return the current configuration as :class:`EngineSettings`."""
-        from ..entities import game_object
         return EngineSettings(
             width=getattr(self.renderer, "width", 640),
             height=getattr(self.renderer, "height", 480),
@@ -260,7 +270,7 @@ class Engine:
             vsync=self.vsync,
             max_angle=get_max_angle(),
             rotate_bbox=self.rotate_bbox,
-            image_cache_limit=getattr(game_object, "_MAX_CACHE", 32),
+            image_cache_limit=cast(SpriteCache, self.sprite_cache).limit,
         )
 
     def variable(self, name):
@@ -314,8 +324,8 @@ class Engine:
                     except Exception:
                         logger.exception("Cache cleanup failed")
         try:
-            from ..entities.game_object import clear_image_cache
-            clear_image_cache()
+            if self.sprite_cache is not None:
+                self.sprite_cache.clear()
         except Exception:
             logger.exception("Failed to clear image cache")
         try:

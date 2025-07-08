@@ -95,10 +95,10 @@ def test_tilemap_cleanup(monkeypatch):
 
 def test_image_cache_cleared(monkeypatch):
     import engine.entities.game_object as go
-    go._IMAGE_CACHE['img'] = object()
+    go.get_sprite_cache()._cache['img'] = object()
     scene = Scene(with_defaults=False)
     eng = DemoEngine(scene=scene, renderer=DummyRenderer, input_backend=DummyInput)
     eng.shutdown()
-    assert not go._IMAGE_CACHE
+    assert not go.get_sprite_cache()._cache
 
 

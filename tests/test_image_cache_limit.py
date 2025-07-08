@@ -41,19 +41,21 @@ import engine.entities.game_object as go  # noqa: E402
 
 def test_env_var_limits_cache(monkeypatch):
     monkeypatch.setenv('SAGE_IMAGE_CACHE_LIMIT', '1')
-    go.set_image_cache_limit(int(os.getenv('SAGE_IMAGE_CACHE_LIMIT')))
+    go.set_sprite_cache(go.SpriteCache(int(os.getenv('SAGE_IMAGE_CACHE_LIMIT'))))
     monkeypatch.setattr('engine.core.resources.get_resource_path', lambda p: p)
     go.clear_image_cache()
+    cache = go.get_sprite_cache()
+    cache.clear()
     go.GameObject(image_path='a.png')
-    assert len(go._IMAGE_CACHE) == 1
+    assert len(cache._cache) == 1
     go.GameObject(image_path='b.png')
-    assert len(go._IMAGE_CACHE) == 1
-    assert list(go._IMAGE_CACHE.keys()) == ['b.png']
+    assert len(cache._cache) == 1
+    assert list(cache._cache.keys()) == ['b.png']
 
 
 def test_engine_setting_updates_cache(monkeypatch):
     monkeypatch.delenv('SAGE_IMAGE_CACHE_LIMIT', raising=False)
-    go.set_image_cache_limit(2)
+    go.set_sprite_cache(go.SpriteCache(2))
     from engine.core.settings import EngineSettings
     from engine.core.engine import Engine
     from engine.renderers.null_renderer import NullRenderer
@@ -61,6 +63,5 @@ def test_engine_setting_updates_cache(monkeypatch):
     from engine.core.scenes.scene import Scene
 
     settings = EngineSettings(image_cache_limit=1)
-    Engine(scene=Scene(with_defaults=False), renderer=NullRenderer, input_backend=NullInput, settings=settings)
-    go.set_image_cache_limit(settings.image_cache_limit)
-    assert go._MAX_CACHE == 1
+    eng = Engine(scene=Scene(with_defaults=False), renderer=NullRenderer, input_backend=NullInput, settings=settings)
+    assert eng.sprite_cache.limit == 1

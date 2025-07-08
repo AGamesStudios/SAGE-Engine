@@ -19,24 +19,66 @@ from .object import Object, Transform2D
 from ..logic import EventSystem, event_from_dict
 from .. import units
 
-# LRU cache so repeated sprites don't reload files on low spec machines
-_IMAGE_CACHE: "OrderedDict[str, Image.Image]" = OrderedDict()
-_CACHE_LOCK = Lock()
-_MAX_CACHE = int(os.environ.get("SAGE_IMAGE_CACHE_LIMIT", "32"))
+class SpriteCache:
+    """Simple LRU cache for sprite images."""
 
-def clear_image_cache():
-    """Remove all cached images."""
-    with _CACHE_LOCK:
-        _IMAGE_CACHE.clear()
+    def __init__(self, limit: int | str = 32) -> None:
+        self.limit = int(limit)
+        self._cache: "OrderedDict[str, Image.Image]" = OrderedDict()
+        self._lock = Lock()
+
+    def get(self, path: str) -> "Image.Image | None":
+        with self._lock:
+            return self._cache.get(path)
+
+    def put(self, path: str, img: "Image.Image") -> None:
+        with self._lock:
+            self._cache[path] = img
+            while len(self._cache) > self.limit:
+                self._cache.popitem(last=False)
+
+    def clear(self) -> None:
+        with self._lock:
+            self._cache.clear()
+
+    def set_limit(self, limit: int) -> None:
+        with self._lock:
+            self.limit = int(limit)
+            while len(self._cache) > self.limit:
+                self._cache.popitem(last=False)
+
+
+SPRITE_CACHE = SpriteCache(os.environ.get("SAGE_IMAGE_CACHE_LIMIT", "32"))
+
+
+def set_sprite_cache(cache: SpriteCache) -> None:
+    global SPRITE_CACHE
+    SPRITE_CACHE = cache
+
+
+def get_sprite_cache() -> SpriteCache:
+    return SPRITE_CACHE
+
+
+def clear_image_cache() -> None:
+    SPRITE_CACHE.clear()
 
 
 def set_image_cache_limit(limit: int) -> None:
-    """Set the maximum number of cached images."""
-    global _MAX_CACHE
-    with _CACHE_LOCK:
-        _MAX_CACHE = int(limit)
-        while len(_IMAGE_CACHE) > _MAX_CACHE:
-            _IMAGE_CACHE.popitem(last=False)
+    SPRITE_CACHE.set_limit(limit)
+
+
+# default for GameObject.rotate when around_bbox not provided
+_ROTATE_BBOX_DEFAULT = False
+
+
+def set_default_rotate_bbox(value: bool) -> None:
+    global _ROTATE_BBOX_DEFAULT
+    _ROTATE_BBOX_DEFAULT = bool(value)
+
+
+def get_default_rotate_bbox() -> bool:
+    return _ROTATE_BBOX_DEFAULT
 
 
 
@@ -260,12 +302,15 @@ class GameObject(Object):
         """Return default texture coordinates."""
         return [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0]
 
-    def rotate(self, da: float, around_bbox: bool = False) -> None:
+    def rotate(self, da: float, around_bbox: bool | None = None) -> None:
         """Rotate the object by ``da`` degrees.
 
         When ``around_bbox`` is ``True`` the object's position is adjusted so the
-        centre of its axis-aligned bounding box remains in place.
+        centre of its axis-aligned bounding box remains in place. If ``None``,
+        the behaviour is controlled by :func:`get_default_rotate_bbox`.
         """
+        if around_bbox is None:
+            around_bbox = get_default_rotate_bbox()
         if around_bbox:
             import math
 
@@ -297,19 +342,16 @@ class GameObject(Object):
         else:
             from ..core.resources import get_resource_path
             path = get_resource_path(self.image_path)
-            with _CACHE_LOCK:
-                img = _IMAGE_CACHE.get(path)
-                if img is None:
-                    try:
-                        img = Image.open(path)
-                        if hasattr(img, 'convert'):
-                            img = img.convert('RGBA')
-                        _IMAGE_CACHE[path] = img
-                        while len(_IMAGE_CACHE) > _MAX_CACHE:
-                            _IMAGE_CACHE.popitem(last=False)
-                    except Exception as exc:
-                        logger.error('Failed to load image %s: %s', path, exc)
-                        raise
+            img = SPRITE_CACHE.get(path)
+            if img is None:
+                try:
+                    img = Image.open(path)
+                    if hasattr(img, 'convert'):
+                        img = img.convert('RGBA')
+                    SPRITE_CACHE.put(path, img)
+                except Exception as exc:
+                    logger.error('Failed to load image %s: %s', path, exc)
+                    raise
         self.image = img
         self.width, self.height = img.size
         self._dirty = True
