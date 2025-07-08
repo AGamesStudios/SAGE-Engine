@@ -101,8 +101,11 @@ comfortably. The event system resolves variables using `$name` shorthand and
 supports the `CallFunction` action, `InputAxis` condition and `EvalExpr`
 condition for custom Python behaviour.
 
-Game objects expose a `visible` flag and `alpha` value for transparency. The
-`engine.mesh_utils` module includes helpers for creating and editing meshes,
+Game objects expose a `visible` flag and `alpha` value for transparency. Each
+`Engine` manages its own sprite cache so large projects can tune memory usage
+independently via `EngineSettings.image_cache_limit` or by calling
+`engine.entities.game_object.set_sprite_cache`.
+The `engine.mesh_utils` module includes helpers for creating and editing meshes,
 including polygons.
 Rotations wrap once they exceed `360` degrees (configurable via
 `EngineSettings.max_angle`) and objects may rotate around their

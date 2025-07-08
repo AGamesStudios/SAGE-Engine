@@ -23,6 +23,10 @@ when using ``run_async``.
 The ``ResourceManager`` includes asynchronous variants of its import and load
 methods so resources can be processed without blocking the event loop.
 
+Each ``Engine`` maintains a sprite cache for loaded images. Adjust the
+``image_cache_limit`` via ``EngineSettings`` or replace it entirely with
+``engine.entities.game_object.set_sprite_cache`` when you need finer control.
+
 Rotation angles wrap by default once they exceed ``360`` degrees. Configure the
 limit with ``EngineSettings.max_angle`` and use ``Object.rotate(da, around_bbox=True)``
 to spin objects around their bounding box centre instead of their pivot.
