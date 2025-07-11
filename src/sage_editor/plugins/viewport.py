@@ -987,12 +987,12 @@ def init_editor(editor) -> None:
     created = False
     if app is None:
         from PyQt6.QtCore import QCoreApplication, Qt
-        QCoreApplication.setAttribute(
-            Qt.ApplicationAttribute.AA_EnableHighDpiScaling, True
-        )
-        QCoreApplication.setAttribute(
-            Qt.ApplicationAttribute.AA_UseHighDpiPixmaps, True
-        )
+        attr = getattr(Qt.ApplicationAttribute, "AA_EnableHighDpiScaling", None)
+        if attr is not None:
+            QCoreApplication.setAttribute(attr, True)
+        attr = getattr(Qt.ApplicationAttribute, "AA_UseHighDpiPixmaps", None)
+        if attr is not None:
+            QCoreApplication.setAttribute(attr, True)
         app = QApplication([])
         created = True
         font = app.font()
