@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 import os
+import math
 from PyQt6.QtWidgets import (  # type: ignore[import-not-found]
     QApplication,
     QMainWindow,
@@ -115,6 +116,7 @@ class _ViewportMixin:
 
     DRAG_THRESHOLD = 5
     HANDLE_PIXELS = 8
+    ROTATE_OFFSET = 15
 
     def __init__(self, window: "EditorWindow", *a, **k) -> None:
         """Initialise mixin state without touching QWidget internals."""
@@ -125,6 +127,7 @@ class _ViewportMixin:
         self._drag_mode: str | None = None
         self._drag_corner: str | None = None
         self._last_world: tuple[float, float] | None = None
+        self._drag_angle: float | None = None
         if hasattr(self, "setContextMenuPolicy"):
             cast(QWidget, self).setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         if hasattr(self, "customContextMenuRequested"):
@@ -154,6 +157,10 @@ class _ViewportMixin:
                     "tl": (left, bottom + h),
                     "tr": (left + w, bottom + h),
                 }
+                rot_y = bottom + h + _ViewportMixin.ROTATE_OFFSET / (
+                    units.UNITS_PER_METER * cam.zoom
+                )
+                rot_pos = (obj.x, rot_y)
                 for name, (cx, cy) in corners.items():
                     if abs(wx - cx) <= th and abs(wy - cy) <= th:
                         self._drag_mode = "resize"
@@ -161,7 +168,11 @@ class _ViewportMixin:
                         self._last_world = (wx, wy)
                         break
                 else:
-                    if left <= wx <= left + w and bottom <= wy <= bottom + h:
+                    if abs(wx - rot_pos[0]) <= th and abs(wy - rot_pos[1]) <= th:
+                        self._drag_mode = "rotate"
+                        self._drag_corner = "rot"
+                        self._last_world = (wx, wy)
+                    elif left <= wx <= left + w and bottom <= wy <= bottom + h:
                         self._drag_mode = "move"
                         self._last_world = (wx, wy)
             try:
@@ -260,10 +271,19 @@ class _ViewportMixin:
                             h = max(0.1, h)
                             obj.scale_x = w / obj.width
                             obj.scale_y = h / obj.height
-                            obj.x = new_left + obj.pivot_x * w
-                            obj.y = new_bottom + obj.pivot_y * h
-                            self._window.update_properties()
-                        self._last_world = (wx, wy)
+                    obj.x = new_left + obj.pivot_x * w
+                    obj.y = new_bottom + obj.pivot_y * h
+                    self._window.update_properties()
+                    self._last_world = (wx, wy)
+                elif self._drag_mode == "rotate" and self._last_world is not None:
+                    obj = self._window.selected_obj
+                    if obj is not None:
+                        cx, cy = obj.x, obj.y
+                        ang0 = math.atan2(self._last_world[1] - cy, self._last_world[0] - cx)
+                        ang1 = math.atan2(wy - cy, wx - cx)
+                        obj.angle += math.degrees(ang1 - ang0)
+                        self._window.update_properties()
+                    self._last_world = (wx, wy)
                 else:
                     dx = pos.x() - self._last_pos.x()
                     dy = pos.y() - self._last_pos.y()
@@ -287,6 +307,7 @@ class _ViewportMixin:
             self._drag_mode = None
             self._drag_corner = None
             self._last_world = None
+            self._drag_angle = None
             try:
                 cast(QWidget, self).unsetCursor()
             except Exception:
@@ -554,8 +575,17 @@ class EditorWindow(QMainWindow):
 
     def _create_viewport_widget(self, backend: str):
         if backend == "sdl":
-            return SDLViewportWidget(self)
-        return ViewportWidget(self)
+            view = SDLViewportWidget(self)
+        else:
+            view = ViewportWidget(self)
+        container = QWidget(self)
+        layout = QHBoxLayout(container)
+        bar = QToolBar(container)
+        layout.addWidget(bar)
+        layout.addWidget(view)
+        container.viewport = view  # type: ignore[attr-defined]
+        container.mode_bar = bar  # type: ignore[attr-defined]
+        return container
 
     def __init__(self, menus=None, toolbar=None, *, backend: str = "opengl") -> None:
         super().__init__()
@@ -565,7 +595,33 @@ class EditorWindow(QMainWindow):
 
         self._engine = None
         self._game_window = None
-        self.viewport = self._create_viewport_widget(backend)
+        container = self._create_viewport_widget(backend)
+        self.viewport_container = container
+        self.viewport = container.viewport  # type: ignore[attr-defined]
+        self.mode_bar = container.mode_bar  # type: ignore[attr-defined]
+        self.move_action = QAction("Move", self.mode_bar)
+        if hasattr(self.move_action, "setCheckable"):
+            self.move_action.setCheckable(True)
+        if hasattr(self.mode_bar, "addAction"):
+            self.mode_bar.addAction(self.move_action)
+        if hasattr(self.move_action, "setChecked"):
+            self.move_action.setChecked(True)
+        self.rotate_action = QAction("Rotate", self.mode_bar)
+        if hasattr(self.rotate_action, "setCheckable"):
+            self.rotate_action.setCheckable(True)
+        if hasattr(self.mode_bar, "addAction"):
+            self.mode_bar.addAction(self.rotate_action)
+        self.scale_action = QAction("Scale", self.mode_bar)
+        if hasattr(self.scale_action, "setCheckable"):
+            self.scale_action.setCheckable(True)
+        if hasattr(self.mode_bar, "addAction"):
+            self.mode_bar.addAction(self.scale_action)
+        if hasattr(self.move_action, "triggered"):
+            self.move_action.triggered.connect(lambda: self.set_mode("move"))
+        if hasattr(self.rotate_action, "triggered"):
+            self.rotate_action.triggered.connect(lambda: self.set_mode("rotate"))
+        if hasattr(self.scale_action, "triggered"):
+            self.scale_action.triggered.connect(lambda: self.set_mode("scale"))
         self.console = QTextEdit(self)
         self.console.setReadOnly(True)
         clear_a = QAction("Clear", self.console)
@@ -659,12 +715,13 @@ class EditorWindow(QMainWindow):
         # keep the viewport camera separate from scene objects
         self.renderer.show_grid = True
         self.mirror_resize = False
+        self.transform_mode = "move"
         self.set_renderer(self.renderer)
         self.selected_obj: Optional[GameObject] = None
         self._clipboard: dict | None = None
 
         splitter = QSplitter(Qt.Orientation.Vertical, self)
-        splitter.addWidget(self.viewport)
+        splitter.addWidget(self.viewport_container)
         splitter.addWidget(self.console)
         splitter.setStretchFactor(0, 5)
         splitter.setStretchFactor(1, 1)
@@ -806,6 +863,31 @@ class EditorWindow(QMainWindow):
 
     def toggle_mirror(self, checked: bool) -> None:
         self.mirror_resize = bool(checked)
+
+    def set_mode(self, mode: str) -> None:
+        self.transform_mode = mode
+        if mode == "move":
+            if hasattr(self.move_action, "setChecked"):
+                self.move_action.setChecked(True)
+            if hasattr(self.rotate_action, "setChecked"):
+                self.rotate_action.setChecked(False)
+            if hasattr(self.scale_action, "setChecked"):
+                self.scale_action.setChecked(False)
+        elif mode == "rotate":
+            if hasattr(self.move_action, "setChecked"):
+                self.move_action.setChecked(False)
+            if hasattr(self.rotate_action, "setChecked"):
+                self.rotate_action.setChecked(True)
+            if hasattr(self.scale_action, "setChecked"):
+                self.scale_action.setChecked(False)
+        else:
+            if hasattr(self.move_action, "setChecked"):
+                self.move_action.setChecked(False)
+            if hasattr(self.rotate_action, "setChecked"):
+                self.rotate_action.setChecked(False)
+            if hasattr(self.scale_action, "setChecked"):
+                self.scale_action.setChecked(True)
+        self.draw_scene(update_list=False)
 
     def save_screenshot(self, path: str) -> None:
         if self.renderer is None:
@@ -993,7 +1075,9 @@ class EditorWindow(QMainWindow):
             splitter.setStretchFactor(1, 1)
             self._splitter = splitter
             self.setCentralWidget(splitter)
-            self.viewport = new_view
+            self.viewport_container = new_view
+            self.viewport = new_view.viewport  # type: ignore[attr-defined]
+            self.mode_bar = new_view.mode_bar  # type: ignore[attr-defined]
         self.renderer = rcls(width=w, height=h, widget=self.viewport, vsync=False, keep_aspect=False)
         self.renderer_backend = backend if rcls is not OpenGLRenderer else "opengl"
         self.set_renderer(self.renderer)
@@ -1088,6 +1172,21 @@ class EditorWindow(QMainWindow):
                 )
             )
             handle_size = 5
+            cam = self.camera
+            rot_y = bottom + h + _ViewportMixin.ROTATE_OFFSET / (
+                units.UNITS_PER_METER * cam.zoom
+            )
+            self.renderer.add_gizmo(
+                gizmos.circle_gizmo(
+                    obj.x,
+                    rot_y,
+                    size=handle_size,
+                    color=(0.2, 0.8, 1.0, 1),
+                    thickness=1,
+                    frames=None,
+                    filled=True,
+                )
+            )
             for x, y in points[:-1]:
                 self.renderer.add_gizmo(
                     gizmos.square_gizmo(
@@ -1106,7 +1205,15 @@ class EditorWindow(QMainWindow):
         self._update_selection_gizmo()
         if update_list:
             self.update_object_list()
-        self.renderer.draw_scene(self.scene, self.camera)
+        try:
+            self.renderer.draw_scene(
+                self.scene,
+                self.camera,
+                selected=self.selected_obj,
+                mode=self.transform_mode,
+            )
+        except TypeError:
+            self.renderer.draw_scene(self.scene, self.camera)
 
     def start_game(self):
         from engine.core.engine import Engine

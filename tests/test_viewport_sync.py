@@ -352,17 +352,18 @@ def test_object_list_sync(monkeypatch):
 
     item = win.objects.item(0)
     win.objects.setCurrentItem(item)
-    assert len(win.renderer.gizmos) == 6
+    assert len(win.renderer.gizmos) == 7
     g0 = win.renderer.gizmos[0]
     pivot = win.renderer.gizmos[1]
     assert g0.shape == "polyline"
     assert len(list(g0.vertices)) == 5
     assert pivot.shape == "circle"
-    assert all(g.shape == "square" and g.filled for g in win.renderer.gizmos[2:])
+    assert win.renderer.gizmos[2].shape == "circle"
+    assert all(g.shape == "square" and g.filled for g in win.renderer.gizmos[3:])
 
     item = win.objects.item(1)
     win.objects.setCurrentItem(item)
-    assert len(win.renderer.gizmos) == 6
+    assert len(win.renderer.gizmos) == 7
     g1 = win.renderer.gizmos[0]
     assert g1 is not g0
 
