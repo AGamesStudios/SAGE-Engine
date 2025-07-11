@@ -47,6 +47,27 @@ from sage_editor.qt import GLWidget, SDLWidget
 log = logging.getLogger(__name__)
 
 
+def _apply_dark_palette(app: QApplication) -> None:
+    """Apply a dark Fusion palette to *app*."""
+    from PyQt6.QtGui import QColor, QPalette  # type: ignore[import-not-found]
+
+    palette = QPalette()
+    palette.setColor(QPalette.ColorRole.Window, QColor(53, 53, 53))
+    palette.setColor(QPalette.ColorRole.WindowText, Qt.GlobalColor.white)
+    palette.setColor(QPalette.ColorRole.Base, QColor(42, 42, 42))
+    palette.setColor(QPalette.ColorRole.AlternateBase, QColor(66, 66, 66))
+    palette.setColor(QPalette.ColorRole.ToolTipBase, Qt.GlobalColor.white)
+    palette.setColor(QPalette.ColorRole.ToolTipText, Qt.GlobalColor.white)
+    palette.setColor(QPalette.ColorRole.Text, Qt.GlobalColor.white)
+    palette.setColor(QPalette.ColorRole.Button, QColor(53, 53, 53))
+    palette.setColor(QPalette.ColorRole.ButtonText, Qt.GlobalColor.white)
+    palette.setColor(QPalette.ColorRole.BrightText, Qt.GlobalColor.red)
+    palette.setColor(QPalette.ColorRole.Link, QColor(42, 130, 218))
+    palette.setColor(QPalette.ColorRole.Highlight, QColor(42, 130, 218))
+    palette.setColor(QPalette.ColorRole.HighlightedText, Qt.GlobalColor.black)
+    app.setPalette(palette)
+
+
 class _ViewportMixin:
     """Input helpers shared between OpenGL and SDL widgets."""
 
@@ -470,6 +491,16 @@ class EditorWindow(QMainWindow):
             ogl_action.triggered.connect(lambda: self.change_renderer("opengl"))
         if sdl_action is not None and hasattr(sdl_action, "triggered"):
             sdl_action.triggered.connect(lambda: self.change_renderer("sdl"))
+        view_menu = menubar.addMenu("View")
+        grid_act = view_menu.addAction("Show Grid")
+        if grid_act is not None:
+            if hasattr(grid_act, "setCheckable"):
+                grid_act.setCheckable(True)
+            if hasattr(grid_act, "setChecked"):
+                grid_act.setChecked(True)
+            if hasattr(grid_act, "triggered"):
+                grid_act.triggered.connect(self.toggle_grid)
+
         if menus:
             for title, cb in menus:
                 action = QAction(title, self)
@@ -487,6 +518,12 @@ class EditorWindow(QMainWindow):
         if run_action is not None and hasattr(run_action, "triggered"):
             run_action.triggered.connect(self.start_game)
         tbar.addAction(run_action)
+
+        shot_action = QAction("Screenshot", self)
+        if shot_action is not None:
+            if hasattr(shot_action, "triggered"):
+                shot_action.triggered.connect(self.save_screenshot)
+            tbar.addAction(shot_action)
 
         right_spacer = QWidget(self)
         right_spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
@@ -527,6 +564,26 @@ class EditorWindow(QMainWindow):
     def log_warning(self, text: str) -> None:
         """Display *text* in the console dock."""
         self.console.appendPlainText(text)
+
+    def toggle_grid(self, checked: bool) -> None:
+        if hasattr(self.renderer, "show_grid"):
+            self.renderer.show_grid = checked
+            self.draw_scene(update_list=False)
+
+    def save_screenshot(self) -> None:
+        if self.renderer is None:
+            return
+        from PyQt6.QtWidgets import QFileDialog  # type: ignore[import-not-found]
+
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Save Screenshot", "screenshot.png", "PNG Images (*.png)"
+        )
+        if path:
+            try:
+                self.renderer.save_screenshot(path)
+                self.log_warning(f"Screenshot saved to {path}")
+            except Exception:
+                log.exception("Screenshot failed")
 
     # coordinate helpers -------------------------------------------------
 
@@ -801,6 +858,7 @@ def init_editor(editor) -> None:
         created = True
     if hasattr(QApplication, "setStyle"):
         QApplication.setStyle(QStyleFactory.create("Fusion"))
+        _apply_dark_palette(app)
 
     window = EditorWindow(editor._menus, editor._toolbar)
     window.resize(800, 600)

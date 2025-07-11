@@ -47,6 +47,11 @@ If you specify ``--target`` you must add that directory to ``PYTHONPATH`` so the
 engine can be imported.
 Extras are listed in ``pyproject.toml`` and can be supplied with ``--extras``.
 
+### Editor
+The Qt editor launches with the Fusion style and a dark theme. Use the **View**
+menu to toggle the grid overlay and the toolbar **Screenshot** button to save
+the current viewport as PNG.
+
 ## Logs
 Log files are written to `~/.cache/sage/logs/engine.log` by default. Configure a
 different directory in `sage.toml` under `[logs]` or set the `SAGE_LOG_DIR`
