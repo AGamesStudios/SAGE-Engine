@@ -155,8 +155,9 @@ class OpenGLRenderer(Renderer):
                     GL.GL_RGBA,
                     GL.GL_UNSIGNED_BYTE,
                 )
-            except Exception:
-                logger.exception("glReadPixels failed")
+            except Exception as exc:
+                # avoid a noisy traceback if the read fails due to lost context
+                logger.error("glReadPixels failed: %s", exc)
                 data = bytes(self.width * self.height * 4)
             finally:
                 widget.doneCurrent()
