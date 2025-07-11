@@ -94,3 +94,16 @@ def test_difference_requires_shapely(monkeypatch):
     square = create_square_mesh()
     with pytest.raises(ImportError):
         mu.difference_meshes(square, [])
+
+
+def test_union_requires_shapely(monkeypatch):
+    monkeypatch.setitem(sys.modules, "shapely", None)
+    monkeypatch.setitem(sys.modules, "shapely.geometry", None)
+    monkeypatch.setitem(sys.modules, "shapely.geometry.base", None)
+    monkeypatch.setitem(sys.modules, "shapely.ops", None)
+    import importlib
+    import engine.mesh_utils as mu
+    importlib.reload(mu)
+    square = create_square_mesh()
+    with pytest.raises(ImportError):
+        mu.union_meshes([square], negatives=[square])

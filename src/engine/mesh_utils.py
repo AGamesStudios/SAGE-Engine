@@ -137,7 +137,9 @@ def union_meshes(
     meshes: list[Mesh], negatives: list[Mesh] | None = None
 ) -> Mesh:
     """Return a new :class:`Mesh` from ``meshes`` optionally subtracting ``negatives``."""
-    if negatives and _Polygon is not None and unary_union is not None:
+    if negatives:
+        if _Polygon is None or unary_union is None:
+            raise ImportError("shapely is required for union_meshes")
         geom = unary_union([_Polygon(m.vertices) for m in meshes])  # pyright: ignore[reportOptionalCall]
         for neg in negatives:
             geom = geom.difference(_Polygon(neg.vertices))

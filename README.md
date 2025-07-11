@@ -24,8 +24,10 @@ pip install .[opengl,sdl,qt,audio,geometry]
 ```
 The Qt based editor requires `PyQt6` and `PyOpenGL`. The SDL renderer depends on
 `PySDL2` while boolean mesh utilities rely on `shapely` (install via the
-`geometry` extra). When these optional
-packages are missing the related features are disabled and a warning is logged.
+`geometry` extra). `union_meshes` with the ``negatives`` argument and
+``difference_meshes`` both require Shapely; without it these functions raise
+``ImportError``. When optional packages are missing the related features are
+disabled and a warning is logged.
 Plugin modules live in `~/.sage_plugins` by default. Configure a different
 location or extra search paths in `sage.toml` under the `[plugins]` table:
 ```toml

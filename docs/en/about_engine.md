@@ -37,8 +37,9 @@ decide whether the bounding box or pivot should stay fixed.
 
 Complex shapes can be built by combining multiple meshes with
 ``engine.mesh_utils.union_meshes`` before assigning them to an object's
-``mesh`` attribute. When :mod:`shapely` is available, ``union_meshes`` can also
-subtract ``negatives`` from the positive shapes. Alternatively use
+``mesh`` attribute. ``union_meshes`` only supports the ``negatives`` argument
+when :mod:`shapely` is installed; otherwise it raises ``ImportError``.
+Alternatively use
 ``engine.mesh_utils.difference_meshes`` to remove one mesh from another.
 Custom shapes can be created with
 ``engine.mesh_utils.create_polygon_mesh`` by providing a list of vertices.
