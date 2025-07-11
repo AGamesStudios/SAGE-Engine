@@ -477,18 +477,20 @@ class EditorWindow(QMainWindow):
         self.console.addAction(copy_a)
         self.console.setContextMenuPolicy(Qt.ContextMenuPolicy.ActionsContextMenu)
         ascii_html = (
-            "<span style='color:#ff5555'>  ____   ___   ____  _____ </span><br>"
-            "<span style='color:#55ff55'> / ___| / _ \\ / ___|| ____|</span><br>"
-            "<span style='color:#ffff55'>| |    | | | | |    |  _|  </span><br>"
-            "<span style='color:#5555ff'>| |___ | |_| | |___ | |___ </span><br>"
-            "<span style='color:#ff55ff'> \\____| \\___/ \\____||_____|</span>"
+            "<span style='color:#ff5555'>   _____ ___   ____________   ______            _          </span><br>"
+            "<span style='color:#ff8855'>  / ___//   | / ____/ ____/  / ____/___  ____ _(_)___  ___ </span><br>"
+            "<span style='color:#ffff55'>  \\__ \\/ /| |/ / __/ __/    / __/ / __ \\/ __ `/ / __ \\/ _ \\</span><br>"
+            "<span style='color:#55ff55'> ___/ / ___ / /_/ / /___   / /___/ / / / /_/ / / / / /  __/</span><br>"
+            "<span style='color:#5555ff'>/____/_/  |_\\____/_____/  /_____/_/ /_/\\__, /_/_/ /_/\\___/ </span><br>"
+            "<span style='color:#ff55ff'>                                      /____/               </span>"
         )
         ascii_plain = (
-            "  ____   ___   ____  _____ \n"
-            " / ___| / _ \\ / ___|| ____|\n"
-            "| |    | | | | |    |  _|  \n"
-            "| |___ | |_| | |___ | |___ \n"
-            " \____| \\___/ \\____||_____|"
+            "   _____ ___   ____________   ______            _          \n"
+            "  / ___//   | / ____/ ____/  / ____/___  ____ _(_)___  ___ \n"
+            "  \\__ \\/ /| |/ / __/ __/    / __/ / __ \\/ __ `/ / __ \\/ _ \\n"
+            " ___/ / ___ / /_/ / /___   / /___/ / / / /_/ / / / / /  __/\n"
+            "/____/_/  |_\\____/_____/  /_____/_/ /_/\\__, /_/_/ /_/\\___/ \n"
+            "                                      /____/               "
         )
         if hasattr(self.console, "appendHtml"):
             self.console.appendHtml(ascii_html)
