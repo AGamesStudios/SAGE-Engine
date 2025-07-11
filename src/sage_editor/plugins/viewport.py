@@ -69,6 +69,17 @@ def _apply_dark_palette(app: QApplication) -> None:
     app.setPalette(palette)
 
 
+def apply_fusion_style(app: QApplication) -> None:
+    """Use the Qt Fusion style with a dark palette on *app*."""
+    if hasattr(QApplication, "setStyle"):
+        QApplication.setStyle(QStyleFactory.create("Fusion"))
+        _apply_dark_palette(app)
+    font = app.font()
+    if font.pointSize() < 10:
+        font.setPointSize(10)
+        app.setFont(font)
+
+
 class _ViewportMixin:
     """Input helpers shared between OpenGL and SDL widgets."""
 
@@ -1018,13 +1029,7 @@ def init_editor(editor) -> None:
             QCoreApplication.setAttribute(attr, True)
         app = QApplication([])
         created = True
-        font = app.font()
-        if font.pointSize() < 10:
-            font.setPointSize(10)
-            app.setFont(font)
-    if hasattr(QApplication, "setStyle"):
-        QApplication.setStyle(QStyleFactory.create("Fusion"))
-        _apply_dark_palette(app)
+    apply_fusion_style(app)
 
     window = EditorWindow(editor._menus, editor._toolbar)
     window.resize(800, 600)

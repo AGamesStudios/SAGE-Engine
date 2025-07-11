@@ -49,11 +49,9 @@ engine can be imported.
 Extras are listed in ``pyproject.toml`` and can be supplied with ``--extras``.
 
 ### Editor
-The Qt editor launches with the Fusion style and a dark theme. High-DPI scaling
-keeps fonts legible on dense displays. Use the **View** menu to toggle the grid
-overlay. The toolbar **Screenshot** button now opens a dialog for selecting the
-path and grid options. The **File** menu also provides a *Screenshot...* entry
-alongside actions to open and save ``.sageproject`` files.
+The Qt editor uses the Fusion style with a dark palette. High-DPI scaling keeps
+text readable. The **File** menu opens and saves ``.sageproject`` files and the
+toolbar includes a screenshot button.
 
 ## Logs
 Log files are written to `~/.cache/sage/logs/engine.log` by default. Configure a
