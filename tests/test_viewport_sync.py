@@ -358,7 +358,7 @@ def test_object_list_sync(monkeypatch):
     assert g0.shape == "polyline"
     assert len(list(g0.vertices)) == 5
     assert pivot.shape == "circle"
-    assert all(g.shape == "square" for g in win.renderer.gizmos[2:])
+    assert all(g.shape == "square" and g.filled for g in win.renderer.gizmos[2:])
 
     item = win.objects.item(1)
     win.objects.setCurrentItem(item)
@@ -477,3 +477,17 @@ def test_edit_shortcuts(monkeypatch):
     assert getattr(win.copy_action, 'shortcut')() == 'Ctrl+C'
     assert getattr(win.paste_action, 'shortcut')() == 'Ctrl+V'
     assert getattr(win.delete_action, 'shortcut')() == 'Delete'
+
+
+def test_mirror_resize_toggle(monkeypatch):
+    _stub_gl(monkeypatch, {})
+    _setup_qt(monkeypatch)
+
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    viewport = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(viewport)
+
+    win = viewport.EditorWindow()
+    assert not win.mirror_resize
+    win.toggle_mirror(True)
+    assert win.mirror_resize

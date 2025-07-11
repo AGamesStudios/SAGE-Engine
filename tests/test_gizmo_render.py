@@ -20,7 +20,7 @@ def _stub_gl(monkeypatch, calls):
             setattr(gl, name, lambda *a, **k: None)
     for const in [
         'GL_LINES','GL_TRIANGLES','GL_QUADS','GL_LINE_LOOP','GL_LINE_STRIP',
-        'GL_TEXTURE_2D','GL_VERTEX_SHADER','GL_FRAGMENT_SHADER'
+        'GL_TEXTURE_2D','GL_VERTEX_SHADER','GL_FRAGMENT_SHADER','GL_TRIANGLE_FAN'
     ]:
         setattr(gl, const, 0)
     monkeypatch.setitem(sys.modules, 'OpenGL', types.ModuleType('OpenGL'))

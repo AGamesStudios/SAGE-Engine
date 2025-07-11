@@ -5,7 +5,8 @@ import math
 from OpenGL.GL import (
     glBindTexture, glColor4f, glBegin, glEnd, glVertex2f, glLineWidth,
     glPushMatrix, glPopMatrix, glTranslatef, glRotatef,
-    GL_LINES, GL_TRIANGLES, GL_QUADS, GL_LINE_LOOP, GL_LINE_STRIP, GL_TEXTURE_2D,
+    GL_LINES, GL_TRIANGLES, GL_QUADS, GL_LINE_LOOP, GL_LINE_STRIP,
+    GL_TEXTURE_2D, GL_TRIANGLE_FAN,
 )  # type: ignore[import-not-found]
 
 from typing import Optional
@@ -151,19 +152,35 @@ def draw_basic_gizmo(renderer, gizmo: Gizmo, camera: Optional[Camera]) -> None:
             glVertex2f(vx * scale, vy * scale * sign)
         glEnd()
     elif shape == "square":
-        glBegin(GL_LINE_LOOP)
-        glVertex2f(-size, -size)
-        glVertex2f(size, -size)
-        glVertex2f(size, size)
-        glVertex2f(-size, size)
-        glEnd()
+        if gizmo.filled:
+            glBegin(GL_QUADS)
+            glVertex2f(-size, -size)
+            glVertex2f(size, -size)
+            glVertex2f(size, size)
+            glVertex2f(-size, size)
+            glEnd()
+        else:
+            glBegin(GL_LINE_LOOP)
+            glVertex2f(-size, -size)
+            glVertex2f(size, -size)
+            glVertex2f(size, size)
+            glVertex2f(-size, size)
+            glEnd()
     elif shape == "circle":
         steps = max(16, int(size))
-        glBegin(GL_LINE_LOOP)
-        for i in range(steps):
-            ang = math.radians(i * 360.0 / steps)
-            glVertex2f(math.cos(ang) * size, math.sin(ang) * size * sign)
-        glEnd()
+        if gizmo.filled:
+            glBegin(GL_TRIANGLE_FAN)
+            glVertex2f(0.0, 0.0)
+            for i in range(steps + 1):
+                ang = math.radians(i * 360.0 / steps)
+                glVertex2f(math.cos(ang) * size, math.sin(ang) * size * sign)
+            glEnd()
+        else:
+            glBegin(GL_LINE_LOOP)
+            for i in range(steps):
+                ang = math.radians(i * 360.0 / steps)
+                glVertex2f(math.cos(ang) * size, math.sin(ang) * size * sign)
+            glEnd()
     else:  # cross
         glBegin(GL_LINES)
         glVertex2f(-size, 0.0)

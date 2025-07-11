@@ -196,34 +196,74 @@ class _ViewportMixin:
                     dy = wy - self._last_world[1]
                     obj = self._window.selected_obj
                     if obj is not None:
-                        w = obj.width * obj.scale_x
-                        h = obj.height * obj.scale_y
+                        w_old = obj.width * obj.scale_x
+                        h_old = obj.height * obj.scale_y
+                        left = obj.x - obj.width * obj.pivot_x * obj.scale_x
+                        bottom = obj.y - obj.height * obj.pivot_y * obj.scale_y
+                        w = w_old
+                        h = h_old
                         shift = hasattr(ev, "modifiers") and (
                             ev.modifiers() & Qt.KeyboardModifier.ShiftModifier
                         )
-                        if shift:
-                            aspect = w / h if h else 1
-                            if abs(dx) >= abs(dy):
-                                delta_w = dx if "r" in self._drag_corner else -dx
-                                w += delta_w
-                                h = w / aspect
+                        if self._window.mirror_resize:
+                            if shift:
+                                aspect = w / h if h else 1
+                                if abs(dx) >= abs(dy):
+                                    delta_w = dx if "r" in self._drag_corner else -dx
+                                    w += delta_w
+                                    h = w / aspect
+                                else:
+                                    delta_h = dy if "t" in self._drag_corner else -dy
+                                    h += delta_h
+                                    w = h * aspect
                             else:
-                                delta_h = dy if "t" in self._drag_corner else -dy
-                                h += delta_h
-                                w = h * aspect
+                                if "r" in self._drag_corner:
+                                    w += dx
+                                else:
+                                    w -= dx
+                                if "t" in self._drag_corner:
+                                    h += dy
+                                else:
+                                    h -= dy
+                            w = max(0.1, w)
+                            h = max(0.1, h)
+                            obj.scale_x = w / obj.width
+                            obj.scale_y = h / obj.height
+                            self._window.update_properties()
                         else:
-                            if "r" in self._drag_corner:
-                                w += dx
+                            if shift:
+                                aspect = w / h if h else 1
+                                if abs(dx) >= abs(dy):
+                                    delta_w = dx if "r" in self._drag_corner else -dx
+                                    w += delta_w
+                                    h = w / aspect
+                                else:
+                                    delta_h = dy if "t" in self._drag_corner else -dy
+                                    h += delta_h
+                                    w = h * aspect
                             else:
-                                w -= dx
-                            if "t" in self._drag_corner:
-                                h += dy
-                            else:
-                                h -= dy
-                        obj.scale_x = max(0.1, w / obj.width)
-                        obj.scale_y = max(0.1, h / obj.height)
-                        self._window.update_properties()
-                    self._last_world = (wx, wy)
+                                if "r" in self._drag_corner:
+                                    w += dx
+                                else:
+                                    w -= dx
+                                if "t" in self._drag_corner:
+                                    h += dy
+                                else:
+                                    h -= dy
+                            new_left = left
+                            new_bottom = bottom
+                            if "l" in self._drag_corner:
+                                new_left = left + (w_old - w)
+                            if "b" in self._drag_corner:
+                                new_bottom = bottom + (h_old - h)
+                            w = max(0.1, w)
+                            h = max(0.1, h)
+                            obj.scale_x = w / obj.width
+                            obj.scale_y = h / obj.height
+                            obj.x = new_left + obj.pivot_x * w
+                            obj.y = new_bottom + obj.pivot_y * h
+                            self._window.update_properties()
+                        self._last_world = (wx, wy)
                 else:
                     dx = pos.x() - self._last_pos.x()
                     dy = pos.y() - self._last_pos.y()
@@ -618,6 +658,7 @@ class EditorWindow(QMainWindow):
         self.project_path: str | None = None
         # keep the viewport camera separate from scene objects
         self.renderer.show_grid = True
+        self.mirror_resize = False
         self.set_renderer(self.renderer)
         self.selected_obj: Optional[GameObject] = None
         self._clipboard: dict | None = None
@@ -672,6 +713,15 @@ class EditorWindow(QMainWindow):
                 grid_act.setChecked(True)
             if hasattr(grid_act, "triggered"):
                 grid_act.triggered.connect(self.toggle_grid)
+
+        mirror_act = view_menu.addAction("Mirror Resize")
+        if mirror_act is not None:
+            if hasattr(mirror_act, "setCheckable"):
+                mirror_act.setCheckable(True)
+            if hasattr(mirror_act, "setChecked"):
+                mirror_act.setChecked(False)
+            if hasattr(mirror_act, "triggered"):
+                mirror_act.triggered.connect(self.toggle_mirror)
 
         menubar.addMenu("About")
 
@@ -753,6 +803,9 @@ class EditorWindow(QMainWindow):
         if hasattr(self.renderer, "show_grid"):
             self.renderer.show_grid = checked
             self.draw_scene(update_list=False)
+
+    def toggle_mirror(self, checked: bool) -> None:
+        self.mirror_resize = bool(checked)
 
     def save_screenshot(self, path: str) -> None:
         if self.renderer is None:
@@ -1044,6 +1097,7 @@ class EditorWindow(QMainWindow):
                         color=(1.0, 0.6, 0.2, 1),
                         thickness=1,
                         frames=None,
+                        filled=True,
                     )
                 )
 
