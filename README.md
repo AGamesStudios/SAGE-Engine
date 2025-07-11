@@ -50,8 +50,9 @@ Extras are listed in ``pyproject.toml`` and can be supplied with ``--extras``.
 
 ### Editor
 The Qt editor launches with the Fusion style and a dark theme. Use the **View**
-menu to toggle the grid overlay. The toolbar **Screenshot** button saves the
-current viewport as PNG, while the **File** menu lets you open and save
+menu to toggle the grid overlay. The toolbar **Screenshot** button now opens a
+dialog for selecting the path and grid options. The **File** menu also provides
+a *Screenshot...* entry alongside actions to open and save
 ``.sageproject`` files.
 
 ## Logs

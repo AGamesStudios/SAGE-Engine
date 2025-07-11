@@ -479,7 +479,7 @@ class EditorWindow(QMainWindow):
         splitter = QSplitter(Qt.Orientation.Vertical, self)
         splitter.addWidget(self.viewport)
         splitter.addWidget(self.console)
-        splitter.setStretchFactor(0, 3)
+        splitter.setStretchFactor(0, 5)
         splitter.setStretchFactor(1, 1)
         self._splitter = splitter
         self.setCentralWidget(splitter)
@@ -489,10 +489,13 @@ class EditorWindow(QMainWindow):
         file_menu = menubar.addMenu("File")
         open_p = file_menu.addAction("Open Project")
         save_p = file_menu.addAction("Save Project")
+        shot_p = file_menu.addAction("Screenshot...")
         if open_p is not None and hasattr(open_p, "triggered"):
             open_p.triggered.connect(self.open_project_dialog)
         if save_p is not None and hasattr(save_p, "triggered"):
             save_p.triggered.connect(self.save_project_dialog)
+        if shot_p is not None and hasattr(shot_p, "triggered"):
+            shot_p.triggered.connect(self.open_screenshot_dialog)
         renderer_menu = menubar.addMenu("Renderer")
         ogl_action = renderer_menu.addAction("OpenGL")
         sdl_action = renderer_menu.addAction("SDL")
@@ -531,7 +534,7 @@ class EditorWindow(QMainWindow):
         shot_action = QAction("Screenshot", self)
         if shot_action is not None:
             if hasattr(shot_action, "triggered"):
-                shot_action.triggered.connect(self.save_screenshot)
+                shot_action.triggered.connect(self.open_screenshot_dialog)
             tbar.addAction(shot_action)
 
         right_spacer = QWidget(self)
@@ -579,20 +582,80 @@ class EditorWindow(QMainWindow):
             self.renderer.show_grid = checked
             self.draw_scene(update_list=False)
 
-    def save_screenshot(self) -> None:
+    def save_screenshot(self, path: str) -> None:
         if self.renderer is None:
             return
-        from PyQt6.QtWidgets import QFileDialog  # type: ignore[import-not-found]
+        try:
+            self.renderer.save_screenshot(path)
+            self.log_warning(f"Screenshot saved to {path}")
+        except Exception:
+            log.exception("Screenshot failed")
 
-        path, _ = QFileDialog.getSaveFileName(
-            self, "Save Screenshot", "screenshot.png", "PNG Images (*.png)"
-        )
-        if path:
+    def open_screenshot_dialog(self) -> None:
+        if self.renderer is None:
+            return
+        from PyQt6.QtWidgets import (
+            QDialog,
+            QFormLayout,
+            QLineEdit,
+            QCheckBox,
+            QPushButton,
+            QFileDialog,
+            QHBoxLayout,
+        )  # type: ignore[import-not-found]
+
+        dlg = QDialog(self)
+        dlg.setWindowTitle("Save Screenshot")
+        form = QFormLayout(dlg)
+
+        path_edit = QLineEdit("screenshot.png", dlg)
+        browse_btn = QPushButton("Browse", dlg)
+
+        def browse() -> None:
+            path, _ = QFileDialog.getSaveFileName(
+                self,
+                "Save Screenshot",
+                path_edit.text(),
+                "PNG Images (*.png)",
+            )
+            if path:
+                path_edit.setText(path)
+
+        browse_btn.clicked.connect(browse)
+        path_row = QHBoxLayout()
+        path_row.addWidget(path_edit)
+        path_row.addWidget(browse_btn)
+        form.addRow("Path", path_row)
+
+        grid_check = QCheckBox("Show Grid", dlg)
+        if hasattr(self.renderer, "show_grid"):
+            grid_check.setChecked(self.renderer.show_grid)
+        form.addRow(grid_check)
+
+        btn_row = QHBoxLayout()
+        ok_btn = QPushButton("Save", dlg)
+        cancel_btn = QPushButton("Cancel", dlg)
+        ok_btn.clicked.connect(dlg.accept)
+        cancel_btn.clicked.connect(dlg.reject)
+        btn_row.addWidget(ok_btn)
+        btn_row.addWidget(cancel_btn)
+        form.addRow(btn_row)
+
+        if dlg.exec():
+            path = path_edit.text()
+            if not path:
+                return
+            show_grid = grid_check.isChecked()
+            orig = getattr(self.renderer, "show_grid", True)
+            if hasattr(self.renderer, "show_grid"):
+                self.renderer.show_grid = show_grid
+            self.draw_scene(update_list=False)
             try:
-                self.renderer.save_screenshot(path)
-                self.log_warning(f"Screenshot saved to {path}")
-            except Exception:
-                log.exception("Screenshot failed")
+                self.save_screenshot(path)
+            finally:
+                if hasattr(self.renderer, "show_grid"):
+                    self.renderer.show_grid = orig
+                self.draw_scene(update_list=False)
 
     def load_project(self, path: str) -> None:
         from engine.core.project import Project
@@ -698,7 +761,7 @@ class EditorWindow(QMainWindow):
             splitter = QSplitter(Qt.Orientation.Vertical, self)
             splitter.addWidget(new_view)
             splitter.addWidget(self.console)
-            splitter.setStretchFactor(0, 3)
+            splitter.setStretchFactor(0, 5)
             splitter.setStretchFactor(1, 1)
             self._splitter = splitter
             self.setCentralWidget(splitter)

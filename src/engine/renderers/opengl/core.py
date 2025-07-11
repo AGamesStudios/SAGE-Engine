@@ -147,6 +147,9 @@ class OpenGLRenderer(Renderer):
         if ctx and ctx.isValid():
             widget.makeCurrent()
             try:
+                # draw the latest frame before reading pixels
+                self.paint()
+                GL.glPixelStorei(GL.GL_PACK_ALIGNMENT, 1)
                 data = GL.glReadPixels(
                     0,
                     0,

@@ -1,4 +1,4 @@
 # Toolbar
 
 The toolbar provides buttons for selecting transform tools and common editor actions.
-It also includes a *Screenshot* button that saves the viewport as ``PNG``.
+The *Screenshot* button opens a dialog for saving the current viewport as ``PNG``.
