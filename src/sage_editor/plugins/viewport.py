@@ -986,8 +986,19 @@ def init_editor(editor) -> None:
     app = QApplication.instance()
     created = False
     if app is None:
+        from PyQt6.QtCore import QCoreApplication, Qt
+        QCoreApplication.setAttribute(
+            Qt.ApplicationAttribute.AA_EnableHighDpiScaling, True
+        )
+        QCoreApplication.setAttribute(
+            Qt.ApplicationAttribute.AA_UseHighDpiPixmaps, True
+        )
         app = QApplication([])
         created = True
+        font = app.font()
+        if font.pointSize() < 10:
+            font.setPointSize(10)
+            app.setFont(font)
     if hasattr(QApplication, "setStyle"):
         QApplication.setStyle(QStyleFactory.create("Fusion"))
         _apply_dark_palette(app)
