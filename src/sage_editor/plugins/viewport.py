@@ -7,6 +7,7 @@ objects are drawn with hardware acceleration by default.
 from __future__ import annotations
 
 import logging
+import os
 from PyQt6.QtWidgets import (  # type: ignore[import-not-found]
     QApplication,
     QMainWindow,
@@ -468,6 +469,7 @@ class EditorWindow(QMainWindow):
         )
         self.camera = Camera(width=w, height=h, active=True)
         self.scene = Scene(with_defaults=False)
+        self.project_path: str | None = None
         # keep the viewport camera separate from scene objects
         self.renderer.show_grid = True
         self.set_renderer(self.renderer)
@@ -484,6 +486,13 @@ class EditorWindow(QMainWindow):
 
         menubar = QMenuBar(self)
         self.setMenuBar(menubar)
+        file_menu = menubar.addMenu("File")
+        open_p = file_menu.addAction("Open Project")
+        save_p = file_menu.addAction("Save Project")
+        if open_p is not None and hasattr(open_p, "triggered"):
+            open_p.triggered.connect(self.open_project_dialog)
+        if save_p is not None and hasattr(save_p, "triggered"):
+            save_p.triggered.connect(self.save_project_dialog)
         renderer_menu = menubar.addMenu("Renderer")
         ogl_action = renderer_menu.addAction("OpenGL")
         sdl_action = renderer_menu.addAction("SDL")
@@ -584,6 +593,66 @@ class EditorWindow(QMainWindow):
                 self.log_warning(f"Screenshot saved to {path}")
             except Exception:
                 log.exception("Screenshot failed")
+
+    def load_project(self, path: str) -> None:
+        from engine.core.project import Project
+        from engine.core.resources import set_resource_root
+
+        proj = Project.load(path)
+        base = os.path.dirname(path)
+        set_resource_root(os.path.join(base, proj.resources))
+        self.scene = Scene.from_dict(proj.scene, base_path=base)
+        self.camera = self.scene.ensure_active_camera(proj.width, proj.height)
+        if hasattr(self.renderer, "set_window_size"):
+            self.renderer.set_window_size(proj.width, proj.height)
+        self.project_path = path
+        self.update_object_list()
+        self.draw_scene()
+
+    def save_project(self, path: str) -> None:
+        from engine.core.project import Project
+
+        proj = Project(
+            scene=self.scene.to_dict(),
+            renderer=self.renderer_backend,
+            width=self.camera.width,
+            height=self.camera.height,
+            keep_aspect=self.renderer.keep_aspect,
+        )
+        proj.save(path)
+        self.project_path = path
+
+    def open_project_dialog(self) -> None:
+        from PyQt6.QtWidgets import QFileDialog  # type: ignore[import-not-found]
+
+        path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Open Project",
+            "",
+            "SAGE Project (*.sageproject)",
+        )
+        if path:
+            try:
+                self.load_project(path)
+                self.log_warning(f"Loaded project {path}")
+            except Exception:
+                log.exception("Failed to load project")
+
+    def save_project_dialog(self) -> None:
+        from PyQt6.QtWidgets import QFileDialog  # type: ignore[import-not-found]
+
+        path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save Project",
+            self.project_path or "project.sageproject",
+            "SAGE Project (*.sageproject)",
+        )
+        if path:
+            try:
+                self.save_project(path)
+                self.log_warning(f"Project saved to {path}")
+            except Exception:
+                log.exception("Failed to save project")
 
     # coordinate helpers -------------------------------------------------
 
