@@ -18,6 +18,7 @@ pip install -r requirements.txt
 ruff check .
 PYTHONPATH=src pytest -q
 ```
+Run `python scripts/clean_pycache.py` afterwards to delete leftover `__pycache__` directories.
 Install optional extras via:
 ```bash
 pip install .[opengl,sdl,qt,audio,geometry]
@@ -50,6 +51,8 @@ Extras are listed in ``pyproject.toml`` and can be supplied with ``--extras``.
 Log files are written to `~/.cache/sage/logs/engine.log` by default. Configure a
 different directory in `sage.toml` under `[logs]` or set the `SAGE_LOG_DIR`
 environment variable.
+Unhandled exceptions trigger **SAGE Crash**, writing a detailed report to
+`~/.cache/sage/crashes/`.
 
 ## Repository layout
 ``src/`` contains the engine libraries and tools. Most users only need the

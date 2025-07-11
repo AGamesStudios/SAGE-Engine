@@ -1,7 +1,9 @@
 import json
 import re
 
-__all__ = ['load_json']
+from .crash import write_crash_report
+
+__all__ = ['load_json', 'write_crash_report']
 
 
 def load_json(path: str):

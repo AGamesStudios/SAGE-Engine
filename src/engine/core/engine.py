@@ -19,6 +19,7 @@ from ..renderers import (
 from .. import ENGINE_VERSION
 from ..utils.log import logger, init_logger
 from ..utils.diagnostics import analyze_exception
+from ..utils.crash import write_crash_report
 from .math2d import set_max_angle, get_max_angle
 from ..entities.game_object import SpriteCache
 
@@ -26,7 +27,8 @@ from ..entities.game_object import SpriteCache
 def _exception_handler(exc_type, exc, tb):
     """Log uncaught exceptions with a short summary."""
     summary = analyze_exception(exc_type, exc, tb)
-    logger.error(summary)
+    path = write_crash_report(exc_type, exc, tb)
+    logger.error("%s [crash report: %s]", summary, path)
     logger.error("Uncaught exception", exc_info=(exc_type, exc, tb))
 
 

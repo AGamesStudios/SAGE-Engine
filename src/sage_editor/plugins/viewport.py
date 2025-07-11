@@ -133,16 +133,20 @@ class _ViewportMixin:
             copy_a = menu.addAction("Copy")
             paste_a = menu.addAction("Paste")
             del_a = menu.addAction("Delete")
-            copy_a.triggered.connect(self._window.copy_selected)
-            paste_a.triggered.connect(self._window.paste_object)
-            del_a.triggered.connect(self._window.delete_selected)
+            if copy_a is not None and hasattr(copy_a, "triggered"):
+                copy_a.triggered.connect(self._window.copy_selected)
+            if paste_a is not None and hasattr(paste_a, "triggered"):
+                paste_a.triggered.connect(self._window.paste_object)
+            if del_a is not None and hasattr(del_a, "triggered"):
+                del_a.triggered.connect(self._window.delete_selected)
         else:
             action = menu.addAction("Create Object")
 
             def cb():
                 self._window.create_object(wx, wy)
 
-            action.triggered.connect(cb)
+            if action is not None and hasattr(action, "triggered"):
+                action.triggered.connect(cb)
         menu.exec(cast(QWidget, self).mapToGlobal(point))
 
 
@@ -230,16 +234,20 @@ class SDLViewportWidget(_ViewportMixin, SDLWidget):
             copy_a = menu.addAction("Copy")
             paste_a = menu.addAction("Paste")
             del_a = menu.addAction("Delete")
-            copy_a.triggered.connect(self._window.copy_selected)
-            paste_a.triggered.connect(self._window.paste_object)
-            del_a.triggered.connect(self._window.delete_selected)
+            if copy_a is not None and hasattr(copy_a, "triggered"):
+                copy_a.triggered.connect(self._window.copy_selected)
+            if paste_a is not None and hasattr(paste_a, "triggered"):
+                paste_a.triggered.connect(self._window.paste_object)
+            if del_a is not None and hasattr(del_a, "triggered"):
+                del_a.triggered.connect(self._window.delete_selected)
         else:
             action = menu.addAction("Create Object")
 
             def cb():
                 self._window.create_object(wx, wy)
 
-            action.triggered.connect(cb)
+            if action is not None and hasattr(action, "triggered"):
+                action.triggered.connect(cb)
         menu.exec(cast(QWidget, self).mapToGlobal(point))
 
 
@@ -458,12 +466,15 @@ class EditorWindow(QMainWindow):
         renderer_menu = menubar.addMenu("Renderer")
         ogl_action = renderer_menu.addAction("OpenGL")
         sdl_action = renderer_menu.addAction("SDL")
-        ogl_action.triggered.connect(lambda: self.change_renderer("opengl"))
-        sdl_action.triggered.connect(lambda: self.change_renderer("sdl"))
+        if ogl_action is not None and hasattr(ogl_action, "triggered"):
+            ogl_action.triggered.connect(lambda: self.change_renderer("opengl"))
+        if sdl_action is not None and hasattr(sdl_action, "triggered"):
+            sdl_action.triggered.connect(lambda: self.change_renderer("sdl"))
         if menus:
             for title, cb in menus:
                 action = QAction(title, self)
-                action.triggered.connect(cb)
+                if action is not None and hasattr(action, "triggered"):
+                    action.triggered.connect(cb)
                 menubar.addAction(action)
 
         tbar = QToolBar(self)
@@ -473,7 +484,8 @@ class EditorWindow(QMainWindow):
         tbar.addWidget(left_spacer)
 
         run_action = QAction("Run", self)
-        run_action.triggered.connect(self.start_game)
+        if run_action is not None and hasattr(run_action, "triggered"):
+            run_action.triggered.connect(self.start_game)
         tbar.addAction(run_action)
 
         right_spacer = QWidget(self)
@@ -482,7 +494,8 @@ class EditorWindow(QMainWindow):
         if toolbar:
             for title, cb in toolbar:
                 action = QAction(title, self)
-                action.triggered.connect(cb)
+                if action is not None and hasattr(action, "triggered"):
+                    action.triggered.connect(cb)
                 tbar.addAction(action)
 
         self.objects = QListWidget()
@@ -745,12 +758,19 @@ class EditorWindow(QMainWindow):
     def _list_context_menu(self, point):
         menu = QMenu(self.objects)
         if self.selected_obj is not None:
-            menu.addAction("Copy").triggered.connect(self.copy_selected)
-            menu.addAction("Paste").triggered.connect(self.paste_object)
-            menu.addAction("Delete").triggered.connect(self.delete_selected)
+            copy_a = menu.addAction("Copy")
+            paste_a = menu.addAction("Paste")
+            del_a = menu.addAction("Delete")
+            if copy_a is not None and hasattr(copy_a, "triggered"):
+                copy_a.triggered.connect(self.copy_selected)
+            if paste_a is not None and hasattr(paste_a, "triggered"):
+                paste_a.triggered.connect(self.paste_object)
+            if del_a is not None and hasattr(del_a, "triggered"):
+                del_a.triggered.connect(self.delete_selected)
             menu.addSeparator()
         action = menu.addAction("Create Object")
-        action.triggered.connect(self.create_object)
+        if action is not None and hasattr(action, "triggered"):
+            action.triggered.connect(self.create_object)
         menu.exec(self.objects.mapToGlobal(point))
 
     def _object_selected(self, current, _prev):

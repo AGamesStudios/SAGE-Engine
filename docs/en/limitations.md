@@ -16,8 +16,8 @@ distributing binaries consider providing wheels for these packages.
 Mesh boolean operations such as unions and subtractions need `shapely` installed
 or they will raise an ``ImportError``. ``union_meshes`` only accepts the
 ``negatives`` argument when Shapely is available. Boolean utilities now handle
-polygons with interior holes by triangulating the result, though complex inputs
-may generate many small triangles.
+polygons with interior holes by triangulating the result. Complex inputs may
+generate many small triangles which can noticeably slow rendering.
 Audio features require `pygame`. When it's missing the engine logs a warning and
 ``AudioManager`` cannot be created.
 
