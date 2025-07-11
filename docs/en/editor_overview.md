@@ -1,6 +1,6 @@
 # Editor Overview
 
-The SAGE Editor lets you place objects and manage scenes. Use the toolbar to switch between move, rotate and scale modes.
+The SAGE Editor lets you place objects and manage scenes. Use the small toolbar in the top-left corner to switch between move, rotate and scale modes.
 
 The editor uses Qt's Fusion style with a dark palette. The viewport fills most
 of the window while docks hold resources, objects and properties. When an object

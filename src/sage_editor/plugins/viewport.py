@@ -580,7 +580,20 @@ class EditorWindow(QMainWindow):
             view = ViewportWidget(self)
         container = QWidget(self)
         layout = QHBoxLayout(container)
+        if hasattr(layout, "setContentsMargins"):
+            layout.setContentsMargins(4, 4, 0, 0)
+        if hasattr(layout, "setSpacing"):
+            layout.setSpacing(4)
         bar = QToolBar(container)
+        if hasattr(bar, "setOrientation"):
+            bar.setOrientation(Qt.Orientation.Vertical)
+        if hasattr(bar, "setSizePolicy"):
+            pol = getattr(QSizePolicy, "Policy", QSizePolicy)
+            horiz = getattr(pol, "Preferred", 0)
+            vert = getattr(pol, "Expanding", 0)
+            bar.setSizePolicy(horiz, vert)
+        if hasattr(bar, "setMaximumWidth"):
+            bar.setMaximumWidth(40)
         layout.addWidget(bar)
         layout.addWidget(view)
         container.viewport = view  # type: ignore[attr-defined]
