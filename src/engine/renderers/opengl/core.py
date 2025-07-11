@@ -157,7 +157,9 @@ class OpenGLRenderer(Renderer):
                 )
             except Exception as exc:
                 # avoid a noisy traceback if the read fails due to lost context
-                msg = getattr(exc, "description", exc)
+                msg = getattr(exc, "description", None)
+                if msg is None:
+                    msg = str(exc)
                 if isinstance(msg, bytes):
                     try:
                         msg = msg.decode("utf-8")
