@@ -352,12 +352,14 @@ def test_object_list_sync(monkeypatch):
 
     item = win.objects.item(0)
     win.objects.setCurrentItem(item)
-    assert len(win.renderer.gizmos) == 7
+    assert len(win.renderer.gizmos) == 2
     g0 = win.renderer.gizmos[0]
     pivot = win.renderer.gizmos[1]
     assert g0.shape == "polyline"
     assert len(list(g0.vertices)) == 5
     assert pivot.shape == "circle"
+    win.set_mode("rect")
+    assert len(win.renderer.gizmos) == 7
     assert win.renderer.gizmos[2].shape == "circle"
     assert all(g.shape == "square" and g.filled for g in win.renderer.gizmos[3:])
 
@@ -492,3 +494,19 @@ def test_mirror_resize_toggle(monkeypatch):
     assert not win.mirror_resize
     win.toggle_mirror(True)
     assert win.mirror_resize
+
+
+def test_rect_mode_gizmos(monkeypatch):
+    _stub_gl(monkeypatch, {})
+    _setup_qt(monkeypatch)
+
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    viewport = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(viewport)
+
+    win = viewport.EditorWindow()
+    obj = win.create_object()
+    win.select_object(obj)
+    assert len(win.renderer.gizmos) == 2
+    win.set_mode('rect')
+    assert len(win.renderer.gizmos) == 7

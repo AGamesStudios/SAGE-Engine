@@ -39,7 +39,7 @@ try:  # support minimal test stubs
 except Exception:  # pragma: no cover - fallback when QTextEdit missing
     QTextEdit = QPlainTextEdit
 from PyQt6.QtCore import Qt  # type: ignore[import-not-found]
-from typing import Optional, cast
+from typing import Optional, cast, Any
 from PyQt6.QtWidgets import QWidget  # type: ignore[import-not-found]
 from engine.utils import units
 
@@ -56,9 +56,9 @@ from sage_editor.qt import GLWidget, SDLWidget
 class ConsoleHandler(logging.Handler):
     """Forward log records to a text widget."""
 
-    def __init__(self, widget: QPlainTextEdit | QTextEdit) -> None:
+    def __init__(self, widget: object) -> None:
         super().__init__()
-        self.widget = widget
+        self.widget: Any = widget
 
     def emit(self, record: logging.LogRecord) -> None:  # pragma: no cover - UI handler
         msg = self.format(record)
@@ -220,19 +220,19 @@ class _ViewportMixin:
                             if shift:
                                 aspect = w / h if h else 1
                                 if abs(dx) >= abs(dy):
-                                    delta_w = dx if "r" in self._drag_corner else -dx
+                                    delta_w = dx if (self._drag_corner and "r" in self._drag_corner) else -dx
                                     w += delta_w
                                     h = w / aspect
                                 else:
-                                    delta_h = dy if "t" in self._drag_corner else -dy
+                                    delta_h = dy if (self._drag_corner and "t" in self._drag_corner) else -dy
                                     h += delta_h
                                     w = h * aspect
                             else:
-                                if "r" in self._drag_corner:
+                                if self._drag_corner and "r" in self._drag_corner:
                                     w += dx
                                 else:
                                     w -= dx
-                                if "t" in self._drag_corner:
+                                if self._drag_corner and "t" in self._drag_corner:
                                     h += dy
                                 else:
                                     h -= dy
@@ -245,36 +245,36 @@ class _ViewportMixin:
                             if shift:
                                 aspect = w / h if h else 1
                                 if abs(dx) >= abs(dy):
-                                    delta_w = dx if "r" in self._drag_corner else -dx
+                                    delta_w = dx if (self._drag_corner and "r" in self._drag_corner) else -dx
                                     w += delta_w
                                     h = w / aspect
                                 else:
-                                    delta_h = dy if "t" in self._drag_corner else -dy
+                                    delta_h = dy if (self._drag_corner and "t" in self._drag_corner) else -dy
                                     h += delta_h
                                     w = h * aspect
                             else:
-                                if "r" in self._drag_corner:
+                                if self._drag_corner and "r" in self._drag_corner:
                                     w += dx
                                 else:
                                     w -= dx
-                                if "t" in self._drag_corner:
+                                if self._drag_corner and "t" in self._drag_corner:
                                     h += dy
                                 else:
                                     h -= dy
                             new_left = left
                             new_bottom = bottom
-                            if "l" in self._drag_corner:
+                            if self._drag_corner and "l" in self._drag_corner:
                                 new_left = left + (w_old - w)
-                            if "b" in self._drag_corner:
+                            if self._drag_corner and "b" in self._drag_corner:
                                 new_bottom = bottom + (h_old - h)
                             w = max(0.1, w)
                             h = max(0.1, h)
                             obj.scale_x = w / obj.width
                             obj.scale_y = h / obj.height
-                    obj.x = new_left + obj.pivot_x * w
-                    obj.y = new_bottom + obj.pivot_y * h
-                    self._window.update_properties()
-                    self._last_world = (wx, wy)
+                            obj.x = new_left + obj.pivot_x * w
+                            obj.y = new_bottom + obj.pivot_y * h
+                            self._window.update_properties()
+                            self._last_world = (wx, wy)
                 elif self._drag_mode == "rotate" and self._last_world is not None:
                     obj = self._window.selected_obj
                     if obj is not None:
@@ -581,7 +581,8 @@ class EditorWindow(QMainWindow):
         container = QWidget(self)
         layout = QHBoxLayout(container)
         if hasattr(layout, "setContentsMargins"):
-            layout.setContentsMargins(4, 4, 0, 0)
+            # Small offset so the bar doesn't stick to the window frame
+            layout.setContentsMargins(8, 8, 0, 0)
         if hasattr(layout, "setSpacing"):
             layout.setSpacing(4)
         bar = QToolBar(container)
@@ -629,12 +630,19 @@ class EditorWindow(QMainWindow):
             self.scale_action.setCheckable(True)
         if hasattr(self.mode_bar, "addAction"):
             self.mode_bar.addAction(self.scale_action)
+        self.rect_action = QAction("Rect", self.mode_bar)
+        if hasattr(self.rect_action, "setCheckable"):
+            self.rect_action.setCheckable(True)
+        if hasattr(self.mode_bar, "addAction"):
+            self.mode_bar.addAction(self.rect_action)
         if hasattr(self.move_action, "triggered"):
             self.move_action.triggered.connect(lambda: self.set_mode("move"))
         if hasattr(self.rotate_action, "triggered"):
             self.rotate_action.triggered.connect(lambda: self.set_mode("rotate"))
         if hasattr(self.scale_action, "triggered"):
             self.scale_action.triggered.connect(lambda: self.set_mode("scale"))
+        if hasattr(self.rect_action, "triggered"):
+            self.rect_action.triggered.connect(lambda: self.set_mode("rect"))
         self.console = QTextEdit(self)
         self.console.setReadOnly(True)
         clear_a = QAction("Clear", self.console)
@@ -886,6 +894,8 @@ class EditorWindow(QMainWindow):
                 self.rotate_action.setChecked(False)
             if hasattr(self.scale_action, "setChecked"):
                 self.scale_action.setChecked(False)
+            if hasattr(self.rect_action, "setChecked"):
+                self.rect_action.setChecked(False)
         elif mode == "rotate":
             if hasattr(self.move_action, "setChecked"):
                 self.move_action.setChecked(False)
@@ -893,14 +903,36 @@ class EditorWindow(QMainWindow):
                 self.rotate_action.setChecked(True)
             if hasattr(self.scale_action, "setChecked"):
                 self.scale_action.setChecked(False)
-        else:
+            if hasattr(self.rect_action, "setChecked"):
+                self.rect_action.setChecked(False)
+        elif mode == "scale":
             if hasattr(self.move_action, "setChecked"):
                 self.move_action.setChecked(False)
             if hasattr(self.rotate_action, "setChecked"):
                 self.rotate_action.setChecked(False)
             if hasattr(self.scale_action, "setChecked"):
                 self.scale_action.setChecked(True)
+            if hasattr(self.rect_action, "setChecked"):
+                self.rect_action.setChecked(False)
+        else:
+            if hasattr(self.move_action, "setChecked"):
+                self.move_action.setChecked(False)
+            if hasattr(self.rotate_action, "setChecked"):
+                self.rotate_action.setChecked(False)
+            if hasattr(self.scale_action, "setChecked"):
+                self.scale_action.setChecked(False)
+            if hasattr(self.rect_action, "setChecked"):
+                self.rect_action.setChecked(True)
         self.draw_scene(update_list=False)
+
+    def resizeEvent(self, ev):  # pragma: no cover - gui layout
+        super().resizeEvent(ev)
+        try:
+            h = self.viewport.height()
+            if hasattr(self.mode_bar, "setFixedHeight"):
+                self.mode_bar.setFixedHeight(h)
+        except Exception:
+            log.exception("Failed to update toolbar height")
 
     def save_screenshot(self, path: str) -> None:
         if self.renderer is None:
@@ -1184,34 +1216,35 @@ class EditorWindow(QMainWindow):
                     frames=None,
                 )
             )
-            handle_size = 5
-            cam = self.camera
-            rot_y = bottom + h + _ViewportMixin.ROTATE_OFFSET / (
-                units.UNITS_PER_METER * cam.zoom
-            )
-            self.renderer.add_gizmo(
-                gizmos.circle_gizmo(
-                    obj.x,
-                    rot_y,
-                    size=handle_size,
-                    color=(0.2, 0.8, 1.0, 1),
-                    thickness=1,
-                    frames=None,
-                    filled=True,
+            if self.transform_mode == "rect":
+                handle_size = 5
+                cam = self.camera
+                rot_y = bottom + h + _ViewportMixin.ROTATE_OFFSET / (
+                    units.UNITS_PER_METER * cam.zoom
                 )
-            )
-            for x, y in points[:-1]:
                 self.renderer.add_gizmo(
-                    gizmos.square_gizmo(
-                        x,
-                        y,
+                    gizmos.circle_gizmo(
+                        obj.x,
+                        rot_y,
                         size=handle_size,
-                        color=(1.0, 0.6, 0.2, 1),
+                        color=(0.2, 0.8, 1.0, 1),
                         thickness=1,
                         frames=None,
                         filled=True,
                     )
                 )
+                for x, y in points[:-1]:
+                    self.renderer.add_gizmo(
+                        gizmos.square_gizmo(
+                            x,
+                            y,
+                            size=handle_size,
+                            color=(1.0, 0.6, 0.2, 1),
+                            thickness=1,
+                            frames=None,
+                            filled=True,
+                        )
+                    )
 
     def draw_scene(self, update_list: bool = True) -> None:
         """Render the current scene and refresh selection gizmos."""

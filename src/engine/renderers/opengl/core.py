@@ -564,7 +564,7 @@ class OpenGLRenderer(Renderer):
                         ) if obj is self._selected_obj else (1.0, 1.0, 0.0, 1.0)
                         width = 3.0 if obj is self._selected_obj else 1.0
                         self._draw_frustum(obj, color=color, width=width)
-                    if obj is self._selected_obj:
+                    if obj is self._selected_obj and self._transform_mode != "rect":
                         self._draw_gizmo(
                             obj,
                             camera,
@@ -584,6 +584,7 @@ class OpenGLRenderer(Renderer):
                 self._draw_gizmos
                 and self._selected_obj
                 and not isinstance(self._selected_obj, Camera)
+                and self._transform_mode != "rect"
             ):
                 self._draw_gizmo(
                     self._selected_obj,
