@@ -2,8 +2,9 @@ import json
 import re
 
 from .crash import write_crash_report
+from .profiler import Profiler
 
-__all__ = ['load_json', 'write_crash_report']
+__all__ = ['load_json', 'write_crash_report', 'Profiler']
 
 
 def load_json(path: str):

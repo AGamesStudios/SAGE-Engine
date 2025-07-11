@@ -1,6 +1,8 @@
 # Menu
 
-The menu bar gives access to project operations, screenshot capture and help.
-The **File** menu includes a *Screenshot...* action that opens a dialog for
-selecting where to save the image. The **View** menu contains a *Show Grid*
-toggle for the viewport.
+The menu bar groups actions into several categories.
+
+- **File** – open and save projects or capture screenshots.
+- **Edit** – copy, paste and delete objects.
+- **Engine** – pick the renderer or toggle the grid under *View*.
+- **About** – information about the editor.

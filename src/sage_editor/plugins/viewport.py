@@ -24,6 +24,7 @@ from PyQt6.QtWidgets import (  # type: ignore[import-not-found]
     QGroupBox,
     QFormLayout,
     QHBoxLayout,
+    QScrollArea,
     QLabel,
     QLineEdit,
     QSlider,
@@ -49,6 +50,30 @@ from engine import gizmos
 from engine.core.objects import get_object_type
 
 from sage_editor.qt import GLWidget, SDLWidget
+
+
+class ConsoleHandler(logging.Handler):
+    """Forward log records to a text widget."""
+
+    def __init__(self, widget: QPlainTextEdit | QTextEdit) -> None:
+        super().__init__()
+        self.widget = widget
+
+    def emit(self, record: logging.LogRecord) -> None:  # pragma: no cover - UI handler
+        msg = self.format(record)
+        color = "#dddddd"
+        if record.levelno >= logging.ERROR:
+            color = "#ff5555"
+        elif record.levelno >= logging.WARNING:
+            color = "#ffaa00"
+        if hasattr(self.widget, "appendHtml"):
+            self.widget.appendHtml(f"<span style='color:{color}'>{msg}</span>")
+        elif hasattr(self.widget, "append"):
+            self.widget.append(msg)
+        else:
+            text = getattr(self.widget, "toPlainText", lambda: "")()
+            if hasattr(self.widget, "setPlainText"):
+                self.widget.setPlainText(text + msg + "\n")
 
 log = logging.getLogger(__name__)
 
@@ -501,8 +526,23 @@ class EditorWindow(QMainWindow):
             self.console.append("Welcome to SAGE Editor")
         else:
             self.console.setPlainText(ascii_plain + "\nWelcome to SAGE Editor")
+        from engine.utils.log import logger
+        self._console_handler = ConsoleHandler(self.console)
+        logger.addHandler(self._console_handler)
         self.properties = PropertiesWidget(self)
         self.prop_apply = self.properties.apply_btn
+        for edit in [
+            self.properties.name_edit,
+            self.properties.tags_edit,
+            self.properties.pos_x,
+            self.properties.pos_y,
+            self.properties.scale_x,
+            self.properties.scale_y,
+            self.properties.pivot_x,
+            self.properties.pivot_y,
+        ]:
+            if hasattr(edit, "editingFinished"):
+                edit.editingFinished.connect(self.apply_properties)
         self.resources = QListWidget()
         self.resource_root = ""
         self.resources_label = QLabel("Resources:")
@@ -554,20 +594,25 @@ class EditorWindow(QMainWindow):
         open_p = file_menu.addAction("Open Project")
         save_p = file_menu.addAction("Save Project")
         shot_p = file_menu.addAction("Screenshot...")
+        edit_menu = menubar.addMenu("Edit")
+        copy_m = edit_menu.addAction("Copy")
+        paste_m = edit_menu.addAction("Paste")
+        del_m = edit_menu.addAction("Delete")
+        engine_menu = menubar.addMenu("Engine")
+        renderer_menu = engine_menu.addMenu("Renderer")
         if open_p is not None and hasattr(open_p, "triggered"):
             open_p.triggered.connect(self.open_project_dialog)
         if save_p is not None and hasattr(save_p, "triggered"):
             save_p.triggered.connect(self.save_project_dialog)
         if shot_p is not None and hasattr(shot_p, "triggered"):
             shot_p.triggered.connect(self.open_screenshot_dialog)
-        renderer_menu = menubar.addMenu("Renderer")
         ogl_action = renderer_menu.addAction("OpenGL")
         sdl_action = renderer_menu.addAction("SDL")
         if ogl_action is not None and hasattr(ogl_action, "triggered"):
             ogl_action.triggered.connect(lambda: self.change_renderer("opengl"))
         if sdl_action is not None and hasattr(sdl_action, "triggered"):
             sdl_action.triggered.connect(lambda: self.change_renderer("sdl"))
-        view_menu = menubar.addMenu("View")
+        view_menu = engine_menu.addMenu("View")
         grid_act = view_menu.addAction("Show Grid")
         if grid_act is not None:
             if hasattr(grid_act, "setCheckable"):
@@ -576,6 +621,15 @@ class EditorWindow(QMainWindow):
                 grid_act.setChecked(True)
             if hasattr(grid_act, "triggered"):
                 grid_act.triggered.connect(self.toggle_grid)
+
+        menubar.addMenu("About")
+
+        if copy_m is not None and hasattr(copy_m, "triggered"):
+            copy_m.triggered.connect(self.copy_selected)
+        if paste_m is not None and hasattr(paste_m, "triggered"):
+            paste_m.triggered.connect(self.paste_object)
+        if del_m is not None and hasattr(del_m, "triggered"):
+            del_m.triggered.connect(self.delete_selected)
 
         if menus:
             for title, cb in menus:
@@ -619,7 +673,10 @@ class EditorWindow(QMainWindow):
 
         prop_dock = QDockWidget("Properties", self)
         prop_dock.setObjectName("PropertiesDock")
-        prop_dock.setWidget(self.properties)
+        prop_scroll = QScrollArea(self)
+        prop_scroll.setWidgetResizable(True)
+        prop_scroll.setWidget(self.properties)
+        prop_dock.setWidget(prop_scroll)
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, prop_dock)
         self.splitDockWidget(obj_dock, prop_dock, Qt.Orientation.Vertical)
 
@@ -1052,6 +1109,12 @@ class EditorWindow(QMainWindow):
                 self.renderer.close()
             except Exception:
                 log.exception("Renderer close failed")
+        from engine.utils.log import logger
+        if getattr(self, "_console_handler", None) is not None:
+            try:
+                logger.removeHandler(self._console_handler)
+            except Exception:
+                pass
         self.close_game()
         super().closeEvent(event)
 

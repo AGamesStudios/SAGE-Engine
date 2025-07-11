@@ -19,6 +19,12 @@ ruff check .
 PYTHONPATH=src pytest -q
 ```
 Run `python scripts/clean_pycache.py` afterwards to delete leftover `__pycache__` directories.
+You can gather performance statistics with `engine.utils.Profiler`:
+```python
+from engine.utils import Profiler
+with Profiler("game.prof"):
+    Engine(scene=my_scene).run()
+```
 Install optional extras via:
 ```bash
 pip install .[opengl,sdl,qt,audio,geometry,physics]

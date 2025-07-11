@@ -106,6 +106,12 @@ def _setup_qt(monkeypatch):
         def clear(self):
             self._text = ""
 
+        def append(self, text):
+            self._text += text + "\n"
+
+        def appendHtml(self, text):
+            self.append(text)
+
         def setPlainText(self, text):
             self._text = text
 
@@ -193,6 +199,12 @@ def _setup_qt(monkeypatch):
         def setStretchFactor(self, i, f):
             pass
 
+    class QScrollArea(QWidget):
+        def setWidgetResizable(self, b):
+            pass
+        def setWidget(self, w):
+            self.w = w
+
     class QAction:
         def __init__(self, *a, **k):
             self.triggered = DummySignal()
@@ -214,6 +226,8 @@ def _setup_qt(monkeypatch):
         def addAction(self, title):
             self.action = QAction()
             return self.action
+        def addMenu(self, title):
+            return QMenu()
         def exec(self, *a, **k):
             if hasattr(self, 'action'):
                 self.action.triggered.emit()
@@ -257,6 +271,7 @@ def _setup_qt(monkeypatch):
     qtwidgets.QVBoxLayout = QVBoxLayout
     qtwidgets.QSizePolicy = QSizePolicy
     qtwidgets.QSplitter = QSplitter
+    qtwidgets.QScrollArea = QScrollArea
     qtwidgets.QStyleFactory = QStyleFactory
 
     qtgui = types.ModuleType('PyQt6.QtGui')
