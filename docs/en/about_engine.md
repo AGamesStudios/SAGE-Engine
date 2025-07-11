@@ -51,6 +51,11 @@ complex shapes can produce many triangles and slow rendering; see
 ``Mesh.apply_matrix`` together with :func:`engine.core.math2d.make_transform`
 to apply translations, scaling and rotations in one step.
 
+Install the ``physics`` extra to enable a lightweight wrapper around
+`pymunk`. Create a :class:`~engine.physics.PhysicsWorld`, add shapes for your
+objects and attach :class:`~engine.physics.PhysicsExtension` to the engine to
+step the world each frame.
+
 Materials describe the appearance of a sprite. A :class:`~engine.entities.object.Material`
 defines a base ``color`` (RGBA tuple), optional ``texture`` path and ``opacity``
 value. When creating a :class:`~engine.entities.game_object.GameObject`, any missing
