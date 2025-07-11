@@ -2,17 +2,21 @@
 
 import math
 from dataclasses import dataclass
-from typing import cast
+from typing import Any, TYPE_CHECKING, cast
 
 try:  # optional, used for boolean mesh operations
-    from shapely.geometry import Polygon
+    from shapely.geometry import Polygon as _Polygon
     from shapely.geometry.base import BaseGeometry
     from shapely.ops import unary_union
 except Exception:  # pragma: no cover - shapely missing
-    Polygon = None  # type: ignore
+    _Polygon = None  # type: ignore
     unary_union = None  # type: ignore
-    from typing import Any
     BaseGeometry = Any  # type: ignore
+
+if TYPE_CHECKING:  # keep type hints when shapely is missing
+    from shapely.geometry import Polygon
+else:  # pragma: no cover - runtime fallback
+    Polygon = Any  # type: ignore
 
 __all__ = [
     "Mesh",
@@ -103,15 +107,15 @@ def union_meshes(
     meshes: list[Mesh], negatives: list[Mesh] | None = None
 ) -> Mesh:
     """Return a new :class:`Mesh` from ``meshes`` optionally subtracting ``negatives``."""
-    if negatives and Polygon is not None and unary_union is not None:
-        geom = unary_union([Polygon(m.vertices) for m in meshes])  # pyright: ignore[reportOptionalCall]
+    if negatives and _Polygon is not None and unary_union is not None:
+        geom = unary_union([_Polygon(m.vertices) for m in meshes])  # pyright: ignore[reportOptionalCall]
         for neg in negatives:
-            geom = geom.difference(Polygon(neg.vertices))
-        polygons: list[Polygon]
+            geom = geom.difference(_Polygon(neg.vertices))
+        polygons: list[Any]
         if isinstance(geom, Polygon):
             polygons = [geom]
         elif hasattr(geom, "geoms"):
-            polygons = [g for g in geom.geoms if isinstance(g, Polygon)]
+            polygons = [g for g in geom.geoms if isinstance(g, Polygon)]  # pyright: ignore[reportAttributeAccessIssue]
             if not polygons:
                 raise ValueError("Union produced unsupported geometry")
         else:
@@ -142,17 +146,17 @@ def union_meshes(
 
 def difference_meshes(base: Mesh, subtract: list[Mesh]) -> Mesh:
     """Return ``base`` minus all meshes in ``subtract`` using shapely when available."""
-    if Polygon is None:
+    if _Polygon is None:
         raise ImportError("shapely is required for difference_meshes")
-    geom = Polygon(base.vertices)
+    geom = _Polygon(base.vertices)
     for neg in subtract:
-        geom = geom.difference(Polygon(neg.vertices))
+        geom = geom.difference(_Polygon(neg.vertices))
 
-    polygons: list[Polygon]
+    polygons: list[Any]
     if isinstance(geom, Polygon):
         polygons = [geom]
     elif hasattr(geom, "geoms"):
-        polygons = [g for g in geom.geoms if isinstance(g, Polygon)]
+        polygons = [g for g in geom.geoms if isinstance(g, Polygon)]  # pyright: ignore[reportAttributeAccessIssue]
         if not polygons:
             raise ValueError("Difference produced unsupported geometry")
     else:

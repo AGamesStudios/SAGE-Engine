@@ -14,9 +14,15 @@ unavailable so the engine falls back to another backend. On lightweight systems
 you may prefer the `NullRenderer` which has no extra dependencies. When
 distributing binaries consider providing wheels for these packages.
 Mesh boolean operations such as unions and subtractions need `shapely` installed
-or they will raise an ``ImportError``.
+or they will raise an ``ImportError``. When `shapely` returns polygons with
+interior rings these holes are discarded because the `Mesh` format only stores a
+single exterior loop.
 Audio features require `pygame`. When it's missing the engine logs a warning and
 ``AudioManager`` cannot be created.
+
+The Qt input backend needs a functional platform plugin such as ``xcb`` on
+Linux. Tests skip gracefully when the plugin is unavailable, but a missing
+platform can cause the engine to abort at startup.
 
 The core engine code is pure Python and also works with **PyPy 3.10+**. Running
 under PyPy can improve execution speed for heavy logic while keeping full

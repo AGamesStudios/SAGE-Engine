@@ -107,7 +107,9 @@ independently via `EngineSettings.image_cache_limit` or by calling
 `engine.entities.game_object.set_sprite_cache`.
 The `engine.mesh_utils` module includes helpers for creating and editing meshes,
 including polygons. Use `create_polygon_mesh` to build a custom shape from
-arbitrary vertices and combine meshes with the boolean utilities.
+arbitrary vertices and combine meshes with the boolean utilities. Boolean
+operations support unions and differences of multiple polygons; interior holes
+are discarded when converting to meshes.
 Rotations wrap once they exceed `360` degrees (configurable via
 `EngineSettings.max_angle`) and objects may rotate around their
 bounding-box centre when `rotate_bbox` is enabled. The `rotate` method uses this
