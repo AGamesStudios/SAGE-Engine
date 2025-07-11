@@ -146,15 +146,20 @@ class OpenGLRenderer(Renderer):
         ctx = widget.context()
         if ctx and ctx.isValid():
             widget.makeCurrent()
-            data = GL.glReadPixels(
-                0,
-                0,
-                self.width,
-                self.height,
-                GL.GL_RGBA,
-                GL.GL_UNSIGNED_BYTE,
-            )
-            widget.doneCurrent()
+            try:
+                data = GL.glReadPixels(
+                    0,
+                    0,
+                    self.width,
+                    self.height,
+                    GL.GL_RGBA,
+                    GL.GL_UNSIGNED_BYTE,
+                )
+            except Exception:
+                logger.exception("glReadPixels failed")
+                data = bytes(self.width * self.height * 4)
+            finally:
+                widget.doneCurrent()
         else:  # pragma: no cover - invalid context during shutdown
             data = bytes(self.width * self.height * 4)
         img = Image.frombytes("RGBA", (self.width, self.height), data)
