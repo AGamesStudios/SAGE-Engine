@@ -157,7 +157,13 @@ class OpenGLRenderer(Renderer):
                 )
             except Exception as exc:
                 # avoid a noisy traceback if the read fails due to lost context
-                logger.error("glReadPixels failed: %s", exc)
+                msg = getattr(exc, "description", exc)
+                if isinstance(msg, bytes):
+                    try:
+                        msg = msg.decode("utf-8")
+                    except Exception:
+                        msg = msg.decode("latin-1", "replace")
+                logger.error("glReadPixels failed: %s", msg)
                 data = bytes(self.width * self.height * 4)
             finally:
                 widget.doneCurrent()
