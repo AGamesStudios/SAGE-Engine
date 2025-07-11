@@ -45,7 +45,10 @@ def test_qt_input_backend_loop():
     except Exception:
         pytest.skip("PyQt6 not available")
 
-    app = QApplication.instance() or QApplication([])
+    try:
+        app = QApplication.instance() or QApplication([])
+    except Exception as exc:
+        pytest.skip(f"Qt platform unavailable: {exc}")
     scene = SceneFile.load('examples/Scenes/Scene1.sagescene').scene
     eng = Engine(scene=scene, renderer="null", input_backend="qt")
 
