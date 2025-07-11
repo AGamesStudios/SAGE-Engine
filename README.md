@@ -20,10 +20,11 @@ PYTHONPATH=src pytest -q
 ```
 Install optional extras via:
 ```bash
-pip install .[opengl,sdl,qt,audio]
+pip install .[opengl,sdl,qt,audio,geometry]
 ```
 The Qt based editor requires `PyQt6` and `PyOpenGL`. The SDL renderer depends on
-`PySDL2` while boolean mesh utilities rely on `shapely`. When these optional
+`PySDL2` while boolean mesh utilities rely on `shapely` (install via the
+`geometry` extra). When these optional
 packages are missing the related features are disabled and a warning is logged.
 Plugin modules live in `~/.sage_plugins` by default. Configure a different
 location or extra search paths in `sage.toml` under the `[plugins]` table:
@@ -109,7 +110,7 @@ The `engine.mesh_utils` module includes helpers for creating and editing meshes,
 including polygons. Use `create_polygon_mesh` to build a custom shape from
 arbitrary vertices and combine meshes with the boolean utilities. Boolean
 operations support unions and differences of multiple polygons; interior holes
-are discarded when converting to meshes.
+are preserved via triangulation when converting to meshes.
 Rotations wrap once they exceed `360` degrees (configurable via
 `EngineSettings.max_angle`) and objects may rotate around their
 bounding-box centre when `rotate_bbox` is enabled. The `rotate` method uses this

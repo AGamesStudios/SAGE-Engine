@@ -28,6 +28,7 @@ opengl = ["PyQt6>=6.5", "PyOpenGL>=3.1"]
 sdl = ["PySDL2"]
 qt = ["PyQt6>=6.5"]
 audio = ["pygame>=2.6"]
+geometry = ["shapely>=2.0"]
 
 [project.urls]
 Homepage = "https://github.com/AGamesStudios/SAGE-Engine"

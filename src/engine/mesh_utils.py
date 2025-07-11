@@ -1,17 +1,21 @@
 """Utilities for generating simple 2D meshes."""
 
+from __future__ import annotations
+
 import math
 from dataclasses import dataclass
 from typing import Any, TYPE_CHECKING, cast
 
 try:  # optional, used for boolean mesh operations
     from shapely.geometry import Polygon as _Polygon
-    from shapely.geometry.base import BaseGeometry
-    from shapely.ops import unary_union
+    from shapely.geometry.base import BaseGeometry as _BaseGeometry
+    from shapely.ops import triangulate, unary_union
 except Exception:  # pragma: no cover - shapely missing
     _Polygon = None  # type: ignore
     unary_union = None  # type: ignore
-    BaseGeometry = Any  # type: ignore
+    _BaseGeometry = Any  # type: ignore
+
+BaseGeometry = _BaseGeometry
 
 if TYPE_CHECKING:  # keep type hints when shapely is missing
     from shapely.geometry import Polygon
@@ -53,6 +57,32 @@ class Mesh:
             for x, y in self.vertices
         ]
 
+
+def _geom_to_mesh(geom: BaseGeometry) -> "Mesh":
+    """Return a triangulated :class:`Mesh` from ``geom``."""
+    if _Polygon is None:
+        raise ImportError("shapely is required for triangulation")
+    polygons: list[Polygon]
+    if isinstance(geom, _Polygon):
+        polygons = [geom]
+    elif hasattr(geom, "geoms"):
+        polygons = [g for g in cast(Any, geom).geoms if isinstance(g, _Polygon)]
+    else:
+        raise ValueError("Unsupported geometry")
+
+    vertices: list[tuple[float, float]] = []
+    indices: list[int] = []
+    offset = 0
+    for poly in polygons:
+        for tri in triangulate(poly):
+            pts = cast(list[tuple[float, float]], list(tri.exterior.coords)[:-1])
+            if len(pts) != 3:
+                continue
+            vertices.extend(pts)
+            indices.extend([offset, offset + 1, offset + 2])
+            offset += 3
+
+    return Mesh(vertices, indices)
 
 def create_square_mesh(width: float = 1.0, height: float | None = None) -> Mesh:
     """Return vertices for a square or rectangle."""
@@ -111,26 +141,7 @@ def union_meshes(
         geom = unary_union([_Polygon(m.vertices) for m in meshes])  # pyright: ignore[reportOptionalCall]
         for neg in negatives:
             geom = geom.difference(_Polygon(neg.vertices))
-        polygons: list[Any]
-        if isinstance(geom, Polygon):
-            polygons = [geom]
-        elif hasattr(geom, "geoms"):
-            polygons = [g for g in geom.geoms if isinstance(g, Polygon)]  # pyright: ignore[reportAttributeAccessIssue]
-            if not polygons:
-                raise ValueError("Union produced unsupported geometry")
-        else:
-            raise ValueError("Union produced unsupported geometry")
-
-        vertices: list[tuple[float, float]] = []
-        indices: list[int] = []
-        offset = 0
-        for poly in polygons:
-            poly_verts = cast(list[tuple[float, float]], list(poly.exterior.coords)[:-1])
-            vertices.extend(poly_verts)
-            for i in range(1, len(poly_verts) - 1):
-                indices.extend([offset, offset + i, offset + i + 1])
-            offset += len(poly_verts)
-        return Mesh(vertices, indices)
+        return _geom_to_mesh(geom)
     vertices: list[tuple[float, float]] = []
     indices: list[int] = []
     offset = 0
@@ -152,23 +163,4 @@ def difference_meshes(base: Mesh, subtract: list[Mesh]) -> Mesh:
     for neg in subtract:
         geom = geom.difference(_Polygon(neg.vertices))
 
-    polygons: list[Any]
-    if isinstance(geom, Polygon):
-        polygons = [geom]
-    elif hasattr(geom, "geoms"):
-        polygons = [g for g in geom.geoms if isinstance(g, Polygon)]  # pyright: ignore[reportAttributeAccessIssue]
-        if not polygons:
-            raise ValueError("Difference produced unsupported geometry")
-    else:
-        raise ValueError("Difference produced unsupported geometry")
-
-    vertices: list[tuple[float, float]] = []
-    indices: list[int] = []
-    offset = 0
-    for poly in polygons:
-        poly_verts = cast(list[tuple[float, float]], list(poly.exterior.coords)[:-1])
-        vertices.extend(poly_verts)
-        for i in range(1, len(poly_verts) - 1):
-            indices.extend([offset, offset + i, offset + i + 1])
-        offset += len(poly_verts)
-    return Mesh(vertices, indices)
+    return _geom_to_mesh(geom)

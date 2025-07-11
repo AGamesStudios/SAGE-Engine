@@ -14,9 +14,9 @@ unavailable so the engine falls back to another backend. On lightweight systems
 you may prefer the `NullRenderer` which has no extra dependencies. When
 distributing binaries consider providing wheels for these packages.
 Mesh boolean operations such as unions and subtractions need `shapely` installed
-or they will raise an ``ImportError``. When `shapely` returns polygons with
-interior rings these holes are discarded because the `Mesh` format only stores a
-single exterior loop.
+or they will raise an ``ImportError``. Boolean utilities now handle polygons with
+interior holes by triangulating the result, though complex inputs may generate
+many small triangles.
 Audio features require `pygame`. When it's missing the engine logs a warning and
 ``AudioManager`` cannot be created.
 

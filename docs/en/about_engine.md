@@ -43,7 +43,8 @@ subtract ``negatives`` from the positive shapes. Alternatively use
 Custom shapes can be created with
 ``engine.mesh_utils.create_polygon_mesh`` by providing a list of vertices.
 The resulting :class:`~engine.mesh_utils.Mesh` can be transformed, joined
-with ``union_meshes`` or subtracted using ``difference_meshes``.
+with ``union_meshes`` or subtracted using ``difference_meshes``. Boolean
+operations triangulate polygons so interior holes are preserved.
 
 Materials describe the appearance of a sprite. A :class:`~engine.entities.object.Material`
 defines a base ``color`` (RGBA tuple), optional ``texture`` path and ``opacity``
