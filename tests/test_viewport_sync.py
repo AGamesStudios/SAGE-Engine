@@ -208,6 +208,13 @@ def _setup_qt(monkeypatch):
     class QAction:
         def __init__(self, *a, **k):
             self.triggered = DummySignal()
+            self._shortcut = None
+
+        def setShortcut(self, seq):
+            self._shortcut = seq
+
+        def shortcut(self):
+            return self._shortcut
 
     class QApplication:
         _inst = None
@@ -276,6 +283,9 @@ def _setup_qt(monkeypatch):
 
     qtgui = types.ModuleType('PyQt6.QtGui')
     qtgui.QAction = QAction
+    class QKeySequence(str):
+        pass
+    qtgui.QKeySequence = QKeySequence
     qtgui.QSurfaceFormat = lambda: types.SimpleNamespace(setSamples=lambda x: None, setSwapInterval=lambda x: None)
 
     qtcore = types.ModuleType('PyQt6.QtCore')
@@ -453,3 +463,17 @@ def test_properties_populated_on_select(monkeypatch):
     assert float(win.properties.pos_y.text()) == -5
     assert float(win.properties.pivot_x.text()) == 0.25
     assert float(win.properties.pivot_y.text()) == 0.75
+
+
+def test_edit_shortcuts(monkeypatch):
+    _stub_gl(monkeypatch, {})
+    _setup_qt(monkeypatch)
+
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    viewport = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(viewport)
+
+    win = viewport.EditorWindow()
+    assert getattr(win.copy_action, 'shortcut')() == 'Ctrl+C'
+    assert getattr(win.paste_action, 'shortcut')() == 'Ctrl+V'
+    assert getattr(win.delete_action, 'shortcut')() == 'Delete'

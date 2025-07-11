@@ -31,7 +31,7 @@ from PyQt6.QtWidgets import (  # type: ignore[import-not-found]
     QCheckBox,
     QStyleFactory,
 )
-from PyQt6.QtGui import QAction  # type: ignore[import-not-found]
+from PyQt6.QtGui import QAction, QKeySequence  # type: ignore[import-not-found]
 
 try:  # support minimal test stubs
     from PyQt6.QtWidgets import QTextEdit  # type: ignore[import-not-found]
@@ -198,14 +198,28 @@ class _ViewportMixin:
                     if obj is not None:
                         w = obj.width * obj.scale_x
                         h = obj.height * obj.scale_y
-                        if "r" in self._drag_corner:
-                            w += dx
+                        shift = hasattr(ev, "modifiers") and (
+                            ev.modifiers() & Qt.KeyboardModifier.ShiftModifier
+                        )
+                        if shift:
+                            aspect = w / h if h else 1
+                            if abs(dx) >= abs(dy):
+                                delta_w = dx if "r" in self._drag_corner else -dx
+                                w += delta_w
+                                h = w / aspect
+                            else:
+                                delta_h = dy if "t" in self._drag_corner else -dy
+                                h += delta_h
+                                w = h * aspect
                         else:
-                            w -= dx
-                        if "t" in self._drag_corner:
-                            h += dy
-                        else:
-                            h -= dy
+                            if "r" in self._drag_corner:
+                                w += dx
+                            else:
+                                w -= dx
+                            if "t" in self._drag_corner:
+                                h += dy
+                            else:
+                                h -= dy
                         obj.scale_x = max(0.1, w / obj.width)
                         obj.scale_y = max(0.1, h / obj.height)
                         self._window.update_properties()
@@ -626,6 +640,15 @@ class EditorWindow(QMainWindow):
         copy_m = edit_menu.addAction("Copy")
         paste_m = edit_menu.addAction("Paste")
         del_m = edit_menu.addAction("Delete")
+        self.copy_action = copy_m
+        self.paste_action = paste_m
+        self.delete_action = del_m
+        if hasattr(copy_m, "setShortcut"):
+            copy_m.setShortcut(QKeySequence("Ctrl+C"))
+        if hasattr(paste_m, "setShortcut"):
+            paste_m.setShortcut(QKeySequence("Ctrl+V"))
+        if hasattr(del_m, "setShortcut"):
+            del_m.setShortcut(QKeySequence("Delete"))
         engine_menu = menubar.addMenu("Engine")
         renderer_menu = engine_menu.addMenu("Renderer")
         if open_p is not None and hasattr(open_p, "triggered"):
@@ -998,7 +1021,7 @@ class EditorWindow(QMainWindow):
             (left, bottom + h),
             (left, bottom),
         ]
-        g = gizmos.polyline_gizmo(points, color=(1, 0, 0, 1), frames=None)
+        g = gizmos.polyline_gizmo(points, color=(1, 0.4, 0.2, 1), frames=None)
         if hasattr(self.renderer, "add_gizmo"):
             self.renderer.add_gizmo(g)
             self.renderer.add_gizmo(
@@ -1011,14 +1034,14 @@ class EditorWindow(QMainWindow):
                     frames=None,
                 )
             )
-            handle_size = 3
+            handle_size = 5
             for x, y in points[:-1]:
                 self.renderer.add_gizmo(
                     gizmos.square_gizmo(
                         x,
                         y,
                         size=handle_size,
-                        color=(0.7, 0.7, 1, 1),
+                        color=(1.0, 0.6, 0.2, 1),
                         thickness=1,
                         frames=None,
                     )

@@ -3,6 +3,7 @@
 The menu bar groups actions into several categories.
 
 - **File** – open and save projects or capture screenshots.
-- **Edit** – copy, paste and delete objects.
+- **Edit** – copy, paste and delete objects. These actions use the shortcuts
+  Ctrl+C, Ctrl+V and Delete.
 - **Engine** – pick the renderer or toggle the grid under *View*.
 - **About** – information about the editor.
