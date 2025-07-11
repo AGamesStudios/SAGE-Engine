@@ -54,6 +54,16 @@ def test_polygon_mesh_and_editing():
     assert len(xs) == 4 and len(ys) == 4
 
 
+def test_mesh_apply_matrix():
+    from engine.core.math2d import make_transform
+
+    mesh = create_square_mesh()
+    mat = make_transform(1, 2)
+    mesh.apply_matrix(mat)
+    assert mesh.vertices[0] == pytest.approx((0.5, 1.5))
+    assert mesh.vertices[2] == pytest.approx((1.5, 2.5))
+
+
 def test_union_meshes():
     square = create_square_mesh()
     tri = create_triangle_mesh()

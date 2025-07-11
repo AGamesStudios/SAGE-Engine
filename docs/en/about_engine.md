@@ -45,7 +45,9 @@ Custom shapes can be created with
 ``engine.mesh_utils.create_polygon_mesh`` by providing a list of vertices.
 The resulting :class:`~engine.mesh_utils.Mesh` can be transformed, joined
 with ``union_meshes`` or subtracted using ``difference_meshes``. Boolean
-operations triangulate polygons so interior holes are preserved.
+operations triangulate polygons so interior holes are preserved. Use
+``Mesh.apply_matrix`` together with :func:`engine.core.math2d.make_transform`
+to apply translations, scaling and rotations in one step.
 
 Materials describe the appearance of a sprite. A :class:`~engine.entities.object.Material`
 defines a base ``color`` (RGBA tuple), optional ``texture`` path and ``opacity``

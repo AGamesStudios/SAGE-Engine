@@ -57,6 +57,12 @@ class Mesh:
             for x, y in self.vertices
         ]
 
+    def apply_matrix(self, mat: list[float]) -> None:
+        """Transform vertices by a 3x3 matrix."""
+        from .core.math2d import transform_point
+
+        self.vertices = [transform_point(mat, x, y) for x, y in self.vertices]
+
 
 def _geom_to_mesh(geom: BaseGeometry) -> "Mesh":
     """Return a triangulated :class:`Mesh` from ``geom``."""
