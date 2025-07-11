@@ -1,4 +1,4 @@
 # Resources Window
 
-Manage and preview the assets used by your project in this window.
-The current resource root folder is shown above the list for reference.
+Browse and manage your project assets.
+The resource root path appears above the list.

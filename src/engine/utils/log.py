@@ -30,6 +30,14 @@ def init_logger(enable_crash_dumps: bool = True) -> logging.Logger:
     logger.addHandler(fh)
     logger.addHandler(ch)
     logger.info('Logger initialised')
+    art = (
+        "\033[31m  ____   ___   ____  _____ \033[0m\n"
+        "\033[32m / ___| / _ \\ / ___|| ____|\033[0m\n"
+        "\033[33m| |    | | | | |    |  _|  \033[0m\n"
+        "\033[34m| |___ | |_| | |___ | |___ \033[0m\n"
+        "\033[35m \\____| \\___/ \\____||_____|\033[0m"
+    )
+    logger.info("\n%s", art)
     atexit.register(logging.shutdown)
     if enable_crash_dumps and not faulthandler.is_enabled():
         global _fault_file

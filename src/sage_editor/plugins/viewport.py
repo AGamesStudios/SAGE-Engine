@@ -31,6 +31,11 @@ from PyQt6.QtWidgets import (  # type: ignore[import-not-found]
     QStyleFactory,
 )
 from PyQt6.QtGui import QAction  # type: ignore[import-not-found]
+
+try:  # support minimal test stubs
+    from PyQt6.QtWidgets import QTextEdit  # type: ignore[import-not-found]
+except Exception:  # pragma: no cover - fallback when QTextEdit missing
+    QTextEdit = QPlainTextEdit
 from PyQt6.QtCore import Qt  # type: ignore[import-not-found]
 from typing import Optional, cast
 from PyQt6.QtWidgets import QWidget  # type: ignore[import-not-found]
@@ -454,12 +459,42 @@ class EditorWindow(QMainWindow):
         self._engine = None
         self._game_window = None
         self.viewport = self._create_viewport_widget(backend)
-        self.console = QPlainTextEdit(self)
+        self.console = QTextEdit(self)
         self.console.setReadOnly(True)
         clear_a = QAction("Clear", self.console)
         clear_a.triggered.connect(self.console.clear)
+        copy_a = QAction("Copy All", self.console)
+
+        def copy_all() -> None:
+            self.console.selectAll()
+            self.console.copy()
+            cursor = self.console.textCursor()
+            cursor.clearSelection()
+            self.console.setTextCursor(cursor)
+
+        copy_a.triggered.connect(copy_all)
         self.console.addAction(clear_a)
+        self.console.addAction(copy_a)
         self.console.setContextMenuPolicy(Qt.ContextMenuPolicy.ActionsContextMenu)
+        ascii_html = (
+            "<span style='color:#ff5555'>  ____   ___   ____  _____ </span><br>"
+            "<span style='color:#55ff55'> / ___| / _ \\ / ___|| ____|</span><br>"
+            "<span style='color:#ffff55'>| |    | | | | |    |  _|  </span><br>"
+            "<span style='color:#5555ff'>| |___ | |_| | |___ | |___ </span><br>"
+            "<span style='color:#ff55ff'> \\____| \\___/ \\____||_____|</span>"
+        )
+        ascii_plain = (
+            "  ____   ___   ____  _____ \n"
+            " / ___| / _ \\ / ___|| ____|\n"
+            "| |    | | | | |    |  _|  \n"
+            "| |___ | |_| | |___ | |___ \n"
+            " \____| \\___/ \\____||_____|"
+        )
+        if hasattr(self.console, "appendHtml"):
+            self.console.appendHtml(ascii_html)
+            self.console.append("Welcome to SAGE Editor")
+        else:
+            self.console.setPlainText(ascii_plain + "\nWelcome to SAGE Editor")
         self.properties = PropertiesWidget(self)
         self.prop_apply = self.properties.apply_btn
         self.resources = QListWidget()
@@ -598,7 +633,7 @@ class EditorWindow(QMainWindow):
 
     def log_warning(self, text: str) -> None:
         """Display *text* in the console dock."""
-        self.console.appendPlainText(text)
+        self.console.append(text)
 
     def toggle_grid(self, checked: bool) -> None:
         if hasattr(self.renderer, "show_grid"):
