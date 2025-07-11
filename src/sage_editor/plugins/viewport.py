@@ -114,6 +114,7 @@ class _ViewportMixin:
     """Input helpers shared between OpenGL and SDL widgets."""
 
     DRAG_THRESHOLD = 5
+    HANDLE_PIXELS = 8
 
     def __init__(self, window: "EditorWindow", *a, **k) -> None:
         """Initialise mixin state without touching QWidget internals."""
@@ -121,6 +122,9 @@ class _ViewportMixin:
         self._last_pos = None
         self._press_pos = None
         self._dragging = False
+        self._drag_mode: str | None = None
+        self._drag_corner: str | None = None
+        self._last_world: tuple[float, float] | None = None
         if hasattr(self, "setContextMenuPolicy"):
             cast(QWidget, self).setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         if hasattr(self, "customContextMenuRequested"):
@@ -132,6 +136,34 @@ class _ViewportMixin:
             self._last_pos = ev.position() if hasattr(ev, "position") else ev.pos()
             self._press_pos = self._last_pos
             self._dragging = False
+            self._drag_mode = "pan"
+            self._drag_corner = None
+            self._last_world = None
+            obj = self._window.selected_obj
+            if obj is not None:
+                wx, wy = self._window.screen_to_world(self._press_pos)
+                if isinstance(obj, Camera):
+                    left, bottom, w, h = obj.view_rect()
+                else:
+                    left, bottom, w, h = obj.rect()
+                cam = self._window.camera
+                th = self.HANDLE_PIXELS / (units.UNITS_PER_METER * cam.zoom)
+                corners = {
+                    "bl": (left, bottom),
+                    "br": (left + w, bottom),
+                    "tl": (left, bottom + h),
+                    "tr": (left + w, bottom + h),
+                }
+                for name, (cx, cy) in corners.items():
+                    if abs(wx - cx) <= th and abs(wy - cy) <= th:
+                        self._drag_mode = "resize"
+                        self._drag_corner = name
+                        self._last_world = (wx, wy)
+                        break
+                else:
+                    if left <= wx <= left + w and bottom <= wy <= bottom + h:
+                        self._drag_mode = "move"
+                        self._last_world = (wx, wy)
             try:
                 from PyQt6.QtGui import QCursor  # type: ignore[import-not-found]
                 cast(QWidget, self).setCursor(QCursor(Qt.CursorShape.ClosedHandCursor))
@@ -148,13 +180,43 @@ class _ViewportMixin:
                     self._dragging = True
                     self._last_pos = pos
             if self._dragging and self._last_pos is not None:
-                dx = pos.x() - self._last_pos.x()
-                dy = pos.y() - self._last_pos.y()
                 cam = self._window.camera
-                scale = units.UNITS_PER_METER
-                sign = -1 if units.Y_UP else 1
-                cam.x -= dx / (scale * cam.zoom)
-                cam.y -= dy * sign / (scale * cam.zoom)
+                wx, wy = self._window.screen_to_world(pos)
+                if self._drag_mode == "move" and self._last_world is not None:
+                    dx = wx - self._last_world[0]
+                    dy = wy - self._last_world[1]
+                    obj = self._window.selected_obj
+                    if obj is not None:
+                        obj.x += dx
+                        obj.y += dy
+                        self._window.update_properties()
+                    self._last_world = (wx, wy)
+                elif self._drag_mode == "resize" and self._last_world is not None:
+                    dx = wx - self._last_world[0]
+                    dy = wy - self._last_world[1]
+                    obj = self._window.selected_obj
+                    if obj is not None:
+                        w = obj.width * obj.scale_x
+                        h = obj.height * obj.scale_y
+                        if "r" in self._drag_corner:
+                            w += dx
+                        else:
+                            w -= dx
+                        if "t" in self._drag_corner:
+                            h += dy
+                        else:
+                            h -= dy
+                        obj.scale_x = max(0.1, w / obj.width)
+                        obj.scale_y = max(0.1, h / obj.height)
+                        self._window.update_properties()
+                    self._last_world = (wx, wy)
+                else:
+                    dx = pos.x() - self._last_pos.x()
+                    dy = pos.y() - self._last_pos.y()
+                    scale = units.UNITS_PER_METER
+                    sign = -1 if units.Y_UP else 1
+                    cam.x -= dx / (scale * cam.zoom)
+                    cam.y -= dy * sign / (scale * cam.zoom)
                 self._window.draw_scene(update_list=False)
                 self._last_pos = pos
 
@@ -168,6 +230,9 @@ class _ViewportMixin:
             self._press_pos = None
             self._dragging = False
             self._last_pos = None
+            self._drag_mode = None
+            self._drag_corner = None
+            self._last_world = None
             try:
                 cast(QWidget, self).unsetCursor()
             except Exception:
@@ -229,50 +294,13 @@ class SDLViewportWidget(_ViewportMixin, SDLWidget):
         _ViewportMixin.__init__(self, window)
 
     def mousePressEvent(self, ev):  # pragma: no cover - gui interaction
-        if ev.button() == Qt.MouseButton.LeftButton:
-            self._last_pos = ev.position() if hasattr(ev, "position") else ev.pos()
-            self._press_pos = self._last_pos
-            self._dragging = False
-            try:
-                from PyQt6.QtGui import QCursor  # type: ignore[import-not-found]
-                cast(QWidget, self).setCursor(QCursor(Qt.CursorShape.ClosedHandCursor))
-            except Exception:
-                log.exception("Failed to set cursor")
+        super().mousePressEvent(ev)
 
     def mouseMoveEvent(self, ev):  # pragma: no cover - gui interaction
-        if self._press_pos is not None and ev.buttons() & Qt.MouseButton.LeftButton:
-            pos = ev.position() if hasattr(ev, "position") else ev.pos()
-            if not self._dragging:
-                dx = pos.x() - self._press_pos.x()
-                dy = pos.y() - self._press_pos.y()
-                if abs(dx) > self.DRAG_THRESHOLD or abs(dy) > self.DRAG_THRESHOLD:
-                    self._dragging = True
-                    self._last_pos = pos
-            if self._dragging and self._last_pos is not None:
-                dx = pos.x() - self._last_pos.x()
-                dy = pos.y() - self._last_pos.y()
-                cam = self._window.camera
-                scale = units.UNITS_PER_METER
-                sign = -1 if units.Y_UP else 1
-                cam.x -= dx / (scale * cam.zoom)
-                cam.y -= dy * sign / (scale * cam.zoom)
-                self._window.draw_scene(update_list=False)
-                self._last_pos = pos
+        super().mouseMoveEvent(ev)
 
     def mouseReleaseEvent(self, ev):  # pragma: no cover - gui interaction
-        if ev.button() == Qt.MouseButton.LeftButton:
-            pos = ev.position() if hasattr(ev, "position") else ev.pos()
-            if self._press_pos is not None and not self._dragging:
-                wx, wy = self._window.screen_to_world(pos)
-                obj = self._window.find_object_at(wx, wy)
-                self._window.select_object(obj)
-            self._press_pos = None
-            self._dragging = False
-            self._last_pos = None
-            try:
-                cast(QWidget, self).unsetCursor()
-            except Exception:
-                log.exception("Failed to unset cursor")
+        super().mouseReleaseEvent(ev)
 
     def wheelEvent(self, ev):  # pragma: no cover - gui interaction
         delta = 0
@@ -983,6 +1011,18 @@ class EditorWindow(QMainWindow):
                     frames=None,
                 )
             )
+            handle_size = 3
+            for x, y in points[:-1]:
+                self.renderer.add_gizmo(
+                    gizmos.square_gizmo(
+                        x,
+                        y,
+                        size=handle_size,
+                        color=(0.7, 0.7, 1, 1),
+                        thickness=1,
+                        frames=None,
+                    )
+                )
 
     def draw_scene(self, update_list: bool = True) -> None:
         """Render the current scene and refresh selection gizmos."""
