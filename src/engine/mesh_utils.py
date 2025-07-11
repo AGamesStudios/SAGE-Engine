@@ -107,12 +107,26 @@ def union_meshes(
         geom = unary_union([Polygon(m.vertices) for m in meshes])  # pyright: ignore[reportOptionalCall]
         for neg in negatives:
             geom = geom.difference(Polygon(neg.vertices))
+        polygons: list[Polygon]
         if isinstance(geom, Polygon):
-            vertices = cast(list[tuple[float, float]], list(geom.exterior.coords)[:-1])
-            inds: list[int] = []
-            for i in range(1, len(vertices) - 1):
-                inds.extend([0, i, i + 1])
-            return Mesh(vertices, inds)
+            polygons = [geom]
+        elif hasattr(geom, "geoms"):
+            polygons = [g for g in geom.geoms if isinstance(g, Polygon)]
+            if not polygons:
+                raise ValueError("Union produced unsupported geometry")
+        else:
+            raise ValueError("Union produced unsupported geometry")
+
+        vertices: list[tuple[float, float]] = []
+        indices: list[int] = []
+        offset = 0
+        for poly in polygons:
+            poly_verts = cast(list[tuple[float, float]], list(poly.exterior.coords)[:-1])
+            vertices.extend(poly_verts)
+            for i in range(1, len(poly_verts) - 1):
+                indices.extend([offset, offset + i, offset + i + 1])
+            offset += len(poly_verts)
+        return Mesh(vertices, indices)
     vertices: list[tuple[float, float]] = []
     indices: list[int] = []
     offset = 0

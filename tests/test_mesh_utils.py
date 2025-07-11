@@ -63,6 +63,16 @@ def test_union_meshes():
     assert max(combo.indices) < len(combo.vertices)
 
 
+def test_union_meshes_multipolygon():
+    pytest.importorskip("shapely")
+    a = create_square_mesh()
+    b = create_square_mesh()
+    b.translate(5, 0)
+    result = union_meshes([a, b], negatives=[create_triangle_mesh()])
+    assert len(result.vertices) > len(a.vertices)
+    assert result.indices is not None
+
+
 def test_difference_meshes():
     pytest.importorskip("shapely")
     square = create_square_mesh()

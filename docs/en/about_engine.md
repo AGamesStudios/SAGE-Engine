@@ -40,6 +40,10 @@ Complex shapes can be built by combining multiple meshes with
 ``mesh`` attribute. When :mod:`shapely` is available, ``union_meshes`` can also
 subtract ``negatives`` from the positive shapes. Alternatively use
 ``engine.mesh_utils.difference_meshes`` to remove one mesh from another.
+Custom shapes can be created with
+``engine.mesh_utils.create_polygon_mesh`` by providing a list of vertices.
+The resulting :class:`~engine.mesh_utils.Mesh` can be transformed, joined
+with ``union_meshes`` or subtracted using ``difference_meshes``.
 
 Materials describe the appearance of a sprite. A :class:`~engine.entities.object.Material`
 defines a base ``color`` (RGBA tuple), optional ``texture`` path and ``opacity``
