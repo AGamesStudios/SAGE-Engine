@@ -94,6 +94,18 @@ def _setup_qt(monkeypatch):
             super().__init__(*a, **k)
             self._text = ""
 
+        def setReadOnly(self, ro):
+            self._ro = ro
+
+        def addAction(self, a):
+            pass
+
+        def setContextMenuPolicy(self, policy):
+            self.policy = policy
+
+        def clear(self):
+            self._text = ""
+
         def setPlainText(self, text):
             self._text = text
 
@@ -155,6 +167,9 @@ def _setup_qt(monkeypatch):
         def __init__(self, *a, **k):
             super().__init__(*a, **k)
 
+        def setText(self, text):
+            self.text = text
+
     class QStyleFactory:
         @staticmethod
         def create(style):
@@ -211,6 +226,7 @@ def _setup_qt(monkeypatch):
     class Qt:
         class ContextMenuPolicy:
             CustomContextMenu = 0
+            ActionsContextMenu = 1
         class DockWidgetArea:
             RightDockWidgetArea = 0
             LeftDockWidgetArea = 1

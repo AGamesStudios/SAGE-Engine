@@ -444,9 +444,21 @@ class EditorWindow(QMainWindow):
         self._game_window = None
         self.viewport = self._create_viewport_widget(backend)
         self.console = QPlainTextEdit(self)
+        self.console.setReadOnly(True)
+        clear_a = QAction("Clear", self.console)
+        clear_a.triggered.connect(self.console.clear)
+        self.console.addAction(clear_a)
+        self.console.setContextMenuPolicy(Qt.ContextMenuPolicy.ActionsContextMenu)
         self.properties = PropertiesWidget(self)
         self.prop_apply = self.properties.apply_btn
         self.resources = QListWidget()
+        self.resource_root = ""
+        self.resources_label = QLabel("Resources:")
+        res_container = QWidget(self)
+        res_layout = QVBoxLayout(res_container)
+        res_layout.setContentsMargins(0, 0, 0, 0)
+        res_layout.addWidget(self.resources_label)
+        res_layout.addWidget(self.resources)
 
         # minimal scene used for previewing objects
         w = self.viewport.width() or 640
@@ -561,7 +573,7 @@ class EditorWindow(QMainWindow):
 
         res_dock = QDockWidget("Resources", self)
         res_dock.setObjectName("ResourcesDock")
-        res_dock.setWidget(self.resources)
+        res_dock.setWidget(res_container)
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, res_dock)
 
         self.objects.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
@@ -663,7 +675,10 @@ class EditorWindow(QMainWindow):
 
         proj = Project.load(path)
         base = os.path.dirname(path)
-        set_resource_root(os.path.join(base, proj.resources))
+        root = os.path.join(base, proj.resources)
+        set_resource_root(root)
+        self.resource_root = os.path.abspath(root)
+        self.resources_label.setText(f"Resources: {self.resource_root}")
         self.scene = Scene.from_dict(proj.scene, base_path=base)
         self.camera = self.scene.ensure_active_camera(proj.width, proj.height)
         if hasattr(self.renderer, "set_window_size"):
@@ -775,14 +790,22 @@ class EditorWindow(QMainWindow):
         self.objects.clear()
         self.objects.addItems(list(names))
 
+    def _object_path(self, obj: GameObject) -> str:
+        parts = [obj.name]
+        parent = getattr(obj, "parent", None)
+        while parent is not None:
+            parts.append(parent.name)
+            parent = getattr(parent, "parent", None)
+        return "/".join(reversed(parts))
+
     def update_object_list(self, preserve: bool = True):
         current = self.selected_obj.name if preserve and self.selected_obj else None
-        names = [obj.name for obj in self.scene.objects]
+        names = [self._object_path(o) for o in self.scene.objects]
         self.set_objects(names)
         if current:
             for i in range(self.objects.count()):
                 item = self.objects.item(i)
-                if item.text() == current:
+                if item.text().split("/")[-1] == current:
                     self.objects.setCurrentItem(item)
                     break
 
@@ -814,7 +837,7 @@ class EditorWindow(QMainWindow):
         else:
             for i in range(self.objects.count()):
                 item = self.objects.item(i)
-                if item.text() == obj.name:
+                if item.text().split("/")[-1] == obj.name:
                     self.objects.setCurrentItem(item)
                     break
         self.update_properties()
@@ -964,7 +987,7 @@ class EditorWindow(QMainWindow):
 
     def _object_selected(self, current, _prev):
         if current is not None:
-            name = current.text()
+            name = current.text().split("/")[-1]
             self.selected_obj = self.scene.find_object(name)
         else:
             self.selected_obj = None
