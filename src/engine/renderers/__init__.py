@@ -72,7 +72,10 @@ def _ensure_default() -> None:
         try:
             from .opengl_renderer import OpenGLRenderer
         except Exception as exc:  # pragma: no cover - optional dependency
-            logger.warning("OpenGL backend unavailable: %s", exc)
+            logger.warning(
+                "OpenGL backend unavailable: %s; install PyOpenGL and PyQt6",
+                exc,
+            )
             from .null_renderer import NullRenderer
             register_renderer("opengl", NullRenderer)
         else:
@@ -81,7 +84,10 @@ def _ensure_default() -> None:
         try:
             from .sdl_renderer import SDLRenderer
         except Exception as exc:  # pragma: no cover - optional dependency
-            logger.warning("SDL backend unavailable: %s", exc)
+            logger.warning(
+                "SDL backend unavailable: %s; install PySDL2 to enable it",
+                exc,
+            )
         else:
             register_renderer("sdl", SDLRenderer)
     if "null" not in RENDERER_REGISTRY:

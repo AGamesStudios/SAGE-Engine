@@ -52,6 +52,15 @@ class PhysicsWorld:
         self.bodies.append(pb)
         return pb
 
+    def remove(self, pb: PhysicsBody) -> None:
+        """Remove *pb* from the world and internal list."""
+        if pymunk is None:
+            raise ImportError("pymunk is required for physics")
+        if pb in self.bodies:
+            shapes = list(pb.body.shapes)
+            self.space.remove(pb.body, *shapes)
+            self.bodies.remove(pb)
+
     def step(self, dt: float) -> None:
         if pymunk is None:
             raise ImportError("pymunk is required for physics")

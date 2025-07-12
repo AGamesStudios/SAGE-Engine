@@ -16,3 +16,5 @@ engine.add_extension(PhysicsExtension(world))
 ```
 
 `PhysicsExtension` steps the world every frame, updating object positions.
+Call `world.remove(pb)` when an object is deleted to keep the physics
+space in sync.

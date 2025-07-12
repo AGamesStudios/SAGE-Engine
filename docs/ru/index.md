@@ -4,3 +4,4 @@
 
 * [Ограничения и проблемы](limitations.md)
 * [Физика](physics.md)
+* [Отчёты о сбоях](crash_reports.md)

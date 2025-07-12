@@ -55,7 +55,10 @@ def _ensure_default() -> None:
         try:
             from ..core.input_sdl import SDLInput
         except Exception as exc:  # pragma: no cover - optional dependency
-            logger.warning("SDL backend unavailable: %s", exc)
+            logger.warning(
+                "SDL backend unavailable: %s; install PySDL2 to enable it",
+                exc,
+            )
             from .null_input import NullInput
             register_input("sdl", NullInput)
         else:
@@ -64,7 +67,10 @@ def _ensure_default() -> None:
         try:
             from .qt_input import QtInput
         except Exception as exc:  # pragma: no cover - optional dependency
-            logger.warning("Qt backend unavailable: %s", exc)
+            logger.warning(
+                "Qt backend unavailable: %s; install PyQt6 to enable it",
+                exc,
+            )
         else:
             register_input("qt", QtInput)
     _load_entry_points()

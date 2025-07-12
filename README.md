@@ -65,7 +65,8 @@ Log files are written to `~/.cache/sage/logs/engine.log` by default. Configure a
 different directory in `sage.toml` under `[logs]` or set the `SAGE_LOG_DIR`
 environment variable.
 Unhandled exceptions trigger **SAGE Crash**, writing a detailed report to
-`~/.cache/sage/crashes/`.
+`~/.cache/sage/crashes/`. See [Crash Reports](docs/en/crash_reports.md) for
+details.
 
 ## Repository layout
 ``src/`` contains the engine libraries and tools. Most users only need the

@@ -531,30 +531,6 @@ class SDLViewportWidget(_ViewportMixin, SDLWidget):
                 cam.zoom = 0.1
             self._window.draw_scene(update_list=False)
 
-    def _context_menu(self, point):  # pragma: no cover - gui interaction
-        menu = QMenu(self)
-        wx, wy = self._window.screen_to_world(point)
-        obj = self._window.find_object_at(wx, wy)
-        if obj is not None:
-            self._window.select_object(obj)
-            copy_a = menu.addAction("Copy") if hasattr(menu, "addAction") else None
-            paste_a = menu.addAction("Paste") if hasattr(menu, "addAction") else None
-            del_a = menu.addAction("Delete") if hasattr(menu, "addAction") else None
-            if copy_a is not None and hasattr(copy_a, "triggered"):
-                copy_a.triggered.connect(self._window.copy_selected)
-            if paste_a is not None and hasattr(paste_a, "triggered"):
-                paste_a.triggered.connect(self._window.paste_object)
-            if del_a is not None and hasattr(del_a, "triggered"):
-                del_a.triggered.connect(self._window.delete_selected)
-        else:
-            action = menu.addAction("Create Object") if hasattr(menu, "addAction") else None
-
-            def cb():
-                self._window.create_object(wx, wy)
-
-            if action is not None and hasattr(action, "triggered"):
-                action.triggered.connect(cb)
-        menu.exec(cast(QWidget, self).mapToGlobal(point))
 
 
 class PropertiesWidget(QWidget):
