@@ -67,6 +67,7 @@ def draw_gizmo(
         glVertex2f(off + sq_size, sign * off + sq_size)
         glVertex2f(off - sq_size, sign * off + sq_size)
         glEnd()
+        glColor4f(color_x, 0.0, 0.0, 1.0)
         glBegin(GL_TRIANGLES)
         glVertex2f(size, 0.0)
         glVertex2f(size - head, head / 2)

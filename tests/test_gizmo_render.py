@@ -82,3 +82,13 @@ def test_move_gizmo_resets_width(monkeypatch):
     renderer = type('R', (), {'widget': None})()
     ogl_gizmos.draw_gizmo(renderer, obj, None, hover=None, dragging=None, mode='move', local=False)
     assert calls['width'][-1] == 1.0
+
+
+def test_move_gizmo_arrow_colors(monkeypatch):
+    calls = {}
+    ogl_gizmos = _load_gizmos(monkeypatch, calls)
+    Dummy = type('Obj', (), {'x': 0.0, 'y': 0.0, 'angle': 0.0})
+    obj = Dummy()
+    renderer = type('R', (), {'widget': None})()
+    ogl_gizmos.draw_gizmo(renderer, obj, None, hover=None, dragging=None, mode='move', local=False)
+    assert calls['color'][2] == (0.7, 0.0, 0.0, 1.0)

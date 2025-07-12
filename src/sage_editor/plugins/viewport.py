@@ -155,6 +155,56 @@ class _ViewportMixin:
         if hasattr(self, "customContextMenuRequested"):
             cast(QWidget, self).customContextMenuRequested.connect(self._context_menu)
 
+    # gizmo hit testing helpers --------------------------------------
+
+    def _hit_move_handle(self, pos) -> str | None:
+        obj = self._window.selected_obj
+        if obj is None:
+            return None
+        sx, sy = self._window.world_to_screen((obj.x, obj.y))
+        size = 50
+        off = size * 0.3
+        sq = 6
+        th = self.HANDLE_PIXELS
+        sign = -1 if units.Y_UP else 1
+        dx = pos.x() - sx
+        dy = pos.y() - sy
+        if abs(dx - off) <= sq and abs(dy - sign * off) <= sq:
+            return "move_xy"
+        if abs(dy) <= th and 0 <= dx <= size:
+            return "move_x"
+        if abs(dx) <= th and 0 <= dy * sign <= size:
+            return "move_y"
+        return None
+
+    def _hit_scale_handle(self, pos) -> str | None:
+        obj = self._window.selected_obj
+        if obj is None:
+            return None
+        sx, sy = self._window.world_to_screen((obj.x, obj.y))
+        size = 50
+        sq = 8
+        th = self.HANDLE_PIXELS
+        sign = -1 if units.Y_UP else 1
+        dx = pos.x() - sx
+        dy = pos.y() - sy
+        if abs(dy) <= th and abs(dx - size) <= sq:
+            return "scale_x"
+        if abs(dx) <= th and abs(dy - sign * size) <= sq:
+            return "scale_y"
+        return None
+
+    def _hit_rotate_handle(self, pos) -> bool:
+        obj = self._window.selected_obj
+        if obj is None:
+            return False
+        sx, sy = self._window.world_to_screen((obj.x, obj.y))
+        ring = 60
+        dx = pos.x() - sx
+        dy = pos.y() - sy
+        dist = math.hypot(dx, dy)
+        return abs(dist - ring) <= self.HANDLE_PIXELS
+
     # event handlers are same as before
     def mousePressEvent(self, ev):  # pragma: no cover - gui interaction
         if ev.button() == Qt.MouseButton.LeftButton:
@@ -166,18 +216,30 @@ class _ViewportMixin:
             self._last_world = None
             obj = self._window.selected_obj
             if obj is not None:
-                wx, wy = self._window.screen_to_world(self._press_pos)
-                if isinstance(obj, Camera):
-                    left, bottom, w, h = obj.view_rect()
+                mode = self._window.transform_mode
+                hit = None
+                if mode == "move":
+                    hit = self._hit_move_handle(self._press_pos)
+                elif mode == "scale":
+                    hit = self._hit_scale_handle(self._press_pos)
+                elif mode == "rotate":
+                    hit = "rotate" if self._hit_rotate_handle(self._press_pos) else None
+                if hit:
+                    self._drag_mode = hit
+                    self._last_world = self._window.screen_to_world(self._press_pos)
                 else:
-                    left, bottom, w, h = obj.rect()
-                cam = self._window.camera
-                th = self.HANDLE_PIXELS / (units.UNITS_PER_METER * cam.zoom)
-                corners = {
-                    "bl": (left, bottom),
-                    "br": (left + w, bottom),
-                    "tl": (left, bottom + h),
-                    "tr": (left + w, bottom + h),
+                    wx, wy = self._window.screen_to_world(self._press_pos)
+                    if isinstance(obj, Camera):
+                        left, bottom, w, h = obj.view_rect()
+                    else:
+                        left, bottom, w, h = obj.rect()
+                    cam = self._window.camera
+                    th = self.HANDLE_PIXELS / (units.UNITS_PER_METER * cam.zoom)
+                    corners = {
+                        "bl": (left, bottom),
+                        "br": (left + w, bottom),
+                        "tl": (left, bottom + h),
+                        "tr": (left + w, bottom + h),
                 }
                 rot_y = bottom + h + _ViewportMixin.ROTATE_OFFSET / (
                     units.UNITS_PER_METER * cam.zoom
@@ -215,13 +277,31 @@ class _ViewportMixin:
             if self._dragging and self._last_pos is not None:
                 cam = self._window.camera
                 wx, wy = self._window.screen_to_world(pos)
-                if self._drag_mode == "move" and self._last_world is not None:
+                if self._drag_mode in ("move", "move_x", "move_y", "move_xy") and self._last_world is not None:
                     dx = wx - self._last_world[0]
                     dy = wy - self._last_world[1]
                     obj = self._window.selected_obj
                     if obj is not None:
-                        obj.x += dx
-                        obj.y += dy
+                        if self._drag_mode in ("move", "move_xy"):
+                            obj.x += dx
+                            obj.y += dy
+                        elif self._drag_mode == "move_x":
+                            obj.x += dx
+                        elif self._drag_mode == "move_y":
+                            obj.y += dy
+                        self._window.update_properties()
+                    self._last_world = (wx, wy)
+                elif self._drag_mode in ("scale_x", "scale_y") and self._last_world is not None:
+                    dx = wx - self._last_world[0]
+                    dy = wy - self._last_world[1]
+                    obj = self._window.selected_obj
+                    if obj is not None:
+                        if self._drag_mode == "scale_x":
+                            new_w = max(0.1, obj.width * obj.scale_x + dx)
+                            obj.scale_x = new_w / obj.width
+                        else:
+                            new_h = max(0.1, obj.height * obj.scale_y + dy)
+                            obj.scale_y = new_h / obj.height
                         self._window.update_properties()
                     self._last_world = (wx, wy)
                 elif self._drag_mode == "resize" and self._last_world is not None:
@@ -1086,6 +1166,18 @@ class EditorWindow(QMainWindow):
         x = cam.x + (point.x() - w / 2) / (scale * cam.zoom)
         y = cam.y + (point.y() - h / 2) * sign / (scale * cam.zoom)
         return x, y
+
+    def world_to_screen(self, pos: tuple[float, float]):
+        """Convert world coordinates to viewport pixels."""
+        x, y = pos
+        w = self.viewport.width() or 1
+        h = self.viewport.height() or 1
+        cam = self.camera
+        scale = units.UNITS_PER_METER
+        sign = -1 if units.Y_UP else 1
+        sx = (x - cam.x) * scale * cam.zoom + w / 2
+        sy = (y - cam.y) * scale * cam.zoom * sign + h / 2
+        return sx, sy
 
     def set_renderer(self, renderer):
         self.viewport.renderer = renderer
