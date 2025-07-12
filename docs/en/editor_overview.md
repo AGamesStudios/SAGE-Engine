@@ -4,7 +4,7 @@ The SAGE Editor lets you place objects and manage scenes. Use the small toolbar 
 
 The editor uses Qt's Fusion style with a dark palette. The viewport fills most
 of the window while docks hold resources, objects and properties. Rect mode shows a bounding box with bright handles you can drag to move or resize objects. Hold **Shift** to keep the aspect ratio while resizing. The *View*
-menu offers a **Mirror Resize** toggle. Handles remain visible so you can keep editing even without the outline.
+menu offers a **Mirror Resize** toggle and a switch for **Local Coordinates**. Handles remain visible so you can keep editing even without the outline.
 Hotkeys Ctrl+C/Ctrl+V/Delete mirror the Edit menu actions. High-DPI scaling
 keeps text readable. Use the **File** menu to open and save ``.sageproject``
 files.

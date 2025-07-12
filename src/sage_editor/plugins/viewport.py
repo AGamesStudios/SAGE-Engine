@@ -91,7 +91,14 @@ class TransformBar(QWidget):
         self.rotate_btn = QPushButton("Rotate", self)
         self.scale_btn = QPushButton("Scale", self)
         self.rect_btn = QPushButton("Rect", self)
-        for btn in [self.move_btn, self.rotate_btn, self.scale_btn, self.rect_btn]:
+        self.local_btn = QPushButton("Local", self)
+        for btn in [
+            self.move_btn,
+            self.rotate_btn,
+            self.scale_btn,
+            self.rect_btn,
+            self.local_btn,
+        ]:
             if hasattr(btn, "setCheckable"):
                 btn.setCheckable(True)
             layout.addWidget(btn)
@@ -295,9 +302,21 @@ class _ViewportMixin:
                             obj.x += dx
                             obj.y += dy
                         elif self._drag_mode == "move_x":
-                            obj.x += dx
+                            if self._window.local_coords:
+                                ang = math.radians(getattr(obj, "angle", 0.0))
+                                ca = math.cos(ang)
+                                sa = math.sin(ang)
+                                obj.x += dx * ca + dy * sa
+                            else:
+                                obj.x += dx
                         elif self._drag_mode == "move_y":
-                            obj.y += dy
+                            if self._window.local_coords:
+                                ang = math.radians(getattr(obj, "angle", 0.0))
+                                ca = math.cos(ang)
+                                sa = math.sin(ang)
+                                obj.y += -dx * sa + dy * ca
+                            else:
+                                obj.y += dy
                         self._window.update_properties()
                     self._last_world = (wx, wy)
                 elif self._drag_mode in ("scale_x", "scale_y") and self._last_world is not None:
@@ -305,11 +324,15 @@ class _ViewportMixin:
                     dy = wy - self._last_world[1]
                     obj = self._window.selected_obj
                     if obj is not None:
-                        ang = math.radians(getattr(obj, "angle", 0.0))
-                        ca = math.cos(ang)
-                        sa = math.sin(ang)
-                        local_dx = dx * ca + dy * sa
-                        local_dy = -dx * sa + dy * ca
+                        if self._window.local_coords:
+                            ang = math.radians(getattr(obj, "angle", 0.0))
+                            ca = math.cos(ang)
+                            sa = math.sin(ang)
+                            local_dx = dx * ca + dy * sa
+                            local_dy = -dx * sa + dy * ca
+                        else:
+                            local_dx = dx
+                            local_dy = dy
                         if self._drag_mode == "scale_x":
                             new_w = max(0.1, obj.width * obj.scale_x + local_dx)
                             obj.scale_x = new_w / obj.width
@@ -744,6 +767,9 @@ class EditorWindow(QMainWindow):
         self.mode_bar.rotate_btn.clicked.connect(lambda: self.set_mode("rotate"))
         self.mode_bar.scale_btn.clicked.connect(lambda: self.set_mode("scale"))
         self.mode_bar.rect_btn.clicked.connect(lambda: self.set_mode("rect"))
+        self.mode_bar.local_btn.clicked.connect(
+            lambda checked: self.toggle_local(checked)
+        )
         if hasattr(self.mode_bar.move_btn, "setChecked"):
             self.mode_bar.move_btn.setChecked(True)
         self.console = QTextEdit(self)
@@ -842,6 +868,7 @@ class EditorWindow(QMainWindow):
         # keep the viewport camera separate from scene objects
         self.renderer.show_grid = True
         self.mirror_resize = False
+        self.local_coords = False
         self.transform_mode = "move"
         self.set_renderer(self.renderer)
         self.selected_obj: Optional[GameObject] = None
@@ -906,6 +933,15 @@ class EditorWindow(QMainWindow):
                 mirror_act.setChecked(False)
             if hasattr(mirror_act, "triggered"):
                 mirror_act.triggered.connect(self.toggle_mirror)
+
+        local_act = view_menu.addAction("Local Coordinates")
+        if local_act is not None:
+            if hasattr(local_act, "setCheckable"):
+                local_act.setCheckable(True)
+            if hasattr(local_act, "setChecked"):
+                local_act.setChecked(False)
+            if hasattr(local_act, "triggered"):
+                local_act.triggered.connect(self.toggle_local)
 
         menubar.addMenu("About")
 
@@ -994,6 +1030,15 @@ class EditorWindow(QMainWindow):
 
     def toggle_mirror(self, checked: bool) -> None:
         self.mirror_resize = bool(checked)
+
+    def toggle_local(self, checked: bool) -> None:
+        """Toggle local coordinate mode."""
+        self.local_coords = bool(checked)
+        if hasattr(self.mode_bar, "local_btn") and hasattr(
+            self.mode_bar.local_btn, "setChecked"
+        ):
+            self.mode_bar.local_btn.setChecked(self.local_coords)
+        self.draw_scene(update_list=False)
 
     def update_cursor(self, x: float, y: float) -> None:
         """Store cursor world coordinates and update the overlay label."""
@@ -1387,6 +1432,7 @@ class EditorWindow(QMainWindow):
                 selected=self.selected_obj,
                 mode=self.transform_mode,
                 cursor=self.cursor_pos,
+                local=self.local_coords,
             )
         except TypeError:
             self.renderer.draw_scene(self.scene, self.camera)
