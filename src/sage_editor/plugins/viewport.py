@@ -716,7 +716,7 @@ class PropertiesWidget(QWidget):
         self.pos_x.setText(str(getattr(obj, "x", 0.0)))
         self.pos_y.setText(str(getattr(obj, "y", 0.0)))
         angle = getattr(obj, "angle", 0.0)
-        self.rot_dial.setValue(int((-angle) % 360))
+        self.rot_dial.setValue(int(angle % 360))
         self.scale_x.setText(str(getattr(obj, "scale_x", 1.0)))
         self.scale_y.setText(str(getattr(obj, "scale_y", 1.0)))
         flip_allowed = role not in ("camera", "empty")
@@ -748,7 +748,7 @@ class PropertiesWidget(QWidget):
             obj.y = float(self.pos_y.text())
         except ValueError:
             log.warning("Invalid position")
-        obj.angle = -float(self.rot_dial.value())
+        obj.angle = float(self.rot_dial.value())
         try:
             sx = float(self.scale_x.text())
             sy = float(self.scale_y.text())
