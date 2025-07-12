@@ -226,7 +226,9 @@ class Engine:
                 self.physics_world = world
                 self.add_extension(PhysicsExtension(world))
             except ImportError:
-                logger.warning("Physics objects present but pymunk is missing")
+                logger.warning(
+                    "Physics objects present but pymunk is missing; install the physics extra"
+                )
 
     def step(self) -> None:
         """Advance the engine by one frame respecting the target FPS."""

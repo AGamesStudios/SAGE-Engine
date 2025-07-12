@@ -1,7 +1,7 @@
 # Physics Extension
 
 The optional physics module integrates the [pymunk](https://www.pymunk.org/) library.
-Install the extra and create a world:
+Install the extra and create a world. Without ``pymunk`` the engine logs a warning and physics is disabled:
 
 ```bash
 pip install .[physics]

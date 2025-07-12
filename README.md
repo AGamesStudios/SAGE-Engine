@@ -35,7 +35,9 @@ The Qt based editor requires `PyQt6` and `PyOpenGL`. The SDL renderer depends on
 `physics` extra). `union_meshes` with the ``negatives`` argument and
 ``difference_meshes`` both require Shapely; without it these functions raise
 ``ImportError``. When optional packages are missing the related features are
-disabled and a warning is logged.
+disabled and a warning is logged. Scenes containing objects with
+``physics_enabled`` trigger a message if ``pymunk`` is not installed, so run
+``pip install .[physics]`` to enable physics support.
 Plugin modules live in `~/.sage_plugins` by default. Configure a different
 location or extra search paths in `sage.toml` under the `[plugins]` table:
 ```toml

@@ -3,7 +3,8 @@
 This panel displays the properties of the selected object. Values update as soon
 as editing finishes and the scroll area keeps long lists accessible. Properties
 are grouped into categories such as **Transform** and **Appearance** so you can
-collapse sections you rarely adjust.
+collapse sections you rarely adjust. There is no **Apply** button – changes are
+stored immediately.
 
 ## Physics
 

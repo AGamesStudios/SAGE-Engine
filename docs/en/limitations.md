@@ -21,7 +21,7 @@ generate many small triangles which can noticeably slow rendering.
 Audio features require `pygame`. When it's missing the engine logs a warning and
 ``AudioManager`` cannot be created.
 The physics extension relies on `pymunk`. Without this library physics features
-are unavailable.
+are unavailable and scenes with ``physics_enabled`` objects print a warning.
 
 The Qt input backend needs a functional platform plugin such as ``xcb`` on
 Linux. Tests skip gracefully when the plugin is unavailable, but a missing
