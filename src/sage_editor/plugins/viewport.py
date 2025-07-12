@@ -275,12 +275,30 @@ def _apply_ember_stylesheet(app: QApplication) -> None:
     stylesheet = """
     QPushButton, QToolButton {
         background-color: #353535;
-        border: 1px solid #ffae00;
-        padding: 4px;
+        border: none;
+        padding: 4px 8px;
         border-radius: 4px;
+        color: white;
     }
     QPushButton:hover, QToolButton:hover {
         background-color: #474747;
+    }
+    QPushButton:pressed, QToolButton:pressed {
+        background-color: #ffae00;
+        color: black;
+    }
+    QMenuBar {
+        background-color: #2c2c2c;
+    }
+    QMenuBar::item:selected {
+        background-color: #444444;
+    }
+    QMenu {
+        background-color: #2c2c2c;
+        border: none;
+    }
+    QMenu::item:selected {
+        background-color: #444444;
     }
     QDockWidget::title {
         background-color: #353535;
@@ -288,18 +306,36 @@ def _apply_ember_stylesheet(app: QApplication) -> None:
     }
     QCheckBox::indicator:checked, QRadioButton::indicator:checked {
         background-color: #ffae00;
-        border: 1px solid #ffae00;
+        border: none;
     }
     QSlider::groove:horizontal {
         height: 6px;
-        background: #555;
+        background: #555555;
+        border-radius: 3px;
     }
     QSlider::handle:horizontal {
         background: #ffae00;
-        border: 1px solid #ffae00;
+        border: none;
         width: 12px;
         margin: -5px 0;
-        border-radius: 3px;
+        border-radius: 6px;
+    }
+    QProgressBar {
+        background-color: #353535;
+        border: none;
+        text-align: center;
+    }
+    QProgressBar::chunk {
+        background-color: #ffae00;
+    }
+    QComboBox {
+        background-color: #353535;
+        border: none;
+        padding: 2px 4px;
+        border-radius: 4px;
+    }
+    QComboBox::drop-down {
+        border: none;
     }
     """
     app.setStyleSheet(stylesheet)
