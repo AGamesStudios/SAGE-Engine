@@ -817,7 +817,6 @@ class EditorWindow(QMainWindow):
         # keep the viewport camera separate from scene objects
         self.renderer.show_grid = True
         self.mirror_resize = False
-        self.show_bbox = True
         self.transform_mode = "move"
         self.set_renderer(self.renderer)
         self.selected_obj: Optional[GameObject] = None
@@ -882,15 +881,6 @@ class EditorWindow(QMainWindow):
                 mirror_act.setChecked(False)
             if hasattr(mirror_act, "triggered"):
                 mirror_act.triggered.connect(self.toggle_mirror)
-
-        bbox_act = view_menu.addAction("Show Bounding Box")
-        if bbox_act is not None:
-            if hasattr(bbox_act, "setCheckable"):
-                bbox_act.setCheckable(True)
-            if hasattr(bbox_act, "setChecked"):
-                bbox_act.setChecked(True)
-            if hasattr(bbox_act, "triggered"):
-                bbox_act.triggered.connect(self.toggle_bbox)
 
         menubar.addMenu("About")
 
@@ -979,10 +969,6 @@ class EditorWindow(QMainWindow):
 
     def toggle_mirror(self, checked: bool) -> None:
         self.mirror_resize = bool(checked)
-
-    def toggle_bbox(self, checked: bool) -> None:
-        self.show_bbox = bool(checked)
-        self.draw_scene(update_list=False)
 
     def set_mode(self, mode: str) -> None:
         self.transform_mode = mode
@@ -1314,20 +1300,19 @@ class EditorWindow(QMainWindow):
             (left, bottom + h),
             (left, bottom),
         ]
-        if self.show_bbox:
-            g = gizmos.polyline_gizmo(points, color=(1, 0.4, 0.2, 1), frames=None)
-            if hasattr(self.renderer, "add_gizmo"):
-                self.renderer.add_gizmo(g)
-                self.renderer.add_gizmo(
-                    gizmos.circle_gizmo(
-                        obj.x,
-                        obj.y,
-                        size=4,
-                        color=(0.5, 0.5, 0.5, 1),
-                        thickness=1,
-                        frames=None,
-                    )
+        g = gizmos.polyline_gizmo(points, color=(1, 0.4, 0.2, 1), frames=None)
+        if hasattr(self.renderer, "add_gizmo"):
+            self.renderer.add_gizmo(g)
+            self.renderer.add_gizmo(
+                gizmos.circle_gizmo(
+                    obj.x,
+                    obj.y,
+                    size=4,
+                    color=(0.5, 0.5, 0.5, 1),
+                    thickness=1,
+                    frames=None,
                 )
+            )
         if self.transform_mode == "rect":
             handle_size = 5
             cam = self.camera
