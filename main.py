@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+import inspect
 from importlib import import_module
 from pathlib import Path
 
@@ -22,6 +23,12 @@ def main(argv: list[str] | None = None) -> int:
     argv = argv or sys.argv[1:]
     editor_main = _load_editor_main()
     if editor_main is not None:
+        try:
+            sig = inspect.signature(editor_main)
+            if len(sig.parameters) == 0:
+                return editor_main()
+        except (TypeError, ValueError):  # pragma: no cover - builtin or bad sig
+            pass
         return editor_main(argv)
 
     from engine.runtime import main as runtime_main
