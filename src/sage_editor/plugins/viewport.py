@@ -334,15 +334,34 @@ class _ViewportMixin:
                             sa = math.sin(ang)
                             local_dx = dx * ca + dy * sa
                             local_dy = -dx * sa + dy * ca
+                            if self._drag_mode == "scale_x":
+                                new_w = max(0.1, obj.width * obj.scale_x + local_dx)
+                                obj.scale_x = new_w / obj.width
+                            else:
+                                new_h = max(0.1, obj.height * obj.scale_y + local_dy)
+                                obj.scale_y = new_h / obj.height
                         else:
-                            local_dx = dx
-                            local_dy = dy
-                        if self._drag_mode == "scale_x":
-                            new_w = max(0.1, obj.width * obj.scale_x + local_dx)
-                            obj.scale_x = new_w / obj.width
-                        else:
-                            new_h = max(0.1, obj.height * obj.scale_y + local_dy)
-                            obj.scale_y = new_h / obj.height
+                            left, bottom, bw, bh = obj.rect()
+                            ang = math.radians(getattr(obj, "angle", 0.0))
+                            ca = abs(math.cos(ang))
+                            sa = abs(math.sin(ang))
+                            if self._drag_mode == "scale_x":
+                                target = max(0.1, bw + dx)
+                                if ca > 1e-6:
+                                    new_sx = (target - sa * obj.height * obj.scale_y) / (ca * obj.width)
+                                    obj.scale_x = max(new_sx, 0.01)
+                                elif sa > 1e-6:
+                                    new_sy = (target - ca * obj.width * obj.scale_x) / (sa * obj.height)
+                                    obj.scale_y = max(new_sy, 0.01)
+                            else:
+                                target = max(0.1, bh + dy)
+                                if ca > 1e-6:
+                                    new_sy = (target - sa * obj.width * obj.scale_x) / (ca * obj.height)
+                                    obj.scale_y = max(new_sy, 0.01)
+                                elif sa > 1e-6:
+                                    new_sx = (target - ca * obj.height * obj.scale_y) / (sa * obj.width)
+                                    obj.scale_x = max(new_sx, 0.01)
+                        
                         self._window.update_properties()
                     self._last_world = (wx, wy)
                 elif self._drag_mode == "resize" and self._last_world is not None:
