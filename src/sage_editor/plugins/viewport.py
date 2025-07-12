@@ -188,9 +188,14 @@ class _ViewportMixin:
         sign = -1 if units.Y_UP else 1
         dx = pos.x() - sx
         dy = pos.y() - sy
-        if abs(dy) <= th and abs(dx - size) <= sq:
+        ang = math.radians(getattr(obj, "angle", 0.0))
+        ca = math.cos(ang)
+        sa = math.sin(ang)
+        lx = dx * ca + dy * sa
+        ly = -dx * sa + dy * ca
+        if abs(ly) <= th and abs(lx - size) <= sq:
             return "scale_x"
-        if abs(dx) <= th and abs(dy - sign * size) <= sq:
+        if abs(lx) <= th and abs(ly - sign * size) <= sq:
             return "scale_y"
         return None
 
@@ -300,11 +305,16 @@ class _ViewportMixin:
                     dy = wy - self._last_world[1]
                     obj = self._window.selected_obj
                     if obj is not None:
+                        ang = math.radians(getattr(obj, "angle", 0.0))
+                        ca = math.cos(ang)
+                        sa = math.sin(ang)
+                        local_dx = dx * ca + dy * sa
+                        local_dy = -dx * sa + dy * ca
                         if self._drag_mode == "scale_x":
-                            new_w = max(0.1, obj.width * obj.scale_x + dx)
+                            new_w = max(0.1, obj.width * obj.scale_x + local_dx)
                             obj.scale_x = new_w / obj.width
                         else:
-                            new_h = max(0.1, obj.height * obj.scale_y + dy)
+                            new_h = max(0.1, obj.height * obj.scale_y + local_dy)
                             obj.scale_y = new_h / obj.height
                         self._window.update_properties()
                     self._last_world = (wx, wy)
