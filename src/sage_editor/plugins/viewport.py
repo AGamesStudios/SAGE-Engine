@@ -355,9 +355,9 @@ class _ViewportMixin:
         obj = self._window.find_object_at(wx, wy)
         if obj is not None:
             self._window.select_object(obj)
-            copy_a = menu.addAction("Copy")
-            paste_a = menu.addAction("Paste")
-            del_a = menu.addAction("Delete")
+            copy_a = menu.addAction("Copy") if hasattr(menu, "addAction") else None
+            paste_a = menu.addAction("Paste") if hasattr(menu, "addAction") else None
+            del_a = menu.addAction("Delete") if hasattr(menu, "addAction") else None
             if copy_a is not None and hasattr(copy_a, "triggered"):
                 copy_a.triggered.connect(self._window.copy_selected)
             if paste_a is not None and hasattr(paste_a, "triggered"):
@@ -365,7 +365,7 @@ class _ViewportMixin:
             if del_a is not None and hasattr(del_a, "triggered"):
                 del_a.triggered.connect(self._window.delete_selected)
         else:
-            action = menu.addAction("Create Object")
+            action = menu.addAction("Create Object") if hasattr(menu, "addAction") else None
 
             def cb():
                 self._window.create_object(wx, wy)
@@ -419,9 +419,9 @@ class SDLViewportWidget(_ViewportMixin, SDLWidget):
         obj = self._window.find_object_at(wx, wy)
         if obj is not None:
             self._window.select_object(obj)
-            copy_a = menu.addAction("Copy")
-            paste_a = menu.addAction("Paste")
-            del_a = menu.addAction("Delete")
+            copy_a = menu.addAction("Copy") if hasattr(menu, "addAction") else None
+            paste_a = menu.addAction("Paste") if hasattr(menu, "addAction") else None
+            del_a = menu.addAction("Delete") if hasattr(menu, "addAction") else None
             if copy_a is not None and hasattr(copy_a, "triggered"):
                 copy_a.triggered.connect(self._window.copy_selected)
             if paste_a is not None and hasattr(paste_a, "triggered"):
@@ -429,7 +429,7 @@ class SDLViewportWidget(_ViewportMixin, SDLWidget):
             if del_a is not None and hasattr(del_a, "triggered"):
                 del_a.triggered.connect(self._window.delete_selected)
         else:
-            action = menu.addAction("Create Object")
+            action = menu.addAction("Create Object") if hasattr(menu, "addAction") else None
 
             def cb():
                 self._window.create_object(wx, wy)
@@ -642,7 +642,8 @@ class EditorWindow(QMainWindow):
         self.console = QTextEdit(self)
         self.console.setReadOnly(True)
         clear_a = QAction("Clear", self.console)
-        clear_a.triggered.connect(self.console.clear)
+        if hasattr(clear_a, "triggered"):
+            clear_a.triggered.connect(self.console.clear)
         copy_a = QAction("Copy All", self.console)
 
         def copy_all() -> None:
@@ -652,9 +653,11 @@ class EditorWindow(QMainWindow):
             cursor.clearSelection()
             self.console.setTextCursor(cursor)
 
-        copy_a.triggered.connect(copy_all)
-        self.console.addAction(clear_a)
-        self.console.addAction(copy_a)
+        if hasattr(copy_a, "triggered"):
+            copy_a.triggered.connect(copy_all)
+        if hasattr(self.console, "addAction"):
+            self.console.addAction(clear_a)
+            self.console.addAction(copy_a)
         self.console.setContextMenuPolicy(Qt.ContextMenuPolicy.ActionsContextMenu)
         ascii_html = (
             "<span style='color:#ff5555'>  _____         _____ ______   ______             _            </span><br>"
@@ -811,7 +814,8 @@ class EditorWindow(QMainWindow):
                 action = QAction(title, self)
                 if action is not None and hasattr(action, "triggered"):
                     action.triggered.connect(cb)
-                menubar.addAction(action)
+                if hasattr(menubar, "addAction"):
+                    menubar.addAction(action)
 
         tbar = QToolBar(self)
         self.addToolBar(tbar)
@@ -822,13 +826,15 @@ class EditorWindow(QMainWindow):
         run_action = QAction("Run", self)
         if run_action is not None and hasattr(run_action, "triggered"):
             run_action.triggered.connect(self.start_game)
-        tbar.addAction(run_action)
+        if hasattr(tbar, "addAction"):
+            tbar.addAction(run_action)
 
         shot_action = QAction("Screenshot", self)
         if shot_action is not None:
             if hasattr(shot_action, "triggered"):
                 shot_action.triggered.connect(self.open_screenshot_dialog)
-            tbar.addAction(shot_action)
+            if hasattr(tbar, "addAction"):
+                tbar.addAction(shot_action)
 
         right_spacer = QWidget(self)
         right_spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
@@ -838,7 +844,8 @@ class EditorWindow(QMainWindow):
                 action = QAction(title, self)
                 if action is not None and hasattr(action, "triggered"):
                     action.triggered.connect(cb)
-                tbar.addAction(action)
+                if hasattr(tbar, "addAction"):
+                    tbar.addAction(action)
 
         self.objects = QListWidget()
         obj_dock = QDockWidget("Objects", self)
@@ -1345,9 +1352,9 @@ class EditorWindow(QMainWindow):
     def _list_context_menu(self, point):
         menu = QMenu(self.objects)
         if self.selected_obj is not None:
-            copy_a = menu.addAction("Copy")
-            paste_a = menu.addAction("Paste")
-            del_a = menu.addAction("Delete")
+            copy_a = menu.addAction("Copy") if hasattr(menu, "addAction") else None
+            paste_a = menu.addAction("Paste") if hasattr(menu, "addAction") else None
+            del_a = menu.addAction("Delete") if hasattr(menu, "addAction") else None
             if copy_a is not None and hasattr(copy_a, "triggered"):
                 copy_a.triggered.connect(self.copy_selected)
             if paste_a is not None and hasattr(paste_a, "triggered"):
@@ -1356,7 +1363,7 @@ class EditorWindow(QMainWindow):
                 del_a.triggered.connect(self.delete_selected)
             if hasattr(menu, "addSeparator"):
                 menu.addSeparator()
-        action = menu.addAction("Create Object")
+        action = menu.addAction("Create Object") if hasattr(menu, "addAction") else None
         if action is not None and hasattr(action, "triggered"):
             action.triggered.connect(self.create_object)
         menu.exec(self.objects.mapToGlobal(point))
