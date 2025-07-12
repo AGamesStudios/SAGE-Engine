@@ -53,7 +53,6 @@ from engine.core.scenes.scene import Scene
 from engine.core.camera import Camera
 from engine.entities.game_object import GameObject
 from engine import gizmos
-from engine.core.objects import get_object_type
 
 from sage_editor.qt import GLWidget, SDLWidget
 
@@ -552,9 +551,10 @@ class PropertiesWidget(QWidget):
         obj_form = QFormLayout(self.object_group)
         self.name_edit = QLineEdit(self)
         obj_form.addRow("Name", self.name_edit)
-        self.type_edit = QLineEdit(self)
-        self.type_edit.setReadOnly(True)
-        obj_form.addRow("Type", self.type_edit)
+        self.role_combo = QComboBox(self)
+        if hasattr(self.role_combo, "addItems"):
+            self.role_combo.addItems(["empty", "sprite", "camera"])
+        obj_form.addRow("Role", self.role_combo)
         self.tags_edit = QLineEdit(self)
         obj_form.addRow("Tags", self.tags_edit)
         self.visible_check = QCheckBox("Visible", self)
@@ -634,7 +634,8 @@ class PropertiesWidget(QWidget):
     def set_object(self, obj: Optional[GameObject]) -> None:
         if obj is None:
             self.name_edit.setText("")
-            self.type_edit.setText("")
+            if hasattr(self, "role_combo"):
+                self.role_combo.setCurrentIndex(-1)
             self.tags_edit.setText("")
             self.visible_check.setChecked(False)
             self.pos_x.setText("")
@@ -653,13 +654,13 @@ class PropertiesWidget(QWidget):
             return
 
         self.name_edit.setText(obj.name or "")
-        typ = (
-            getattr(obj, "role", None)
-            or getattr(obj, "type", None)
-            or get_object_type(obj)
-            or type(obj).__name__
-        )
-        self.type_edit.setText(str(typ))
+        role = getattr(obj, "role", "")
+        if hasattr(self, "role_combo"):
+            idx = self.role_combo.findText(role) if hasattr(self.role_combo, "findText") else -1
+            if idx >= 0 and hasattr(self.role_combo, "setCurrentIndex"):
+                self.role_combo.setCurrentIndex(idx)
+            elif hasattr(self.role_combo, "setCurrentText"):
+                self.role_combo.setCurrentText(role)
         tags = obj.metadata.get("tags", [])
         if isinstance(tags, (list, set)):
             tags = ",".join(tags)
@@ -687,6 +688,8 @@ class PropertiesWidget(QWidget):
         if tags:
             obj.metadata["tags"] = tags
         obj.visible = self.visible_check.isChecked()
+        if hasattr(self, "role_combo") and hasattr(self.role_combo, "currentText"):
+            obj.role = self.role_combo.currentText() or obj.role
         try:
             obj.x = float(self.pos_x.text())
             obj.y = float(self.pos_y.text())
@@ -920,14 +923,14 @@ class EditorWindow(QMainWindow):
 
         menubar = QMenuBar(self)
         self.setMenuBar(menubar)
-        file_menu = menubar.addMenu("File")
-        open_p = file_menu.addAction("Open Project")
-        save_p = file_menu.addAction("Save Project")
-        shot_p = file_menu.addAction("Screenshot...")
-        edit_menu = menubar.addMenu("Edit")
-        copy_m = edit_menu.addAction("Copy")
-        paste_m = edit_menu.addAction("Paste")
-        del_m = edit_menu.addAction("Delete")
+        file_menu = menubar.addMenu("File") if hasattr(menubar, "addMenu") else None
+        open_p = file_menu.addAction("Open Project") if file_menu and hasattr(file_menu, "addAction") else None
+        save_p = file_menu.addAction("Save Project") if file_menu and hasattr(file_menu, "addAction") else None
+        shot_p = file_menu.addAction("Screenshot...") if file_menu and hasattr(file_menu, "addAction") else None
+        edit_menu = menubar.addMenu("Edit") if hasattr(menubar, "addMenu") else None
+        copy_m = edit_menu.addAction("Copy") if edit_menu and hasattr(edit_menu, "addAction") else None
+        paste_m = edit_menu.addAction("Paste") if edit_menu and hasattr(edit_menu, "addAction") else None
+        del_m = edit_menu.addAction("Delete") if edit_menu and hasattr(edit_menu, "addAction") else None
         self.copy_action = copy_m
         self.paste_action = paste_m
         self.delete_action = del_m
@@ -937,22 +940,22 @@ class EditorWindow(QMainWindow):
             paste_m.setShortcut(QKeySequence("Ctrl+V"))
         if hasattr(del_m, "setShortcut"):
             del_m.setShortcut(QKeySequence("Delete"))
-        engine_menu = menubar.addMenu("Engine")
-        renderer_menu = engine_menu.addMenu("Renderer")
+        engine_menu = menubar.addMenu("Engine") if hasattr(menubar, "addMenu") else None
+        renderer_menu = engine_menu.addMenu("Renderer") if engine_menu and hasattr(engine_menu, "addMenu") else None
         if open_p is not None and hasattr(open_p, "triggered"):
             open_p.triggered.connect(self.open_project_dialog)
         if save_p is not None and hasattr(save_p, "triggered"):
             save_p.triggered.connect(self.save_project_dialog)
         if shot_p is not None and hasattr(shot_p, "triggered"):
             shot_p.triggered.connect(self.open_screenshot_dialog)
-        ogl_action = renderer_menu.addAction("OpenGL")
-        sdl_action = renderer_menu.addAction("SDL")
+        ogl_action = renderer_menu.addAction("OpenGL") if renderer_menu and hasattr(renderer_menu, "addAction") else None
+        sdl_action = renderer_menu.addAction("SDL") if renderer_menu and hasattr(renderer_menu, "addAction") else None
         if ogl_action is not None and hasattr(ogl_action, "triggered"):
             ogl_action.triggered.connect(lambda: self.change_renderer("opengl"))
         if sdl_action is not None and hasattr(sdl_action, "triggered"):
             sdl_action.triggered.connect(lambda: self.change_renderer("sdl"))
-        view_menu = engine_menu.addMenu("View")
-        grid_act = view_menu.addAction("Show Grid")
+        view_menu = engine_menu.addMenu("View") if engine_menu and hasattr(engine_menu, "addMenu") else None
+        grid_act = view_menu.addAction("Show Grid") if view_menu and hasattr(view_menu, "addAction") else None
         if grid_act is not None:
             if hasattr(grid_act, "setCheckable"):
                 grid_act.setCheckable(True)
@@ -961,7 +964,7 @@ class EditorWindow(QMainWindow):
             if hasattr(grid_act, "triggered"):
                 grid_act.triggered.connect(self.toggle_grid)
 
-        mirror_act = view_menu.addAction("Mirror Resize")
+        mirror_act = view_menu.addAction("Mirror Resize") if view_menu and hasattr(view_menu, "addAction") else None
         if mirror_act is not None:
             if hasattr(mirror_act, "setCheckable"):
                 mirror_act.setCheckable(True)
@@ -970,7 +973,7 @@ class EditorWindow(QMainWindow):
             if hasattr(mirror_act, "triggered"):
                 mirror_act.triggered.connect(self.toggle_mirror)
 
-        local_act = view_menu.addAction("Local Coordinates")
+        local_act = view_menu.addAction("Local Coordinates") if view_menu and hasattr(view_menu, "addAction") else None
         if local_act is not None:
             if hasattr(local_act, "setCheckable"):
                 local_act.setCheckable(True)
@@ -1160,30 +1163,16 @@ class EditorWindow(QMainWindow):
                     height=120,
                     widget=self.preview_widget,
                     vsync=False,
-                    keep_aspect=False,
+                    keep_aspect=True,
                 )
             except Exception:
                 log.exception("Failed to create preview renderer")
                 return
-        w = getattr(cam, "width", 160)
-        h = getattr(cam, "height", 120)
-        aspect = w / h if h else 1
-        ph = 120
-        pw = 160
-        if aspect >= 1:
-            ph = int(pw / aspect)
         else:
-            pw = int(ph * aspect)
-        if hasattr(self.preview_widget, "setFixedSize"):
-            self.preview_widget.setFixedSize(pw, ph)
-        if self.preview_renderer is not None:
             try:
-                self.preview_renderer.set_window_size(pw, ph)
+                self.preview_renderer.set_window_size(160, 120)
             except Exception:
                 pass
-        frame = getattr(self, "preview_frame", None)
-        if frame is not None and hasattr(frame, "setFixedSize"):
-            frame.setFixedSize(pw, ph)
         if hasattr(self.preview_frame, "show"):
             self.preview_frame.show()
         elif hasattr(self.preview_widget, "show"):

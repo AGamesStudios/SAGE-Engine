@@ -3,8 +3,10 @@
 This panel displays the properties of the selected object. Values update as soon
 as editing finishes and the scroll area keeps long lists accessible. Properties
 are grouped into categories such as **Transform** and **Appearance** so you can
-collapse sections you rarely adjust. There is no **Apply** button – changes are
-stored immediately.
+collapse sections you rarely adjust. The **Object** section lists the object
+**Role** rather than a fixed type. A drop-down lets you pick between the
+built-in roles **empty**, **sprite** and **camera**. There is no **Apply**
+button – changes are stored immediately.
 
 ## Physics
 
