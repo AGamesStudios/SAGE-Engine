@@ -1,13 +1,14 @@
 # Properties Window
 
-This panel displays the properties of the selected object with a scroll area so
-large sets of fields remain accessible. Changes take effect immediately when you
-finish editing a value.
+This panel displays the properties of the selected object. Values update as soon
+as editing finishes and the scroll area keeps long lists accessible. Properties
+are grouped into categories such as **Transform** and **Appearance** so you can
+collapse sections you rarely adjust.
 
 ## Physics
 
-If the optional physics module is installed, objects include a **Physics**
-category. Physics support is experimental. Each object has two settings:
+When the optional physics module is installed, objects include a **Physics**
+category. Physics support is experimental. The tab contains two options:
 
-- **Enabled** &ndash; toggles physics on or off for the object.
-- **Body Type** &ndash; choose **Static** or **Dynamic** behaviour.
+- **Enabled** – toggles physics on or off for the object.
+- **Body Type** – choose **Static** or **Dynamic** behaviour.

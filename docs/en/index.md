@@ -10,6 +10,7 @@ Select a topic from the list to learn about the engine and editor features.
 * [Plugins](plugins.md)
 * [Gizmos](gizmos.md)
 * [Physics Extension](physics.md)
+* [Properties Window](properties_window.md)
 * [Crash Reports](crash_reports.md)
 * [Editor API](editor_api.md) – building editors with the optional ``sage_editor`` package
 
