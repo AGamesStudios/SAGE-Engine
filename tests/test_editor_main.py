@@ -11,7 +11,7 @@ def test_main_no_window(monkeypatch):
     def load_plugins(self, paths=None):
         pass
     monkeypatch.setattr(Editor, "load_plugins", load_plugins)
-    assert main([]) == 1
+    assert main() == 1
     assert any("No editor window" in m for m in msgs)
 
 
@@ -23,5 +23,5 @@ def test_main_with_window(monkeypatch):
     def load_plugins(self, paths=None):
         self.window = object()
     monkeypatch.setattr(Editor, "load_plugins", load_plugins)
-    assert main([]) == 0
+    assert main() == 0
     assert any("SAGE Editor started" in m for m in msgs)

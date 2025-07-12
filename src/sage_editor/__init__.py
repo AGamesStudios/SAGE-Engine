@@ -34,7 +34,7 @@ class Editor(EditorInterface):
         self.plugins.load(self, paths)
 
 
-def main(argv: list[str] | None = None) -> int:
+def main() -> int:
     """Entry point for the default editor implementation."""
     init_logger()
     sys.excepthook = _exception_handler

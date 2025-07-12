@@ -22,15 +22,12 @@ from PyQt6.QtWidgets import (  # type: ignore[import-not-found]
     QSplitter,
     QPushButton,
     QVBoxLayout,
-    QGroupBox,
-    QFormLayout,
     QHBoxLayout,
     QScrollArea,
     QLabel,
     QLineEdit,
     QDoubleSpinBox,
     QDial,
-    QCheckBox,
     QComboBox,
     QWidget,
     QStyleFactory,
@@ -60,7 +57,11 @@ from engine.core.camera import Camera
 from engine.entities.game_object import GameObject
 from engine import gizmos
 
-from sage_editor.qt import GLWidget, SDLWidget
+from sage_editor.qt import GLWidget
+
+ViewportWidget: Any
+SDLViewportWidget: Any
+PropertiesWidget: Any
 
 
 class ConsoleHandler(logging.Handler):
@@ -287,7 +288,7 @@ class _ViewportMixin:
     HANDLE_PIXELS = 8
     ROTATE_OFFSET = 15
 
-    def __init__(self, window: "EditorWindow", *a, **k) -> None:
+    def __init__(self, window: "EditorWindow") -> None:
         """Initialise mixin state without touching QWidget internals."""
         self._window = window
         self._last_pos = None
@@ -692,322 +693,15 @@ class _ViewportMixin:
         menu.exec(cast(QWidget, self).mapToGlobal(point))
 
 
-class ViewportWidget(_ViewportMixin, GLWidget):
-    """OpenGL viewport widget."""
-
-    def __init__(self, window: "EditorWindow") -> None:
-        GLWidget.__init__(self, window)
-        _ViewportMixin.__init__(self, window)
-
-
-class SDLViewportWidget(_ViewportMixin, SDLWidget):
-    """SDL viewport widget."""
-
-    def __init__(self, window: "EditorWindow") -> None:
-        SDLWidget.__init__(self, window)
-        _ViewportMixin.__init__(self, window)
-
-    def mousePressEvent(self, ev):  # pragma: no cover - gui interaction
-        super().mousePressEvent(ev)
-
-    def mouseMoveEvent(self, ev):  # pragma: no cover - gui interaction
-        super().mouseMoveEvent(ev)
-
-    def mouseReleaseEvent(self, ev):  # pragma: no cover - gui interaction
-        super().mouseReleaseEvent(ev)
-
-    def wheelEvent(self, ev):  # pragma: no cover - gui interaction
-        delta = 0
-        if hasattr(ev, "angleDelta"):
-            delta = ev.angleDelta().y()
-        elif hasattr(ev, "delta"):
-            delta = ev.delta()
-        if delta:
-            factor = 1.1 ** (delta / 120)
-            cam = self._window.camera
-            cam.zoom *= factor
-            if cam.zoom <= 0:
-                cam.zoom = 0.1
-            self._window.draw_scene(update_list=False)
-
-
-
-class PropertiesWidget(QWidget):
-    """Widget for editing object properties."""
-
-    def __init__(self, parent=None) -> None:
-        super().__init__(parent)
-        layout = QVBoxLayout(self)
-
-        self.object_group = QGroupBox("Object", self)
-        obj_form = QFormLayout(self.object_group)
-        self.name_edit = NoWheelLineEdit(self)
-        obj_form.addRow("Name", self.name_edit)
-        self.role_combo = QComboBox(self)
-        if hasattr(self.role_combo, "addItems"):
-            self.role_combo.addItems(["empty", "shape", "sprite", "camera"])
-        obj_form.addRow("Role", self.role_combo)
-        self.tags_edit = NoWheelLineEdit(self)
-        obj_form.addRow("Tags", self.tags_edit)
-        self.visible_check = QCheckBox("Visible", self)
-        obj_form.addRow(self.visible_check)
-        layout.addWidget(self.object_group)
-
-        self.transform_group = QGroupBox("Transform", self)
-        trans_form = QFormLayout(self.transform_group)
-        pos_widget = QWidget(self)
-        pos_layout = QHBoxLayout(pos_widget)
-        self.pos_x = NoWheelSpinBox(self)
-        self.pos_y = NoWheelSpinBox(self)
-        for box in (self.pos_x, self.pos_y):
-            box.setRange(-1e6, 1e6)
-            box.setAccelerated(True)
-        pos_layout.addWidget(QLabel("X", self))
-        pos_layout.addWidget(self.pos_x)
-        pos_layout.addWidget(QLabel("Y", self))
-        pos_layout.addWidget(self.pos_y)
-        trans_form.addRow("Position", pos_widget)
-
-        self.rot_dial = ProgressDial(self)
-        self.rot_dial.setRange(0, 360)
-        trans_form.addRow("Rotation", self.rot_dial)
-
-        scale_widget = QWidget(self)
-        scale_layout = QHBoxLayout(scale_widget)
-        self.scale_x = NoWheelSpinBox(self)
-        self.scale_y = NoWheelSpinBox(self)
-        for box in (self.scale_x, self.scale_y):
-            box.setRange(0.01, 1000.0)
-            box.setDecimals(3)
-            box.setSingleStep(0.1)
-            box.setAccelerated(True)
-        self.link_scale = QCheckBox("Link", self)
-        scale_layout.addWidget(QLabel("X", self))
-        scale_layout.addWidget(self.scale_x)
-        scale_layout.addWidget(QLabel("Y", self))
-        scale_layout.addWidget(self.scale_y)
-        scale_layout.addWidget(self.link_scale)
-        trans_form.addRow("Scale", scale_widget)
-
-        pivot_widget = QWidget(self)
-        pivot_layout = QHBoxLayout(pivot_widget)
-        self.pivot_x = NoWheelSpinBox(self)
-        self.pivot_y = NoWheelSpinBox(self)
-        for box in (self.pivot_x, self.pivot_y):
-            box.setRange(0.0, 1.0)
-            box.setDecimals(3)
-            box.setSingleStep(0.01)
-            box.setAccelerated(True)
-        pivot_layout.addWidget(QLabel("X", self))
-        pivot_layout.addWidget(self.pivot_x)
-        pivot_layout.addWidget(QLabel("Y", self))
-        pivot_layout.addWidget(self.pivot_y)
-        trans_form.addRow("Pivot", pivot_widget)
-
-        flip_widget = QWidget(self)
-        flip_layout = QHBoxLayout(flip_widget)
-        self.flip_x = QCheckBox("X", self)
-        self.flip_y = QCheckBox("Y", self)
-        flip_layout.addWidget(self.flip_x)
-        flip_layout.addWidget(self.flip_y)
-        trans_form.addRow("Flip", flip_widget)
-
-        self.scale_x.editingFinished.connect(self._sync_scale_x)
-        self.scale_y.editingFinished.connect(self._sync_scale_y)
-
-        layout.addWidget(self.transform_group)
-
-        # shape settings
-        self.shape_group = QGroupBox("Shape", self)
-        shape_form = QFormLayout(self.shape_group)
-        self.shape_combo = QComboBox(self)
-        if hasattr(self.shape_combo, "addItems"):
-            self.shape_combo.addItems(["square", "triangle", "circle"])
-        shape_form.addRow("Form", self.shape_combo)
-        layout.addWidget(self.shape_group)
-        if hasattr(self.shape_group, "hide"):
-            self.shape_group.hide()
-
-        # sprite settings
-        self.sprite_group = QGroupBox("Sprite", self)
-        sprite_form = QFormLayout(self.sprite_group)
-        self.image_edit = NoWheelLineEdit(self)
-        sprite_form.addRow("Image", self.image_edit)
-        self.smooth_check = QCheckBox("Smooth", self)
-        sprite_form.addRow(self.smooth_check)
-        layout.addWidget(self.sprite_group)
-        if hasattr(self.sprite_group, "hide"):
-            self.sprite_group.hide()
-
-        try:
-            from engine import physics  # noqa: F401
-        except Exception:
-            self.physics_group = None
-        else:
-            self.physics_group = QGroupBox("Physics", self)
-            phys_form = QFormLayout(self.physics_group)
-            self.physics_enabled = QCheckBox("Enabled", self)
-            phys_form.addRow(self.physics_enabled)
-            self.body_combo = QComboBox(self)
-            if hasattr(self.body_combo, "addItems"):
-                self.body_combo.addItems(["Dynamic", "Static"])
-            phys_form.addRow("Body Type", self.body_combo)
-            layout.addWidget(self.physics_group)
-
-        layout.addStretch()
-
-    def set_object(self, obj: Optional[GameObject]) -> None:
-        if obj is None:
-            self.name_edit.setText("")
-            if hasattr(self, "role_combo"):
-                self.role_combo.setCurrentIndex(-1)
-            self.tags_edit.setText("")
-            self.visible_check.setChecked(False)
-            self.pos_x.setValue(0.0)
-            self.pos_y.setValue(0.0)
-            self.rot_dial.setValue(0)
-            self.scale_x.setValue(1.0)
-            self.scale_y.setValue(1.0)
-            self.flip_x.setChecked(False)
-            self.flip_y.setChecked(False)
-            if hasattr(self.flip_x, "setEnabled"):
-                self.flip_x.setEnabled(False)
-            if hasattr(self.flip_y, "setEnabled"):
-                self.flip_y.setEnabled(False)
-            self.pivot_x.setValue(0.0)
-            self.pivot_y.setValue(0.0)
-            if getattr(self, "physics_group", None):
-                self.physics_enabled.setChecked(False)
-                if hasattr(self, "body_combo"):
-                    self.body_combo.setCurrentIndex(0)
-            # Hide all groups so the panel looks empty
-            for grp in [
-                self.object_group,
-                self.transform_group,
-                getattr(self, "shape_group", None),
-                getattr(self, "sprite_group", None),
-                getattr(self, "physics_group", None),
-            ]:
-                if grp is not None and hasattr(grp, "hide"):
-                    grp.hide()
-            return
-
-        self.name_edit.setText(obj.name or "")
-        # Ensure groups are visible again when an object is selected
-        for grp in [
-            self.object_group,
-            self.transform_group,
-            getattr(self, "shape_group", None),
-            getattr(self, "sprite_group", None),
-            getattr(self, "physics_group", None),
-        ]:
-            if grp is not None and hasattr(grp, "show"):
-                grp.show()
-        role = getattr(obj, "role", "")
-        if hasattr(self, "role_combo"):
-            idx = self.role_combo.findText(role) if hasattr(self.role_combo, "findText") else -1
-            if idx >= 0 and hasattr(self.role_combo, "setCurrentIndex"):
-                self.role_combo.setCurrentIndex(idx)
-            elif hasattr(self.role_combo, "setCurrentText"):
-                self.role_combo.setCurrentText(role)
-        tags = obj.metadata.get("tags", [])
-        if isinstance(tags, (list, set)):
-            tags = ",".join(tags)
-        self.tags_edit.setText(str(tags))
-        self.visible_check.setChecked(bool(getattr(obj, "visible", True)))
-        self.pos_x.setValue(float(getattr(obj, "x", 0.0)))
-        self.pos_y.setValue(float(getattr(obj, "y", 0.0)))
-        angle = getattr(obj, "angle", 0.0)
-        self.rot_dial.setValue(int((-angle) % 360))
-        self.scale_x.setValue(float(getattr(obj, "scale_x", 1.0)))
-        self.scale_y.setValue(float(getattr(obj, "scale_y", 1.0)))
-        flip_allowed = role not in ("camera", "empty")
-        if hasattr(self.flip_x, "setEnabled"):
-            self.flip_x.setEnabled(flip_allowed)
-        if hasattr(self.flip_y, "setEnabled"):
-            self.flip_y.setEnabled(flip_allowed)
-        self.flip_x.setChecked(flip_allowed and bool(getattr(obj, "flip_x", False)))
-        self.flip_y.setChecked(flip_allowed and bool(getattr(obj, "flip_y", False)))
-        self.pivot_x.setValue(float(getattr(obj, "pivot_x", 0.0)))
-        self.pivot_y.setValue(float(getattr(obj, "pivot_y", 0.0)))
-        if hasattr(self, "shape_group"):
-            shape = str(getattr(obj, "shape", "square"))
-            order = ["square", "triangle", "circle"]
-            if hasattr(self.shape_combo, "setCurrentIndex"):
-                idx = order.index(shape) if shape in order else 0
-                self.shape_combo.setCurrentIndex(idx)
-            elif hasattr(self.shape_combo, "setCurrentText"):
-                self.shape_combo.setCurrentText(shape)
-        if hasattr(self, "sprite_group"):
-            self.image_edit.setText(getattr(obj, "image_path", ""))
-            self.smooth_check.setChecked(bool(getattr(obj, "smooth", True)))
-        if hasattr(self.shape_group, "setVisible"):
-            self.shape_group.setVisible(role == "shape")
-        if hasattr(self.sprite_group, "setVisible"):
-            self.sprite_group.setVisible(role == "sprite")
-        if getattr(self, "physics_group", None):
-            self.physics_enabled.setChecked(bool(getattr(obj, "physics_enabled", False)))
-            body = getattr(obj, "body_type", "dynamic")
-            idx = 0 if body != "static" else 1
-            if hasattr(self, "body_combo"):
-                self.body_combo.setCurrentIndex(idx)
-
-    def apply_to_object(self, obj: GameObject) -> None:
-        obj.name = self.name_edit.text()
-        tags = [t.strip() for t in self.tags_edit.text().split(',') if t.strip()]
-        if tags:
-            obj.metadata["tags"] = tags
-        obj.visible = self.visible_check.isChecked()
-        if hasattr(self, "role_combo") and hasattr(self.role_combo, "currentText"):
-            new_role = self.role_combo.currentText() or obj.role
-            if hasattr(obj, "set_role"):
-                obj.set_role(new_role)
-            else:
-                obj.role = new_role
-        obj.x = float(self.pos_x.value())
-        obj.y = float(self.pos_y.value())
-        obj.angle = -float(self.rot_dial.value())
-        sx = float(self.scale_x.value())
-        sy = float(self.scale_y.value())
-        if self.link_scale.isChecked():
-            sy = sx
-        obj.scale_x = sx
-        obj.scale_y = sy
-        if obj.role not in ("camera", "empty"):
-            obj.flip_x = self.flip_x.isChecked()
-            obj.flip_y = self.flip_y.isChecked()
-        obj.pivot_x = float(self.pivot_x.value())
-        obj.pivot_y = float(self.pivot_y.value())
-        if getattr(self, "physics_group", None):
-            obj.physics_enabled = self.physics_enabled.isChecked()
-            if hasattr(self, "body_combo"):
-                obj.body_type = (
-                    "static" if self.body_combo.currentIndex() == 1 else "dynamic"
-                )
-        if hasattr(self.shape_group, "isVisible") and self.shape_group.isVisible():
-            if hasattr(self.shape_combo, "currentText"):
-                obj.shape = self.shape_combo.currentText()
-            else:
-                idx = self.shape_combo.currentIndex() if hasattr(self.shape_combo, "currentIndex") else 0
-                order = ["square", "triangle", "circle"]
-                obj.shape = order[idx] if 0 <= idx < len(order) else "square"
-        if hasattr(self.sprite_group, "isVisible") and self.sprite_group.isVisible():
-            obj.image_path = self.image_edit.text()
-            obj.smooth = self.smooth_check.isChecked()
-
-    def _sync_scale_x(self):
-        if self.link_scale.isChecked():
-            self.scale_y.setValue(self.scale_x.value())
-
-    def _sync_scale_y(self):
-        if self.link_scale.isChecked():
-            self.scale_x.setValue(self.scale_y.value())
-
-
 class EditorWindow(QMainWindow):
     """Main editor window with dockable widgets."""
 
     def _create_viewport_widget(self, backend: str):
+        from sage_editor import widgets as _w
+        global ViewportWidget, SDLViewportWidget
+        ViewportWidget = _w.ViewportWidget
+        SDLViewportWidget = _w.SDLViewportWidget
+
         if backend == "sdl":
             view = SDLViewportWidget(self)
         else:
@@ -1133,6 +827,10 @@ class EditorWindow(QMainWindow):
         else:
             self.console.setPlainText(ascii_plain + "\nWelcome to SAGE Editor")
         from engine.utils.log import logger
+        from sage_editor import widgets as _w
+        global PropertiesWidget
+        PropertiesWidget = _w.PropertiesWidget
+
         self._console_handler = ConsoleHandler(self.console)
         logger.addHandler(self._console_handler)
         self.properties = PropertiesWidget(self)
@@ -1746,6 +1444,7 @@ class EditorWindow(QMainWindow):
         old_splitter = self._splitter
         w = self.viewport.width() or 640
         h = self.viewport.height() or 480
+        from sage_editor.widgets import SDLViewportWidget
         if (backend == "sdl" and not isinstance(self.viewport, SDLViewportWidget)) or (
             backend != "sdl" and isinstance(self.viewport, SDLViewportWidget)
         ):
@@ -2126,3 +1825,17 @@ def init_editor(editor) -> None:
     editor.viewport = window.viewport
     if created:
         app.exec()
+
+
+def __getattr__(name: str):  # pragma: no cover - runtime import
+    if name in {"ViewportWidget", "SDLViewportWidget", "PropertiesWidget"}:
+        from sage_editor import widgets as _w
+        globals().update(
+            {
+                "ViewportWidget": _w.ViewportWidget,
+                "SDLViewportWidget": _w.SDLViewportWidget,
+                "PropertiesWidget": _w.PropertiesWidget,
+            }
+        )
+        return globals()[name]
+    raise AttributeError(name)
