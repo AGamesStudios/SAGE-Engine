@@ -215,11 +215,7 @@ class _ViewportMixin:
             self._drag_corner = None
             self._last_world = None
             obj = self._window.selected_obj
-            if (
-                obj is not None
-                and self._window.transform_mode == "rect"
-                and self._window.show_bbox
-            ):
+            if obj is not None and self._window.transform_mode == "rect":
                 wx, wy = self._window.screen_to_world(self._press_pos)
                 if isinstance(obj, Camera):
                     left, bottom, w, h = obj.view_rect()
@@ -251,6 +247,20 @@ class _ViewportMixin:
                     elif left <= wx <= left + w and bottom <= wy <= bottom + h:
                         self._drag_mode = "move"
                         self._last_world = (wx, wy)
+            elif obj is not None and self._window.transform_mode == "move":
+                handle = self._hit_move_handle(self._press_pos)
+                if handle:
+                    self._drag_mode = handle
+                    self._last_world = self._window.screen_to_world(self._press_pos)
+            elif obj is not None and self._window.transform_mode == "scale":
+                handle = self._hit_scale_handle(self._press_pos)
+                if handle:
+                    self._drag_mode = handle
+                    self._last_world = self._window.screen_to_world(self._press_pos)
+            elif obj is not None and self._window.transform_mode == "rotate":
+                if self._hit_rotate_handle(self._press_pos):
+                    self._drag_mode = "rotate"
+                    self._last_world = self._window.screen_to_world(self._press_pos)
             try:
                 from PyQt6.QtGui import QCursor  # type: ignore[import-not-found]
                 cast(QWidget, self).setCursor(QCursor(Qt.CursorShape.ClosedHandCursor))
@@ -1297,14 +1307,14 @@ class EditorWindow(QMainWindow):
             left, bottom, w, h = obj.view_rect()
         else:
             left, bottom, w, h = obj.rect()
+        points = [
+            (left, bottom),
+            (left + w, bottom),
+            (left + w, bottom + h),
+            (left, bottom + h),
+            (left, bottom),
+        ]
         if self.show_bbox:
-            points = [
-                (left, bottom),
-                (left + w, bottom),
-                (left + w, bottom + h),
-                (left, bottom + h),
-                (left, bottom),
-            ]
             g = gizmos.polyline_gizmo(points, color=(1, 0.4, 0.2, 1), frames=None)
             if hasattr(self.renderer, "add_gizmo"):
                 self.renderer.add_gizmo(g)
@@ -1318,35 +1328,35 @@ class EditorWindow(QMainWindow):
                         frames=None,
                     )
                 )
-        if self.transform_mode == "rect" and self.show_bbox:
-                handle_size = 5
-                cam = self.camera
-                rot_y = bottom + h + _ViewportMixin.ROTATE_OFFSET / (
-                    units.UNITS_PER_METER * cam.zoom
+        if self.transform_mode == "rect":
+            handle_size = 5
+            cam = self.camera
+            rot_y = bottom + h + _ViewportMixin.ROTATE_OFFSET / (
+                units.UNITS_PER_METER * cam.zoom
+            )
+            self.renderer.add_gizmo(
+                gizmos.circle_gizmo(
+                    obj.x,
+                    rot_y,
+                    size=handle_size,
+                    color=(0.2, 0.8, 1.0, 1),
+                    thickness=1,
+                    frames=None,
+                    filled=True,
                 )
+            )
+            for x, y in points[:-1]:
                 self.renderer.add_gizmo(
-                    gizmos.circle_gizmo(
-                        obj.x,
-                        rot_y,
+                    gizmos.square_gizmo(
+                        x,
+                        y,
                         size=handle_size,
-                        color=(0.2, 0.8, 1.0, 1),
+                        color=(1.0, 0.6, 0.2, 1),
                         thickness=1,
                         frames=None,
                         filled=True,
                     )
                 )
-                for x, y in points[:-1]:
-                    self.renderer.add_gizmo(
-                        gizmos.square_gizmo(
-                            x,
-                            y,
-                            size=handle_size,
-                            color=(1.0, 0.6, 0.2, 1),
-                            thickness=1,
-                            frames=None,
-                            filled=True,
-                        )
-                    )
 
     def draw_scene(self, update_list: bool = True) -> None:
         """Render the current scene and refresh selection gizmos."""
