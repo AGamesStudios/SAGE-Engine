@@ -177,12 +177,16 @@ class NoWheelLineEdit(QLineEdit):
 
 
 class NoWheelSpinBox(QDoubleSpinBox):
-    """Spin box that ignores the mouse wheel and allows simple drag editing."""
+    """Spin box that ignores the mouse wheel and supports drag editing."""
 
-    DRAG_SPEED = 0.05
+    DRAG_SPEED = 0.01
+    MAX_MULTIPLIER = 5.0
 
     def __init__(self, *a, **k):
         super().__init__(*a, **k)
+        if hasattr(self, "setButtonSymbols"):
+            from PyQt6.QtWidgets import QAbstractSpinBox  # type: ignore[import-not-found]
+            self.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
         self._drag_origin: float | None = None
         self._drag_value: float = 0.0
 
@@ -196,6 +200,10 @@ class NoWheelSpinBox(QDoubleSpinBox):
             self._drag_value = self.value()
             if hasattr(self, "setCursor"):
                 self.setCursor(Qt.CursorShape.SizeVerCursor)
+            if hasattr(self.lineEdit(), "setFocus"):
+                self.lineEdit().setFocus()
+            event.accept()
+            return
         if hasattr(QDoubleSpinBox, "mousePressEvent"):
             QDoubleSpinBox.mousePressEvent(self, event)
 
@@ -204,7 +212,8 @@ class NoWheelSpinBox(QDoubleSpinBox):
             y = getattr(event, "globalPosition", event.pos)().y()
             delta = self._drag_origin - y
             step = self.singleStep() or 1.0
-            new_val = self._drag_value + delta * step * self.DRAG_SPEED
+            mult = min(abs(delta) * self.DRAG_SPEED, self.MAX_MULTIPLIER)
+            new_val = self._drag_value + delta * step * mult
             self.setValue(new_val)
             event.accept()
             return
@@ -707,11 +716,6 @@ class PropertiesWidget(QWidget):
 
         self.rot_dial = AngleDial(self)
         self.rot_dial.setRange(0, 360)
-        # Invert the dial so clockwise motion yields clockwise rotation
-        if hasattr(self.rot_dial, "setInvertedAppearance"):
-            self.rot_dial.setInvertedAppearance(True)
-        if hasattr(self.rot_dial, "setInvertedControls"):
-            self.rot_dial.setInvertedControls(True)
         trans_form.addRow("Rotation", self.rot_dial)
 
         scale_widget = QWidget(self)
@@ -860,7 +864,7 @@ class PropertiesWidget(QWidget):
         self.pos_x.setValue(float(getattr(obj, "x", 0.0)))
         self.pos_y.setValue(float(getattr(obj, "y", 0.0)))
         angle = getattr(obj, "angle", 0.0)
-        self.rot_dial.setValue(int(angle % 360))
+        self.rot_dial.setValue(int((-angle) % 360))
         self.scale_x.setValue(float(getattr(obj, "scale_x", 1.0)))
         self.scale_y.setValue(float(getattr(obj, "scale_y", 1.0)))
         flip_allowed = role not in ("camera", "empty")
@@ -908,7 +912,7 @@ class PropertiesWidget(QWidget):
                 obj.role = new_role
         obj.x = float(self.pos_x.value())
         obj.y = float(self.pos_y.value())
-        obj.angle = float(self.rot_dial.value())
+        obj.angle = -float(self.rot_dial.value())
         sx = float(self.scale_x.value())
         sy = float(self.scale_y.value())
         if self.link_scale.isChecked():
