@@ -224,6 +224,7 @@ class _ViewportMixin:
                     hit = self._hit_scale_handle(self._press_pos)
                 elif mode == "rotate":
                     hit = "rotate" if self._hit_rotate_handle(self._press_pos) else None
+
                 if hit:
                     self._drag_mode = hit
                     self._last_world = self._window.screen_to_world(self._press_pos)
@@ -240,25 +241,25 @@ class _ViewportMixin:
                         "br": (left + w, bottom),
                         "tl": (left, bottom + h),
                         "tr": (left + w, bottom + h),
-                }
-                rot_y = bottom + h + _ViewportMixin.ROTATE_OFFSET / (
-                    units.UNITS_PER_METER * cam.zoom
-                )
-                rot_pos = (obj.x, rot_y)
-                for name, (cx, cy) in corners.items():
-                    if abs(wx - cx) <= th and abs(wy - cy) <= th:
-                        self._drag_mode = "resize"
-                        self._drag_corner = name
-                        self._last_world = (wx, wy)
-                        break
-                else:
-                    if abs(wx - rot_pos[0]) <= th and abs(wy - rot_pos[1]) <= th:
-                        self._drag_mode = "rotate"
-                        self._drag_corner = "rot"
-                        self._last_world = (wx, wy)
-                    elif left <= wx <= left + w and bottom <= wy <= bottom + h:
-                        self._drag_mode = "move"
-                        self._last_world = (wx, wy)
+                    }
+                    rot_y = bottom + h + _ViewportMixin.ROTATE_OFFSET / (
+                        units.UNITS_PER_METER * cam.zoom
+                    )
+                    rot_pos = (obj.x, rot_y)
+                    for name, (cx, cy) in corners.items():
+                        if abs(wx - cx) <= th and abs(wy - cy) <= th:
+                            self._drag_mode = "resize"
+                            self._drag_corner = name
+                            self._last_world = (wx, wy)
+                            break
+                    else:
+                        if abs(wx - rot_pos[0]) <= th and abs(wy - rot_pos[1]) <= th:
+                            self._drag_mode = "rotate"
+                            self._drag_corner = "rot"
+                            self._last_world = (wx, wy)
+                        elif left <= wx <= left + w and bottom <= wy <= bottom + h:
+                            self._drag_mode = "move"
+                            self._last_world = (wx, wy)
             try:
                 from PyQt6.QtGui import QCursor  # type: ignore[import-not-found]
                 cast(QWidget, self).setCursor(QCursor(Qt.CursorShape.ClosedHandCursor))
