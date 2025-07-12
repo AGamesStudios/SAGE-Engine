@@ -46,11 +46,22 @@ def _setup_qt(monkeypatch):
 
     class QWidget:
         def __init__(self, *a, **k):
-            pass
+            self._visible = True
         def setSizePolicy(self, *a, **k):
             pass
         def winId(self):
             return 1
+        def show(self):
+            self._visible = True
+        def hide(self):
+            self._visible = False
+        def isVisible(self):
+            return self._visible
+        def setVisible(self, b):
+            if b:
+                self.show()
+            else:
+                self.hide()
 
     class QPushButton(QWidget):
         def __init__(self, *a, **k):
@@ -155,6 +166,15 @@ def _setup_qt(monkeypatch):
             self.currentIndexChanged.emit(idx)
         def currentIndex(self):
             return self._index
+        def currentText(self):
+            if 0 <= self._index < len(self._items):
+                return self._items[self._index]
+            return ""
+        def findText(self, text):
+            try:
+                return self._items.index(text)
+            except ValueError:
+                return -1
         def count(self):
             return len(self._items)
 

@@ -720,9 +720,29 @@ class PropertiesWidget(QWidget):
                 self.physics_enabled.setChecked(False)
                 if hasattr(self, "body_combo"):
                     self.body_combo.setCurrentIndex(0)
+            # Hide all groups so the panel looks empty
+            for grp in [
+                self.object_group,
+                self.transform_group,
+                getattr(self, "shape_group", None),
+                getattr(self, "sprite_group", None),
+                getattr(self, "physics_group", None),
+            ]:
+                if grp is not None and hasattr(grp, "hide"):
+                    grp.hide()
             return
 
         self.name_edit.setText(obj.name or "")
+        # Ensure groups are visible again when an object is selected
+        for grp in [
+            self.object_group,
+            self.transform_group,
+            getattr(self, "shape_group", None),
+            getattr(self, "sprite_group", None),
+            getattr(self, "physics_group", None),
+        ]:
+            if grp is not None and hasattr(grp, "show"):
+                grp.show()
         role = getattr(obj, "role", "")
         if hasattr(self, "role_combo"):
             idx = self.role_combo.findText(role) if hasattr(self.role_combo, "findText") else -1
@@ -1549,6 +1569,8 @@ class EditorWindow(QMainWindow):
             self.properties.apply_to_object(self.selected_obj)
         except Exception:
             log.exception("Failed to apply properties")
+        # Refresh the UI so role-specific categories appear immediately
+        self.update_properties()
         self.draw_scene(update_list=update_list)
 
     def find_object_at(self, x: float, y: float) -> Optional[GameObject]:

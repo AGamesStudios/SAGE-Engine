@@ -8,6 +8,9 @@ collapse sections you rarely adjust. The **Object** section lists the object
 built-in roles **empty**, **shape**, **sprite** and **camera**. There is no **Apply**
 button – changes are stored immediately.
 
+When no object is selected the panel is blank. Changing the role updates the
+visible categories automatically so the Shape or Sprite options appear at once.
+
 Rotation uses a circular dial that displays the angle value in degrees.
 
 Choosing the **shape** role reveals an additional **Shape** category
