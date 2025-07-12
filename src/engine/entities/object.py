@@ -308,6 +308,7 @@ def register_role(
 
 
 register_role("empty")
+register_role("shape", metadata={"shape": "square"})
 register_role("sprite", material=Material())
 register_role("camera", metadata={"width": 640, "height": 480, "active": False})
 

@@ -593,7 +593,7 @@ class PropertiesWidget(QWidget):
         obj_form.addRow("Name", self.name_edit)
         self.role_combo = QComboBox(self)
         if hasattr(self.role_combo, "addItems"):
-            self.role_combo.addItems(["empty", "sprite", "camera"])
+            self.role_combo.addItems(["empty", "shape", "sprite", "camera"])
         obj_form.addRow("Role", self.role_combo)
         self.tags_edit = QLineEdit(self)
         obj_form.addRow("Tags", self.tags_edit)
@@ -656,6 +656,28 @@ class PropertiesWidget(QWidget):
         self.scale_y.editingFinished.connect(self._sync_scale_y)
 
         layout.addWidget(self.transform_group)
+
+        # shape settings
+        self.shape_group = QGroupBox("Shape", self)
+        shape_form = QFormLayout(self.shape_group)
+        self.shape_combo = QComboBox(self)
+        if hasattr(self.shape_combo, "addItems"):
+            self.shape_combo.addItems(["square", "triangle", "circle"])
+        shape_form.addRow("Form", self.shape_combo)
+        layout.addWidget(self.shape_group)
+        if hasattr(self.shape_group, "hide"):
+            self.shape_group.hide()
+
+        # sprite settings
+        self.sprite_group = QGroupBox("Sprite", self)
+        sprite_form = QFormLayout(self.sprite_group)
+        self.image_edit = QLineEdit(self)
+        sprite_form.addRow("Image", self.image_edit)
+        self.smooth_check = QCheckBox("Smooth", self)
+        sprite_form.addRow(self.smooth_check)
+        layout.addWidget(self.sprite_group)
+        if hasattr(self.sprite_group, "hide"):
+            self.sprite_group.hide()
 
         try:
             from engine import physics  # noqa: F401
@@ -728,6 +750,21 @@ class PropertiesWidget(QWidget):
         self.flip_y.setChecked(flip_allowed and bool(getattr(obj, "flip_y", False)))
         self.pivot_x.setText(str(getattr(obj, "pivot_x", 0.0)))
         self.pivot_y.setText(str(getattr(obj, "pivot_y", 0.0)))
+        if hasattr(self, "shape_group"):
+            shape = str(getattr(obj, "shape", "square"))
+            order = ["square", "triangle", "circle"]
+            if hasattr(self.shape_combo, "setCurrentIndex"):
+                idx = order.index(shape) if shape in order else 0
+                self.shape_combo.setCurrentIndex(idx)
+            elif hasattr(self.shape_combo, "setCurrentText"):
+                self.shape_combo.setCurrentText(shape)
+        if hasattr(self, "sprite_group"):
+            self.image_edit.setText(getattr(obj, "image_path", ""))
+            self.smooth_check.setChecked(bool(getattr(obj, "smooth", True)))
+        if hasattr(self.shape_group, "setVisible"):
+            self.shape_group.setVisible(role == "shape")
+        if hasattr(self.sprite_group, "setVisible"):
+            self.sprite_group.setVisible(role == "sprite")
         if getattr(self, "physics_group", None):
             self.physics_enabled.setChecked(bool(getattr(obj, "physics_enabled", False)))
             body = getattr(obj, "body_type", "dynamic")
@@ -772,6 +809,16 @@ class PropertiesWidget(QWidget):
                 obj.body_type = (
                     "static" if self.body_combo.currentIndex() == 1 else "dynamic"
                 )
+        if hasattr(self.shape_group, "isVisible") and self.shape_group.isVisible():
+            if hasattr(self.shape_combo, "currentText"):
+                obj.shape = self.shape_combo.currentText()
+            else:
+                idx = self.shape_combo.currentIndex() if hasattr(self.shape_combo, "currentIndex") else 0
+                order = ["square", "triangle", "circle"]
+                obj.shape = order[idx] if 0 <= idx < len(order) else "square"
+        if hasattr(self.sprite_group, "isVisible") and self.sprite_group.isVisible():
+            obj.image_path = self.image_edit.text()
+            obj.smooth = self.smooth_check.isChecked()
 
     def _sync_scale_x(self):
         if self.link_scale.isChecked():
@@ -923,6 +970,7 @@ class EditorWindow(QMainWindow):
             self.properties.scale_y,
             self.properties.pivot_x,
             self.properties.pivot_y,
+            self.properties.image_edit,
         ]:
             if hasattr(edit, "editingFinished"):
                 edit.editingFinished.connect(self.apply_properties)
@@ -930,6 +978,7 @@ class EditorWindow(QMainWindow):
             self.properties.visible_check,
             self.properties.flip_x,
             self.properties.flip_y,
+            self.properties.smooth_check,
             getattr(self.properties, "physics_enabled", None),
         ]:
             if box is not None and hasattr(box, "stateChanged"):
@@ -938,6 +987,8 @@ class EditorWindow(QMainWindow):
             self.properties.rot_dial.valueChanged.connect(lambda *_: self.apply_properties(False))
         if hasattr(self.properties.role_combo, "currentIndexChanged"):
             self.properties.role_combo.currentIndexChanged.connect(lambda *_: self.apply_properties(False))
+        if hasattr(self.properties.shape_combo, "currentIndexChanged"):
+            self.properties.shape_combo.currentIndexChanged.connect(lambda *_: self.apply_properties(False))
         body = getattr(self.properties, "body_combo", None)
         if body is not None and hasattr(body, "currentIndexChanged"):
             body.currentIndexChanged.connect(lambda *_: self.apply_properties(False))

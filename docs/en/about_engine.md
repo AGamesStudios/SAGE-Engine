@@ -70,7 +70,7 @@ can provide consistent defaults.
 
 Objects carry a ``role`` string instead of a fixed class type. Register new
 roles with :func:`engine.entities.object.register_role` to provide default
-logic, materials or metadata. Built-in roles ``empty``, ``sprite`` and
+logic, materials or metadata. Built-in roles ``empty``, ``shape``, ``sprite`` and
 ``camera`` can be used directly with :func:`engine.entities.object.create_role`.
 ```python
 from engine.entities.object import register_role, create_role

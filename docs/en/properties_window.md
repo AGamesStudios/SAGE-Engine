@@ -5,10 +5,15 @@ as editing finishes and the scroll area keeps long lists accessible. Properties
 are grouped into categories such as **Transform** and **Appearance** so you can
 collapse sections you rarely adjust. The **Object** section lists the object
 **Role** rather than a fixed type. A drop-down lets you pick between the
-built-in roles **empty**, **sprite** and **camera**. There is no **Apply**
+built-in roles **empty**, **shape**, **sprite** and **camera**. There is no **Apply**
 button – changes are stored immediately.
 
 Rotation uses a circular dial that displays the angle value in degrees.
+
+Choosing the **shape** role reveals an additional **Shape** category
+with a drop-down to select **square**, **triangle** or **circle**. Picking
+the **sprite** role instead shows a **Sprite** category where you can
+enter the image path and toggle texture filtering via the **Smooth** box.
 
 ## Physics
 
