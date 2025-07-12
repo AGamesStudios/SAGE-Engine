@@ -111,7 +111,11 @@ class TransformBar(QWidget):
 
 
 class AngleDial(QDial):
-    """Dial that displays the current value inside the circle."""
+    """Dial that displays the current value inside the circle.
+
+    The wheel and simple clicks are ignored so the angle changes only when
+    dragging with the left mouse button.
+    """
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -119,7 +123,40 @@ class AngleDial(QDial):
         if hasattr(self._label, "setAlignment"):
             self._label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.valueChanged.connect(self._update_label)
+        self._drag_start = None
+        self._start_value = 0
         self._update_label(self.value())
+
+    def wheelEvent(self, event):  # pragma: no cover - ui tweak
+        """Ignore wheel scrolling so the dial doesn't change accidentally."""
+        event.ignore()
+
+    def mousePressEvent(self, event):  # pragma: no cover - ui tweak
+        if event.button() == Qt.MouseButton.LeftButton:
+            self._drag_start = (event.position().x(), event.position().y())
+            self._start_value = self.value()
+            event.accept()
+        else:
+            super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):  # pragma: no cover - ui tweak
+        if self._drag_start is not None:
+            cx, cy = self.width() / 2, self.height() / 2
+            x0, y0 = self._drag_start
+            ang0 = math.atan2(y0 - cy, x0 - cx)
+            ang1 = math.atan2(event.position().y() - cy, event.position().x() - cx)
+            delta = math.degrees(ang1 - ang0)
+            self.setValue(int((self._start_value + delta) % 360))
+            event.accept()
+        else:
+            super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event):  # pragma: no cover - ui tweak
+        if self._drag_start is not None:
+            self._drag_start = None
+            event.accept()
+        else:
+            super().mouseReleaseEvent(event)
 
     def resizeEvent(self, event):  # pragma: no cover - gui adjustment
         super().resizeEvent(event)
@@ -129,6 +166,13 @@ class AngleDial(QDial):
     def _update_label(self, value: int) -> None:
         if hasattr(self._label, "setText"):
             self._label.setText(str(value))
+
+
+class NoWheelLineEdit(QLineEdit):
+    """Line edit that ignores mouse wheel events."""
+
+    def wheelEvent(self, event):  # pragma: no cover - ui tweak
+        event.ignore()
 
 log = logging.getLogger(__name__)
 
@@ -589,13 +633,13 @@ class PropertiesWidget(QWidget):
 
         self.object_group = QGroupBox("Object", self)
         obj_form = QFormLayout(self.object_group)
-        self.name_edit = QLineEdit(self)
+        self.name_edit = NoWheelLineEdit(self)
         obj_form.addRow("Name", self.name_edit)
         self.role_combo = QComboBox(self)
         if hasattr(self.role_combo, "addItems"):
             self.role_combo.addItems(["empty", "shape", "sprite", "camera"])
         obj_form.addRow("Role", self.role_combo)
-        self.tags_edit = QLineEdit(self)
+        self.tags_edit = NoWheelLineEdit(self)
         obj_form.addRow("Tags", self.tags_edit)
         self.visible_check = QCheckBox("Visible", self)
         obj_form.addRow(self.visible_check)
@@ -605,8 +649,8 @@ class PropertiesWidget(QWidget):
         trans_form = QFormLayout(self.transform_group)
         pos_widget = QWidget(self)
         pos_layout = QHBoxLayout(pos_widget)
-        self.pos_x = QLineEdit(self)
-        self.pos_y = QLineEdit(self)
+        self.pos_x = NoWheelLineEdit(self)
+        self.pos_y = NoWheelLineEdit(self)
         pos_layout.addWidget(QLabel("X", self))
         pos_layout.addWidget(self.pos_x)
         pos_layout.addWidget(QLabel("Y", self))
@@ -624,8 +668,8 @@ class PropertiesWidget(QWidget):
 
         scale_widget = QWidget(self)
         scale_layout = QHBoxLayout(scale_widget)
-        self.scale_x = QLineEdit(self)
-        self.scale_y = QLineEdit(self)
+        self.scale_x = NoWheelLineEdit(self)
+        self.scale_y = NoWheelLineEdit(self)
         self.link_scale = QCheckBox("Link", self)
         scale_layout.addWidget(QLabel("X", self))
         scale_layout.addWidget(self.scale_x)
@@ -636,8 +680,8 @@ class PropertiesWidget(QWidget):
 
         pivot_widget = QWidget(self)
         pivot_layout = QHBoxLayout(pivot_widget)
-        self.pivot_x = QLineEdit(self)
-        self.pivot_y = QLineEdit(self)
+        self.pivot_x = NoWheelLineEdit(self)
+        self.pivot_y = NoWheelLineEdit(self)
         pivot_layout.addWidget(QLabel("X", self))
         pivot_layout.addWidget(self.pivot_x)
         pivot_layout.addWidget(QLabel("Y", self))
@@ -671,7 +715,7 @@ class PropertiesWidget(QWidget):
         # sprite settings
         self.sprite_group = QGroupBox("Sprite", self)
         sprite_form = QFormLayout(self.sprite_group)
-        self.image_edit = QLineEdit(self)
+        self.image_edit = NoWheelLineEdit(self)
         sprite_form.addRow("Image", self.image_edit)
         self.smooth_check = QCheckBox("Smooth", self)
         sprite_form.addRow(self.smooth_check)
@@ -981,6 +1025,7 @@ class EditorWindow(QMainWindow):
         self._console_handler = ConsoleHandler(self.console)
         logger.addHandler(self._console_handler)
         self.properties = PropertiesWidget(self)
+        self.properties.set_object(None)
         for edit in [
             self.properties.name_edit,
             self.properties.tags_edit,
@@ -1340,7 +1385,6 @@ class EditorWindow(QMainWindow):
         from PyQt6.QtWidgets import (
             QDialog,
             QFormLayout,
-            QLineEdit,
             QCheckBox,
             QPushButton,
             QFileDialog,
@@ -1351,7 +1395,7 @@ class EditorWindow(QMainWindow):
         dlg.setWindowTitle("Save Screenshot")
         form = QFormLayout(dlg)
 
-        path_edit = QLineEdit("screenshot.png", dlg)
+        path_edit = NoWheelLineEdit("screenshot.png", dlg)
         browse_btn = QPushButton("Browse", dlg)
 
         def browse() -> None:
