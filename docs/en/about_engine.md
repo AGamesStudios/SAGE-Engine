@@ -26,6 +26,9 @@ methods so resources can be processed without blocking the event loop.
 Each ``Engine`` maintains a sprite cache for loaded images. Adjust the
 ``image_cache_limit`` via ``EngineSettings`` or replace it entirely with
 ``engine.entities.game_object.set_sprite_cache`` when you need finer control.
+Engine settings also accept an ``Environment`` object holding global options
+such as the background colour. ``engine.environment`` can be updated at runtime
+to change these properties.
 
 Rotation angles wrap by default once they exceed ``360`` degrees. Configure the
 limit with ``EngineSettings.max_angle`` and use ``Object.rotate(da, around_bbox=True)``

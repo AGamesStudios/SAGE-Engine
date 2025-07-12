@@ -6,6 +6,7 @@ from .core.project import Project
 from .renderers import get_renderer
 from .core.engine import Engine
 from .core.settings import EngineSettings
+from .environment import Environment
 from .core.objects import register_object, object_from_dict, object_to_dict
 
 __all__ = [
@@ -45,8 +46,9 @@ def create_engine(project: Project, fps: int = 30) -> Engine:
     if rcls is None:
         from .renderers.opengl_renderer import OpenGLRenderer
         rcls = OpenGLRenderer
+    bg = getattr(project, 'background', (0, 0, 0))
     renderer = rcls(project.width, project.height, project.title,
-                    background=getattr(project, 'background', (0, 0, 0)))
+                    background=bg)
     events = scene.build_event_system(aggregate=False)
     settings = EngineSettings(
         width=project.width,
@@ -58,7 +60,8 @@ def create_engine(project: Project, fps: int = 30) -> Engine:
         renderer=renderer,
         camera=camera,
         keep_aspect=getattr(project, 'keep_aspect', True),
-        background=getattr(project, 'background', (0, 0, 0)),
+        background=bg,
+        environment=Environment(background=bg),
     )
     return Engine(settings=settings)
 
@@ -93,6 +96,7 @@ def run_scene(
     fps: int = 30,
     keep_aspect: bool = True,
     background: tuple[int, int, int] = (0, 0, 0),
+    *, environment: Environment | None = None,
 ) -> None:
     """Run a single scene file directly."""
     scene = load_scene(path)
@@ -101,8 +105,9 @@ def run_scene(
     if rcls is None:
         from .renderers.opengl_renderer import OpenGLRenderer
         rcls = OpenGLRenderer
+    env = environment or Environment(background=background)
     renderer = rcls(width, height, title or "SAGE 2D",
-                    background=background)
+                    background=env.background)
     events = scene.build_event_system(aggregate=False)
     settings = EngineSettings(
         width=width,
@@ -114,7 +119,8 @@ def run_scene(
         camera=camera,
         fps=fps,
         keep_aspect=keep_aspect,
-        background=background,
+        background=env.background,
+        environment=env,
     )
     return Engine(settings=settings).run()
 
@@ -127,6 +133,7 @@ async def run_scene_async(
     fps: int = 30,
     keep_aspect: bool = True,
     background: tuple[int, int, int] = (0, 0, 0),
+    *, environment: Environment | None = None,
 ) -> None:
     """Asynchronous variant of :func:`run_scene`."""
     scene = load_scene(path)
@@ -135,7 +142,8 @@ async def run_scene_async(
     if rcls is None:
         from .renderers.opengl_renderer import OpenGLRenderer
         rcls = OpenGLRenderer
-    renderer = rcls(width, height, title or "SAGE 2D", background=background)
+    env = environment or Environment(background=background)
+    renderer = rcls(width, height, title or "SAGE 2D", background=env.background)
     events = scene.build_event_system(aggregate=False)
     settings = EngineSettings(
         width=width,
@@ -147,6 +155,7 @@ async def run_scene_async(
         camera=camera,
         fps=fps,
         keep_aspect=keep_aspect,
-        background=background,
+        background=env.background,
+        environment=env,
     )
     return await Engine(settings=settings).run_async()

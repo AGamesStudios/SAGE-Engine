@@ -1,12 +1,13 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Tuple, Any, TYPE_CHECKING
 import os
 
 from ..inputs import InputBackend
 from ..renderers import Renderer
+from ..environment import Environment
 
 if TYPE_CHECKING:  # pragma: no cover - hints for static analyzers
     from .camera import Camera
@@ -36,3 +37,4 @@ class EngineSettings:
     image_cache_limit: int = int(os.environ.get("SAGE_IMAGE_CACHE_LIMIT", "32"))
     max_angle: float = 360.0
     rotate_bbox: bool = False
+    environment: Environment = field(default_factory=Environment)

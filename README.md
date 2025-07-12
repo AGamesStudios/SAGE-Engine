@@ -53,6 +53,8 @@ used by the renderer.
 If you specify ``--target`` you must add that directory to ``PYTHONPATH`` so the
 engine can be imported.
 Extras are listed in ``pyproject.toml`` and can be supplied with ``--extras``.
+An ``Environment`` object stores global scene settings such as the background
+colour and is passed to ``EngineSettings`` when creating an engine.
 
 ### Editor
 The Qt editor uses the Fusion style with a dark palette. High-DPI scaling keeps

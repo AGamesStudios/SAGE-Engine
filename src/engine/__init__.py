@@ -35,6 +35,7 @@ _lazy = {
     'Project': ('engine.core.project', 'Project'),
     'Camera': ('engine.core.camera', 'Camera'),
     'EngineSettings': ('engine.core.settings', 'EngineSettings'),
+    'Environment': ('engine.environment', 'Environment'),
     'Mesh': ('engine.mesh_utils', 'Mesh'),
     'create_square_mesh': ('engine.mesh_utils', 'create_square_mesh'),
     'create_triangle_mesh': ('engine.mesh_utils', 'create_triangle_mesh'),

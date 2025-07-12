@@ -11,6 +11,7 @@ from .extensions import EngineExtension
 from .project import Project
 from ..inputs import get_input, InputBackend
 from .settings import EngineSettings
+from ..environment import Environment
 from .camera import Camera
 from ..renderers import (
     Renderer,
@@ -46,6 +47,7 @@ class Engine:
                  title="SAGE 2D", renderer: Renderer | str | None = None,
                  camera: Camera | None = None, keep_aspect: bool = True,  # pyright: ignore[reportGeneralTypeIssues]
                  background: tuple[int, int, int] = (0, 0, 0),
+                 environment: Environment | None = None,
                  input_backend: str | type[InputBackend] | InputBackend = "sdl",
                  max_delta: float = 0.1,
                  async_events: bool = False,
@@ -68,6 +70,7 @@ class Engine:
             camera = settings.camera
             keep_aspect = settings.keep_aspect
             background = settings.background
+            environment = settings.environment
             input_backend = settings.input_backend
             max_delta = settings.max_delta
             async_events = settings.async_events
@@ -85,6 +88,8 @@ class Engine:
             cache = game_object.SpriteCache()
             game_object.set_sprite_cache(cache)
             self.sprite_cache = cache
+        if environment is None:
+            environment = Environment(background)
         self.fps = fps
         self.vsync = vsync
         self._frame_interval = 0 if vsync else (1.0 / fps if fps else 0)
@@ -165,13 +170,14 @@ class Engine:
             except Exception:
                 logger.exception("Failed to set vsync")
         cast(Any, self.renderer).keep_aspect = keep_aspect
-        cast(Any, self.renderer).background = tuple(background)
+        cast(Any, self.renderer).background = tuple(environment.background)
         # hide editor-only gizmos in the game window
         if hasattr(self.renderer, 'show_axes'):
             cast(Any, self.renderer).show_axes = False
         if hasattr(self.renderer, 'show_grid'):
             cast(Any, self.renderer).show_grid = False
-        self.bg_color = tuple(background)
+        self.bg_color = tuple(environment.background)
+        self.environment = environment
         # create the input backend using the registry. Backends may optionally
         # accept the renderer widget as their first argument
         if isinstance(input_backend, InputBackend):
@@ -265,6 +271,7 @@ class Engine:
             events=self.events,
             keep_aspect=getattr(self.renderer, "keep_aspect", True),
             background=getattr(self.renderer, "background", (0, 0, 0)),
+            environment=self.environment,
             input_backend=type(self.input),
             max_delta=self.max_delta,
             async_events=self.async_events,
