@@ -42,6 +42,9 @@ sage-editor = "sage_editor:main"
 where = ["src"]
 include = ["engine*", "sage_editor*"]
 
+[tool.setuptools.package-data]
+"sage_editor" = ["plugins/plugins.json"]
+
 [tool.pyright]
 include = ["src"]
 typeCheckingMode = "basic"
