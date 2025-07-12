@@ -57,7 +57,8 @@ Extras are listed in ``pyproject.toml`` and can be supplied with ``--extras``.
 ### Editor
 The Qt editor uses the Fusion style with a dark palette. High-DPI scaling keeps
 text readable. The **File** menu opens and saves ``.sageproject`` files and the
-toolbar includes a screenshot button.
+toolbar includes a screenshot button. The *View* menu lets you hide the bounding
+box around the selection.
 
 ## Logs
 Log files are written to `~/.cache/sage/logs/engine.log` by default. Configure a

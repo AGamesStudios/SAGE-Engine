@@ -496,6 +496,20 @@ def test_mirror_resize_toggle(monkeypatch):
     assert win.mirror_resize
 
 
+def test_bbox_toggle(monkeypatch):
+    _stub_gl(monkeypatch, {})
+    _setup_qt(monkeypatch)
+
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    viewport = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(viewport)
+
+    win = viewport.EditorWindow()
+    assert win.show_bbox
+    win.toggle_bbox(False)
+    assert not win.show_bbox
+
+
 def test_rect_mode_gizmos(monkeypatch):
     _stub_gl(monkeypatch, {})
     _setup_qt(monkeypatch)

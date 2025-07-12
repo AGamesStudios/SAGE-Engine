@@ -215,51 +215,42 @@ class _ViewportMixin:
             self._drag_corner = None
             self._last_world = None
             obj = self._window.selected_obj
-            if obj is not None:
-                mode = self._window.transform_mode
-                hit = None
-                if mode == "move":
-                    hit = self._hit_move_handle(self._press_pos)
-                elif mode == "scale":
-                    hit = self._hit_scale_handle(self._press_pos)
-                elif mode == "rotate":
-                    hit = "rotate" if self._hit_rotate_handle(self._press_pos) else None
-
-                if hit:
-                    self._drag_mode = hit
-                    self._last_world = self._window.screen_to_world(self._press_pos)
+            if (
+                obj is not None
+                and self._window.transform_mode == "rect"
+                and self._window.show_bbox
+            ):
+                wx, wy = self._window.screen_to_world(self._press_pos)
+                if isinstance(obj, Camera):
+                    left, bottom, w, h = obj.view_rect()
                 else:
-                    wx, wy = self._window.screen_to_world(self._press_pos)
-                    if isinstance(obj, Camera):
-                        left, bottom, w, h = obj.view_rect()
-                    else:
-                        left, bottom, w, h = obj.rect()
-                    cam = self._window.camera
-                    th = self.HANDLE_PIXELS / (units.UNITS_PER_METER * cam.zoom)
-                    corners = {
-                        "bl": (left, bottom),
-                        "br": (left + w, bottom),
-                        "tl": (left, bottom + h),
-                        "tr": (left + w, bottom + h),
-                    }
-                    rot_y = bottom + h + _ViewportMixin.ROTATE_OFFSET / (
-                        units.UNITS_PER_METER * cam.zoom
-                    )
-                    rot_pos = (obj.x, rot_y)
-                    for name, (cx, cy) in corners.items():
-                        if abs(wx - cx) <= th and abs(wy - cy) <= th:
-                            self._drag_mode = "resize"
-                            self._drag_corner = name
-                            self._last_world = (wx, wy)
-                            break
-                    else:
-                        if abs(wx - rot_pos[0]) <= th and abs(wy - rot_pos[1]) <= th:
-                            self._drag_mode = "rotate"
-                            self._drag_corner = "rot"
-                            self._last_world = (wx, wy)
-                        elif left <= wx <= left + w and bottom <= wy <= bottom + h:
-                            self._drag_mode = "move"
-                            self._last_world = (wx, wy)
+                    left, bottom, w, h = obj.rect()
+                cam = self._window.camera
+                th = self.HANDLE_PIXELS / (units.UNITS_PER_METER * cam.zoom)
+                corners = {
+                    "bl": (left, bottom),
+                    "br": (left + w, bottom),
+                    "tl": (left, bottom + h),
+                    "tr": (left + w, bottom + h),
+                }
+                rot_y = bottom + h + _ViewportMixin.ROTATE_OFFSET / (
+                    units.UNITS_PER_METER * cam.zoom
+                )
+                rot_pos = (obj.x, rot_y)
+                for name, (cx, cy) in corners.items():
+                    if abs(wx - cx) <= th and abs(wy - cy) <= th:
+                        self._drag_mode = "resize"
+                        self._drag_corner = name
+                        self._last_world = (wx, wy)
+                        break
+                else:
+                    if abs(wx - rot_pos[0]) <= th and abs(wy - rot_pos[1]) <= th:
+                        self._drag_mode = "rotate"
+                        self._drag_corner = "rot"
+                        self._last_world = (wx, wy)
+                    elif left <= wx <= left + w and bottom <= wy <= bottom + h:
+                        self._drag_mode = "move"
+                        self._last_world = (wx, wy)
             try:
                 from PyQt6.QtGui import QCursor  # type: ignore[import-not-found]
                 cast(QWidget, self).setCursor(QCursor(Qt.CursorShape.ClosedHandCursor))
@@ -816,6 +807,7 @@ class EditorWindow(QMainWindow):
         # keep the viewport camera separate from scene objects
         self.renderer.show_grid = True
         self.mirror_resize = False
+        self.show_bbox = True
         self.transform_mode = "move"
         self.set_renderer(self.renderer)
         self.selected_obj: Optional[GameObject] = None
@@ -880,6 +872,15 @@ class EditorWindow(QMainWindow):
                 mirror_act.setChecked(False)
             if hasattr(mirror_act, "triggered"):
                 mirror_act.triggered.connect(self.toggle_mirror)
+
+        bbox_act = view_menu.addAction("Show Bounding Box")
+        if bbox_act is not None:
+            if hasattr(bbox_act, "setCheckable"):
+                bbox_act.setCheckable(True)
+            if hasattr(bbox_act, "setChecked"):
+                bbox_act.setChecked(True)
+            if hasattr(bbox_act, "triggered"):
+                bbox_act.triggered.connect(self.toggle_bbox)
 
         menubar.addMenu("About")
 
@@ -968,6 +969,10 @@ class EditorWindow(QMainWindow):
 
     def toggle_mirror(self, checked: bool) -> None:
         self.mirror_resize = bool(checked)
+
+    def toggle_bbox(self, checked: bool) -> None:
+        self.show_bbox = bool(checked)
+        self.draw_scene(update_list=False)
 
     def set_mode(self, mode: str) -> None:
         self.transform_mode = mode
@@ -1292,27 +1297,28 @@ class EditorWindow(QMainWindow):
             left, bottom, w, h = obj.view_rect()
         else:
             left, bottom, w, h = obj.rect()
-        points = [
-            (left, bottom),
-            (left + w, bottom),
-            (left + w, bottom + h),
-            (left, bottom + h),
-            (left, bottom),
-        ]
-        g = gizmos.polyline_gizmo(points, color=(1, 0.4, 0.2, 1), frames=None)
-        if hasattr(self.renderer, "add_gizmo"):
-            self.renderer.add_gizmo(g)
-            self.renderer.add_gizmo(
-                gizmos.circle_gizmo(
-                    obj.x,
-                    obj.y,
-                    size=4,
-                    color=(0.5, 0.5, 0.5, 1),
-                    thickness=1,
-                    frames=None,
+        if self.show_bbox:
+            points = [
+                (left, bottom),
+                (left + w, bottom),
+                (left + w, bottom + h),
+                (left, bottom + h),
+                (left, bottom),
+            ]
+            g = gizmos.polyline_gizmo(points, color=(1, 0.4, 0.2, 1), frames=None)
+            if hasattr(self.renderer, "add_gizmo"):
+                self.renderer.add_gizmo(g)
+                self.renderer.add_gizmo(
+                    gizmos.circle_gizmo(
+                        obj.x,
+                        obj.y,
+                        size=4,
+                        color=(0.5, 0.5, 0.5, 1),
+                        thickness=1,
+                        frames=None,
+                    )
                 )
-            )
-            if self.transform_mode == "rect":
+        if self.transform_mode == "rect" and self.show_bbox:
                 handle_size = 5
                 cam = self.camera
                 rot_y = bottom + h + _ViewportMixin.ROTATE_OFFSET / (
