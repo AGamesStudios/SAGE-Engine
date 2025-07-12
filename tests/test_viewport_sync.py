@@ -606,3 +606,39 @@ def test_model_toggle(monkeypatch):
     assert not win.modeling
     win.toggle_model(True)
     assert win.modeling
+
+
+def test_mode_combo(monkeypatch):
+    _stub_gl(monkeypatch, {})
+    _setup_qt(monkeypatch)
+
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    viewport = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(viewport)
+
+    win = viewport.EditorWindow()
+    assert win.mode_combo.currentText() == 'Edit'
+    win.mode_combo.setCurrentIndex(1)
+    assert win.modeling
+    win.mode_combo.setCurrentIndex(0)
+    assert not win.modeling
+
+
+def test_modeling_normals(monkeypatch):
+    _stub_gl(monkeypatch, {})
+    _setup_qt(monkeypatch)
+
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    viewport = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(viewport)
+
+    win = viewport.EditorWindow()
+    obj = win.create_object()
+    class DummyMesh:
+        vertices = [(-0.5, -0.5), (0.5, -0.5), (0.5, 0.5), (-0.5, 0.5)]
+        indices = [0, 1, 2, 0, 2, 3]
+    obj.mesh = DummyMesh()
+    win.select_object(obj)
+    assert len(win.renderer.gizmos) == 2
+    win.toggle_model(True)
+    assert len(win.renderer.gizmos) == 11

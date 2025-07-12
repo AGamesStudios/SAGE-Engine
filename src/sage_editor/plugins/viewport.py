@@ -40,6 +40,11 @@ try:  # optional for tests
 except Exception:  # pragma: no cover - fallback when QFrame missing
     QFrame = QWidget  # type: ignore[misc]
 from PyQt6.QtGui import QAction, QKeySequence  # type: ignore[import-not-found]
+try:  # optional QPainter for fancy dial
+    from PyQt6.QtGui import QPainter, QColor  # type: ignore[import-not-found]
+except Exception:  # pragma: no cover - fallback for stubs
+    QPainter = None  # type: ignore[assignment]
+    QColor = None  # type: ignore[assignment]
 
 try:  # support minimal test stubs
     from PyQt6.QtWidgets import QTextEdit  # type: ignore[import-not-found]
@@ -92,16 +97,12 @@ class TransformBar(QWidget):
             layout.setContentsMargins(0, 0, 0, 0)
         if hasattr(layout, "setSpacing"):
             layout.setSpacing(2)
-        self.edit_btn = QPushButton("Edit", self)
-        self.model_btn = QPushButton("Model", self)
         self.move_btn = QPushButton("Move", self)
         self.rotate_btn = QPushButton("Rotate", self)
         self.scale_btn = QPushButton("Scale", self)
         self.rect_btn = QPushButton("Rect", self)
         self.local_btn = QPushButton("Local", self)
         for btn in [
-            self.edit_btn,
-            self.model_btn,
             self.move_btn,
             self.rotate_btn,
             self.scale_btn,
@@ -115,8 +116,8 @@ class TransformBar(QWidget):
             layout.addStretch()
 
 
-class AngleDial(QDial):
-    """Dial that displays the current value inside the circle.
+class ProgressDial(QDial):
+    """Circular dial that fills like a progress bar and shows the angle.
 
     The wheel and simple clicks are ignored so the angle changes only when
     dragging with the left mouse button.
@@ -131,6 +132,20 @@ class AngleDial(QDial):
         self._drag_start = None
         self._start_value = 0
         self._update_label(self.value())
+
+    def paintEvent(self, event):  # pragma: no cover - visual
+        super().paintEvent(event)
+        if QPainter is not None and QColor is not None:
+            try:
+                painter = QPainter(self)
+                rect = self.rect().adjusted(2, 2, -2, -2)
+                start = 90 * 16
+                span = -self.value() * 16
+                painter.setBrush(QColor(100, 150, 255, 80))
+                painter.setPen(Qt.PenStyle.NoPen)
+                painter.drawPie(rect, start, span)
+            except Exception:
+                pass
 
     def wheelEvent(self, event):  # pragma: no cover - ui tweak
         """Ignore wheel scrolling so the dial doesn't change accidentally."""
@@ -753,7 +768,7 @@ class PropertiesWidget(QWidget):
         pos_layout.addWidget(self.pos_y)
         trans_form.addRow("Position", pos_widget)
 
-        self.rot_dial = AngleDial(self)
+        self.rot_dial = ProgressDial(self)
         self.rot_dial.setRange(0, 360)
         trans_form.addRow("Rotation", self.rot_dial)
 
@@ -1070,8 +1085,6 @@ class EditorWindow(QMainWindow):
         self.mode_bar.local_btn.clicked.connect(
             lambda checked: self.toggle_local(checked)
         )
-        self.mode_bar.edit_btn.clicked.connect(lambda: self.toggle_model(False))
-        self.mode_bar.model_btn.clicked.connect(lambda: self.toggle_model(True))
         if hasattr(self.mode_bar.move_btn, "setChecked"):
             self.mode_bar.move_btn.setChecked(True)
         self.console = QTextEdit(self)
@@ -1290,6 +1303,14 @@ class EditorWindow(QMainWindow):
         left_spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         tbar.addWidget(left_spacer)
 
+        self.mode_combo = QComboBox(self)
+        self.mode_combo.addItems(["Edit", "Model"])
+        self.mode_combo.setCurrentIndex(0)
+        self.mode_combo.currentIndexChanged.connect(
+            lambda i: self.toggle_model(bool(i))
+        )
+        tbar.addWidget(self.mode_combo)
+
         run_action = QAction("Run", self)
         if run_action is not None and hasattr(run_action, "triggered"):
             run_action.triggered.connect(self.start_game)
@@ -1367,14 +1388,14 @@ class EditorWindow(QMainWindow):
     def toggle_model(self, modeling: bool) -> None:
         """Switch between edit and model modes."""
         self.modeling = modeling
-        if hasattr(self.mode_bar, "model_btn") and hasattr(
-            self.mode_bar.model_btn, "setChecked"
-        ):
-            self.mode_bar.model_btn.setChecked(modeling)
-        if hasattr(self.mode_bar, "edit_btn") and hasattr(
-            self.mode_bar.edit_btn, "setChecked"
-        ):
-            self.mode_bar.edit_btn.setChecked(not modeling)
+        if hasattr(self, "mode_combo") and hasattr(self.mode_combo, "currentIndex"):
+            new_idx = 1 if modeling else 0
+            try:
+                cur = self.mode_combo.currentIndex()
+            except Exception:
+                cur = new_idx
+            if cur != new_idx and hasattr(self.mode_combo, "setCurrentIndex"):
+                self.mode_combo.setCurrentIndex(new_idx)
         self.draw_scene(update_list=False)
 
     def update_cursor(self, x: float, y: float) -> None:
@@ -1686,6 +1707,24 @@ class EditorWindow(QMainWindow):
         vy = (vy - off_y) / sy + off_y
         return vx / w if w else 0.0, vy / h if h else 0.0
 
+    def _vertex_normal(self, verts: list[tuple[float, float]], i: int) -> tuple[float, float]:
+        """Return a unit normal for vertex ``i`` in mesh space."""
+        prev = verts[i - 1]
+        cur = verts[i]
+        nxt = verts[(i + 1) % len(verts)]
+        dx1 = cur[0] - prev[0]
+        dy1 = cur[1] - prev[1]
+        dx2 = nxt[0] - cur[0]
+        dy2 = nxt[1] - cur[1]
+        n1 = (dy1, -dx1)
+        n2 = (dy2, -dx2)
+        len1 = math.hypot(*n1) or 1.0
+        len2 = math.hypot(*n2) or 1.0
+        nx = n1[0] / len1 + n2[0] / len2
+        ny = n1[1] / len1 + n2[1] / len2
+        length = math.hypot(nx, ny) or 1.0
+        return nx / length, ny / length
+
     def set_renderer(self, renderer):
         self.viewport.renderer = renderer
 
@@ -1825,8 +1864,8 @@ class EditorWindow(QMainWindow):
                 )
             )
         if self.modeling and getattr(obj, "mesh", None) is not None:
-            for vx, vy in obj.mesh.vertices:
-                wx, wy = self.mesh_to_world(obj, vx, vy)
+            verts = [self.mesh_to_world(obj, vx, vy) for vx, vy in obj.mesh.vertices]
+            for wx, wy in verts:
                 self.renderer.add_gizmo(
                     gizmos.square_gizmo(
                         wx,
@@ -1838,6 +1877,21 @@ class EditorWindow(QMainWindow):
                         filled=True,
                     )
                 )
+            if len(verts) > 1:
+                self.renderer.add_gizmo(
+                    gizmos.polyline_gizmo(verts + [verts[0]], color=(0.4, 1.0, 0.4, 1), frames=None)
+                )
+                for i, (vx, vy) in enumerate(obj.mesh.vertices):
+                    nx, ny = self._vertex_normal(obj.mesh.vertices, i)
+                    wx, wy = verts[i]
+                    wx2, wy2 = self.mesh_to_world(obj, vx + nx * 0.05, vy + ny * 0.05)
+                    self.renderer.add_gizmo(
+                        gizmos.polyline_gizmo(
+                            [(wx, wy), (wx2, wy2)],
+                            color=(0.6, 0.6, 1.0, 1),
+                            frames=None,
+                        )
+                    )
         if self.transform_mode == "rect":
             handle_size = 5
             cam = self.camera
