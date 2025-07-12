@@ -30,7 +30,6 @@ from PyQt6.QtWidgets import (  # type: ignore[import-not-found]
     QDial,
     QComboBox,
     QWidget,
-    QStyleFactory,
 )
 try:  # optional for tests
     from PyQt6.QtWidgets import QFrame  # type: ignore[import-not-found]
@@ -249,8 +248,8 @@ class NoWheelSpinBox(QDoubleSpinBox):
 log = logging.getLogger(__name__)
 
 
-def _apply_dark_palette(app: QApplication) -> None:
-    """Apply a dark palette with a soft orange accent to *app*."""
+def _apply_sage_palette(app: QApplication) -> None:
+    """Apply the SAGE Flat palette with a soft orange accent to *app*."""
     from PyQt6.QtGui import QColor, QPalette  # type: ignore[import-not-found]
 
     accent = QColor(255, 170, 0)
@@ -271,11 +270,9 @@ def _apply_dark_palette(app: QApplication) -> None:
     app.setPalette(palette)
 
 
-def apply_fusion_style(app: QApplication) -> None:
-    """Use the Qt Fusion style with a dark palette on *app*."""
-    if hasattr(QApplication, "setStyle"):
-        QApplication.setStyle(QStyleFactory.create("Fusion"))
-        _apply_dark_palette(app)
+def apply_sage_style(app: QApplication) -> None:
+    """Use the custom SAGE Flat style on *app*."""
+    _apply_sage_palette(app)
     font = app.font()
     if font.pointSize() < 10:
         font.setPointSize(10)
@@ -1816,7 +1813,7 @@ def init_editor(editor) -> None:
             QCoreApplication.setAttribute(attr, True)
         app = QApplication([])
         created = True
-    apply_fusion_style(app)
+    apply_sage_style(app)
 
     window = EditorWindow(editor._menus, editor._toolbar)
     window.resize(800, 600)

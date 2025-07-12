@@ -59,9 +59,9 @@ An ``Environment`` object stores global scene settings such as the background
 colour and is passed to ``EngineSettings`` when creating an engine.
 
 ### Editor
-The Qt editor uses the Fusion style with a custom dark palette.
+The editor uses the custom **SAGE Flat** style.
 High-DPI scaling keeps text readable.
-The palette features a soft orange accent for highlights and links.
+The palette is predominantly gray with soft yellow and orange highlights.
 The **File** menu opens and saves ``.sageproject`` files and the toolbar
 includes a screenshot button.
 The *View* menu lets you hide the bounding box around the selection.
