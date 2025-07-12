@@ -135,8 +135,10 @@ def _setup_qt(monkeypatch):
         def __init__(self, *a, **k):
             super().__init__(*a, **k)
             self._checked = False
+            self.stateChanged = DummySignal()
         def setChecked(self, b):
             self._checked = b
+            self.stateChanged.emit(b)
         def isChecked(self):
             return self._checked
 
@@ -145,10 +147,12 @@ def _setup_qt(monkeypatch):
             super().__init__(*a, **k)
             self._items = []
             self._index = 0
+            self.currentIndexChanged = DummySignal()
         def addItems(self, items):
             self._items.extend(items)
         def setCurrentIndex(self, idx):
             self._index = idx
+            self.currentIndexChanged.emit(idx)
         def currentIndex(self):
             return self._index
         def count(self):
@@ -159,6 +163,7 @@ def _setup_qt(monkeypatch):
             super().__init__(*a, **k)
             self._value = 0
             self.orientation = orientation
+            self.valueChanged = DummySignal()
         def setRange(self, a, b):
             self._min = a
             self._max = b
@@ -166,6 +171,7 @@ def _setup_qt(monkeypatch):
             return self._value
         def setValue(self, v):
             self._value = v
+            self.valueChanged.emit(v)
 
     class QGroupBox(QWidget):
         def __init__(self, *a, **k):

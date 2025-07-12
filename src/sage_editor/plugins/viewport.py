@@ -899,6 +899,21 @@ class EditorWindow(QMainWindow):
         ]:
             if hasattr(edit, "editingFinished"):
                 edit.editingFinished.connect(self.apply_properties)
+        for box in [
+            self.properties.visible_check,
+            self.properties.flip_x,
+            self.properties.flip_y,
+            getattr(self.properties, "physics_enabled", None),
+        ]:
+            if box is not None and hasattr(box, "stateChanged"):
+                box.stateChanged.connect(lambda *_: self.apply_properties(False))
+        if hasattr(self.properties.rot_slider, "valueChanged"):
+            self.properties.rot_slider.valueChanged.connect(lambda *_: self.apply_properties(False))
+        if hasattr(self.properties.role_combo, "currentIndexChanged"):
+            self.properties.role_combo.currentIndexChanged.connect(lambda *_: self.apply_properties(False))
+        body = getattr(self.properties, "body_combo", None)
+        if body is not None and hasattr(body, "currentIndexChanged"):
+            body.currentIndexChanged.connect(lambda *_: self.apply_properties(False))
         self.resources = QListWidget()
         self.resource_root = ""
         self.resources_label = QLabel("Resources:")
@@ -1443,16 +1458,20 @@ class EditorWindow(QMainWindow):
                     break
 
     def update_properties(self):
+        self._updating_properties = True
         self.properties.set_object(self.selected_obj)
+        self._updating_properties = False
 
-    def apply_properties(self):
+    def apply_properties(self, update_list: bool = True) -> None:
+        if getattr(self, "_updating_properties", False):
+            return
         if self.selected_obj is None:
             return
         try:
             self.properties.apply_to_object(self.selected_obj)
         except Exception:
             log.exception("Failed to apply properties")
-        self.draw_scene()
+        self.draw_scene(update_list=update_list)
 
     def find_object_at(self, x: float, y: float) -> Optional[GameObject]:
         for obj in reversed(self.scene.objects):
