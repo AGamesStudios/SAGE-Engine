@@ -55,6 +55,17 @@ def draw_gizmo(
         glVertex2f(0.0, 0.0)
         glVertex2f(size - head, 0.0)
         glEnd()
+
+        hxy = hover == "xy" or dragging == "xy"
+        color_xy = (1.0, 1.0, 0.0, 1.0) if hxy else (0.8, 0.8, 0.0, 1.0)
+        glColor4f(*color_xy)
+        sq_size = sq * (1.5 if hxy else 1.0)
+        glBegin(GL_QUADS)
+        glVertex2f(-sq_size, -sq_size)
+        glVertex2f(sq_size, -sq_size)
+        glVertex2f(sq_size, sq_size)
+        glVertex2f(-sq_size, sq_size)
+        glEnd()
         glBegin(GL_TRIANGLES)
         glVertex2f(size, 0.0)
         glVertex2f(size - head, head / 2)
@@ -130,6 +141,7 @@ def draw_gizmo(
             glVertex2f(math.cos(ang) * ring_r, math.sin(ang) * ring_r * sign)
         glEnd()
         glLineWidth(ring_w)
+    glLineWidth(1.0)
     glPopMatrix()
 
 

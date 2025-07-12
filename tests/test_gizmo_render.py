@@ -72,3 +72,13 @@ def test_polyline_gizmo(monkeypatch):
     ogl_gizmos.draw_basic_gizmo(None, g, None)
     assert calls['verts'] == [(0, 0), (1, 1), (2, 0)]
     assert calls['color'][0] == (1, 0, 0, 1)
+
+
+def test_move_gizmo_resets_width(monkeypatch):
+    calls = {}
+    ogl_gizmos = _load_gizmos(monkeypatch, calls)
+    Dummy = type('Obj', (), {'x': 0.0, 'y': 0.0, 'angle': 0.0})
+    obj = Dummy()
+    renderer = type('R', (), {'widget': None})()
+    ogl_gizmos.draw_gizmo(renderer, obj, None, hover=None, dragging=None, mode='move', local=False)
+    assert calls['width'][-1] == 1.0
