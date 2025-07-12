@@ -248,8 +248,8 @@ class NoWheelSpinBox(QDoubleSpinBox):
 log = logging.getLogger(__name__)
 
 
-def _apply_sage_palette(app: QApplication) -> None:
-    """Apply the SAGE Flat palette with a soft orange accent to *app*."""
+def _apply_ember_palette(app: QApplication) -> None:
+    """Apply the SAGE Ember palette with a soft orange accent to *app*."""
     from PyQt6.QtGui import QColor, QPalette  # type: ignore[import-not-found]
 
     accent = QColor(255, 170, 0)
@@ -270,9 +270,45 @@ def _apply_sage_palette(app: QApplication) -> None:
     app.setPalette(palette)
 
 
-def apply_sage_style(app: QApplication) -> None:
-    """Use the custom SAGE Flat style on *app*."""
-    _apply_sage_palette(app)
+def _apply_ember_stylesheet(app: QApplication) -> None:
+    """Style common widgets with an orange highlight."""
+    stylesheet = """
+    QPushButton, QToolButton {
+        background-color: #353535;
+        border: 1px solid #ffae00;
+        padding: 4px;
+        border-radius: 4px;
+    }
+    QPushButton:hover, QToolButton:hover {
+        background-color: #474747;
+    }
+    QDockWidget::title {
+        background-color: #353535;
+        text-align: center;
+    }
+    QCheckBox::indicator:checked, QRadioButton::indicator:checked {
+        background-color: #ffae00;
+        border: 1px solid #ffae00;
+    }
+    QSlider::groove:horizontal {
+        height: 6px;
+        background: #555;
+    }
+    QSlider::handle:horizontal {
+        background: #ffae00;
+        border: 1px solid #ffae00;
+        width: 12px;
+        margin: -5px 0;
+        border-radius: 3px;
+    }
+    """
+    app.setStyleSheet(stylesheet)
+
+
+def apply_ember_style(app: QApplication) -> None:
+    """Use the custom SAGE Ember style on *app*."""
+    _apply_ember_palette(app)
+    _apply_ember_stylesheet(app)
     font = app.font()
     if font.pointSize() < 10:
         font.setPointSize(10)
@@ -1813,7 +1849,7 @@ def init_editor(editor) -> None:
             QCoreApplication.setAttribute(attr, True)
         app = QApplication([])
         created = True
-    apply_sage_style(app)
+    apply_ember_style(app)
 
     window = EditorWindow(editor._menus, editor._toolbar)
     window.resize(800, 600)
