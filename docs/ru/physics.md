@@ -22,3 +22,11 @@ engine.add_extension(PhysicsExtension(world))
 Если в сцене есть объекты с ``physics_enabled=True``, движок автоматически
 создаёт ``PhysicsWorld`` и подключает ``PhysicsExtension`` – физика работает
 без дополнительного кода.
+
+Метод ``debug_draw`` выводит прямоугольные коллайдеры для отладки:
+
+```python
+world.debug_draw(engine.renderer)
+```
+
+Каждое тело подсвечивается зелёным контуром.

@@ -22,3 +22,11 @@ space in sync.
 When a scene contains objects with ``physics_enabled`` set, the engine
 automatically creates a ``PhysicsWorld`` and adds a ``PhysicsExtension`` so
 physics runs without extra setup.
+
+``PhysicsWorld`` can draw simple box colliders for debugging:
+
+```python
+world.debug_draw(engine.renderer)
+```
+
+Each body is visualised with a green outline in world space.

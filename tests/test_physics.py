@@ -17,7 +17,16 @@ class _Body:
 
     def __init__(self, *a, **k) -> None:
         self.shapes = []
-        self.position = type("P", (), {"x": 0, "y": 0})()
+        self._pos = type("P", (), {"x": 0.0, "y": 0.0})()
+        self.angle = 0.0
+
+    @property
+    def position(self):
+        return self._pos
+
+    @position.setter
+    def position(self, value):
+        self._pos.x, self._pos.y = value
 
 
 class _Space:
@@ -79,3 +88,36 @@ def test_engine_auto_world(monkeypatch):
     eng = Engine(scene=scene, renderer="null")
     assert eng.physics_world is not None
     assert eng.physics_world.bodies and eng.physics_world.bodies[0].obj is obj
+
+
+def test_debug_draw(monkeypatch):
+    fake = type(
+        "pymunk",
+        (),
+        {
+            "Space": _Space,
+            "Body": _Body,
+            "moment_for_box": lambda m, s: 0,
+            "Poly": type("Poly", (), {"create_box": lambda b, s: object()}),
+        },
+    )
+    monkeypatch.setitem(sys.modules, "pymunk", fake)
+    sys.modules.pop("engine.physics", None)
+    import engine.physics as phys
+    import importlib
+    importlib.reload(phys)
+
+    world = phys.PhysicsWorld()
+    obj = object()
+    world.add_box(obj, size=(2, 4))
+
+    class R:
+        def __init__(self):
+            self.gizmos = []
+
+        def add_gizmo(self, g):
+            self.gizmos.append(g)
+
+    r = R()
+    world.debug_draw(r)
+    assert r.gizmos and r.gizmos[0].vertices

@@ -20,6 +20,7 @@ __all__ = ["PhysicsWorld", "PhysicsExtension"]
 class PhysicsBody:
     obj: Any
     body: Any
+    size: tuple[float, float]
 
 
 class PhysicsWorld:
@@ -48,7 +49,7 @@ class PhysicsWorld:
         body.position = (getattr(obj, "x", 0.0), getattr(obj, "y", 0.0))
         shape = pymunk.Poly.create_box(body, size)
         self.space.add(body, shape)
-        pb = PhysicsBody(obj, body)
+        pb = PhysicsBody(obj, body, size)
         self.bodies.append(pb)
         return pb
 
@@ -73,6 +74,39 @@ class PhysicsWorld:
             if hasattr(obj, "y"):
                 obj.y = float(pos.y)
 
+    def debug_draw(self, renderer) -> None:
+        """Draw simple box gizmos for each body using ``renderer``."""
+        if pymunk is None:
+            raise ImportError("pymunk is required for physics")
+        from .gizmos import polyline_gizmo
+        import math
+        for pb in self.bodies:
+            w, h = pb.size
+            cx = float(pb.body.position.x)
+            cy = float(pb.body.position.y)
+            ang = float(pb.body.angle)
+            cos_a = math.cos(ang)
+            sin_a = math.sin(ang)
+            hw = w / 2
+            hh = h / 2
+            corners = [
+                (-hw, -hh),
+                (hw, -hh),
+                (hw, hh),
+                (-hw, hh),
+                (-hw, -hh),
+            ]
+            verts = [
+                (
+                    cx + x * cos_a - y * sin_a,
+                    cy + x * sin_a + y * cos_a,
+                )
+                for x, y in corners
+            ]
+            renderer.add_gizmo(
+                polyline_gizmo(verts, color=(0.0, 1.0, 0.0, 0.5), thickness=1.0)
+            )
+
 
 class PhysicsExtension(EngineExtension):
     """Engine extension that steps a :class:`PhysicsWorld`."""
@@ -82,3 +116,8 @@ class PhysicsExtension(EngineExtension):
 
     def update(self, engine, dt: float) -> None:  # type: ignore[override]
         self.world.step(dt)
+        if hasattr(engine, "renderer") and hasattr(engine.renderer, "add_gizmo"):
+            try:
+                self.world.debug_draw(engine.renderer)
+            except Exception:
+                pass
