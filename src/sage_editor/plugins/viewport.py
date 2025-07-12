@@ -179,8 +179,8 @@ class NoWheelLineEdit(QLineEdit):
 class NoWheelSpinBox(QDoubleSpinBox):
     """Spin box that ignores the mouse wheel and supports drag editing."""
 
-    DRAG_SPEED = 0.02
-    MAX_MULTIPLIER = 5.0
+    DRAG_SPEED = 0.01
+    MAX_MULTIPLIER = 3.0
 
     def __init__(self, *a, **k):
         super().__init__(*a, **k)
