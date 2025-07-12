@@ -743,6 +743,14 @@ class EditorWindow(QMainWindow):
             bar.setFixedWidth(60)
         layout.addWidget(bar)
         layout.addWidget(view)
+        preview = GLWidget(view)
+        if hasattr(preview, "setFixedSize"):
+            preview.setFixedSize(160, 120)
+        if hasattr(preview, "setObjectName"):
+            preview.setObjectName("CameraPreview")
+        if hasattr(preview, "hide"):
+            preview.hide()
+        container.preview_widget = preview  # type: ignore[attr-defined]
         label = QLabel("0, 0", container)
         if hasattr(label, "setObjectName"):
             label.setObjectName("CursorLabel")
@@ -770,6 +778,9 @@ class EditorWindow(QMainWindow):
         self.viewport = container.viewport  # type: ignore[attr-defined]
         self.mode_bar = container.mode_bar  # type: ignore[attr-defined]
         self.cursor_label = container.cursor_label  # type: ignore[attr-defined]
+        self.preview_widget = container.preview_widget  # type: ignore[attr-defined]
+        self.preview_renderer = None
+        self.preview_camera = None
         self.cursor_pos: tuple[float, float] | None = None
         self.mode_bar.move_btn.clicked.connect(lambda: self.set_mode("move"))
         self.mode_bar.rotate_btn.clicked.connect(lambda: self.set_mode("rotate"))
@@ -1025,6 +1036,7 @@ class EditorWindow(QMainWindow):
         self.selected_obj = None
         self.update_object_list()
         self.prop_apply.clicked.connect(self.apply_properties)
+        self._reposition_preview()
         self.draw_scene()
 
     def log_warning(self, text: str) -> None:
@@ -1101,8 +1113,48 @@ class EditorWindow(QMainWindow):
             h = self.viewport.height()
             if hasattr(self.mode_bar, "setFixedHeight"):
                 self.mode_bar.setFixedHeight(h)
+            self._reposition_preview()
         except Exception:
             log.exception("Failed to update toolbar height")
+
+    def _reposition_preview(self) -> None:
+        """Position the camera preview widget in the bottom-right corner."""
+        preview = getattr(self, "preview_widget", None)
+        view = getattr(self, "viewport", None)
+        if not preview or not view:
+            return
+        if not hasattr(preview, "move") or not hasattr(view, "width"):
+            return
+        w = view.width() or 0
+        h = view.height() or 0
+        pw = preview.width() if hasattr(preview, "width") else 0
+        ph = preview.height() if hasattr(preview, "height") else 0
+        preview.move(w - pw - 10, h - ph - 10)
+
+    def show_camera_preview(self, cam: Camera) -> None:
+        """Display a preview from *cam* in the corner of the viewport."""
+        self.preview_camera = cam
+        if self.preview_renderer is None:
+            try:
+                self.preview_renderer = OpenGLRenderer(
+                    width=160,
+                    height=120,
+                    widget=self.preview_widget,
+                    vsync=False,
+                    keep_aspect=False,
+                )
+            except Exception:
+                log.exception("Failed to create preview renderer")
+                return
+        if hasattr(self.preview_widget, "show"):
+            self.preview_widget.show()
+        self._reposition_preview()
+        self.preview_renderer.draw_scene(self.scene, cam)
+
+    def hide_camera_preview(self) -> None:
+        self.preview_camera = None
+        if hasattr(self.preview_widget, "hide"):
+            self.preview_widget.hide()
 
     def save_screenshot(self, path: str) -> None:
         if self.renderer is None:
@@ -1190,11 +1242,12 @@ class EditorWindow(QMainWindow):
         self.resource_root = os.path.abspath(root)
         self.resources_label.setText(f"Resources: {self.resource_root}")
         self.scene = Scene.from_dict(proj.scene, base_path=base)
-        self.camera = self.scene.ensure_active_camera(proj.width, proj.height)
+        self.camera = Camera(width=proj.width, height=proj.height, active=True)
         if hasattr(self.renderer, "set_window_size"):
             self.renderer.set_window_size(proj.width, proj.height)
         self.project_path = path
         self.update_object_list()
+        self.hide_camera_preview()
         self.draw_scene()
 
     def save_project(self, path: str) -> None:
@@ -1444,6 +1497,8 @@ class EditorWindow(QMainWindow):
             )
         except TypeError:
             self.renderer.draw_scene(self.scene, self.camera)
+        if self.preview_renderer and self.preview_camera:
+            self.preview_renderer.draw_scene(self.scene, self.preview_camera)
 
     def start_game(self):
         from engine.core.engine import Engine
@@ -1451,11 +1506,12 @@ class EditorWindow(QMainWindow):
         self.close_game()
         w = self.renderer.width
         h = self.renderer.height
+        cam = self.scene.ensure_active_camera(w, h)
         self._engine = Engine(
             width=w,
             height=h,
             scene=self.scene,
-            camera=self.camera,
+            camera=cam,
             renderer=self.renderer_backend,
             keep_aspect=self.renderer.keep_aspect,
         )
@@ -1555,6 +1611,10 @@ class EditorWindow(QMainWindow):
             self.selected_obj = self.scene.find_object(name)
         else:
             self.selected_obj = None
+        if isinstance(self.selected_obj, Camera):
+            self.show_camera_preview(cast(Camera, self.selected_obj))
+        else:
+            self.hide_camera_preview()
         self.update_properties()
         self.draw_scene(update_list=False)
 
