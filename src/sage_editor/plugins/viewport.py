@@ -31,8 +31,13 @@ from PyQt6.QtWidgets import (  # type: ignore[import-not-found]
     QSlider,
     QCheckBox,
     QComboBox,
+    QWidget,
     QStyleFactory,
 )
+try:  # optional for tests
+    from PyQt6.QtWidgets import QFrame  # type: ignore[import-not-found]
+except Exception:  # pragma: no cover - fallback when QFrame missing
+    QFrame = QWidget  # type: ignore[misc]
 from PyQt6.QtGui import QAction, QKeySequence  # type: ignore[import-not-found]
 
 try:  # support minimal test stubs
@@ -41,7 +46,6 @@ except Exception:  # pragma: no cover - fallback when QTextEdit missing
     QTextEdit = QPlainTextEdit
 from PyQt6.QtCore import Qt  # type: ignore[import-not-found]
 from typing import Optional, cast, Any
-from PyQt6.QtWidgets import QWidget  # type: ignore[import-not-found]
 from engine.utils import units
 
 from engine.renderers.opengl.core import OpenGLRenderer
@@ -484,13 +488,16 @@ class _ViewportMixin:
             if del_a is not None and hasattr(del_a, "triggered"):
                 del_a.triggered.connect(self._window.delete_selected)
         else:
-            action = menu.addAction("Create Object") if hasattr(menu, "addAction") else None
+            sprite_a = menu.addAction("Create Sprite") if hasattr(menu, "addAction") else None
+            empty_a = menu.addAction("Create Empty") if hasattr(menu, "addAction") else None
+            cam_a = menu.addAction("Create Camera") if hasattr(menu, "addAction") else None
 
-            def cb():
-                self._window.create_object(wx, wy)
-
-            if action is not None and hasattr(action, "triggered"):
-                action.triggered.connect(cb)
+            if sprite_a is not None and hasattr(sprite_a, "triggered"):
+                sprite_a.triggered.connect(lambda: self._window.create_object(wx, wy))
+            if empty_a is not None and hasattr(empty_a, "triggered"):
+                empty_a.triggered.connect(lambda: self._window.create_empty(wx, wy))
+            if cam_a is not None and hasattr(cam_a, "triggered"):
+                cam_a.triggered.connect(lambda: self._window.create_camera(wx, wy))
         menu.exec(cast(QWidget, self).mapToGlobal(point))
 
 
@@ -743,14 +750,23 @@ class EditorWindow(QMainWindow):
             bar.setFixedWidth(60)
         layout.addWidget(bar)
         layout.addWidget(view)
-        preview = GLWidget(view)
-        if hasattr(preview, "setFixedSize"):
-            preview.setFixedSize(160, 120)
+        frame = QFrame(view)
+        frame.setObjectName("CameraPreviewFrame") if hasattr(frame, "setObjectName") else None
+        if hasattr(frame, "setFrameShape"):
+            frame.setFrameShape(getattr(QFrame, "Shape", QFrame).StyledPanel)
+        fl = QVBoxLayout(frame)
+        if hasattr(fl, "setContentsMargins"):
+            fl.setContentsMargins(0, 0, 0, 0)
+        preview = GLWidget(frame)
         if hasattr(preview, "setObjectName"):
             preview.setObjectName("CameraPreview")
-        if hasattr(preview, "hide"):
-            preview.hide()
+        if hasattr(preview, "setFixedSize"):
+            preview.setFixedSize(160, 120)
+        fl.addWidget(preview)
+        if hasattr(frame, "hide"):
+            frame.hide()
         container.preview_widget = preview  # type: ignore[attr-defined]
+        container.preview_frame = frame  # type: ignore[attr-defined]
         label = QLabel("0, 0", container)
         if hasattr(label, "setObjectName"):
             label.setObjectName("CursorLabel")
@@ -779,6 +795,7 @@ class EditorWindow(QMainWindow):
         self.mode_bar = container.mode_bar  # type: ignore[attr-defined]
         self.cursor_label = container.cursor_label  # type: ignore[attr-defined]
         self.preview_widget = container.preview_widget  # type: ignore[attr-defined]
+        self.preview_frame = container.preview_frame  # type: ignore[attr-defined]
         self.preview_renderer = None
         self.preview_camera = None
         self.cursor_pos: tuple[float, float] | None = None
@@ -1119,7 +1136,9 @@ class EditorWindow(QMainWindow):
 
     def _reposition_preview(self) -> None:
         """Position the camera preview widget in the bottom-right corner."""
-        preview = getattr(self, "preview_widget", None)
+        preview = getattr(self, "preview_frame", None)
+        if preview is None:
+            preview = getattr(self, "preview_widget", None)
         view = getattr(self, "viewport", None)
         if not preview or not view:
             return
@@ -1146,14 +1165,37 @@ class EditorWindow(QMainWindow):
             except Exception:
                 log.exception("Failed to create preview renderer")
                 return
-        if hasattr(self.preview_widget, "show"):
+        w = getattr(cam, "width", 160)
+        h = getattr(cam, "height", 120)
+        aspect = w / h if h else 1
+        ph = 120
+        pw = 160
+        if aspect >= 1:
+            ph = int(pw / aspect)
+        else:
+            pw = int(ph * aspect)
+        if hasattr(self.preview_widget, "setFixedSize"):
+            self.preview_widget.setFixedSize(pw, ph)
+        if self.preview_renderer is not None:
+            try:
+                self.preview_renderer.set_window_size(pw, ph)
+            except Exception:
+                pass
+        frame = getattr(self, "preview_frame", None)
+        if frame is not None and hasattr(frame, "setFixedSize"):
+            frame.setFixedSize(pw, ph)
+        if hasattr(self.preview_frame, "show"):
+            self.preview_frame.show()
+        elif hasattr(self.preview_widget, "show"):
             self.preview_widget.show()
         self._reposition_preview()
         self.preview_renderer.draw_scene(self.scene, cam)
 
     def hide_camera_preview(self) -> None:
         self.preview_camera = None
-        if hasattr(self.preview_widget, "hide"):
+        if hasattr(self.preview_frame, "hide"):
+            self.preview_frame.hide()
+        elif hasattr(self.preview_widget, "hide"):
             self.preview_widget.hide()
 
     def save_screenshot(self, path: str) -> None:
@@ -1551,6 +1593,27 @@ class EditorWindow(QMainWindow):
         self.draw_scene()
         return obj
 
+    def create_empty(self, x: float = 0.0, y: float = 0.0) -> GameObject:
+        count = len([o for o in self.scene.objects if getattr(o, "role", "") == "empty"])
+        obj = GameObject(role="empty", name=f"Empty {count}")
+        obj.transform.x = x
+        obj.transform.y = y
+        obj.width = 0
+        obj.height = 0
+        obj.visible = False
+        self.scene.add_object(obj)
+        self.update_object_list()
+        self.draw_scene()
+        return obj
+
+    def create_camera(self, x: float = 0.0, y: float = 0.0) -> Camera:
+        count = len([o for o in self.scene.objects if isinstance(o, Camera)])
+        cam = Camera(x=x, y=y, active=False, name=f"Camera {count}")
+        self.scene.add_object(cam)
+        self.update_object_list()
+        self.draw_scene()
+        return cam
+
     # clipboard and selection helpers ----------------------------------
 
     def copy_selected(self) -> None:
@@ -1600,9 +1663,15 @@ class EditorWindow(QMainWindow):
                 del_a.triggered.connect(self.delete_selected)
             if hasattr(menu, "addSeparator"):
                 menu.addSeparator()
-        action = menu.addAction("Create Object") if hasattr(menu, "addAction") else None
-        if action is not None and hasattr(action, "triggered"):
-            action.triggered.connect(self.create_object)
+        sprite_a = menu.addAction("Create Sprite") if hasattr(menu, "addAction") else None
+        empty_a = menu.addAction("Create Empty") if hasattr(menu, "addAction") else None
+        cam_a = menu.addAction("Create Camera") if hasattr(menu, "addAction") else None
+        if sprite_a is not None and hasattr(sprite_a, "triggered"):
+            sprite_a.triggered.connect(self.create_object)
+        if empty_a is not None and hasattr(empty_a, "triggered"):
+            empty_a.triggered.connect(self.create_empty)
+        if cam_a is not None and hasattr(cam_a, "triggered"):
+            cam_a.triggered.connect(self.create_camera)
         menu.exec(self.objects.mapToGlobal(point))
 
     def _object_selected(self, current, _prev):
