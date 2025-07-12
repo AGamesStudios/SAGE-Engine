@@ -140,6 +140,20 @@ def _setup_qt(monkeypatch):
         def isChecked(self):
             return self._checked
 
+    class QComboBox(QWidget):
+        def __init__(self, *a, **k):
+            super().__init__(*a, **k)
+            self._items = []
+            self._index = 0
+        def addItems(self, items):
+            self._items.extend(items)
+        def setCurrentIndex(self, idx):
+            self._index = idx
+        def currentIndex(self):
+            return self._index
+        def count(self):
+            return len(self._items)
+
     class QSlider(QWidget):
         def __init__(self, orientation=None, *a, **k):
             super().__init__(*a, **k)
@@ -266,6 +280,7 @@ def _setup_qt(monkeypatch):
     qtwidgets.QPlainTextEdit = QPlainTextEdit
     qtwidgets.QLineEdit = QLineEdit
     qtwidgets.QCheckBox = QCheckBox
+    qtwidgets.QComboBox = QComboBox
     qtwidgets.QSlider = QSlider
     qtwidgets.QGroupBox = QGroupBox
     qtwidgets.QFormLayout = QFormLayout

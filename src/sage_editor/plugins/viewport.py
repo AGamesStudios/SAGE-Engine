@@ -30,6 +30,7 @@ from PyQt6.QtWidgets import (  # type: ignore[import-not-found]
     QLineEdit,
     QSlider,
     QCheckBox,
+    QComboBox,
     QStyleFactory,
 )
 from PyQt6.QtGui import QAction, QKeySequence  # type: ignore[import-not-found]
@@ -604,6 +605,21 @@ class PropertiesWidget(QWidget):
 
         layout.addWidget(self.transform_group)
 
+        try:
+            from engine import physics  # noqa: F401
+        except Exception:
+            self.physics_group = None
+        else:
+            self.physics_group = QGroupBox("Physics", self)
+            phys_form = QFormLayout(self.physics_group)
+            self.physics_enabled = QCheckBox("Enabled", self)
+            phys_form.addRow(self.physics_enabled)
+            self.body_combo = QComboBox(self)
+            if hasattr(self.body_combo, "addItems"):
+                self.body_combo.addItems(["Dynamic", "Static"])
+            phys_form.addRow("Body Type", self.body_combo)
+            layout.addWidget(self.physics_group)
+
         self.apply_btn = QPushButton("Apply", self)
         layout.addWidget(self.apply_btn)
         layout.addStretch()
@@ -623,6 +639,10 @@ class PropertiesWidget(QWidget):
             self.flip_y.setChecked(False)
             self.pivot_x.setText("")
             self.pivot_y.setText("")
+            if getattr(self, "physics_group", None):
+                self.physics_enabled.setChecked(False)
+                if hasattr(self, "body_combo"):
+                    self.body_combo.setCurrentIndex(0)
             return
 
         self.name_edit.setText(obj.name or "")
@@ -647,6 +667,12 @@ class PropertiesWidget(QWidget):
         self.flip_y.setChecked(bool(getattr(obj, "flip_y", False)))
         self.pivot_x.setText(str(getattr(obj, "pivot_x", 0.0)))
         self.pivot_y.setText(str(getattr(obj, "pivot_y", 0.0)))
+        if getattr(self, "physics_group", None):
+            self.physics_enabled.setChecked(bool(getattr(obj, "physics_enabled", False)))
+            body = getattr(obj, "body_type", "dynamic")
+            idx = 0 if body != "static" else 1
+            if hasattr(self, "body_combo"):
+                self.body_combo.setCurrentIndex(idx)
 
     def apply_to_object(self, obj: GameObject) -> None:
         obj.name = self.name_edit.text()
@@ -676,6 +702,12 @@ class PropertiesWidget(QWidget):
             obj.pivot_y = float(self.pivot_y.text())
         except ValueError:
             log.warning("Invalid pivot")
+        if getattr(self, "physics_group", None):
+            obj.physics_enabled = self.physics_enabled.isChecked()
+            if hasattr(self, "body_combo"):
+                obj.body_type = (
+                    "static" if self.body_combo.currentIndex() == 1 else "dynamic"
+                )
 
     def _sync_scale_x(self):
         if self.link_scale.isChecked():

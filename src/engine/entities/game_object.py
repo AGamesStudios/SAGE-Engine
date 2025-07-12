@@ -141,6 +141,8 @@ class GameObject(Object):
     image: Image.Image | None = field(init=False, default=None)
     width: int = field(init=False, default=0)
     height: int = field(init=False, default=0)
+    physics_enabled: bool = False
+    body_type: str = "dynamic"
     _dirty: bool = field(init=False, default=True)
     _cached_rect: tuple[float, float, float, float] | None = field(init=False, default=None)
     _cached_matrix: list[float] | None = field(init=False, default=None)
