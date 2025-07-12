@@ -20,6 +20,8 @@ __all__ = ["PhysicsWorld", "PhysicsExtension"]
 class PhysicsBody:
     obj: Any
     body: Any
+    shape: Any
+    base_size: tuple[float, float]
     size: tuple[float, float]
 
 
@@ -49,7 +51,7 @@ class PhysicsWorld:
         body.position = (getattr(obj, "x", 0.0), getattr(obj, "y", 0.0))
         shape = pymunk.Poly.create_box(body, size)
         self.space.add(body, shape)
-        pb = PhysicsBody(obj, body, size)
+        pb = PhysicsBody(obj=obj, body=body, shape=shape, base_size=size, size=size)
         self.bodies.append(pb)
         return pb
 
@@ -65,7 +67,26 @@ class PhysicsWorld:
     def step(self, dt: float) -> None:
         if pymunk is None:
             raise ImportError("pymunk is required for physics")
+        import math
+        for pb in self.bodies:
+            obj = pb.obj
+            if hasattr(obj, "x") and hasattr(obj, "y"):
+                pb.body.position = (getattr(obj, "x"), getattr(obj, "y"))
+            if hasattr(obj, "angle"):
+                pb.body.angle = math.radians(getattr(obj, "angle"))
+            sx = getattr(obj, "scale_x", 1.0)
+            sy = getattr(obj, "scale_y", 1.0)
+            size = (pb.base_size[0] * sx, pb.base_size[1] * sy)
+            if size != pb.size:
+                shapes = list(pb.body.shapes)
+                if shapes:
+                    self.space.remove(*shapes)
+                pb.shape = pymunk.Poly.create_box(pb.body, size)
+                self.space.add(pb.shape)
+                pb.size = size
+
         self.space.step(dt)
+
         for pb in self.bodies:
             obj = pb.obj
             pos = pb.body.position
@@ -73,6 +94,8 @@ class PhysicsWorld:
                 obj.x = float(pos.x)
             if hasattr(obj, "y"):
                 obj.y = float(pos.y)
+            if hasattr(obj, "angle"):
+                obj.angle = math.degrees(pb.body.angle)
 
     def debug_draw(self, renderer) -> None:
         """Draw simple box gizmos for each body using ``renderer``."""

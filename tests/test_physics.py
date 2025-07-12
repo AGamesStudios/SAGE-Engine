@@ -1,5 +1,6 @@
 import importlib
 import sys
+import math
 import pytest
 
 
@@ -121,3 +122,46 @@ def test_debug_draw(monkeypatch):
     r = R()
     world.debug_draw(r)
     assert r.gizmos and r.gizmos[0].vertices
+
+
+def test_body_sync(monkeypatch):
+    class B(_Body):
+        pass
+
+    class S(_Space):
+        pass
+
+    poly_cls = type("Poly", (), {"create_box": lambda b, s: type("Shape", (), {"size": s})()})
+    fake = type(
+        "pymunk",
+        (),
+        {
+            "Space": S,
+            "Body": B,
+            "moment_for_box": lambda m, s: 0,
+            "Poly": poly_cls,
+        },
+    )
+    monkeypatch.setitem(sys.modules, "pymunk", fake)
+    sys.modules.pop("engine.physics", None)
+    import engine.physics as phys
+    import importlib
+    importlib.reload(phys)
+
+    world = phys.PhysicsWorld()
+    obj = type(
+        "O",
+        (),
+        {"x": 0.0, "y": 0.0, "scale_x": 1.0, "scale_y": 1.0, "angle": 0.0},
+    )()
+    pb = world.add_box(obj, size=(1.0, 1.0))
+    obj.x = 5.0
+    obj.y = 6.0
+    obj.scale_x = 2.0
+    obj.scale_y = 3.0
+    obj.angle = 90.0
+    world.step(0.016)
+    assert pb.body.position.x == 5.0
+    assert pb.body.position.y == 6.0
+    assert round(pb.body.angle, 5) == round(math.radians(90.0), 5)
+    assert pb.size == (2.0, 3.0)

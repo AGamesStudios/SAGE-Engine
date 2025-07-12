@@ -22,6 +22,7 @@ space in sync.
 When a scene contains objects with ``physics_enabled`` set, the engine
 automatically creates a ``PhysicsWorld`` and adds a ``PhysicsExtension`` so
 physics runs without extra setup.
+Collider shapes automatically follow each object's position, rotation and scale.
 
 ``PhysicsWorld`` can draw simple box colliders for debugging:
 

@@ -84,6 +84,7 @@ Runtime state can be saved and loaded with `engine.save_game` and
 Open `examples/blank.sageproject` with the editor or runtime to see the basic structure. The sample scene now contains two sprites and a camera. Additional resources in `examples/Resources/` demonstrate `.sageaudio`, `.sagemesh`, `.sageanimation`, `.sagemap` and `.sagelogic` files. Tile maps are pre‑rendered to textures so large maps draw efficiently. Example scenes under `examples/Scenes/` showcase animation, audio playback, event groups, multiple tile maps and basic physics (`Physics.sagescene`). Call ``renderer.unload_texture(obj)`` when removing objects to release the cached sprite texture.
 For a larger demonstration use `examples/advanced.sageproject`, which links several scenes to show animations, physics and large tile maps.
 Objects with ``physics_enabled`` set will automatically create a physics world when the engine starts so movement follows physical rules.
+Colliders track each object's position, rotation and scale so physics stays aligned.
 Call ``world.debug_draw(renderer)`` to visualise simple box colliders.
 
 ## Running
