@@ -142,6 +142,26 @@ def _setup_qt(monkeypatch):
         def setReadOnly(self, ro):
             self._ro = ro
 
+    class QDoubleSpinBox(QWidget):
+        def __init__(self, *a, **k):
+            super().__init__(*a, **k)
+            self._value = 0.0
+            self.editingFinished = DummySignal()
+        def setRange(self, a, b):
+            self._min = a
+            self._max = b
+        def value(self):
+            return self._value
+        def setValue(self, v):
+            self._value = float(v)
+            self.editingFinished.emit()
+        def setSingleStep(self, step):
+            self._step = step
+        def setDecimals(self, dec):
+            self._dec = dec
+        def setAccelerated(self, flag):
+            self._acc = flag
+
     class QCheckBox(QWidget):
         def __init__(self, *a, **k):
             super().__init__(*a, **k)
@@ -308,6 +328,7 @@ def _setup_qt(monkeypatch):
     qtwidgets.QMenu = QMenu
     qtwidgets.QPlainTextEdit = QPlainTextEdit
     qtwidgets.QLineEdit = QLineEdit
+    qtwidgets.QDoubleSpinBox = QDoubleSpinBox
     qtwidgets.QCheckBox = QCheckBox
     qtwidgets.QComboBox = QComboBox
     qtwidgets.QSlider = QSlider
@@ -449,8 +470,8 @@ def test_apply_properties_validation(monkeypatch):
     win = viewport.EditorWindow()
     obj = win.create_object()
     win.select_object(obj)
-    win.properties.pos_x.setText("bad")
-    win.properties.pivot_x.setText("bad")
+    win.properties.pos_x.setValue(0.0)
+    win.properties.pivot_x.setValue(0.5)
     win.apply_properties()
     assert obj.x == 0.0
     assert obj.pivot_x == 0.5
@@ -467,8 +488,8 @@ def test_pivot_edit(monkeypatch):
     win = viewport.EditorWindow()
     obj = win.create_object()
     win.select_object(obj)
-    win.properties.pivot_x.setText("0.25")
-    win.properties.pivot_y.setText("0.75")
+    win.properties.pivot_x.setValue(0.25)
+    win.properties.pivot_y.setValue(0.75)
     win.apply_properties()
     assert obj.pivot_x == 0.25
     assert obj.pivot_y == 0.75
@@ -507,10 +528,10 @@ def test_properties_populated_on_select(monkeypatch):
     obj.pivot_y = 0.75
     win.select_object(obj)
 
-    assert float(win.properties.pos_x.text()) == 10
-    assert float(win.properties.pos_y.text()) == -5
-    assert float(win.properties.pivot_x.text()) == 0.25
-    assert float(win.properties.pivot_y.text()) == 0.75
+    assert win.properties.pos_x.value() == 10
+    assert win.properties.pos_y.value() == -5
+    assert win.properties.pivot_x.value() == 0.25
+    assert win.properties.pivot_y.value() == 0.75
 
 
 def test_edit_shortcuts(monkeypatch):

@@ -12,6 +12,8 @@ When no object is selected the panel is blank. Changing the role updates the
 visible categories automatically so the Shape or Sprite options appear at once.
 
 Rotation uses a circular dial that displays the angle value in degrees.
+Position, scale and pivot use spin boxes with repeat buttons so holding the
+arrows increments the values automatically.
 
 Choosing the **shape** role reveals an additional **Shape** category
 with a drop-down to select **square**, **triangle** or **circle**. Picking

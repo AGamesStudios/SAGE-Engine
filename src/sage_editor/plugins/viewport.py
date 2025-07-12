@@ -28,6 +28,7 @@ from PyQt6.QtWidgets import (  # type: ignore[import-not-found]
     QScrollArea,
     QLabel,
     QLineEdit,
+    QDoubleSpinBox,
     QDial,
     QCheckBox,
     QComboBox,
@@ -170,6 +171,13 @@ class AngleDial(QDial):
 
 class NoWheelLineEdit(QLineEdit):
     """Line edit that ignores mouse wheel events."""
+
+    def wheelEvent(self, event):  # pragma: no cover - ui tweak
+        event.ignore()
+
+
+class NoWheelSpinBox(QDoubleSpinBox):
+    """Spin box that ignores mouse wheel events."""
 
     def wheelEvent(self, event):  # pragma: no cover - ui tweak
         event.ignore()
@@ -649,8 +657,11 @@ class PropertiesWidget(QWidget):
         trans_form = QFormLayout(self.transform_group)
         pos_widget = QWidget(self)
         pos_layout = QHBoxLayout(pos_widget)
-        self.pos_x = NoWheelLineEdit(self)
-        self.pos_y = NoWheelLineEdit(self)
+        self.pos_x = NoWheelSpinBox(self)
+        self.pos_y = NoWheelSpinBox(self)
+        for box in (self.pos_x, self.pos_y):
+            box.setRange(-1e6, 1e6)
+            box.setAccelerated(True)
         pos_layout.addWidget(QLabel("X", self))
         pos_layout.addWidget(self.pos_x)
         pos_layout.addWidget(QLabel("Y", self))
@@ -668,8 +679,13 @@ class PropertiesWidget(QWidget):
 
         scale_widget = QWidget(self)
         scale_layout = QHBoxLayout(scale_widget)
-        self.scale_x = NoWheelLineEdit(self)
-        self.scale_y = NoWheelLineEdit(self)
+        self.scale_x = NoWheelSpinBox(self)
+        self.scale_y = NoWheelSpinBox(self)
+        for box in (self.scale_x, self.scale_y):
+            box.setRange(0.01, 1000.0)
+            box.setDecimals(3)
+            box.setSingleStep(0.1)
+            box.setAccelerated(True)
         self.link_scale = QCheckBox("Link", self)
         scale_layout.addWidget(QLabel("X", self))
         scale_layout.addWidget(self.scale_x)
@@ -680,8 +696,13 @@ class PropertiesWidget(QWidget):
 
         pivot_widget = QWidget(self)
         pivot_layout = QHBoxLayout(pivot_widget)
-        self.pivot_x = NoWheelLineEdit(self)
-        self.pivot_y = NoWheelLineEdit(self)
+        self.pivot_x = NoWheelSpinBox(self)
+        self.pivot_y = NoWheelSpinBox(self)
+        for box in (self.pivot_x, self.pivot_y):
+            box.setRange(0.0, 1.0)
+            box.setDecimals(3)
+            box.setSingleStep(0.01)
+            box.setAccelerated(True)
         pivot_layout.addWidget(QLabel("X", self))
         pivot_layout.addWidget(self.pivot_x)
         pivot_layout.addWidget(QLabel("Y", self))
@@ -747,19 +768,19 @@ class PropertiesWidget(QWidget):
                 self.role_combo.setCurrentIndex(-1)
             self.tags_edit.setText("")
             self.visible_check.setChecked(False)
-            self.pos_x.setText("")
-            self.pos_y.setText("")
+            self.pos_x.setValue(0.0)
+            self.pos_y.setValue(0.0)
             self.rot_dial.setValue(0)
-            self.scale_x.setText("")
-            self.scale_y.setText("")
+            self.scale_x.setValue(1.0)
+            self.scale_y.setValue(1.0)
             self.flip_x.setChecked(False)
             self.flip_y.setChecked(False)
             if hasattr(self.flip_x, "setEnabled"):
                 self.flip_x.setEnabled(False)
             if hasattr(self.flip_y, "setEnabled"):
                 self.flip_y.setEnabled(False)
-            self.pivot_x.setText("")
-            self.pivot_y.setText("")
+            self.pivot_x.setValue(0.0)
+            self.pivot_y.setValue(0.0)
             if getattr(self, "physics_group", None):
                 self.physics_enabled.setChecked(False)
                 if hasattr(self, "body_combo"):
@@ -799,12 +820,12 @@ class PropertiesWidget(QWidget):
             tags = ",".join(tags)
         self.tags_edit.setText(str(tags))
         self.visible_check.setChecked(bool(getattr(obj, "visible", True)))
-        self.pos_x.setText(str(getattr(obj, "x", 0.0)))
-        self.pos_y.setText(str(getattr(obj, "y", 0.0)))
+        self.pos_x.setValue(float(getattr(obj, "x", 0.0)))
+        self.pos_y.setValue(float(getattr(obj, "y", 0.0)))
         angle = getattr(obj, "angle", 0.0)
         self.rot_dial.setValue(int(angle % 360))
-        self.scale_x.setText(str(getattr(obj, "scale_x", 1.0)))
-        self.scale_y.setText(str(getattr(obj, "scale_y", 1.0)))
+        self.scale_x.setValue(float(getattr(obj, "scale_x", 1.0)))
+        self.scale_y.setValue(float(getattr(obj, "scale_y", 1.0)))
         flip_allowed = role not in ("camera", "empty")
         if hasattr(self.flip_x, "setEnabled"):
             self.flip_x.setEnabled(flip_allowed)
@@ -812,8 +833,8 @@ class PropertiesWidget(QWidget):
             self.flip_y.setEnabled(flip_allowed)
         self.flip_x.setChecked(flip_allowed and bool(getattr(obj, "flip_x", False)))
         self.flip_y.setChecked(flip_allowed and bool(getattr(obj, "flip_y", False)))
-        self.pivot_x.setText(str(getattr(obj, "pivot_x", 0.0)))
-        self.pivot_y.setText(str(getattr(obj, "pivot_y", 0.0)))
+        self.pivot_x.setValue(float(getattr(obj, "pivot_x", 0.0)))
+        self.pivot_y.setValue(float(getattr(obj, "pivot_y", 0.0)))
         if hasattr(self, "shape_group"):
             shape = str(getattr(obj, "shape", "square"))
             order = ["square", "triangle", "circle"]
@@ -844,29 +865,20 @@ class PropertiesWidget(QWidget):
         obj.visible = self.visible_check.isChecked()
         if hasattr(self, "role_combo") and hasattr(self.role_combo, "currentText"):
             obj.role = self.role_combo.currentText() or obj.role
-        try:
-            obj.x = float(self.pos_x.text())
-            obj.y = float(self.pos_y.text())
-        except ValueError:
-            log.warning("Invalid position")
+        obj.x = float(self.pos_x.value())
+        obj.y = float(self.pos_y.value())
         obj.angle = float(self.rot_dial.value())
-        try:
-            sx = float(self.scale_x.text())
-            sy = float(self.scale_y.text())
-            if self.link_scale.isChecked():
-                sy = sx
-            obj.scale_x = sx
-            obj.scale_y = sy
-        except ValueError:
-            log.warning("Invalid scale")
+        sx = float(self.scale_x.value())
+        sy = float(self.scale_y.value())
+        if self.link_scale.isChecked():
+            sy = sx
+        obj.scale_x = sx
+        obj.scale_y = sy
         if obj.role not in ("camera", "empty"):
             obj.flip_x = self.flip_x.isChecked()
             obj.flip_y = self.flip_y.isChecked()
-        try:
-            obj.pivot_x = float(self.pivot_x.text())
-            obj.pivot_y = float(self.pivot_y.text())
-        except ValueError:
-            log.warning("Invalid pivot")
+        obj.pivot_x = float(self.pivot_x.value())
+        obj.pivot_y = float(self.pivot_y.value())
         if getattr(self, "physics_group", None):
             obj.physics_enabled = self.physics_enabled.isChecked()
             if hasattr(self, "body_combo"):
@@ -886,11 +898,11 @@ class PropertiesWidget(QWidget):
 
     def _sync_scale_x(self):
         if self.link_scale.isChecked():
-            self.scale_y.setText(self.scale_x.text())
+            self.scale_y.setValue(self.scale_x.value())
 
     def _sync_scale_y(self):
         if self.link_scale.isChecked():
-            self.scale_x.setText(self.scale_y.text())
+            self.scale_x.setValue(self.scale_y.value())
 
 
 class EditorWindow(QMainWindow):
