@@ -234,10 +234,12 @@ class SDLRenderer(Renderer):
         h = obj.height * obj.scale_y * scale
         px = w * obj.pivot_x
         py = h * obj.pivot_y
+        off_x = px - w / 2
+        off_y = py - h / 2
         verts = []
         for vx, vy in mesh.vertices:
-            vx = (vx * w - px) * sx + px
-            vy = (vy * h - py) * sy + py
+            vx = (vx * w - off_x) * sx + off_x
+            vy = (vy * h - off_y) * sy + off_y
             rx = vx * cos_a - vy * sin_a
             ry = vx * sin_a + vy * cos_a
             verts.append((int(obj.x + rx), int(obj.y + ry)))

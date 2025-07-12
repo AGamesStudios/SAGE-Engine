@@ -627,8 +627,6 @@ class PropertiesWidget(QWidget):
             phys_form.addRow("Body Type", self.body_combo)
             layout.addWidget(self.physics_group)
 
-        self.apply_btn = QPushButton("Apply", self)
-        layout.addWidget(self.apply_btn)
         layout.addStretch()
 
     def set_object(self, obj: Optional[GameObject]) -> None:
@@ -645,6 +643,10 @@ class PropertiesWidget(QWidget):
             self.scale_y.setText("")
             self.flip_x.setChecked(False)
             self.flip_y.setChecked(False)
+            if hasattr(self.flip_x, "setEnabled"):
+                self.flip_x.setEnabled(False)
+            if hasattr(self.flip_y, "setEnabled"):
+                self.flip_y.setEnabled(False)
             self.pivot_x.setText("")
             self.pivot_y.setText("")
             if getattr(self, "physics_group", None):
@@ -671,8 +673,13 @@ class PropertiesWidget(QWidget):
         self.rot_slider.setValue(int(getattr(obj, "angle", 0.0) % 360))
         self.scale_x.setText(str(getattr(obj, "scale_x", 1.0)))
         self.scale_y.setText(str(getattr(obj, "scale_y", 1.0)))
-        self.flip_x.setChecked(bool(getattr(obj, "flip_x", False)))
-        self.flip_y.setChecked(bool(getattr(obj, "flip_y", False)))
+        flip_allowed = role not in ("camera", "empty")
+        if hasattr(self.flip_x, "setEnabled"):
+            self.flip_x.setEnabled(flip_allowed)
+        if hasattr(self.flip_y, "setEnabled"):
+            self.flip_y.setEnabled(flip_allowed)
+        self.flip_x.setChecked(flip_allowed and bool(getattr(obj, "flip_x", False)))
+        self.flip_y.setChecked(flip_allowed and bool(getattr(obj, "flip_y", False)))
         self.pivot_x.setText(str(getattr(obj, "pivot_x", 0.0)))
         self.pivot_y.setText(str(getattr(obj, "pivot_y", 0.0)))
         if getattr(self, "physics_group", None):
@@ -705,8 +712,9 @@ class PropertiesWidget(QWidget):
             obj.scale_y = sy
         except ValueError:
             log.warning("Invalid scale")
-        obj.flip_x = self.flip_x.isChecked()
-        obj.flip_y = self.flip_y.isChecked()
+        if obj.role not in ("camera", "empty"):
+            obj.flip_x = self.flip_x.isChecked()
+            obj.flip_y = self.flip_y.isChecked()
         try:
             obj.pivot_x = float(self.pivot_x.text())
             obj.pivot_y = float(self.pivot_y.text())
@@ -860,7 +868,6 @@ class EditorWindow(QMainWindow):
         self._console_handler = ConsoleHandler(self.console)
         logger.addHandler(self._console_handler)
         self.properties = PropertiesWidget(self)
-        self.prop_apply = self.properties.apply_btn
         for edit in [
             self.properties.name_edit,
             self.properties.tags_edit,
@@ -1055,7 +1062,6 @@ class EditorWindow(QMainWindow):
 
         self.selected_obj = None
         self.update_object_list()
-        self.prop_apply.clicked.connect(self.apply_properties)
         self._reposition_preview()
         self.draw_scene()
 

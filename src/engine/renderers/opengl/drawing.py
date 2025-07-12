@@ -81,6 +81,8 @@ def draw_outline(renderer, obj: GameObject, camera: Optional[Camera],
     h = obj.height * obj.scale_y * scale_mul
     px = w * obj.pivot_x
     py = h * obj.pivot_y
+    off_x = px - w / 2
+    off_y = py - h / 2
     corners = [
         (-px, -py),
         (w - px, -py),
@@ -92,8 +94,8 @@ def draw_outline(renderer, obj: GameObject, camera: Optional[Camera],
     glLineWidth(width)
     glBegin(GL_LINE_LOOP)
     for cx, cy in corners:
-        vx = cx * sx
-        vy = cy * sy
+        vx = (cx - off_x) * sx + off_x
+        vy = (cy - off_y) * sy + off_y
         rx = vx * cos_a - vy * sin_a
         ry = vx * sin_a + vy * cos_a
         world_x = (rx + obj_x) * unit_scale
@@ -135,6 +137,8 @@ def draw_mesh(renderer, obj: GameObject, camera: Optional[Camera], mesh: Mesh) -
     obj_x, obj_y = obj.render_position(camera)
     px = w * obj.pivot_x
     py = h * obj.pivot_y
+    off_x = px - w / 2
+    off_y = py - h / 2
     sx = -1.0 if flip_x else 1.0
     sy = -1.0 if flip_y else 1.0
 
@@ -143,8 +147,8 @@ def draw_mesh(renderer, obj: GameObject, camera: Optional[Camera], mesh: Mesh) -
     indices = mesh.indices if mesh.indices else range(len(verts))
     for idx in indices:
         vx, vy = verts[idx]
-        vx = (vx * w - px) * sx + px
-        vy = (vy * h - py) * sy + py
+        vx = (vx * w - off_x) * sx + off_x
+        vy = (vy * h - off_y) * sy + off_y
         rx = vx * cos_a - vy * sin_a
         ry = vx * sin_a + vy * cos_a
         world_x = (rx + obj_x) * unit_scale
