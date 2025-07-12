@@ -268,8 +268,10 @@ class _ViewportMixin:
                 log.exception("Failed to set cursor")
 
     def mouseMoveEvent(self, ev):  # pragma: no cover - gui interaction
+        pos = ev.position() if hasattr(ev, "position") else ev.pos()
+        wx, wy = self._window.screen_to_world(pos)
+        self._window.update_cursor(wx, wy)
         if self._press_pos is not None and ev.buttons() & Qt.MouseButton.LeftButton:
-            pos = ev.position() if hasattr(ev, "position") else ev.pos()
             if not self._dragging:
                 dx = pos.x() - self._press_pos.x()
                 dy = pos.y() - self._press_pos.y()
@@ -345,6 +347,7 @@ class _ViewportMixin:
                             obj.scale_x = w / obj.width
                             obj.scale_y = h / obj.height
                             self._window.update_properties()
+                            self._last_world = (wx, wy)
                         else:
                             if shift:
                                 aspect = w / h if h else 1
@@ -699,6 +702,16 @@ class EditorWindow(QMainWindow):
             bar.setFixedWidth(60)
         layout.addWidget(bar)
         layout.addWidget(view)
+        label = QLabel("0, 0", container)
+        if hasattr(label, "setObjectName"):
+            label.setObjectName("CursorLabel")
+        if hasattr(label, "setStyleSheet"):
+            label.setStyleSheet("color:#ddd;background:rgba(0,0,0,0.5);padding:2px;")
+        if hasattr(label, "move"):
+            label.move(70, 8)
+        container.cursor_label = label  # type: ignore[attr-defined]
+        if hasattr(view, "setMouseTracking"):
+            view.setMouseTracking(True)
         container.viewport = view  # type: ignore[attr-defined]
         container.mode_bar = bar  # type: ignore[attr-defined]
         return container
@@ -715,6 +728,8 @@ class EditorWindow(QMainWindow):
         self.viewport_container = container
         self.viewport = container.viewport  # type: ignore[attr-defined]
         self.mode_bar = container.mode_bar  # type: ignore[attr-defined]
+        self.cursor_label = container.cursor_label  # type: ignore[attr-defined]
+        self.cursor_pos: tuple[float, float] | None = None
         self.mode_bar.move_btn.clicked.connect(lambda: self.set_mode("move"))
         self.mode_bar.rotate_btn.clicked.connect(lambda: self.set_mode("rotate"))
         self.mode_bar.scale_btn.clicked.connect(lambda: self.set_mode("scale"))
@@ -969,6 +984,13 @@ class EditorWindow(QMainWindow):
 
     def toggle_mirror(self, checked: bool) -> None:
         self.mirror_resize = bool(checked)
+
+    def update_cursor(self, x: float, y: float) -> None:
+        """Store cursor world coordinates and update the overlay label."""
+        self.cursor_pos = (x, y)
+        if hasattr(self.cursor_label, "setText"):
+            self.cursor_label.setText(f"{x:.1f}, {y:.1f}")
+        self.draw_scene(update_list=False)
 
     def set_mode(self, mode: str) -> None:
         self.transform_mode = mode
@@ -1354,6 +1376,7 @@ class EditorWindow(QMainWindow):
                 self.camera,
                 selected=self.selected_obj,
                 mode=self.transform_mode,
+                cursor=self.cursor_pos,
             )
         except TypeError:
             self.renderer.draw_scene(self.scene, self.camera)
