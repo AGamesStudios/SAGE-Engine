@@ -197,6 +197,7 @@ class Engine:
         self.delta_time = 0.0
         self.logic_active = False
         self.extensions: list[EngineExtension] = []
+        self.physics_world = None
         try:
             from .. import load_engine_plugins
             load_engine_plugins(self)
@@ -209,6 +210,23 @@ class Engine:
         except Exception:
             logger.exception("Failed to load engine libraries")
             raise
+
+        # automatically enable physics when objects request it
+        objs = [o for o in getattr(self.scene, "objects", []) if getattr(o, "physics_enabled", False)]
+        if objs:
+            try:
+                from ..physics import PhysicsWorld, PhysicsExtension
+                world = PhysicsWorld()
+                for obj in objs:
+                    world.add_box(
+                        obj,
+                        size=(getattr(obj, "width", 1), getattr(obj, "height", 1)),
+                        body_type=getattr(obj, "body_type", "dynamic"),
+                    )
+                self.physics_world = world
+                self.add_extension(PhysicsExtension(world))
+            except ImportError:
+                logger.warning("Physics objects present but pymunk is missing")
 
     def step(self) -> None:
         """Advance the engine by one frame respecting the target FPS."""
