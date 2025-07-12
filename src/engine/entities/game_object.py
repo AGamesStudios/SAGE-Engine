@@ -268,6 +268,32 @@ class GameObject(Object):
                 except Exception:
                     logger.exception("Failed to load shader %s/%s", vert, frag)
 
+    # ------------------------------------------------------------------
+    def set_role(self, role: str) -> None:
+        """Change ``self.role`` and update attributes for the new role."""
+        if self.role == role:
+            return
+        self.role = role
+        if role in ("empty", "camera"):
+            self.image_path = ""
+            self.shape = None
+            self.width = 0
+            self.height = 0
+            if role == "camera":
+                self.metadata.setdefault("width", 640)
+                self.metadata.setdefault("height", 480)
+                self.metadata.setdefault("active", False)
+        elif role == "shape":
+            self.image_path = ""
+            if self.shape is None:
+                self.shape = "square"
+            if self.width == 0 and self.height == 0:
+                self.width = self.height = 32
+        elif role == "sprite":
+            self.shape = None
+            if not self.image_path:
+                self.width = self.height = 32
+
 
     def update(self, dt: float):
         if self.animation is not None:
@@ -332,11 +358,13 @@ class GameObject(Object):
     def _load_image(self):
         """Load the object's image with Pillow."""
         if not self.image_path:
-            # No sprite image - default dimensions for shape rendering
             self.image = None
-            self.width, self.height = 32, 32
-            if self.shape is None:
-                self.shape = "square"
+            if self.role in ("empty", "camera"):
+                self.width = self.height = 0
+            else:
+                self.width, self.height = 32, 32
+                if self.shape is None:
+                    self.shape = "square"
             self._dirty = True
             self._cached_rect = None
             self._cached_matrix = None

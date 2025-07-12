@@ -864,7 +864,11 @@ class PropertiesWidget(QWidget):
             obj.metadata["tags"] = tags
         obj.visible = self.visible_check.isChecked()
         if hasattr(self, "role_combo") and hasattr(self.role_combo, "currentText"):
-            obj.role = self.role_combo.currentText() or obj.role
+            new_role = self.role_combo.currentText() or obj.role
+            if hasattr(obj, "set_role"):
+                obj.set_role(new_role)
+            else:
+                obj.role = new_role
         obj.x = float(self.pos_x.value())
         obj.y = float(self.pos_y.value())
         obj.angle = float(self.rot_dial.value())
