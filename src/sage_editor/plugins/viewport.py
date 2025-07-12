@@ -615,6 +615,11 @@ class PropertiesWidget(QWidget):
 
         self.rot_dial = AngleDial(self)
         self.rot_dial.setRange(0, 360)
+        # Invert the dial so clockwise motion yields clockwise rotation
+        if hasattr(self.rot_dial, "setInvertedAppearance"):
+            self.rot_dial.setInvertedAppearance(True)
+        if hasattr(self.rot_dial, "setInvertedControls"):
+            self.rot_dial.setInvertedControls(True)
         trans_form.addRow("Rotation", self.rot_dial)
 
         scale_widget = QWidget(self)
@@ -710,7 +715,8 @@ class PropertiesWidget(QWidget):
         self.visible_check.setChecked(bool(getattr(obj, "visible", True)))
         self.pos_x.setText(str(getattr(obj, "x", 0.0)))
         self.pos_y.setText(str(getattr(obj, "y", 0.0)))
-        self.rot_dial.setValue(int(getattr(obj, "angle", 0.0) % 360))
+        angle = getattr(obj, "angle", 0.0)
+        self.rot_dial.setValue(int((-angle) % 360))
         self.scale_x.setText(str(getattr(obj, "scale_x", 1.0)))
         self.scale_y.setText(str(getattr(obj, "scale_y", 1.0)))
         flip_allowed = role not in ("camera", "empty")
@@ -742,7 +748,7 @@ class PropertiesWidget(QWidget):
             obj.y = float(self.pos_y.text())
         except ValueError:
             log.warning("Invalid position")
-        obj.angle = float(self.rot_dial.value())
+        obj.angle = -float(self.rot_dial.value())
         try:
             sx = float(self.scale_x.text())
             sy = float(self.scale_y.text())
