@@ -14,9 +14,9 @@ visible categories automatically so the Shape or Sprite options appear at once.
 Rotation uses a circular dial that displays the angle value in degrees.
 Position, scale and pivot use spin boxes with repeat buttons so holding the
 arrows increments the values automatically. You can also drag up or down
-with the left mouse button. The value follows the pointer distance so
-moving farther speeds up the change while holding still leaves it
-unchanged.
+with the left mouse button. The value changes in proportion to how far you
+drag from the starting point, so keeping the pointer still stops the
+adjustment.
 
 Choosing the **shape** role reveals an additional **Shape** category
 with a drop-down to select **square**, **triangle** or **circle**. Picking
