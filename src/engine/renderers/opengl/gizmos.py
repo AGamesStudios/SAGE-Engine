@@ -119,16 +119,17 @@ def draw_gizmo(
             glVertex2f(-sq_size, -size)
         glEnd()
 
-    glLineWidth(base_w)
-    glColor4f(0.7, 0.7, 1.0, 1.0 if mode == "rotate" else 0.5)
-    steps = 24
-    angle_step = 360.0 / steps
-    glBegin(GL_LINE_LOOP)
-    for i in range(steps):
-        ang = math.radians(i * angle_step)
-        glVertex2f(math.cos(ang) * ring_r, math.sin(ang) * ring_r * sign)
-    glEnd()
-    glLineWidth(ring_w)
+    if mode == "rotate":
+        glLineWidth(base_w)
+        glColor4f(0.7, 0.7, 1.0, 1.0)
+        steps = 24
+        angle_step = 360.0 / steps
+        glBegin(GL_LINE_LOOP)
+        for i in range(steps):
+            ang = math.radians(i * angle_step)
+            glVertex2f(math.cos(ang) * ring_r, math.sin(ang) * ring_r * sign)
+        glEnd()
+        glLineWidth(ring_w)
     glPopMatrix()
 
 

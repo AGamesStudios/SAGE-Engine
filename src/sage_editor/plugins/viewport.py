@@ -76,6 +76,28 @@ class ConsoleHandler(logging.Handler):
             if hasattr(self.widget, "setPlainText"):
                 self.widget.setPlainText(text + msg + "\n")
 
+
+class TransformBar(QWidget):
+    """Simple vertical bar with toggle buttons for transform modes."""
+
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        layout = QVBoxLayout(self)
+        if hasattr(layout, "setContentsMargins"):
+            layout.setContentsMargins(0, 0, 0, 0)
+        if hasattr(layout, "setSpacing"):
+            layout.setSpacing(2)
+        self.move_btn = QPushButton("Move", self)
+        self.rotate_btn = QPushButton("Rotate", self)
+        self.scale_btn = QPushButton("Scale", self)
+        self.rect_btn = QPushButton("Rect", self)
+        for btn in [self.move_btn, self.rotate_btn, self.scale_btn, self.rect_btn]:
+            if hasattr(btn, "setCheckable"):
+                btn.setCheckable(True)
+            layout.addWidget(btn)
+        if hasattr(layout, "addStretch"):
+            layout.addStretch()
+
 log = logging.getLogger(__name__)
 
 
@@ -585,16 +607,14 @@ class EditorWindow(QMainWindow):
             layout.setContentsMargins(8, 8, 0, 0)
         if hasattr(layout, "setSpacing"):
             layout.setSpacing(4)
-        bar = QToolBar(container)
-        if hasattr(bar, "setOrientation"):
-            bar.setOrientation(Qt.Orientation.Vertical)
+        bar = TransformBar(container)
         if hasattr(bar, "setSizePolicy"):
             pol = getattr(QSizePolicy, "Policy", QSizePolicy)
             horiz = getattr(pol, "Preferred", 0)
             vert = getattr(pol, "Expanding", 0)
             bar.setSizePolicy(horiz, vert)
-        if hasattr(bar, "setMaximumWidth"):
-            bar.setMaximumWidth(40)
+        if hasattr(bar, "setFixedWidth"):
+            bar.setFixedWidth(60)
         layout.addWidget(bar)
         layout.addWidget(view)
         container.viewport = view  # type: ignore[attr-defined]
@@ -613,36 +633,12 @@ class EditorWindow(QMainWindow):
         self.viewport_container = container
         self.viewport = container.viewport  # type: ignore[attr-defined]
         self.mode_bar = container.mode_bar  # type: ignore[attr-defined]
-        self.move_action = QAction("Move", self.mode_bar)
-        if hasattr(self.move_action, "setCheckable"):
-            self.move_action.setCheckable(True)
-        if hasattr(self.mode_bar, "addAction"):
-            self.mode_bar.addAction(self.move_action)
-        if hasattr(self.move_action, "setChecked"):
-            self.move_action.setChecked(True)
-        self.rotate_action = QAction("Rotate", self.mode_bar)
-        if hasattr(self.rotate_action, "setCheckable"):
-            self.rotate_action.setCheckable(True)
-        if hasattr(self.mode_bar, "addAction"):
-            self.mode_bar.addAction(self.rotate_action)
-        self.scale_action = QAction("Scale", self.mode_bar)
-        if hasattr(self.scale_action, "setCheckable"):
-            self.scale_action.setCheckable(True)
-        if hasattr(self.mode_bar, "addAction"):
-            self.mode_bar.addAction(self.scale_action)
-        self.rect_action = QAction("Rect", self.mode_bar)
-        if hasattr(self.rect_action, "setCheckable"):
-            self.rect_action.setCheckable(True)
-        if hasattr(self.mode_bar, "addAction"):
-            self.mode_bar.addAction(self.rect_action)
-        if hasattr(self.move_action, "triggered"):
-            self.move_action.triggered.connect(lambda: self.set_mode("move"))
-        if hasattr(self.rotate_action, "triggered"):
-            self.rotate_action.triggered.connect(lambda: self.set_mode("rotate"))
-        if hasattr(self.scale_action, "triggered"):
-            self.scale_action.triggered.connect(lambda: self.set_mode("scale"))
-        if hasattr(self.rect_action, "triggered"):
-            self.rect_action.triggered.connect(lambda: self.set_mode("rect"))
+        self.mode_bar.move_btn.clicked.connect(lambda: self.set_mode("move"))
+        self.mode_bar.rotate_btn.clicked.connect(lambda: self.set_mode("rotate"))
+        self.mode_bar.scale_btn.clicked.connect(lambda: self.set_mode("scale"))
+        self.mode_bar.rect_btn.clicked.connect(lambda: self.set_mode("rect"))
+        if hasattr(self.mode_bar.move_btn, "setChecked"):
+            self.mode_bar.move_btn.setChecked(True)
         self.console = QTextEdit(self)
         self.console.setReadOnly(True)
         clear_a = QAction("Clear", self.console)
@@ -888,41 +884,41 @@ class EditorWindow(QMainWindow):
     def set_mode(self, mode: str) -> None:
         self.transform_mode = mode
         if mode == "move":
-            if hasattr(self.move_action, "setChecked"):
-                self.move_action.setChecked(True)
-            if hasattr(self.rotate_action, "setChecked"):
-                self.rotate_action.setChecked(False)
-            if hasattr(self.scale_action, "setChecked"):
-                self.scale_action.setChecked(False)
-            if hasattr(self.rect_action, "setChecked"):
-                self.rect_action.setChecked(False)
+            if hasattr(self.mode_bar.move_btn, "setChecked"):
+                self.mode_bar.move_btn.setChecked(True)
+            if hasattr(self.mode_bar.rotate_btn, "setChecked"):
+                self.mode_bar.rotate_btn.setChecked(False)
+            if hasattr(self.mode_bar.scale_btn, "setChecked"):
+                self.mode_bar.scale_btn.setChecked(False)
+            if hasattr(self.mode_bar.rect_btn, "setChecked"):
+                self.mode_bar.rect_btn.setChecked(False)
         elif mode == "rotate":
-            if hasattr(self.move_action, "setChecked"):
-                self.move_action.setChecked(False)
-            if hasattr(self.rotate_action, "setChecked"):
-                self.rotate_action.setChecked(True)
-            if hasattr(self.scale_action, "setChecked"):
-                self.scale_action.setChecked(False)
-            if hasattr(self.rect_action, "setChecked"):
-                self.rect_action.setChecked(False)
+            if hasattr(self.mode_bar.move_btn, "setChecked"):
+                self.mode_bar.move_btn.setChecked(False)
+            if hasattr(self.mode_bar.rotate_btn, "setChecked"):
+                self.mode_bar.rotate_btn.setChecked(True)
+            if hasattr(self.mode_bar.scale_btn, "setChecked"):
+                self.mode_bar.scale_btn.setChecked(False)
+            if hasattr(self.mode_bar.rect_btn, "setChecked"):
+                self.mode_bar.rect_btn.setChecked(False)
         elif mode == "scale":
-            if hasattr(self.move_action, "setChecked"):
-                self.move_action.setChecked(False)
-            if hasattr(self.rotate_action, "setChecked"):
-                self.rotate_action.setChecked(False)
-            if hasattr(self.scale_action, "setChecked"):
-                self.scale_action.setChecked(True)
-            if hasattr(self.rect_action, "setChecked"):
-                self.rect_action.setChecked(False)
+            if hasattr(self.mode_bar.move_btn, "setChecked"):
+                self.mode_bar.move_btn.setChecked(False)
+            if hasattr(self.mode_bar.rotate_btn, "setChecked"):
+                self.mode_bar.rotate_btn.setChecked(False)
+            if hasattr(self.mode_bar.scale_btn, "setChecked"):
+                self.mode_bar.scale_btn.setChecked(True)
+            if hasattr(self.mode_bar.rect_btn, "setChecked"):
+                self.mode_bar.rect_btn.setChecked(False)
         else:
-            if hasattr(self.move_action, "setChecked"):
-                self.move_action.setChecked(False)
-            if hasattr(self.rotate_action, "setChecked"):
-                self.rotate_action.setChecked(False)
-            if hasattr(self.scale_action, "setChecked"):
-                self.scale_action.setChecked(False)
-            if hasattr(self.rect_action, "setChecked"):
-                self.rect_action.setChecked(True)
+            if hasattr(self.mode_bar.move_btn, "setChecked"):
+                self.mode_bar.move_btn.setChecked(False)
+            if hasattr(self.mode_bar.rotate_btn, "setChecked"):
+                self.mode_bar.rotate_btn.setChecked(False)
+            if hasattr(self.mode_bar.scale_btn, "setChecked"):
+                self.mode_bar.scale_btn.setChecked(False)
+            if hasattr(self.mode_bar.rect_btn, "setChecked"):
+                self.mode_bar.rect_btn.setChecked(True)
         self.draw_scene(update_list=False)
 
     def resizeEvent(self, ev):  # pragma: no cover - gui layout
@@ -1358,7 +1354,8 @@ class EditorWindow(QMainWindow):
                 paste_a.triggered.connect(self.paste_object)
             if del_a is not None and hasattr(del_a, "triggered"):
                 del_a.triggered.connect(self.delete_selected)
-            menu.addSeparator()
+            if hasattr(menu, "addSeparator"):
+                menu.addSeparator()
         action = menu.addAction("Create Object")
         if action is not None and hasattr(action, "triggered"):
             action.triggered.connect(self.create_object)
