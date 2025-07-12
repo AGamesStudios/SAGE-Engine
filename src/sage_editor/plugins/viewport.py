@@ -92,12 +92,16 @@ class TransformBar(QWidget):
             layout.setContentsMargins(0, 0, 0, 0)
         if hasattr(layout, "setSpacing"):
             layout.setSpacing(2)
+        self.edit_btn = QPushButton("Edit", self)
+        self.model_btn = QPushButton("Model", self)
         self.move_btn = QPushButton("Move", self)
         self.rotate_btn = QPushButton("Rotate", self)
         self.scale_btn = QPushButton("Scale", self)
         self.rect_btn = QPushButton("Rect", self)
         self.local_btn = QPushButton("Local", self)
         for btn in [
+            self.edit_btn,
+            self.model_btn,
             self.move_btn,
             self.rotate_btn,
             self.scale_btn,
@@ -276,6 +280,7 @@ class _ViewportMixin:
         self._dragging = False
         self._drag_mode: str | None = None
         self._drag_corner: str | None = None
+        self._drag_vertex: int | None = None
         self._last_world: tuple[float, float] | None = None
         self._drag_angle: float | None = None
         if hasattr(self, "setContextMenuPolicy"):
@@ -338,6 +343,18 @@ class _ViewportMixin:
         dist = math.hypot(dx, dy)
         return abs(dist - ring) <= self.HANDLE_PIXELS
 
+    def _hit_vertex_handle(self, pos) -> int | None:
+        obj = self._window.selected_obj
+        if obj is None or not self._window.modeling or getattr(obj, "mesh", None) is None:
+            return None
+        th = self.HANDLE_PIXELS
+        for i, (vx, vy) in enumerate(obj.mesh.vertices):
+            wx, wy = self._window.mesh_to_world(obj, vx, vy)
+            sx, sy = self._window.world_to_screen((wx, wy))
+            if abs(pos.x() - sx) <= th and abs(pos.y() - sy) <= th:
+                return i
+        return None
+
     # event handlers are same as before
     def mousePressEvent(self, ev):  # pragma: no cover - gui interaction
         if ev.button() == Qt.MouseButton.LeftButton:
@@ -348,6 +365,13 @@ class _ViewportMixin:
             self._drag_corner = None
             self._last_world = None
             obj = self._window.selected_obj
+            if obj is not None:
+                v = self._hit_vertex_handle(self._press_pos)
+                if v is not None:
+                    self._drag_mode = "vertex"
+                    self._drag_vertex = v
+                    self._last_world = self._window.screen_to_world(self._press_pos)
+                    return
             if obj is not None and self._window.transform_mode == "rect":
                 wx, wy = self._window.screen_to_world(self._press_pos)
                 if isinstance(obj, Camera):
@@ -414,7 +438,23 @@ class _ViewportMixin:
             if self._dragging and self._last_pos is not None:
                 cam = self._window.camera
                 wx, wy = self._window.screen_to_world(pos)
-                if self._drag_mode in ("move", "move_x", "move_y", "move_xy") and self._last_world is not None:
+                if (
+                    self._drag_mode == "vertex"
+                    and self._last_world is not None
+                    and self._drag_vertex is not None
+                ):
+                    obj = self._window.selected_obj
+                    if obj is not None and getattr(obj, "mesh", None) is not None:
+                        dx = wx - self._last_world[0]
+                        dy = wy - self._last_world[1]
+                        vx, vy = obj.mesh.vertices[self._drag_vertex]
+                        wx0, wy0 = self._window.mesh_to_world(obj, vx, vy)
+                        new_x = wx0 + dx
+                        new_y = wy0 + dy
+                        obj.mesh.vertices[self._drag_vertex] = self._window.world_to_mesh(obj, new_x, new_y)
+                        self._window.draw_scene(update_list=False)
+                    self._last_world = (wx, wy)
+                elif self._drag_mode in ("move", "move_x", "move_y", "move_xy") and self._last_world is not None:
                     dx = wx - self._last_world[0]
                     dy = wy - self._last_world[1]
                     obj = self._window.selected_obj
@@ -586,6 +626,7 @@ class _ViewportMixin:
             self._last_pos = None
             self._drag_mode = None
             self._drag_corner = None
+            self._drag_vertex = None
             self._last_world = None
             self._drag_angle = None
             try:
@@ -1029,6 +1070,8 @@ class EditorWindow(QMainWindow):
         self.mode_bar.local_btn.clicked.connect(
             lambda checked: self.toggle_local(checked)
         )
+        self.mode_bar.edit_btn.clicked.connect(lambda: self.toggle_model(False))
+        self.mode_bar.model_btn.clicked.connect(lambda: self.toggle_model(True))
         if hasattr(self.mode_bar.move_btn, "setChecked"):
             self.mode_bar.move_btn.setChecked(True)
         self.console = QTextEdit(self)
@@ -1149,6 +1192,7 @@ class EditorWindow(QMainWindow):
         self.renderer.show_grid = True
         self.mirror_resize = False
         self.local_coords = False
+        self.modeling = False
         self.transform_mode = "move"
         self.set_renderer(self.renderer)
         self.selected_obj: Optional[GameObject] = None
@@ -1318,6 +1362,19 @@ class EditorWindow(QMainWindow):
             self.mode_bar.local_btn, "setChecked"
         ):
             self.mode_bar.local_btn.setChecked(self.local_coords)
+        self.draw_scene(update_list=False)
+
+    def toggle_model(self, modeling: bool) -> None:
+        """Switch between edit and model modes."""
+        self.modeling = modeling
+        if hasattr(self.mode_bar, "model_btn") and hasattr(
+            self.mode_bar.model_btn, "setChecked"
+        ):
+            self.mode_bar.model_btn.setChecked(modeling)
+        if hasattr(self.mode_bar, "edit_btn") and hasattr(
+            self.mode_bar.edit_btn, "setChecked"
+        ):
+            self.mode_bar.edit_btn.setChecked(not modeling)
         self.draw_scene(update_list=False)
 
     def update_cursor(self, x: float, y: float) -> None:
@@ -1589,6 +1646,46 @@ class EditorWindow(QMainWindow):
         sy = (y - cam.y) * scale * cam.zoom * sign + h / 2
         return sx, sy
 
+    def mesh_to_world(self, obj: GameObject, vx: float, vy: float) -> tuple[float, float]:
+        """Return world coordinates for a mesh vertex."""
+        w = obj.width * obj.scale_x
+        h = obj.height * obj.scale_y
+        px = w * obj.pivot_x
+        py = h * obj.pivot_y
+        off_x = px - w / 2
+        off_y = py - h / 2
+        sx = -1 if obj.flip_x else 1
+        sy = -1 if obj.flip_y else 1
+        vx = (vx * w - off_x) * sx + off_x
+        vy = (vy * h - off_y) * sy + off_y
+        ang = math.radians(obj.angle)
+        cos_a = math.cos(ang)
+        sin_a = math.sin(ang)
+        rx = vx * cos_a - vy * sin_a
+        ry = vx * sin_a + vy * cos_a
+        return obj.x + rx, obj.y + ry
+
+    def world_to_mesh(self, obj: GameObject, x: float, y: float) -> tuple[float, float]:
+        """Convert world coordinates back to mesh space."""
+        w = obj.width * obj.scale_x
+        h = obj.height * obj.scale_y
+        px = w * obj.pivot_x
+        py = h * obj.pivot_y
+        off_x = px - w / 2
+        off_y = py - h / 2
+        sx = -1 if obj.flip_x else 1
+        sy = -1 if obj.flip_y else 1
+        ang = math.radians(obj.angle)
+        cos_a = math.cos(ang)
+        sin_a = math.sin(ang)
+        rx = x - obj.x
+        ry = y - obj.y
+        vx = rx * cos_a + ry * sin_a
+        vy = -rx * sin_a + ry * cos_a
+        vx = (vx - off_x) / sx + off_x
+        vy = (vy - off_y) / sy + off_y
+        return vx / w if w else 0.0, vy / h if h else 0.0
+
     def set_renderer(self, renderer):
         self.viewport.renderer = renderer
 
@@ -1727,6 +1824,20 @@ class EditorWindow(QMainWindow):
                     frames=None,
                 )
             )
+        if self.modeling and getattr(obj, "mesh", None) is not None:
+            for vx, vy in obj.mesh.vertices:
+                wx, wy = self.mesh_to_world(obj, vx, vy)
+                self.renderer.add_gizmo(
+                    gizmos.square_gizmo(
+                        wx,
+                        wy,
+                        size=4,
+                        color=(0.2, 0.8, 1.0, 1),
+                        thickness=1,
+                        frames=None,
+                        filled=True,
+                    )
+                )
         if self.transform_mode == "rect":
             handle_size = 5
             cam = self.camera

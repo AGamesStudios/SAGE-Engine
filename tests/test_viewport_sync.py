@@ -592,3 +592,17 @@ def test_rect_mode_gizmos(monkeypatch):
     assert len(win.renderer.gizmos) == 2
     win.set_mode('rect')
     assert len(win.renderer.gizmos) == 7
+
+
+def test_model_toggle(monkeypatch):
+    _stub_gl(monkeypatch, {})
+    _setup_qt(monkeypatch)
+
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    viewport = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(viewport)
+
+    win = viewport.EditorWindow()
+    assert not win.modeling
+    win.toggle_model(True)
+    assert win.modeling
