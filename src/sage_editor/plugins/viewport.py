@@ -177,10 +177,9 @@ class NoWheelLineEdit(QLineEdit):
 
 
 class NoWheelSpinBox(QDoubleSpinBox):
-    """Spin box that ignores the mouse wheel and supports drag editing."""
+    """Spin box that ignores the mouse wheel and allows simple drag editing."""
 
-    DRAG_SPEED = 0.01
-    MAX_MULTIPLIER = 3.0
+    DRAG_SPEED = 0.05
 
     def __init__(self, *a, **k):
         super().__init__(*a, **k)
@@ -204,9 +203,8 @@ class NoWheelSpinBox(QDoubleSpinBox):
         if self._drag_origin is not None and event.buttons() & Qt.MouseButton.LeftButton:
             y = getattr(event, "globalPosition", event.pos)().y()
             delta = self._drag_origin - y
-            mult = 1 + min(self.MAX_MULTIPLIER - 1, abs(delta) * self.DRAG_SPEED)
             step = self.singleStep() or 1.0
-            new_val = self._drag_value + delta * mult * step / 20.0
+            new_val = self._drag_value + delta * step * self.DRAG_SPEED
             self.setValue(new_val)
             event.accept()
             return
@@ -1094,6 +1092,8 @@ class EditorWindow(QMainWindow):
         ]:
             if hasattr(edit, "editingFinished"):
                 edit.editingFinished.connect(self.apply_properties)
+            if hasattr(edit, "valueChanged"):
+                edit.valueChanged.connect(lambda *_: self.apply_properties(False))
         for box in [
             self.properties.visible_check,
             self.properties.flip_x,
