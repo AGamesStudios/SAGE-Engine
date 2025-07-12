@@ -177,10 +177,49 @@ class NoWheelLineEdit(QLineEdit):
 
 
 class NoWheelSpinBox(QDoubleSpinBox):
-    """Spin box that ignores mouse wheel events."""
+    """Spin box that ignores the mouse wheel and supports drag editing."""
+
+    DRAG_SPEED = 0.02
+    MAX_MULTIPLIER = 5.0
+
+    def __init__(self, *a, **k):
+        super().__init__(*a, **k)
+        self._drag_origin: float | None = None
+        self._drag_value: float = 0.0
 
     def wheelEvent(self, event):  # pragma: no cover - ui tweak
         event.ignore()
+
+    # Drag with the left mouse button to change the value quickly
+    def mousePressEvent(self, event):  # pragma: no cover - ui tweak
+        if event.button() == Qt.MouseButton.LeftButton:
+            self._drag_origin = getattr(event, "globalPosition", event.pos)().y()
+            self._drag_value = self.value()
+            if hasattr(self, "setCursor"):
+                self.setCursor(Qt.CursorShape.SizeVerCursor)
+        if hasattr(QDoubleSpinBox, "mousePressEvent"):
+            QDoubleSpinBox.mousePressEvent(self, event)
+
+    def mouseMoveEvent(self, event):  # pragma: no cover - ui tweak
+        if self._drag_origin is not None and event.buttons() & Qt.MouseButton.LeftButton:
+            y = getattr(event, "globalPosition", event.pos)().y()
+            delta = self._drag_origin - y
+            mult = 1 + min(self.MAX_MULTIPLIER - 1, abs(delta) * self.DRAG_SPEED)
+            step = self.singleStep() or 1.0
+            new_val = self._drag_value + delta * mult * step / 20.0
+            self.setValue(new_val)
+            event.accept()
+            return
+        if hasattr(QDoubleSpinBox, "mouseMoveEvent"):
+            QDoubleSpinBox.mouseMoveEvent(self, event)
+
+    def mouseReleaseEvent(self, event):  # pragma: no cover - ui tweak
+        if event.button() == Qt.MouseButton.LeftButton and self._drag_origin is not None:
+            self._drag_origin = None
+            if hasattr(self, "unsetCursor"):
+                self.unsetCursor()
+        if hasattr(QDoubleSpinBox, "mouseReleaseEvent"):
+            QDoubleSpinBox.mouseReleaseEvent(self, event)
 
 log = logging.getLogger(__name__)
 
