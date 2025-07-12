@@ -51,8 +51,9 @@ with ``union_meshes`` or subtracted using ``difference_meshes``. Boolean
 operations triangulate polygons so interior holes are preserved. Note that
 complex shapes can produce many triangles and slow rendering; see
 [limitations](limitations.md). Use
-``Mesh.apply_matrix`` together with :func:`engine.core.math2d.make_transform`
-to apply translations, scaling and rotations in one step.
+``Mesh.apply_matrix`` or ``Transform2D.apply_matrix`` together with
+:func:`engine.core.math2d.make_transform` to apply translations, scaling and
+rotations in one step.
 
 Install the ``physics`` extra to enable a lightweight wrapper around
 `pymunk`. Create a :class:`~engine.physics.PhysicsWorld`, add shapes for your

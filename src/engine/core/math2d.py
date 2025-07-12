@@ -17,6 +17,8 @@ __all__ = [
     "make_transform",
     "transform_point",
     "make_ortho",
+    "multiply_matrix",
+    "decompose_matrix",
     "normalize_angle",
     "set_max_angle",
     "get_max_angle",
@@ -170,4 +172,29 @@ def make_ortho(left: float, right: float, bottom: float, top: float) -> list[flo
         0.0, 2.0 / tb, 0.0,
         -(right + left) / rl, -(top + bottom) / tb, 1.0,
     ]
+
+
+def multiply_matrix(a: list[float], b: list[float]) -> list[float]:
+    """Return ``a * b`` for two column-major 3x3 matrices."""
+    return [
+        a[0] * b[0] + a[3] * b[1] + a[6] * b[2],
+        a[1] * b[0] + a[4] * b[1] + a[7] * b[2],
+        0.0,
+        a[0] * b[3] + a[3] * b[4] + a[6] * b[5],
+        a[1] * b[3] + a[4] * b[4] + a[7] * b[5],
+        0.0,
+        a[0] * b[6] + a[3] * b[7] + a[6] * b[8],
+        a[1] * b[6] + a[4] * b[7] + a[7] * b[8],
+        1.0,
+    ]
+
+
+def decompose_matrix(mat: list[float]) -> tuple[float, float, float, float, float]:
+    """Return ``(x, y, sx, sy, angle)`` from ``mat``."""
+    sx = math.hypot(mat[0], mat[1])
+    sy = math.hypot(mat[3], mat[4])
+    if sx == 0 or sy == 0:
+        raise ValueError("Invalid matrix scale")
+    angle = math.degrees(math.atan2(mat[1] / sx, mat[0] / sx))
+    return mat[6], mat[7], sx, sy, angle
 

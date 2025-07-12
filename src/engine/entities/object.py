@@ -55,6 +55,18 @@ class Transform2D:
             self.pivot_y,
         )
 
+    def apply_matrix(self, mat: List[float]) -> None:
+        """Apply ``mat`` to this transform in place."""
+        from ..core.math2d import multiply_matrix, decompose_matrix
+
+        new_mat = multiply_matrix(self.matrix(), mat)
+        x, y, sx, sy, ang = decompose_matrix(new_mat)
+        self.x = x
+        self.y = y
+        self.scale_x = sx
+        self.scale_y = sy
+        self.angle = ang
+
 
 @dataclass(slots=True)
 class Material:
