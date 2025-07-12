@@ -248,11 +248,14 @@ class NoWheelSpinBox(QDoubleSpinBox):
 log = logging.getLogger(__name__)
 
 
+ACCENT_COLOR = "#ffae00"
+
+
 def _apply_ember_palette(app: QApplication) -> None:
     """Apply the SAGE Ember palette with a soft orange accent to *app*."""
     from PyQt6.QtGui import QColor, QPalette  # type: ignore[import-not-found]
 
-    accent = QColor(255, 170, 0)
+    accent = QColor(255, 174, 0)
     palette = QPalette()
     palette.setColor(QPalette.ColorRole.Window, QColor(45, 45, 45))
     palette.setColor(QPalette.ColorRole.WindowText, Qt.GlobalColor.white)
@@ -272,71 +275,98 @@ def _apply_ember_palette(app: QApplication) -> None:
 
 def _apply_ember_stylesheet(app: QApplication) -> None:
     """Style common widgets with an orange highlight."""
-    stylesheet = """
-    QPushButton, QToolButton {
+    stylesheet = f"""
+    QPushButton, QToolButton {{
         background-color: #353535;
         border: none;
         padding: 4px 8px;
         border-radius: 4px;
         color: white;
-    }
-    QPushButton:hover, QToolButton:hover {
+    }}
+    QPushButton:hover, QToolButton:hover {{
         background-color: #474747;
-    }
-    QPushButton:pressed, QToolButton:pressed {
-        background-color: #ffae00;
+    }}
+    QPushButton:pressed, QToolButton:pressed {{
+        background-color: {ACCENT_COLOR};
         color: black;
-    }
-    QMenuBar {
+    }}
+    QMenuBar {{
         background-color: #2c2c2c;
-    }
-    QMenuBar::item:selected {
+    }}
+    QMenuBar::item:selected {{
         background-color: #444444;
-    }
-    QMenu {
+    }}
+    QMenu {{
         background-color: #2c2c2c;
         border: none;
-    }
-    QMenu::item:selected {
+    }}
+    QMenu::item:selected {{
         background-color: #444444;
-    }
-    QDockWidget::title {
+    }}
+    QDockWidget::title {{
         background-color: #353535;
         text-align: center;
-    }
-    QCheckBox::indicator:checked, QRadioButton::indicator:checked {
-        background-color: #ffae00;
+    }}
+    QCheckBox::indicator:checked, QRadioButton::indicator:checked {{
+        background-color: {ACCENT_COLOR};
         border: none;
-    }
-    QSlider::groove:horizontal {
+    }}
+    QSlider::groove:horizontal {{
         height: 6px;
         background: #555555;
         border-radius: 3px;
-    }
-    QSlider::handle:horizontal {
-        background: #ffae00;
+    }}
+    QSlider::handle:horizontal {{
+        background: {ACCENT_COLOR};
         border: none;
         width: 12px;
         margin: -5px 0;
         border-radius: 6px;
-    }
-    QProgressBar {
+    }}
+    QProgressBar {{
         background-color: #353535;
         border: none;
         text-align: center;
-    }
-    QProgressBar::chunk {
-        background-color: #ffae00;
-    }
-    QComboBox {
+    }}
+    QProgressBar::chunk {{
+        background-color: {ACCENT_COLOR};
+    }}
+    QComboBox {{
         background-color: #353535;
         border: none;
         padding: 2px 4px;
         border-radius: 4px;
-    }
-    QComboBox::drop-down {
+    }}
+    QComboBox::drop-down {{
         border: none;
-    }
+    }}
+    QLineEdit, QPlainTextEdit {{
+        background-color: #2b2b2b;
+        border: 1px solid #555555;
+        border-radius: 4px;
+        padding: 2px;
+        color: white;
+    }}
+    QLineEdit:focus, QPlainTextEdit:focus {{
+        border-color: {ACCENT_COLOR};
+    }}
+    QScrollBar:vertical {{
+        background: #2c2c2c;
+        width: 12px;
+        margin: 16px 0 16px 0;
+    }}
+    QScrollBar::handle:vertical {{
+        background: #555555;
+        min-height: 20px;
+        border-radius: 5px;
+    }}
+    QScrollBar::handle:vertical:hover {{
+        background: {ACCENT_COLOR};
+    }}
+    QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
+        border: none;
+        background: #2c2c2c;
+    }}
     """
     app.setStyleSheet(stylesheet)
 
