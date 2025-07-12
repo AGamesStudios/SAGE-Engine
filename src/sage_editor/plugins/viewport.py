@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import (  # type: ignore[import-not-found]
     QScrollArea,
     QLabel,
     QLineEdit,
-    QSlider,
+    QDial,
     QCheckBox,
     QComboBox,
     QWidget,
@@ -108,6 +108,27 @@ class TransformBar(QWidget):
             layout.addWidget(btn)
         if hasattr(layout, "addStretch"):
             layout.addStretch()
+
+
+class AngleDial(QDial):
+    """Dial that displays the current value inside the circle."""
+
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self._label = QLabel(self)
+        if hasattr(self._label, "setAlignment"):
+            self._label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.valueChanged.connect(self._update_label)
+        self._update_label(self.value())
+
+    def resizeEvent(self, event):  # pragma: no cover - gui adjustment
+        super().resizeEvent(event)
+        if hasattr(self._label, "setGeometry"):
+            self._label.setGeometry(0, 0, self.width(), self.height())
+
+    def _update_label(self, value: int) -> None:
+        if hasattr(self._label, "setText"):
+            self._label.setText(str(value))
 
 log = logging.getLogger(__name__)
 
@@ -592,9 +613,9 @@ class PropertiesWidget(QWidget):
         pos_layout.addWidget(self.pos_y)
         trans_form.addRow("Position", pos_widget)
 
-        self.rot_slider = QSlider(Qt.Orientation.Horizontal, self)
-        self.rot_slider.setRange(0, 360)
-        trans_form.addRow("Rotation", self.rot_slider)
+        self.rot_dial = AngleDial(self)
+        self.rot_dial.setRange(0, 360)
+        trans_form.addRow("Rotation", self.rot_dial)
 
         scale_widget = QWidget(self)
         scale_layout = QHBoxLayout(scale_widget)
@@ -657,7 +678,7 @@ class PropertiesWidget(QWidget):
             self.visible_check.setChecked(False)
             self.pos_x.setText("")
             self.pos_y.setText("")
-            self.rot_slider.setValue(0)
+            self.rot_dial.setValue(0)
             self.scale_x.setText("")
             self.scale_y.setText("")
             self.flip_x.setChecked(False)
@@ -689,7 +710,7 @@ class PropertiesWidget(QWidget):
         self.visible_check.setChecked(bool(getattr(obj, "visible", True)))
         self.pos_x.setText(str(getattr(obj, "x", 0.0)))
         self.pos_y.setText(str(getattr(obj, "y", 0.0)))
-        self.rot_slider.setValue(int(getattr(obj, "angle", 0.0) % 360))
+        self.rot_dial.setValue(int(getattr(obj, "angle", 0.0) % 360))
         self.scale_x.setText(str(getattr(obj, "scale_x", 1.0)))
         self.scale_y.setText(str(getattr(obj, "scale_y", 1.0)))
         flip_allowed = role not in ("camera", "empty")
@@ -721,7 +742,7 @@ class PropertiesWidget(QWidget):
             obj.y = float(self.pos_y.text())
         except ValueError:
             log.warning("Invalid position")
-        obj.angle = float(self.rot_slider.value())
+        obj.angle = float(self.rot_dial.value())
         try:
             sx = float(self.scale_x.text())
             sy = float(self.scale_y.text())
@@ -907,8 +928,8 @@ class EditorWindow(QMainWindow):
         ]:
             if box is not None and hasattr(box, "stateChanged"):
                 box.stateChanged.connect(lambda *_: self.apply_properties(False))
-        if hasattr(self.properties.rot_slider, "valueChanged"):
-            self.properties.rot_slider.valueChanged.connect(lambda *_: self.apply_properties(False))
+        if hasattr(self.properties.rot_dial, "valueChanged"):
+            self.properties.rot_dial.valueChanged.connect(lambda *_: self.apply_properties(False))
         if hasattr(self.properties.role_combo, "currentIndexChanged"):
             self.properties.role_combo.currentIndexChanged.connect(lambda *_: self.apply_properties(False))
         body = getattr(self.properties, "body_combo", None)
@@ -975,11 +996,11 @@ class EditorWindow(QMainWindow):
         self.copy_action = copy_m
         self.paste_action = paste_m
         self.delete_action = del_m
-        if hasattr(copy_m, "setShortcut"):
+        if copy_m is not None and hasattr(copy_m, "setShortcut"):
             copy_m.setShortcut(QKeySequence("Ctrl+C"))
-        if hasattr(paste_m, "setShortcut"):
+        if paste_m is not None and hasattr(paste_m, "setShortcut"):
             paste_m.setShortcut(QKeySequence("Ctrl+V"))
-        if hasattr(del_m, "setShortcut"):
+        if del_m is not None and hasattr(del_m, "setShortcut"):
             del_m.setShortcut(QKeySequence("Delete"))
         engine_menu = menubar.addMenu("Engine") if hasattr(menubar, "addMenu") else None
         renderer_menu = engine_menu.addMenu("Renderer") if engine_menu and hasattr(engine_menu, "addMenu") else None

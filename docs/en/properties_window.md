@@ -8,6 +8,8 @@ collapse sections you rarely adjust. The **Object** section lists the object
 built-in roles **empty**, **sprite** and **camera**. There is no **Apply**
 button – changes are stored immediately.
 
+Rotation uses a circular dial that displays the angle value in degrees.
+
 ## Physics
 
 When the optional physics module is installed, objects include a **Physics**

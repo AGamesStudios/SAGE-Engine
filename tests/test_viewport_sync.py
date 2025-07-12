@@ -173,6 +173,9 @@ def _setup_qt(monkeypatch):
             self._value = v
             self.valueChanged.emit(v)
 
+    class QDial(QSlider):
+        pass
+
     class QGroupBox(QWidget):
         def __init__(self, *a, **k):
             super().__init__(*a, **k)
@@ -288,6 +291,7 @@ def _setup_qt(monkeypatch):
     qtwidgets.QCheckBox = QCheckBox
     qtwidgets.QComboBox = QComboBox
     qtwidgets.QSlider = QSlider
+    qtwidgets.QDial = QDial
     qtwidgets.QGroupBox = QGroupBox
     qtwidgets.QFormLayout = QFormLayout
     qtwidgets.QHBoxLayout = QHBoxLayout
