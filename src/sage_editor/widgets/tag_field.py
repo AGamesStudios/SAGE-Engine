@@ -34,7 +34,9 @@ class TagCapsule(QWidget):
         self.text = text
         layout = QHBoxLayout(self)
         if hasattr(layout, "setContentsMargins"):
-            layout.setContentsMargins(4, 0, 4, 0)
+            layout.setContentsMargins(2, 0, 2, 0)
+        if hasattr(layout, "setSpacing"):
+            layout.setSpacing(1)
         if hasattr(self, "setSizePolicy"):
             pol = getattr(QSizePolicy, "Policy", QSizePolicy)
             horiz = getattr(pol, "Maximum", 0)
@@ -45,6 +47,7 @@ class TagCapsule(QWidget):
                 "background: rgba(255,255,255,0.2);"
                 " border-radius: 8px;"
                 " padding: 0 2px;"
+                " border: none;"
             )
         self.label = QLabel(text, self)
         if hasattr(self.label, "setSizePolicy"):
@@ -100,7 +103,7 @@ class TagField(QWidget):
         if hasattr(self.tag_layout, "setContentsMargins"):
             self.tag_layout.setContentsMargins(0, 0, 0, 0)
         if hasattr(self.tag_layout, "setSpacing"):
-            self.tag_layout.setSpacing(2)
+            self.tag_layout.setSpacing(1)
 
         self.add_btn = QPushButton("+", self)
         if hasattr(self.add_btn, "setFixedSize"):
