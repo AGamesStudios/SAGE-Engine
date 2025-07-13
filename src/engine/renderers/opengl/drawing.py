@@ -133,7 +133,11 @@ def draw_mesh(renderer, obj: GameObject, camera: Optional[Camera], mesh: Mesh) -
     w = obj.width * obj.scale_x * scale_mul
     h = obj.height * obj.scale_y * scale_mul
 
-    mode = GL_TRIANGLES if mesh.indices else GL_TRIANGLE_FAN
+    filled = getattr(obj, "filled", True)
+    if filled:
+        mode = GL_TRIANGLES if mesh.indices else GL_TRIANGLE_FAN
+    else:
+        mode = GL_LINE_LOOP
     obj_x, obj_y = obj.render_position(camera)
     px = w * obj.pivot_x
     py = h * obj.pivot_y
@@ -144,7 +148,10 @@ def draw_mesh(renderer, obj: GameObject, camera: Optional[Camera], mesh: Mesh) -
 
     glBegin(mode)
     verts = mesh.vertices
-    indices = mesh.indices if mesh.indices else range(len(verts))
+    if filled:
+        indices = mesh.indices if mesh.indices else range(len(verts))
+    else:
+        indices = range(len(verts))
     for idx in indices:
         vx, vy = verts[idx]
         vx = (vx * w - off_x) * sx + off_x

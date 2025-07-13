@@ -2400,6 +2400,7 @@ class EditorWindow(QMainWindow):
         obj = GameObject(role="shape", name=f"{shape.capitalize()} {count}")
         obj.transform.x = x
         obj.transform.y = y
+        obj.filled = True
         if shape == "triangle":
             obj.mesh = create_triangle_mesh()
         elif shape == "circle":

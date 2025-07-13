@@ -161,6 +161,9 @@ class PropertiesWidget(QWidget):
         if hasattr(self.shape_combo, "addItems"):
             self.shape_combo.addItems(["square", "triangle", "circle"])
         shape_form.addRow("Form", self.shape_combo)
+        self.filled_check = QCheckBox("Filled", self)
+        _disable_text_select(self.filled_check)
+        shape_form.addRow(self.filled_check)
         layout.addWidget(self.shape_group)
         if hasattr(self.shape_group, "hide"):
             self.shape_group.hide()
@@ -217,6 +220,8 @@ class PropertiesWidget(QWidget):
             self.pivot_y.setValue(0.0)
             self.pivot_combo.setCurrentIndex(self._manual_index)
             self._pivot_preset_changed(self._manual_index)
+            if hasattr(self, "filled_check"):
+                self.filled_check.setChecked(True)
             if getattr(self, "physics_group", None):
                 self.physics_enabled.setChecked(False)
                 if hasattr(self, "body_combo"):
@@ -288,6 +293,7 @@ class PropertiesWidget(QWidget):
                 self.shape_combo.setCurrentIndex(idx)
             elif hasattr(self.shape_combo, "setCurrentText"):
                 self.shape_combo.setCurrentText(shape)
+            self.filled_check.setChecked(bool(getattr(obj, "filled", True)))
         if hasattr(self, "sprite_group"):
             self.image_edit.setText(getattr(obj, "image_path", ""))
             self.smooth_check.setChecked(bool(getattr(obj, "smooth", True)))
@@ -343,6 +349,7 @@ class PropertiesWidget(QWidget):
                 idx = self.shape_combo.currentIndex() if hasattr(self.shape_combo, "currentIndex") else 0
                 order = ["square", "triangle", "circle"]
                 obj.shape = order[idx] if 0 <= idx < len(order) else "square"
+            obj.filled = self.filled_check.isChecked()
         if hasattr(self.sprite_group, "isVisible") and self.sprite_group.isVisible():
             obj.image_path = self.image_edit.text()
             obj.smooth = self.smooth_check.isChecked()

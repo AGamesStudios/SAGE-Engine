@@ -683,6 +683,26 @@ def test_create_shape(monkeypatch):
     assert shape.mesh is not None
 
 
+def test_shape_fill_property(monkeypatch):
+    _stub_gl(monkeypatch, {})
+    _setup_qt(monkeypatch)
+
+    import importlib
+
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    viewport = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(viewport)
+
+    win = viewport.EditorWindow()
+    obj = win.create_shape('square')
+    props = viewport.PropertiesWidget()
+    props.set_object(obj)
+    assert props.filled_check.isChecked()
+    props.filled_check.setChecked(False)
+    props.apply_to_object(obj)
+    assert obj.filled is False
+
+
 def test_extrude_and_loop_cut(monkeypatch):
     _stub_gl(monkeypatch, {})
     _setup_qt(monkeypatch)

@@ -93,6 +93,8 @@ Model mode reveals vertex handles and a second bar with **Verts**, **Edges** and
 **Faces** buttons. Choose which element type to manipulate—drag points, edges or
 the entire face. Extruding selected vertices toward the cursor creates new edges
 and you can subdivide the mesh with ``Loop Cut`` for quick experiments.
+Objects with the **shape** role include a **Filled** checkbox so you can draw
+polygons as outlines or solid faces.
 The *View* menu lets you hide the bounding box around the selection.
 Hold **Ctrl** or **Shift** while clicking objects to add them to the selection.
 

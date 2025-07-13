@@ -125,6 +125,7 @@ class GameObject(Object):
     smooth: bool = True
     color: tuple[int, int, int, int] | None = None
     alpha: float = 1.0
+    filled: bool = True
     flip_x: bool = False
     flip_y: bool = False
     visible: bool = True

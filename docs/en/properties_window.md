@@ -19,7 +19,8 @@ drag from the starting point, so keeping the pointer still stops the
 adjustment.
 
 Choosing the **shape** role reveals an additional **Shape** category
-with a drop-down to select **square**, **triangle** or **circle**. Picking
+with a drop-down to select **square**, **triangle** or **circle** and a
+**Filled** checkbox that toggles a solid fill. Picking
 the **sprite** role instead shows a **Sprite** category where you can
 enter the image path and toggle texture filtering via the **Smooth** box.
 
