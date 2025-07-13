@@ -306,3 +306,46 @@ class NoWheelSpinBox(QDoubleSpinBox):
         if hasattr(QDoubleSpinBox, "mouseReleaseEvent"):
             QDoubleSpinBox.mouseReleaseEvent(self, event)
 
+
+class SnapSettingsWidget(QWidget):
+    """Dockable widget for configuring grid snapping."""
+
+    def __init__(self, window: "EditorWindow", parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self._window = window
+        try:  # pragma: no cover - present in real Qt only
+            from PyQt6.QtWidgets import QFormLayout  # type: ignore[import-not-found]
+        except Exception:
+            QFormLayout = QVBoxLayout  # type: ignore[assignment]
+
+        layout = QFormLayout(self)
+        if hasattr(layout, "setContentsMargins"):
+            layout.setContentsMargins(4, 4, 4, 4)
+
+        self.move_spin = NoWheelSpinBox(self)
+        self.move_spin.setDecimals(3)
+        self.move_spin.setRange(0.01, 100.0)
+        self.move_spin.setValue(window.move_step)
+        layout.addRow("Move Step", self.move_spin)
+
+        self.rot_spin = NoWheelSpinBox(self)
+        self.rot_spin.setDecimals(1)
+        self.rot_spin.setRange(0.1, 360.0)
+        self.rot_spin.setValue(window.rotate_step)
+        layout.addRow("Rotate Step", self.rot_spin)
+
+        self.scale_spin = NoWheelSpinBox(self)
+        self.scale_spin.setDecimals(3)
+        self.scale_spin.setRange(0.01, 10.0)
+        self.scale_spin.setValue(window.scale_step)
+        layout.addRow("Scale Step", self.scale_spin)
+
+        for spin in [self.move_spin, self.rot_spin, self.scale_spin]:
+            if hasattr(spin, "valueChanged"):
+                spin.valueChanged.connect(self._apply)
+
+    def _apply(self) -> None:
+        self._window.move_step = float(self.move_spin.value())
+        self._window.rotate_step = float(self.rot_spin.value())
+        self._window.scale_step = float(self.scale_spin.value())
+

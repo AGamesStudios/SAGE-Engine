@@ -67,6 +67,7 @@ from sage_editor.plugins.editor_widgets import (
     NoWheelLineEdit,
     NoWheelSpinBox,  # noqa: F401 - re-exported for widgets
     ProgressWheel,  # noqa: F401 - re-exported for widgets
+    SnapSettingsWidget,
 )
 from sage_editor.plugins.viewport_base import _ViewportMixin
 
@@ -423,6 +424,15 @@ class EditorWindow(QMainWindow):
         if snap_settings is not None and hasattr(snap_settings, "triggered"):
             snap_settings.triggered.connect(self.open_snap_dialog)
 
+        axes_act = view_menu.addAction("Show Axes") if view_menu and hasattr(view_menu, "addAction") else None
+        if axes_act is not None:
+            if hasattr(axes_act, "setCheckable"):
+                axes_act.setCheckable(True)
+            if hasattr(axes_act, "setChecked"):
+                axes_act.setChecked(True)
+            if hasattr(axes_act, "triggered"):
+                axes_act.triggered.connect(self.toggle_axes)
+
         mirror_act = view_menu.addAction("Mirror Resize") if view_menu and hasattr(view_menu, "addAction") else None
         if mirror_act is not None:
             if hasattr(mirror_act, "setCheckable"):
@@ -527,6 +537,20 @@ class EditorWindow(QMainWindow):
             self.snap_action.toggled.connect(self.toggle_snap)
         quickbar.addAction(self.snap_action)
 
+        self.snap_settings_action = QAction("Snap Settings", self)
+        if hasattr(self.snap_settings_action, "triggered"):
+            self.snap_settings_action.triggered.connect(self.open_snap_dock)
+        quickbar.addAction(self.snap_settings_action)
+
+        self.axes_action = QAction("Axes", self)
+        if hasattr(self.axes_action, "setCheckable"):
+            self.axes_action.setCheckable(True)
+        if hasattr(self.axes_action, "setChecked"):
+            self.axes_action.setChecked(getattr(self.renderer, "show_axes", True))
+        if hasattr(self.axes_action, "toggled"):
+            self.axes_action.toggled.connect(self.toggle_axes)
+        quickbar.addAction(self.axes_action)
+
         self.ruler_action = QAction("Rulers", self)
         if hasattr(self.ruler_action, "setCheckable"):
             self.ruler_action.setCheckable(True)
@@ -582,6 +606,15 @@ class EditorWindow(QMainWindow):
         res_dock.setWidget(res_container)
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, res_dock)
 
+        snap_widget = SnapSettingsWidget(self)
+        snap_dock = QDockWidget("Snap", self)
+        snap_dock.setObjectName("SnapDock")
+        snap_dock.setWidget(snap_widget)
+        if hasattr(snap_dock, "hide"):
+            snap_dock.hide()
+        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, snap_dock)
+        self.snap_dock = snap_dock  # type: ignore[assignment]
+
         self.objects.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.objects.customContextMenuRequested.connect(self._list_context_menu)
         if hasattr(self.objects, "itemSelectionChanged"):
@@ -635,6 +668,29 @@ class EditorWindow(QMainWindow):
         self.cursor_visible = bool(checked)
         if hasattr(self.cursor_label, "setVisible"):
             self.cursor_label.setVisible(checked)
+
+    def toggle_axes(self, checked: bool) -> None:
+        """Show or hide the world coordinate axes gizmo."""
+        if hasattr(self.renderer, "show_axes"):
+            self.renderer.show_axes = bool(checked)
+            self.draw_scene(update_list=False)
+
+    def open_snap_dock(self) -> None:
+        """Display the snap settings dock."""
+        dock = getattr(self, "snap_dock", None)
+        if dock is not None:
+            widget = dock.widget()
+            if widget is not None:
+                if hasattr(widget, "move_spin"):
+                    widget.move_spin.setValue(self.move_step)
+                if hasattr(widget, "rot_spin"):
+                    widget.rot_spin.setValue(self.rotate_step)
+                if hasattr(widget, "scale_spin"):
+                    widget.scale_spin.setValue(self.scale_step)
+            if hasattr(dock, "show"):
+                dock.show()
+            if hasattr(dock, "raise_"):
+                dock.raise_()
 
     def toggle_model(self, modeling: bool) -> None:
         """Switch between edit and model modes."""
@@ -1006,43 +1062,8 @@ class EditorWindow(QMainWindow):
                 self.draw_scene(update_list=False)
 
     def open_snap_dialog(self) -> None:
-        from PyQt6.QtWidgets import QDialog, QFormLayout, QDoubleSpinBox, QPushButton, QHBoxLayout  # type: ignore[import-not-found]
-
-        dlg = QDialog(self)
-        dlg.setWindowTitle("Snap Settings")
-        form = QFormLayout(dlg)
-
-        move_spin = QDoubleSpinBox(dlg)
-        move_spin.setDecimals(3)
-        move_spin.setRange(0.01, 100.0)
-        move_spin.setValue(self.move_step)
-        form.addRow("Move Step", move_spin)
-
-        rot_spin = QDoubleSpinBox(dlg)
-        rot_spin.setDecimals(1)
-        rot_spin.setRange(0.1, 360.0)
-        rot_spin.setValue(self.rotate_step)
-        form.addRow("Rotate Step", rot_spin)
-
-        scale_spin = QDoubleSpinBox(dlg)
-        scale_spin.setDecimals(3)
-        scale_spin.setRange(0.01, 10.0)
-        scale_spin.setValue(self.scale_step)
-        form.addRow("Scale Step", scale_spin)
-
-        btn_row = QHBoxLayout()
-        ok_btn = QPushButton("OK", dlg)
-        cancel_btn = QPushButton("Cancel", dlg)
-        ok_btn.clicked.connect(dlg.accept)
-        cancel_btn.clicked.connect(dlg.reject)
-        btn_row.addWidget(ok_btn)
-        btn_row.addWidget(cancel_btn)
-        form.addRow(btn_row)
-
-        if dlg.exec():
-            self.move_step = float(move_spin.value())
-            self.rotate_step = float(rot_spin.value())
-            self.scale_step = float(scale_spin.value())
+        """Backward compatible wrapper for opening the snap dock."""
+        self.open_snap_dock()
 
     def load_project(self, path: str) -> None:
         from engine.core.project import Project
