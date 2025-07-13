@@ -556,19 +556,21 @@ class EditorWindow(QMainWindow):
             self.grid_action.toggled.connect(self.toggle_grid)
         quickbar.addAction(self.grid_action)
 
-        self.snap_action = QAction("Snap", self)
-        if hasattr(self.snap_action, "setCheckable"):
-            self.snap_action.setCheckable(True)
-        if hasattr(self.snap_action, "setChecked"):
-            self.snap_action.setChecked(False)
-        if hasattr(self.snap_action, "toggled"):
-            self.snap_action.toggled.connect(self.toggle_snap)
-        quickbar.addAction(self.snap_action)
-
         try:  # pragma: no cover - Qt only
             from PyQt6.QtWidgets import QToolButton  # type: ignore[import-not-found]
-        except Exception:
+        except Exception:  # pragma: no cover - fallback for tests
             QToolButton = QWidget  # type: ignore[assignment]
+
+        self.snap_button = QToolButton()
+        if hasattr(self.snap_button, "setText"):
+            self.snap_button.setText("Snap")
+        if hasattr(self.snap_button, "setCheckable"):
+            self.snap_button.setCheckable(True)
+        if hasattr(self.snap_button, "setChecked"):
+            self.snap_button.setChecked(False)
+        if hasattr(self.snap_button, "toggled"):
+            self.snap_button.toggled.connect(self.toggle_snap)
+        quickbar.addWidget(self.snap_button)
 
         self.snap_menu_btn = QToolButton()
         if hasattr(self.snap_menu_btn, "setText"):
