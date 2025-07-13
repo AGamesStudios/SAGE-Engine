@@ -37,11 +37,17 @@ except Exception:  # pragma: no cover - fallback when QFrame missing
     QFrame = QWidget  # type: ignore[misc]
 from PyQt6.QtGui import QAction, QKeySequence  # type: ignore[import-not-found]
 try:  # optional QPainter for fancy dial
-    from PyQt6.QtGui import QPainter, QColor, QPainterPath  # type: ignore[import-not-found]
+    from PyQt6.QtGui import (
+        QPainter,
+        QColor,
+        QPainterPath,
+        QPointF,
+    )  # type: ignore[import-not-found]
 except Exception:  # pragma: no cover - fallback for stubs
     QPainter = None  # type: ignore[assignment]
     QColor = None  # type: ignore[assignment]
     QPainterPath = None  # type: ignore[assignment]
+    QPointF = None  # type: ignore[assignment]
 
 try:  # support minimal test stubs
     from PyQt6.QtWidgets import QTextEdit  # type: ignore[import-not-found]
@@ -158,7 +164,11 @@ class ProgressDial(QDial):
         painter.drawEllipse(rect)
         # progress arc
         path = QPainterPath()
-        path.moveTo(rect.center())
+        if QPointF is not None:
+            center = QPointF(rect.center())
+        else:
+            center = rect.center()
+        path.moveTo(center)
         path.arcTo(rect, 90, -float(self.value()))
         path.closeSubpath()
         painter.fillPath(path, QColor(255, 184, 77))
