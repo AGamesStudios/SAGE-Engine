@@ -91,18 +91,18 @@ class RulerWidget(QWidget):
         else:
             w = self.width()
             start = math.floor(self.offset / step) * step
-            y = (start - self.offset) * self.scale / self.sign
+            y = (start - self.offset) * self.scale * self.sign
             world = start
             while y < self.height():
                 size = 8 if world % (step * 5) == 0 else 4
-                painter.drawLine(w, int(y), w - size, int(y))
+                painter.drawLine(w, int(round(y)), w - size, int(round(y)))
                 if size == 8:
-                    painter.drawText(2, int(y) + 6, f"{world:.0f}")
+                    painter.drawText(2, int(round(y)) + 6, f"{world:.0f}")
                 y += step_pixels(step)
-                world += step
+                world += step * self.sign
             if self.cursor is not None:
-                cy = (self.cursor - self.offset) * self.scale / self.sign
+                cy = (self.cursor - self.offset) * self.scale * self.sign
                 if 0 <= cy <= self.height():
                     painter.setPen(QPen(QColor(ACCENT_COLOR)))
-                    painter.drawLine(0, int(cy), w, int(cy))
+                    painter.drawLine(0, int(round(cy)), w, int(round(cy)))
 
