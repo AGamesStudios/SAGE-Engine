@@ -661,3 +661,23 @@ def test_quickbar_toggles(monkeypatch):
     assert not win.cursor_label.isVisible()
     win.toggle_grid(False)
     assert not win.renderer.show_grid
+
+
+def test_create_shape(monkeypatch):
+    _stub_gl(monkeypatch, {})
+    _setup_qt(monkeypatch)
+
+    import importlib
+    import sys
+
+    sys.modules.pop('engine.mesh_utils', None)
+    import engine.mesh_utils  # noqa: F401  - reload real module
+
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    viewport = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(viewport)
+
+    win = viewport.EditorWindow()
+    shape = win.create_shape('triangle')
+    assert shape.role == 'shape'
+    assert shape.mesh is not None

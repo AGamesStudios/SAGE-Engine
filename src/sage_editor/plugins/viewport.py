@@ -64,6 +64,11 @@ from engine.core.scenes.scene import Scene
 from engine.core.camera import Camera
 from engine.entities.game_object import GameObject
 from engine import gizmos
+from engine.mesh_utils import (
+    create_circle_mesh,
+    create_square_mesh,
+    create_triangle_mesh,
+)
 
 from sage_editor.qt import GLWidget
 
@@ -917,6 +922,7 @@ class _ViewportMixin:
             sprite_a = menu.addAction("Create Sprite") if hasattr(menu, "addAction") else None
             empty_a = menu.addAction("Create Empty") if hasattr(menu, "addAction") else None
             cam_a = menu.addAction("Create Camera") if hasattr(menu, "addAction") else None
+            shape_m = menu.addMenu("Create Shape") if hasattr(menu, "addMenu") else None
 
             if sprite_a is not None and hasattr(sprite_a, "triggered"):
                 sprite_a.triggered.connect(lambda: self._window.create_object(wx, wy))
@@ -924,6 +930,16 @@ class _ViewportMixin:
                 empty_a.triggered.connect(lambda: self._window.create_empty(wx, wy))
             if cam_a is not None and hasattr(cam_a, "triggered"):
                 cam_a.triggered.connect(lambda: self._window.create_camera(wx, wy))
+            if shape_m is not None:
+                sq_a = shape_m.addAction("Square") if hasattr(shape_m, "addAction") else None
+                tri_a = shape_m.addAction("Triangle") if hasattr(shape_m, "addAction") else None
+                cir_a = shape_m.addAction("Circle") if hasattr(shape_m, "addAction") else None
+                if sq_a is not None and hasattr(sq_a, "triggered"):
+                    sq_a.triggered.connect(lambda: self._window.create_shape("square", wx, wy))
+                if tri_a is not None and hasattr(tri_a, "triggered"):
+                    tri_a.triggered.connect(lambda: self._window.create_shape("triangle", wx, wy))
+                if cir_a is not None and hasattr(cir_a, "triggered"):
+                    cir_a.triggered.connect(lambda: self._window.create_shape("circle", wx, wy))
         menu.exec(cast(QWidget, self).mapToGlobal(point))
 
 
@@ -2092,6 +2108,25 @@ class EditorWindow(QMainWindow):
         self.draw_scene()
         return cam
 
+    def create_shape(self, shape: str, x: float = 0.0, y: float = 0.0) -> GameObject:
+        """Create a basic shape object and add it to the scene."""
+        count = len([o for o in self.scene.objects if getattr(o, "role", "") == "shape"])
+        obj = GameObject(role="shape", name=f"{shape.capitalize()} {count}")
+        obj.transform.x = x
+        obj.transform.y = y
+        if shape == "triangle":
+            obj.mesh = create_triangle_mesh()
+        elif shape == "circle":
+            obj.mesh = create_circle_mesh()
+        else:
+            obj.mesh = create_square_mesh()
+        obj.width = 1.0
+        obj.height = 1.0
+        self.scene.add_object(obj)
+        self.update_object_list()
+        self.draw_scene()
+        return obj
+
     # clipboard and selection helpers ----------------------------------
 
     def copy_selected(self) -> None:
@@ -2144,12 +2179,23 @@ class EditorWindow(QMainWindow):
         sprite_a = menu.addAction("Create Sprite") if hasattr(menu, "addAction") else None
         empty_a = menu.addAction("Create Empty") if hasattr(menu, "addAction") else None
         cam_a = menu.addAction("Create Camera") if hasattr(menu, "addAction") else None
+        shape_m = menu.addMenu("Create Shape") if hasattr(menu, "addMenu") else None
         if sprite_a is not None and hasattr(sprite_a, "triggered"):
             sprite_a.triggered.connect(self.create_object)
         if empty_a is not None and hasattr(empty_a, "triggered"):
             empty_a.triggered.connect(self.create_empty)
         if cam_a is not None and hasattr(cam_a, "triggered"):
             cam_a.triggered.connect(self.create_camera)
+        if shape_m is not None:
+            sq_a = shape_m.addAction("Square") if hasattr(shape_m, "addAction") else None
+            tri_a = shape_m.addAction("Triangle") if hasattr(shape_m, "addAction") else None
+            cir_a = shape_m.addAction("Circle") if hasattr(shape_m, "addAction") else None
+            if sq_a is not None and hasattr(sq_a, "triggered"):
+                sq_a.triggered.connect(lambda: self.create_shape("square"))
+            if tri_a is not None and hasattr(tri_a, "triggered"):
+                tri_a.triggered.connect(lambda: self.create_shape("triangle"))
+            if cir_a is not None and hasattr(cir_a, "triggered"):
+                cir_a.triggered.connect(lambda: self.create_shape("circle"))
         menu.exec(self.objects.mapToGlobal(point))
 
     def _object_selected(self, current=None, _prev=None):

@@ -88,6 +88,9 @@ includes a screenshot button.
 A second toolbar below the menu offers quick toggles for the grid, rulers and
 cursor label. Toolbars appear flat without the usual drag handles for a cleaner
 look.
+Right-click the viewport to create sprites, empties, cameras or basic shapes.
+Model mode reveals vertex and edge handles so these shapes can be edited
+directly.
 The *View* menu lets you hide the bounding box around the selection.
 Hold **Ctrl** or **Shift** while clicking objects to add them to the selection.
 
