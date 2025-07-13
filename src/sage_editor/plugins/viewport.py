@@ -138,7 +138,14 @@ class ProgressDial(QDial):
         if QPainter is not None and QColor is not None:
             try:
                 painter = QPainter(self)
-                rect = self.rect().adjusted(2, 2, -2, -2)
+                size = min(self.width(), self.height()) - 4
+                rtype = type(self.rect())
+                rect = rtype(
+                    (self.width() - size) // 2 + 2,
+                    (self.height() - size) // 2 + 2,
+                    size,
+                    size,
+                )
                 start = 90 * 16
                 span = -self.value() * 16
                 painter.setBrush(QColor(255, 184, 77, 120))
@@ -294,14 +301,16 @@ def _apply_ember_stylesheet(app: QApplication) -> None:
         background-color: #2c2c2c;
     }}
     QMenuBar::item:selected {{
-        background-color: #444444;
+        background-color: {ACCENT_COLOR};
+        color: black;
     }}
     QMenu {{
         background-color: #2c2c2c;
         border: none;
     }}
     QMenu::item:selected {{
-        background-color: #444444;
+        background-color: {ACCENT_COLOR};
+        color: black;
     }}
     QDockWidget::title {{
         background-color: #353535;
@@ -349,6 +358,11 @@ def _apply_ember_stylesheet(app: QApplication) -> None:
     }}
     QComboBox::drop-down {{
         border: none;
+    }}
+    QComboBox QAbstractItemView {{
+        background-color: #353535;
+        selection-background-color: {ACCENT_COLOR};
+        selection-color: black;
     }}
     QLineEdit, QPlainTextEdit {{
         background-color: #2b2b2b;
