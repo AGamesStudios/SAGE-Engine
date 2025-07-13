@@ -77,6 +77,36 @@ class PropertiesWidget(QWidget):
 
         pivot_widget = QWidget(self)
         pivot_layout = QHBoxLayout(pivot_widget)
+        self.pivot_combo = QComboBox(self)
+        if hasattr(self.pivot_combo, "addItems"):
+            self.pivot_combo.addItems(
+                [
+                    "Top Left",
+                    "Top",
+                    "Top Right",
+                    "Left",
+                    "Center",
+                    "Right",
+                    "Bottom Left",
+                    "Bottom",
+                    "Bottom Right",
+                    "Manual",
+                ]
+            )
+        self._pivot_presets = {
+            0: (0.0, 0.0),  # top left
+            1: (0.5, 0.0),  # top
+            2: (1.0, 0.0),  # top right
+            3: (0.0, 0.5),  # left
+            4: (0.5, 0.5),  # center
+            5: (1.0, 0.5),  # right
+            6: (0.0, 1.0),  # bottom left
+            7: (0.5, 1.0),  # bottom
+            8: (1.0, 1.0),  # bottom right
+        }
+        self._manual_index = 9
+        if hasattr(self.pivot_combo, "setCurrentIndex"):
+            self.pivot_combo.setCurrentIndex(self._manual_index)
         self.pivot_x = NoWheelSpinBox(self)
         self.pivot_y = NoWheelSpinBox(self)
         for box in (self.pivot_x, self.pivot_y):
@@ -84,11 +114,14 @@ class PropertiesWidget(QWidget):
             box.setDecimals(3)
             box.setSingleStep(0.01)
             box.setAccelerated(True)
+        pivot_layout.addWidget(self.pivot_combo)
         pivot_layout.addWidget(QLabel("X", self))
         pivot_layout.addWidget(self.pivot_x)
         pivot_layout.addWidget(QLabel("Y", self))
         pivot_layout.addWidget(self.pivot_y)
         trans_form.addRow("Pivot", pivot_widget)
+        self.pivot_combo.currentIndexChanged.connect(self._pivot_preset_changed)
+        self._pivot_preset_changed(self._manual_index)
 
         flip_widget = QWidget(self)
         flip_layout = QHBoxLayout(flip_widget)
@@ -162,6 +195,8 @@ class PropertiesWidget(QWidget):
                 self.flip_y.setEnabled(False)
             self.pivot_x.setValue(0.0)
             self.pivot_y.setValue(0.0)
+            self.pivot_combo.setCurrentIndex(self._manual_index)
+            self._pivot_preset_changed(self._manual_index)
             if getattr(self, "physics_group", None):
                 self.physics_enabled.setChecked(False)
                 if hasattr(self, "body_combo"):
@@ -214,8 +249,17 @@ class PropertiesWidget(QWidget):
             self.flip_y.setEnabled(flip_allowed)
         self.flip_x.setChecked(flip_allowed and bool(getattr(obj, "flip_x", False)))
         self.flip_y.setChecked(flip_allowed and bool(getattr(obj, "flip_y", False)))
-        self.pivot_x.setValue(float(getattr(obj, "pivot_x", 0.0)))
-        self.pivot_y.setValue(float(getattr(obj, "pivot_y", 0.0)))
+        px = float(getattr(obj, "pivot_x", 0.0))
+        py = float(getattr(obj, "pivot_y", 0.0))
+        self.pivot_x.setValue(px)
+        self.pivot_y.setValue(py)
+        preset_index = self._manual_index
+        for idx, (vx, vy) in self._pivot_presets.items():
+            if abs(vx - px) < 1e-3 and abs(vy - py) < 1e-3:
+                preset_index = idx
+                break
+        self.pivot_combo.setCurrentIndex(preset_index)
+        self._pivot_preset_changed(preset_index)
         if hasattr(self, "shape_group"):
             shape = str(getattr(obj, "shape", "square"))
             order = ["square", "triangle", "circle"]
@@ -288,4 +332,21 @@ class PropertiesWidget(QWidget):
     def _sync_scale_y(self):
         if self.link_scale.isChecked():
             self.scale_x.setValue(self.scale_y.value())
+
+    def _pivot_preset_changed(self, index: int) -> None:
+        if index == self._manual_index:
+            if hasattr(self.pivot_x, "setEnabled"):
+                self.pivot_x.setEnabled(True)
+            if hasattr(self.pivot_y, "setEnabled"):
+                self.pivot_y.setEnabled(True)
+            return
+        preset = self._pivot_presets.get(index)
+        if preset is None:
+            return
+        self.pivot_x.setValue(preset[0])
+        self.pivot_y.setValue(preset[1])
+        if hasattr(self.pivot_x, "setEnabled"):
+            self.pivot_x.setEnabled(False)
+        if hasattr(self.pivot_y, "setEnabled"):
+            self.pivot_y.setEnabled(False)
 
