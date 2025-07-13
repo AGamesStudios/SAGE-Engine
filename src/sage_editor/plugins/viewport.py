@@ -141,7 +141,7 @@ class ProgressDial(QDial):
                 rect = self.rect().adjusted(2, 2, -2, -2)
                 start = 90 * 16
                 span = -self.value() * 16
-                painter.setBrush(QColor(100, 150, 255, 80))
+                painter.setBrush(QColor(255, 184, 77, 120))
                 painter.setPen(Qt.PenStyle.NoPen)
                 painter.drawPie(rect, start, span)
             except Exception:
@@ -307,9 +307,19 @@ def _apply_ember_stylesheet(app: QApplication) -> None:
         background-color: #353535;
         text-align: center;
     }}
+    QCheckBox::indicator, QRadioButton::indicator {{
+        width: 12px;
+        height: 12px;
+        border: 1px solid #bbbbbb;
+        border-radius: 3px;
+        background: #353535;
+    }}
+    QCheckBox::indicator:hover, QRadioButton::indicator:hover {{
+        border-color: {ACCENT_COLOR};
+    }}
     QCheckBox::indicator:checked, QRadioButton::indicator:checked {{
         background-color: {ACCENT_COLOR};
-        border: none;
+        border: 1px solid {ACCENT_COLOR};
     }}
     QSlider::groove:horizontal {{
         height: 6px;
@@ -363,6 +373,10 @@ def _apply_ember_stylesheet(app: QApplication) -> None:
     QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
         border: none;
         background: #2c2c2c;
+    }}
+    QListWidget::item:selected {{
+        background: {ACCENT_COLOR};
+        color: black;
     }}
     """
     app.setStyleSheet(stylesheet)
