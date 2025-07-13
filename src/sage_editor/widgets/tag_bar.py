@@ -31,7 +31,7 @@ from ..plugins.viewport import NoWheelLineEdit
 
 
 class TagCapsule(QWidget):
-    """Small label with a remove button."""
+    """Pill-shaped label with a remove button."""
 
     removeRequested = _signal(str)
 
@@ -40,9 +40,9 @@ class TagCapsule(QWidget):
         self.text = text
         layout = QHBoxLayout(self)
         if hasattr(layout, "setContentsMargins"):
-            layout.setContentsMargins(4, 0, 2, 0)
+            layout.setContentsMargins(8, 0, 4, 0)
         if hasattr(layout, "setSpacing"):
-            layout.setSpacing(1)
+            layout.setSpacing(2)
         if hasattr(self, "setSizePolicy"):
             pol = getattr(QSizePolicy, "Policy", QSizePolicy)
             horiz = getattr(pol, "Maximum", 0)
@@ -50,10 +50,8 @@ class TagCapsule(QWidget):
             self.setSizePolicy(horiz, vert)
         if hasattr(self, "setStyleSheet"):
             self.setStyleSheet(
-                "background: rgba(255,255,255,0.12);"
-                " border-radius: 10px;"
-                " padding: 2px 6px;"
-                " border: none;"
+                "background:#555; border-radius:12px;"
+                "padding:2px 6px; border:none;"
             )
         self.label = QLabel(text, self)
         if hasattr(self.label, "setSizePolicy"):
@@ -63,10 +61,10 @@ class TagCapsule(QWidget):
             self.label.setSizePolicy(horiz, vert)
         self.remove_btn = QPushButton("×", self)
         if hasattr(self.remove_btn, "setFixedSize"):
-            self.remove_btn.setFixedSize(12, 12)
+            self.remove_btn.setFixedSize(14, 14)
         if hasattr(self.remove_btn, "setStyleSheet"):
             self.remove_btn.setStyleSheet(
-                "border: none; margin-left: 4px; color: white;"
+                "border:none;margin-left:4px;color:white;background:#555;"
             )
         layout.addWidget(self.label)
         layout.addWidget(self.remove_btn)
@@ -87,18 +85,19 @@ class TagBar(QWidget):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._tags: list[str] = []
+        self._scroll_val: int | None = None
         layout = QHBoxLayout(self)
         if hasattr(layout, "setContentsMargins"):
-            layout.setContentsMargins(4, 2, 4, 2)
+            layout.setContentsMargins(4, 4, 4, 4)
         if hasattr(layout, "setSpacing"):
-            layout.setSpacing(2)
+            layout.setSpacing(0)
         if hasattr(self, "setFixedHeight"):
-            self.setFixedHeight(26)
+            self.setFixedHeight(40)
 
         if hasattr(self, "setStyleSheet"):
             self.setStyleSheet(
-                "border: 1px solid white; border-radius: 10px;"
-                " background: transparent;"
+                "border:2px solid white; border-radius:20px;"
+                " background:#333;"
             )
 
         self.scroll = QScrollArea(self)
@@ -107,7 +106,9 @@ class TagBar(QWidget):
         if hasattr(self.scroll, "setFrameShape"):
             self.scroll.setFrameShape(getattr(QFrame, "Shape", QFrame).NoFrame)
         if hasattr(self.scroll, "setStyleSheet"):
-            self.scroll.setStyleSheet("border:none;background:transparent;")
+            self.scroll.setStyleSheet(
+                "border:none;background:#222; border-radius:16px;"
+            )
         if hasattr(self.scroll, "setHorizontalScrollBarPolicy"):
             policy = getattr(Qt.ScrollBarPolicy, "ScrollBarAsNeeded", None)
             if policy is not None:
@@ -127,32 +128,32 @@ class TagBar(QWidget):
         if hasattr(self.tag_layout, "setContentsMargins"):
             self.tag_layout.setContentsMargins(0, 0, 0, 0)
         if hasattr(self.tag_layout, "setSpacing"):
-            self.tag_layout.setSpacing(1)
+            self.tag_layout.setSpacing(6)
         if hasattr(self.scroll, "setWidget"):
             self.scroll.setWidget(self.tag_area)
 
-        self.add_btn = QPushButton("+", self)
+        self.add_btn = QPushButton("+", self.tag_area)
         if hasattr(self.add_btn, "setFixedSize"):
-            self.add_btn.setFixedSize(18, 18)
+            self.add_btn.setFixedSize(28, 28)
         if hasattr(self.add_btn, "setStyleSheet"):
             self.add_btn.setStyleSheet(
-                "border: 1px solid white; border-radius: 9px; background: transparent;"
+                "border:none;border-radius:14px;background:#555;color:white;"
             )
         self.add_btn.clicked.connect(self._show_editor)
         layout.addWidget(self.scroll)
-        layout.addWidget(self.add_btn)
         if hasattr(layout, "setStretch"):
             layout.setStretch(0, 1)
 
         self._editor = NoWheelLineEdit(self.tag_area)
         if hasattr(self._editor, "setFixedWidth"):
-            self._editor.setFixedWidth(60)
+            self._editor.setFixedWidth(80)
         if hasattr(self._editor, "returnPressed"):
             self._editor.returnPressed.connect(self._finish_edit)
         if hasattr(self._editor, "editingFinished"):
             self._editor.editingFinished.connect(self._finish_edit)
         self._editor.hide()
         self.tag_layout.addWidget(self._editor)
+        self.tag_layout.addWidget(self.add_btn)
         if hasattr(self.tag_layout, "addStretch"):
             self.tag_layout.addStretch(1)
 
@@ -171,11 +172,10 @@ class TagBar(QWidget):
     def add_tag(self, text: str) -> None:
         text = text.strip()
         if not text or text in self._tags:
+            self._restore_scroll()
             return
         self._tags.append(text)
-
-        sb = self._parent_scrollbar()
-        val = sb.value() if sb is not None else 0
+        self._store_scroll()
 
         cap = TagCapsule(text, self.tag_area)
         cap.removeRequested.connect(self.remove_tag)
@@ -186,8 +186,7 @@ class TagBar(QWidget):
             else:
                 self.tag_layout.addWidget(cap)
 
-        if sb is not None:
-            sb.setValue(val)
+        self._restore_scroll()
 
         hbar = getattr(self.scroll, "horizontalScrollBar", lambda: None)()
         if hbar is not None and hasattr(hbar, "maximum"):
@@ -199,19 +198,18 @@ class TagBar(QWidget):
         if text not in self._tags:
             return
         self._tags.remove(text)
-        sb = self._parent_scrollbar()
-        val = sb.value() if sb is not None else 0
+        self._store_scroll()
         for child in getattr(self.tag_area, "children", lambda: [])():
             if isinstance(child, TagCapsule) and getattr(child, "text", None) == text:
                 if hasattr(child, "setParent"):
                     child.setParent(None)
                 break
-        if sb is not None:
-            sb.setValue(val)
+        self._restore_scroll()
         self.editingFinished.emit()
 
     # internals ------------------------------------------------------
     def _show_editor(self) -> None:
+        self._store_scroll()
         if hasattr(self._editor, "show"):
             self._editor.show()
             self._editor.setFocus()
@@ -223,6 +221,7 @@ class TagBar(QWidget):
         if hasattr(self._editor, "hide"):
             self._editor.hide()
         self.add_tag(text)
+        self._restore_scroll()
 
     def _parent_scrollbar(self):
         parent = getattr(self, "parent", lambda: None)()
@@ -231,4 +230,16 @@ class TagBar(QWidget):
                 return parent.verticalScrollBar()
             parent = getattr(parent, "parent", lambda: None)()
         return None
+
+    def _store_scroll(self) -> None:
+        sb = self._parent_scrollbar()
+        if sb is not None:
+            self._scroll_val = sb.value()
+
+    def _restore_scroll(self) -> None:
+        if self._scroll_val is None:
+            return
+        sb = self._parent_scrollbar()
+        if sb is not None:
+            sb.setValue(self._scroll_val)
 
