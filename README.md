@@ -69,9 +69,10 @@ Text fields and scroll bars highlight orange when focused. Buttons include a
 small margin so controls don't stick together. Checkboxes have rounded
 indicators and the custom rotation wheel fills like a circular progress bar.
 The properties panel uses a **TagBar** – a long rounded capsule outlined in
-white. Inside, a darker track holds tag chips that glide to the left while a
-round **+** button sits at the far right. Pressing it inserts a small editor so
-you can enter a tag. Each chip is a pill‑shaped label with a delete button.
+white. Inside, a darker track holds tag chips that slide left as you add more,
+while a round **+** button stays on the right. Pressing it reveals an inline
+editor. Each tag capsule matches the track colour and includes a small delete
+button inside the pill.
 When chips overflow, the track scrolls horizontally but the white outline stays
 fixed, giving the impression that the list slides inside a static frame.
 Menus leave a small gap between levels and combo boxes highlight items in the

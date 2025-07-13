@@ -40,9 +40,9 @@ class TagCapsule(QWidget):
         self.text = text
         layout = QHBoxLayout(self)
         if hasattr(layout, "setContentsMargins"):
-            layout.setContentsMargins(8, 0, 4, 0)
+            layout.setContentsMargins(8, 0, 6, 0)
         if hasattr(layout, "setSpacing"):
-            layout.setSpacing(2)
+            layout.setSpacing(4)
         if hasattr(self, "setSizePolicy"):
             pol = getattr(QSizePolicy, "Policy", QSizePolicy)
             horiz = getattr(pol, "Maximum", 0)
@@ -50,8 +50,8 @@ class TagCapsule(QWidget):
             self.setSizePolicy(horiz, vert)
         if hasattr(self, "setStyleSheet"):
             self.setStyleSheet(
-                "background:#555; border-radius:12px;"
-                "padding:2px 6px; border:none;"
+                "background:#444; border-radius:14px;"
+                "padding:4px 6px; border:none;"
             )
         self.label = QLabel(text, self)
         if hasattr(self.label, "setSizePolicy"):
@@ -61,10 +61,10 @@ class TagCapsule(QWidget):
             self.label.setSizePolicy(horiz, vert)
         self.remove_btn = QPushButton("×", self)
         if hasattr(self.remove_btn, "setFixedSize"):
-            self.remove_btn.setFixedSize(14, 14)
+            self.remove_btn.setFixedSize(16, 16)
         if hasattr(self.remove_btn, "setStyleSheet"):
             self.remove_btn.setStyleSheet(
-                "border:none;margin-left:4px;color:white;background:#555;"
+                "border:none;margin-left:4px;color:white;background:transparent;"
             )
         layout.addWidget(self.label)
         layout.addWidget(self.remove_btn)
@@ -128,7 +128,7 @@ class TagBar(QWidget):
         if hasattr(self.tag_layout, "setContentsMargins"):
             self.tag_layout.setContentsMargins(0, 0, 0, 0)
         if hasattr(self.tag_layout, "setSpacing"):
-            self.tag_layout.setSpacing(6)
+            self.tag_layout.setSpacing(4)
         if hasattr(self.scroll, "setWidget"):
             self.scroll.setWidget(self.tag_area)
 
