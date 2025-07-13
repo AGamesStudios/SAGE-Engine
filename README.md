@@ -85,6 +85,8 @@ object positions at a glance without numbers piling up when you zoom.
 On launch the main window expands to fill the primary screen so the interface is easy to see on any monitor.
 The **File** menu opens and saves ``.sageproject`` files and the toolbar
 includes a screenshot button.
+A second toolbar below the menu offers quick toggles for the grid, rulers and
+cursor label.
 The *View* menu lets you hide the bounding box around the selection.
 Hold **Ctrl** or **Shift** while clicking objects to add them to the selection.
 

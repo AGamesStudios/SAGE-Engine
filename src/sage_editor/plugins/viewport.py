@@ -1151,6 +1151,8 @@ class EditorWindow(QMainWindow):
         self.renderer.show_grid = True
         self.mirror_resize = False
         self.local_coords = False
+        self.rulers_visible = True
+        self.cursor_visible = True
         self.modeling = False
         self.transform_mode = "move"
         self.set_renderer(self.renderer)
@@ -1290,6 +1292,45 @@ class EditorWindow(QMainWindow):
                 if hasattr(tbar, "addAction"):
                     tbar.addAction(action)
 
+        quickbar = QToolBar(self)
+        self.addToolBar(quickbar)
+        self.quickbar = quickbar  # type: ignore[attr-defined]
+        self.grid_action = QAction("Grid", self)
+        if hasattr(self.grid_action, "setCheckable"):
+            self.grid_action.setCheckable(True)
+        if hasattr(self.grid_action, "setChecked"):
+            self.grid_action.setChecked(True)
+        if hasattr(self.grid_action, "toggled"):
+            self.grid_action.toggled.connect(self.toggle_grid)
+        quickbar.addAction(self.grid_action)
+
+        self.ruler_action = QAction("Rulers", self)
+        if hasattr(self.ruler_action, "setCheckable"):
+            self.ruler_action.setCheckable(True)
+        if hasattr(self.ruler_action, "setChecked"):
+            self.ruler_action.setChecked(True)
+        if hasattr(self.ruler_action, "toggled"):
+            self.ruler_action.toggled.connect(self.toggle_rulers)
+        quickbar.addAction(self.ruler_action)
+
+        self.cursor_action = QAction("Cursor", self)
+        if hasattr(self.cursor_action, "setCheckable"):
+            self.cursor_action.setCheckable(True)
+        if hasattr(self.cursor_action, "setChecked"):
+            self.cursor_action.setChecked(True)
+        if hasattr(self.cursor_action, "toggled"):
+            self.cursor_action.toggled.connect(self.toggle_cursor_label)
+        quickbar.addAction(self.cursor_action)
+
+        self.local_action = QAction("Local", self)
+        if hasattr(self.local_action, "setCheckable"):
+            self.local_action.setCheckable(True)
+        if hasattr(self.local_action, "setChecked"):
+            self.local_action.setChecked(False)
+        if hasattr(self.local_action, "toggled"):
+            self.local_action.toggled.connect(self.toggle_local)
+        quickbar.addAction(self.local_action)
+
         self.objects = QListWidget()
         if hasattr(self.objects, "setSelectionMode"):
             self.objects.setSelectionMode(
@@ -1351,6 +1392,23 @@ class EditorWindow(QMainWindow):
         ):
             self.mode_bar.local_btn.setChecked(self.local_coords)
         self.draw_scene(update_list=False)
+
+    def toggle_rulers(self, checked: bool) -> None:
+        """Show or hide the viewport rulers."""
+        self.rulers_visible = bool(checked)
+        cont = self.viewport_container
+        h_ruler = getattr(cont, "h_ruler", None)
+        v_ruler = getattr(cont, "v_ruler", None)
+        if h_ruler is not None and hasattr(h_ruler, "setVisible"):
+            h_ruler.setVisible(checked)
+        if v_ruler is not None and hasattr(v_ruler, "setVisible"):
+            v_ruler.setVisible(checked)
+
+    def toggle_cursor_label(self, checked: bool) -> None:
+        """Show or hide the cursor coordinate label."""
+        self.cursor_visible = bool(checked)
+        if hasattr(self.cursor_label, "setVisible"):
+            self.cursor_label.setVisible(checked)
 
     def toggle_model(self, modeling: bool) -> None:
         """Switch between edit and model modes."""

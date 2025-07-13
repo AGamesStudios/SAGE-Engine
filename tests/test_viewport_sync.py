@@ -642,3 +642,22 @@ def test_modeling_normals(monkeypatch):
     assert len(win.renderer.gizmos) == 2
     win.toggle_model(True)
     assert len(win.renderer.gizmos) == 11
+
+
+def test_quickbar_toggles(monkeypatch):
+    _stub_gl(monkeypatch, {})
+    _setup_qt(monkeypatch)
+
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    viewport = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(viewport)
+
+    win = viewport.EditorWindow()
+    win.toggle_rulers(False)
+    cont = win.viewport_container
+    assert not cont.h_ruler.isVisible()
+    assert not cont.v_ruler.isVisible()
+    win.toggle_cursor_label(False)
+    assert not win.cursor_label.isVisible()
+    win.toggle_grid(False)
+    assert not win.renderer.show_grid
