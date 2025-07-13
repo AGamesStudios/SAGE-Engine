@@ -144,6 +144,12 @@ class ProgressWheel(QWidget):
         self._label = QLabel(self)
         if hasattr(self._label, "setAlignment"):
             self._label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        if hasattr(self._label, "setStyleSheet"):
+            self._label.setStyleSheet("background: transparent")
+        if hasattr(self._label, "setAttribute"):
+            self._label.setAttribute(
+                getattr(Qt.WidgetAttribute, "WA_TransparentForMouseEvents", 79)
+            )
         self._drag_start = None
         self._start_value = 0
         if hasattr(self, "setMinimumSize"):
@@ -176,11 +182,11 @@ class ProgressWheel(QWidget):
 
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        size = min(self.width(), self.height()) - 4
+        size = min(self.width(), self.height()) - 6
         rtype = type(self.rect())
         rect = rtype(
-            (self.width() - size) // 2 + 2,
-            (self.height() - size) // 2 + 2,
+            (self.width() - size) / 2,
+            (self.height() - size) / 2,
             size,
             size,
         )
@@ -418,11 +424,16 @@ def _apply_ember_stylesheet(app: QApplication) -> None:
         selection-background-color: {ACCENT_COLOR};
         selection-color: black;
         padding: 2px;
+        outline: 0;
     }}
     QComboBox QAbstractItemView::item {{
         padding: 2px 8px;
         margin: 2px 0;
         border-radius: 2px;
+    }}
+    QComboBox QAbstractItemView::item:selected {{
+        background: {ACCENT_COLOR};
+        color: black;
     }}
     QLineEdit, QPlainTextEdit {{
         background-color: #2b2b2b;
@@ -452,8 +463,8 @@ def _apply_ember_stylesheet(app: QApplication) -> None:
     QListView::item:selected,
     QTreeView::item:selected,
     QTableView::item:selected {{
-        background: transparent;
-        color: white;
+        background: {ACCENT_COLOR};
+        color: black;
     }}
     """
     app.setStyleSheet(stylesheet)
