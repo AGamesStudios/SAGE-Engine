@@ -42,8 +42,9 @@ class TagCapsule(QWidget):
             self.setSizePolicy(horiz, vert)
         if hasattr(self, "setStyleSheet"):
             self.setStyleSheet(
-                "border: 1px solid white; border-radius: 8px;"
-                " background: transparent;"
+                "background: rgba(255,255,255,0.2);"
+                " border-radius: 8px;"
+                " padding: 0 2px;"
             )
         self.label = QLabel(text, self)
         if hasattr(self.label, "setSizePolicy"):
@@ -79,7 +80,9 @@ class TagField(QWidget):
         if hasattr(layout, "setContentsMargins"):
             layout.setContentsMargins(4, 2, 4, 2)
         if hasattr(layout, "setSpacing"):
-            layout.setSpacing(4)
+            layout.setSpacing(2)
+        if hasattr(self, "setFixedHeight"):
+            self.setFixedHeight(26)
 
         if hasattr(self, "setStyleSheet"):
             self.setStyleSheet(
@@ -97,14 +100,14 @@ class TagField(QWidget):
         if hasattr(self.tag_layout, "setContentsMargins"):
             self.tag_layout.setContentsMargins(0, 0, 0, 0)
         if hasattr(self.tag_layout, "setSpacing"):
-            self.tag_layout.setSpacing(4)
-        layout.addWidget(self.tag_area)
+            self.tag_layout.setSpacing(2)
 
         self.add_btn = QPushButton("+", self)
         if hasattr(self.add_btn, "setFixedSize"):
             self.add_btn.setFixedSize(18, 18)
         self.add_btn.clicked.connect(self._show_editor)
         layout.addWidget(self.add_btn)
+        layout.addWidget(self.tag_area)
 
         self._editor = NoWheelLineEdit(self.tag_area)
         if hasattr(self._editor, "setFixedWidth"):
