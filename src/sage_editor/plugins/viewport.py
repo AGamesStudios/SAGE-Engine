@@ -631,6 +631,49 @@ class _ViewportMixin:
                 return i
         return None
 
+    def _hit_edge_handle(self, pos) -> int | None:
+        obj = self._window.selected_obj
+        if obj is None or not self._window.modeling or getattr(obj, "mesh", None) is None:
+            return None
+        verts = obj.mesh.vertices
+        wx, wy = self._window.screen_to_world(pos)
+        th = self.HANDLE_PIXELS / (units.UNITS_PER_METER * self._window.camera.zoom)
+
+        def _dist(px, py, ax, ay, bx, by):
+            dx = bx - ax
+            dy = by - ay
+            if dx == dy == 0:
+                return math.hypot(px - ax, py - ay)
+            t = max(0.0, min(1.0, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy)))
+            ex = ax + t * dx
+            ey = ay + t * dy
+            return math.hypot(px - ex, py - ey)
+
+        for i, (va, vb) in enumerate(zip(verts, verts[1:] + verts[:1])):
+            ax, ay = self._window.mesh_to_world(obj, *va)
+            bx, by = self._window.mesh_to_world(obj, *vb)
+            if _dist(wx, wy, ax, ay, bx, by) <= th:
+                return i
+        return None
+
+    def _hit_face_handle(self, pos) -> bool:
+        obj = self._window.selected_obj
+        if obj is None or not self._window.modeling or getattr(obj, "mesh", None) is None:
+            return False
+        wx, wy = self._window.screen_to_world(pos)
+        mx, my = self._window.world_to_mesh(obj, wx, wy)
+        verts = obj.mesh.vertices
+        inside = False
+        j = len(verts) - 1
+        for i, (x0, y0) in enumerate(verts):
+            x1, y1 = verts[j]
+            if ((y0 > my) != (y1 > my)) and (
+                mx < (x1 - x0) * (my - y0) / ((y1 - y0) or 1e-9) + x0
+            ):
+                inside = not inside
+            j = i
+        return inside
+
     # event handlers are same as before
     def mousePressEvent(self, ev):  # pragma: no cover - gui interaction
         if ev.button() == Qt.MouseButton.LeftButton:
@@ -642,18 +685,28 @@ class _ViewportMixin:
             self._last_world = None
             obj = self._window.selected_obj
             if obj is not None and self._window.modeling:
-                v = self._hit_vertex_handle(self._press_pos)
-                if v is not None:
-                    mods = ev.modifiers() if hasattr(ev, "modifiers") else 0
-                    add = mods & (
-                        Qt.KeyboardModifier.ControlModifier
-                        | Qt.KeyboardModifier.ShiftModifier
-                    )
-                    self._window.select_vertex(v, additive=bool(add))
-                    self._drag_mode = "vertex"
-                    self._drag_vertex = v
-                    self._last_world = self._window.screen_to_world(self._press_pos)
-                    return
+                mods = ev.modifiers() if hasattr(ev, "modifiers") else 0
+                add = mods & (
+                    Qt.KeyboardModifier.ControlModifier
+                    | Qt.KeyboardModifier.ShiftModifier
+                )
+                if self._window.selection_mode == "vertex":
+                    v = self._hit_vertex_handle(self._press_pos)
+                    if v is not None:
+                        self._window.select_vertex(v, additive=bool(add))
+                        self._drag_mode = "vertex"
+                        self._drag_vertex = v
+                        self._last_world = self._window.screen_to_world(self._press_pos)
+                        return
+                elif self._window.selection_mode == "edge":
+                    e = self._hit_edge_handle(self._press_pos)
+                    if e is not None:
+                        self._window.select_edge(e, additive=bool(add))
+                        return
+                else:
+                    if self._hit_face_handle(self._press_pos):
+                        self._window.select_face(True)
+                        return
             if obj is not None and self._window.transform_mode == "rect":
                 wx, wy = self._window.screen_to_world(self._press_pos)
                 if isinstance(obj, Camera):
@@ -1233,6 +1286,8 @@ class EditorWindow(QMainWindow):
         self.transform_mode = "move"
         self.selection_mode = "vertex"
         self.selected_vertices: set[int] = set()
+        self.selected_edges: set[int] = set()
+        self.selected_face = False
         self.set_renderer(self.renderer)
         self.selected_obj: Optional[GameObject] = None
         self.selected_objs: list[GameObject] = []
@@ -1507,6 +1562,8 @@ class EditorWindow(QMainWindow):
             self.model_bar.setVisible(modeling)
         if not modeling:
             self.selected_vertices.clear()
+            self.selected_edges.clear()
+            self.selected_face = False
         self.draw_scene(update_list=False)
 
     def update_cursor(self, x: float, y: float) -> None:
@@ -1562,6 +1619,9 @@ class EditorWindow(QMainWindow):
     # modeling helpers -------------------------------------------------
     def set_selection_mode(self, mode: str) -> None:
         self.selection_mode = mode
+        self.selected_vertices.clear()
+        self.selected_edges.clear()
+        self.selected_face = False
         if mode == "vertex":
             if hasattr(self.model_bar.vert_btn, "setChecked"):
                 self.model_bar.vert_btn.setChecked(True)
@@ -1590,12 +1650,18 @@ class EditorWindow(QMainWindow):
         obj = self.selected_obj
         if obj is None or getattr(obj, "mesh", None) is None:
             return
+        if self.cursor_pos is None:
+            return
         mesh = obj.mesh
-        for idx in sorted(self.selected_vertices):
+        wx, wy = self.cursor_pos
+        mx, my = self.world_to_mesh(obj, wx, wy)
+        for idx in sorted(self.selected_vertices, reverse=True):
             if 0 <= idx < len(mesh.vertices):
-                nx, ny = self._vertex_normal(mesh.vertices, idx)
-                vx, vy = mesh.vertices[idx]
-                mesh.vertices[idx] = (vx + nx * 0.1, vy + ny * 0.1)
+                mesh.vertices.insert(idx + 1, (mx, my))
+                self.selected_vertices = {
+                    i + 1 if i > idx else i for i in self.selected_vertices
+                }
+                self.selected_vertices.add(idx + 1)
         self.draw_scene(update_list=False)
 
     def loop_cut(self) -> None:
@@ -2032,6 +2098,8 @@ class EditorWindow(QMainWindow):
         if not additive:
             self.selected_objs = [obj] if obj else []
             self.selected_vertices.clear()
+            self.selected_edges.clear()
+            self.selected_face = False
         else:
             if obj is None:
                 return
@@ -2063,6 +2131,20 @@ class EditorWindow(QMainWindow):
                 self.selected_vertices.remove(index)
             else:
                 self.selected_vertices.add(index)
+        self.draw_scene(update_list=False)
+
+    def select_edge(self, index: int, additive: bool = False) -> None:
+        if not additive:
+            self.selected_edges = {index}
+        else:
+            if index in self.selected_edges:
+                self.selected_edges.remove(index)
+            else:
+                self.selected_edges.add(index)
+        self.draw_scene(update_list=False)
+
+    def select_face(self, selected: bool) -> None:
+        self.selected_face = selected
         self.draw_scene(update_list=False)
 
     def _update_selection_gizmo(self) -> None:
@@ -2115,9 +2197,19 @@ class EditorWindow(QMainWindow):
                         )
                     )
                 if len(verts) > 1:
+                    color = (1.0, 0.8, 0.2, 1) if self.selected_face else (0.4, 1.0, 0.4, 1)
                     self.renderer.add_gizmo(
-                        gizmos.polyline_gizmo(verts + [verts[0]], color=(0.4, 1.0, 0.4, 1), frames=None)
+                        gizmos.polyline_gizmo(verts + [verts[0]], color=color, frames=None)
                     )
+                    for i in self.selected_edges:
+                        j = (i + 1) % len(verts)
+                        self.renderer.add_gizmo(
+                            gizmos.polyline_gizmo(
+                                [verts[i], verts[j]],
+                                color=(1.0, 0.8, 0.2, 1),
+                                frames=None,
+                            )
+                        )
                     for i, (vx, vy) in enumerate(obj.mesh.vertices):
                         nx, ny = self._vertex_normal(obj.mesh.vertices, i)
                         wx, wy = verts[i]

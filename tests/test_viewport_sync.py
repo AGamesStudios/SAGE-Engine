@@ -696,9 +696,12 @@ def test_extrude_and_loop_cut(monkeypatch):
     win.select_object(obj)
     win.toggle_model(True)
     win.select_vertex(0)
-    before = obj.mesh.vertices[0]
+    win.update_cursor(1.0, 0.0)
+    count = len(obj.mesh.vertices)
     win.extrude_selection()
-    assert obj.mesh.vertices[0] != before
+    assert len(obj.mesh.vertices) == count + 1
+    mx, my = win.world_to_mesh(obj, 1.0, 0.0)
+    assert obj.mesh.vertices[1] == (mx, my)
     count = len(obj.mesh.vertices)
     win.loop_cut()
     assert len(obj.mesh.vertices) == count * 2
@@ -726,9 +729,5 @@ def test_concave_vertex_normal(monkeypatch):
     ]
     obj.mesh = create_polygon_mesh(verts)
     win.select_object(obj)
-    win.toggle_model(True)
-    win.select_vertex(3)
-    before = obj.mesh.vertices[3]
-    win.extrude_selection()
-    after = obj.mesh.vertices[3]
-    assert after[0] < before[0] and after[1] < before[1]
+    nx, ny = win._vertex_normal(obj.mesh.vertices, 3)
+    assert nx < 0 and ny < 0

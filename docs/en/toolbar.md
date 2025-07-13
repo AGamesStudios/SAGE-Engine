@@ -1,6 +1,6 @@
 # Toolbar
 
-The toolbar sits vertically in the top-left corner and starts with **Edit** and **Model** buttons. Edit mode exposes move, rotate, scale and rect tools while Model mode shows vertex handles for editing meshes and a second bar where you can pick **Verts**, **Edges** or **Faces**. The extra buttons let you **Extrude** or perform a ``Loop Cut``. A **Local** toggle aligns gizmos to the object's rotation. The move gizmo includes a small square between the arrows that lets you drag objects along both axes at once.
+The toolbar sits vertically in the top-left corner and starts with **Edit** and **Model** buttons. Edit mode exposes move, rotate, scale and rect tools while Model mode shows vertex handles for editing meshes and a second bar where you can pick **Verts**, **Edges** or **Faces**. Use **Extrude** to create a new edge from selected vertices at the cursor, or perform a ``Loop Cut`` to subdivide the mesh. A **Local** toggle aligns gizmos to the object's rotation. The move gizmo includes a small square between the arrows that lets you drag objects along both axes at once.
 Right-click the viewport to create sprites, empties, cameras or simple shapes.
 The *Screenshot* button opens a dialog for saving the current viewport as ``PNG``.
 
