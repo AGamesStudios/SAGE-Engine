@@ -70,8 +70,8 @@ small margin so controls don't stick together. Checkboxes have rounded
 indicators and the custom rotation wheel fills like a circular progress bar.
 The properties panel includes a tag field with a white outline and a round **+**
 button on the left. Tags start from the left edge, and pressing the button opens
-an inline editor there. Each capsule is a soft pill with a delete button tucked
-inside on the right.
+an inline editor there. Each capsule shows only a translucent background with no
+outline and contains a delete button tucked inside on the right.
 Menus leave a small gap between levels and combo boxes highlight items in the
 same accent. A dedicated **Console** dock sits below the viewport.
 The **File** menu opens and saves ``.sageproject`` files and the toolbar

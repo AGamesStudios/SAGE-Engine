@@ -34,7 +34,7 @@ class TagCapsule(QWidget):
         self.text = text
         layout = QHBoxLayout(self)
         if hasattr(layout, "setContentsMargins"):
-            layout.setContentsMargins(2, 0, 2, 0)
+            layout.setContentsMargins(4, 0, 2, 0)
         if hasattr(layout, "setSpacing"):
             layout.setSpacing(1)
         if hasattr(self, "setSizePolicy"):
@@ -44,9 +44,9 @@ class TagCapsule(QWidget):
             self.setSizePolicy(horiz, vert)
         if hasattr(self, "setStyleSheet"):
             self.setStyleSheet(
-                "background: rgba(255,255,255,0.2);"
+                "background: rgba(255,255,255,0.15);"
                 " border-radius: 8px;"
-                " padding: 0 2px;"
+                " padding: 0 4px 0 4px;"
                 " border: none;"
             )
         self.label = QLabel(text, self)
@@ -59,7 +59,9 @@ class TagCapsule(QWidget):
         if hasattr(self.remove_btn, "setFixedSize"):
             self.remove_btn.setFixedSize(12, 12)
         if hasattr(self.remove_btn, "setStyleSheet"):
-            self.remove_btn.setStyleSheet("border: none; padding-left: 2px; color: white;")
+            self.remove_btn.setStyleSheet(
+                "border: none; padding-left: 4px; padding-right: 2px; color: white;"
+            )
         layout.addWidget(self.label)
         layout.addWidget(self.remove_btn)
         if hasattr(self.remove_btn, "clicked"):
