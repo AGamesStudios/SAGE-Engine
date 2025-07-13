@@ -30,6 +30,10 @@ from PyQt6.QtWidgets import (  # type: ignore[import-not-found]
     QWidget,
 )
 try:  # optional for tests
+    from PyQt6.QtWidgets import QAbstractItemView  # type: ignore[import-not-found]
+except Exception:  # pragma: no cover - fallback when class missing
+    QAbstractItemView = QWidget  # type: ignore[assignment]
+try:  # optional for tests
     from PyQt6.QtWidgets import QFrame  # type: ignore[import-not-found]
 except Exception:  # pragma: no cover - fallback when QFrame missing
     QFrame = QWidget  # type: ignore[misc]
@@ -835,7 +839,11 @@ class _ViewportMixin:
             if self._press_pos is not None and not self._dragging:
                 wx, wy = self._window.screen_to_world(pos)
                 obj = self._window.find_object_at(wx, wy)
-                self._window.select_object(obj)
+                mods = ev.modifiers() if hasattr(ev, "modifiers") else 0
+                add = mods & (
+                    Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.ShiftModifier
+                )
+                self._window.select_object(obj, additive=bool(add))
             self._press_pos = None
             self._dragging = False
             self._last_pos = None
@@ -1106,6 +1114,7 @@ class EditorWindow(QMainWindow):
         self.transform_mode = "move"
         self.set_renderer(self.renderer)
         self.selected_obj: Optional[GameObject] = None
+        self.selected_objs: list[GameObject] = []
         self._clipboard: dict | None = None
 
         self.setCentralWidget(self.viewport_container)
@@ -1239,6 +1248,10 @@ class EditorWindow(QMainWindow):
                     tbar.addAction(action)
 
         self.objects = QListWidget()
+        if hasattr(self.objects, "setSelectionMode"):
+            self.objects.setSelectionMode(
+                QAbstractItemView.SelectionMode.ExtendedSelection
+            )
         obj_dock = QDockWidget("Objects", self)
         obj_dock.setObjectName("ObjectsDock")
         obj_dock.setWidget(self.objects)
@@ -1260,7 +1273,10 @@ class EditorWindow(QMainWindow):
 
         self.objects.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.objects.customContextMenuRequested.connect(self._list_context_menu)
-        self.objects.currentItemChanged.connect(self._object_selected)
+        if hasattr(self.objects, "itemSelectionChanged"):
+            self.objects.itemSelectionChanged.connect(self._object_selected)
+        else:
+            self.objects.currentItemChanged.connect(self._object_selected)
 
         self.selected_obj = None
         self.update_object_list()
@@ -1683,12 +1699,14 @@ class EditorWindow(QMainWindow):
         current = self.selected_obj.name if preserve and self.selected_obj else None
         names = [self._object_path(o) for o in self.scene.objects]
         self.set_objects(names)
-        if current:
-            for i in range(self.objects.count()):
-                item = self.objects.item(i)
-                if item.text().split("/")[-1] == current:
-                    self.objects.setCurrentItem(item)
-                    break
+        selected_names = {o.name for o in self.selected_objs}
+        for i in range(self.objects.count()):
+            item = self.objects.item(i)
+            name = item.text().split("/")[-1]
+            if hasattr(item, "setSelected"):
+                item.setSelected(name in selected_names)
+            if name == current:
+                self.objects.setCurrentItem(item)
 
     def update_properties(self):
         self._updating_properties = True
@@ -1717,16 +1735,29 @@ class EditorWindow(QMainWindow):
                 return obj
         return None
 
-    def select_object(self, obj: Optional[GameObject]) -> None:
-        self.selected_obj = obj
-        if obj is None:
-            self.objects.setCurrentItem(None)
+    def select_object(self, obj: Optional[GameObject], additive: bool = False) -> None:
+        if not additive:
+            self.selected_objs = [obj] if obj else []
         else:
-            for i in range(self.objects.count()):
-                item = self.objects.item(i)
-                if item.text().split("/")[-1] == obj.name:
-                    self.objects.setCurrentItem(item)
-                    break
+            if obj is None:
+                return
+            if obj in self.selected_objs:
+                self.selected_objs.remove(obj)
+            else:
+                self.selected_objs.append(obj)
+        self.selected_obj = self.selected_objs[-1] if self.selected_objs else None
+
+        selected_names = {o.name for o in self.selected_objs}
+        for i in range(self.objects.count()):
+            item = self.objects.item(i)
+            name = item.text().split("/")[-1]
+            if hasattr(item, "setSelected"):
+                item.setSelected(name in selected_names)
+            if name == getattr(self.selected_obj, "name", None):
+                self.objects.setCurrentItem(item)
+        if not self.selected_obj:
+            self.objects.setCurrentItem(None)
+
         self.update_properties()
         self.draw_scene(update_list=False)
 
@@ -1734,91 +1765,89 @@ class EditorWindow(QMainWindow):
         """Refresh gizmo highlighting the currently selected object."""
         if hasattr(self.renderer, "clear_gizmos"):
             self.renderer.clear_gizmos()
-        obj = self.selected_obj
-        if obj is None:
-            return
-        if isinstance(obj, Camera):
-            left, bottom, w, h = obj.view_rect()
-        else:
-            left, bottom, w, h = obj.rect()
-        points = [
-            (left, bottom),
-            (left + w, bottom),
-            (left + w, bottom + h),
-            (left, bottom + h),
-            (left, bottom),
-        ]
-        g = gizmos.polyline_gizmo(points, color=(1, 0.4, 0.2, 1), frames=None)
-        if hasattr(self.renderer, "add_gizmo"):
-            self.renderer.add_gizmo(g)
-            self.renderer.add_gizmo(
-                gizmos.circle_gizmo(
-                    obj.x,
-                    obj.y,
-                    size=4,
-                    color=(0.5, 0.5, 0.5, 1),
-                    thickness=1,
-                    frames=None,
-                )
-            )
-        if self.modeling and getattr(obj, "mesh", None) is not None:
-            verts = [self.mesh_to_world(obj, vx, vy) for vx, vy in obj.mesh.vertices]
-            for wx, wy in verts:
+        for obj in self.selected_objs:
+            if isinstance(obj, Camera):
+                left, bottom, w, h = obj.view_rect()
+            else:
+                left, bottom, w, h = obj.rect()
+            points = [
+                (left, bottom),
+                (left + w, bottom),
+                (left + w, bottom + h),
+                (left, bottom + h),
+                (left, bottom),
+            ]
+            g = gizmos.polyline_gizmo(points, color=(1, 0.4, 0.2, 1), frames=None)
+            if hasattr(self.renderer, "add_gizmo"):
+                self.renderer.add_gizmo(g)
                 self.renderer.add_gizmo(
-                    gizmos.square_gizmo(
-                        wx,
-                        wy,
+                    gizmos.circle_gizmo(
+                        obj.x,
+                        obj.y,
                         size=4,
+                        color=(0.5, 0.5, 0.5, 1),
+                        thickness=1,
+                        frames=None,
+                    )
+                )
+            if self.modeling and getattr(obj, "mesh", None) is not None:
+                verts = [self.mesh_to_world(obj, vx, vy) for vx, vy in obj.mesh.vertices]
+                for wx, wy in verts:
+                    self.renderer.add_gizmo(
+                        gizmos.square_gizmo(
+                            wx,
+                            wy,
+                            size=4,
+                            color=(0.2, 0.8, 1.0, 1),
+                            thickness=1,
+                            frames=None,
+                            filled=True,
+                        )
+                    )
+                if len(verts) > 1:
+                    self.renderer.add_gizmo(
+                        gizmos.polyline_gizmo(verts + [verts[0]], color=(0.4, 1.0, 0.4, 1), frames=None)
+                    )
+                    for i, (vx, vy) in enumerate(obj.mesh.vertices):
+                        nx, ny = self._vertex_normal(obj.mesh.vertices, i)
+                        wx, wy = verts[i]
+                        wx2, wy2 = self.mesh_to_world(obj, vx + nx * 0.05, vy + ny * 0.05)
+                        self.renderer.add_gizmo(
+                            gizmos.polyline_gizmo(
+                                [(wx, wy), (wx2, wy2)],
+                                color=(0.6, 0.6, 1.0, 1),
+                                frames=None,
+                            )
+                        )
+            if self.transform_mode == "rect":
+                handle_size = 5
+                cam = self.camera
+                rot_y = bottom + h + _ViewportMixin.ROTATE_OFFSET / (
+                    units.UNITS_PER_METER * cam.zoom
+                )
+                self.renderer.add_gizmo(
+                    gizmos.circle_gizmo(
+                        obj.x,
+                        rot_y,
+                        size=handle_size,
                         color=(0.2, 0.8, 1.0, 1),
                         thickness=1,
                         frames=None,
                         filled=True,
                     )
                 )
-            if len(verts) > 1:
-                self.renderer.add_gizmo(
-                    gizmos.polyline_gizmo(verts + [verts[0]], color=(0.4, 1.0, 0.4, 1), frames=None)
-                )
-                for i, (vx, vy) in enumerate(obj.mesh.vertices):
-                    nx, ny = self._vertex_normal(obj.mesh.vertices, i)
-                    wx, wy = verts[i]
-                    wx2, wy2 = self.mesh_to_world(obj, vx + nx * 0.05, vy + ny * 0.05)
+                for x, y in points[:-1]:
                     self.renderer.add_gizmo(
-                        gizmos.polyline_gizmo(
-                            [(wx, wy), (wx2, wy2)],
-                            color=(0.6, 0.6, 1.0, 1),
+                        gizmos.square_gizmo(
+                            x,
+                            y,
+                            size=handle_size,
+                            color=(1.0, 0.6, 0.2, 1),
+                            thickness=1,
                             frames=None,
+                            filled=True,
                         )
                     )
-        if self.transform_mode == "rect":
-            handle_size = 5
-            cam = self.camera
-            rot_y = bottom + h + _ViewportMixin.ROTATE_OFFSET / (
-                units.UNITS_PER_METER * cam.zoom
-            )
-            self.renderer.add_gizmo(
-                gizmos.circle_gizmo(
-                    obj.x,
-                    rot_y,
-                    size=handle_size,
-                    color=(0.2, 0.8, 1.0, 1),
-                    thickness=1,
-                    frames=None,
-                    filled=True,
-                )
-            )
-            for x, y in points[:-1]:
-                self.renderer.add_gizmo(
-                    gizmos.square_gizmo(
-                        x,
-                        y,
-                        size=handle_size,
-                        color=(1.0, 0.6, 0.2, 1),
-                        thickness=1,
-                        frames=None,
-                        filled=True,
-                    )
-                )
 
     def draw_scene(self, update_list: bool = True) -> None:
         """Render the current scene and refresh selection gizmos."""
@@ -1971,12 +2000,19 @@ class EditorWindow(QMainWindow):
             cam_a.triggered.connect(self.create_camera)
         menu.exec(self.objects.mapToGlobal(point))
 
-    def _object_selected(self, current, _prev):
-        if current is not None:
-            name = current.text().split("/")[-1]
-            self.selected_obj = self.scene.find_object(name)
+    def _object_selected(self, current=None, _prev=None):
+        if hasattr(self.objects, "selectedItems"):
+            items = self.objects.selectedItems()
+            names = [i.text().split("/")[-1] for i in items]
+        elif current is not None:
+            names = [current.text().split("/")[-1]] if current is not None else []
+        elif hasattr(self.objects, "currentItem"):
+            cur = self.objects.currentItem()
+            names = [cur.text().split("/")[-1]] if cur is not None else []
         else:
-            self.selected_obj = None
+            names = []
+        self.selected_objs = [o for o in (self.scene.find_object(n) for n in names) if o]
+        self.selected_obj = self.selected_objs[-1] if self.selected_objs else None
         if isinstance(self.selected_obj, Camera):
             self.show_camera_preview(cast(Camera, self.selected_obj))
         else:

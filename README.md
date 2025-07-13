@@ -73,6 +73,7 @@ same accent. A dedicated **Console** dock sits below the viewport.
 The **File** menu opens and saves ``.sageproject`` files and the toolbar
 includes a screenshot button.
 The *View* menu lets you hide the bounding box around the selection.
+Hold **Ctrl** or **Shift** while clicking objects to add them to the selection.
 
 ## Logs
 Log files are written to `~/.cache/sage/logs/engine.log` by default. Configure a
