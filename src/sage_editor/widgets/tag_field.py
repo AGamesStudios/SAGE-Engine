@@ -18,6 +18,7 @@ from PyQt6.QtWidgets import (  # type: ignore[import-not-found]
     QPushButton,
     QLabel,
     QHBoxLayout,
+    QSizePolicy,
 )
 
 from ..plugins.viewport import NoWheelLineEdit
@@ -34,10 +35,27 @@ class TagCapsule(QWidget):
         layout = QHBoxLayout(self)
         if hasattr(layout, "setContentsMargins"):
             layout.setContentsMargins(4, 0, 4, 0)
+        if hasattr(self, "setSizePolicy"):
+            pol = getattr(QSizePolicy, "Policy", QSizePolicy)
+            horiz = getattr(pol, "Maximum", 0)
+            vert = getattr(pol, "Preferred", 0)
+            self.setSizePolicy(horiz, vert)
+        if hasattr(self, "setStyleSheet"):
+            self.setStyleSheet(
+                "border: 1px solid white; border-radius: 8px;"
+                " background: transparent;"
+            )
         self.label = QLabel(text, self)
+        if hasattr(self.label, "setSizePolicy"):
+            pol = getattr(QSizePolicy, "Policy", QSizePolicy)
+            horiz = getattr(pol, "Maximum", 0)
+            vert = getattr(pol, "Preferred", 0)
+            self.label.setSizePolicy(horiz, vert)
         self.remove_btn = QPushButton("×", self)
         if hasattr(self.remove_btn, "setFixedSize"):
             self.remove_btn.setFixedSize(12, 12)
+        if hasattr(self.remove_btn, "setStyleSheet"):
+            self.remove_btn.setStyleSheet("border: none;")
         layout.addWidget(self.label)
         layout.addWidget(self.remove_btn)
         if hasattr(self.remove_btn, "clicked"):
@@ -63,7 +81,18 @@ class TagField(QWidget):
         if hasattr(layout, "setSpacing"):
             layout.setSpacing(4)
 
+        if hasattr(self, "setStyleSheet"):
+            self.setStyleSheet(
+                "border: 1px solid white; border-radius: 10px;"
+                " background: transparent;"
+            )
+
         self.tag_area = QWidget(self)
+        if hasattr(self.tag_area, "setSizePolicy"):
+            pol = getattr(QSizePolicy, "Policy", QSizePolicy)
+            horiz = getattr(pol, "Expanding", 0)
+            vert = getattr(pol, "Preferred", 0)
+            self.tag_area.setSizePolicy(horiz, vert)
         self.tag_layout = QHBoxLayout(self.tag_area)
         if hasattr(self.tag_layout, "setContentsMargins"):
             self.tag_layout.setContentsMargins(0, 0, 0, 0)
@@ -78,6 +107,8 @@ class TagField(QWidget):
         layout.addWidget(self.add_btn)
 
         self._editor = NoWheelLineEdit(self.tag_area)
+        if hasattr(self._editor, "setFixedWidth"):
+            self._editor.setFixedWidth(60)
         if hasattr(self._editor, "returnPressed"):
             self._editor.returnPressed.connect(self._finish_edit)
         if hasattr(self._editor, "editingFinished"):

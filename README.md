@@ -68,9 +68,9 @@ use the same accent colour for focus but items no longer stay highlighted.
 Text fields and scroll bars highlight orange when focused. Buttons include a
 small margin so controls don't stick together. Checkboxes have rounded
 indicators and the custom rotation wheel fills like a circular progress bar.
-The properties panel includes a tag field: a long box with a round **+** button
-on the right. Pressing the button inserts a small editable capsule; after you
-enter a name it becomes a tag capsule with its own delete button.
+The properties panel includes a tag field with a white capsule outline and a
+round **+** button on the right. Pressing the button shows an inline editor; the
+resulting tag capsule sizes to its text and includes a delete button.
 Menus leave a small gap between levels and combo boxes highlight items in the
 same accent. A dedicated **Console** dock sits below the viewport.
 The **File** menu opens and saves ``.sageproject`` files and the toolbar
