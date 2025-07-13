@@ -1986,11 +1986,19 @@ class EditorWindow(QMainWindow):
         n2 = (dy2, -dx2)
         len1 = math.hypot(*n1) or 1.0
         len2 = math.hypot(*n2) or 1.0
-        nx = n1[0] / len1 + n2[0] / len2
-        ny = n1[1] / len1 + n2[1] / len2
-        length = math.hypot(nx, ny) or 1.0
-        nx /= length
-        ny /= length
+        n1x = n1[0] / len1
+        n1y = n1[1] / len1
+        n2x = n2[0] / len2
+        n2y = n2[1] / len2
+        dot = n1x * n2x + n1y * n2y
+        if abs(dot) > 0.8:
+            nx, ny = n1x, n1y
+        else:
+            nx = n1x + n2x
+            ny = n1y + n2y
+            length = math.hypot(nx, ny) or 1.0
+            nx /= length
+            ny /= length
         if (dx1 * dy2 - dy1 * dx2) * orient < 0:
             nx = -nx
             ny = -ny

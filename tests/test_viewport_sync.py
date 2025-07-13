@@ -731,3 +731,29 @@ def test_concave_vertex_normal(monkeypatch):
     win.select_object(obj)
     nx, ny = win._vertex_normal(obj.mesh.vertices, 3)
     assert nx < 0 and ny < 0
+
+
+def test_bevel_vertex_normal(monkeypatch):
+    _stub_gl(monkeypatch, {})
+    _setup_qt(monkeypatch)
+
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    viewport = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(viewport)
+
+    from engine.mesh_utils import create_polygon_mesh
+
+    win = viewport.EditorWindow()
+    obj = win.create_shape('square')
+    verts = [
+        (0.0, 0.0),
+        (1.0, 0.0),
+        (2.0, 0.05),
+        (2.0, 1.0),
+        (0.0, 1.0),
+    ]
+    obj.mesh = create_polygon_mesh(verts)
+    win.select_object(obj)
+    nx, ny = win._vertex_normal(obj.mesh.vertices, 1)
+    assert abs(nx) < 0.2
+    assert ny < 0
