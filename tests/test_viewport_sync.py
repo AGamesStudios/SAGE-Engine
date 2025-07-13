@@ -702,3 +702,33 @@ def test_extrude_and_loop_cut(monkeypatch):
     count = len(obj.mesh.vertices)
     win.loop_cut()
     assert len(obj.mesh.vertices) == count * 2
+
+
+def test_concave_vertex_normal(monkeypatch):
+    _stub_gl(monkeypatch, {})
+    _setup_qt(monkeypatch)
+
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    viewport = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(viewport)
+
+    from engine.mesh_utils import create_polygon_mesh
+
+    win = viewport.EditorWindow()
+    obj = win.create_shape('square')
+    verts = [
+        (0.0, 0.0),
+        (1.0, 0.0),
+        (1.0, 0.2),
+        (0.2, 0.2),
+        (0.2, 1.0),
+        (0.0, 1.0),
+    ]
+    obj.mesh = create_polygon_mesh(verts)
+    win.select_object(obj)
+    win.toggle_model(True)
+    win.select_vertex(3)
+    before = obj.mesh.vertices[3]
+    win.extrude_selection()
+    after = obj.mesh.vertices[3]
+    assert after[0] < before[0] and after[1] < before[1]

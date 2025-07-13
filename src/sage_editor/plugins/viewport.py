@@ -1908,6 +1908,7 @@ class EditorWindow(QMainWindow):
 
     def _vertex_normal(self, verts: list[tuple[float, float]], i: int) -> tuple[float, float]:
         """Return a unit normal for vertex ``i`` in mesh space."""
+        orient = self._polygon_orientation(verts)
         prev = verts[i - 1]
         cur = verts[i]
         nxt = verts[(i + 1) % len(verts)]
@@ -1922,7 +1923,19 @@ class EditorWindow(QMainWindow):
         nx = n1[0] / len1 + n2[0] / len2
         ny = n1[1] / len1 + n2[1] / len2
         length = math.hypot(nx, ny) or 1.0
-        return nx / length, ny / length
+        nx /= length
+        ny /= length
+        if (dx1 * dy2 - dy1 * dx2) * orient < 0:
+            nx = -nx
+            ny = -ny
+        return nx, ny
+
+    def _polygon_orientation(self, verts: list[tuple[float, float]]) -> int:
+        area = 0.0
+        for i, (x0, y0) in enumerate(verts):
+            x1, y1 = verts[(i + 1) % len(verts)]
+            area += x0 * y1 - y0 * x1
+        return 1 if area >= 0 else -1
 
     def set_renderer(self, renderer):
         self.viewport.renderer = renderer
