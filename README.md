@@ -68,11 +68,14 @@ use the same accent colour for focus but items no longer stay highlighted.
 Text fields and scroll bars highlight orange when focused. Buttons include a
 small margin so controls don't stick together. Checkboxes have rounded
 indicators and the custom rotation wheel fills like a circular progress bar.
-The properties panel uses a **TagBar** – a long rounded capsule outlined in
-white. Inside, a darker track holds tag chips that slide left as you add more,
-while a round **+** button stays on the right. Pressing it reveals an inline
-editor. Each tag capsule matches the track colour and includes a small delete
-button inside the pill.
+The properties panel uses a **TagBar** – a long 40 px capsule with a continuous
+2 px white outline. The container sits flush to the “Tags” label and has a dark
+`#333` background. Inside, tag chips and the **+** button share the same
+graphite `#555` colour. Each capsule has 12 px of internal padding, 8 px gaps
+between neighbours and includes a small delete button on the right. The **+**
+button is a 24 px circle that reveals an inline editor when pressed. When chips
+overflow, the track scrolls horizontally but the white outline stays fixed,
+giving the impression that the list slides inside a static frame.
 When chips overflow, the track scrolls horizontally but the white outline stays
 fixed, giving the impression that the list slides inside a static frame.
 Menus leave a small gap between levels and combo boxes highlight items in the

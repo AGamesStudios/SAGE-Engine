@@ -40,7 +40,7 @@ class TagCapsule(QWidget):
         self.text = text
         layout = QHBoxLayout(self)
         if hasattr(layout, "setContentsMargins"):
-            layout.setContentsMargins(8, 0, 6, 0)
+            layout.setContentsMargins(12, 0, 12, 0)
         if hasattr(layout, "setSpacing"):
             layout.setSpacing(4)
         if hasattr(self, "setSizePolicy"):
@@ -50,8 +50,8 @@ class TagCapsule(QWidget):
             self.setSizePolicy(horiz, vert)
         if hasattr(self, "setStyleSheet"):
             self.setStyleSheet(
-                "background:#444; border-radius:14px;"
-                "padding:4px 6px; border:none;"
+                "background:#555; border-radius:16px;"
+                "padding:0 12px; border:none;"
             )
         self.label = QLabel(text, self)
         if hasattr(self.label, "setSizePolicy"):
@@ -88,7 +88,7 @@ class TagBar(QWidget):
         self._scroll_val: int | None = None
         layout = QHBoxLayout(self)
         if hasattr(layout, "setContentsMargins"):
-            layout.setContentsMargins(4, 4, 4, 4)
+            layout.setContentsMargins(0, 0, 0, 0)
         if hasattr(layout, "setSpacing"):
             layout.setSpacing(0)
         if hasattr(self, "setFixedHeight"):
@@ -107,7 +107,7 @@ class TagBar(QWidget):
             self.scroll.setFrameShape(getattr(QFrame, "Shape", QFrame).NoFrame)
         if hasattr(self.scroll, "setStyleSheet"):
             self.scroll.setStyleSheet(
-                "border:none;background:#222; border-radius:16px;"
+                "border:none;background:#333;"
             )
         if hasattr(self.scroll, "setHorizontalScrollBarPolicy"):
             policy = getattr(Qt.ScrollBarPolicy, "ScrollBarAsNeeded", None)
@@ -128,16 +128,16 @@ class TagBar(QWidget):
         if hasattr(self.tag_layout, "setContentsMargins"):
             self.tag_layout.setContentsMargins(0, 0, 0, 0)
         if hasattr(self.tag_layout, "setSpacing"):
-            self.tag_layout.setSpacing(4)
+            self.tag_layout.setSpacing(8)
         if hasattr(self.scroll, "setWidget"):
             self.scroll.setWidget(self.tag_area)
 
         self.add_btn = QPushButton("+", self.tag_area)
         if hasattr(self.add_btn, "setFixedSize"):
-            self.add_btn.setFixedSize(28, 28)
+            self.add_btn.setFixedSize(24, 24)
         if hasattr(self.add_btn, "setStyleSheet"):
             self.add_btn.setStyleSheet(
-                "border:none;border-radius:14px;background:#555;color:white;"
+                "border:none;border-radius:12px;background:#555;color:white;"
             )
         self.add_btn.clicked.connect(self._show_editor)
         layout.addWidget(self.scroll)
