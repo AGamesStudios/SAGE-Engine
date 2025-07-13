@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import os
 import math
+import sys
 from typing import Optional, cast
 
 from PyQt6.QtWidgets import (  # type: ignore[import-not-found]
@@ -54,12 +55,8 @@ from engine.utils import units
 from engine.core.scenes.scene import Scene
 from engine.core.camera import Camera
 from engine.entities.game_object import GameObject
+from copy import deepcopy
 from engine import gizmos
-from engine.mesh_utils import (
-    create_circle_mesh,
-    create_square_mesh,
-    create_triangle_mesh,
-)
 
 from sage_editor.qt import GLWidget
 from sage_editor.plugins.editor_widgets import (
@@ -306,15 +303,16 @@ class EditorWindow(QMainWindow):
         w = self.viewport.width() or 640
         h = self.viewport.height() or 480
         from . import viewport as _vp
+        vp_mod = sys.modules.get("viewport", _vp)
         if backend == "opengl":
-            rcls = _vp.OpenGLRenderer
+            rcls = vp_mod.OpenGLRenderer
         else:
             from engine.renderers import get_renderer
             rcls = get_renderer(backend)
             if rcls is None:
                 self.log_warning(f"Renderer '{backend}' unavailable; falling back to OpenGL")
-                rcls = _vp.OpenGLRenderer
-        self.renderer_backend = backend if rcls is not _vp.OpenGLRenderer else "opengl"
+                rcls = vp_mod.OpenGLRenderer
+        self.renderer_backend = backend if rcls is not vp_mod.OpenGLRenderer else "opengl"
         self.renderer = rcls(
             width=w,
             height=h,
@@ -1053,10 +1051,11 @@ class EditorWindow(QMainWindow):
         w = self.viewport.width() or 1
         h = self.viewport.height() or 1
         cam = self.camera
+        cam_zoom = getattr(cam, "zoom", 1.0)
         scale = units.UNITS_PER_METER
         sign = -1 if units.Y_UP else 1
-        x = cam.x + (point.x() - w / 2) / (scale * cam.zoom)
-        y = cam.y + (point.y() - h / 2) * sign / (scale * cam.zoom)
+        x = cam.x + (point.x() - w / 2) / (scale * cam_zoom)
+        y = cam.y + (point.y() - h / 2) * sign / (scale * cam_zoom)
         return x, y
 
     def world_to_screen(self, pos: tuple[float, float]):
@@ -1065,10 +1064,11 @@ class EditorWindow(QMainWindow):
         w = self.viewport.width() or 1
         h = self.viewport.height() or 1
         cam = self.camera
+        cam_zoom = getattr(cam, "zoom", 1.0)
         scale = units.UNITS_PER_METER
         sign = -1 if units.Y_UP else 1
-        sx = (x - cam.x) * scale * cam.zoom + w / 2
-        sy = (y - cam.y) * scale * cam.zoom * sign + h / 2
+        sx = (x - cam.x) * scale * cam_zoom + w / 2
+        sy = (y - cam.y) * scale * cam_zoom * sign + h / 2
         return sx, sy
 
     def _update_rulers(self) -> None:
@@ -1421,8 +1421,9 @@ class EditorWindow(QMainWindow):
             if not self.modeling and self.transform_mode == "rect":
                 handle_size = 5
                 cam = self.camera
+                cam_zoom = getattr(cam, "zoom", 1.0)
                 rot_y = bottom + h + _ViewportMixin.ROTATE_OFFSET / (
-                    units.UNITS_PER_METER * cam.zoom
+                    units.UNITS_PER_METER * cam_zoom
                 )
                 self.renderer.add_gizmo(
                     gizmos.circle_gizmo(
@@ -1551,6 +1552,11 @@ class EditorWindow(QMainWindow):
         obj.transform.x = x
         obj.transform.y = y
         obj.filled = True
+        from engine.mesh_utils import (
+            create_square_mesh,
+            create_triangle_mesh,
+            create_circle_mesh,
+        )
         if shape == "triangle":
             obj.mesh = create_triangle_mesh()
         elif shape == "circle":
@@ -1580,18 +1586,25 @@ class EditorWindow(QMainWindow):
         if self.selected_obj is None:
             return
         from engine.core.objects import object_to_dict
-        self._clipboard = object_to_dict(self.selected_obj)
+        data = object_to_dict(self.selected_obj)
+        if data is None:
+            self._clipboard = deepcopy(self.selected_obj)
+        else:
+            self._clipboard = data
 
     def paste_object(self) -> Optional[GameObject]:
         if not self._clipboard:
             return None
         self.undo_stack.snapshot(self.scene)
-        from engine.core.objects import object_from_dict
-        try:
-            obj = cast(GameObject, object_from_dict(dict(self._clipboard)))
-        except Exception:
-            log.exception("Failed to paste object")
-            return None
+        if isinstance(self._clipboard, dict):
+            from engine.core.objects import object_from_dict
+            try:
+                obj = cast(GameObject, object_from_dict(dict(self._clipboard)))
+            except Exception:
+                log.exception("Failed to paste object")
+                return None
+        else:
+            obj = deepcopy(cast(GameObject, self._clipboard))
         base = obj.name
         idx = 1
         while self.scene.find_object(obj.name):

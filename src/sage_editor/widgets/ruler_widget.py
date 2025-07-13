@@ -77,17 +77,19 @@ class RulerWidget(QWidget):
             x = (start - self.offset) * self.scale
             world = start
             while x < self.width():
+                pos = int(round(x))
                 size = 8 if world % (step * 5) == 0 else 4
-                painter.drawLine(int(x), h, int(x), h - size)
+                painter.drawLine(pos, h, pos, h - size)
                 if size == 8:
-                    painter.drawText(int(x) + 2, h - size - 2, f"{world:.0f}")
+                    painter.drawText(pos + 2, h - size - 2, f"{world:.0f}")
                 x += step_pixels(step)
                 world += step
             if self.cursor is not None:
                 cx = (self.cursor - self.offset) * self.scale
                 if 0 <= cx <= self.width():
+                    pos = int(round(cx))
                     painter.setPen(QPen(QColor(ACCENT_COLOR)))
-                    painter.drawLine(int(cx), 0, int(cx), h)
+                    painter.drawLine(pos, 0, pos, h)
         else:
             w = self.width()
             start = math.floor(self.offset / step) * step

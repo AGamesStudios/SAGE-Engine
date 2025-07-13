@@ -7,6 +7,8 @@ objects are drawn with hardware acceleration by default.
 from __future__ import annotations
 
 import logging
+import sys
+from types import ModuleType
 from PyQt6.QtWidgets import QApplication  # type: ignore[import-not-found]
 from engine.renderers.opengl.core import OpenGLRenderer  # noqa: F401
 from engine.core.scenes.scene import Scene  # noqa: F401
@@ -61,4 +63,8 @@ def init_editor(editor) -> None:
     editor.viewport = window.viewport
     if created:
         app.exec()
+
+module = sys.modules.setdefault(__name__, ModuleType(__name__))
+module.__dict__.update(globals())
+sys.modules.setdefault('sage_editor.plugins.viewport', module)
 
