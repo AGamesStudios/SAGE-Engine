@@ -15,7 +15,8 @@ from PyQt6.QtWidgets import (  # type: ignore[import-not-found]
 
 from engine.entities.game_object import GameObject
 
-from ..plugins.viewport import ProgressWheel, NoWheelLineEdit, NoWheelSpinBox
+from ..plugins.viewport import ProgressWheel, NoWheelSpinBox, NoWheelLineEdit
+from .tag_field import TagField
 
 
 class PropertiesWidget(QWidget):
@@ -33,7 +34,7 @@ class PropertiesWidget(QWidget):
         if hasattr(self.role_combo, "addItems"):
             self.role_combo.addItems(["empty", "shape", "sprite", "camera"])
         obj_form.addRow("Role", self.role_combo)
-        self.tags_edit = NoWheelLineEdit(self)
+        self.tags_edit = TagField(self)
         obj_form.addRow("Tags", self.tags_edit)
         self.visible_check = QCheckBox("Visible", self)
         obj_form.addRow(self.visible_check)
@@ -182,7 +183,7 @@ class PropertiesWidget(QWidget):
             self.name_edit.setText("")
             if hasattr(self, "role_combo"):
                 self.role_combo.setCurrentIndex(-1)
-            self.tags_edit.setText("")
+            self.tags_edit.set_tags([])
             self.visible_check.setChecked(False)
             self.pos_x.setValue(0.0)
             self.pos_y.setValue(0.0)
@@ -234,9 +235,9 @@ class PropertiesWidget(QWidget):
             elif hasattr(self.role_combo, "setCurrentText"):
                 self.role_combo.setCurrentText(role)
         tags = obj.metadata.get("tags", [])
-        if isinstance(tags, (list, set)):
-            tags = ",".join(tags)
-        self.tags_edit.setText(str(tags))
+        if isinstance(tags, str):
+            tags = [tags]
+        self.tags_edit.set_tags(tags if isinstance(tags, (list, set)) else [])
         self.visible_check.setChecked(bool(getattr(obj, "visible", True)))
         self.pos_x.setValue(float(getattr(obj, "x", 0.0)))
         self.pos_y.setValue(float(getattr(obj, "y", 0.0)))
@@ -286,9 +287,11 @@ class PropertiesWidget(QWidget):
 
     def apply_to_object(self, obj: GameObject) -> None:
         obj.name = self.name_edit.text()
-        tags = [t.strip() for t in self.tags_edit.text().split(',') if t.strip()]
+        tags = self.tags_edit.tags()
         if tags:
             obj.metadata["tags"] = tags
+        elif "tags" in obj.metadata:
+            obj.metadata.pop("tags")
         obj.visible = self.visible_check.isChecked()
         if hasattr(self, "role_combo") and hasattr(self.role_combo, "currentText"):
             new_role = self.role_combo.currentText() or obj.role
