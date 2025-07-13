@@ -51,7 +51,6 @@ except Exception:  # pragma: no cover - fallback when QTextEdit missing
 from PyQt6.QtCore import Qt  # type: ignore[import-not-found]
 from engine.utils import units
 
-from engine.renderers.opengl.core import OpenGLRenderer
 from engine.core.scenes.scene import Scene
 from engine.core.camera import Camera
 from engine.entities.game_object import GameObject
@@ -306,15 +305,16 @@ class EditorWindow(QMainWindow):
         # minimal scene used for previewing objects
         w = self.viewport.width() or 640
         h = self.viewport.height() or 480
+        from . import viewport as _vp
         if backend == "opengl":
-            rcls = OpenGLRenderer
+            rcls = _vp.OpenGLRenderer
         else:
             from engine.renderers import get_renderer
             rcls = get_renderer(backend)
             if rcls is None:
                 self.log_warning(f"Renderer '{backend}' unavailable; falling back to OpenGL")
-                rcls = OpenGLRenderer
-        self.renderer_backend = backend if rcls is not OpenGLRenderer else "opengl"
+                rcls = _vp.OpenGLRenderer
+        self.renderer_backend = backend if rcls is not _vp.OpenGLRenderer else "opengl"
         self.renderer = rcls(
             width=w,
             height=h,
@@ -622,6 +622,8 @@ class EditorWindow(QMainWindow):
                 self.mode_combo.setCurrentIndex(new_idx)
         if hasattr(self.model_bar, "setVisible"):
             self.model_bar.setVisible(modeling)
+        if hasattr(self.mode_bar, "setVisible"):
+            self.mode_bar.setVisible(not modeling)
         if not modeling:
             self.selected_vertices.clear()
             self.selected_edges.clear()
@@ -861,7 +863,8 @@ class EditorWindow(QMainWindow):
         self.preview_camera = cam
         if self.preview_renderer is None:
             try:
-                self.preview_renderer = OpenGLRenderer(
+                from . import viewport as _vp
+                self.preview_renderer = _vp.OpenGLRenderer(
                     width=160,
                     height=120,
                     widget=self.preview_widget,
@@ -1187,14 +1190,15 @@ class EditorWindow(QMainWindow):
         self.viewport.renderer = renderer
 
     def change_renderer(self, backend: str) -> None:
+        from . import viewport as _vp
         if backend == "opengl":
-            rcls = OpenGLRenderer
+            rcls = _vp.OpenGLRenderer
         else:
             from engine.renderers import get_renderer
             rcls = get_renderer(backend)
             if rcls is None:
                 self.log_warning(f"Renderer '{backend}' unavailable; falling back to OpenGL")
-                rcls = OpenGLRenderer
+                rcls = _vp.OpenGLRenderer
         if self.renderer is not None:
             try:
                 self.renderer.close()
@@ -1217,7 +1221,7 @@ class EditorWindow(QMainWindow):
             self.preview_widget = new_view.preview_widget  # type: ignore[attr-defined]
             self.preview_frame = new_view.preview_frame  # type: ignore[attr-defined]
         self.renderer = rcls(width=w, height=h, widget=self.viewport, vsync=False, keep_aspect=False)
-        self.renderer_backend = backend if rcls is not OpenGLRenderer else "opengl"
+        self.renderer_backend = backend if rcls is not _vp.OpenGLRenderer else "opengl"
         self.set_renderer(self.renderer)
         self.draw_scene()
 
@@ -1344,7 +1348,7 @@ class EditorWindow(QMainWindow):
         if hasattr(self.renderer, "clear_gizmos"):
             self.renderer.clear_gizmos()
         for obj in self.selected_objs:
-            if isinstance(obj, Camera):
+            if isinstance(obj, Camera) or not hasattr(obj, "rect"):
                 left, bottom, w, h = obj.view_rect()
             else:
                 left, bottom, w, h = obj.rect()
@@ -1413,7 +1417,7 @@ class EditorWindow(QMainWindow):
                                 frames=None,
                             )
                         )
-            if self.transform_mode == "rect":
+            if not self.modeling and self.transform_mode == "rect":
                 handle_size = 5
                 cam = self.camera
                 rot_y = bottom + h + _ViewportMixin.ROTATE_OFFSET / (
@@ -1453,7 +1457,7 @@ class EditorWindow(QMainWindow):
                 self.scene,
                 self.camera,
                 selected=self.selected_obj,
-                mode=self.transform_mode,
+                mode=(self.transform_mode if not self.modeling else "pan"),
                 cursor=self.cursor_pos,
                 local=self.local_coords,
             )
@@ -1678,6 +1682,8 @@ class EditorWindow(QMainWindow):
             except Exception:
                 pass
         self.close_game()
-        super().closeEvent(event)
+        base = super()
+        if hasattr(base, "closeEvent"):
+            base.closeEvent(event)
 
 

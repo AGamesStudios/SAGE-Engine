@@ -402,7 +402,7 @@ class _ViewportMixin:
                             self._press_pos
                         )
                         return
-            if obj is not None and self._window.transform_mode == "rect":
+            elif obj is not None and self._window.transform_mode == "rect":
                 wx, wy = self._window.screen_to_world(self._press_pos)
                 if isinstance(obj, Camera):
                     left, bottom, w, h = obj.view_rect()
@@ -434,17 +434,17 @@ class _ViewportMixin:
                     elif left <= wx <= left + w and bottom <= wy <= bottom + h:
                         self._drag_mode = "move"
                         self._last_world = (wx, wy)
-            elif obj is not None and self._window.transform_mode == "move":
+            elif obj is not None and not self._window.modeling and self._window.transform_mode == "move":
                 handle = self._hit_move_handle(self._press_pos)
                 if handle:
                     self._drag_mode = handle
                     self._last_world = self._window.screen_to_world(self._press_pos)
-            elif obj is not None and self._window.transform_mode == "scale":
+            elif obj is not None and not self._window.modeling and self._window.transform_mode == "scale":
                 handle = self._hit_scale_handle(self._press_pos)
                 if handle:
                     self._drag_mode = handle
                     self._last_world = self._window.screen_to_world(self._press_pos)
-            elif obj is not None and self._window.transform_mode == "rotate":
+            elif obj is not None and not self._window.modeling and self._window.transform_mode == "rotate":
                 if self._hit_rotate_handle(self._press_pos):
                     self._drag_mode = "rotate"
                     self._last_world = self._window.screen_to_world(self._press_pos)
