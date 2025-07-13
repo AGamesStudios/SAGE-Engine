@@ -45,7 +45,7 @@ class TagCapsule(QWidget):
             layout.setSpacing(4)
         if hasattr(self, "setSizePolicy"):
             pol = getattr(QSizePolicy, "Policy", QSizePolicy)
-            horiz = getattr(pol, "Maximum", 0)
+            horiz = getattr(pol, "Minimum", 0)
             vert = getattr(pol, "Preferred", 0)
             self.setSizePolicy(horiz, vert)
         if hasattr(self, "setStyleSheet"):
@@ -56,7 +56,7 @@ class TagCapsule(QWidget):
         self.label = QLabel(text, self)
         if hasattr(self.label, "setSizePolicy"):
             pol = getattr(QSizePolicy, "Policy", QSizePolicy)
-            horiz = getattr(pol, "Maximum", 0)
+            horiz = getattr(pol, "Minimum", 0)
             vert = getattr(pol, "Preferred", 0)
             self.label.setSizePolicy(horiz, vert)
         self.remove_btn = QPushButton("×", self)
@@ -73,8 +73,6 @@ class TagCapsule(QWidget):
 
     def _emit_remove(self):
         self.removeRequested.emit(self.text)
-        if hasattr(self, "setParent"):
-            self.setParent(None)
 
 
 class TagBar(QWidget):
@@ -180,7 +178,7 @@ class TagBar(QWidget):
         cap = TagCapsule(text, self.tag_area)
         cap.removeRequested.connect(self.remove_tag)
         if hasattr(self.tag_layout, "indexOf"):
-            idx = self.tag_layout.indexOf(self._editor)
+            idx = self.tag_layout.indexOf(self.add_btn)
             if idx != -1 and hasattr(self.tag_layout, "insertWidget"):
                 self.tag_layout.insertWidget(idx, cap)
             else:
@@ -203,6 +201,8 @@ class TagBar(QWidget):
             if isinstance(child, TagCapsule) and getattr(child, "text", None) == text:
                 if hasattr(child, "setParent"):
                     child.setParent(None)
+                if hasattr(child, "deleteLater"):
+                    child.deleteLater()
                 break
         self._restore_scroll()
         self.editingFinished.emit()

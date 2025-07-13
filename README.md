@@ -71,11 +71,11 @@ indicators and the custom rotation wheel fills like a circular progress bar.
 The properties panel uses a **TagBar** – a long 40 px capsule with a continuous
 2 px white outline. The container sits flush to the “Tags” label and has a dark
 `#333` background. Inside, tag chips and the **+** button share the same
-graphite `#555` colour. Each capsule has 12 px of internal padding, 8 px gaps
-between neighbours and includes a small delete button on the right. The **+**
-button is a 24 px circle that reveals an inline editor when pressed. When chips
-overflow, the track scrolls horizontally but the white outline stays fixed,
-giving the impression that the list slides inside a static frame.
+graphite `#555` colour. Each capsule sizes to its text with 12 px padding, 8 px
+gaps between neighbours and shows a small “×” button on the right for removal.
+The **+** button is a 24 px circle that reveals an inline editor when pressed.
+When chips overflow, the track scrolls horizontally but the white outline stays
+fixed, giving the impression that the list slides inside a static frame.
 When chips overflow, the track scrolls horizontally but the white outline stays
 fixed, giving the impression that the list slides inside a static frame.
 Menus leave a small gap between levels and combo boxes highlight items in the
