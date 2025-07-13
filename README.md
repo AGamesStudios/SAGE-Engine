@@ -76,8 +76,6 @@ gaps between neighbours and shows a small “×” button on the right for remov
 The **+** button is a 24 px circle that reveals an inline editor when pressed.
 When chips overflow, the track scrolls horizontally but the white outline stays
 fixed, giving the impression that the list slides inside a static frame.
-When chips overflow, the track scrolls horizontally but the white outline stays
-fixed, giving the impression that the list slides inside a static frame.
 Menus leave a small gap between levels and combo boxes highlight items in the
 same accent. A dedicated **Console** dock sits below the viewport. Rulers along
 the top and left edges align to world units and track the mouse so you can gauge

@@ -72,9 +72,6 @@ from engine.mesh_utils import (
 
 from sage_editor.qt import GLWidget
 
-ViewportWidget: Any
-SDLViewportWidget: Any
-PropertiesWidget: Any
 
 
 class ConsoleHandler(logging.Handler):
@@ -99,6 +96,36 @@ class ConsoleHandler(logging.Handler):
             text = getattr(self.widget, "toPlainText", lambda: "")()
             if hasattr(self.widget, "setPlainText"):
                 self.widget.setPlainText(text + msg + "\n")
+
+
+class UndoStack:
+    """Simple stack for undo/redo snapshots."""
+
+    def __init__(self) -> None:
+        self._undo: list[dict] = []
+        self._redo: list[dict] = []
+
+    def snapshot(self, scene: Scene) -> None:
+        self._undo.append(scene.to_dict())
+        self._redo.clear()
+
+    def undo(self, window: "EditorWindow") -> None:
+        if not self._undo:
+            return
+        state = self._undo.pop()
+        self._redo.append(window.scene.to_dict())
+        window.scene = Scene.from_dict(state)
+        window.update_object_list(preserve=False)
+        window.draw_scene()
+
+    def redo(self, window: "EditorWindow") -> None:
+        if not self._redo:
+            return
+        state = self._redo.pop()
+        self._undo.append(window.scene.to_dict())
+        window.scene = Scene.from_dict(state)
+        window.update_object_list(preserve=False)
+        window.draw_scene()
 
 
 class TransformBar(QWidget):
@@ -1067,15 +1094,17 @@ class _ViewportMixin:
         menu.exec(cast(QWidget, self).mapToGlobal(point))
 
 
+
+
 class EditorWindow(QMainWindow):
     """Main editor window with dockable widgets."""
 
     def _create_viewport_widget(self, backend: str):
         from sage_editor import widgets as _w
-        global ViewportWidget, SDLViewportWidget
+        global ViewportWidget, SDLViewportWidget, PropertiesWidget
         ViewportWidget = _w.ViewportWidget
         SDLViewportWidget = _w.SDLViewportWidget
-
+        PropertiesWidget = _w.PropertiesWidget
         if backend == "sdl":
             view = SDLViewportWidget(self)
         else:
@@ -1247,9 +1276,6 @@ class EditorWindow(QMainWindow):
         else:
             self.console.setPlainText(ascii_plain + "\nWelcome to SAGE Editor")
         from engine.utils.log import logger
-        from sage_editor import widgets as _w
-        global PropertiesWidget
-        PropertiesWidget = _w.PropertiesWidget
 
         self._console_handler = ConsoleHandler(self.console)
         logger.addHandler(self._console_handler)
@@ -1318,6 +1344,7 @@ class EditorWindow(QMainWindow):
         )
         self.camera = Camera(width=w, height=h, active=True)
         self.scene = Scene(with_defaults=False)
+        self.undo_stack = UndoStack()
         self.project_path: str | None = None
         # keep the viewport camera separate from scene objects
         self.renderer.show_grid = True
@@ -1353,18 +1380,30 @@ class EditorWindow(QMainWindow):
         save_p = file_menu.addAction("Save Project") if file_menu and hasattr(file_menu, "addAction") else None
         shot_p = file_menu.addAction("Screenshot...") if file_menu and hasattr(file_menu, "addAction") else None
         edit_menu = menubar.addMenu("Edit") if hasattr(menubar, "addMenu") else None
+        undo_m = edit_menu.addAction("Undo") if edit_menu and hasattr(edit_menu, "addAction") else None
+        redo_m = edit_menu.addAction("Redo") if edit_menu and hasattr(edit_menu, "addAction") else None
         copy_m = edit_menu.addAction("Copy") if edit_menu and hasattr(edit_menu, "addAction") else None
         paste_m = edit_menu.addAction("Paste") if edit_menu and hasattr(edit_menu, "addAction") else None
         del_m = edit_menu.addAction("Delete") if edit_menu and hasattr(edit_menu, "addAction") else None
         self.copy_action = copy_m
         self.paste_action = paste_m
         self.delete_action = del_m
+        self.undo_action = undo_m
+        self.redo_action = redo_m
         if copy_m is not None and hasattr(copy_m, "setShortcut"):
             copy_m.setShortcut(QKeySequence("Ctrl+C"))
         if paste_m is not None and hasattr(paste_m, "setShortcut"):
             paste_m.setShortcut(QKeySequence("Ctrl+V"))
         if del_m is not None and hasattr(del_m, "setShortcut"):
             del_m.setShortcut(QKeySequence("Delete"))
+        if undo_m is not None and hasattr(undo_m, "setShortcut"):
+            undo_m.setShortcut(QKeySequence("Ctrl+Z"))
+        if redo_m is not None and hasattr(redo_m, "setShortcut"):
+            redo_m.setShortcut(QKeySequence("Ctrl+Y"))
+        if undo_m is not None and hasattr(undo_m, "triggered"):
+            undo_m.triggered.connect(self.undo)
+        if redo_m is not None and hasattr(redo_m, "triggered"):
+            redo_m.triggered.connect(self.redo)
         engine_menu = menubar.addMenu("Engine") if hasattr(menubar, "addMenu") else None
         renderer_menu = engine_menu.addMenu("Renderer") if engine_menu and hasattr(engine_menu, "addMenu") else None
         if open_p is not None and hasattr(open_p, "triggered"):
@@ -1708,6 +1747,7 @@ class EditorWindow(QMainWindow):
         obj = self.selected_obj
         if obj is None or getattr(obj, "mesh", None) is None:
             return
+        self.undo_stack.snapshot(self.scene)
         mesh = obj.mesh
         new_selection: set[int] = set()
         for idx in sorted(self.selected_vertices, reverse=True):
@@ -1727,6 +1767,7 @@ class EditorWindow(QMainWindow):
         obj = self.selected_obj
         if obj is None or getattr(obj, "mesh", None) is None:
             return
+        self.undo_stack.snapshot(self.scene)
         verts = obj.mesh.vertices
         if self.selected_edges:
             idx = next(iter(self.selected_edges))
@@ -1760,6 +1801,7 @@ class EditorWindow(QMainWindow):
         obj = self.selected_obj
         if obj is None or getattr(obj, "mesh", None) is None:
             return
+        self.undo_stack.snapshot(self.scene)
         verts = obj.mesh.vertices
         new_verts: list[tuple[float, float]] = []
         for i, v in enumerate(verts):
@@ -1777,6 +1819,7 @@ class EditorWindow(QMainWindow):
         obj = self.selected_obj
         if obj is None or not hasattr(obj, "filled"):
             return
+        self.undo_stack.snapshot(self.scene)
         obj.filled = not obj.filled
         self.update_properties()
         self.draw_scene(update_list=False)
@@ -1786,6 +1829,7 @@ class EditorWindow(QMainWindow):
         obj = self.selected_obj
         if obj is None or getattr(obj, "mesh", None) is None:
             return
+        self.undo_stack.snapshot(self.scene)
         verts = obj.mesh.vertices
         if self.selection_mode == "vertex":
             indices = set(self.selected_vertices)
@@ -2012,6 +2056,14 @@ class EditorWindow(QMainWindow):
             except Exception:
                 log.exception("Failed to save project")
 
+    def undo(self) -> None:
+        """Undo the last operation."""
+        self.undo_stack.undo(self)
+
+    def redo(self) -> None:
+        """Redo the previously undone operation."""
+        self.undo_stack.redo(self)
+
     # coordinate helpers -------------------------------------------------
 
     def screen_to_world(self, point):
@@ -2172,7 +2224,6 @@ class EditorWindow(QMainWindow):
         old_view = self.viewport
         w = self.viewport.width() or 640
         h = self.viewport.height() or 480
-        from sage_editor.widgets import SDLViewportWidget
         if (backend == "sdl" and not isinstance(self.viewport, SDLViewportWidget)) or (
             backend != "sdl" and isinstance(self.viewport, SDLViewportWidget)
         ):
@@ -2475,6 +2526,7 @@ class EditorWindow(QMainWindow):
             self._engine = None
 
     def create_object(self, x: float = 0.0, y: float = 0.0) -> GameObject:
+        self.undo_stack.snapshot(self.scene)
         count = len([o for o in self.scene.objects if not isinstance(o, Camera)])
         obj = GameObject(name=f"Object {count}")
         obj.transform.x = x
@@ -2485,6 +2537,7 @@ class EditorWindow(QMainWindow):
         return obj
 
     def create_empty(self, x: float = 0.0, y: float = 0.0) -> GameObject:
+        self.undo_stack.snapshot(self.scene)
         count = len([o for o in self.scene.objects if getattr(o, "role", "") == "empty"])
         obj = GameObject(role="empty", name=f"Empty {count}")
         obj.transform.x = x
@@ -2498,6 +2551,7 @@ class EditorWindow(QMainWindow):
         return obj
 
     def create_camera(self, x: float = 0.0, y: float = 0.0) -> Camera:
+        self.undo_stack.snapshot(self.scene)
         count = len([o for o in self.scene.objects if isinstance(o, Camera)])
         cam = Camera(x=x, y=y, active=False, name=f"Camera {count}")
         self.scene.add_object(cam)
@@ -2507,6 +2561,7 @@ class EditorWindow(QMainWindow):
 
     def create_shape(self, shape: str, x: float = 0.0, y: float = 0.0) -> GameObject:
         """Create a basic shape object and add it to the scene."""
+        self.undo_stack.snapshot(self.scene)
         count = len([o for o in self.scene.objects if getattr(o, "role", "") == "shape"])
         obj = GameObject(role="shape", name=f"{shape.capitalize()} {count}")
         obj.transform.x = x
@@ -2546,6 +2601,7 @@ class EditorWindow(QMainWindow):
     def paste_object(self) -> Optional[GameObject]:
         if not self._clipboard:
             return None
+        self.undo_stack.snapshot(self.scene)
         from engine.core.objects import object_from_dict
         try:
             obj = cast(GameObject, object_from_dict(dict(self._clipboard)))
@@ -2565,6 +2621,7 @@ class EditorWindow(QMainWindow):
     def delete_selected(self) -> None:
         if self.selected_obj is None:
             return
+        self.undo_stack.snapshot(self.scene)
         self.scene.remove_object(self.selected_obj)
         self.selected_obj = None
         self.update_object_list()
@@ -2674,16 +2731,3 @@ def init_editor(editor) -> None:
     if created:
         app.exec()
 
-
-def __getattr__(name: str):  # pragma: no cover - runtime import
-    if name in {"ViewportWidget", "SDLViewportWidget", "PropertiesWidget"}:
-        from sage_editor import widgets as _w
-        globals().update(
-            {
-                "ViewportWidget": _w.ViewportWidget,
-                "SDLViewportWidget": _w.SDLViewportWidget,
-                "PropertiesWidget": _w.PropertiesWidget,
-            }
-        )
-        return globals()[name]
-    raise AttributeError(name)
