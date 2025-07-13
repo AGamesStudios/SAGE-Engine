@@ -130,6 +130,31 @@ class TransformBar(QWidget):
             layout.addStretch()
 
 
+class ModelBar(QWidget):
+    """Extra buttons for modeling operations."""
+
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        layout = QVBoxLayout(self)
+        if hasattr(layout, "setContentsMargins"):
+            layout.setContentsMargins(0, 0, 0, 0)
+        if hasattr(layout, "setSpacing"):
+            layout.setSpacing(6)
+        self.vert_btn = QPushButton("Verts", self)
+        self.edge_btn = QPushButton("Edges", self)
+        self.face_btn = QPushButton("Faces", self)
+        self.extrude_btn = QPushButton("Extrude", self)
+        self.loop_btn = QPushButton("Loop Cut", self)
+        for btn in [self.vert_btn, self.edge_btn, self.face_btn]:
+            if hasattr(btn, "setCheckable"):
+                btn.setCheckable(True)
+            layout.addWidget(btn)
+        layout.addWidget(self.extrude_btn)
+        layout.addWidget(self.loop_btn)
+        if hasattr(layout, "addStretch"):
+            layout.addStretch()
+
+
 class ProgressWheel(QWidget):
     """Custom circular control that shows and edits an angle."""
 
@@ -616,9 +641,15 @@ class _ViewportMixin:
             self._drag_corner = None
             self._last_world = None
             obj = self._window.selected_obj
-            if obj is not None:
+            if obj is not None and self._window.modeling:
                 v = self._hit_vertex_handle(self._press_pos)
                 if v is not None:
+                    mods = ev.modifiers() if hasattr(ev, "modifiers") else 0
+                    add = mods & (
+                        Qt.KeyboardModifier.ControlModifier
+                        | Qt.KeyboardModifier.ShiftModifier
+                    )
+                    self._window.select_vertex(v, additive=bool(add))
                     self._drag_mode = "vertex"
                     self._drag_vertex = v
                     self._last_world = self._window.screen_to_world(self._press_pos)
@@ -964,6 +995,7 @@ class EditorWindow(QMainWindow):
         if hasattr(layout, "setSpacing"):
             layout.setSpacing(4)
         bar = TransformBar(container)
+        mbar = ModelBar(container)
         if hasattr(bar, "setSizePolicy"):
             pol = getattr(QSizePolicy, "Policy", QSizePolicy)
             horiz = getattr(pol, "Preferred", 0)
@@ -971,7 +1003,11 @@ class EditorWindow(QMainWindow):
             bar.setSizePolicy(horiz, vert)
         if hasattr(bar, "setFixedWidth"):
             bar.setFixedWidth(60)
+        if hasattr(mbar, "setFixedWidth"):
+            mbar.setFixedWidth(80)
+        mbar.hide()
         layout.addWidget(bar)
+        layout.addWidget(mbar)
 
         view_area = QWidget(container)
         vlayout = QVBoxLayout(view_area)
@@ -1023,6 +1059,7 @@ class EditorWindow(QMainWindow):
             view.setMouseTracking(True)
         container.viewport = view  # type: ignore[attr-defined]
         container.mode_bar = bar  # type: ignore[attr-defined]
+        container.model_bar = mbar  # type: ignore[attr-defined]
         container.h_ruler = h_ruler  # type: ignore[attr-defined]
         container.v_ruler = v_ruler  # type: ignore[attr-defined]
         return container
@@ -1039,6 +1076,7 @@ class EditorWindow(QMainWindow):
         self.viewport_container = container
         self.viewport = container.viewport  # type: ignore[attr-defined]
         self.mode_bar = container.mode_bar  # type: ignore[attr-defined]
+        self.model_bar = container.model_bar  # type: ignore[attr-defined]
         self.cursor_label = container.cursor_label  # type: ignore[attr-defined]
         self.preview_widget = container.preview_widget  # type: ignore[attr-defined]
         self.preview_frame = container.preview_frame  # type: ignore[attr-defined]
@@ -1052,8 +1090,21 @@ class EditorWindow(QMainWindow):
         self.mode_bar.local_btn.clicked.connect(
             lambda checked: self.toggle_local(checked)
         )
+        self.model_bar.vert_btn.clicked.connect(
+            lambda: self.set_selection_mode("vertex")
+        )
+        self.model_bar.edge_btn.clicked.connect(
+            lambda: self.set_selection_mode("edge")
+        )
+        self.model_bar.face_btn.clicked.connect(
+            lambda: self.set_selection_mode("face")
+        )
+        self.model_bar.extrude_btn.clicked.connect(self.extrude_selection)
+        self.model_bar.loop_btn.clicked.connect(self.loop_cut)
         if hasattr(self.mode_bar.move_btn, "setChecked"):
             self.mode_bar.move_btn.setChecked(True)
+        if hasattr(self.model_bar.vert_btn, "setChecked"):
+            self.model_bar.vert_btn.setChecked(True)
         self.console = QTextEdit(self)
         self.console.setReadOnly(True)
         clear_a = QAction("Clear", self.console)
@@ -1180,6 +1231,8 @@ class EditorWindow(QMainWindow):
         self.cursor_visible = True
         self.modeling = False
         self.transform_mode = "move"
+        self.selection_mode = "vertex"
+        self.selected_vertices: set[int] = set()
         self.set_renderer(self.renderer)
         self.selected_obj: Optional[GameObject] = None
         self.selected_objs: list[GameObject] = []
@@ -1450,6 +1503,10 @@ class EditorWindow(QMainWindow):
                 cur = new_idx
             if cur != new_idx and hasattr(self.mode_combo, "setCurrentIndex"):
                 self.mode_combo.setCurrentIndex(new_idx)
+        if hasattr(self.model_bar, "setVisible"):
+            self.model_bar.setVisible(modeling)
+        if not modeling:
+            self.selected_vertices.clear()
         self.draw_scene(update_list=False)
 
     def update_cursor(self, x: float, y: float) -> None:
@@ -1500,6 +1557,62 @@ class EditorWindow(QMainWindow):
                 self.mode_bar.scale_btn.setChecked(False)
             if hasattr(self.mode_bar.rect_btn, "setChecked"):
                 self.mode_bar.rect_btn.setChecked(True)
+        self.draw_scene(update_list=False)
+
+    # modeling helpers -------------------------------------------------
+    def set_selection_mode(self, mode: str) -> None:
+        self.selection_mode = mode
+        if mode == "vertex":
+            if hasattr(self.model_bar.vert_btn, "setChecked"):
+                self.model_bar.vert_btn.setChecked(True)
+            if hasattr(self.model_bar.edge_btn, "setChecked"):
+                self.model_bar.edge_btn.setChecked(False)
+            if hasattr(self.model_bar.face_btn, "setChecked"):
+                self.model_bar.face_btn.setChecked(False)
+        elif mode == "edge":
+            if hasattr(self.model_bar.vert_btn, "setChecked"):
+                self.model_bar.vert_btn.setChecked(False)
+            if hasattr(self.model_bar.edge_btn, "setChecked"):
+                self.model_bar.edge_btn.setChecked(True)
+            if hasattr(self.model_bar.face_btn, "setChecked"):
+                self.model_bar.face_btn.setChecked(False)
+        else:
+            if hasattr(self.model_bar.vert_btn, "setChecked"):
+                self.model_bar.vert_btn.setChecked(False)
+            if hasattr(self.model_bar.edge_btn, "setChecked"):
+                self.model_bar.edge_btn.setChecked(False)
+            if hasattr(self.model_bar.face_btn, "setChecked"):
+                self.model_bar.face_btn.setChecked(True)
+
+    def extrude_selection(self) -> None:
+        if self.selection_mode != "vertex":
+            return
+        obj = self.selected_obj
+        if obj is None or getattr(obj, "mesh", None) is None:
+            return
+        mesh = obj.mesh
+        for idx in sorted(self.selected_vertices):
+            if 0 <= idx < len(mesh.vertices):
+                nx, ny = self._vertex_normal(mesh.vertices, idx)
+                vx, vy = mesh.vertices[idx]
+                mesh.vertices[idx] = (vx + nx * 0.1, vy + ny * 0.1)
+        self.draw_scene(update_list=False)
+
+    def loop_cut(self) -> None:
+        obj = self.selected_obj
+        if obj is None or getattr(obj, "mesh", None) is None:
+            return
+        verts = obj.mesh.vertices
+        new_verts: list[tuple[float, float]] = []
+        for i, v in enumerate(verts):
+            nxt = verts[(i + 1) % len(verts)]
+            new_verts.append(v)
+            mid = ((v[0] + nxt[0]) / 2, (v[1] + nxt[1]) / 2)
+            new_verts.append(mid)
+        from engine.mesh_utils import create_polygon_mesh
+        poly = create_polygon_mesh(new_verts)
+        obj.mesh.vertices = poly.vertices
+        obj.mesh.indices = poly.indices
         self.draw_scene(update_list=False)
 
     def resizeEvent(self, ev):  # pragma: no cover - gui layout
@@ -1905,6 +2018,7 @@ class EditorWindow(QMainWindow):
     def select_object(self, obj: Optional[GameObject], additive: bool = False) -> None:
         if not additive:
             self.selected_objs = [obj] if obj else []
+            self.selected_vertices.clear()
         else:
             if obj is None:
                 return
@@ -1926,6 +2040,16 @@ class EditorWindow(QMainWindow):
             self.objects.setCurrentItem(None)
 
         self.update_properties()
+        self.draw_scene(update_list=False)
+
+    def select_vertex(self, index: int, additive: bool = False) -> None:
+        if not additive:
+            self.selected_vertices = {index}
+        else:
+            if index in self.selected_vertices:
+                self.selected_vertices.remove(index)
+            else:
+                self.selected_vertices.add(index)
         self.draw_scene(update_list=False)
 
     def _update_selection_gizmo(self) -> None:
@@ -1959,13 +2083,19 @@ class EditorWindow(QMainWindow):
                 )
             if self.modeling and getattr(obj, "mesh", None) is not None:
                 verts = [self.mesh_to_world(obj, vx, vy) for vx, vy in obj.mesh.vertices]
-                for wx, wy in verts:
+                for i, (wx, wy) in enumerate(verts):
+                    color = (1.0, 0.8, 0.2, 1) if i in self.selected_vertices else (
+                        0.2,
+                        0.8,
+                        1.0,
+                        1,
+                    )
                     self.renderer.add_gizmo(
                         gizmos.square_gizmo(
                             wx,
                             wy,
                             size=4,
-                            color=(0.2, 0.8, 1.0, 1),
+                            color=color,
                             thickness=1,
                             frames=None,
                             filled=True,
@@ -2120,8 +2250,8 @@ class EditorWindow(QMainWindow):
             obj.mesh = create_circle_mesh()
         else:
             obj.mesh = create_square_mesh()
-        obj.width = 1.0
-        obj.height = 1.0
+        obj.width = 2.0
+        obj.height = 2.0
         self.scene.add_object(obj)
         self.update_object_list()
         self.draw_scene()

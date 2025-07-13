@@ -120,13 +120,14 @@ def create_triangle_mesh(size: float = 1.0) -> Mesh:
     return Mesh(verts, [0, 1, 2])
 
 
-def create_circle_mesh(radius: float = 0.5, segments: int = 32) -> Mesh:
-    """Return vertices approximating a filled circle."""
-    verts = [(0.0, 0.0)]
-    for i in range(segments + 1):
-        ang = 2 * math.pi * i / segments
-        verts.append((math.cos(ang) * radius, math.sin(ang) * radius))
-    return Mesh(verts, None)
+def create_circle_mesh(radius: float = 0.5, segments: int = 64) -> Mesh:
+    """Return a polygon mesh approximating a filled circle."""
+    verts = [
+        (math.cos(2 * math.pi * i / segments) * radius,
+         math.sin(2 * math.pi * i / segments) * radius)
+        for i in range(segments)
+    ]
+    return create_polygon_mesh(verts)
 
 
 def create_polygon_mesh(vertices: list[tuple[float, float]]) -> Mesh:

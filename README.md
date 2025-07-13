@@ -89,8 +89,9 @@ A second toolbar below the menu offers quick toggles for the grid, rulers and
 cursor label. Toolbars appear flat without the usual drag handles for a cleaner
 look.
 Right-click the viewport to create sprites, empties, cameras or basic shapes.
-Model mode reveals vertex and edge handles so these shapes can be edited
-directly.
+Model mode reveals vertex handles and a second bar with **Verts**, **Edges** and
+**Faces** buttons. Selected vertices can be extruded or the mesh subdivided with
+``Loop Cut`` for quick experiments.
 The *View* menu lets you hide the bounding box around the selection.
 Hold **Ctrl** or **Shift** while clicking objects to add them to the selection.
 
