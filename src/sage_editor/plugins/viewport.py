@@ -1469,6 +1469,14 @@ class EditorWindow(QMainWindow):
         form.addRow("Path", path_row)
 
         grid_check = QCheckBox("Show Grid", dlg)
+        if hasattr(grid_check, "setTextInteractionFlags"):
+            flag = getattr(Qt, "TextInteractionFlag", None)
+            if flag is not None and hasattr(flag, "NoTextInteraction"):
+                grid_check.setTextInteractionFlags(flag.NoTextInteraction)
+            else:
+                no_flag = getattr(Qt, "NoTextInteraction", None)
+                if no_flag is not None:
+                    grid_check.setTextInteractionFlags(no_flag)
         if hasattr(self.renderer, "show_grid"):
             grid_check.setChecked(self.renderer.show_grid)
         form.addRow(grid_check)

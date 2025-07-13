@@ -12,11 +12,22 @@ from PyQt6.QtWidgets import (  # type: ignore[import-not-found]
     QVBoxLayout,
     QWidget,
 )
-
+from PyQt6.QtCore import Qt  # type: ignore[import-not-found]
 from engine.entities.game_object import GameObject
-
 from ..plugins.viewport import ProgressWheel, NoWheelSpinBox, NoWheelLineEdit
 from .tag_field import TagField
+
+
+def _disable_text_select(widget: QWidget) -> None:
+    """Prevent text selection on *widget* if supported."""
+    if hasattr(widget, "setTextInteractionFlags"):
+        flag = getattr(Qt, "TextInteractionFlag", None)
+        if flag is not None and hasattr(flag, "NoTextInteraction"):
+            widget.setTextInteractionFlags(flag.NoTextInteraction)
+        else:
+            no_flag = getattr(Qt, "NoTextInteraction", None)
+            if no_flag is not None:
+                widget.setTextInteractionFlags(no_flag)
 
 
 class PropertiesWidget(QWidget):
@@ -37,6 +48,7 @@ class PropertiesWidget(QWidget):
         self.tags_edit = TagField(self)
         obj_form.addRow("Tags", self.tags_edit)
         self.visible_check = QCheckBox("Visible", self)
+        _disable_text_select(self.visible_check)
         obj_form.addRow(self.visible_check)
         layout.addWidget(self.object_group)
 
@@ -69,6 +81,7 @@ class PropertiesWidget(QWidget):
             box.setSingleStep(0.1)
             box.setAccelerated(True)
         self.link_scale = QCheckBox("Link", self)
+        _disable_text_select(self.link_scale)
         scale_layout.addWidget(QLabel("X", self))
         scale_layout.addWidget(self.scale_x)
         scale_layout.addWidget(QLabel("Y", self))
@@ -129,7 +142,9 @@ class PropertiesWidget(QWidget):
         flip_widget = QWidget(self)
         flip_layout = QHBoxLayout(flip_widget)
         self.flip_x = QCheckBox("X", self)
+        _disable_text_select(self.flip_x)
         self.flip_y = QCheckBox("Y", self)
+        _disable_text_select(self.flip_y)
         flip_layout.addWidget(self.flip_x)
         flip_layout.addWidget(self.flip_y)
         trans_form.addRow("Flip", flip_widget)
@@ -156,6 +171,7 @@ class PropertiesWidget(QWidget):
         self.image_edit = NoWheelLineEdit(self)
         sprite_form.addRow("Image", self.image_edit)
         self.smooth_check = QCheckBox("Smooth", self)
+        _disable_text_select(self.smooth_check)
         sprite_form.addRow(self.smooth_check)
         layout.addWidget(self.sprite_group)
         if hasattr(self.sprite_group, "hide"):
@@ -169,6 +185,7 @@ class PropertiesWidget(QWidget):
             self.physics_group = QGroupBox("Physics", self)
             phys_form = QFormLayout(self.physics_group)
             self.physics_enabled = QCheckBox("Enabled", self)
+            _disable_text_select(self.physics_enabled)
             phys_form.addRow(self.physics_enabled)
             self.body_combo = QComboBox(self)
             if hasattr(self.body_combo, "addItems"):
