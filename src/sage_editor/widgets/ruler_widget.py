@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+
 try:  # pragma: no cover - fallback when Qt not available
     from PyQt6.QtWidgets import QWidget  # type: ignore[import-not-found]
     from PyQt6.QtCore import Qt  # type: ignore[import-not-found]
@@ -53,19 +55,34 @@ class RulerWidget(QWidget):
             return
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.fillRect(self.rect(), QColor("#2a2a2a"))
         pen = QPen(QColor("#888"))
         painter.setPen(pen)
         font = painter.font()
         font.setPointSize(7)
         painter.setFont(font)
+
+        def step_pixels(step: float) -> float:
+            return step * self.scale
+
+        step = 1.0
+        while step_pixels(step) < 10:
+            step *= 2
+        while step_pixels(step) > 80 and step > 1:
+            step /= 2
+
         if self.orientation == getattr(Qt.Orientation, "Horizontal", 1):
             h = self.height()
-            for x in range(0, self.width(), 10):
-                size = 8 if x % 50 == 0 else 4
-                painter.drawLine(x, h, x, h - size)
-                if x % 50 == 0:
-                    world = self.offset + x / self.scale
-                    painter.drawText(x + 2, h - size - 2, f"{world:.0f}")
+            start = math.floor(self.offset / step) * step
+            x = (start - self.offset) * self.scale
+            world = start
+            while x < self.width():
+                size = 8 if world % (step * 5) == 0 else 4
+                painter.drawLine(int(x), h, int(x), h - size)
+                if size == 8:
+                    painter.drawText(int(x) + 2, h - size - 2, f"{world:.0f}")
+                x += step_pixels(step)
+                world += step
             if self.cursor is not None:
                 cx = (self.cursor - self.offset) * self.scale
                 if 0 <= cx <= self.width():
@@ -73,12 +90,16 @@ class RulerWidget(QWidget):
                     painter.drawLine(int(cx), 0, int(cx), h)
         else:
             w = self.width()
-            for y in range(0, self.height(), 10):
-                size = 8 if y % 50 == 0 else 4
-                painter.drawLine(w, y, w - size, y)
-                if y % 50 == 0:
-                    world = self.offset + self.sign * y / self.scale
-                    painter.drawText(2, y + 6, f"{world:.0f}")
+            start = math.floor(self.offset / step) * step
+            y = (start - self.offset) * self.scale / self.sign
+            world = start
+            while y < self.height():
+                size = 8 if world % (step * 5) == 0 else 4
+                painter.drawLine(w, int(y), w - size, int(y))
+                if size == 8:
+                    painter.drawText(2, int(y) + 6, f"{world:.0f}")
+                y += step_pixels(step)
+                world += step
             if self.cursor is not None:
                 cy = (self.cursor - self.offset) * self.scale / self.sign
                 if 0 <= cy <= self.height():

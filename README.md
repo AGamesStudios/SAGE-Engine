@@ -80,8 +80,8 @@ When chips overflow, the track scrolls horizontally but the white outline stays
 fixed, giving the impression that the list slides inside a static frame.
 Menus leave a small gap between levels and combo boxes highlight items in the
 same accent. A dedicated **Console** dock sits below the viewport. Rulers along
-the top and left edges mark world units and track the mouse so you can gauge
-object positions at a glance.
+the top and left edges align to world units and track the mouse so you can gauge
+object positions at a glance without numbers piling up when you zoom.
 On launch the main window expands to fill the primary screen so the interface is easy to see on any monitor.
 The **File** menu opens and saves ``.sageproject`` files and the toolbar
 includes a screenshot button.
