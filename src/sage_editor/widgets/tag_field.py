@@ -106,6 +106,8 @@ class TagField(QWidget):
             self.scroll.setWidgetResizable(True)
         if hasattr(self.scroll, "setFrameShape"):
             self.scroll.setFrameShape(getattr(QFrame, "Shape", QFrame).NoFrame)
+        if hasattr(self.scroll, "setStyleSheet"):
+            self.scroll.setStyleSheet("border:none;background:transparent;")
         if hasattr(self.scroll, "setHorizontalScrollBarPolicy"):
             policy = getattr(Qt.ScrollBarPolicy, "ScrollBarAsNeeded", None)
             if policy is not None:

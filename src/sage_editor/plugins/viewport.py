@@ -463,6 +463,24 @@ def _apply_ember_stylesheet(app: QApplication) -> None:
         border: none;
         background: #2c2c2c;
     }}
+    QScrollBar:horizontal {{
+        background: #2c2c2c;
+        height: 8px;
+        margin: 0 16px 0 16px;
+    }}
+    QScrollBar::handle:horizontal {{
+        background: #555555;
+        min-width: 20px;
+        border-radius: 5px;
+    }}
+    QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {{
+        border: none;
+        background: #2c2c2c;
+    }}
+    QSplitter::handle {{
+        background: #2c2c2c;
+        width: 4px;
+    }}
     QListWidget::item:selected,
     QListView::item:selected,
     QTreeView::item:selected,
@@ -1121,6 +1139,8 @@ class EditorWindow(QMainWindow):
         console_dock = QDockWidget("Console", self)
         console_dock.setObjectName("ConsoleDock")
         console_dock.setWidget(self.console)
+        if hasattr(console_dock, "setMinimumHeight"):
+            console_dock.setMinimumHeight(120)
         area = getattr(Qt.DockWidgetArea, "BottomDockWidgetArea", Qt.DockWidgetArea.LeftDockWidgetArea)
         self.addDockWidget(area, console_dock)
         self.console_dock = console_dock  # type: ignore[assignment]
@@ -1255,6 +1275,8 @@ class EditorWindow(QMainWindow):
         obj_dock = QDockWidget("Objects", self)
         obj_dock.setObjectName("ObjectsDock")
         obj_dock.setWidget(self.objects)
+        if hasattr(obj_dock, "setMinimumWidth"):
+            obj_dock.setMinimumWidth(150)
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, obj_dock)
 
         prop_dock = QDockWidget("Properties", self)
@@ -1263,6 +1285,8 @@ class EditorWindow(QMainWindow):
         prop_scroll.setWidgetResizable(True)
         prop_scroll.setWidget(self.properties)
         prop_dock.setWidget(prop_scroll)
+        if hasattr(prop_dock, "setMinimumWidth"):
+            prop_dock.setMinimumWidth(220)
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, prop_dock)
         self.splitDockWidget(obj_dock, prop_dock, Qt.Orientation.Vertical)
 
@@ -2063,9 +2087,7 @@ def init_editor(editor) -> None:
     window = EditorWindow(editor._menus, editor._toolbar)
     geom = getattr(app.primaryScreen(), "availableGeometry", lambda: None)()
     if geom and hasattr(geom, "width") and hasattr(geom, "height"):
-        width = int(geom.width() * 0.8)
-        height = int(geom.height() * 0.8)
-        window.resize(width, height)
+        window.resize(int(geom.width()), int(geom.height()))
     else:
         window.resize(800, 600)
     window.show()
