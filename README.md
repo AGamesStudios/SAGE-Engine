@@ -88,6 +88,7 @@ cursor label. Toolbars appear flat without the usual drag handles for a cleaner
 look.
 Right-click the viewport to create sprites, empties, cameras or basic shapes including squares, triangles, circles and polygons.
 Model mode reveals vertex handles and a second bar with **Verts**, **Edges** and **Faces** buttons. Choose which element type to manipulate—drag points, edges or the entire face. Selecting two neighbouring vertices highlights their edge. Press **E** to extrude vertices, **F** to create a face from an edge and **L** for ``Loop Cut`` when editing meshes. A **Fill** button toggles solid rendering. Right-clicking a mesh opens a modeling menu with these actions.
+The editor prevents invalid self-intersections when editing polygons and hides move/rotate gizmos while in model mode.
 Objects with the **shape** role include a **Filled** checkbox so you can draw
 polygons as outlines or solid faces.
 The *View* menu lets you hide the bounding box around the selection.
