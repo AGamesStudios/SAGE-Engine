@@ -128,31 +128,38 @@ class ProgressDial(QDial):
         self._label = QLabel(self)
         if hasattr(self._label, "setAlignment"):
             self._label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        if hasattr(self, "setNotchesVisible"):
+            self.setNotchesVisible(False)
+        if hasattr(self, "setWrapping"):
+            self.setWrapping(True)
         self.valueChanged.connect(self._update_label)
         self._drag_start = None
         self._start_value = 0
         self._update_label(self.value())
 
     def paintEvent(self, event):  # pragma: no cover - visual
-        super().paintEvent(event)
-        if QPainter is not None and QColor is not None:
-            try:
-                painter = QPainter(self)
-                size = min(self.width(), self.height()) - 4
-                rtype = type(self.rect())
-                rect = rtype(
-                    (self.width() - size) // 2 + 2,
-                    (self.height() - size) // 2 + 2,
-                    size,
-                    size,
-                )
-                start = 90 * 16
-                span = -self.value() * 16
-                painter.setBrush(QColor(255, 184, 77, 120))
-                painter.setPen(Qt.PenStyle.NoPen)
-                painter.drawPie(rect, start, span)
-            except Exception:
-                pass
+        if QPainter is None or QColor is None:
+            super().paintEvent(event)
+            return
+        painter = QPainter(self)
+        size = min(self.width(), self.height()) - 4
+        rtype = type(self.rect())
+        rect = rtype(
+            (self.width() - size) // 2 + 2,
+            (self.height() - size) // 2 + 2,
+            size,
+            size,
+        )
+        # base circle
+        painter.setBrush(QColor("#353535"))
+        painter.setPen(QColor("#555555"))
+        painter.drawEllipse(rect)
+        # progress arc
+        start = 90 * 16
+        span = -self.value() * 16
+        painter.setBrush(QColor(255, 184, 77))
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.drawPie(rect, start, span)
 
     def wheelEvent(self, event):  # pragma: no cover - ui tweak
         """Ignore wheel scrolling so the dial doesn't change accidentally."""
@@ -307,10 +314,12 @@ def _apply_ember_stylesheet(app: QApplication) -> None:
     QMenu {{
         background-color: #2c2c2c;
         border: none;
+        border-radius: 4px;
     }}
     QMenu::item:selected {{
         background-color: {ACCENT_COLOR};
         color: black;
+        border-radius: 4px;
     }}
     QDockWidget::title {{
         background-color: #353535;
@@ -361,6 +370,8 @@ def _apply_ember_stylesheet(app: QApplication) -> None:
     }}
     QComboBox QAbstractItemView {{
         background-color: #353535;
+        border: 1px solid #555555;
+        border-radius: 4px;
         selection-background-color: {ACCENT_COLOR};
         selection-color: black;
     }}
@@ -388,7 +399,10 @@ def _apply_ember_stylesheet(app: QApplication) -> None:
         border: none;
         background: #2c2c2c;
     }}
-    QListWidget::item:selected {{
+    QListWidget::item:selected,
+    QListView::item:selected,
+    QTreeView::item:selected,
+    QTableView::item:selected {{
         background: {ACCENT_COLOR};
         color: black;
     }}

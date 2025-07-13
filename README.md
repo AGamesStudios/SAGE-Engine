@@ -62,12 +62,12 @@ colour and is passed to ``EngineSettings`` when creating an engine.
 The editor uses the custom **SAGE Ember** style.
 High-DPI scaling keeps text readable.
 The palette and stylesheet apply a dark theme with soft yellow-orange accents
-across menus, buttons and sliders. Widgets use a flat borderless design that
-highlights controls when pressed. Text fields and scroll bars highlight orange
-when focused. Context menus and drop-down lists use the same accent colour for
-selection. Checkboxes have rounded indicators and the rotation dial fills
-clockwise with a yellow arc that stays perfectly circular for a clean, modern
-look.
+across menus, buttons and sliders. Widgets use a flat borderless design with
+rounded corners that highlights controls when pressed. Lists and tree views
+use the same accent colour to mark selections. Text fields and scroll bars
+highlight orange when focused. Checkboxes have rounded indicators and the
+custom rotation dial draws an opaque yellow arc that stays perfectly circular
+for a clean, modern look.
 The **File** menu opens and saves ``.sageproject`` files and the toolbar
 includes a screenshot button.
 The *View* menu lets you hide the bounding box around the selection.
