@@ -60,7 +60,7 @@ colour and is passed to ``EngineSettings`` when creating an engine.
 
 ### Editor
 The editor uses the custom **SAGE Ember** style.
-High-DPI scaling keeps text readable.
+High-DPI scaling keeps text readable and fonts default to at least 12 points.
 The palette and stylesheet apply a dark theme with soft yellow-orange accents
 across menus, buttons and sliders. Widgets use a flat borderless design with
 rounded corners that highlights controls when pressed. Lists and tree views
@@ -75,6 +75,7 @@ outline and contains a delete button tucked inside on the right. The field
 scrolls horizontally if the capsules extend past its width.
 Menus leave a small gap between levels and combo boxes highlight items in the
 same accent. A dedicated **Console** dock sits below the viewport.
+On launch the main window scales to around 80% of the primary screen so the interface remains readable on different displays.
 The **File** menu opens and saves ``.sageproject`` files and the toolbar
 includes a screenshot button.
 The *View* menu lets you hide the bounding box around the selection.

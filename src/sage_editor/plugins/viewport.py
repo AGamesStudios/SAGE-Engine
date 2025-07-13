@@ -479,8 +479,8 @@ def apply_ember_style(app: QApplication) -> None:
     _apply_ember_palette(app)
     _apply_ember_stylesheet(app)
     font = app.font()
-    if font.pointSize() < 10:
-        font.setPointSize(10)
+    if font.pointSize() < 12:
+        font.setPointSize(12)
         app.setFont(font)
 
 
@@ -2061,7 +2061,13 @@ def init_editor(editor) -> None:
     apply_ember_style(app)
 
     window = EditorWindow(editor._menus, editor._toolbar)
-    window.resize(800, 600)
+    geom = getattr(app.primaryScreen(), "availableGeometry", lambda: None)()
+    if geom and hasattr(geom, "width") and hasattr(geom, "height"):
+        width = int(geom.width() * 0.8)
+        height = int(geom.height() * 0.8)
+        window.resize(width, height)
+    else:
+        window.resize(800, 600)
     window.show()
 
     editor.window = window
