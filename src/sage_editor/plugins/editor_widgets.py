@@ -17,7 +17,7 @@ from PyQt6.QtWidgets import (
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints
     from engine.core.scenes.scene import Scene
-    from .viewport import EditorWindow
+    from sage_editor.plugins.editor_window import EditorWindow
 
 try:  # optional for tests
     from PyQt6.QtWidgets import QAbstractSpinBox  # type: ignore[import-not-found]

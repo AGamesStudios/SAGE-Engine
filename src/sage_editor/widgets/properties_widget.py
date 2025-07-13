@@ -14,7 +14,7 @@ from PyQt6.QtWidgets import (  # type: ignore[import-not-found]
 )
 from PyQt6.QtCore import Qt  # type: ignore[import-not-found]
 from engine.entities.game_object import GameObject
-from ..plugins.viewport import ProgressWheel, NoWheelSpinBox, NoWheelLineEdit
+from ..plugins.editor_widgets import ProgressWheel, NoWheelSpinBox, NoWheelLineEdit
 from .tag_bar import TagBar
 
 

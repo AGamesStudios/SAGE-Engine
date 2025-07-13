@@ -4,10 +4,10 @@ from typing import TYPE_CHECKING
 
 from sage_editor.qt import GLWidget
 
-from ..plugins.viewport import _ViewportMixin
+from ..plugins.viewport_base import _ViewportMixin
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints
-    from ..plugins.viewport import EditorWindow
+    from ..plugins.editor_window import EditorWindow
 
 
 class ViewportWidget(_ViewportMixin, GLWidget):

@@ -27,7 +27,7 @@ except Exception:  # pragma: no cover - fallback for stubs
     QFrame = QWidget  # type: ignore[misc]
 from PyQt6.QtCore import Qt  # type: ignore[import-not-found]
 
-from ..plugins.viewport import NoWheelLineEdit
+from ..plugins.editor_widgets import NoWheelLineEdit
 
 
 class TagCapsule(QWidget):
