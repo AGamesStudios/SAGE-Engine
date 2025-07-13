@@ -172,6 +172,8 @@ class ProgressWheel(QWidget):
     def paintEvent(self, event):  # pragma: no cover - visual
         if QPainter is None or QColor is None:
             return
+        from PyQt6.QtGui import QPen  # type: ignore[import-not-found]
+
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         size = min(self.width(), self.height()) - 4
@@ -182,15 +184,13 @@ class ProgressWheel(QWidget):
             size,
             size,
         )
-        painter.setBrush(QColor("#353535"))
-        painter.setPen(QColor("#555555"))
+        pen = QPen(QColor("#555555"), 4)
+        painter.setPen(pen)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.drawEllipse(rect)
-        path = QPainterPath()
-        center = QPointF(rect.center()) if QPointF is not None else rect.center()
-        path.moveTo(center)
-        path.arcTo(rect, 90, -float(self._value))
-        path.closeSubpath()
-        painter.fillPath(path, QColor(255, 184, 77))
+        pen.setColor(QColor(255, 184, 77))
+        painter.setPen(pen)
+        painter.drawArc(rect, 90 * 16, int(-self._value * 16))
 
     # interaction ---------------------------------------------------
     def wheelEvent(self, event):  # pragma: no cover - ui tweak
@@ -353,9 +353,11 @@ def _apply_ember_stylesheet(app: QApplication) -> None:
         border: 1px solid #555555;
         border-radius: 6px;
         padding: 4px;
+        margin: 2px; /* space from menu bar or parent menu */
     }}
     QMenu::item {{
         padding: 4px 12px;
+        margin: 2px 0;
         border-radius: 4px;
     }}
     QMenu::item:selected {{
@@ -415,6 +417,12 @@ def _apply_ember_stylesheet(app: QApplication) -> None:
         border-radius: 4px;
         selection-background-color: {ACCENT_COLOR};
         selection-color: black;
+        padding: 2px;
+    }}
+    QComboBox QAbstractItemView::item {{
+        padding: 2px 8px;
+        margin: 2px 0;
+        border-radius: 2px;
     }}
     QLineEdit, QPlainTextEdit {{
         background-color: #2b2b2b;

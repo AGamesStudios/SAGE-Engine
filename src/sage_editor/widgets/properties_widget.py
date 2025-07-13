@@ -109,15 +109,17 @@ class PropertiesWidget(QWidget):
             self.pivot_combo.setCurrentIndex(self._manual_index)
         self.pivot_x = NoWheelSpinBox(self)
         self.pivot_y = NoWheelSpinBox(self)
+        self.pivot_x_label = QLabel("X", self)
+        self.pivot_y_label = QLabel("Y", self)
         for box in (self.pivot_x, self.pivot_y):
             box.setRange(0.0, 1.0)
             box.setDecimals(3)
             box.setSingleStep(0.01)
             box.setAccelerated(True)
         pivot_layout.addWidget(self.pivot_combo)
-        pivot_layout.addWidget(QLabel("X", self))
+        pivot_layout.addWidget(self.pivot_x_label)
         pivot_layout.addWidget(self.pivot_x)
-        pivot_layout.addWidget(QLabel("Y", self))
+        pivot_layout.addWidget(self.pivot_y_label)
         pivot_layout.addWidget(self.pivot_y)
         trans_form.addRow("Pivot", pivot_widget)
         self.pivot_combo.currentIndexChanged.connect(self._pivot_preset_changed)
@@ -335,6 +337,9 @@ class PropertiesWidget(QWidget):
 
     def _pivot_preset_changed(self, index: int) -> None:
         if index == self._manual_index:
+            for w in (self.pivot_x, self.pivot_y, self.pivot_x_label, self.pivot_y_label):
+                if hasattr(w, "setVisible"):
+                    w.setVisible(True)
             if hasattr(self.pivot_x, "setEnabled"):
                 self.pivot_x.setEnabled(True)
             if hasattr(self.pivot_y, "setEnabled"):
@@ -345,6 +350,9 @@ class PropertiesWidget(QWidget):
             return
         self.pivot_x.setValue(preset[0])
         self.pivot_y.setValue(preset[1])
+        for w in (self.pivot_x, self.pivot_y, self.pivot_x_label, self.pivot_y_label):
+            if hasattr(w, "setVisible"):
+                w.setVisible(False)
         if hasattr(self.pivot_x, "setEnabled"):
             self.pivot_x.setEnabled(False)
         if hasattr(self.pivot_y, "setEnabled"):

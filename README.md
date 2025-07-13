@@ -67,9 +67,9 @@ rounded corners that highlights controls when pressed. Lists and tree views
 use the same accent colour for focus but items no longer stay highlighted.
 Text fields and scroll bars highlight orange when focused. Buttons include a
 small margin so controls don't stick together. Checkboxes have rounded
-indicators and the custom rotation wheel draws a smooth anti‑aliased arc that
-remains perfectly circular for a clean, modern look. A dedicated **Console**
-dock sits below the viewport.
+indicators and the custom rotation wheel fills like a circular progress bar.
+Menus leave a small gap between levels and combo boxes highlight items in the
+same accent. A dedicated **Console** dock sits below the viewport.
 The **File** menu opens and saves ``.sageproject`` files and the toolbar
 includes a screenshot button.
 The *View* menu lets you hide the bounding box around the selection.
