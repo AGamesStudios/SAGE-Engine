@@ -3,11 +3,11 @@ import importlib
 from tests.test_viewport_sync import _setup_qt
 
 
-def test_tag_field_basic(monkeypatch):
+def test_tag_bar_basic(monkeypatch):
     _setup_qt(monkeypatch)
-    tag_field = importlib.import_module('sage_editor.widgets.tag_field')
+    tag_bar_mod = importlib.import_module('sage_editor.widgets.tag_bar')
 
-    w = tag_field.TagField()
+    w = tag_bar_mod.TagBar()
     w.set_tags(['a', 'b'])
     assert w.tags() == ['a', 'b']
     w.add_tag('c')

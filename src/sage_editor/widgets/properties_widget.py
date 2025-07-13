@@ -15,7 +15,7 @@ from PyQt6.QtWidgets import (  # type: ignore[import-not-found]
 from PyQt6.QtCore import Qt  # type: ignore[import-not-found]
 from engine.entities.game_object import GameObject
 from ..plugins.viewport import ProgressWheel, NoWheelSpinBox, NoWheelLineEdit
-from .tag_field import TagField
+from .tag_bar import TagBar
 
 
 def _disable_text_select(widget: QWidget) -> None:
@@ -45,7 +45,7 @@ class PropertiesWidget(QWidget):
         if hasattr(self.role_combo, "addItems"):
             self.role_combo.addItems(["empty", "shape", "sprite", "camera"])
         obj_form.addRow("Role", self.role_combo)
-        self.tags_edit = TagField(self)
+        self.tags_edit = TagBar(self)
         obj_form.addRow("Tags", self.tags_edit)
         self.visible_check = QCheckBox("Visible", self)
         _disable_text_select(self.visible_check)

@@ -68,11 +68,11 @@ use the same accent colour for focus but items no longer stay highlighted.
 Text fields and scroll bars highlight orange when focused. Buttons include a
 small margin so controls don't stick together. Checkboxes have rounded
 indicators and the custom rotation wheel fills like a circular progress bar.
-The properties panel includes a tag field with a white outline and a round **+**
-button on the left. Tags start from the left edge, and pressing the button opens
-an inline editor there. Each capsule shows only a translucent background with no
-outline and contains a delete button tucked inside on the right. The field
-scrolls horizontally with a slim bar if the capsules extend past its width.
+The properties panel uses a **TagBar** – a capsule with a white border that
+holds tag chips and a round **+** button on the right. Tags start from the left
+edge and pressing the button opens an inline editor to create a new chip.
+Capsules have a soft background, contain a small delete button and the bar
+scrolls horizontally if there are too many tags to fit.
 Menus leave a small gap between levels and combo boxes highlight items in the
 same accent. A dedicated **Console** dock sits below the viewport.
 On launch the main window expands to fill the primary screen so the interface is easy to see on any monitor.

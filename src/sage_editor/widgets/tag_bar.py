@@ -79,8 +79,8 @@ class TagCapsule(QWidget):
             self.setParent(None)
 
 
-class TagField(QWidget):
-    """Field that lets the user manage a list of tags."""
+class TagBar(QWidget):
+    """Horizontal capsule with tag chips and an add button."""
 
     editingFinished = _signal()
 
@@ -134,9 +134,15 @@ class TagField(QWidget):
         self.add_btn = QPushButton("+", self)
         if hasattr(self.add_btn, "setFixedSize"):
             self.add_btn.setFixedSize(18, 18)
+        if hasattr(self.add_btn, "setStyleSheet"):
+            self.add_btn.setStyleSheet(
+                "border: 1px solid white; border-radius: 9px; background: transparent;"
+            )
         self.add_btn.clicked.connect(self._show_editor)
-        layout.addWidget(self.add_btn)
         layout.addWidget(self.scroll)
+        layout.addWidget(self.add_btn)
+        if hasattr(layout, "setStretch"):
+            layout.setStretch(0, 1)
 
         self._editor = NoWheelLineEdit(self.tag_area)
         if hasattr(self._editor, "setFixedWidth"):
