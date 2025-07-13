@@ -249,6 +249,11 @@ class _ViewportMixin:
         if hasattr(self, "customContextMenuRequested"):
             cast(QWidget, self).customContextMenuRequested.connect(self._context_menu)
 
+    def _snap(self, value: float, step: float) -> float:
+        if step > 0:
+            return round(value / step) * step
+        return value
+
     # gizmo hit testing helpers --------------------------------------
 
     def _hit_move_handle(self, pos) -> str | None:
@@ -516,6 +521,9 @@ class _ViewportMixin:
                                 obj.y += -dx * sa + dy * ca
                             else:
                                 obj.y += dy
+                        if self._window.snap_to_grid:
+                            obj.x = self._snap(obj.x, self._window.move_step)
+                            obj.y = self._snap(obj.y, self._window.move_step)
                         self._window.update_properties()
                     self._last_world = (wx, wy)
                 elif self._drag_mode in ("scale_x", "scale_y") and self._last_world is not None:
@@ -597,6 +605,9 @@ class _ViewportMixin:
                             h = max(0.1, h)
                             obj.scale_x = w / obj.width
                             obj.scale_y = h / obj.height
+                            if self._window.snap_to_grid:
+                                obj.scale_x = self._snap(obj.scale_x, self._window.scale_step)
+                                obj.scale_y = self._snap(obj.scale_y, self._window.scale_step)
                             self._window.update_properties()
                             self._last_world = (wx, wy)
                         else:
@@ -629,6 +640,9 @@ class _ViewportMixin:
                             h = max(0.1, h)
                             obj.scale_x = w / obj.width
                             obj.scale_y = h / obj.height
+                            if self._window.snap_to_grid:
+                                obj.scale_x = self._snap(obj.scale_x, self._window.scale_step)
+                                obj.scale_y = self._snap(obj.scale_y, self._window.scale_step)
                             obj.x = new_left + obj.pivot_x * w
                             obj.y = new_bottom + obj.pivot_y * h
                             self._window.update_properties()
@@ -640,6 +654,8 @@ class _ViewportMixin:
                         ang0 = math.atan2(self._last_world[1] - cy, self._last_world[0] - cx)
                         ang1 = math.atan2(wy - cy, wx - cx)
                         obj.angle += math.degrees(ang1 - ang0)
+                        if self._window.snap_to_grid:
+                            obj.angle = self._snap(obj.angle, self._window.rotate_step)
                         self._window.update_properties()
                     self._last_world = (wx, wy)
                 else:

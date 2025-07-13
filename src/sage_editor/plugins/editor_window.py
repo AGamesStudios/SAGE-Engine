@@ -330,6 +330,10 @@ class EditorWindow(QMainWindow):
         self.local_coords = False
         self.rulers_visible = True
         self.cursor_visible = True
+        self.snap_to_grid = False
+        self.move_step = 1.0
+        self.rotate_step = 15.0
+        self.scale_step = 0.1
         self.modeling = False
         self.transform_mode = "move"
         self.selection_mode = "vertex"
@@ -405,6 +409,19 @@ class EditorWindow(QMainWindow):
                 grid_act.setChecked(True)
             if hasattr(grid_act, "triggered"):
                 grid_act.triggered.connect(self.toggle_grid)
+
+        snap_act = view_menu.addAction("Snap to Grid") if view_menu and hasattr(view_menu, "addAction") else None
+        if snap_act is not None:
+            if hasattr(snap_act, "setCheckable"):
+                snap_act.setCheckable(True)
+            if hasattr(snap_act, "setChecked"):
+                snap_act.setChecked(False)
+            if hasattr(snap_act, "triggered"):
+                snap_act.triggered.connect(self.toggle_snap)
+
+        snap_settings = view_menu.addAction("Snap Settings...") if view_menu and hasattr(view_menu, "addAction") else None
+        if snap_settings is not None and hasattr(snap_settings, "triggered"):
+            snap_settings.triggered.connect(self.open_snap_dialog)
 
         mirror_act = view_menu.addAction("Mirror Resize") if view_menu and hasattr(view_menu, "addAction") else None
         if mirror_act is not None:
@@ -501,6 +518,15 @@ class EditorWindow(QMainWindow):
             self.grid_action.toggled.connect(self.toggle_grid)
         quickbar.addAction(self.grid_action)
 
+        self.snap_action = QAction("Snap", self)
+        if hasattr(self.snap_action, "setCheckable"):
+            self.snap_action.setCheckable(True)
+        if hasattr(self.snap_action, "setChecked"):
+            self.snap_action.setChecked(False)
+        if hasattr(self.snap_action, "toggled"):
+            self.snap_action.toggled.connect(self.toggle_snap)
+        quickbar.addAction(self.snap_action)
+
         self.ruler_action = QAction("Rulers", self)
         if hasattr(self.ruler_action, "setCheckable"):
             self.ruler_action.setCheckable(True)
@@ -577,6 +603,9 @@ class EditorWindow(QMainWindow):
         if hasattr(self.renderer, "show_grid"):
             self.renderer.show_grid = checked
             self.draw_scene(update_list=False)
+
+    def toggle_snap(self, checked: bool) -> None:
+        self.snap_to_grid = bool(checked)
 
     def toggle_mirror(self, checked: bool) -> None:
         self.mirror_resize = bool(checked)
@@ -827,6 +856,9 @@ class EditorWindow(QMainWindow):
             wx, wy = self.mesh_to_world(obj, vx, vy)
             wx += dx
             wy += dy
+            if self.snap_to_grid:
+                wx = self.snap_value(wx, self.move_step)
+                wy = self.snap_value(wy, self.move_step)
             verts[i] = self.world_to_mesh(obj, wx, wy)
         self.draw_scene(update_list=False)
 
@@ -973,6 +1005,45 @@ class EditorWindow(QMainWindow):
                     self.renderer.show_grid = orig
                 self.draw_scene(update_list=False)
 
+    def open_snap_dialog(self) -> None:
+        from PyQt6.QtWidgets import QDialog, QFormLayout, QDoubleSpinBox, QPushButton, QHBoxLayout  # type: ignore[import-not-found]
+
+        dlg = QDialog(self)
+        dlg.setWindowTitle("Snap Settings")
+        form = QFormLayout(dlg)
+
+        move_spin = QDoubleSpinBox(dlg)
+        move_spin.setDecimals(3)
+        move_spin.setRange(0.01, 100.0)
+        move_spin.setValue(self.move_step)
+        form.addRow("Move Step", move_spin)
+
+        rot_spin = QDoubleSpinBox(dlg)
+        rot_spin.setDecimals(1)
+        rot_spin.setRange(0.1, 360.0)
+        rot_spin.setValue(self.rotate_step)
+        form.addRow("Rotate Step", rot_spin)
+
+        scale_spin = QDoubleSpinBox(dlg)
+        scale_spin.setDecimals(3)
+        scale_spin.setRange(0.01, 10.0)
+        scale_spin.setValue(self.scale_step)
+        form.addRow("Scale Step", scale_spin)
+
+        btn_row = QHBoxLayout()
+        ok_btn = QPushButton("OK", dlg)
+        cancel_btn = QPushButton("Cancel", dlg)
+        ok_btn.clicked.connect(dlg.accept)
+        cancel_btn.clicked.connect(dlg.reject)
+        btn_row.addWidget(ok_btn)
+        btn_row.addWidget(cancel_btn)
+        form.addRow(btn_row)
+
+        if dlg.exec():
+            self.move_step = float(move_spin.value())
+            self.rotate_step = float(rot_spin.value())
+            self.scale_step = float(scale_spin.value())
+
     def load_project(self, path: str) -> None:
         from engine.core.project import Project
         from engine.core.resources import set_resource_root
@@ -1070,6 +1141,11 @@ class EditorWindow(QMainWindow):
         sx = (x - cam.x) * scale * cam_zoom + w / 2
         sy = (y - cam.y) * scale * cam_zoom * sign + h / 2
         return sx, sy
+
+    def snap_value(self, value: float, step: float) -> float:
+        if step > 0:
+            return round(value / step) * step
+        return value
 
     def _update_rulers(self) -> None:
         """Update ruler markers based on the camera and cursor."""
