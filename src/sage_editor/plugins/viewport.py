@@ -696,16 +696,26 @@ class _ViewportMixin:
                         self._window.select_vertex(v, additive=bool(add))
                         self._drag_mode = "vertex"
                         self._drag_vertex = v
-                        self._last_world = self._window.screen_to_world(self._press_pos)
+                        self._last_world = self._window.screen_to_world(
+                            self._press_pos
+                        )
                         return
                 elif self._window.selection_mode == "edge":
                     e = self._hit_edge_handle(self._press_pos)
                     if e is not None:
                         self._window.select_edge(e, additive=bool(add))
+                        self._drag_mode = "edge"
+                        self._last_world = self._window.screen_to_world(
+                            self._press_pos
+                        )
                         return
                 else:
                     if self._hit_face_handle(self._press_pos):
                         self._window.select_face(True)
+                        self._drag_mode = "face"
+                        self._last_world = self._window.screen_to_world(
+                            self._press_pos
+                        )
                         return
             if obj is not None and self._window.transform_mode == "rect":
                 wx, wy = self._window.screen_to_world(self._press_pos)
@@ -788,6 +798,14 @@ class _ViewportMixin:
                         new_y = wy0 + dy
                         obj.mesh.vertices[self._drag_vertex] = self._window.world_to_mesh(obj, new_x, new_y)
                         self._window.draw_scene(update_list=False)
+                    self._last_world = (wx, wy)
+                elif (
+                    self._drag_mode in {"edge", "face"}
+                    and self._last_world is not None
+                ):
+                    dx = wx - self._last_world[0]
+                    dy = wy - self._last_world[1]
+                    self._window.translate_selection(dx, dy)
                     self._last_world = (wx, wy)
                 elif self._drag_mode in ("move", "move_x", "move_y", "move_xy") and self._last_world is not None:
                     dx = wx - self._last_world[0]
@@ -1679,6 +1697,31 @@ class EditorWindow(QMainWindow):
         poly = create_polygon_mesh(new_verts)
         obj.mesh.vertices = poly.vertices
         obj.mesh.indices = poly.indices
+        self.draw_scene(update_list=False)
+
+    def translate_selection(self, dx: float, dy: float) -> None:
+        """Move the currently selected mesh elements by ``dx, dy`` world units."""
+        obj = self.selected_obj
+        if obj is None or getattr(obj, "mesh", None) is None:
+            return
+        verts = obj.mesh.vertices
+        if self.selection_mode == "vertex":
+            indices = set(self.selected_vertices)
+        elif self.selection_mode == "edge":
+            indices = set()
+            for idx in self.selected_edges:
+                indices.add(idx)
+                indices.add((idx + 1) % len(verts))
+        else:  # face
+            if not self.selected_face:
+                return
+            indices = set(range(len(verts)))
+        for i in indices:
+            vx, vy = verts[i]
+            wx, wy = self.mesh_to_world(obj, vx, vy)
+            wx += dx
+            wy += dy
+            verts[i] = self.world_to_mesh(obj, wx, wy)
         self.draw_scene(update_list=False)
 
     def resizeEvent(self, ev):  # pragma: no cover - gui layout

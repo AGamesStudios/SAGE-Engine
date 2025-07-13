@@ -1,6 +1,6 @@
 # Editor Overview
 
-The SAGE Editor lets you place objects and manage scenes. Use the small toolbar in the top-left corner to switch between **Edit** and **Model** modes. In Edit mode the buttons select move, rotate, scale or rect tools. When the move tool is active a square between the arrows lets you drag objects along both axes. Model mode shows vertex points for mesh objects and reveals another bar for selecting **Verts**, **Edges** or **Faces**. Use **Extrude** to create an edge from selected vertices at the cursor, or slice the mesh with ``Loop Cut``. Right-click the viewport to create sprites, empties, cameras or basic shapes.
+The SAGE Editor lets you place objects and manage scenes. Use the small toolbar in the top-left corner to switch between **Edit** and **Model** modes. In Edit mode the buttons select move, rotate, scale or rect tools. When the move tool is active a square between the arrows lets you drag objects along both axes. Model mode shows vertex points for mesh objects and reveals another bar for selecting **Verts**, **Edges** or **Faces**. Depending on the choice you can drag vertices, edges or the entire polygon. Use **Extrude** to create an edge from selected vertices at the cursor, or slice the mesh with ``Loop Cut``. Right-click the viewport to create sprites, empties, cameras or basic shapes.
 
 A narrow toolbar under the menu bar provides quick toggles for the grid, rulers
 and cursor coordinates. Toolbars no longer show drag handles, giving the window

@@ -90,9 +90,9 @@ cursor label. Toolbars appear flat without the usual drag handles for a cleaner
 look.
 Right-click the viewport to create sprites, empties, cameras or basic shapes.
 Model mode reveals vertex handles and a second bar with **Verts**, **Edges** and
-**Faces** buttons. You can pick which element type to select and extrude
-selected vertices toward the cursor to create new edges. The mesh can also be
-subdivided with ``Loop Cut`` for quick experiments.
+**Faces** buttons. Choose which element type to manipulate—drag points, edges or
+the entire face. Extruding selected vertices toward the cursor creates new edges
+and you can subdivide the mesh with ``Loop Cut`` for quick experiments.
 The *View* menu lets you hide the bounding box around the selection.
 Hold **Ctrl** or **Shift** while clicking objects to add them to the selection.
 

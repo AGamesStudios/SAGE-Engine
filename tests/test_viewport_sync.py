@@ -757,3 +757,31 @@ def test_bevel_vertex_normal(monkeypatch):
     nx, ny = win._vertex_normal(obj.mesh.vertices, 1)
     assert abs(nx) < 0.2
     assert ny < 0
+
+
+def test_translate_edges_and_face(monkeypatch):
+    _stub_gl(monkeypatch, {})
+    _setup_qt(monkeypatch)
+
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    viewport = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(viewport)
+
+    win = viewport.EditorWindow()
+    obj = win.create_shape('square')
+    win.select_object(obj)
+    win.toggle_model(True)
+
+    win.set_selection_mode('edge')
+    win.select_edge(0)
+    before0 = obj.mesh.vertices[0]
+    before1 = obj.mesh.vertices[1]
+    win.translate_selection(0.1, 0.0)
+    assert obj.mesh.vertices[0] != before0
+    assert obj.mesh.vertices[1] != before1
+
+    win.set_selection_mode('face')
+    win.select_face(True)
+    before = list(obj.mesh.vertices)
+    win.translate_selection(0.0, 0.2)
+    assert obj.mesh.vertices != before
