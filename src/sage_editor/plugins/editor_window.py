@@ -71,6 +71,8 @@ from sage_editor.plugins.editor_widgets import (
     SnapPopup,
 )
 from sage_editor.plugins.viewport_base import _ViewportMixin
+import sage_editor.i18n as i18n
+from sage_editor.i18n import LANGUAGES, set_language, tr
 
 log = logging.getLogger(__name__)
 
@@ -362,11 +364,13 @@ class EditorWindow(QMainWindow):
 
         menubar = QMenuBar(self)
         self.setMenuBar(menubar)
-        file_menu = menubar.addMenu("File") if hasattr(menubar, "addMenu") else None
+        file_menu = menubar.addMenu(tr("File")) if hasattr(menubar, "addMenu") else None
+        self.file_menu = file_menu
         open_p = file_menu.addAction("Open Project") if file_menu and hasattr(file_menu, "addAction") else None
         save_p = file_menu.addAction("Save Project") if file_menu and hasattr(file_menu, "addAction") else None
         shot_p = file_menu.addAction("Screenshot...") if file_menu and hasattr(file_menu, "addAction") else None
-        edit_menu = menubar.addMenu("Edit") if hasattr(menubar, "addMenu") else None
+        edit_menu = menubar.addMenu(tr("Edit")) if hasattr(menubar, "addMenu") else None
+        self.edit_menu = edit_menu
         undo_m = edit_menu.addAction("Undo") if edit_menu and hasattr(edit_menu, "addAction") else None
         redo_m = edit_menu.addAction("Redo") if edit_menu and hasattr(edit_menu, "addAction") else None
         copy_m = edit_menu.addAction("Copy") if edit_menu and hasattr(edit_menu, "addAction") else None
@@ -391,7 +395,8 @@ class EditorWindow(QMainWindow):
             undo_m.triggered.connect(self.undo)
         if redo_m is not None and hasattr(redo_m, "triggered"):
             redo_m.triggered.connect(self.redo)
-        engine_menu = menubar.addMenu("Engine") if hasattr(menubar, "addMenu") else None
+        engine_menu = menubar.addMenu(tr("Engine")) if hasattr(menubar, "addMenu") else None
+        self.engine_menu = engine_menu
         renderer_menu = engine_menu.addMenu("Renderer") if engine_menu and hasattr(engine_menu, "addMenu") else None
         if open_p is not None and hasattr(open_p, "triggered"):
             open_p.triggered.connect(self.open_project_dialog)
@@ -405,7 +410,8 @@ class EditorWindow(QMainWindow):
             ogl_action.triggered.connect(lambda: self.change_renderer("opengl"))
         if sdl_action is not None and hasattr(sdl_action, "triggered"):
             sdl_action.triggered.connect(lambda: self.change_renderer("sdl"))
-        view_menu = engine_menu.addMenu("View") if engine_menu and hasattr(engine_menu, "addMenu") else None
+        view_menu = engine_menu.addMenu(tr("View")) if engine_menu and hasattr(engine_menu, "addMenu") else None
+        self.view_menu = view_menu
         grid_act = view_menu.addAction("Show Grid") if view_menu and hasattr(view_menu, "addAction") else None
         if grid_act is not None:
             if hasattr(grid_act, "setCheckable"):
@@ -455,7 +461,25 @@ class EditorWindow(QMainWindow):
             if hasattr(local_act, "triggered"):
                 local_act.triggered.connect(self.toggle_local)
 
-        menubar.addMenu("About")
+        self.settings_menu = menubar.addMenu(tr("Settings")) if hasattr(menubar, "addMenu") else None
+        lang_menu = self.settings_menu.addMenu(tr("Language")) if self.settings_menu and hasattr(self.settings_menu, "addMenu") else None
+        self._lang_menu = lang_menu
+        self._lang_actions = {}
+        if lang_menu:
+            for name in LANGUAGES:
+                act = lang_menu.addAction(tr(name))
+                if hasattr(act, "setCheckable"):
+                    act.setCheckable(True)
+                if name == i18n.CURRENT_LANGUAGE and hasattr(act, "setChecked"):
+                    act.setChecked(True)
+                if hasattr(act, "triggered"):
+                    act.triggered.connect(lambda _c, n=name: self.change_language(n))
+                self._lang_actions[name] = act
+
+        self.about_menu = menubar.addMenu(tr("About")) if hasattr(menubar, "addMenu") else None
+        self.about_action = self.about_menu.addAction(tr("About")) if self.about_menu and hasattr(self.about_menu, "addAction") else None
+        if self.about_action is not None and hasattr(self.about_action, "triggered"):
+            self.about_action.triggered.connect(self.show_about_dialog)
 
         if copy_m is not None and hasattr(copy_m, "triggered"):
             copy_m.triggered.connect(self.copy_selected)
@@ -622,6 +646,8 @@ class EditorWindow(QMainWindow):
         if hasattr(self.snap_popup, "hide"):
             self.snap_popup.hide()
 
+        self.apply_translation()
+
         self.objects.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.objects.customContextMenuRequested.connect(self._list_context_menu)
         if hasattr(self.objects, "itemSelectionChanged"):
@@ -690,6 +716,45 @@ class EditorWindow(QMainWindow):
         if hasattr(self.renderer, "show_axes"):
             self.renderer.show_axes = bool(checked)
             self.draw_scene(update_list=False)
+
+    def change_language(self, name: str) -> None:
+        """Switch UI text to the selected language."""
+        set_language(name)
+        for lang, act in getattr(self, "_lang_actions", {}).items():
+            if hasattr(act, "setChecked"):
+                act.setChecked(lang == name)
+            if hasattr(act, "setText"):
+                act.setText(tr(lang))
+        self.apply_translation()
+
+    def apply_translation(self) -> None:
+        """Refresh menu titles using the current language."""
+        if hasattr(self, "file_menu") and hasattr(self.file_menu, "setTitle"):
+            self.file_menu.setTitle(tr("File"))
+        if hasattr(self, "edit_menu") and hasattr(self.edit_menu, "setTitle"):
+            self.edit_menu.setTitle(tr("Edit"))
+        if hasattr(self, "engine_menu") and hasattr(self.engine_menu, "setTitle"):
+            self.engine_menu.setTitle(tr("Engine"))
+        if hasattr(self, "settings_menu") and hasattr(self.settings_menu, "setTitle"):
+            self.settings_menu.setTitle(tr("Settings"))
+        if hasattr(self, "view_menu") and hasattr(self.view_menu, "setTitle"):
+            self.view_menu.setTitle(tr("View"))
+        if hasattr(self, "about_menu") and hasattr(self.about_menu, "setTitle"):
+            self.about_menu.setTitle(tr("About"))
+        if hasattr(self, "about_action") and hasattr(self.about_action, "setText"):
+            self.about_action.setText(tr("About"))
+        if hasattr(self, "_lang_actions"):
+            lang_menu = getattr(self, "_lang_menu", None)
+            if lang_menu is not None and hasattr(lang_menu, "setTitle"):
+                lang_menu.setTitle(tr("Language"))
+            for lang, act in self._lang_actions.items():
+                if hasattr(act, "setText"):
+                    act.setText(tr(lang))
+
+    def show_about_dialog(self) -> None:
+        from PyQt6.QtWidgets import QMessageBox  # type: ignore[import-not-found]
+
+        QMessageBox.about(self, "SAGE Engine", tr("About_Message"))
 
     def open_snap_dock(self) -> None:
         """Display the snap settings dock."""

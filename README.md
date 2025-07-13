@@ -95,6 +95,11 @@ polygons as outlines or solid faces.
 The *View* menu lets you hide the bounding box around the selection.
 Hold **Ctrl** or **Shift** while clicking objects to add them to the selection.
 
+The editor now includes an **About** dialog acknowledging Amckinator as the
+original developer. A dedicated **Settings** menu lets you switch languages at
+runtime. Localisation files live under `sage_editor/translations` so new
+languages can be added simply by dropping additional JSON dictionaries.
+
 ## Logs
 Log files are written to `~/.cache/sage/logs/engine.log` by default. Configure a
 different directory in `sage.toml` under `[logs]` or set the `SAGE_LOG_DIR`

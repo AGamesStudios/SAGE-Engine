@@ -43,7 +43,7 @@ where = ["src"]
 include = ["engine*", "sage_editor*"]
 
 [tool.setuptools.package-data]
-"sage_editor" = ["plugins/plugins.json"]
+"sage_editor" = ["plugins/plugins.json", "translations/*.json"]
 
 [tool.pyright]
 include = ["src"]
