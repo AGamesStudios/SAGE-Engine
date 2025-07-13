@@ -947,7 +947,28 @@ class EditorWindow(QMainWindow):
         if hasattr(bar, "setFixedWidth"):
             bar.setFixedWidth(60)
         layout.addWidget(bar)
-        layout.addWidget(view)
+
+        view_area = QWidget(container)
+        vlayout = QVBoxLayout(view_area)
+        if hasattr(vlayout, "setContentsMargins"):
+            vlayout.setContentsMargins(0, 0, 0, 0)
+        if hasattr(vlayout, "setSpacing"):
+            vlayout.setSpacing(0)
+        h_ruler = _w.RulerWidget(getattr(Qt.Orientation, "Horizontal", 1), view_area)
+        vlayout.addWidget(h_ruler)
+
+        row = QWidget(view_area)
+        hlayout = QHBoxLayout(row)
+        if hasattr(hlayout, "setContentsMargins"):
+            hlayout.setContentsMargins(0, 0, 0, 0)
+        if hasattr(hlayout, "setSpacing"):
+            hlayout.setSpacing(0)
+        v_ruler = _w.RulerWidget(getattr(Qt.Orientation, "Vertical", 2), row)
+        hlayout.addWidget(v_ruler)
+        hlayout.addWidget(view)
+        vlayout.addWidget(row)
+
+        layout.addWidget(view_area)
         frame = QFrame(view)
         frame.setObjectName("CameraPreviewFrame") if hasattr(frame, "setObjectName") else None
         if hasattr(frame, "setFrameShape"):
@@ -977,6 +998,8 @@ class EditorWindow(QMainWindow):
             view.setMouseTracking(True)
         container.viewport = view  # type: ignore[attr-defined]
         container.mode_bar = bar  # type: ignore[attr-defined]
+        container.h_ruler = h_ruler  # type: ignore[attr-defined]
+        container.v_ruler = v_ruler  # type: ignore[attr-defined]
         return container
 
     def __init__(self, menus=None, toolbar=None, *, backend: str = "opengl") -> None:
