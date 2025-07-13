@@ -965,13 +965,13 @@ class EditorWindow(QMainWindow):
             frame.hide()
         container.preview_widget = preview  # type: ignore[attr-defined]
         container.preview_frame = frame  # type: ignore[attr-defined]
-        label = QLabel("0, 0", container)
+        label = QLabel("X: 0  Y: 0", view)
         if hasattr(label, "setObjectName"):
             label.setObjectName("CursorLabel")
         if hasattr(label, "setStyleSheet"):
             label.setStyleSheet("color:#ddd;background:rgba(0,0,0,0.5);padding:2px;")
         if hasattr(label, "move"):
-            label.move(70, 8)
+            label.move(8, 8)
         container.cursor_label = label  # type: ignore[attr-defined]
         if hasattr(view, "setMouseTracking"):
             view.setMouseTracking(True)
@@ -1345,7 +1345,7 @@ class EditorWindow(QMainWindow):
         """Store cursor world coordinates and update the overlay label."""
         self.cursor_pos = (x, y)
         if hasattr(self.cursor_label, "setText"):
-            self.cursor_label.setText(f"{x:.1f}, {y:.1f}")
+            self.cursor_label.setText(f"X: {x:.1f}  Y: {y:.1f}")
         self.draw_scene(update_list=False)
 
     def set_mode(self, mode: str) -> None:
