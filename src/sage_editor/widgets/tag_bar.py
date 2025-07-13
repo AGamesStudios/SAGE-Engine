@@ -220,7 +220,8 @@ class TagBar(QWidget):
             self._editor.setText("")
         if hasattr(self._editor, "hide"):
             self._editor.hide()
-        self.add_tag(text)
+        if text.strip():
+            self.add_tag(text)
         self._restore_scroll()
 
     def _parent_scrollbar(self):

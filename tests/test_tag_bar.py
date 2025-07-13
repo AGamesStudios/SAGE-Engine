@@ -19,3 +19,10 @@ def test_tag_bar_basic(monkeypatch):
     w.add_tag('f')
     assert len(w.tags()) == 5
 
+    before = len(w.tags())
+    w.add_tag('')
+    assert len(w.tags()) == before
+    w._editor.setText(' ')
+    w._finish_edit()
+    assert len(w.tags()) == before
+
