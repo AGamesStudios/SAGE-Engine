@@ -8,8 +8,7 @@ Hold **Ctrl** or **Shift** and click to add or remove objects from the selection
 Right clicking a selected object opens a menu with **Copy**, **Paste** and
 **Delete** actions. Right clicking empty space opens a menu to create a new
 object. You can also create square, triangle or circle shapes from this menu.
-In Model mode additional controls let you extrude selected vertices or perform
-a ``Loop Cut`` to split edges evenly.
+In Model mode additional controls let you extrude selected vertices, add faces from edges and perform ``Loop Cut`` to split edges evenly. Shortcuts **E**, **F** and **L** trigger these actions.
 object at the cursor position. Selecting a camera object shows a small preview
 in the bottom-right corner of the viewport. The preview frame matches the
 **SAGE Ember** style and keeps the camera's aspect ratio even if letterbox bars

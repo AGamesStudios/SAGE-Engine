@@ -89,10 +89,7 @@ A second toolbar below the menu offers quick toggles for the grid, rulers and
 cursor label. Toolbars appear flat without the usual drag handles for a cleaner
 look.
 Right-click the viewport to create sprites, empties, cameras or basic shapes.
-Model mode reveals vertex handles and a second bar with **Verts**, **Edges** and
-**Faces** buttons. Choose which element type to manipulate—drag points, edges or
-the entire face. Extruding selected vertices toward the cursor creates new edges
-and you can subdivide the mesh with ``Loop Cut`` for quick experiments.
+Model mode reveals vertex handles and a second bar with **Verts**, **Edges** and **Faces** buttons. Choose which element type to manipulate—drag points, edges or the entire face. Selecting two neighbouring vertices highlights their edge. Press **E** to extrude vertices, **F** to create a face from an edge and **L** for ``Loop Cut`` when editing meshes.
 Objects with the **shape** role include a **Filled** checkbox so you can draw
 polygons as outlines or solid faces.
 The *View* menu lets you hide the bounding box around the selection.

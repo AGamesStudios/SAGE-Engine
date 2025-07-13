@@ -726,6 +726,44 @@ def test_extrude_and_loop_cut(monkeypatch):
     assert len(obj.mesh.vertices) == count * 2
 
 
+def test_select_two_vertices_highlights_edge(monkeypatch):
+    _stub_gl(monkeypatch, {})
+    _setup_qt(monkeypatch)
+
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    viewport = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(viewport)
+
+    win = viewport.EditorWindow()
+    obj = win.create_shape('square')
+    win.select_object(obj)
+    win.toggle_model(True)
+
+    win.select_vertex(0)
+    win.select_vertex(1, additive=True)
+    assert win.selected_edges == {0}
+
+
+def test_new_face_from_edge(monkeypatch):
+    _stub_gl(monkeypatch, {})
+    _setup_qt(monkeypatch)
+
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    viewport = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(viewport)
+
+    win = viewport.EditorWindow()
+    obj = win.create_shape('square')
+    win.select_object(obj)
+    win.toggle_model(True)
+
+    win.set_selection_mode('edge')
+    win.select_edge(0)
+    count = len(obj.mesh.vertices)
+    win.new_face_from_edge()
+    assert len(obj.mesh.vertices) == count + 2
+
+
 def test_concave_vertex_normal(monkeypatch):
     _stub_gl(monkeypatch, {})
     _setup_qt(monkeypatch)

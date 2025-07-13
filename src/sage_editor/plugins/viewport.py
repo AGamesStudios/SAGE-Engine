@@ -1634,6 +1634,20 @@ class EditorWindow(QMainWindow):
                 self.mode_bar.rect_btn.setChecked(True)
         self.draw_scene(update_list=False)
 
+    def keyPressEvent(self, ev):  # pragma: no cover - ui hotkeys
+        key = ev.key() if hasattr(ev, "key") else None
+        if self.modeling:
+            if key == getattr(Qt.Key, "E", 0):
+                self.extrude_selection()
+                return
+            if key == getattr(Qt.Key, "F", 0):
+                self.new_face_from_edge()
+                return
+            if key == getattr(Qt.Key, "L", 0):
+                self.loop_cut()
+                return
+        super().keyPressEvent(ev)
+
     # modeling helpers -------------------------------------------------
     def set_selection_mode(self, mode: str) -> None:
         self.selection_mode = mode
@@ -1681,6 +1695,40 @@ class EditorWindow(QMainWindow):
                 new_selection.add(idx + 1)
         if new_selection:
             self.selected_vertices = new_selection
+        self.draw_scene(update_list=False)
+
+    def new_face_from_edge(self) -> None:
+        """Extrude the selected edge to form a quad."""
+        obj = self.selected_obj
+        if obj is None or getattr(obj, "mesh", None) is None:
+            return
+        verts = obj.mesh.vertices
+        if self.selected_edges:
+            idx = next(iter(self.selected_edges))
+        elif (
+            len(self.selected_vertices) == 2
+            and all(0 <= i < len(verts) for i in self.selected_vertices)
+        ):
+            a, b = sorted(self.selected_vertices)
+            if b == a + 1 or (a == len(verts) - 1 and b == 0):
+                idx = a
+            else:
+                return
+        else:
+            return
+        nx, ny = self._edge_normal(verts, idx)
+        off = 0.5
+        a = verts[idx]
+        b = verts[(idx + 1) % len(verts)]
+        new_b = (b[0] + nx * off, b[1] + ny * off)
+        new_a = (a[0] + nx * off, a[1] + ny * off)
+        new_verts = verts[: idx + 1] + [new_b, new_a] + verts[idx + 1 :]
+        from engine.mesh_utils import create_polygon_mesh
+        poly = create_polygon_mesh(new_verts)
+        obj.mesh.vertices = poly.vertices
+        obj.mesh.indices = poly.indices
+        self.selected_edges = {idx + 1}
+        self.selected_vertices = {idx + 1, idx + 2}
         self.draw_scene(update_list=False)
 
     def loop_cut(self) -> None:
@@ -2048,6 +2096,22 @@ class EditorWindow(QMainWindow):
             ny = -ny
         return nx, ny
 
+    def _edge_normal(self, verts: list[tuple[float, float]], i: int) -> tuple[float, float]:
+        """Return a unit normal for edge ``i`` in mesh space."""
+        orient = self._polygon_orientation(verts)
+        a = verts[i]
+        b = verts[(i + 1) % len(verts)]
+        dx = b[0] - a[0]
+        dy = b[1] - a[1]
+        nx, ny = dy, -dx
+        length = math.hypot(nx, ny) or 1.0
+        nx /= length
+        ny /= length
+        if orient < 0:
+            nx = -nx
+            ny = -ny
+        return nx, ny
+
     def _polygon_orientation(self, verts: list[tuple[float, float]]) -> int:
         area = 0.0
         for i, (x0, y0) in enumerate(verts):
@@ -2183,6 +2247,19 @@ class EditorWindow(QMainWindow):
                 self.selected_vertices.remove(index)
             else:
                 self.selected_vertices.add(index)
+        verts = self.selected_obj.mesh.vertices if self.selected_obj else []
+        if (
+            len(self.selected_vertices) == 2
+            and verts
+            and all(0 <= i < len(verts) for i in self.selected_vertices)
+        ):
+            a, b = sorted(self.selected_vertices)
+            if b == a + 1 or (a == len(verts) - 1 and b == 0):
+                self.selected_edges = {a}
+            else:
+                self.selected_edges.clear()
+        else:
+            self.selected_edges.clear()
         self.draw_scene(update_list=False)
 
     def select_edge(self, index: int, additive: bool = False) -> None:
