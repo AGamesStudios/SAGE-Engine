@@ -59,7 +59,7 @@ class TagCapsule(QWidget):
         if hasattr(self.remove_btn, "setFixedSize"):
             self.remove_btn.setFixedSize(12, 12)
         if hasattr(self.remove_btn, "setStyleSheet"):
-            self.remove_btn.setStyleSheet("border: none;")
+            self.remove_btn.setStyleSheet("border: none; padding-left: 2px; color: white;")
         layout.addWidget(self.label)
         layout.addWidget(self.remove_btn)
         if hasattr(self.remove_btn, "clicked"):
@@ -121,6 +121,8 @@ class TagField(QWidget):
             self._editor.editingFinished.connect(self._finish_edit)
         self._editor.hide()
         self.tag_layout.addWidget(self._editor)
+        if hasattr(self.tag_layout, "addStretch"):
+            self.tag_layout.addStretch(1)
 
     # public API -----------------------------------------------------
     def tags(self) -> list[str]:
