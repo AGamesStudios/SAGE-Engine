@@ -14,4 +14,8 @@ def test_tag_field_basic(monkeypatch):
     assert 'c' in w.tags()
     w.remove_tag('a')
     assert 'a' not in w.tags()
+    w.add_tag('d')
+    w.add_tag('e')
+    w.add_tag('f')
+    assert len(w.tags()) == 5
 

@@ -50,9 +50,9 @@ class TagCapsule(QWidget):
             self.setSizePolicy(horiz, vert)
         if hasattr(self, "setStyleSheet"):
             self.setStyleSheet(
-                "background: rgba(255,255,255,0.15);"
-                " border-radius: 8px;"
-                " padding: 0 4px 0 4px;"
+                "background: rgba(255,255,255,0.12);"
+                " border-radius: 10px;"
+                " padding: 2px 6px;"
                 " border: none;"
             )
         self.label = QLabel(text, self)
@@ -66,7 +66,7 @@ class TagCapsule(QWidget):
             self.remove_btn.setFixedSize(12, 12)
         if hasattr(self.remove_btn, "setStyleSheet"):
             self.remove_btn.setStyleSheet(
-                "border: none; padding-left: 4px; padding-right: 2px; color: white;"
+                "border: none; margin-left: 4px; color: white;"
             )
         layout.addWidget(self.label)
         layout.addWidget(self.remove_btn)
@@ -167,6 +167,10 @@ class TagField(QWidget):
         if not text or text in self._tags:
             return
         self._tags.append(text)
+
+        sb = self._parent_scrollbar()
+        val = sb.value() if sb is not None else 0
+
         cap = TagCapsule(text, self.tag_area)
         cap.removeRequested.connect(self.remove_tag)
         if hasattr(self.tag_layout, "indexOf"):
@@ -175,17 +179,29 @@ class TagField(QWidget):
                 self.tag_layout.insertWidget(idx, cap)
             else:
                 self.tag_layout.addWidget(cap)
+
+        if sb is not None:
+            sb.setValue(val)
+
+        hbar = getattr(self.scroll, "horizontalScrollBar", lambda: None)()
+        if hbar is not None and hasattr(hbar, "maximum"):
+            hbar.setValue(hbar.maximum())
+
         self.editingFinished.emit()
 
     def remove_tag(self, text: str) -> None:
         if text not in self._tags:
             return
         self._tags.remove(text)
+        sb = self._parent_scrollbar()
+        val = sb.value() if sb is not None else 0
         for child in getattr(self.tag_area, "children", lambda: [])():
             if isinstance(child, TagCapsule) and getattr(child, "text", None) == text:
                 if hasattr(child, "setParent"):
                     child.setParent(None)
                 break
+        if sb is not None:
+            sb.setValue(val)
         self.editingFinished.emit()
 
     # internals ------------------------------------------------------
@@ -201,4 +217,12 @@ class TagField(QWidget):
         if hasattr(self._editor, "hide"):
             self._editor.hide()
         self.add_tag(text)
+
+    def _parent_scrollbar(self):
+        parent = getattr(self, "parent", lambda: None)()
+        while parent is not None:
+            if isinstance(parent, QScrollArea):
+                return parent.verticalScrollBar()
+            parent = getattr(parent, "parent", lambda: None)()
+        return None
 
