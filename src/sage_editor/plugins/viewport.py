@@ -145,12 +145,14 @@ class ModelBar(QWidget):
         self.face_btn = QPushButton("Faces", self)
         self.extrude_btn = QPushButton("Extrude", self)
         self.loop_btn = QPushButton("Loop Cut", self)
+        self.fill_btn = QPushButton("Fill", self)
         for btn in [self.vert_btn, self.edge_btn, self.face_btn]:
             if hasattr(btn, "setCheckable"):
                 btn.setCheckable(True)
             layout.addWidget(btn)
         layout.addWidget(self.extrude_btn)
         layout.addWidget(self.loop_btn)
+        layout.addWidget(self.fill_btn)
         if hasattr(layout, "addStretch"):
             layout.addStretch()
 
@@ -1011,15 +1013,32 @@ class _ViewportMixin:
         obj = self._window.find_object_at(wx, wy)
         if obj is not None:
             self._window.select_object(obj)
-            copy_a = menu.addAction("Copy") if hasattr(menu, "addAction") else None
-            paste_a = menu.addAction("Paste") if hasattr(menu, "addAction") else None
-            del_a = menu.addAction("Delete") if hasattr(menu, "addAction") else None
-            if copy_a is not None and hasattr(copy_a, "triggered"):
-                copy_a.triggered.connect(self._window.copy_selected)
-            if paste_a is not None and hasattr(paste_a, "triggered"):
-                paste_a.triggered.connect(self._window.paste_object)
-            if del_a is not None and hasattr(del_a, "triggered"):
-                del_a.triggered.connect(self._window.delete_selected)
+            if self._window.modeling and getattr(obj, "mesh", None) is not None:
+                extr_a = menu.addAction("Extrude") if hasattr(menu, "addAction") else None
+                face_a = menu.addAction("New Face") if hasattr(menu, "addAction") else None
+                loop_a = menu.addAction("Loop Cut") if hasattr(menu, "addAction") else None
+                fill_a = menu.addAction("Toggle Fill") if hasattr(menu, "addAction") else None
+                del_a = menu.addAction("Delete") if hasattr(menu, "addAction") else None
+                if extr_a is not None and hasattr(extr_a, "triggered"):
+                    extr_a.triggered.connect(self._window.extrude_selection)
+                if face_a is not None and hasattr(face_a, "triggered"):
+                    face_a.triggered.connect(self._window.new_face_from_edge)
+                if loop_a is not None and hasattr(loop_a, "triggered"):
+                    loop_a.triggered.connect(self._window.loop_cut)
+                if fill_a is not None and hasattr(fill_a, "triggered"):
+                    fill_a.triggered.connect(self._window.toggle_fill)
+                if del_a is not None and hasattr(del_a, "triggered"):
+                    del_a.triggered.connect(self._window.delete_selected)
+            else:
+                copy_a = menu.addAction("Copy") if hasattr(menu, "addAction") else None
+                paste_a = menu.addAction("Paste") if hasattr(menu, "addAction") else None
+                del_a = menu.addAction("Delete") if hasattr(menu, "addAction") else None
+                if copy_a is not None and hasattr(copy_a, "triggered"):
+                    copy_a.triggered.connect(self._window.copy_selected)
+                if paste_a is not None and hasattr(paste_a, "triggered"):
+                    paste_a.triggered.connect(self._window.paste_object)
+                if del_a is not None and hasattr(del_a, "triggered"):
+                    del_a.triggered.connect(self._window.delete_selected)
         else:
             sprite_a = menu.addAction("Create Sprite") if hasattr(menu, "addAction") else None
             empty_a = menu.addAction("Create Empty") if hasattr(menu, "addAction") else None
@@ -1036,12 +1055,15 @@ class _ViewportMixin:
                 sq_a = shape_m.addAction("Square") if hasattr(shape_m, "addAction") else None
                 tri_a = shape_m.addAction("Triangle") if hasattr(shape_m, "addAction") else None
                 cir_a = shape_m.addAction("Circle") if hasattr(shape_m, "addAction") else None
+                poly_a = shape_m.addAction("Polygon") if hasattr(shape_m, "addAction") else None
                 if sq_a is not None and hasattr(sq_a, "triggered"):
                     sq_a.triggered.connect(lambda: self._window.create_shape("square", wx, wy))
                 if tri_a is not None and hasattr(tri_a, "triggered"):
                     tri_a.triggered.connect(lambda: self._window.create_shape("triangle", wx, wy))
                 if cir_a is not None and hasattr(cir_a, "triggered"):
                     cir_a.triggered.connect(lambda: self._window.create_shape("circle", wx, wy))
+                if poly_a is not None and hasattr(poly_a, "triggered"):
+                    poly_a.triggered.connect(lambda: self._window.create_shape("polygon", wx, wy))
         menu.exec(cast(QWidget, self).mapToGlobal(point))
 
 
@@ -1058,6 +1080,8 @@ class EditorWindow(QMainWindow):
             view = SDLViewportWidget(self)
         else:
             view = ViewportWidget(self)
+        if hasattr(view, "setFocusPolicy"):
+            view.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         container = QWidget(self)
         layout = QHBoxLayout(container)
         if hasattr(layout, "setContentsMargins"):
@@ -1172,6 +1196,7 @@ class EditorWindow(QMainWindow):
         )
         self.model_bar.extrude_btn.clicked.connect(self.extrude_selection)
         self.model_bar.loop_btn.clicked.connect(self.loop_cut)
+        self.model_bar.fill_btn.clicked.connect(self.toggle_fill)
         if hasattr(self.mode_bar.move_btn, "setChecked"):
             self.mode_bar.move_btn.setChecked(True)
         if hasattr(self.model_bar.vert_btn, "setChecked"):
@@ -1746,6 +1771,14 @@ class EditorWindow(QMainWindow):
         poly = create_polygon_mesh(new_verts)
         obj.mesh.vertices = poly.vertices
         obj.mesh.indices = poly.indices
+        self.draw_scene(update_list=False)
+
+    def toggle_fill(self) -> None:
+        obj = self.selected_obj
+        if obj is None or not hasattr(obj, "filled"):
+            return
+        obj.filled = not obj.filled
+        self.update_properties()
         self.draw_scene(update_list=False)
 
     def translate_selection(self, dx: float, dy: float) -> None:
@@ -2483,6 +2516,16 @@ class EditorWindow(QMainWindow):
             obj.mesh = create_triangle_mesh()
         elif shape == "circle":
             obj.mesh = create_circle_mesh()
+        elif shape == "polygon":
+            from engine.mesh_utils import create_polygon_mesh
+            verts = [
+                (
+                    math.cos(2 * math.pi * i / 5) * 1.0,
+                    math.sin(2 * math.pi * i / 5) * 1.0,
+                )
+                for i in range(5)
+            ]
+            obj.mesh = create_polygon_mesh(verts)
         else:
             obj.mesh = create_square_mesh()
         obj.width = 2.0
@@ -2555,12 +2598,15 @@ class EditorWindow(QMainWindow):
             sq_a = shape_m.addAction("Square") if hasattr(shape_m, "addAction") else None
             tri_a = shape_m.addAction("Triangle") if hasattr(shape_m, "addAction") else None
             cir_a = shape_m.addAction("Circle") if hasattr(shape_m, "addAction") else None
+            poly_a = shape_m.addAction("Polygon") if hasattr(shape_m, "addAction") else None
             if sq_a is not None and hasattr(sq_a, "triggered"):
                 sq_a.triggered.connect(lambda: self.create_shape("square"))
             if tri_a is not None and hasattr(tri_a, "triggered"):
                 tri_a.triggered.connect(lambda: self.create_shape("triangle"))
             if cir_a is not None and hasattr(cir_a, "triggered"):
                 cir_a.triggered.connect(lambda: self.create_shape("circle"))
+            if poly_a is not None and hasattr(poly_a, "triggered"):
+                poly_a.triggered.connect(lambda: self.create_shape("polygon"))
         menu.exec(self.objects.mapToGlobal(point))
 
     def _object_selected(self, current=None, _prev=None):

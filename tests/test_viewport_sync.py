@@ -683,6 +683,21 @@ def test_create_shape(monkeypatch):
     assert shape.mesh is not None
 
 
+def test_create_polygon(monkeypatch):
+    _stub_gl(monkeypatch, {})
+    _setup_qt(monkeypatch)
+
+    import importlib
+
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    viewport = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(viewport)
+
+    win = viewport.EditorWindow()
+    poly = win.create_shape('polygon')
+    assert len(poly.mesh.vertices) == 5
+
+
 def test_shape_fill_property(monkeypatch):
     _stub_gl(monkeypatch, {})
     _setup_qt(monkeypatch)
@@ -724,6 +739,35 @@ def test_extrude_and_loop_cut(monkeypatch):
     count = len(obj.mesh.vertices)
     win.loop_cut()
     assert len(obj.mesh.vertices) == count * 2
+
+
+def test_toggle_fill_action(monkeypatch):
+    _stub_gl(monkeypatch, {})
+    _setup_qt(monkeypatch)
+
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    viewport = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(viewport)
+
+    win = viewport.EditorWindow()
+    obj = win.create_shape('square')
+    win.select_object(obj)
+    before = obj.filled
+    win.toggle_fill()
+    assert obj.filled != before
+
+
+def test_view_focus_policy(monkeypatch):
+    _stub_gl(monkeypatch, {})
+    _setup_qt(monkeypatch)
+
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    viewport = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(viewport)
+
+    win = viewport.EditorWindow()
+    Qt = sys.modules['PyQt6.QtCore'].Qt
+    assert getattr(win.viewport, 'policy', None) == Qt.FocusPolicy.StrongFocus
 
 
 def test_select_two_vertices_highlights_edge(monkeypatch):
