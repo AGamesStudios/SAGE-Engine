@@ -248,14 +248,14 @@ class NoWheelSpinBox(QDoubleSpinBox):
 log = logging.getLogger(__name__)
 
 
-ACCENT_COLOR = "#ffae00"
+ACCENT_COLOR = "#ffb84d"
 
 
 def _apply_ember_palette(app: QApplication) -> None:
-    """Apply the SAGE Ember palette with a soft orange accent to *app*."""
+    """Apply the SAGE Ember palette with a soft yellow-orange accent."""
     from PyQt6.QtGui import QColor, QPalette  # type: ignore[import-not-found]
 
-    accent = QColor(255, 174, 0)
+    accent = QColor(255, 184, 77)
     palette = QPalette()
     palette.setColor(QPalette.ColorRole.Window, QColor(45, 45, 45))
     palette.setColor(QPalette.ColorRole.WindowText, Qt.GlobalColor.white)
@@ -359,9 +359,6 @@ def _apply_ember_stylesheet(app: QApplication) -> None:
         background: #555555;
         min-height: 20px;
         border-radius: 5px;
-    }}
-    QScrollBar::handle:vertical:hover {{
-        background: {ACCENT_COLOR};
     }}
     QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
         border: none;
