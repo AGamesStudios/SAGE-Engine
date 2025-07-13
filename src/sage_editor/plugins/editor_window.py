@@ -839,6 +839,7 @@ class EditorWindow(QMainWindow):
             if hasattr(self.mode_bar, "setFixedHeight"):
                 self.mode_bar.setFixedHeight(h)
             self._reposition_preview()
+            self._update_rulers()
         except Exception:
             log.exception("Failed to update toolbar height")
 
