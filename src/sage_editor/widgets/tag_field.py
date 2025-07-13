@@ -19,7 +19,13 @@ from PyQt6.QtWidgets import (  # type: ignore[import-not-found]
     QLabel,
     QHBoxLayout,
     QSizePolicy,
+    QScrollArea,
 )
+try:  # pragma: no cover - fallback when QFrame missing
+    from PyQt6.QtWidgets import QFrame  # type: ignore[import-not-found]
+except Exception:  # pragma: no cover - fallback for stubs
+    QFrame = QWidget  # type: ignore[misc]
+from PyQt6.QtCore import Qt  # type: ignore[import-not-found]
 
 from ..plugins.viewport import NoWheelLineEdit
 
@@ -95,24 +101,40 @@ class TagField(QWidget):
                 " background: transparent;"
             )
 
-        self.tag_area = QWidget(self)
-        if hasattr(self.tag_area, "setSizePolicy"):
+        self.scroll = QScrollArea(self)
+        if hasattr(self.scroll, "setWidgetResizable"):
+            self.scroll.setWidgetResizable(True)
+        if hasattr(self.scroll, "setFrameShape"):
+            self.scroll.setFrameShape(getattr(QFrame, "Shape", QFrame).NoFrame)
+        if hasattr(self.scroll, "setHorizontalScrollBarPolicy"):
+            policy = getattr(Qt.ScrollBarPolicy, "ScrollBarAsNeeded", None)
+            if policy is not None:
+                self.scroll.setHorizontalScrollBarPolicy(policy)
+        if hasattr(self.scroll, "setVerticalScrollBarPolicy"):
+            policy = getattr(Qt.ScrollBarPolicy, "ScrollBarAlwaysOff", None)
+            if policy is not None:
+                self.scroll.setVerticalScrollBarPolicy(policy)
+        if hasattr(self.scroll, "setSizePolicy"):
             pol = getattr(QSizePolicy, "Policy", QSizePolicy)
             horiz = getattr(pol, "Expanding", 0)
             vert = getattr(pol, "Preferred", 0)
-            self.tag_area.setSizePolicy(horiz, vert)
+            self.scroll.setSizePolicy(horiz, vert)
+
+        self.tag_area = QWidget(self.scroll)
         self.tag_layout = QHBoxLayout(self.tag_area)
         if hasattr(self.tag_layout, "setContentsMargins"):
             self.tag_layout.setContentsMargins(0, 0, 0, 0)
         if hasattr(self.tag_layout, "setSpacing"):
             self.tag_layout.setSpacing(1)
+        if hasattr(self.scroll, "setWidget"):
+            self.scroll.setWidget(self.tag_area)
 
         self.add_btn = QPushButton("+", self)
         if hasattr(self.add_btn, "setFixedSize"):
             self.add_btn.setFixedSize(18, 18)
         self.add_btn.clicked.connect(self._show_editor)
         layout.addWidget(self.add_btn)
-        layout.addWidget(self.tag_area)
+        layout.addWidget(self.scroll)
 
         self._editor = NoWheelLineEdit(self.tag_area)
         if hasattr(self._editor, "setFixedWidth"):
