@@ -970,7 +970,7 @@ class _ViewportMixin:
     def mouseReleaseEvent(self, ev):  # pragma: no cover - gui interaction
         if ev.button() == Qt.MouseButton.LeftButton:
             pos = ev.position() if hasattr(ev, "position") else ev.pos()
-            if self._press_pos is not None and not self._dragging:
+            if self._press_pos is not None and not self._dragging and self._drag_mode == "pan":
                 wx, wy = self._window.screen_to_world(pos)
                 obj = self._window.find_object_at(wx, wy)
                 mods = ev.modifiers() if hasattr(ev, "modifiers") else 0
@@ -1663,23 +1663,24 @@ class EditorWindow(QMainWindow):
                 self.model_bar.face_btn.setChecked(True)
 
     def extrude_selection(self) -> None:
+        """Duplicate selected vertices and prepare them for dragging."""
         if self.selection_mode != "vertex":
             return
         obj = self.selected_obj
         if obj is None or getattr(obj, "mesh", None) is None:
             return
-        if self.cursor_pos is None:
-            return
         mesh = obj.mesh
-        wx, wy = self.cursor_pos
-        mx, my = self.world_to_mesh(obj, wx, wy)
+        new_selection: set[int] = set()
         for idx in sorted(self.selected_vertices, reverse=True):
             if 0 <= idx < len(mesh.vertices):
-                mesh.vertices.insert(idx + 1, (mx, my))
+                vx, vy = mesh.vertices[idx]
+                mesh.vertices.insert(idx + 1, (vx, vy))
                 self.selected_vertices = {
                     i + 1 if i > idx else i for i in self.selected_vertices
                 }
-                self.selected_vertices.add(idx + 1)
+                new_selection.add(idx + 1)
+        if new_selection:
+            self.selected_vertices = new_selection
         self.draw_scene(update_list=False)
 
     def loop_cut(self) -> None:

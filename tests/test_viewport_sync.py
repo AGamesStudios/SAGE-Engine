@@ -716,12 +716,11 @@ def test_extrude_and_loop_cut(monkeypatch):
     win.select_object(obj)
     win.toggle_model(True)
     win.select_vertex(0)
-    win.update_cursor(1.0, 0.0)
     count = len(obj.mesh.vertices)
+    vx, vy = obj.mesh.vertices[0]
     win.extrude_selection()
     assert len(obj.mesh.vertices) == count + 1
-    mx, my = win.world_to_mesh(obj, 1.0, 0.0)
-    assert obj.mesh.vertices[1] == (mx, my)
+    assert obj.mesh.vertices[1] == (vx, vy)
     count = len(obj.mesh.vertices)
     win.loop_cut()
     assert len(obj.mesh.vertices) == count * 2
