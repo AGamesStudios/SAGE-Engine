@@ -59,11 +59,9 @@ class TagField(QWidget):
         self._tags: list[str] = []
         layout = QHBoxLayout(self)
         if hasattr(layout, "setContentsMargins"):
-            layout.setContentsMargins(0, 0, 0, 0)
-
-        self.add_btn = QPushButton("+", self)
-        self.add_btn.clicked.connect(self._show_editor)
-        layout.addWidget(self.add_btn)
+            layout.setContentsMargins(4, 2, 4, 2)
+        if hasattr(layout, "setSpacing"):
+            layout.setSpacing(4)
 
         self.tag_area = QWidget(self)
         self.tag_layout = QHBoxLayout(self.tag_area)
@@ -72,6 +70,12 @@ class TagField(QWidget):
         if hasattr(self.tag_layout, "setSpacing"):
             self.tag_layout.setSpacing(4)
         layout.addWidget(self.tag_area)
+
+        self.add_btn = QPushButton("+", self)
+        if hasattr(self.add_btn, "setFixedSize"):
+            self.add_btn.setFixedSize(18, 18)
+        self.add_btn.clicked.connect(self._show_editor)
+        layout.addWidget(self.add_btn)
 
         self._editor = NoWheelLineEdit(self.tag_area)
         if hasattr(self._editor, "returnPressed"):
@@ -100,8 +104,12 @@ class TagField(QWidget):
         self._tags.append(text)
         cap = TagCapsule(text, self.tag_area)
         cap.removeRequested.connect(self.remove_tag)
-        if hasattr(self.tag_layout, "addWidget"):
-            self.tag_layout.addWidget(cap)
+        if hasattr(self.tag_layout, "indexOf"):
+            idx = self.tag_layout.indexOf(self._editor)
+            if idx != -1 and hasattr(self.tag_layout, "insertWidget"):
+                self.tag_layout.insertWidget(idx, cap)
+            else:
+                self.tag_layout.addWidget(cap)
         self.editingFinished.emit()
 
     def remove_tag(self, text: str) -> None:
