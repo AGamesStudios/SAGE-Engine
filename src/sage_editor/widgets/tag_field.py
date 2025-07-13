@@ -60,21 +60,26 @@ class TagField(QWidget):
         layout = QHBoxLayout(self)
         if hasattr(layout, "setContentsMargins"):
             layout.setContentsMargins(0, 0, 0, 0)
+
+        self.add_btn = QPushButton("+", self)
+        self.add_btn.clicked.connect(self._show_editor)
+        layout.addWidget(self.add_btn)
+
         self.tag_area = QWidget(self)
         self.tag_layout = QHBoxLayout(self.tag_area)
         if hasattr(self.tag_layout, "setContentsMargins"):
             self.tag_layout.setContentsMargins(0, 0, 0, 0)
-        self.add_btn = QPushButton("+", self)
-        self.add_btn.clicked.connect(self._show_editor)
-        self._editor = NoWheelLineEdit(self)
+        if hasattr(self.tag_layout, "setSpacing"):
+            self.tag_layout.setSpacing(4)
+        layout.addWidget(self.tag_area)
+
+        self._editor = NoWheelLineEdit(self.tag_area)
         if hasattr(self._editor, "returnPressed"):
             self._editor.returnPressed.connect(self._finish_edit)
         if hasattr(self._editor, "editingFinished"):
             self._editor.editingFinished.connect(self._finish_edit)
         self._editor.hide()
-        layout.addWidget(self.tag_area)
-        layout.addWidget(self._editor)
-        layout.addWidget(self.add_btn)
+        self.tag_layout.addWidget(self._editor)
 
     # public API -----------------------------------------------------
     def tags(self) -> list[str]:
