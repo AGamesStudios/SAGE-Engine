@@ -1329,6 +1329,7 @@ class EditorWindow(QMainWindow):
         self.update_object_list()
         self._reposition_preview()
         self.draw_scene()
+        self._update_rulers()
 
     def log_warning(self, text: str) -> None:
         """Display *text* in the console dock."""
@@ -1371,6 +1372,7 @@ class EditorWindow(QMainWindow):
             self.cursor_label.setText(f"X: {x:.1f}  Y: {y:.1f}")
             if hasattr(self.cursor_label, "adjustSize"):
                 self.cursor_label.adjustSize()
+        self._update_rulers()
         self.draw_scene(update_list=False)
 
     def set_mode(self, mode: str) -> None:
@@ -1642,6 +1644,27 @@ class EditorWindow(QMainWindow):
         sx = (x - cam.x) * scale * cam.zoom + w / 2
         sy = (y - cam.y) * scale * cam.zoom * sign + h / 2
         return sx, sy
+
+    def _update_rulers(self) -> None:
+        """Update ruler markers based on the camera and cursor."""
+        h_ruler = getattr(self.viewport_container, "h_ruler", None)
+        v_ruler = getattr(self.viewport_container, "v_ruler", None)
+        if h_ruler is None or v_ruler is None:
+            return
+        cam = self.camera
+        w = self.viewport.width() or 1
+        h = self.viewport.height() or 1
+        zoom = getattr(cam, "zoom", 1.0)
+        scale = units.UNITS_PER_METER * zoom
+        sign = -1 if units.Y_UP else 1
+        left = cam.x - w / (2 * scale)
+        top = cam.y - sign * h / (2 * scale)
+        cx = self.cursor_pos[0] if self.cursor_pos else None
+        cy = self.cursor_pos[1] if self.cursor_pos else None
+        if hasattr(h_ruler, "set_transform"):
+            h_ruler.set_transform(left, scale, cx)
+        if hasattr(v_ruler, "set_transform"):
+            v_ruler.set_transform(top, scale, cy, sign)
 
     def mesh_to_world(self, obj: GameObject, vx: float, vy: float) -> tuple[float, float]:
         """Return world coordinates for a mesh vertex."""
@@ -1924,6 +1947,7 @@ class EditorWindow(QMainWindow):
             self.renderer.draw_scene(self.scene, self.camera)
         if self.preview_renderer and self.preview_camera:
             self.preview_renderer.draw_scene(self.scene, self.preview_camera)
+        self._update_rulers()
 
     def start_game(self):
         from engine.core.engine import Engine
