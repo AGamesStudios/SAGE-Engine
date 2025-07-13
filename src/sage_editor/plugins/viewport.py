@@ -37,10 +37,11 @@ except Exception:  # pragma: no cover - fallback when QFrame missing
     QFrame = QWidget  # type: ignore[misc]
 from PyQt6.QtGui import QAction, QKeySequence  # type: ignore[import-not-found]
 try:  # optional QPainter for fancy dial
-    from PyQt6.QtGui import QPainter, QColor  # type: ignore[import-not-found]
+    from PyQt6.QtGui import QPainter, QColor, QPainterPath  # type: ignore[import-not-found]
 except Exception:  # pragma: no cover - fallback for stubs
     QPainter = None  # type: ignore[assignment]
     QColor = None  # type: ignore[assignment]
+    QPainterPath = None  # type: ignore[assignment]
 
 try:  # support minimal test stubs
     from PyQt6.QtWidgets import QTextEdit  # type: ignore[import-not-found]
@@ -96,7 +97,7 @@ class TransformBar(QWidget):
         if hasattr(layout, "setContentsMargins"):
             layout.setContentsMargins(0, 0, 0, 0)
         if hasattr(layout, "setSpacing"):
-            layout.setSpacing(2)
+            layout.setSpacing(6)
         self.move_btn = QPushButton("Move", self)
         self.rotate_btn = QPushButton("Rotate", self)
         self.scale_btn = QPushButton("Scale", self)
@@ -142,6 +143,7 @@ class ProgressDial(QDial):
             super().paintEvent(event)
             return
         painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         size = min(self.width(), self.height()) - 4
         rtype = type(self.rect())
         rect = rtype(
@@ -155,11 +157,11 @@ class ProgressDial(QDial):
         painter.setPen(QColor("#555555"))
         painter.drawEllipse(rect)
         # progress arc
-        start = 90 * 16
-        span = -self.value() * 16
-        painter.setBrush(QColor(255, 184, 77))
-        painter.setPen(Qt.PenStyle.NoPen)
-        painter.drawPie(rect, start, span)
+        path = QPainterPath()
+        path.moveTo(rect.center())
+        path.arcTo(rect, 90, -float(self.value()))
+        path.closeSubpath()
+        painter.fillPath(path, QColor(255, 184, 77))
 
     def wheelEvent(self, event):  # pragma: no cover - ui tweak
         """Ignore wheel scrolling so the dial doesn't change accidentally."""
@@ -294,6 +296,7 @@ def _apply_ember_stylesheet(app: QApplication) -> None:
         background-color: #353535;
         border: none;
         padding: 4px 8px;
+        margin: 2px;
         border-radius: 4px;
         color: white;
     }}
@@ -403,8 +406,8 @@ def _apply_ember_stylesheet(app: QApplication) -> None:
     QListView::item:selected,
     QTreeView::item:selected,
     QTableView::item:selected {{
-        background: {ACCENT_COLOR};
-        color: black;
+        background: transparent;
+        color: white;
     }}
     """
     app.setStyleSheet(stylesheet)
@@ -1135,6 +1138,12 @@ class EditorWindow(QMainWindow):
                     menubar.addAction(action)
 
         tbar = QToolBar(self)
+        try:
+            from PyQt6.QtCore import QSize  # type: ignore
+        except Exception:
+            pass
+        else:
+            tbar.setIconSize(QSize(20, 20))
         self.addToolBar(tbar)
         left_spacer = QWidget(self)
         left_spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
