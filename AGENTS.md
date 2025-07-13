@@ -8,5 +8,7 @@ This project contains a modular game engine (`engine`), an optional editor (`sag
 - **Testing**: Run `ruff check .` and `PYTHONPATH=. pytest -q` before every commit. Update tests when changing behaviour.
 - **Documentation**: Keep `README.md` concise. Place detailed guides under `docs/` and link to them from the README.
 - **Commits**: Write descriptive commit messages that summarise the change.
+- **Custom style only.** Never use Qt's built-in styles such as "Fusion".
+  The editor must apply its own palette and stylesheet.
 
 Following these rules helps keep the engine lightweight, extensible and easy to maintain.
