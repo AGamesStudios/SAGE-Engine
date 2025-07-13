@@ -565,10 +565,26 @@ class EditorWindow(QMainWindow):
             self.snap_action.toggled.connect(self.toggle_snap)
         quickbar.addAction(self.snap_action)
 
-        self.snap_settings_action = QAction("Snap Settings", self)
-        if hasattr(self.snap_settings_action, "triggered"):
-            self.snap_settings_action.triggered.connect(self.open_snap_dock)
-        quickbar.addAction(self.snap_settings_action)
+        try:  # pragma: no cover - Qt only
+            from PyQt6.QtWidgets import QToolButton  # type: ignore[import-not-found]
+        except Exception:
+            QToolButton = QWidget  # type: ignore[assignment]
+
+        self.snap_menu_btn = QToolButton()
+        if hasattr(self.snap_menu_btn, "setText"):
+            self.snap_menu_btn.setText("▼")
+        if hasattr(self.snap_menu_btn, "setAutoRaise"):
+            self.snap_menu_btn.setAutoRaise(True)
+        if hasattr(self.snap_menu_btn, "clicked"):
+            self.snap_menu_btn.clicked.connect(
+                lambda: self.snap_popup.show_near(self.snap_menu_btn)
+            )
+        if hasattr(self.snap_menu_btn, "setVisible"):
+            self.snap_menu_btn.setVisible(False)
+        quickbar.addWidget(self.snap_menu_btn)
+
+        if hasattr(quickbar, "addSeparator"):
+            quickbar.addSeparator()
 
         self.axes_action = QAction("Axes", self)
         if hasattr(self.axes_action, "setCheckable"):
@@ -605,6 +621,9 @@ class EditorWindow(QMainWindow):
         if hasattr(self.local_action, "toggled"):
             self.local_action.toggled.connect(self.toggle_local)
         quickbar.addAction(self.local_action)
+
+        if hasattr(quickbar, "addSeparator"):
+            quickbar.addSeparator()
 
         self.objects = QListWidget()
         if hasattr(self.objects, "setSelectionMode"):
@@ -673,13 +692,10 @@ class EditorWindow(QMainWindow):
     def toggle_snap(self, checked: bool) -> None:
         self.snap_to_grid = bool(checked)
         pop = getattr(self, "snap_popup", None)
-        btn = self.quickbar.widgetForAction(self.snap_action)
-        if checked and pop is not None and btn is not None:
-            pop.settings.move_spin.setValue(self.move_step)
-            pop.settings.rot_spin.setValue(self.rotate_step)
-            pop.settings.scale_spin.setValue(self.scale_step)
-            pop.show_near(btn)
-        elif pop is not None:
+        menu_btn = getattr(self, "snap_menu_btn", None)
+        if menu_btn is not None and hasattr(menu_btn, "setVisible"):
+            menu_btn.setVisible(checked)
+        if not checked and pop is not None:
             pop.hide()
 
     def toggle_mirror(self, checked: bool) -> None:

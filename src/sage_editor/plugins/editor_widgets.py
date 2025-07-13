@@ -318,6 +318,11 @@ class SnapSettingsWidget(QWidget):
         except Exception:
             QFormLayout = QVBoxLayout  # type: ignore[assignment]
 
+        try:  # pragma: no cover - present in real Qt only
+            from PyQt6.QtWidgets import QFrame  # type: ignore[import-not-found]
+        except Exception:
+            QFrame = QWidget  # type: ignore[assignment]
+
         layout = QFormLayout(self)
         if hasattr(layout, "setContentsMargins"):
             layout.setContentsMargins(4, 4, 4, 4)
@@ -327,12 +332,20 @@ class SnapSettingsWidget(QWidget):
         self.move_spin.setRange(0.01, 100.0)
         self.move_spin.setValue(window.move_step)
         layout.addRow("Move Step", self.move_spin)
+        line = QFrame(self)
+        if hasattr(line, "setFrameShape"):
+            line.setFrameShape(QFrame.Shape.HLine)
+        layout.addRow(line)
 
         self.rot_spin = NoWheelSpinBox(self)
         self.rot_spin.setDecimals(1)
         self.rot_spin.setRange(0.1, 360.0)
         self.rot_spin.setValue(window.rotate_step)
         layout.addRow("Rotate Step", self.rot_spin)
+        line = QFrame(self)
+        if hasattr(line, "setFrameShape"):
+            line.setFrameShape(QFrame.Shape.HLine)
+        layout.addRow(line)
 
         self.scale_spin = NoWheelSpinBox(self)
         self.scale_spin.setDecimals(3)
