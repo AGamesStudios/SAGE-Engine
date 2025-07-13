@@ -15,7 +15,7 @@ from PyQt6.QtWidgets import (  # type: ignore[import-not-found]
 
 from engine.entities.game_object import GameObject
 
-from ..plugins.viewport import ProgressDial, NoWheelLineEdit, NoWheelSpinBox
+from ..plugins.viewport import ProgressWheel, NoWheelLineEdit, NoWheelSpinBox
 
 
 class PropertiesWidget(QWidget):
@@ -54,7 +54,7 @@ class PropertiesWidget(QWidget):
         pos_layout.addWidget(self.pos_y)
         trans_form.addRow("Position", pos_widget)
 
-        self.rot_dial = ProgressDial(self)
+        self.rot_dial = ProgressWheel(self)
         self.rot_dial.setRange(0, 360)
         trans_form.addRow("Rotation", self.rot_dial)
 

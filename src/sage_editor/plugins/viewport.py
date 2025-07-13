@@ -19,7 +19,6 @@ from PyQt6.QtWidgets import (  # type: ignore[import-not-found]
     QMenuBar,
     QToolBar,
     QSizePolicy,
-    QSplitter,
     QPushButton,
     QVBoxLayout,
     QHBoxLayout,
@@ -27,7 +26,6 @@ from PyQt6.QtWidgets import (  # type: ignore[import-not-found]
     QLabel,
     QLineEdit,
     QDoubleSpinBox,
-    QDial,
     QComboBox,
     QWidget,
 )
@@ -123,30 +121,56 @@ class TransformBar(QWidget):
             layout.addStretch()
 
 
-class ProgressDial(QDial):
-    """Circular dial that fills like a progress bar and shows the angle.
+class ProgressWheel(QWidget):
+    """Custom circular control that shows and edits an angle."""
 
-    The wheel and simple clicks are ignored so the angle changes only when
-    dragging with the left mouse button.
-    """
+    try:  # pragma: no cover - signal for real Qt only
+        from PyQt6.QtCore import pyqtSignal as _signal  # type: ignore[import-not-found]
+    except Exception:  # pragma: no cover - test stubs
+        def _signal(*_a, **_k):  # type: ignore[return-type]
+            class _DummySignal:
+                def connect(self, *a, **k):
+                    pass
+
+            return _DummySignal()
+
+    valueChanged = _signal(int)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
+        self._value = 0
+        self._minimum = 0
+        self._maximum = 360
         self._label = QLabel(self)
         if hasattr(self._label, "setAlignment"):
             self._label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        if hasattr(self, "setNotchesVisible"):
-            self.setNotchesVisible(False)
-        if hasattr(self, "setWrapping"):
-            self.setWrapping(True)
-        self.valueChanged.connect(self._update_label)
         self._drag_start = None
         self._start_value = 0
-        self._update_label(self.value())
+        if hasattr(self, "setMinimumSize"):
+            self.setMinimumSize(40, 40)
+        self._update_label(self._value)
 
+    # basic API -----------------------------------------------------
+    def value(self) -> int:
+        return self._value
+
+    def setRange(self, minimum: int, maximum: int) -> None:
+        self._minimum = minimum
+        self._maximum = maximum
+        self.setValue(self._value)
+
+    def setValue(self, value: int) -> None:
+        value = max(self._minimum, min(self._maximum, int(value)))
+        if value != self._value:
+            self._value = value
+            self._update_label(value)
+            self.valueChanged.emit(value)
+            if hasattr(self, "update"):
+                self.update()
+
+    # painting ------------------------------------------------------
     def paintEvent(self, event):  # pragma: no cover - visual
         if QPainter is None or QColor is None:
-            super().paintEvent(event)
             return
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -158,29 +182,24 @@ class ProgressDial(QDial):
             size,
             size,
         )
-        # base circle
         painter.setBrush(QColor("#353535"))
         painter.setPen(QColor("#555555"))
         painter.drawEllipse(rect)
-        # progress arc
         path = QPainterPath()
-        if QPointF is not None:
-            center = QPointF(rect.center())
-        else:
-            center = rect.center()
+        center = QPointF(rect.center()) if QPointF is not None else rect.center()
         path.moveTo(center)
-        path.arcTo(rect, 90, -float(self.value()))
+        path.arcTo(rect, 90, -float(self._value))
         path.closeSubpath()
         painter.fillPath(path, QColor(255, 184, 77))
 
+    # interaction ---------------------------------------------------
     def wheelEvent(self, event):  # pragma: no cover - ui tweak
-        """Ignore wheel scrolling so the dial doesn't change accidentally."""
         event.ignore()
 
     def mousePressEvent(self, event):  # pragma: no cover - ui tweak
         if event.button() == Qt.MouseButton.LeftButton:
             self._drag_start = (event.position().x(), event.position().y())
-            self._start_value = self.value()
+            self._start_value = self._value
             event.accept()
         else:
             super().mousePressEvent(event)
@@ -192,7 +211,7 @@ class ProgressDial(QDial):
             ang0 = math.atan2(y0 - cy, x0 - cx)
             ang1 = math.atan2(event.position().y() - cy, event.position().x() - cx)
             delta = math.degrees(ang1 - ang0)
-            self.setValue(int((self._start_value + delta) % 360))
+            self.setValue((self._start_value + int(delta)) % 360)
             event.accept()
         else:
             super().mouseMoveEvent(event)
@@ -320,19 +339,28 @@ def _apply_ember_stylesheet(app: QApplication) -> None:
     QMenuBar {{
         background-color: #2c2c2c;
     }}
+    QMenuBar::item {{
+        padding: 4px 8px;
+        margin: 0 2px;
+        border-radius: 4px;
+    }}
     QMenuBar::item:selected {{
         background-color: {ACCENT_COLOR};
         color: black;
     }}
     QMenu {{
         background-color: #2c2c2c;
-        border: none;
+        border: 1px solid #555555;
+        border-radius: 6px;
+        padding: 4px;
+    }}
+    QMenu::item {{
+        padding: 4px 12px;
         border-radius: 4px;
     }}
     QMenu::item:selected {{
         background-color: {ACCENT_COLOR};
         color: black;
-        border-radius: 4px;
     }}
     QDockWidget::title {{
         background-color: #353535;
@@ -375,7 +403,7 @@ def _apply_ember_stylesheet(app: QApplication) -> None:
     QComboBox {{
         background-color: #353535;
         border: none;
-        padding: 2px 4px;
+        padding: 2px 6px;
         border-radius: 4px;
     }}
     QComboBox::drop-down {{
@@ -1061,13 +1089,13 @@ class EditorWindow(QMainWindow):
         self.selected_obj: Optional[GameObject] = None
         self._clipboard: dict | None = None
 
-        splitter = QSplitter(Qt.Orientation.Vertical, self)
-        splitter.addWidget(self.viewport_container)
-        splitter.addWidget(self.console)
-        splitter.setStretchFactor(0, 5)
-        splitter.setStretchFactor(1, 1)
-        self._splitter = splitter
-        self.setCentralWidget(splitter)
+        self.setCentralWidget(self.viewport_container)
+        console_dock = QDockWidget("Console", self)
+        console_dock.setObjectName("ConsoleDock")
+        console_dock.setWidget(self.console)
+        area = getattr(Qt.DockWidgetArea, "BottomDockWidgetArea", Qt.DockWidgetArea.LeftDockWidgetArea)
+        self.addDockWidget(area, console_dock)
+        self.console_dock = console_dock  # type: ignore[assignment]
 
         menubar = QMenuBar(self)
         self.setMenuBar(menubar)
@@ -1599,7 +1627,6 @@ class EditorWindow(QMainWindow):
             except Exception:
                 log.exception("Renderer close failed")
         old_view = self.viewport
-        old_splitter = self._splitter
         w = self.viewport.width() or 640
         h = self.viewport.height() or 480
         from sage_editor.widgets import SDLViewportWidget
@@ -1608,19 +1635,14 @@ class EditorWindow(QMainWindow):
         ):
             if old_view is not None and hasattr(old_view, "deleteLater"):
                 old_view.deleteLater()
-            if old_splitter is not None and hasattr(old_splitter, "deleteLater"):
-                old_splitter.deleteLater()
             new_view = self._create_viewport_widget(backend)
-            splitter = QSplitter(Qt.Orientation.Vertical, self)
-            splitter.addWidget(new_view)
-            splitter.addWidget(self.console)
-            splitter.setStretchFactor(0, 5)
-            splitter.setStretchFactor(1, 1)
-            self._splitter = splitter
-            self.setCentralWidget(splitter)
+            self.setCentralWidget(new_view)
             self.viewport_container = new_view
             self.viewport = new_view.viewport  # type: ignore[attr-defined]
             self.mode_bar = new_view.mode_bar  # type: ignore[attr-defined]
+            self.cursor_label = new_view.cursor_label  # type: ignore[attr-defined]
+            self.preview_widget = new_view.preview_widget  # type: ignore[attr-defined]
+            self.preview_frame = new_view.preview_frame  # type: ignore[attr-defined]
         self.renderer = rcls(width=w, height=h, widget=self.viewport, vsync=False, keep_aspect=False)
         self.renderer_backend = backend if rcls is not OpenGLRenderer else "opengl"
         self.set_renderer(self.renderer)
