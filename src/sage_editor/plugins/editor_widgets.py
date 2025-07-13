@@ -349,3 +349,27 @@ class SnapSettingsWidget(QWidget):
         self._window.rotate_step = float(self.rot_spin.value())
         self._window.scale_step = float(self.scale_spin.value())
 
+
+class SnapPopup(QWidget):
+    """Floating menu that shows snap step controls next to the toolbar."""
+
+    def __init__(self, window: "EditorWindow", parent: QWidget | None = None) -> None:
+        flag = getattr(getattr(Qt, "WindowType", Qt), "Popup", getattr(Qt, "Popup", 0))
+        super().__init__(parent, flag)
+        if hasattr(self, "setStyleSheet"):
+            self.setStyleSheet(
+                "background:#333;border:2px solid white;border-radius:4px;",
+            )
+        layout = QVBoxLayout(self)
+        if hasattr(layout, "setContentsMargins"):
+            layout.setContentsMargins(8, 8, 8, 8)
+        self.settings = SnapSettingsWidget(window, self)
+        layout.addWidget(self.settings)
+
+    def show_near(self, widget: QWidget) -> None:
+        pos = widget.mapToGlobal(widget.rect().bottomLeft())
+        if hasattr(self, "move"):
+            self.move(pos)
+        if hasattr(self, "show"):
+            self.show()
+

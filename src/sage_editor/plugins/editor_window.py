@@ -68,6 +68,7 @@ from sage_editor.plugins.editor_widgets import (
     NoWheelSpinBox,  # noqa: F401 - re-exported for widgets
     ProgressWheel,  # noqa: F401 - re-exported for widgets
     SnapSettingsWidget,
+    SnapPopup,
 )
 from sage_editor.plugins.viewport_base import _ViewportMixin
 
@@ -303,7 +304,10 @@ class EditorWindow(QMainWindow):
         # minimal scene used for previewing objects
         w = self.viewport.width() or 640
         h = self.viewport.height() or 480
-        from . import viewport as _vp
+        try:
+            import viewport as _vp  # type: ignore
+        except Exception:
+            from sage_editor.plugins import viewport as _vp
         vp_mod = sys.modules.get("viewport", _vp)
         if backend == "opengl":
             rcls = vp_mod.OpenGLRenderer
@@ -614,6 +618,9 @@ class EditorWindow(QMainWindow):
             snap_dock.hide()
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, snap_dock)
         self.snap_dock = snap_dock  # type: ignore[assignment]
+        self.snap_popup = SnapPopup(self)
+        if hasattr(self.snap_popup, "hide"):
+            self.snap_popup.hide()
 
         self.objects.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.objects.customContextMenuRequested.connect(self._list_context_menu)
@@ -639,6 +646,15 @@ class EditorWindow(QMainWindow):
 
     def toggle_snap(self, checked: bool) -> None:
         self.snap_to_grid = bool(checked)
+        pop = getattr(self, "snap_popup", None)
+        btn = self.quickbar.widgetForAction(self.snap_action)
+        if checked and pop is not None and btn is not None:
+            pop.settings.move_spin.setValue(self.move_step)
+            pop.settings.rot_spin.setValue(self.rotate_step)
+            pop.settings.scale_spin.setValue(self.scale_step)
+            pop.show_near(btn)
+        elif pop is not None:
+            pop.hide()
 
     def toggle_mirror(self, checked: bool) -> None:
         self.mirror_resize = bool(checked)
@@ -691,6 +707,8 @@ class EditorWindow(QMainWindow):
                 dock.show()
             if hasattr(dock, "raise_"):
                 dock.raise_()
+        if getattr(self, "snap_popup", None) is not None:
+            self.snap_popup.hide()
 
     def toggle_model(self, modeling: bool) -> None:
         """Switch between edit and model modes."""
@@ -950,7 +968,10 @@ class EditorWindow(QMainWindow):
         self.preview_camera = cam
         if self.preview_renderer is None:
             try:
-                from . import viewport as _vp
+                try:
+                    import viewport as _vp  # type: ignore
+                except Exception:
+                    from sage_editor.plugins import viewport as _vp
                 self.preview_renderer = _vp.OpenGLRenderer(
                     width=160,
                     height=120,
@@ -1288,7 +1309,10 @@ class EditorWindow(QMainWindow):
         self.viewport.renderer = renderer
 
     def change_renderer(self, backend: str) -> None:
-        from . import viewport as _vp
+        try:
+            import viewport as _vp  # type: ignore
+        except Exception:
+            from sage_editor.plugins import viewport as _vp
         if backend == "opengl":
             rcls = _vp.OpenGLRenderer
         else:

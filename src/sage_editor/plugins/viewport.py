@@ -64,7 +64,14 @@ def init_editor(editor) -> None:
     if created:
         app.exec()
 
-module = sys.modules.setdefault(__name__, ModuleType(__name__))
-module.__dict__.update(globals())
-sys.modules.setdefault('sage_editor.plugins.viewport', module)
+class _ViewportProxy(ModuleType):
+    def __getattr__(self, name: str):  # pragma: no cover - simple proxy
+        return globals()[name]
+
+    def __setattr__(self, name: str, value) -> None:  # pragma: no cover - proxy
+        globals()[name] = value
+
+module = _ViewportProxy('viewport')
+sys.modules['viewport'] = module
+sys.modules['sage_editor.plugins.viewport'] = module
 
