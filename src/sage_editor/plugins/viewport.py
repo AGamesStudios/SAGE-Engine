@@ -349,6 +349,15 @@ def _apply_ember_stylesheet(app: QApplication) -> None:
     QMenuBar {{
         background-color: #2c2c2c;
     }}
+    QToolBar {{
+        background-color: #2c2c2c;
+        spacing: 4px;
+    }}
+    QToolBar::handle {{
+        image: none;
+        width: 0px;
+        margin: 0px;
+    }}
     QMenuBar::item {{
         padding: 4px 8px;
         margin: 0 2px;
@@ -1249,6 +1258,8 @@ class EditorWindow(QMainWindow):
                     menubar.addAction(action)
 
         tbar = QToolBar(self)
+        if hasattr(tbar, "setMovable"):
+            tbar.setMovable(False)
         try:
             from PyQt6.QtCore import QSize  # type: ignore
         except Exception:
@@ -1293,6 +1304,8 @@ class EditorWindow(QMainWindow):
                     tbar.addAction(action)
 
         quickbar = QToolBar(self)
+        if hasattr(quickbar, "setMovable"):
+            quickbar.setMovable(False)
         self.addToolBar(quickbar)
         self.quickbar = quickbar  # type: ignore[attr-defined]
         self.grid_action = QAction("Grid", self)

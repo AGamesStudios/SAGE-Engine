@@ -86,7 +86,8 @@ On launch the main window expands to fill the primary screen so the interface is
 The **File** menu opens and saves ``.sageproject`` files and the toolbar
 includes a screenshot button.
 A second toolbar below the menu offers quick toggles for the grid, rulers and
-cursor label.
+cursor label. Toolbars appear flat without the usual drag handles for a cleaner
+look.
 The *View* menu lets you hide the bounding box around the selection.
 Hold **Ctrl** or **Shift** while clicking objects to add them to the selection.
 

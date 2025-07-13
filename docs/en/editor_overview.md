@@ -3,7 +3,8 @@
 The SAGE Editor lets you place objects and manage scenes. Use the small toolbar in the top-left corner to switch between **Edit** and **Model** modes. In Edit mode the buttons select move, rotate, scale or rect tools. When the move tool is active a square between the arrows lets you drag objects along both axes. Model mode shows vertex points for mesh objects so shapes can be adjusted directly.
 
 A narrow toolbar under the menu bar provides quick toggles for the grid, rulers
-and cursor coordinates.
+and cursor coordinates. Toolbars no longer show drag handles, giving the window
+a cleaner look.
 
 The editor uses the custom **SAGE Ember** style with a dark palette. The viewport fills most
 of the window while docks hold resources, objects and properties. Rect mode shows a bounding box with bright handles you can drag to move or resize objects. Hold **Shift** to keep the aspect ratio while resizing. The *View*

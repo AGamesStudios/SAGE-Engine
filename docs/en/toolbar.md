@@ -4,4 +4,5 @@ The toolbar sits vertically in the top-left corner and starts with **Edit** and 
 The *Screenshot* button opens a dialog for saving the current viewport as ``PNG``.
 
 Below the menu bar a compact toolbar provides quick toggle buttons for the grid,
-rulers, cursor coordinates and local mode.
+rulers, cursor coordinates and local mode. Toolbars are fixed in place without
+visible drag handles.
