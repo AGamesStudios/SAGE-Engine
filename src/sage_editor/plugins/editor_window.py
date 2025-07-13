@@ -697,7 +697,11 @@ class EditorWindow(QMainWindow):
         menu_btn = getattr(self, "snap_menu_btn", None)
         if menu_btn is not None and hasattr(menu_btn, "setVisible"):
             menu_btn.setVisible(checked)
-        if not checked and pop is not None:
+        if checked:
+            if pop is not None:
+                target = menu_btn if menu_btn is not None else self.snap_button
+                pop.show_near(target)
+        elif pop is not None:
             pop.hide()
 
     def toggle_mirror(self, checked: bool) -> None:
