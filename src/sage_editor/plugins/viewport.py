@@ -1346,6 +1346,8 @@ class EditorWindow(QMainWindow):
         self.cursor_pos = (x, y)
         if hasattr(self.cursor_label, "setText"):
             self.cursor_label.setText(f"X: {x:.1f}  Y: {y:.1f}")
+            if hasattr(self.cursor_label, "adjustSize"):
+                self.cursor_label.adjustSize()
         self.draw_scene(update_list=False)
 
     def set_mode(self, mode: str) -> None:
