@@ -15,6 +15,7 @@ from PyQt6.QtWidgets import (  # type: ignore[import-not-found]
     QMenuBar,
     QToolBar,
     QSizePolicy,
+    QTabWidget,
     QPushButton,  # noqa: F401 - used in dialogs
     QVBoxLayout,
     QHBoxLayout,
@@ -98,17 +99,16 @@ class EditorWindow(QMainWindow, ModelingMixin):
             layout.setContentsMargins(8, 8, 0, 0)
         if hasattr(layout, "setSpacing"):
             layout.setSpacing(4)
-        tools = ToolStack(container)
-        if hasattr(tools.transform_bar, "setSizePolicy"):
-            pol = getattr(QSizePolicy, "Policy", QSizePolicy)
-            horiz = getattr(pol, "Preferred", 0)
-            vert = getattr(pol, "Expanding", 0)
-            tools.transform_bar.setSizePolicy(horiz, vert)
+
+        # floating tool bar anchored inside the viewport
+        tools = ToolStack(view)
+        tools.setObjectName("ViewportTools") if hasattr(tools, "setObjectName") else None
+        if hasattr(tools, "move"):
+            tools.move(8, 8)
         if hasattr(tools.transform_bar, "setFixedWidth"):
             tools.transform_bar.setFixedWidth(60)
         if hasattr(tools.model_bar, "setFixedWidth"):
             tools.model_bar.setFixedWidth(80)
-        layout.addWidget(tools)
 
         view_area = QWidget(container)
         vlayout = QVBoxLayout(view_area)
@@ -183,6 +183,13 @@ class EditorWindow(QMainWindow, ModelingMixin):
         self.cursor_label = container.cursor_label  # type: ignore[attr-defined]
         self.preview_widget = container.preview_widget  # type: ignore[attr-defined]
         self.preview_frame = container.preview_frame  # type: ignore[attr-defined]
+
+        self.tabs = QTabWidget(self)
+        if hasattr(self.tabs, "setTabsClosable"):
+            self.tabs.setTabsClosable(True)
+            self.tabs.tabCloseRequested.connect(self.tabs.removeTab)
+        if hasattr(self.tabs, "addTab"):
+            self.tabs.addTab(container, "Viewport")
         self.preview_renderer = None
         self.preview_camera = None
         self.cursor_pos: tuple[float, float] | None = None
@@ -353,7 +360,7 @@ class EditorWindow(QMainWindow, ModelingMixin):
         self.selected_objs: list[GameObject] = []
         self._clipboard: dict | None = None
 
-        self.setCentralWidget(self.viewport_container)
+        self.setCentralWidget(self.tabs)
         console_dock = QDockWidget("Console", self)
         console_dock.setObjectName("ConsoleDock")
         console_dock.setWidget(self.console)
@@ -1328,7 +1335,10 @@ class EditorWindow(QMainWindow, ModelingMixin):
             if old_view is not None and hasattr(old_view, "deleteLater"):
                 old_view.deleteLater()
             new_view = self._create_viewport_widget(backend)
-            self.setCentralWidget(new_view)
+            index = self.tabs.indexOf(self.viewport_container)
+            if index != -1:
+                self.tabs.removeTab(index)
+            self.tabs.addTab(new_view, "Viewport")
             self.viewport_container = new_view
             self.viewport = new_view.viewport  # type: ignore[attr-defined]
             self.mode_bar = new_view.mode_bar  # type: ignore[attr-defined]

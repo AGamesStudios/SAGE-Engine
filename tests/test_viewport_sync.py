@@ -278,6 +278,27 @@ def _setup_qt(monkeypatch):
         def addAction(self, a):
             pass
 
+    class QTabWidget(QWidget):
+        def __init__(self, *a, **k):
+            super().__init__(*a, **k)
+            self._tabs = []
+            self.tabCloseRequested = DummySignal()
+
+        def setTabsClosable(self, b):
+            self._closable = b
+
+        def addTab(self, w, title):
+            self._tabs.append(w)
+
+        def removeTab(self, index):
+            self._tabs.pop(index)
+
+        def indexOf(self, w):
+            try:
+                return self._tabs.index(w)
+            except ValueError:
+                return -1
+
     class QSplitter(QWidget):
         def addWidget(self, w):
             pass
@@ -361,6 +382,7 @@ def _setup_qt(monkeypatch):
     qtwidgets.QLabel = QLabel
     qtwidgets.QMenuBar = QMenuBar
     qtwidgets.QToolBar = QToolBar
+    qtwidgets.QTabWidget = QTabWidget
     qtwidgets.QToolButton = QToolButton
     qtwidgets.QWidget = QWidget
     qtwidgets.QPushButton = QPushButton
