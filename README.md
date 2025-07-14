@@ -68,6 +68,11 @@ Extras are listed in ``pyproject.toml`` and can be supplied with ``--extras``.
 An ``Environment`` object stores global scene settings such as the background
 colour and is passed to ``EngineSettings`` when creating an engine.
 
+Patcher scripts are loaded at runtime via ``engine.load_patcher()``. Both
+Python and Lua files are supported, allowing quick prototyping with your
+preferred language. Lua patchers rely on the optional ``lupa`` package and are
+ignored when the dependency is missing.
+
 ### Editor
 The editor uses the custom **SAGE Ember** style.
 High-DPI scaling keeps text readable and fonts default to at least 12 points.

@@ -152,6 +152,8 @@ _lazy = {
     'run_sched': ('engine.nano_sched', 'run_sched'),
     'RenderFabric': ('engine.render_fabric', 'RenderFabric'),
     'SpritePass': ('engine.render_fabric', 'SpritePass'),
+    'load_patcher': ('engine.patchers', 'load_patcher'),
+    'Patcher': ('engine.patchers', 'Patcher'),
 }
 
 __all__ = sorted(
