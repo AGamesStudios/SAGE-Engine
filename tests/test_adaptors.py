@@ -24,7 +24,11 @@ def test_adaptor_loading(monkeypatch):
     called = []
     eps = _EPS("sage_adaptor", called)
     monkeypatch.setattr(metadata, "entry_points", lambda: eps)
-    adaptors._LOADED = False
+    adaptors._LOADED = set()
     adaptors.load_adaptors()
     assert set(called) == {"a1", "a2"}
+
+    # loading again with selection should skip already loaded adaptors
+    adaptors.load_adaptors(["a2"])
+    assert called.count("a2") == 1
 

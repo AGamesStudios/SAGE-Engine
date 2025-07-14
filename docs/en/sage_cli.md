@@ -2,7 +2,7 @@
 
 The `sage` command provides basic project utilities. Available subcommands:
 
-* `build`
+* `build` – optional `--bundle <name>` loads configuration from `config/bundles`
 * `serve`
 * `featherize`
 * `create <name>` – generate a project from a template

@@ -18,6 +18,7 @@ Select a topic from the list to learn about the engine and editor features.
 * [Sage Command Line](sage_cli.md)
 * [Adaptors](adaptors.md)
 * [Capability Flags](capabilities.md)
+* [Feature Bundles](sage_cli.md#build)
 * [Limitations and Caveats](limitations.md)
 * [Plugins](plugins.md)
 * [Gizmos](gizmos.md)

@@ -5,14 +5,16 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-_LOADED = False
+_LOADED: set[str] = set()
 
 
-def load_adaptors() -> None:
-    """Load and register available adaptors."""
+def load_adaptors(selected: list[str] | None = None) -> None:
+    """Load and register available adaptors.
+
+    If ``selected`` is provided, only adaptors with matching entry point names
+    are loaded.
+    """
     global _LOADED
-    if _LOADED:
-        return
     try:
         eps = metadata.entry_points()
         entries = (
@@ -21,14 +23,18 @@ def load_adaptors() -> None:
             else eps.get("sage_adaptor", [])
         )
         for ep in entries:
+            if selected and ep.name not in selected:
+                continue
+            if ep.name in _LOADED:
+                continue
             try:
                 func = ep.load()
                 if hasattr(func, "register"):
                     func.register()
                 else:
                     func()
+                _LOADED.add(ep.name)
             except Exception as exc:  # pragma: no cover - plugin may fail
                 logger.warning("Failed to load adaptor %s: %s", ep.name, exc)
     except Exception as exc:  # pragma: no cover - metadata issues
         logger.error("Error loading adaptors: %s", exc)
-    _LOADED = True

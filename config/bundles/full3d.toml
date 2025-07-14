@@ -1,0 +1,2 @@
+[adaptors]
+list = ["render", "audio", "gui", "network"]

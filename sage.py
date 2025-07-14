@@ -4,11 +4,19 @@ import argparse
 import shutil
 from pathlib import Path
 
+from engine import adaptors
+from engine import bundles
+
 from engine.utils import TraceProfiler
 
 
 def _build(args: argparse.Namespace) -> None:
     profiler = TraceProfiler(args.profile) if args.profile else None
+    if args.bundle:
+        config = bundles.load_bundle(args.bundle)
+        adaptors.load_adaptors(config.get("adaptors", {}).get("list"))
+    else:
+        adaptors.load_adaptors()
     if profiler:
         with profiler.phase("Input"):
             pass
@@ -78,7 +86,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="sage", description="SAGE command line")
     parser.add_argument("--profile", nargs="?", const="trace.json", help="write Chrome Trace JSON")
     sub = parser.add_subparsers(dest="cmd", required=True)
-    sub.add_parser("build")
+    build_p = sub.add_parser("build")
+    build_p.add_argument("--bundle")
     sub.add_parser("serve")
     sub.add_parser("featherize")
     create_p = sub.add_parser("create")
