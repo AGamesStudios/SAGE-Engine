@@ -13,3 +13,4 @@ object at the cursor position. Selecting a camera object shows a small preview
 in the bottom-right corner of the viewport. The preview frame matches the
 **SAGE Ember** style and keeps the camera's aspect ratio even if letterbox bars
 are required.
+Toolbar toggles enable the grid, rulers, wireframe view and local coordinates.

@@ -61,6 +61,8 @@ colour and is passed to ``EngineSettings`` when creating an engine.
 ### Editor
 The editor uses the custom **SAGE Ember** style.
 High-DPI scaling keeps text readable and fonts default to at least 12 points.
+The editor enables this policy when creating the Qt application so the interface
+looks sharp on high resolution displays.
 The palette and stylesheet apply a dark theme with soft yellow-orange accents
 across menus, buttons and sliders. Widgets use a flat borderless design with
 rounded corners that highlights controls when pressed. Lists and tree views
@@ -84,8 +86,8 @@ On launch the main window expands to fill the primary screen so the interface is
 The **File** menu opens and saves ``.sageproject`` files and the toolbar
 includes a screenshot button.
 A second toolbar below the menu offers quick toggles for the grid, rulers and
-cursor label. Toolbars appear flat without the usual drag handles for a cleaner
-look. Enabling **Snap** reveals a small popup beside the button with move,
+cursor label. A **Wire** button switches to wireframe rendering. Toolbars appear
+flat without the usual drag handles for a cleaner look. Enabling **Snap** reveals a small popup beside the button with move,
 rotate and scale step controls.
 Right-click the viewport to create sprites, empties, cameras or basic shapes including squares, triangles, circles and polygons.
 Model mode reveals vertex handles and a second bar with **Verts**, **Edges** and **Faces** buttons. Choose which element type to manipulate—drag points, edges or the entire face. Selecting two neighbouring vertices highlights their edge. Press **E** to extrude vertices, **F** to create a face from an edge and **L** for ``Loop Cut`` when editing meshes. A **Fill** button toggles solid rendering. A **Union** button merges all selected shapes into one. Right-clicking a mesh opens a modeling menu with these actions.

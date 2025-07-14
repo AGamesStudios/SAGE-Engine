@@ -54,6 +54,9 @@ def init_editor(editor) -> None:
         attr = getattr(Qt.ApplicationAttribute, "AA_UseHighDpiPixmaps", None)
         if attr is not None:
             QCoreApplication.setAttribute(attr, True)
+        policy = getattr(Qt.HighDpiScaleFactorRoundingPolicy, "PassThrough", None)
+        if policy is not None and hasattr(QCoreApplication, "setHighDpiScaleFactorRoundingPolicy"):
+            QCoreApplication.setHighDpiScaleFactorRoundingPolicy(policy)
         app = QApplication([])
         created = True
     apply_ember_style(app)

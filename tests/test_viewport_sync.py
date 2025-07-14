@@ -600,6 +600,22 @@ def test_local_coords_toggle(monkeypatch):
     assert win.local_coords
 
 
+def test_wireframe_toggle(monkeypatch):
+    _stub_gl(monkeypatch, {})
+    _setup_qt(monkeypatch)
+
+    spec = importlib.util.spec_from_file_location(
+        'viewport', Path('src/sage_editor/plugins/viewport.py')
+    )
+    viewport = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(viewport)
+
+    win = viewport.EditorWindow()
+    assert not getattr(win.renderer, 'wireframe', False)
+    win.toggle_wireframe(True)
+    assert win.renderer.wireframe
+
+
 def test_rect_mode_gizmos(monkeypatch):
     _stub_gl(monkeypatch, {})
     _setup_qt(monkeypatch)

@@ -445,6 +445,16 @@ class EditorWindow(QMainWindow, ModelingMixin):
             if hasattr(axes_act, "triggered"):
                 axes_act.triggered.connect(self.toggle_axes)
 
+        wire_act = view_menu.addAction("Wireframe") if view_menu and hasattr(view_menu, "addAction") else None
+        if wire_act is not None:
+            if hasattr(wire_act, "setCheckable"):
+                wire_act.setCheckable(True)
+            if hasattr(wire_act, "setChecked"):
+                wire_act.setChecked(False)
+            if hasattr(wire_act, "triggered"):
+                wire_act.triggered.connect(self.toggle_wireframe)
+        self.wire_menu_action = wire_act  # type: ignore[assignment]
+
         mirror_act = view_menu.addAction("Mirror Resize") if view_menu and hasattr(view_menu, "addAction") else None
         if mirror_act is not None:
             if hasattr(mirror_act, "setCheckable"):
@@ -617,6 +627,15 @@ class EditorWindow(QMainWindow, ModelingMixin):
             self.cursor_action.toggled.connect(self.toggle_cursor_label)
         quickbar.addAction(self.cursor_action)
 
+        self.wire_action = QAction("Wire", self)
+        if hasattr(self.wire_action, "setCheckable"):
+            self.wire_action.setCheckable(True)
+        if hasattr(self.wire_action, "setChecked"):
+            self.wire_action.setChecked(False)
+        if hasattr(self.wire_action, "toggled"):
+            self.wire_action.toggled.connect(self.toggle_wireframe)
+        quickbar.addAction(self.wire_action)
+
         self.local_action = QAction("Local", self)
         if hasattr(self.local_action, "setCheckable"):
             self.local_action.setCheckable(True)
@@ -742,6 +761,12 @@ class EditorWindow(QMainWindow, ModelingMixin):
             self.renderer.show_axes = bool(checked)
             self.draw_scene(update_list=False)
 
+    def toggle_wireframe(self, checked: bool) -> None:
+        """Enable or disable wireframe mode."""
+        if hasattr(self.renderer, "wireframe"):
+            self.renderer.wireframe = bool(checked)
+            self.draw_scene(update_list=False)
+
     def change_language(self, name: str) -> None:
         """Switch UI text to the selected language."""
         set_language(name)
@@ -775,6 +800,10 @@ class EditorWindow(QMainWindow, ModelingMixin):
             for lang, act in self._lang_actions.items():
                 if hasattr(act, "setText"):
                     act.setText(tr(lang))
+        if hasattr(self.wire_action, "setText"):
+            self.wire_action.setText(tr("Wireframe"))
+        if getattr(self, "wire_menu_action", None) is not None and hasattr(self.wire_menu_action, "setText"):
+            self.wire_menu_action.setText(tr("Wireframe"))
 
     def show_about_dialog(self) -> None:
         from PyQt6.QtWidgets import QMessageBox  # type: ignore[import-not-found]

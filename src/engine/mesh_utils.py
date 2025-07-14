@@ -198,20 +198,7 @@ def create_polygon_mesh(vertices: list[tuple[float, float]]) -> Mesh:
         raise ValueError("At least three vertices required")
     if _Polygon is not None:
         poly = _Polygon(vertices)  # pyright: ignore[reportOptionalCall]
-        tris = triangulate(poly)
-        verts = list(vertices)
-        indices: list[int] = []
-        for tri in tris:
-            pts = list(tri.exterior.coords)[:-1]
-            tri_idx: list[int] = []
-            for pt in pts:
-                if pt in verts:
-                    tri_idx.append(verts.index(pt))
-                else:
-                    verts.append(pt)
-                    tri_idx.append(len(verts) - 1)
-            indices.extend(tri_idx)
-        return Mesh(verts, indices)
+        return _geom_to_mesh(poly)
     return _ear_clip(list(vertices))
 
 

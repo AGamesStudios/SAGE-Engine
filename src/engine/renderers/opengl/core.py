@@ -102,6 +102,7 @@ class OpenGLRenderer(Renderer):
         self._local_coords: bool = False
         self.show_axes = True
         self.show_grid = False
+        self.wireframe = False
         self.grid_size = 1.0
         self.grid_color = (0.3, 0.3, 0.3, 1.0)
         self.keep_aspect = bool(self.keep_aspect)
@@ -536,6 +537,10 @@ class OpenGLRenderer(Renderer):
         self.clear(self.background)
         GL.glDisable(GL.GL_SCISSOR_TEST)
         self._apply_projection(camera)
+        GL.glPolygonMode(
+            GL.GL_FRONT_AND_BACK,
+            GL.GL_LINE if self.wireframe else GL.GL_FILL,
+        )
         cam_shader = camera.get_shader() if camera and hasattr(camera, "get_shader") else None
         GL.glPushMatrix()
         try:
@@ -608,6 +613,7 @@ class OpenGLRenderer(Renderer):
             if cam_shader:
                 Shader.stop()
             GL.glPopMatrix()
+        GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL)
 
 
     def present(self):
