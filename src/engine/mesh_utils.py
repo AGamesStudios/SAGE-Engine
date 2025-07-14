@@ -28,6 +28,7 @@ __all__ = [
     "create_triangle_mesh",
     "create_circle_mesh",
     "create_polygon_mesh",
+    "triangulate_mesh",
     "union_meshes",
     "difference_meshes",
 ]
@@ -245,6 +246,18 @@ def create_polygon_mesh(vertices: list[tuple[float, float]]) -> Mesh:
     if len(verts) < 3:
         raise ValueError("At least three vertices required")
     return Mesh(verts)
+
+
+def triangulate_mesh(mesh: Mesh) -> Mesh:
+    """Return a triangulated copy of ``mesh``."""
+    verts = _clean_polygon(list(mesh.vertices))
+    if _Polygon is not None:
+        try:
+            poly = _Polygon(verts)
+            return _geom_to_mesh(poly)
+        except Exception:  # pragma: no cover - shapely may fail
+            pass
+    return _ear_clip(verts)
 
 
 def union_meshes(

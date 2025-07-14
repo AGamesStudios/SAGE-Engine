@@ -6,7 +6,7 @@ from OpenGL.GL import (
     glBindTexture, glColor4f, glBegin, glEnd, glVertex2f, glLineWidth,
     glPushMatrix, glPopMatrix, glTranslatef,
     glUseProgram,
-    GL_LINES, GL_LINE_LOOP, GL_TRIANGLES, GL_TRIANGLE_FAN,
+    GL_LINES, GL_LINE_LOOP, GL_TRIANGLES,
     GL_TEXTURE_2D,
 )  # type: ignore[import-not-found]
 
@@ -135,8 +135,19 @@ def draw_mesh(renderer, obj: GameObject, camera: Optional[Camera], mesh: Mesh) -
 
     filled = getattr(obj, "filled", True)
     if filled:
-        mode = GL_TRIANGLES if mesh.indices else GL_TRIANGLE_FAN
+        if mesh.indices is None:
+            from ... import mesh_utils
+
+            tri = mesh_utils.triangulate_mesh(mesh)
+            verts = tri.vertices
+            indices = tri.indices if tri.indices else range(len(verts))
+        else:
+            verts = mesh.vertices
+            indices = mesh.indices
+        mode = GL_TRIANGLES
     else:
+        verts = mesh.vertices
+        indices = range(len(verts))
         mode = GL_LINE_LOOP
     obj_x, obj_y = obj.render_position(camera)
     px = w * obj.pivot_x
@@ -147,11 +158,6 @@ def draw_mesh(renderer, obj: GameObject, camera: Optional[Camera], mesh: Mesh) -
     sy = -1.0 if flip_y else 1.0
 
     glBegin(mode)
-    verts = mesh.vertices
-    if filled:
-        indices = mesh.indices if mesh.indices else range(len(verts))
-    else:
-        indices = range(len(verts))
     for idx in indices:
         vx, vy = verts[idx]
         vx = (vx * w - off_x) * sx + off_x

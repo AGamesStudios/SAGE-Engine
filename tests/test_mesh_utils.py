@@ -11,6 +11,7 @@ from engine.mesh_utils import (  # noqa: E402
     create_square_mesh,
     create_triangle_mesh,
     create_polygon_mesh,
+    triangulate_mesh,
     union_meshes,
     difference_meshes,
 )
@@ -146,4 +147,25 @@ def test_polygon_with_collinear_points():
     verts = [(0, 0), (1, 0), (2, 0), (2, 1), (1, 2), (0, 1)]
     mesh = create_polygon_mesh(verts)
     assert mesh.indices is None
+
+
+def test_triangulate_mesh():
+    verts = [(0, 0), (2, 0), (2, 2), (1, 1), (0, 2)]
+    poly = create_polygon_mesh(verts)
+    tri = triangulate_mesh(poly)
+    assert tri.indices is not None
+    assert len(tri.indices) % 3 == 0
+
+
+def test_triangulate_mesh_no_shapely(monkeypatch):
+    monkeypatch.setitem(sys.modules, "shapely", None)
+    monkeypatch.setitem(sys.modules, "shapely.geometry", None)
+    monkeypatch.setitem(sys.modules, "shapely.geometry.base", None)
+    monkeypatch.setitem(sys.modules, "shapely.ops", None)
+    import importlib
+    import engine.mesh_utils as mu
+    importlib.reload(mu)
+    poly = mu.create_polygon_mesh([(0, 0), (2, 0), (2, 2), (1, 1), (0, 2)])
+    tri = mu.triangulate_mesh(poly)
+    assert tri.indices is not None
 
