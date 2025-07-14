@@ -1,6 +1,8 @@
 import types
 import sys
 
+# ruff: noqa: E402
+
 # stub heavy deps so the engine can run headless
 sys.modules.setdefault('PIL', types.ModuleType('PIL'))
 sys.modules.setdefault('PIL.Image', types.ModuleType('PIL.Image'))

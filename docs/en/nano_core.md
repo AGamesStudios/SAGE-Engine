@@ -11,6 +11,7 @@ Two functions are provided:
 
 * `merge_chunk_delta(a: bytes, b: bytes) -> bytes` – merge two byte sequences.
 * `alloc_smart_slice(count: int) -> bytearray` – allocate `count` 1 KiB blocks.
+* `reset_tree() -> None` – free all SmartSlice pages for a clean reload.
 
 Both functions release the Python GIL while performing work so they can be
 called from multiple threads.
