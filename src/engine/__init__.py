@@ -11,6 +11,7 @@ from .version import (
 from .utils.log import logger  # noqa: F401
 from .utils.diagnostics import warn, error, exception  # noqa: F401
 from .plugins import _get_manager
+from .adaptors import load_adaptors
 from typing import TYPE_CHECKING
 
 require_version = require
@@ -180,3 +181,7 @@ def get_engine_attr(name: str):
 
 def __dir__():
     return sorted(list(globals().keys()) + list(_lazy.keys()))
+
+
+load_adaptors()
+

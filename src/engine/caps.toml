@@ -1,0 +1,5 @@
+[features]
+volumetric-fx = 0
+skeletal-mesh = 1
+rollback-netcode = 2
+

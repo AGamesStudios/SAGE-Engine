@@ -39,12 +39,19 @@ sage-runtime = "engine.runtime.__main__:main"
 sage-editor = "sage_editor:main"
 sage = "sage:main"
 
+[project.entry-points."sage_adaptor"]
+render = "sage_adaptors.render:register"
+audio = "sage_adaptors.audio:register"
+network = "sage_adaptors.network:register"
+gui = "sage_adaptors.gui:register"
+
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["engine*", "sage_editor*"]
+include = ["engine*", "sage_editor*", "sage_adaptors*"]
 
 [tool.setuptools.package-data]
 "sage_editor" = ["plugins/plugins.json", "translations/*.json"]
+"engine" = ["caps.toml"]
 
 [tool.pyright]
 include = ["src"]

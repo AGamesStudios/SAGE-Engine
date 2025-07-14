@@ -16,6 +16,8 @@ Select a topic from the list to learn about the engine and editor features.
 * [NanoCore](nano_core.md)
 * [RenderFabric](render_fabric.md)
 * [Sage Command Line](sage_cli.md)
+* [Adaptors](adaptors.md)
+* [Capability Flags](capabilities.md)
 * [Limitations and Caveats](limitations.md)
 * [Plugins](plugins.md)
 * [Gizmos](gizmos.md)

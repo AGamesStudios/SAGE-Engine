@@ -41,6 +41,13 @@ def save_project(project: Project, path: str) -> None:
 def create_engine(project: Project, fps: int = 30) -> Engine:
     """Create an :class:`Engine` for the given project."""
     scene = Scene.from_dict(project.scene)
+    from .capabilities import check_scene_caps
+    from .utils.log import logger
+    missing = check_scene_caps(scene)
+    if missing:
+        logger.warning(
+            "Scene requires unsupported capabilities: %s", ", ".join(missing)
+        )
     camera = scene.ensure_active_camera(project.width, project.height)
     rcls = get_renderer(getattr(project, "renderer", "opengl"))
     if rcls is None:
@@ -100,6 +107,13 @@ def run_scene(
 ) -> None:
     """Run a single scene file directly."""
     scene = load_scene(path)
+    from .capabilities import check_scene_caps
+    from .utils.log import logger
+    missing = check_scene_caps(scene)
+    if missing:
+        logger.warning(
+            "Scene requires unsupported capabilities: %s", ", ".join(missing)
+        )
     camera = scene.ensure_active_camera(width, height)
     rcls = get_renderer("opengl")
     if rcls is None:
@@ -137,6 +151,13 @@ async def run_scene_async(
 ) -> None:
     """Asynchronous variant of :func:`run_scene`."""
     scene = load_scene(path)
+    from .capabilities import check_scene_caps
+    from .utils.log import logger
+    missing = check_scene_caps(scene)
+    if missing:
+        logger.warning(
+            "Scene requires unsupported capabilities: %s", ", ".join(missing)
+        )
     camera = scene.ensure_active_camera(width, height)
     rcls = get_renderer("opengl")
     if rcls is None:
