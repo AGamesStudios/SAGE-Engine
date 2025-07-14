@@ -156,40 +156,71 @@ class ModelingMixin:
         self.draw_scene(update_list=False)
 
     def union_selected(self) -> None:
+        self._boolean_operation("union")
+
+    def difference_selected(self) -> None:
+        self._boolean_operation("difference")
+
+    def intersection_selected(self) -> None:
+        self._boolean_operation("intersection")
+
+    def toggle_negative(self) -> None:
+        for obj in self.selected_objs:
+            if hasattr(obj, "negative"):
+                obj.negative = not obj.negative
+        self.update_properties()
+
+    def _boolean_operation(self, mode: str) -> None:
         objs = [o for o in self.selected_objs if getattr(o, "mesh", None) is not None]
         if len(objs) < 2:
             return
-        from engine.mesh_utils import Mesh, union_meshes
-        self.undo_stack.snapshot(self.scene)
-        meshes = []
-        for obj in objs:
-            verts = [self.mesh_to_world(obj, vx, vy) for vx, vy in obj.mesh.vertices]
-            meshes.append(Mesh(list(verts), list(obj.mesh.indices or [])))
+        from engine.mesh_utils import Mesh, union_meshes, difference_meshes, intersection_meshes
 
-        result = union_meshes(meshes)
+        self.undo_stack.snapshot(self.scene)
+        base_obj = objs[0]
+        base = Mesh(
+            [self.mesh_to_world(base_obj, vx, vy) for vx, vy in base_obj.mesh.vertices],
+            list(base_obj.mesh.indices or []),
+        )
+        others = []
+        negatives = []
+        for obj in objs[1:]:
+            verts = [self.mesh_to_world(obj, vx, vy) for vx, vy in obj.mesh.vertices]
+            mesh = Mesh(list(verts), list(obj.mesh.indices or []))
+            if getattr(obj, "negative", False) and mode == "union":
+                negatives.append(mesh)
+            else:
+                others.append(mesh)
+
+        if mode == "union":
+            result = union_meshes([base] + others, negatives=negatives)
+        elif mode == "difference":
+            result = difference_meshes(base, others)
+        else:  # intersection
+            result = intersection_meshes(base, others)
+
         min_x = min(v[0] for v in result.vertices)
         max_x = max(v[0] for v in result.vertices)
         min_y = min(v[1] for v in result.vertices)
         max_y = max(v[1] for v in result.vertices)
 
-        base = objs[0]
-        base.x = (min_x + max_x) / 2
-        base.y = (min_y + max_y) / 2
-        base.width = max_x - min_x
-        base.height = max_y - min_y
-        base.angle = 0.0
-        base.scale_x = base.scale_y = 1.0
-        base.pivot_x = base.pivot_y = 0.5
+        base_obj.x = (min_x + max_x) / 2
+        base_obj.y = (min_y + max_y) / 2
+        base_obj.width = max_x - min_x
+        base_obj.height = max_y - min_y
+        base_obj.angle = 0.0
+        base_obj.scale_x = base_obj.scale_y = 1.0
+        base_obj.pivot_x = base_obj.pivot_y = 0.5
 
-        base.mesh = Mesh(
-            [self.world_to_mesh(base, x, y) for x, y in result.vertices]
+        base_obj.mesh = Mesh(
+            [self.world_to_mesh(base_obj, x, y) for x, y in result.vertices]
         )
 
         for obj in objs[1:]:
             self.scene.remove_object(obj)
 
-        self.selected_objs = [base]
-        self.selected_obj = base
+        self.selected_objs = [base_obj]
+        self.selected_obj = base_obj
         self.update_object_list()
         self.draw_scene()
 

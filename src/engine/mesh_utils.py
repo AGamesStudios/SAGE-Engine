@@ -31,6 +31,7 @@ __all__ = [
     "triangulate_mesh",
     "union_meshes",
     "difference_meshes",
+    "intersection_meshes",
 ]
 
 
@@ -291,5 +292,16 @@ def difference_meshes(base: Mesh, subtract: list[Mesh]) -> Mesh:
     geom = _Polygon(base.vertices)
     for neg in subtract:
         geom = geom.difference(_Polygon(neg.vertices))
+
+    return _geom_to_mesh(geom)
+
+
+def intersection_meshes(base: Mesh, others: list[Mesh]) -> Mesh:
+    """Return the intersection of ``base`` with all meshes in ``others``."""
+    if _Polygon is None:
+        raise ImportError("shapely is required for intersection_meshes")
+    geom = _Polygon(base.vertices)
+    for other in others:
+        geom = geom.intersection(_Polygon(other.vertices))
 
     return _geom_to_mesh(geom)

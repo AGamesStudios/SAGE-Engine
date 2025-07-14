@@ -412,7 +412,11 @@ class OpenGLRenderer(Renderer):
         camera: Optional[Camera],
         mesh: Mesh,
     ) -> None:
+        if self.wireframe:
+            GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_LINE)
         drawing.draw_mesh(self, obj, camera, mesh)
+        if self.wireframe:
+            GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL)
 
     def _draw_shape(
         self,
@@ -420,7 +424,11 @@ class OpenGLRenderer(Renderer):
         camera: Optional[Camera],
         shape: str,
     ) -> None:
+        if self.wireframe:
+            GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_LINE)
         drawing.draw_shape(self, obj, camera, shape)
+        if self.wireframe:
+            GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL)
 
     def _draw_frustum(
         self,
@@ -537,10 +545,6 @@ class OpenGLRenderer(Renderer):
         self.clear(self.background)
         GL.glDisable(GL.GL_SCISSOR_TEST)
         self._apply_projection(camera)
-        GL.glPolygonMode(
-            GL.GL_FRONT_AND_BACK,
-            GL.GL_LINE if self.wireframe else GL.GL_FILL,
-        )
         cam_shader = camera.get_shader() if camera and hasattr(camera, "get_shader") else None
         GL.glPushMatrix()
         try:
@@ -613,7 +617,6 @@ class OpenGLRenderer(Renderer):
             if cam_shader:
                 Shader.stop()
             GL.glPopMatrix()
-        GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL)
 
 
     def present(self):

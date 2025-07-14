@@ -10,5 +10,9 @@
   "English": "English",
   "Русский": "Russian",
   "Wireframe": "Wireframe",
-  "Bake": "Bake"
+  "Bake": "Bake",
+  "Union": "Union",
+  "Difference": "Difference",
+  "Intersection": "Intersection",
+  "Negative": "Negative"
 }

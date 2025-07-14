@@ -2,6 +2,7 @@ import sys
 import types
 import importlib.util
 from pathlib import Path
+import pytest
 
 from tests.test_opengl_tilemap import _stub_gl
 
@@ -801,6 +802,65 @@ def test_union_selected(monkeypatch):
     assert len(win.selected_obj.mesh.vertices) >= before
     assert win.selected_obj.mesh.indices is None
     assert obj_b not in win.scene.objects or not obj_b.visible
+
+
+def test_difference_selected(monkeypatch):
+    pytest.importorskip("shapely")
+    _stub_gl(monkeypatch, {})
+    _setup_qt(monkeypatch)
+
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    viewport = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(viewport)
+
+    win = viewport.EditorWindow()
+    obj_a = win.create_shape('square')
+    obj_b = win.create_shape('triangle')
+    win.selected_objs = [obj_a, obj_b]
+    win.selected_obj = obj_b
+    win.toggle_model(True)
+    win.difference_selected()
+    assert win.selected_obj is obj_a
+    assert len(obj_a.mesh.vertices) > 0
+
+
+def test_intersection_selected(monkeypatch):
+    pytest.importorskip("shapely")
+    _stub_gl(monkeypatch, {})
+    _setup_qt(monkeypatch)
+
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    viewport = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(viewport)
+
+    win = viewport.EditorWindow()
+    obj_a = win.create_shape('square')
+    obj_b = win.create_shape('triangle')
+    win.selected_objs = [obj_a, obj_b]
+    win.selected_obj = obj_b
+    win.toggle_model(True)
+    win.intersection_selected()
+    assert win.selected_obj is obj_a
+    assert len(obj_a.mesh.vertices) > 0
+
+
+def test_toggle_negative(monkeypatch):
+    _stub_gl(monkeypatch, {})
+    _setup_qt(monkeypatch)
+
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    viewport = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(viewport)
+
+    win = viewport.EditorWindow()
+    obj = win.create_shape('square')
+    win.selected_objs = [obj]
+    win.selected_obj = obj
+    assert not obj.negative
+    win.toggle_negative()
+    assert obj.negative
+    win.toggle_negative()
+    assert not obj.negative
 
 
 def test_bake_model(monkeypatch):

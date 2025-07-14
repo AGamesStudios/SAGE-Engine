@@ -102,6 +102,7 @@ def get_default_rotate_bbox() -> bool:
         ('flip_x', None),
         ('flip_y', None),
         ('visible', None),
+        ('negative', None),
         ('mesh', 'mesh'),
         ('metadata', 'metadata'),
         ('variables', 'variables'),
@@ -129,6 +130,7 @@ class GameObject(Object):
     flip_x: bool = False
     flip_y: bool = False
     visible: bool = True
+    negative: bool = False
     metadata: dict = field(default_factory=dict)
     events: list = field(default_factory=list)
     settings: dict = field(default_factory=dict)

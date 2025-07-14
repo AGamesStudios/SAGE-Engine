@@ -62,6 +62,21 @@ class PropertiesWidget(QWidget):
             self.reset_visible.clicked.connect(self._reset_visible)
         visible_layout.addWidget(self.reset_visible)
         obj_form.addRow(visible_widget)
+
+        self.negative_check = QCheckBox("Negative", self)
+        _disable_text_select(self.negative_check)
+        neg_widget = QWidget(self)
+        neg_layout = QHBoxLayout(neg_widget)
+        neg_layout.addWidget(self.negative_check)
+        self.reset_negative = QToolButton(self)
+        if hasattr(self.reset_negative, "setText"):
+            self.reset_negative.setText("\u21BA")
+        if hasattr(self.reset_negative, "setAutoRaise"):
+            self.reset_negative.setAutoRaise(True)
+        if hasattr(self.reset_negative, "clicked"):
+            self.reset_negative.clicked.connect(self._reset_negative)
+        neg_layout.addWidget(self.reset_negative)
+        obj_form.addRow(neg_widget)
         layout.addWidget(self.object_group)
 
         self.transform_group = QGroupBox("Transform", self)
@@ -260,6 +275,7 @@ class PropertiesWidget(QWidget):
                 self.role_combo.setCurrentIndex(-1)
             self.tags_edit.set_tags([])
             self.visible_check.setChecked(False)
+            self.negative_check.setChecked(False)
             self.pos_x.setValue(0.0)
             self.pos_y.setValue(0.0)
             self.rot_dial.setValue(0)
@@ -316,6 +332,7 @@ class PropertiesWidget(QWidget):
             tags = [tags]
         self.tags_edit.set_tags(tags if isinstance(tags, (list, set)) else [])
         self.visible_check.setChecked(bool(getattr(obj, "visible", True)))
+        self.negative_check.setChecked(bool(getattr(obj, "negative", False)))
         self.pos_x.setValue(float(getattr(obj, "x", 0.0)))
         self.pos_y.setValue(float(getattr(obj, "y", 0.0)))
         angle = getattr(obj, "angle", 0.0)
@@ -371,6 +388,7 @@ class PropertiesWidget(QWidget):
         elif "tags" in obj.metadata:
             obj.metadata.pop("tags")
         obj.visible = self.visible_check.isChecked()
+        obj.negative = self.negative_check.isChecked()
         if hasattr(self, "role_combo") and hasattr(self.role_combo, "currentText"):
             new_role = self.role_combo.currentText() or obj.role
             if hasattr(obj, "set_role"):
@@ -457,6 +475,9 @@ class PropertiesWidget(QWidget):
 
     def _reset_visible(self) -> None:
         self.visible_check.setChecked(True)
+
+    def _reset_negative(self) -> None:
+        self.negative_check.setChecked(False)
 
     def _reset_flip(self) -> None:
         self.flip_x.setChecked(False)
