@@ -99,6 +99,8 @@ The editor now includes an **About** dialog acknowledging Amckinator as the
 original developer. A dedicated **Settings** menu lets you switch languages at
 runtime. Localisation files live under `sage_editor/translations` so new
 languages can be added simply by dropping additional JSON dictionaries.
+See [Localization](docs/en/localization.md) for guidance on creating
+additional language files.
 
 ## Logs
 Log files are written to `~/.cache/sage/logs/engine.log` by default. Configure a

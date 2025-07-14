@@ -13,6 +13,7 @@ Select a topic from the list to learn about the engine and editor features.
 * [Properties Window](properties_window.md)
 * [Crash Reports](crash_reports.md)
 * [Editor API](editor_api.md) – building editors with the optional ``sage_editor`` package
+* [Localization](localization.md) – adding new language files
 
 Example scenes under `examples/Scenes/` include:
 - `Scene1.sagescene` – basic sprites

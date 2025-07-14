@@ -3,8 +3,9 @@ from __future__ import annotations
 import logging
 import os
 import math
-import sys
 from typing import Optional, cast
+
+from engine.renderers.opengl.core import OpenGLRenderer
 
 from PyQt6.QtWidgets import (  # type: ignore[import-not-found]
     QMainWindow,
@@ -307,20 +308,15 @@ class EditorWindow(QMainWindow):
         # minimal scene used for previewing objects
         w = self.viewport.width() or 640
         h = self.viewport.height() or 480
-        try:
-            import viewport as _vp  # type: ignore
-        except Exception:
-            from sage_editor.plugins import viewport as _vp
-        vp_mod = sys.modules.get("viewport", _vp)
         if backend == "opengl":
-            rcls = vp_mod.OpenGLRenderer
+            rcls = OpenGLRenderer
         else:
             from engine.renderers import get_renderer
             rcls = get_renderer(backend)
             if rcls is None:
                 self.log_warning(f"Renderer '{backend}' unavailable; falling back to OpenGL")
-                rcls = vp_mod.OpenGLRenderer
-        self.renderer_backend = backend if rcls is not vp_mod.OpenGLRenderer else "opengl"
+                rcls = OpenGLRenderer
+        self.renderer_backend = backend if rcls is not OpenGLRenderer else "opengl"
         self.renderer = rcls(
             width=w,
             height=h,
@@ -1097,11 +1093,7 @@ class EditorWindow(QMainWindow):
         self.preview_camera = cam
         if self.preview_renderer is None:
             try:
-                try:
-                    import viewport as _vp  # type: ignore
-                except Exception:
-                    from sage_editor.plugins import viewport as _vp
-                self.preview_renderer = _vp.OpenGLRenderer(
+                self.preview_renderer = OpenGLRenderer(
                     width=160,
                     height=120,
                     widget=self.preview_widget,
@@ -1438,18 +1430,14 @@ class EditorWindow(QMainWindow):
         self.viewport.renderer = renderer
 
     def change_renderer(self, backend: str) -> None:
-        try:
-            import viewport as _vp  # type: ignore
-        except Exception:
-            from sage_editor.plugins import viewport as _vp
         if backend == "opengl":
-            rcls = _vp.OpenGLRenderer
+            rcls = OpenGLRenderer
         else:
             from engine.renderers import get_renderer
             rcls = get_renderer(backend)
             if rcls is None:
                 self.log_warning(f"Renderer '{backend}' unavailable; falling back to OpenGL")
-                rcls = _vp.OpenGLRenderer
+                rcls = OpenGLRenderer
         if self.renderer is not None:
             try:
                 self.renderer.close()
@@ -1472,7 +1460,7 @@ class EditorWindow(QMainWindow):
             self.preview_widget = new_view.preview_widget  # type: ignore[attr-defined]
             self.preview_frame = new_view.preview_frame  # type: ignore[attr-defined]
         self.renderer = rcls(width=w, height=h, widget=self.viewport, vsync=False, keep_aspect=False)
-        self.renderer_backend = backend if rcls is not _vp.OpenGLRenderer else "opengl"
+        self.renderer_backend = backend if rcls is not OpenGLRenderer else "opengl"
         self.set_renderer(self.renderer)
         self.draw_scene()
 

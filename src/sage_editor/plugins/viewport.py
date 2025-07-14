@@ -64,6 +64,7 @@ def init_editor(editor) -> None:
     if created:
         app.exec()
 
+# Export this module as ``viewport`` for backward compatibility
 class _ViewportProxy(ModuleType):
     def __getattr__(self, name: str):  # pragma: no cover - simple proxy
         return globals()[name]

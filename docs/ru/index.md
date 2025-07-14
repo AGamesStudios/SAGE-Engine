@@ -6,3 +6,4 @@
 * [Физика](physics.md)
 * [Окно свойств](properties_window.md)
 * [Отчёты о сбоях](crash_reports.md)
+* [Локализация](localization.md) – как добавить новый язык

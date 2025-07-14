@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import logging
 import math
+import json
+import zlib
 from typing import Any, TYPE_CHECKING
 
 from PyQt6.QtCore import Qt  # type: ignore[import-not-found]
@@ -55,18 +57,19 @@ class UndoStack:
     """Simple stack for undo/redo snapshots."""
 
     def __init__(self) -> None:
-        self._undo: list[dict] = []
-        self._redo: list[dict] = []
+        self._undo: list[bytes] = []
+        self._redo: list[bytes] = []
 
     def snapshot(self, scene: "Scene") -> None:
-        self._undo.append(scene.to_dict())
+        data = json.dumps(scene.to_dict()).encode("utf-8")
+        self._undo.append(zlib.compress(data))
         self._redo.clear()
 
     def undo(self, window: "EditorWindow") -> None:
         if not self._undo:
             return
-        state = self._undo.pop()
-        self._redo.append(window.scene.to_dict())
+        state = json.loads(zlib.decompress(self._undo.pop()).decode("utf-8"))
+        self._redo.append(zlib.compress(json.dumps(window.scene.to_dict()).encode("utf-8")))
         window.scene = Scene.from_dict(state)
         window.update_object_list(preserve=False)
         window.draw_scene()
@@ -74,8 +77,8 @@ class UndoStack:
     def redo(self, window: "EditorWindow") -> None:
         if not self._redo:
             return
-        state = self._redo.pop()
-        self._undo.append(window.scene.to_dict())
+        state = json.loads(zlib.decompress(self._redo.pop()).decode("utf-8"))
+        self._undo.append(zlib.compress(json.dumps(window.scene.to_dict()).encode("utf-8")))
         window.scene = Scene.from_dict(state)
         window.update_object_list(preserve=False)
         window.draw_scene()
