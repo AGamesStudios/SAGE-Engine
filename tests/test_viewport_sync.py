@@ -803,6 +803,26 @@ def test_union_selected(monkeypatch):
     assert obj_b not in win.scene.objects or not obj_b.visible
 
 
+def test_bake_model(monkeypatch):
+    _stub_gl(monkeypatch, {})
+    _setup_qt(monkeypatch)
+
+    spec = importlib.util.spec_from_file_location(
+        'viewport', Path('src/sage_editor/plugins/viewport.py')
+    )
+    viewport = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(viewport)
+
+    win = viewport.EditorWindow()
+    obj = win.create_shape('polygon')
+    win.select_object(obj)
+    win.toggle_model(True)
+    assert obj.mesh.indices is None
+    win.bake_model()
+    assert obj.mesh.indices is not None
+    assert not win.modeling
+
+
 def test_toggle_fill_action(monkeypatch):
     _stub_gl(monkeypatch, {})
     _setup_qt(monkeypatch)

@@ -223,3 +223,14 @@ class ModelingMixin:
             self.undo_stack.undo(self)
             return
         self.draw_scene(update_list=False)
+
+    def bake_model(self) -> None:
+        """Triangulate the active mesh and exit model mode."""
+        obj = self.selected_obj
+        if obj is None or getattr(obj, "mesh", None) is None:
+            return
+        from engine.mesh_utils import triangulate_mesh
+
+        self.undo_stack.snapshot(self.scene)
+        obj.mesh = triangulate_mesh(obj.mesh)
+        self.toggle_model(False)

@@ -208,6 +208,7 @@ class EditorWindow(QMainWindow, ModelingMixin):
         self.model_bar.loop_btn.clicked.connect(self.loop_cut)
         self.model_bar.fill_btn.clicked.connect(self.toggle_fill)
         self.model_bar.union_btn.clicked.connect(self.union_selected)
+        self.model_bar.bake_btn.clicked.connect(self.bake_model)
         if hasattr(self.mode_bar.move_btn, "setChecked"):
             self.mode_bar.move_btn.setChecked(True)
         if hasattr(self.model_bar.vert_btn, "setChecked"):

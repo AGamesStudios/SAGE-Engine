@@ -137,6 +137,7 @@ class ModelBar(QWidget):
         self.loop_btn = QPushButton("Loop Cut", self)
         self.fill_btn = QPushButton("Fill", self)
         self.union_btn = QPushButton("Union", self)
+        self.bake_btn = QPushButton("Bake", self)
         for btn in [self.vert_btn, self.edge_btn, self.face_btn]:
             if hasattr(btn, "setCheckable"):
                 btn.setCheckable(True)
@@ -145,6 +146,7 @@ class ModelBar(QWidget):
         layout.addWidget(self.loop_btn)
         layout.addWidget(self.fill_btn)
         layout.addWidget(self.union_btn)
+        layout.addWidget(self.bake_btn)
         if hasattr(layout, "addStretch"):
             layout.addStretch()
 
