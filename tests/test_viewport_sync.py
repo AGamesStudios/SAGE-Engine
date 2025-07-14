@@ -482,6 +482,29 @@ def test_viewport_click_and_context_menu(monkeypatch):
     assert win.scene.find_object(pasted.name) is pasted
 
 
+def test_find_object_uses_shape(monkeypatch):
+    _stub_gl(monkeypatch, {})
+    _setup_qt(monkeypatch)
+
+    # ensure real mesh utilities are loaded
+    import sys
+    import importlib
+    sys.modules.pop('engine.mesh_utils', None)
+    import engine.mesh_utils  # noqa: F401
+
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    viewport = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(viewport)
+
+    win = viewport.EditorWindow()
+    tri = win.create_shape('triangle')
+    # point inside bounding box but outside the triangle
+    found = win.find_object_at(0.6, 0.0)
+    assert found is None
+    found = win.find_object_at(0.0, 0.0)
+    assert found is tri
+
+
 def test_apply_properties_validation(monkeypatch):
     _stub_gl(monkeypatch, {})
     _setup_qt(monkeypatch)

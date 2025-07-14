@@ -264,14 +264,15 @@ def triangulate_mesh(mesh: Mesh) -> Mesh:
 def union_meshes(
     meshes: list[Mesh], negatives: list[Mesh] | None = None
 ) -> Mesh:
-    """Return a new :class:`Mesh` from ``meshes`` optionally subtracting ``negatives``."""
-    if negatives:
-        if _Polygon is None or unary_union is None:
-            raise ImportError("shapely is required for union_meshes")
+    """Return a new :class:`Mesh` combining ``meshes`` and subtracting ``negatives``."""
+    if _Polygon is not None and unary_union is not None:
         geom = unary_union([_Polygon(m.vertices) for m in meshes])  # pyright: ignore[reportOptionalCall]
-        for neg in negatives:
-            geom = geom.difference(_Polygon(neg.vertices))
+        if negatives:
+            for neg in negatives:
+                geom = geom.difference(_Polygon(neg.vertices))
         return _geom_to_mesh(geom)
+    if negatives:
+        raise ImportError("shapely is required for union_meshes with negatives")
     vertices: list[tuple[float, float]] = []
     indices: list[int] = []
     offset = 0

@@ -1235,6 +1235,20 @@ class EditorWindow(QMainWindow, ModelingMixin):
         vy = (vy - off_y) / sy + off_y
         return vx / w if w else 0.0, vy / h if h else 0.0
 
+    def _point_in_mesh(self, obj: GameObject, x: float, y: float) -> bool:
+        """Return ``True`` if ``(x, y)`` is inside ``obj``'s mesh."""
+        verts = [self.mesh_to_world(obj, vx, vy) for vx, vy in obj.mesh.vertices]
+        inside = False
+        j = len(verts) - 1
+        for i, (x0, y0) in enumerate(verts):
+            x1, y1 = verts[j]
+            if ((y0 > y) != (y1 > y)) and (
+                x < (x1 - x0) * (y - y0) / ((y1 - y0) or 1e-9) + x0
+            ):
+                inside = not inside
+            j = i
+        return inside
+
     def _vertex_normal(self, verts: list[tuple[float, float]], i: int) -> tuple[float, float]:
         """Return a unit normal for vertex ``i`` in mesh space."""
         orient = self._polygon_orientation(verts)
@@ -1380,9 +1394,13 @@ class EditorWindow(QMainWindow, ModelingMixin):
         for obj in reversed(self.scene.objects):
             if isinstance(obj, Camera):
                 continue
-            left, bottom, w, h = obj.rect()
-            if left <= x <= left + w and bottom <= y <= bottom + h:
-                return obj
+            if getattr(obj, "mesh", None) is not None:
+                if self._point_in_mesh(obj, x, y):
+                    return obj
+            else:
+                left, bottom, w, h = obj.rect()
+                if left <= x <= left + w and bottom <= y <= bottom + h:
+                    return obj
         return None
 
     def select_object(self, obj: Optional[GameObject], additive: bool = False) -> None:
