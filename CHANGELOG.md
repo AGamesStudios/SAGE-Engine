@@ -8,3 +8,4 @@ All notable changes to this project will be documented in this file.
 - feat: roadmap and adaptor smoke tests
 - feat: migration wizard upgrades YAML project files
 - feat: sprite regression tests and atlas error handling
+- feat: OpenGL adaptor module and SpritePass benchmark

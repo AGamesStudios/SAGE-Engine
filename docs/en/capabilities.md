@@ -8,6 +8,7 @@ volumetric-fx = 0
 skeletal-mesh = 1
 rollback-netcode = 2
 vm_lua = 3
+render_opengl = 4
 ```
 
 Scenes may specify required capabilities under `metadata.caps`. During loading the engine checks these flags and issues a warning if the runtime does not support them. ChunkΔ headers also encode capability bits which are validated when decoded.

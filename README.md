@@ -149,7 +149,7 @@ and `docs/en/chunk_delta.md`.
 `merge_ops()` from NanoMerge accelerates patch merging with NumPy, while
 `run_sched()` executes `PatcherTask` objects in dependency order. See
 `docs/en/nano_merge.md` and `docs/en/nano_sched.md`.
-`RenderFabric` initialises a WGPU device with an OpenGL 3.3 fallback to draw sprites via `SpritePass`.
+`RenderFabric` initialises a WGPU device with an OpenGL 3.3 fallback to draw sprites via `SpritePass`. If WGPU fails to start, the engine loads the OpenGL adaptor automatically.
 The sprite pipeline packs PNG files into an atlas during `sage build`; see
 [`docs/en/sprite_pipeline.md`](docs/en/sprite_pipeline.md) for details.
 Adaptors provide modular backends for rendering, audio, networking and GUI. They

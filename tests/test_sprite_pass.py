@@ -1,6 +1,8 @@
 import sys
 import time
 import types
+import os
+import pytest
 
 import engine.render_fabric as rf
 
@@ -31,6 +33,7 @@ def test_sprite_pass_draw(monkeypatch):
     assert any(e['name'] == 'SpritePass CPU' for e in fabric.profiler.events)
 
 
+@pytest.mark.xfail(os.environ.get("DEPS") == "minimal", strict=True, reason="perf budget")
 def test_sprite_pass_perf(monkeypatch):
     monkeypatch.setitem(sys.modules, 'wgpu', None)
     dummy = DummyRenderer()
@@ -45,8 +48,6 @@ def test_sprite_pass_perf(monkeypatch):
         fabric.sprite_pass.add_sprite(1, (0.0, 0.0, 1.0, 1.0))
     fabric.sprite_pass.draw()
     elapsed = time.perf_counter() - start
-    print(f"sprite pass cpu {elapsed*1000:.3f} ms")
-    if elapsed > 0.002:
-        import pytest
-
-        pytest.xfail(f"slow: {elapsed*1000:.3f} ms")
+    cpu_ms = elapsed * 1000
+    print(f"sprite pass cpu {cpu_ms:.3f} ms")
+    assert cpu_ms < 2.5, "SpritePass slower than budget"

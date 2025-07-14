@@ -46,6 +46,7 @@ render = "sage_adaptors.render:register"
 audio = "sage_adaptors.audio:register"
 network = "sage_adaptors.network:register"
 gui = "sage_adaptors.gui:register"
+opengl = "sage_adaptors.opengl:register"
 
 [tool.setuptools.packages.find]
 where = ["src"]

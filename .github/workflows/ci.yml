@@ -17,6 +17,7 @@ jobs:
         with:
           toolchain: stable
           override: true
+      - run: echo "DEPS=${{ matrix.deps }}" >> $GITHUB_ENV
       - run: pip install ruff pytest markdown maturin websockets mkdocs-material mkdocstrings[python] mkdocstrings[rust]
       - if: matrix.deps == 'lua'
         run: pip install lupa

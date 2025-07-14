@@ -8,6 +8,7 @@ from typing import List, Tuple, Optional
 
 from .smart_slice import SLICE_SIZE, SmartSliceAllocator
 from .utils import TraceProfiler
+from . import adaptors
 
 __all__ = ["RenderFabric", "SpritePass"]
 
@@ -81,6 +82,7 @@ class RenderFabric:
 
             self.device = wgpu.utils.get_default_device()
         except Exception:
+            adaptors.load_adaptors(["opengl"])
             from .renderers.opengl_renderer import OpenGLRenderer
 
             self.backend = "opengl"
