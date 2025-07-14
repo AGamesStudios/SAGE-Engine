@@ -1,0 +1,16 @@
+repos:
+  - repo: https://github.com/psf/black
+    rev: 24.1.1
+    hooks:
+      - id: black
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.1
+    hooks:
+      - id: ruff
+  - repo: local
+    hooks:
+      - id: commit-msg-check
+        name: commit message template
+        entry: python scripts/check_commit_msg.py
+        language: system
+        stages: [commit-msg]

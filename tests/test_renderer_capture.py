@@ -81,7 +81,7 @@ def test_widget_config_and_grab(monkeypatch):
     try:
         ogl = importlib.import_module('engine.renderers.opengl_renderer')
     except Exception as exc:  # pragma: no cover - optional dependency
-        pytest.skip(f"opengl renderer unavailable: {exc}")
+        pytest.xfail(f"opengl renderer unavailable: {exc}")
     monkeypatch.setattr(ogl, 'GLWidget', DummyWidget)
     r = ogl.OpenGLRenderer(width=2, height=2, samples=8, vsync=True)
     assert isinstance(r.widget, DummyWidget)

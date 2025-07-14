@@ -1,10 +1,21 @@
+import importlib
 import pytest
-pytest.importorskip("OpenGL.GL")
+
 try:
+    importlib.import_module("OpenGL.GL")
     from engine.renderers.shader import Shader
+    _HAVE = True
 except Exception as exc:  # pragma: no cover - optional dependency
-    pytest.skip(f"Shader module unavailable: {exc}", allow_module_level=True)
+    _HAVE = False
+    _reason = str(exc)
+    Shader = None
 from engine.entities.game_object import GameObject
+
+
+@pytest.fixture(autouse=True)
+def _check_shader():
+    if not _HAVE:
+        pytest.xfail(f"Shader module unavailable: {_reason}")
 
 
 def test_shader_from_files(tmp_path, monkeypatch):

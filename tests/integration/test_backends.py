@@ -27,7 +27,7 @@ def test_sdl_renderer_run():
     try:
         import sdl2  # noqa: F401
     except Exception:
-        pytest.skip("SDL2 library not available")
+        pytest.xfail("SDL2 library not available")
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     scene = SceneFile.load('examples/Scenes/Scene1.sagescene').scene
     eng = Engine(scene=scene, renderer="sdl")
@@ -43,12 +43,12 @@ def test_qt_input_backend_loop():
         from PyQt6.QtWidgets import QApplication
         from PyQt6.QtCore import QTimer
     except Exception:
-        pytest.skip("PyQt6 not available")
+        pytest.xfail("PyQt6 not available")
 
     try:
         app = QApplication.instance() or QApplication([])
     except Exception as exc:
-        pytest.skip(f"Qt platform unavailable: {exc}")
+        pytest.xfail(f"Qt platform unavailable: {exc}")
     scene = SceneFile.load('examples/Scenes/Scene1.sagescene').scene
     eng = Engine(scene=scene, renderer="null", input_backend="qt")
 

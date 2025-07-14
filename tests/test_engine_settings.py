@@ -1,11 +1,18 @@
+import importlib
 import pytest
-pytest.importorskip("PIL.Image")
-pytest.importorskip("PyQt6")
-pytest.importorskip("OpenGL.GL")
 from engine.core.engine import Engine
 from engine.core.settings import EngineSettings
 from engine.inputs import InputBackend
 from engine.renderers import Renderer
+
+missing = []
+for name in ["PIL.Image", "PyQt6", "OpenGL.GL"]:
+    try:
+        importlib.import_module(name)
+    except Exception:
+        missing.append(name)
+if missing:
+    pytest.xfail("missing deps: " + ", ".join(missing))
 
 class DummyRenderer(Renderer):
     def __init__(self, width, height, title):

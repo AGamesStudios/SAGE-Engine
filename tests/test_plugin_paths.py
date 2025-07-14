@@ -12,7 +12,7 @@ def test_plugin_rejects_outside_relative(tmp_path):
     try:
         link.symlink_to("../evil.py")
     except (OSError, NotImplementedError):
-        pytest.skip("symlink unsupported")
+        pytest.xfail("symlink unsupported")
 
     obj = types.SimpleNamespace()
     PluginManager("engine", plugin_dir=str(plugins)).load(obj)

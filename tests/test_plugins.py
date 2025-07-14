@@ -39,7 +39,7 @@ def test_symlink_outside_dir(tmp_path):
     try:
         link.symlink_to(outside)
     except (OSError, NotImplementedError):
-        pytest.skip("symlink unsupported")
+        pytest.xfail("symlink unsupported")
     manager = PluginManager('engine', plugin_dir=str(plugins))
     ns = types.SimpleNamespace()
     manager.load(ns)

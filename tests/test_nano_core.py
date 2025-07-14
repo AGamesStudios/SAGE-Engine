@@ -1,7 +1,19 @@
+import importlib
 import threading
 import pytest
 
-nano_core = pytest.importorskip("nano_core")
+try:
+    nano_core = importlib.import_module("nano_core")
+    _HAVE = True
+except Exception:
+    nano_core = None
+    _HAVE = False
+
+
+@pytest.fixture(autouse=True)
+def _check_ext():
+    if not _HAVE:
+        pytest.xfail("nano_core extension missing")
 
 
 def test_nano_core_functions():

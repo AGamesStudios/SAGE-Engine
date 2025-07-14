@@ -36,7 +36,7 @@ def test_logic_plugin_entry_point(tmp_path, monkeypatch):
         importlib.reload(engine.logic)
         engine.logic.load_logic_plugins()
         if 'DummyAction' not in engine.logic.ACTION_REGISTRY:
-            pytest.skip('Entry point loading failed')
+            pytest.xfail('Entry point loading failed')
         assert 'DummyAction' in engine.logic.ACTION_REGISTRY
     finally:
         sys.path.pop(0)

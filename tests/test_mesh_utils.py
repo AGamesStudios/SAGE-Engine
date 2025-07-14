@@ -4,7 +4,7 @@ import sys
 import pytest
 spec = importlib.util.find_spec("engine.mesh_utils")
 if not spec or spec.loader is None:
-    pytest.skip("engine.mesh_utils unavailable", allow_module_level=True)
+    pytest.xfail("engine.mesh_utils unavailable")
 import engine.mesh_utils  # noqa: E402
 importlib.reload(engine.mesh_utils)
 from engine.mesh_utils import (  # noqa: E402
