@@ -176,7 +176,8 @@ The `engine.mesh_utils` module includes helpers for creating and editing meshes,
 including polygons. Use `create_polygon_mesh` to build a custom shape from
 arbitrary vertices and combine meshes with the boolean utilities. Boolean
 operations support unions and differences of multiple polygons; interior holes
-are preserved via triangulation when converting to meshes. Meshes or object
+are preserved when converting to meshes. `create_polygon_mesh` returns an
+n-gon without triangulating its vertices. Meshes or object
 transforms can be adjusted with a 3×3 matrix using `Mesh.apply_matrix` or
 `Transform2D.apply_matrix` for convenient translations, rotations or scaling.
 Rotations wrap once they exceed `360` degrees (configurable via

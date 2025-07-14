@@ -45,7 +45,7 @@ def test_triangle_mesh_centered():
 
 def test_polygon_mesh_and_editing():
     mesh = create_polygon_mesh([(0, 0), (1, 0), (1, 1), (0, 1)])
-    assert len(mesh.indices) == 6
+    assert mesh.indices is None
     mesh.translate(1, 2)
     mesh.scale(2)
     mesh.rotate(math.pi / 2)
@@ -117,12 +117,10 @@ def test_union_requires_shapely(monkeypatch):
         mu.union_meshes([square], negatives=[square])
 
 
-def test_concave_polygon_triangulation():
+def test_concave_polygon():
     verts = [(0, 0), (2, 0), (2, 2), (1, 1), (0, 2)]
     mesh = create_polygon_mesh(verts)
-    assert len(mesh.indices) % 3 == 0
-    assert len(mesh.indices) >= 3 * (len(verts) - 2)
-    assert max(mesh.indices) < len(mesh.vertices)
+    assert mesh.indices is None
 
 
 def test_concave_polygon_no_shapely(monkeypatch):
@@ -135,21 +133,17 @@ def test_concave_polygon_no_shapely(monkeypatch):
     importlib.reload(mu)
     verts = [(0, 0), (2, 0), (2, 2), (1, 1), (0, 2)]
     mesh = mu.create_polygon_mesh(verts)
-    assert len(mesh.indices) % 3 == 0
-    assert len(mesh.indices) >= 3 * (len(verts) - 2)
-    assert max(mesh.indices) < len(mesh.vertices)
+    assert mesh.indices is None
 
 
 def test_self_intersecting_polygon():
     verts = [(0, 0), (2, 2), (0, 2), (2, 0)]
     mesh = create_polygon_mesh(verts)
-    assert len(mesh.indices) % 3 == 0
-    assert max(mesh.indices) < len(mesh.vertices)
+    assert mesh.indices is None
 
 
 def test_polygon_with_collinear_points():
     verts = [(0, 0), (1, 0), (2, 0), (2, 1), (1, 2), (0, 1)]
     mesh = create_polygon_mesh(verts)
-    assert len(mesh.indices) % 3 == 0
-    assert max(mesh.indices) < len(mesh.vertices)
+    assert mesh.indices is None
 

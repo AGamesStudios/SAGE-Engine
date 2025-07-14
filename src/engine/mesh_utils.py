@@ -244,12 +244,7 @@ def create_polygon_mesh(vertices: list[tuple[float, float]]) -> Mesh:
     verts = _clean_polygon(list(vertices))
     if len(verts) < 3:
         raise ValueError("At least three vertices required")
-    if _Polygon is not None:
-        poly = _Polygon(verts)  # pyright: ignore[reportOptionalCall]
-        if not poly.is_valid:  # type: ignore[attr-defined]
-            poly = poly.buffer(0)
-        return _geom_to_mesh(poly)
-    return _ear_clip(verts)
+    return Mesh(verts)
 
 
 def union_meshes(

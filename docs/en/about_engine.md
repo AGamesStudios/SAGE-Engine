@@ -48,8 +48,9 @@ Custom shapes can be created with
 ``engine.mesh_utils.create_polygon_mesh`` by providing a list of vertices.
 The resulting :class:`~engine.mesh_utils.Mesh` can be transformed, joined
 with ``union_meshes`` or subtracted using ``difference_meshes``. Boolean
-operations triangulate polygons so interior holes are preserved. Note that
-complex shapes can produce many triangles and slow rendering; see
+operations triangulate polygons so interior holes are preserved. Simple
+polygons created with ``create_polygon_mesh`` remain as n-gons without
+triangulation. Complex shapes can produce many triangles and slow rendering; see
 [limitations](limitations.md). Use
 ``Mesh.apply_matrix`` or ``Transform2D.apply_matrix`` together with
 :func:`engine.core.math2d.make_transform` to apply translations, scaling and
