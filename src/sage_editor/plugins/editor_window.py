@@ -916,7 +916,25 @@ class EditorWindow(QMainWindow, ModelingMixin):
                 self.cursor_label.adjustSize()
         self._reposition_overlays()
         self._update_rulers()
-        self.draw_scene(update_list=False)
+        try:
+            self.renderer.draw_scene(
+                self.scene,
+                self.camera,
+                selected=self.selected_obj,
+                mode=(self.transform_mode if not self.modeling else "pan"),
+                cursor=self.cursor_pos,
+                local=self.local_coords,
+            )
+        except Exception:
+            try:
+                self.renderer.draw_scene(self.scene, self.camera)
+            except Exception:
+                log.exception("Failed to update cursor")
+        if self.preview_renderer and self.preview_camera:
+            try:
+                self.preview_renderer.draw_scene(self.scene, self.preview_camera)
+            except Exception:
+                pass
 
     def set_mode(self, mode: str) -> None:
         self.transform_mode = mode
