@@ -41,3 +41,5 @@ Example scenes under `examples/Scenes/` include:
 - `.sagelogic` files store event logic with optional `#` or `//` comments
 - `.sagesave` files store saved game state via `engine.save_game`.
 - Use `--vsync/--no-vsync` when running projects to toggle vertical sync.
+* [Reference](reference.md)
+* [Migration Wizard](migration.md)

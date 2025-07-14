@@ -1,10 +1,14 @@
+//! High performance helpers exposed to Python via `pyo3`.
+
 use pyo3::prelude::*;
 use pyo3::types::{PyByteArray, PyBytes};
 use once_cell::sync::Lazy;
 use std::sync::Mutex;
 
+/// Stored `Vec<u8>` pages for reuse.
 static PAGES: Lazy<Mutex<Vec<Vec<u8>>>> = Lazy::new(|| Mutex::new(Vec::new()));
 
+/// Merge two byte arrays without holding the Python GIL.
 #[pyfunction]
 fn merge_chunk_delta(py: Python<'_>, a: &[u8], b: &[u8]) -> Py<PyBytes> {
     let data = py.allow_threads(|| {
@@ -16,6 +20,7 @@ fn merge_chunk_delta(py: Python<'_>, a: &[u8], b: &[u8]) -> Py<PyBytes> {
     PyBytes::new(py, &data).into()
 }
 
+/// Allocate `count` 1 KiB slices and return a bytearray pointing to them.
 #[pyfunction]
 fn alloc_smart_slice(py: Python<'_>, count: usize) -> Py<PyByteArray> {
     let size = count * 1024;
@@ -25,6 +30,7 @@ fn alloc_smart_slice(py: Python<'_>, count: usize) -> Py<PyByteArray> {
     out.into()
 }
 
+/// Release all allocated slices for a clean restart.
 #[pyfunction]
 fn reset_tree() -> PyResult<()> {
     PAGES.lock().unwrap().clear();

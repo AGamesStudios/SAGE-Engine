@@ -6,6 +6,7 @@ The `sage` command provides basic project utilities. Available subcommands:
 * `serve`
 * `featherize`
 * `create <name>` – generate a project from a template
+* `migrate <path>` – update older project files and print a report
 
 `build`, `serve` and `featherize` remain placeholders. `create` copies one of
 two templates: ``minimal_platformer`` with ``-t platformer`` or
@@ -18,3 +19,4 @@ sage create myhello -t hello_sprite_py
 
 The optional ``--profile`` flag writes a Chrome Trace JSON file capturing the
 `Input`, `Patchers`, `Merge` and `Render` phases of a command.
+\nUse `sage migrate <project>` to update files from older versions.

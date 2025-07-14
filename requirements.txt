@@ -7,3 +7,6 @@ pygame>=2.6
 markdown
 maturin
 websockets
+mkdocs-material
+mkdocstrings[python]
+mkdocstrings[rust]

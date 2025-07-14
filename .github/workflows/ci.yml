@@ -16,7 +16,7 @@ jobs:
         with:
           toolchain: stable
           override: true
-      - run: pip install ruff pytest markdown maturin websockets
+      - run: pip install ruff pytest markdown maturin websockets mkdocs-material mkdocstrings[python] mkdocstrings[rust]
       - run: ruff check .
       - run: python scripts/build_nano_core.py
       - run: python scripts/check_changelog.py
@@ -25,6 +25,8 @@ jobs:
         shell: bash
       - run: python scripts/build_docs.py
         shell: bash
+      - run: python -m sage build --bundle retro2d
+      - run: python -m sage build --bundle full3d
 
   smoke:
     runs-on: ubuntu-latest

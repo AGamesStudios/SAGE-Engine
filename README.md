@@ -14,6 +14,9 @@ Documentation lives under `docs/`. Begin with [docs/en/getting_started.md](docs/
 For known caveats such as dependency requirements and experimental features see
 [limitations](docs/en/limitations.md). The development roadmap and design
 proposals live in [ROADMAP.md](ROADMAP.md) and the [rfcs/](rfcs) directory.
+Run ``python scripts/build_docs.py`` to generate the HTML documentation with
+MkDocs and view the API reference.
+The ``sage migrate`` command upgrades older projects to the latest format.
 
 ## Quick start
 ```bash

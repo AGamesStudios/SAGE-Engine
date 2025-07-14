@@ -8,6 +8,7 @@ from engine import adaptors
 from engine import bundles
 
 from engine.utils import TraceProfiler
+import json
 
 
 def _build(args: argparse.Namespace) -> None:
@@ -71,6 +72,26 @@ def _create(args: argparse.Namespace) -> None:
     shutil.copytree(src, dest)
 
 
+def _migrate(args: argparse.Namespace) -> None:
+    path = Path(args.path)
+    changed: list[Path] = []
+    if path.is_file():
+        files = [path]
+    else:
+        files = list(path.rglob("*.sageproject")) + list(path.rglob("*.sagescene"))
+    for fp in files:
+        data = json.loads(fp.read_text())
+        if "scene" in data:
+            data["scene_file"] = data.pop("scene")
+            changed.append(fp)
+        if "version" not in data:
+            data["version"] = "0.0.1"
+            changed.append(fp)
+        fp.write_text(json.dumps(data, indent=2))
+    for fp in changed:
+        print(f"Migrated {fp}")
+
+
 
 
 
@@ -79,6 +100,7 @@ _COMMANDS = {
     "serve": _serve,
     "featherize": _featherize,
     "create": _create,
+    "migrate": _migrate,
 }
 
 
@@ -93,6 +115,8 @@ def main(argv: list[str] | None = None) -> int:
     create_p = sub.add_parser("create")
     create_p.add_argument("name")
     create_p.add_argument("-t", "--template", default="platformer")
+    migrate_p = sub.add_parser("migrate")
+    migrate_p.add_argument("path")
     args = parser.parse_args(argv)
     _COMMANDS[args.cmd](args)
     return 0
