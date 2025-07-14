@@ -1425,6 +1425,8 @@ class EditorWindow(QMainWindow, ModelingMixin):
             if name == getattr(self.selected_obj, "name", None):
                 self.objects.setCurrentItem(item)
         if not self.selected_obj:
+            if hasattr(self.objects, "clearSelection"):
+                self.objects.clearSelection()
             self.objects.setCurrentItem(None)
 
         self.update_properties()
@@ -1641,6 +1643,7 @@ class EditorWindow(QMainWindow, ModelingMixin):
         obj.transform.y = y
         self.scene.add_object(obj)
         self.update_object_list()
+        self.select_object(None)
         self.draw_scene()
         return obj
 
@@ -1655,6 +1658,7 @@ class EditorWindow(QMainWindow, ModelingMixin):
         obj.visible = False
         self.scene.add_object(obj)
         self.update_object_list()
+        self.select_object(None)
         self.draw_scene()
         return obj
 
@@ -1664,6 +1668,7 @@ class EditorWindow(QMainWindow, ModelingMixin):
         cam = Camera(x=x, y=y, active=False, name=f"Camera {count}")
         self.scene.add_object(cam)
         self.update_object_list()
+        self.select_object(None)
         self.draw_scene()
         return cam
 
@@ -1700,6 +1705,7 @@ class EditorWindow(QMainWindow, ModelingMixin):
         obj.height = 2.0
         self.scene.add_object(obj)
         self.update_object_list()
+        self.select_object(None)
         self.draw_scene()
         return obj
 

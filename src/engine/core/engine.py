@@ -17,7 +17,7 @@ from ..renderers import (
     Renderer,
     get_renderer,
 )
-from .. import ENGINE_VERSION
+from .. import ENGINE_VERSION, ENGINE_FULL_VERSION
 from ..utils.log import logger, init_logger
 from ..utils.diagnostics import analyze_exception
 from ..utils.crash import write_crash_report
@@ -492,7 +492,7 @@ class Engine:
                 self.renderer.close()
             return None
 
-        _log(f"Starting engine version {ENGINE_VERSION}")
+        _log(f"Starting engine version {ENGINE_FULL_VERSION}")
         app = QApplication.instance()
         if app is None:
             app = QApplication(sys.argv)
@@ -546,7 +546,7 @@ class Engine:
                 self.renderer.close()
             return None
 
-        _log(f"Starting engine version {ENGINE_VERSION}")
+        _log(f"Starting engine version {ENGINE_FULL_VERSION}")
         loop = asyncio.get_running_loop()
         app = QApplication.instance()
         if app is None:

@@ -2,16 +2,25 @@
 
 from importlib import import_module
 
-from .version import __version__, require as require_version  # noqa: F401
+from .version import (
+    __version__,
+    FULL_VERSION,
+    DEVELOPMENT_STATUS,
+    require,
+)
 from .utils.log import logger  # noqa: F401
 from .utils.diagnostics import warn, error, exception  # noqa: F401
 from .plugins import _get_manager
 from typing import TYPE_CHECKING
 
+require_version = require
+
 if TYPE_CHECKING:  # pragma: no cover - imported for type hints
     from .plugins import PluginManager
 
 ENGINE_VERSION = __version__
+ENGINE_STATUS = DEVELOPMENT_STATUS
+ENGINE_FULL_VERSION = FULL_VERSION
 
 def _engine_plugins() -> "PluginManager":
     """Return the engine plugin manager."""
@@ -135,7 +144,11 @@ _lazy = {
 __all__ = sorted(
     list(_lazy.keys())
     + [
-        '__version__', 'ENGINE_VERSION', 'logger',
+        '__version__',
+        'ENGINE_VERSION',
+        'ENGINE_STATUS',
+        'ENGINE_FULL_VERSION',
+        'logger',
         'warn', 'error', 'exception',
         'register_engine_plugin', 'load_engine_plugins',
         'require_version', 'EDITOR_API_VERSION',

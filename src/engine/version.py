@@ -2,7 +2,11 @@
 
 from packaging.version import Version
 
+DEVELOPMENT_STATUS = "В разработке"
+
 __version__ = "0.0.1-alpha"
+
+FULL_VERSION = f"{__version__} ({DEVELOPMENT_STATUS})"
 
 
 def require(min_version: str) -> None:
