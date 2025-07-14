@@ -244,6 +244,7 @@ class _ViewportMixin:
         self._drag_vertex: int | None = None
         self._last_world: tuple[float, float] | None = None
         self._drag_angle: float | None = None
+        self._press_hit = None
         if hasattr(self, "setContextMenuPolicy"):
             cast(QWidget, self).setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         if hasattr(self, "customContextMenuRequested"):
@@ -373,6 +374,10 @@ class _ViewportMixin:
             self._drag_mode = "pan"
             self._drag_corner = None
             self._last_world = None
+            wx, wy = self._window.screen_to_world(self._press_pos)
+            self._press_hit = self._window.find_object_at(wx, wy)
+            if self._press_hit is None:
+                self._window.select_object(None)
             obj = self._window.selected_obj
             if obj is not None and self._window.modeling:
                 mods = ev.modifiers() if hasattr(ev, "modifiers") else 0
@@ -672,13 +677,17 @@ class _ViewportMixin:
         if ev.button() == Qt.MouseButton.LeftButton:
             pos = ev.position() if hasattr(ev, "position") else ev.pos()
             if self._press_pos is not None and not self._dragging and self._drag_mode == "pan":
-                wx, wy = self._window.screen_to_world(pos)
-                obj = self._window.find_object_at(wx, wy)
-                mods = ev.modifiers() if hasattr(ev, "modifiers") else 0
-                add = mods & (
-                    Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.ShiftModifier
-                )
-                self._window.select_object(obj, additive=bool(add))
+                if self._press_hit is None:
+                    self._window.select_object(None)
+                else:
+                    wx, wy = self._window.screen_to_world(pos)
+                    obj = self._window.find_object_at(wx, wy)
+                    mods = ev.modifiers() if hasattr(ev, "modifiers") else 0
+                    add = mods & (
+                        Qt.KeyboardModifier.ControlModifier
+                        | Qt.KeyboardModifier.ShiftModifier
+                    )
+                    self._window.select_object(obj, additive=bool(add))
             self._press_pos = None
             self._dragging = False
             self._last_pos = None
@@ -687,6 +696,7 @@ class _ViewportMixin:
             self._drag_vertex = None
             self._last_world = None
             self._drag_angle = None
+            self._press_hit = None
             try:
                 cast(QWidget, self).unsetCursor()
             except Exception:
