@@ -3,9 +3,9 @@ import os
 import struct
 from dataclasses import dataclass
 
-__all__ = ["Node", "SmartSlice", "NanoTree"]
+from .smart_slice import SmartSlice, SLICE_SIZE
 
-SLICE_SIZE = 1024
+__all__ = ["Node", "NanoTree"]
 HEADER_STRUCT = "<II"
 NODE_STRUCT = "<III"
 HEADER_SIZE = struct.calcsize(HEADER_STRUCT)
@@ -21,17 +21,6 @@ class Node:
     slice_index: int
 
 
-@dataclass
-class SmartSlice:
-    """A 1 KiB chunk of mapped memory."""
-
-    view: memoryview
-
-    def write(self, data: bytes) -> None:
-        self.view[: len(data)] = data
-
-    def read(self, size: int) -> bytes:
-        return bytes(self.view[:size])
 
 
 class NanoTree:

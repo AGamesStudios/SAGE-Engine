@@ -7,6 +7,8 @@ Select a topic from the list to learn about the engine and editor features.
 * [Logic and Scripting](logic.md)
 * [Saving and Loading](save_load.md)
 * [ChronoPatch Tree](chronopatch.md)
+* [SmartSlice Allocator](smart_slice.md)
+* [ChunkΔ Codec](chunk_delta.md)
 * [NanoTree](nano_tree.md)
 * [Limitations and Caveats](limitations.md)
 * [Plugins](plugins.md)

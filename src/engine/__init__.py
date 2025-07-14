@@ -140,7 +140,10 @@ _lazy = {
     'EditorInterface': ('engine.editor_api', 'EditorInterface'),
     'EDITOR_API_VERSION': ('engine.editor_api', 'EDITOR_API_VERSION'),
     'ChronoPatchTree': ('engine.chrono_patch', 'ChronoPatchTree'),
-    'SmartSlice': ('engine.chrono_patch', 'SmartSlice'),
+    'SmartSlice': ('engine.smart_slice', 'SmartSlice'),
+    'SmartSliceAllocator': ('engine.smart_slice', 'SmartSliceAllocator'),
+    'encode_ops': ('engine.chunk_delta', 'encode_ops'),
+    'decode_chunk': ('engine.chunk_delta', 'decode'),
     'NanoTree': ('engine.nano_tree', 'NanoTree'),
     'Node': ('engine.nano_tree', 'Node'),
 }

@@ -2,28 +2,14 @@ import mmap
 import os
 import lzma
 import struct
-from dataclasses import dataclass
 
-__all__ = ["SmartSlice", "ChronoPatchTree"]
+from .smart_slice import SLICE_SIZE, SmartSlice
 
+__all__ = ["ChronoPatchTree"]
 
-SLICE_SIZE = 1024
 
 PATCH_HEADER = "<QI"
 PATCH_HEADER_SIZE = struct.calcsize(PATCH_HEADER)
-
-
-@dataclass
-class SmartSlice:
-    """A 1 KiB view into the mapped state."""
-
-    view: memoryview
-
-    def write(self, data: bytes) -> None:
-        self.view[: len(data)] = data
-
-    def read(self, size: int) -> bytes:
-        return bytes(self.view[:size])
 
 
 class ChronoPatchTree:
