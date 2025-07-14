@@ -428,3 +428,52 @@ class SnapPopup(QWidget):
         if hasattr(self, "show"):
             self.show()
 
+
+class StatsWidget(QWidget):
+    """Collapsible panel showing basic scene statistics."""
+
+    def __init__(self, window: "EditorWindow", parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self._window = window
+        if hasattr(self, "setStyleSheet"):
+            self.setStyleSheet(
+                "background:#222;border:1px solid #ffb84d;color:white;"
+                "border-radius:4px;"
+            )
+        layout = QHBoxLayout(self)
+        if hasattr(layout, "setContentsMargins"):
+            layout.setContentsMargins(6, 4, 6, 4)
+        self.label = QLabel("", self)
+        layout.addWidget(self.label)
+        try:  # pragma: no cover - real Qt
+            from PyQt6.QtWidgets import QToolButton  # type: ignore[import-not-found]
+        except Exception:  # pragma: no cover - test stubs
+            QToolButton = QPushButton  # type: ignore[assignment]
+        self.toggle = QToolButton(self)
+        if hasattr(self.toggle, "setText"):
+            self.toggle.setText("\u25BC")
+        self.toggle.setCheckable(True)
+        self.toggle.setChecked(True)
+        if hasattr(self.toggle, "setFixedSize"):
+            self.toggle.setFixedSize(16, 16)
+        if hasattr(self.toggle, "toggled"):
+            self.toggle.toggled.connect(self._on_toggle)
+        layout.addWidget(self.toggle)
+        if hasattr(layout, "addStretch"):
+            layout.addStretch()
+
+    def _on_toggle(self, checked: bool) -> None:
+        if hasattr(self.label, "setVisible"):
+            self.label.setVisible(checked)
+        txt = "\u25B2" if not checked else "\u25BC"
+        if hasattr(self.toggle, "setText"):
+            self.toggle.setText(txt)
+        if hasattr(self, "adjustSize"):
+            self.adjustSize()
+
+    def update_stats(self) -> None:
+        scene = getattr(self._window, "scene", None)
+        count = len(getattr(scene, "objects", [])) if scene else 0
+        if hasattr(self.label, "setText"):
+            self.label.setText(f"Objs: {count}")
+

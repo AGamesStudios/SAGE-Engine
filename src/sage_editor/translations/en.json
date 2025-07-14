@@ -14,5 +14,7 @@
   "Union": "Union",
   "Difference": "Difference",
   "Intersection": "Intersection",
-  "Negative": "Negative"
+  "Negative": "Negative",
+  "Stats Panel": "Stats Panel",
+  "Stats": "Stats"
 }

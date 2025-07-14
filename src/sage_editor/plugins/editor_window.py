@@ -69,6 +69,7 @@ from sage_editor.plugins.editor_widgets import (
     ProgressWheel,  # noqa: F401 - re-exported for widgets
     SnapSettingsWidget,
     SnapPopup,
+    StatsWidget,
 )
 from sage_editor.plugins.viewport_base import _ViewportMixin
 from sage_editor.plugins.editor_modeling import ModelingMixin
@@ -156,6 +157,10 @@ class EditorWindow(QMainWindow, ModelingMixin):
         if hasattr(label, "move"):
             label.move(8, 8)
         container.cursor_label = label  # type: ignore[attr-defined]
+        stats = StatsWidget(self, view)
+        if hasattr(stats, "hide"):
+            stats.hide()
+        container.stats_widget = stats  # type: ignore[attr-defined]
         if hasattr(view, "setMouseTracking"):
             view.setMouseTracking(True)
         container.viewport = view  # type: ignore[attr-defined]
@@ -183,6 +188,7 @@ class EditorWindow(QMainWindow, ModelingMixin):
         self.cursor_label = container.cursor_label  # type: ignore[attr-defined]
         self.preview_widget = container.preview_widget  # type: ignore[attr-defined]
         self.preview_frame = container.preview_frame  # type: ignore[attr-defined]
+        self.stats_widget = container.stats_widget  # type: ignore[attr-defined]
 
         self.tabs = QTabWidget(self)
         if hasattr(self.tabs, "setTabsClosable"):
@@ -461,6 +467,16 @@ class EditorWindow(QMainWindow, ModelingMixin):
                 wire_act.triggered.connect(self.toggle_wireframe)
         self.wire_menu_action = wire_act  # type: ignore[assignment]
 
+        stats_act = view_menu.addAction("Stats Panel") if view_menu and hasattr(view_menu, "addAction") else None
+        if stats_act is not None:
+            if hasattr(stats_act, "setCheckable"):
+                stats_act.setCheckable(True)
+            if hasattr(stats_act, "setChecked"):
+                stats_act.setChecked(False)
+            if hasattr(stats_act, "triggered"):
+                stats_act.triggered.connect(self.toggle_stats_panel)
+        self.stats_menu_action = stats_act  # type: ignore[assignment]
+
         mirror_act = view_menu.addAction("Mirror Resize") if view_menu and hasattr(view_menu, "addAction") else None
         if mirror_act is not None:
             if hasattr(mirror_act, "setCheckable"):
@@ -651,6 +667,15 @@ class EditorWindow(QMainWindow, ModelingMixin):
             self.local_action.toggled.connect(self.toggle_local)
         quickbar.addAction(self.local_action)
 
+        self.stats_action = QAction("Stats", self)
+        if hasattr(self.stats_action, "setCheckable"):
+            self.stats_action.setCheckable(True)
+        if hasattr(self.stats_action, "setChecked"):
+            self.stats_action.setChecked(False)
+        if hasattr(self.stats_action, "toggled"):
+            self.stats_action.toggled.connect(self.toggle_stats_panel)
+        quickbar.addAction(self.stats_action)
+
         if hasattr(quickbar, "addSeparator"):
             quickbar.addSeparator()
 
@@ -705,7 +730,7 @@ class EditorWindow(QMainWindow, ModelingMixin):
 
         self.selected_obj = None
         self.update_object_list()
-        self._reposition_preview()
+        self._reposition_overlays()
         self.draw_scene()
         self._update_rulers()
 
@@ -760,6 +785,7 @@ class EditorWindow(QMainWindow, ModelingMixin):
         self.cursor_visible = bool(checked)
         if hasattr(self.cursor_label, "setVisible"):
             self.cursor_label.setVisible(checked)
+        self._reposition_overlays()
 
     def toggle_axes(self, checked: bool) -> None:
         """Show or hide the world coordinate axes gizmo."""
@@ -772,6 +798,18 @@ class EditorWindow(QMainWindow, ModelingMixin):
         if hasattr(self.renderer, "wireframe"):
             self.renderer.wireframe = bool(checked)
             self.draw_scene(update_list=False)
+
+    def toggle_stats_panel(self, checked: bool) -> None:
+        """Show or hide the scene statistics panel."""
+        stats = getattr(self, "stats_widget", None)
+        if stats is not None and hasattr(stats, "setVisible"):
+            stats.setVisible(checked)
+            self._reposition_overlays()
+
+    def update_stats(self) -> None:
+        stats = getattr(self, "stats_widget", None)
+        if stats is not None and hasattr(stats, "update_stats"):
+            stats.update_stats()
 
     def change_language(self, name: str) -> None:
         """Switch UI text to the selected language."""
@@ -810,6 +848,10 @@ class EditorWindow(QMainWindow, ModelingMixin):
             self.wire_action.setText(tr("Wireframe"))
         if getattr(self, "wire_menu_action", None) is not None and hasattr(self.wire_menu_action, "setText"):
             self.wire_menu_action.setText(tr("Wireframe"))
+        if hasattr(self.stats_action, "setText"):
+            self.stats_action.setText(tr("Stats"))
+        if getattr(self, "stats_menu_action", None) is not None and hasattr(self.stats_menu_action, "setText"):
+            self.stats_menu_action.setText(tr("Stats Panel"))
 
     def show_about_dialog(self) -> None:
         from PyQt6.QtWidgets import QMessageBox  # type: ignore[import-not-found]
@@ -872,6 +914,7 @@ class EditorWindow(QMainWindow, ModelingMixin):
             self.cursor_label.setText(f"X: {x:.1f}  Y: {y:.1f}")
             if hasattr(self.cursor_label, "adjustSize"):
                 self.cursor_label.adjustSize()
+        self._reposition_overlays()
         self._update_rulers()
         self.draw_scene(update_list=False)
 
@@ -933,26 +976,33 @@ class EditorWindow(QMainWindow, ModelingMixin):
     def resizeEvent(self, ev):  # pragma: no cover - gui layout
         super().resizeEvent(ev)
         try:
-            self._reposition_preview()
+            self._reposition_overlays()
             self._update_rulers()
         except Exception:
             log.exception("Failed to update toolbar height")
 
-    def _reposition_preview(self) -> None:
-        """Position the camera preview widget in the bottom-right corner."""
+    def _reposition_overlays(self) -> None:
+        """Position the preview, cursor label and stats panel."""
         preview = getattr(self, "preview_frame", None)
         if preview is None:
             preview = getattr(self, "preview_widget", None)
         view = getattr(self, "viewport", None)
-        if not preview or not view:
-            return
-        if not hasattr(preview, "move") or not hasattr(view, "width"):
+        if not view:
             return
         w = view.width() or 0
         h = view.height() or 0
-        pw = preview.width() if hasattr(preview, "width") else 0
-        ph = preview.height() if hasattr(preview, "height") else 0
-        preview.move(w - pw - 10, h - ph - 10)
+        if preview and hasattr(preview, "move"):
+            pw = preview.width() if hasattr(preview, "width") else 0
+            ph = preview.height() if hasattr(preview, "height") else 0
+            preview.move(w - pw - 10, h - ph - 10)
+        label = getattr(self, "cursor_label", None)
+        if label and hasattr(label, "move"):
+            lw = label.width() if hasattr(label, "width") else 0
+            label.move(w - lw - 10, 8)
+        stats = getattr(self, "stats_widget", None)
+        if stats and hasattr(stats, "move"):
+            sh = stats.height() if hasattr(stats, "height") else 0
+            stats.move(8, h - sh - 8)
 
     def show_camera_preview(self, cam: Camera) -> None:
         """Display a preview from *cam* in the corner of the viewport."""
@@ -979,7 +1029,7 @@ class EditorWindow(QMainWindow, ModelingMixin):
             self.preview_frame.show()
         elif hasattr(self.preview_widget, "show"):
             self.preview_widget.show()
-        self._reposition_preview()
+        self._reposition_overlays()
         self.preview_renderer.draw_scene(self.scene, cam)
 
     def hide_camera_preview(self) -> None:
@@ -1603,6 +1653,7 @@ class EditorWindow(QMainWindow, ModelingMixin):
         if self.preview_renderer and self.preview_camera:
             self.preview_renderer.draw_scene(self.scene, self.preview_camera)
         self._update_rulers()
+        self.update_stats()
 
     def start_game(self):
         from engine.core.engine import Engine
