@@ -7,6 +7,9 @@ class DummyWS:
     def __init__(self, messages):
         self._msgs = list(messages)
 
+    async def send(self, msg):
+        pass
+
     def __aiter__(self):
         return self
 
@@ -36,3 +39,9 @@ def test_handle_reload(monkeypatch):
     ws = DummyWS(["reload sage_adaptors.render"])
     asyncio.run(run_handler(ws))
     assert called == {"name": "sage_adaptors.render", "reloaded": True, "load": ["render"]}
+
+
+def test_handle_toast():
+    ws = DummyWS(["toast hello"])
+    asyncio.run(run_handler(ws))
+

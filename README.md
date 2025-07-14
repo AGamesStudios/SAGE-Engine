@@ -10,7 +10,7 @@ Custom resources use compact `.sageaudio`, `.sagemesh` and `.sageanimation` desc
 Sprite animations expose speed, pause and reverse options while ``AudioManager`` supports simple music playback.
 ``ResourceManager`` can load and import files asynchronously to avoid blocking the event loop when using ``asyncio``.
 
-Documentation lives under `docs/`. Begin with [docs/en/getting_started.md](docs/en/getting_started.md) for a simple tutorial or read [docs/en/index.md](docs/en/index.md) for a full list of guides. See [plugins](docs/en/plugins.md) for extension points and [optimisation tips](docs/en/optimisation.md) for performance advice.
+Documentation lives under `docs/`. Begin with [docs/en/getting_started.md](docs/en/getting_started.md) for a simple tutorial or read [docs/en/index.md](docs/en/index.md) for a full list of guides. See [plugins](docs/en/plugins.md) and [creating a plugin](docs/en/create_plugin.md) for extension points. Refer to [optimisation tips](docs/en/optimisation.md) for performance advice.
 For known caveats such as dependency requirements and experimental features see
 [limitations](docs/en/limitations.md).
 

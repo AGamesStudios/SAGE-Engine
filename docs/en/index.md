@@ -21,6 +21,7 @@ Select a topic from the list to learn about the engine and editor features.
 * [Feature Bundles](sage_cli.md#build)
 * [Limitations and Caveats](limitations.md)
 * [Plugins](plugins.md)
+* [Creating a Plugin](create_plugin.md)
 * [Gizmos](gizmos.md)
 * [Physics Extension](physics.md)
 * [Properties Window](properties_window.md)
