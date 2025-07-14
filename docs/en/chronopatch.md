@@ -7,4 +7,6 @@ compressed patches so the state can be replayed or rolled back.
 Use :class:`engine.chrono_patch.ChronoPatchTree` to manage the state. The
 ``snapshot`` method writes data to the mapped region and appends a patch entry to
 ``<path>.log``. Calling ``replay`` applies the patch log to restore the latest
-state.
+state. ``iter_patches()`` yields offset/data pairs which can be sent over the
+network or fed to another tree. The class acts as a context manager so resources
+are automatically closed.
