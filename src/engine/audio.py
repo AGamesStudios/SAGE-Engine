@@ -1,121 +1,103 @@
-"""Simple audio playback using pygame."""
+"""Audio playback via miniaudio."""
 from __future__ import annotations
 
+import array
+import threading
+from typing import Iterable
 
-import os
-from typing import Dict, cast, Any
-
-from .core.resources import get_resource_path
 from .utils.log import logger
 
 try:
-    import pygame
+    import miniaudio
+    import lameenc
 except Exception as exc:  # pragma: no cover - optional dependency
-    pygame: Any = None
-    PYGAME_IMPORT_ERROR = exc
+    miniaudio = None  # type: ignore
+    lameenc = None  # type: ignore
+    IMPORT_ERROR = exc
 else:
-    PYGAME_IMPORT_ERROR = None
+    IMPORT_ERROR = None
 
 
+class Sound:
+    """Handle for a playing sound."""
 
-class AudioManager:
-    """Load and play sound effects using ``pygame.mixer``."""
+    def __init__(self, path: str, loop: bool, gain: float, pan: float) -> None:
+        if miniaudio is None:
+            raise ImportError(
+                "Audio features require miniaudio; install with 'pip install miniaudio'"
+            ) from IMPORT_ERROR
+        self.path = path
+        self.loop = loop
+        self.gain = gain
+        self.pan = pan
+        self.pitch = 1.0
+        self._device: miniaudio.PlaybackDevice | None = None
+        self._stop = threading.Event()
 
-    def __init__(self) -> None:
-        global pygame
-        if pygame is None:
+    def _stream(self) -> Iterable[bytes]:
+        decoded = miniaudio.decode_file(self.path)
+        frames = decoded.samples  # array.array
+        channels = decoded.nchannels
+        idx = 0
+        frame_size = 1024 * channels
+        while not self._stop.is_set():
+            chunk = frames[idx : idx + frame_size]
+            if not chunk:
+                if self.loop:
+                    idx = 0
+                    continue
+                break
+            if self.gain != 1.0 or self.pan:
+                data = array.array("h", chunk)
+                for i in range(0, len(data), channels):
+                    left = int(data[i] * self.gain)
+                    if channels > 1:
+                        right = int(data[i + 1] * self.gain)
+                        if self.pan:
+                            left = int(left * (1 - self.pan))
+                            right = int(right * (1 + self.pan))
+                        data[i] = left
+                        data[i + 1] = right
+                    else:
+                        data[i] = left
+                yield data.tobytes()
+            else:
+                yield array.array("h", chunk).tobytes()
+            idx += frame_size
+
+    def play(self) -> None:
+        """Begin playback."""
+        decoded = miniaudio.decode_file(self.path)
+        rate = int(decoded.sample_rate * self.pitch)
+        self._device = miniaudio.PlaybackDevice(
+            output_format=miniaudio.SampleFormat.SIGNED16,
+            nchannels=decoded.nchannels,
+            sample_rate=rate,
+            backends=[miniaudio.Backend.NULL],
+        )
+        gen = self._stream()
+        next(gen, None)
+        self._device.start(gen)
+
+    def stop(self) -> None:
+        if self._device:
+            self._stop.set()
             try:
-                import pygame as _pg
-                pygame = _pg
-            except Exception:
-                logger.error("AudioManager unavailable: %s", PYGAME_IMPORT_ERROR)
-                raise ImportError(
-                    "Audio features require pygame; install with 'pip install pygame'"
-                ) from PYGAME_IMPORT_ERROR
-        os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
-        if not pygame.mixer.get_init():
-            try:
-                pygame.mixer.init()
-            except Exception:
-                logger.exception("Failed to initialise audio")
-                raise
-        self._sounds: Dict[str, Any] = {}
-        self._music_path: str | None = None
+                self._device.stop()
+                self._device.close()
+            except Exception:  # pragma: no cover - cleanup best effort
+                logger.debug("failed to stop audio")
+            self._device = None
 
-    def load_sound(self, name: str) -> Any:
-        """Load a sound file or ``.sageaudio`` descriptor."""
-        path = get_resource_path(name)
-        meta = None
-        if path.endswith(".sageaudio"):
-            from .formats import load_sageaudio
+    def set_pitch(self, value: float) -> None:
+        self.pitch = value
+        if self._device:
+            self.stop()
+            self.play()
 
-            meta = load_sageaudio(path)
-            file_path = os.path.join(
-                os.path.dirname(path), cast(str, meta["file"])  # pyright: ignore[reportTypedDictNotRequiredAccess]
-            )
-        else:
-            file_path = path
-        try:
-            sound = pygame.mixer.Sound(file_path)
-        except Exception:
-            logger.exception("Failed to load sound %s", file_path)
-            raise
-        if meta and "volume" in meta:
-            try:
-                sound.set_volume(float(meta["volume"]))
-            except Exception:
-                logger.exception("Invalid volume value: %s", meta["volume"])
-        self._sounds[name] = sound
-        return sound
 
-    def play(self, name: str) -> None:
-        """Play a previously loaded sound or load it on demand."""
-        sound = self._sounds.get(name)
-        if sound is None:
-            sound = self.load_sound(name)
-        sound.play()
-
-    def stop(self, name: str) -> None:
-        sound = self._sounds.get(name)
-        if sound:
-            sound.stop()
-
-    def load_music(self, path: str) -> None:
-        """Load a music file."""
-        path = get_resource_path(path)
-        try:
-            pygame.mixer.music.load(path)
-            self._music_path = path
-        except Exception:
-            logger.exception("Failed to load music %s", path)
-            raise
-
-    def play_music(self, path: str | None = None, *, loops: int = 0) -> None:
-        """Play music once loaded."""
-        if path:
-            self.load_music(path)
-        if self._music_path:
-            pygame.mixer.music.play(loops)
-
-    def stop_music(self) -> None:
-        pygame.mixer.music.stop()
-
-    def pause_music(self) -> None:
-        pygame.mixer.music.pause()
-
-    def unpause_music(self) -> None:
-        pygame.mixer.music.unpause()
-
-    def set_music_volume(self, vol: float) -> None:
-        try:
-            pygame.mixer.music.set_volume(float(vol))
-        except Exception:
-            logger.exception("Invalid music volume: %s", vol)
-
-    def shutdown(self) -> None:
-        for snd in self._sounds.values():
-            snd.stop()
-        self._sounds.clear()
-        pygame.mixer.music.stop()
-        if pygame.mixer.get_init():
-            pygame.mixer.quit()
+def play(path: str, *, loop: bool = False, gain: float = 1.0, pan: float = 0.0) -> Sound:
+    """Play an audio file and return a :class:`Sound` handle."""
+    snd = Sound(path, loop, gain, pan)
+    snd.play()
+    return snd

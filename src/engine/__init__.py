@@ -121,7 +121,7 @@ _lazy = {
     'register_draw_handler': ('engine.renderers', 'register_draw_handler'),
     'Cache': ('engine.cache', 'Cache'),
     'SAGE_CACHE': ('engine.cache', 'SAGE_CACHE'),
-    'AudioManager': ('engine.audio', 'AudioManager'),
+    'play_sound': ('engine.audio', 'play'),
     'load_sageaudio': ('engine.formats', 'load_sageaudio'),
     'save_sageaudio': ('engine.formats', 'save_sageaudio'),
     'load_sagemesh': ('engine.formats', 'load_sagemesh'),
@@ -183,6 +183,10 @@ def get_engine_attr(name: str):
 
 def __dir__():
     return sorted(list(globals().keys()) + list(_lazy.keys()))
+
+
+def __getattr__(name: str):
+    return get_engine_attr(name)
 
 
 load_adaptors()

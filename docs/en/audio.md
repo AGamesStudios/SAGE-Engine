@@ -1,19 +1,19 @@
 # Audio Support
 
-SAGE Engine plays sound effects through the ``AudioManager`` class. Install the
-``audio`` extra to enable it:
+SAGE Engine ships with ``sage_audio`` built on the ``miniaudio`` library. Install
+the ``audio`` extra to enable it:
 
 ```bash
 pip install .[audio]
 ```
 
-Load and play sounds from your resources folder:
+Play a sound from your resources folder:
 
 ```python
-from engine.audio import AudioManager
+from engine.audio import play
 
-am = AudioManager()
-am.play('sounds/jump.wav')
+snd = play('sounds/jump.ogg', loop=False, gain=0.8, pan=-0.3)
+snd.set_pitch(1.2)
 ```
 
 You can also load a `.sageaudio` descriptor containing metadata:
@@ -26,12 +26,5 @@ If the descriptor specifies a `volume` key the sound is automatically scaled.
 
 ## Music playback
 
-``AudioManager`` exposes helper methods to control background music:
-
-```python
-am.load_music('music/theme.ogg')
-am.play_music(loops=-1)    # loop forever
-am.set_music_volume(0.5)
-```
-
-Use ``stop_music()`` and ``pause_music()`` to control playback.
+The returned ``Sound`` handle allows you to stop playback with ``stop()`` or
+change pitch with ``set_pitch()``.

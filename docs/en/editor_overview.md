@@ -13,3 +13,4 @@ Hold **Ctrl** or **Shift** and click in the viewport to select multiple objects.
 Hotkeys Ctrl+C/Ctrl+V/Delete mirror the Edit menu actions. High-DPI scaling
 keeps text readable. Use the **File** menu to open and save ``.sageproject``
 files.
+The new **Mixer** dock lists audio tracks with a volume slider and mute toggle.

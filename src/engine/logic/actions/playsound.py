@@ -1,13 +1,10 @@
-from typing import Any
 from ..base import Action, register_action, resolve_value
 from ...utils.log import logger
 
 try:
-    from ...audio import AudioManager as _AudioManager
+    from ... import play_sound
 except Exception:  # pragma: no cover - optional dependency may be missing
-    AudioManager: Any = None
-else:
-    AudioManager = _AudioManager
+    play_sound = None
 
 
 @register_action('PlaySound', [('name', 'value')])
@@ -18,19 +15,11 @@ class PlaySound(Action):
         self.name = name
 
     def execute(self, engine, scene, dt):
-        if AudioManager is None:
-            logger.warning('AudioManager unavailable; install pygame')
+        if play_sound is None:
+            logger.warning("Audio support unavailable; install miniaudio")
             return
-        am = getattr(engine, '_audio_manager', None)
-        if am is None:
-            try:
-                am = AudioManager()
-            except Exception:
-                logger.exception('Failed to initialise audio')
-                return
-            engine._audio_manager = am
         path = resolve_value(self.name, engine)
         try:
-            am.play(path)
+            play_sound(path)
         except Exception:
             logger.exception('Failed to play sound %s', path)

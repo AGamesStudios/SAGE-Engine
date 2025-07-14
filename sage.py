@@ -17,7 +17,8 @@ from engine import adaptors
 from engine import bundles
 
 from engine.utils import TraceProfiler
-from tools import pack_atlas
+from engine.utils.log import logger
+from tools import pack_atlas, sound_mint
 import yaml
 
 
@@ -39,6 +40,13 @@ def _build(args: argparse.Namespace) -> None:
         adaptors.load_adaptors(selected)
     else:
         adaptors.load_adaptors()
+    if args.bundle == "windows":
+        for ogg in Path("assets").rglob("*.ogg"):
+            try:
+                mp3 = sound_mint.ogg_to_mp3(str(ogg))
+                shutil.copy(mp3, ogg.with_suffix(".mp3"))
+            except Exception:
+                logger.warning("failed to convert %s", ogg)
     pngs = sorted(Path("assets").rglob("*.png"))
     if pngs:
         pack_atlas.pack_atlas([str(p) for p in pngs])
@@ -53,6 +61,8 @@ def _build(args: argparse.Namespace) -> None:
                 idx = fp.parts.index("sage_adaptors")
                 if fp.parts[idx + 1] not in selected:
                     continue
+            if args.bundle == "windows" and fp.suffix == ".ogg":
+                continue
             tf.add(fp)
             manifest[str(fp)] = hashlib.sha256(fp.read_bytes()).hexdigest()
     with open(out_dir / "manifest.json", "w", encoding="utf-8") as f:

@@ -3,6 +3,7 @@ from .sdl_viewport_widget import SDLViewportWidget
 from .properties_widget import PropertiesWidget
 from .tag_bar import TagBar
 from .ruler_widget import RulerWidget
+from .mixer_widget import MixerWidget
 
 __all__ = [
     "ViewportWidget",
@@ -10,4 +11,5 @@ __all__ = [
     "PropertiesWidget",
     "TagBar",
     "RulerWidget",
+    "MixerWidget",
 ]

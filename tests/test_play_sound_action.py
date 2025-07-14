@@ -2,21 +2,24 @@ import types
 
 import engine.logic.actions.playsound as playsound_mod
 
+class DummySound:
+    def __init__(self):
+        self.stopped = False
+    def set_pitch(self, p):
+        pass
+    def stop(self):
+        self.stopped = True
+
+
 
 def test_play_sound_executes():
     calls = {}
 
-    class DummyAM:
-        def __init__(self):
-            pass
+    def dummy_play(name, **_):
+        calls['name'] = name
 
-        def play(self, name):
-            calls['name'] = name
-
-    # Patch AudioManager
-    playsound_mod.AudioManager = DummyAM
+    playsound_mod.play_sound = dummy_play
     action = playsound_mod.PlaySound('tone.wav')
     eng = types.SimpleNamespace()
     action.execute(eng, None, 0)
     assert calls['name'] == 'tone.wav'
-    assert isinstance(eng._audio_manager, DummyAM)
