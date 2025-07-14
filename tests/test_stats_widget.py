@@ -14,4 +14,4 @@ def test_stats_widget_tracks_fps(monkeypatch):
     w = StatsWidget(window)
     w.update_stats()
     w.update_stats()
-    assert "FPS" in getattr(w.label, "text", "")
+    assert "FPS" in getattr(w.fps_label, "text", "")

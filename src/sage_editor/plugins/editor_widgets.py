@@ -441,25 +441,25 @@ class StatsWidget(QWidget):
                 "background:rgba(34,34,34,0.8);"
                 "border:2px solid #ffb84d;color:white;border-radius:4px;"
             )
-        layout = QHBoxLayout(self)
+        layout = QVBoxLayout(self)
         if hasattr(layout, "setContentsMargins"):
             layout.setContentsMargins(8, 6, 8, 6)
         if hasattr(layout, "setSpacing"):
-            layout.setSpacing(4)
-        self.label = QLabel("", self)
-        metrics = self.fontMetrics() if hasattr(self, "fontMetrics") else None
-        if metrics is not None and hasattr(self.label, "setFixedWidth"):
-            self.label.setFixedWidth(
-                metrics.horizontalAdvance("Objs: 9999 FPS: 999")
-            )
-        if hasattr(self.label, "setAlignment"):
-            from PyQt6.QtCore import Qt
-            self.label.setAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
-        if hasattr(self.label, "font"):
-            font = self.label.font()
-            font.setPointSize(font.pointSize() + 1)
-            self.label.setFont(font)
-        layout.addWidget(self.label)
+            layout.setSpacing(2)
+        from PyQt6.QtCore import Qt
+        self.obj_label = QLabel("", self)
+        self.vert_label = QLabel("", self)
+        self.tri_label = QLabel("", self)
+        self.fps_label = QLabel("", self)
+        labels = [self.obj_label, self.vert_label, self.tri_label, self.fps_label]
+        for lbl in labels:
+            if hasattr(lbl, "setAlignment"):
+                lbl.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+            if hasattr(lbl, "font"):
+                font = lbl.font()
+                font.setPointSize(font.pointSize() + 1)
+                lbl.setFont(font)
+            layout.addWidget(lbl)
         try:  # pragma: no cover - real Qt
             from PyQt6.QtWidgets import QToolButton  # type: ignore[import-not-found]
         except Exception:  # pragma: no cover - test stubs
@@ -482,15 +482,29 @@ class StatsWidget(QWidget):
         self._fps = 0.0
 
     def _on_toggle(self, checked: bool) -> None:
-        if hasattr(self.label, "setVisible"):
-            self.label.setVisible(checked)
+        for lbl in (self.obj_label, self.vert_label, self.tri_label, self.fps_label):
+            if hasattr(lbl, "setVisible"):
+                lbl.setVisible(checked)
         txt = "\u25B2" if not checked else "\u25BC"
         if hasattr(self.toggle, "setText"):
             self.toggle.setText(txt)
 
     def update_stats(self) -> None:
         scene = getattr(self._window, "scene", None)
-        count = len(getattr(scene, "objects", [])) if scene else 0
+        objects = getattr(scene, "objects", []) if scene else []
+        count = len(objects)
+        verts = 0
+        tris = 0
+        for obj in objects:
+            mesh = getattr(obj, "mesh", None)
+            if not mesh:
+                continue
+            verts += len(getattr(mesh, "vertices", []))
+            inds = getattr(mesh, "indices", None)
+            if inds is not None:
+                tris += len(inds) // 3
+            else:
+                tris += max(0, len(mesh.vertices) - 2)
         engine = getattr(self._window, "_engine", None)
         fps = getattr(engine, "current_fps", None)
         if fps is None:
@@ -501,6 +515,12 @@ class StatsWidget(QWidget):
                 self._frames = 0
                 self._last = now
             fps = self._fps
-        if hasattr(self.label, "setText"):
-            self.label.setText(f"Objs: {count:4d} FPS: {fps:4.0f}")
+        if hasattr(self.obj_label, "setText"):
+            self.obj_label.setText(f"Objects: {count}")
+        if hasattr(self.vert_label, "setText"):
+            self.vert_label.setText(f"Vertices: {verts}")
+        if hasattr(self.tri_label, "setText"):
+            self.tri_label.setText(f"Triangles: {tris}")
+        if hasattr(self.fps_label, "setText"):
+            self.fps_label.setText(f"FPS: {fps:.0f}")
 
