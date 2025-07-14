@@ -21,6 +21,7 @@ keywords = ["game", "engine", "sage", "sageaudio", "sagemesh"]
 dependencies = [
     "Pillow",
     "tomli; python_version < '3.11'",
+    "websockets",
 ]
 
 [project.optional-dependencies]

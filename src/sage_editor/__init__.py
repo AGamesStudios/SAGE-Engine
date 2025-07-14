@@ -7,6 +7,10 @@ import sys
 
 from engine.core.engine import _exception_handler
 from engine.utils.log import init_logger, logger
+import threading
+import asyncio
+import os
+from . import hot_reload
 
 from pathlib import Path
 
@@ -39,6 +43,11 @@ def main() -> int:
     init_logger()
     sys.excepthook = _exception_handler
     editor = Editor()
+    if os.environ.get("SAGE_HOT_RELOAD") == "1":
+        threading.Thread(
+            target=lambda: asyncio.run(hot_reload.start_listener()),
+            daemon=True,
+        ).start()
     editor.load_plugins()
     if not getattr(editor, "window", None):
         logger.error(

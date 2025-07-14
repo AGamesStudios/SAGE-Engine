@@ -6,3 +6,4 @@ PySDL2
 pygame>=2.6
 markdown
 maturin
+websockets
