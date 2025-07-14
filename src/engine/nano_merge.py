@@ -1,4 +1,7 @@
-import numpy as np
+try:
+    import numpy as np  # type: ignore
+except Exception:  # pragma: no cover - optional dependency
+    np = None
 from typing import Iterable, Tuple
 
 __all__ = ["merge_ops"]
@@ -10,7 +13,7 @@ def merge_ops(ops: Iterable[Tuple[int, bytes]], simd: bool = True) -> bytes:
     if not ops_list:
         return b""
 
-    if simd:
+    if simd and np is not None:
         try:
             crcs = np.fromiter((o[0] for o in ops_list), dtype=np.uint32)
             order = crcs.argsort(kind="stable")

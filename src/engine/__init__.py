@@ -149,6 +149,8 @@ _lazy = {
     'merge_ops': ('engine.nano_merge', 'merge_ops'),
     'PatcherTask': ('engine.nano_sched', 'PatcherTask'),
     'run_sched': ('engine.nano_sched', 'run_sched'),
+    'RenderFabric': ('engine.render_fabric', 'RenderFabric'),
+    'SpritePass': ('engine.render_fabric', 'SpritePass'),
 }
 
 __all__ = sorted(
