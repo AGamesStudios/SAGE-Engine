@@ -3,7 +3,13 @@ import json
 from pathlib import Path
 
 LANGUAGES: dict[str, dict[str, str]] = {}
-CURRENT_LANGUAGE = "English"
+# keys are derived from file names like ``en.json`` -> ``En`` so we
+# default to the English dictionary using that key
+CURRENT_LANGUAGE = "En"
+
+# map internal language keys to human friendly names which appear in
+# the translation files so we can translate menu entries
+LANGUAGE_NAMES = {"En": "English", "Ru": "Русский"}
 
 
 def _load_languages() -> None:
@@ -27,3 +33,9 @@ def set_language(name: str) -> None:
 
 def tr(text: str) -> str:
     return LANGUAGES.get(CURRENT_LANGUAGE, {}).get(text, text)
+
+
+def language_label(key: str) -> str:
+    """Return the display name for *key* translated for the current locale."""
+    name = LANGUAGE_NAMES.get(key, key)
+    return tr(name)

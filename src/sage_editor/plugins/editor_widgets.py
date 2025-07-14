@@ -54,15 +54,18 @@ class ConsoleHandler(logging.Handler):
 
 
 class UndoStack:
-    """Simple stack for undo/redo snapshots."""
+    """Simple stack for undo/redo snapshots with a size limit."""
 
-    def __init__(self) -> None:
+    def __init__(self, limit: int = 50) -> None:
+        self._limit = limit
         self._undo: list[bytes] = []
         self._redo: list[bytes] = []
 
     def snapshot(self, scene: "Scene") -> None:
         # pickle the scene so meshes and custom objects survive round-trips
         self._undo.append(zlib.compress(pickle.dumps(scene)))
+        if len(self._undo) > self._limit:
+            self._undo.pop(0)
         self._redo.clear()
 
     def undo(self, window: "EditorWindow") -> None:
@@ -70,6 +73,8 @@ class UndoStack:
             return
         state = pickle.loads(zlib.decompress(self._undo.pop()))
         self._redo.append(zlib.compress(pickle.dumps(window.scene)))
+        if len(self._redo) > self._limit:
+            self._redo.pop(0)
         window.scene = state
         window.update_object_list(preserve=False)
         window.draw_scene()
@@ -79,6 +84,8 @@ class UndoStack:
             return
         state = pickle.loads(zlib.decompress(self._redo.pop()))
         self._undo.append(zlib.compress(pickle.dumps(window.scene)))
+        if len(self._undo) > self._limit:
+            self._undo.pop(0)
         window.scene = state
         window.update_object_list(preserve=False)
         window.draw_scene()
