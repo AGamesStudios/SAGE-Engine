@@ -20,14 +20,10 @@ def install_maturin() -> None:
 
 
 def build_nano_core() -> None:
-    manifest = ROOT / "native" / "nano_core" / "Cargo.toml"
     subprocess.run([
-        "maturin",
-        "develop",
-        "--release",
-        "--manifest-path",
-        str(manifest),
-    ], check=True)
+        sys.executable,
+        str(ROOT / "scripts" / "build_nano_core.py"),
+    ], check=True, env=os.environ)
 
 
 def run_tests() -> None:

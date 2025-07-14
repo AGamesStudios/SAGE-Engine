@@ -2,22 +2,38 @@ from __future__ import annotations
 
 import subprocess
 import time
+import os
 from pathlib import Path
+import sysconfig
+import shutil
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "native" / "nano_core"
 FLAG = ROOT / "reload.flag"
 
 
+def _compress(path: Path) -> None:
+    if not shutil.which("upx"):
+        return
+    subprocess.run(["upx", "-q", str(path)], check=True)
+
+
 def build() -> None:
     manifest = SRC / "Cargo.toml"
-    subprocess.run([
+    build_type = os.environ.get("SAGE_BUILD", "release").lower()
+    args = [
         "maturin",
         "develop",
-        "--release",
         "--manifest-path",
         str(manifest),
-    ], check=True)
+    ]
+    if build_type == "release":
+        args.insert(2, "--release")
+    subprocess.run(args, check=True)
+    if build_type == "release":
+        platlib = Path(sysconfig.get_paths()["platlib"])
+        for so in platlib.glob("nano_core*.so"):
+            _compress(so)
     FLAG.touch()
 
 
@@ -37,3 +53,4 @@ def watch() -> None:
 
 if __name__ == "__main__":
     watch()
+

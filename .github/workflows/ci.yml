@@ -24,3 +24,18 @@ jobs:
         shell: bash
       - run: python scripts/build_docs.py
         shell: bash
+
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+      - run: pip install maturin
+      - run: maturin develop --manifest-path native/nano_core/Cargo.toml
+      - run: python examples/hello_sprite_py/run_headless.py

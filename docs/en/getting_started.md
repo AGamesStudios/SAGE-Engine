@@ -49,7 +49,8 @@ older blocks in bulk.
 
 ## Working from PyCharm
 1. Create a virtual environment with `python -m venv .venv`.
-2. Build the Rust extension using `maturin develop --release`.
+2. Build the Rust extension using `maturin develop`. Set `SAGE_BUILD=debug` to
+   disable optimisation.
 3. Run `main.py` from the IDE.
 
 ```

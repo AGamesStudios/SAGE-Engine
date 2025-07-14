@@ -21,7 +21,9 @@ python tools/bootstrap.py
 ```
 Use `make watch-rust` in a separate terminal to rebuild the Rust core when
 `.rs` files change. The Python process can watch for `reload.flag` and reload the
-module automatically.
+module automatically. Set `SAGE_BUILD=debug` before running
+`scripts/build_nano_core.py` to keep debug symbols. Release builds are
+compressed with `upx` if available.
 Run `python scripts/clean_pycache.py` afterwards to delete leftover `__pycache__` directories.
 You can gather performance statistics with `engine.utils.Profiler`:
 ```python
