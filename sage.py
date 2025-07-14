@@ -8,6 +8,7 @@ from engine import adaptors
 from engine import bundles
 
 from engine.utils import TraceProfiler
+from tools import pack_atlas
 import yaml
 
 
@@ -18,6 +19,9 @@ def _build(args: argparse.Namespace) -> None:
         adaptors.load_adaptors(config.get("adaptors", {}).get("list"))
     else:
         adaptors.load_adaptors()
+    pngs = sorted(Path("assets").glob("*.png"))
+    if pngs:
+        pack_atlas.pack_atlas([str(p) for p in pngs])
     if profiler:
         with profiler.phase("Input"):
             pass

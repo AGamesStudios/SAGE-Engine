@@ -2,7 +2,7 @@
   "objects": [
     {"type": "camera", "x": 0, "y": 0, "width": 640, "height": 480, "active": true, "name": "Camera"},
     {"type": "map", "map_file": "../Resources/map.sagemap", "visible": true, "name": "Level"},
-    {"type": "sprite", "animation": "../Resources/walk.sageanimation", "x": 32, "y": 32, "name": "Hero"}
+    {"type": "sprite", "animation": "../Resources/walk.sageanimation", "x": 32, "y": 32, "name": "Hero", "atlas": "../Resources/atlas.json"}
   ],
   "events": [
     {

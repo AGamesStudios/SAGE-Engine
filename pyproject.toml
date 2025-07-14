@@ -53,7 +53,7 @@ include = ["engine*", "sage_editor*", "sage_adaptors*"]
 
 [tool.setuptools.package-data]
 "sage_editor" = ["plugins/plugins.json", "translations/*.json"]
-"engine" = ["caps.toml"]
+"engine" = ["caps.toml", "renderers/wgsl/*.wgsl"]
 
 [tool.pyright]
 include = ["src"]

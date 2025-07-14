@@ -16,6 +16,7 @@ Select a topic from the list to learn about the engine and editor features.
 * [NanoCore](nano_core.md)
 * [Patcher Scripts](patchers.md)
 * [RenderFabric](render_fabric.md)
+* [Sprite Rendering Pipeline](sprite_pipeline.md)
 * [Sage Command Line](sage_cli.md)
 * [Adaptors](adaptors.md)
 * [Capability Flags](capabilities.md)

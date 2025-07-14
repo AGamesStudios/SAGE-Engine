@@ -115,6 +115,21 @@ class OpenGLRenderer(Renderer):
         self._quad_vbo = None
         self._projection: list[float] | None = None
 
+    def draw_sprites(self, sprites: list[tuple[int, tuple[float, float, float, float]]]) -> None:
+        """Draw *sprites* using a trivial immediate mode API."""
+        for tex_id, (x, y, w, h) in sprites:
+            GL.glBindTexture(GL.GL_TEXTURE_2D, tex_id)
+            GL.glBegin(GL.GL_QUADS)
+            GL.glTexCoord2f(0.0, 0.0)
+            GL.glVertex2f(x, y)
+            GL.glTexCoord2f(1.0, 0.0)
+            GL.glVertex2f(x + w, y)
+            GL.glTexCoord2f(1.0, 1.0)
+            GL.glVertex2f(x + w, y + h)
+            GL.glTexCoord2f(0.0, 1.0)
+            GL.glVertex2f(x, y + h)
+            GL.glEnd()
+
     def set_window_size(self, width: int, height: int):
         if self.widget:
             self.widget.resize(width, height)

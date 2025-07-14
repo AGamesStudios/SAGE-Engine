@@ -150,6 +150,8 @@ and `docs/en/chunk_delta.md`.
 `run_sched()` executes `PatcherTask` objects in dependency order. See
 `docs/en/nano_merge.md` and `docs/en/nano_sched.md`.
 `RenderFabric` initialises a WGPU device with an OpenGL 3.3 fallback to draw sprites via `SpritePass`.
+The sprite pipeline packs PNG files into an atlas during `sage build`; see
+[`docs/en/sprite_pipeline.md`](docs/en/sprite_pipeline.md) for details.
 Adaptors provide modular backends for rendering, audio, networking and GUI. They
 are discovered through the `sage_adaptor` entry point so new backends can be
 installed without modifying the engine.

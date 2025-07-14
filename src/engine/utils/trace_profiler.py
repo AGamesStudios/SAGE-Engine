@@ -29,6 +29,18 @@ class TraceProfiler:
             "tid": 0,
         })
 
+    def instant(self, name: str) -> None:
+        """Record an instant event at the current time."""
+        ts = time.perf_counter() * 1_000_000
+        self.events.append({
+            "name": name,
+            "ph": "i",
+            "ts": ts,
+            "pid": 0,
+            "tid": 0,
+            "s": "g",
+        })
+
     def write(self) -> None:
         with open(self.path, "w", encoding="utf-8") as f:
             json.dump({"traceEvents": self.events}, f)
