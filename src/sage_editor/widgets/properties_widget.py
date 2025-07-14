@@ -9,6 +9,7 @@ from PyQt6.QtWidgets import (  # type: ignore[import-not-found]
     QGroupBox,
     QHBoxLayout,
     QLabel,
+    QToolButton,
     QVBoxLayout,
     QWidget,
 )
@@ -49,7 +50,18 @@ class PropertiesWidget(QWidget):
         obj_form.addRow("Tags", self.tags_edit)
         self.visible_check = QCheckBox("Visible", self)
         _disable_text_select(self.visible_check)
-        obj_form.addRow(self.visible_check)
+        visible_widget = QWidget(self)
+        visible_layout = QHBoxLayout(visible_widget)
+        visible_layout.addWidget(self.visible_check)
+        self.reset_visible = QToolButton(self)
+        if hasattr(self.reset_visible, "setText"):
+            self.reset_visible.setText("\u21BA")
+        if hasattr(self.reset_visible, "setAutoRaise"):
+            self.reset_visible.setAutoRaise(True)
+        if hasattr(self.reset_visible, "clicked"):
+            self.reset_visible.clicked.connect(self._reset_visible)
+        visible_layout.addWidget(self.reset_visible)
+        obj_form.addRow(visible_widget)
         layout.addWidget(self.object_group)
 
         self.transform_group = QGroupBox("Transform", self)
@@ -65,11 +77,30 @@ class PropertiesWidget(QWidget):
         pos_layout.addWidget(self.pos_x)
         pos_layout.addWidget(QLabel("Y", self))
         pos_layout.addWidget(self.pos_y)
+        self.reset_pos = QToolButton(self)
+        if hasattr(self.reset_pos, "setText"):
+            self.reset_pos.setText("\u21BA")
+        if hasattr(self.reset_pos, "setAutoRaise"):
+            self.reset_pos.setAutoRaise(True)
+        if hasattr(self.reset_pos, "clicked"):
+            self.reset_pos.clicked.connect(self._reset_position)
+        pos_layout.addWidget(self.reset_pos)
         trans_form.addRow("Position", pos_widget)
 
+        rot_widget = QWidget(self)
+        rot_layout = QHBoxLayout(rot_widget)
         self.rot_dial = ProgressWheel(self)
         self.rot_dial.setRange(0, 360)
-        trans_form.addRow("Rotation", self.rot_dial)
+        rot_layout.addWidget(self.rot_dial)
+        self.reset_rot = QToolButton(self)
+        if hasattr(self.reset_rot, "setText"):
+            self.reset_rot.setText("\u21BA")
+        if hasattr(self.reset_rot, "setAutoRaise"):
+            self.reset_rot.setAutoRaise(True)
+        if hasattr(self.reset_rot, "clicked"):
+            self.reset_rot.clicked.connect(self._reset_rotation)
+        rot_layout.addWidget(self.reset_rot)
+        trans_form.addRow("Rotation", rot_widget)
 
         scale_widget = QWidget(self)
         scale_layout = QHBoxLayout(scale_widget)
@@ -87,6 +118,14 @@ class PropertiesWidget(QWidget):
         scale_layout.addWidget(QLabel("Y", self))
         scale_layout.addWidget(self.scale_y)
         scale_layout.addWidget(self.link_scale)
+        self.reset_scale = QToolButton(self)
+        if hasattr(self.reset_scale, "setText"):
+            self.reset_scale.setText("\u21BA")
+        if hasattr(self.reset_scale, "setAutoRaise"):
+            self.reset_scale.setAutoRaise(True)
+        if hasattr(self.reset_scale, "clicked"):
+            self.reset_scale.clicked.connect(self._reset_scale)
+        scale_layout.addWidget(self.reset_scale)
         trans_form.addRow("Scale", scale_widget)
 
         pivot_widget = QWidget(self)
@@ -135,6 +174,14 @@ class PropertiesWidget(QWidget):
         pivot_layout.addWidget(self.pivot_x)
         pivot_layout.addWidget(self.pivot_y_label)
         pivot_layout.addWidget(self.pivot_y)
+        self.reset_pivot = QToolButton(self)
+        if hasattr(self.reset_pivot, "setText"):
+            self.reset_pivot.setText("\u21BA")
+        if hasattr(self.reset_pivot, "setAutoRaise"):
+            self.reset_pivot.setAutoRaise(True)
+        if hasattr(self.reset_pivot, "clicked"):
+            self.reset_pivot.clicked.connect(self._reset_pivot)
+        pivot_layout.addWidget(self.reset_pivot)
         trans_form.addRow("Pivot", pivot_widget)
         self.pivot_combo.currentIndexChanged.connect(self._pivot_preset_changed)
         self._pivot_preset_changed(self._manual_index)
@@ -147,6 +194,14 @@ class PropertiesWidget(QWidget):
         _disable_text_select(self.flip_y)
         flip_layout.addWidget(self.flip_x)
         flip_layout.addWidget(self.flip_y)
+        self.reset_flip = QToolButton(self)
+        if hasattr(self.reset_flip, "setText"):
+            self.reset_flip.setText("\u21BA")
+        if hasattr(self.reset_flip, "setAutoRaise"):
+            self.reset_flip.setAutoRaise(True)
+        if hasattr(self.reset_flip, "clicked"):
+            self.reset_flip.clicked.connect(self._reset_flip)
+        flip_layout.addWidget(self.reset_flip)
         trans_form.addRow("Flip", flip_widget)
 
         self.scale_x.editingFinished.connect(self._sync_scale_x)
@@ -384,4 +439,26 @@ class PropertiesWidget(QWidget):
             self.pivot_x.setEnabled(False)
         if hasattr(self.pivot_y, "setEnabled"):
             self.pivot_y.setEnabled(False)
+
+    def _reset_position(self) -> None:
+        self.pos_x.setValue(0.0)
+        self.pos_y.setValue(0.0)
+
+    def _reset_rotation(self) -> None:
+        self.rot_dial.setValue(0)
+
+    def _reset_scale(self) -> None:
+        self.scale_x.setValue(1.0)
+        self.scale_y.setValue(1.0)
+
+    def _reset_pivot(self) -> None:
+        self.pivot_combo.setCurrentIndex(self._manual_index)
+        self._pivot_preset_changed(self._manual_index)
+
+    def _reset_visible(self) -> None:
+        self.visible_check.setChecked(True)
+
+    def _reset_flip(self) -> None:
+        self.flip_x.setChecked(False)
+        self.flip_y.setChecked(False)
 
