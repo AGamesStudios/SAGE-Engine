@@ -7,3 +7,8 @@ logger = getLogger(__name__)
 
 def register():
     logger.info("Render adaptor registered")
+
+
+def get_capabilities() -> list[str]:
+    """Return supported capability flags."""
+    return []

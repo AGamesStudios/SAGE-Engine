@@ -12,7 +12,8 @@ Sprite animations expose speed, pause and reverse options while ``AudioManager``
 
 Documentation lives under `docs/`. Begin with [docs/en/getting_started.md](docs/en/getting_started.md) for a simple tutorial or read [docs/en/index.md](docs/en/index.md) for a full list of guides. See [plugins](docs/en/plugins.md) and [creating a plugin](docs/en/create_plugin.md) for extension points. Refer to [optimisation tips](docs/en/optimisation.md) for performance advice.
 For known caveats such as dependency requirements and experimental features see
-[limitations](docs/en/limitations.md).
+[limitations](docs/en/limitations.md). The development roadmap and design
+proposals live in [ROADMAP.md](ROADMAP.md) and the [rfcs/](rfcs) directory.
 
 ## Quick start
 ```bash
