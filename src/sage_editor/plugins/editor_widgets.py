@@ -459,6 +459,21 @@ class StatsWidget(QFrame):
         self.vert_label = QLabel("", self)
         self.tri_label = QLabel("", self)
         self.fps_label = QLabel("", self)
+        try:  # pragma: no cover - real Qt
+            from PyQt6.QtWidgets import QToolButton  # type: ignore[import-not-found]
+        except Exception:  # pragma: no cover - test stubs
+            QToolButton = QPushButton  # type: ignore[assignment]
+        self.toggle = QToolButton(self)
+        if hasattr(self.toggle, "setText"):
+            self.toggle.setText("\u25B2")
+        self.toggle.setCheckable(True)
+        self.toggle.setChecked(True)
+        if hasattr(self.toggle, "setFixedSize"):
+            self.toggle.setFixedSize(16, 16)
+        if hasattr(self.toggle, "toggled"):
+            self.toggle.toggled.connect(self._on_toggle)
+        layout.addWidget(self.toggle)
+
         labels = [self.obj_label, self.vert_label, self.tri_label, self.fps_label]
         for lbl in labels:
             if hasattr(lbl, "setAlignment"):
@@ -468,20 +483,6 @@ class StatsWidget(QFrame):
                 font.setPointSize(font.pointSize() + 1)
                 lbl.setFont(font)
             layout.addWidget(lbl)
-        try:  # pragma: no cover - real Qt
-            from PyQt6.QtWidgets import QToolButton  # type: ignore[import-not-found]
-        except Exception:  # pragma: no cover - test stubs
-            QToolButton = QPushButton  # type: ignore[assignment]
-        self.toggle = QToolButton(self)
-        if hasattr(self.toggle, "setText"):
-            self.toggle.setText("\u25BC")
-        self.toggle.setCheckable(True)
-        self.toggle.setChecked(True)
-        if hasattr(self.toggle, "setFixedSize"):
-            self.toggle.setFixedSize(16, 16)
-        if hasattr(self.toggle, "toggled"):
-            self.toggle.toggled.connect(self._on_toggle)
-        layout.addWidget(self.toggle)
         if hasattr(layout, "addStretch"):
             layout.addStretch()
 
