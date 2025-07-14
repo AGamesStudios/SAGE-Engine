@@ -430,16 +430,24 @@ class SnapPopup(QWidget):
             self.show()
 
 
-class StatsWidget(QWidget):
+try:  # pragma: no cover - real Qt only
+    from PyQt6.QtWidgets import QFrame  # type: ignore[import-not-found]
+except Exception:  # pragma: no cover - test stubs
+    QFrame = QWidget  # type: ignore[assignment]
+
+
+class StatsWidget(QFrame):
     """Collapsible panel showing basic scene statistics."""
 
     def __init__(self, window: "EditorWindow", parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._window = window
+        if hasattr(self, "setFrameShape"):
+            self.setFrameShape(QFrame.Shape.StyledPanel)
         if hasattr(self, "setStyleSheet"):
             self.setStyleSheet(
                 "background:rgba(34,34,34,0.8);"
-                "border:2px solid #ffb84d;color:white;border-radius:4px;"
+                "color:white;border-radius:4px;"
             )
         layout = QVBoxLayout(self)
         if hasattr(layout, "setContentsMargins"):
