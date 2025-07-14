@@ -182,8 +182,7 @@ class ModelingMixin:
         base.pivot_x = base.pivot_y = 0.5
 
         base.mesh = Mesh(
-            [self.world_to_mesh(base, x, y) for x, y in result.vertices],
-            result.indices,
+            [self.world_to_mesh(base, x, y) for x, y in result.vertices]
         )
 
         for obj in objs[1:]:

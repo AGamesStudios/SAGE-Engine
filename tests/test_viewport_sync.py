@@ -799,6 +799,7 @@ def test_union_selected(monkeypatch):
     before = len(obj_a.mesh.vertices) + len(obj_b.mesh.vertices)
     win.union_selected()
     assert len(win.selected_obj.mesh.vertices) >= before
+    assert win.selected_obj.mesh.indices is None
     assert obj_b not in win.scene.objects or not obj_b.visible
 
 
