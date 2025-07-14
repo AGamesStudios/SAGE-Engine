@@ -139,3 +139,17 @@ def test_concave_polygon_no_shapely(monkeypatch):
     assert len(mesh.indices) >= 3 * (len(verts) - 2)
     assert max(mesh.indices) < len(mesh.vertices)
 
+
+def test_self_intersecting_polygon():
+    verts = [(0, 0), (2, 2), (0, 2), (2, 0)]
+    mesh = create_polygon_mesh(verts)
+    assert len(mesh.indices) % 3 == 0
+    assert max(mesh.indices) < len(mesh.vertices)
+
+
+def test_polygon_with_collinear_points():
+    verts = [(0, 0), (1, 0), (2, 0), (2, 1), (1, 2), (0, 1)]
+    mesh = create_polygon_mesh(verts)
+    assert len(mesh.indices) % 3 == 0
+    assert max(mesh.indices) < len(mesh.vertices)
+

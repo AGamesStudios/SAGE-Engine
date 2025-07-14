@@ -157,12 +157,59 @@ def _point_in_triangle(p: tuple[float, float], a, b, c) -> bool:
     return u >= 0 and v >= 0 and u + v <= 1
 
 
+def _segments_intersect(a1, a2, b1, b2) -> bool:
+    def orient(p, q, r) -> float:
+        return (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0])
+
+    o1 = orient(a1, a2, b1)
+    o2 = orient(a1, a2, b2)
+    o3 = orient(b1, b2, a1)
+    o4 = orient(b1, b2, a2)
+    if o1 == o2 == o3 == o4 == 0:
+        def on_seg(p, q, r) -> bool:
+            return min(p[0], r[0]) <= q[0] <= max(p[0], r[0]) and min(p[1], r[1]) <= q[1] <= max(p[1], r[1])
+
+        return (
+            on_seg(a1, b1, a2)
+            or on_seg(a1, b2, a2)
+            or on_seg(b1, a1, b2)
+            or on_seg(b1, a2, b2)
+        )
+    return o1 * o2 <= 0 and o3 * o4 <= 0
+
+
+def _has_self_intersections(verts: list[tuple[float, float]]) -> bool:
+    n = len(verts)
+    for i in range(n):
+        a1 = verts[i]
+        a2 = verts[(i + 1) % n]
+        for j in range(i + 1, n):
+            if j in {i, (i + 1) % n, (i - 1) % n}:
+                continue
+            b1 = verts[j]
+            b2 = verts[(j + 1) % n]
+            if _segments_intersect(a1, a2, b1, b2):
+                return True
+    return False
+
+
+def _clean_polygon(verts: list[tuple[float, float]]) -> list[tuple[float, float]]:
+    if not verts:
+        return []
+    cleaned = list(verts)
+    if len(cleaned) >= 2 and cleaned[0] == cleaned[-1]:
+        cleaned.pop()
+    return cleaned
+
+
 def _ear_clip(vertices: list[tuple[float, float]]) -> Mesh:
     order = list(range(len(vertices)))
     if _polygon_area(vertices) < 0:
         order.reverse()
     indices: list[int] = []
-    while len(order) > 2:
+    guard = 0
+    while len(order) > 2 and guard < len(vertices) ** 2:
+        guard += 1
         n = len(order)
         ear_found = False
         for i in range(n):
@@ -172,10 +219,10 @@ def _ear_clip(vertices: list[tuple[float, float]]) -> Mesh:
             ax, ay = vertices[prev_i]
             bx, by = vertices[curr_i]
             cx, cy = vertices[next_i]
-            if (bx - ax) * (cy - ay) - (by - ay) * (cx - ax) <= 0:
+            if (bx - ax) * (cy - ay) - (by - ay) * (cx - ax) <= 1e-9:
                 continue
-            inside = False
             tri = (vertices[prev_i], vertices[curr_i], vertices[next_i])
+            inside = False
             for j in order:
                 if j in (prev_i, curr_i, next_i):
                     continue
@@ -194,12 +241,15 @@ def _ear_clip(vertices: list[tuple[float, float]]) -> Mesh:
 
 def create_polygon_mesh(vertices: list[tuple[float, float]]) -> Mesh:
     """Return a mesh from an arbitrary polygon defined by ``vertices``."""
-    if len(vertices) < 3:
+    verts = _clean_polygon(list(vertices))
+    if len(verts) < 3:
         raise ValueError("At least three vertices required")
     if _Polygon is not None:
-        poly = _Polygon(vertices)  # pyright: ignore[reportOptionalCall]
+        poly = _Polygon(verts)  # pyright: ignore[reportOptionalCall]
+        if not poly.is_valid:  # type: ignore[attr-defined]
+            poly = poly.buffer(0)
         return _geom_to_mesh(poly)
-    return _ear_clip(list(vertices))
+    return _ear_clip(verts)
 
 
 def union_meshes(
