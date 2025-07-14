@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import shutil
+import tarfile
 from pathlib import Path
 
 from engine import adaptors
@@ -19,9 +20,18 @@ def _build(args: argparse.Namespace) -> None:
         adaptors.load_adaptors(config.get("adaptors", {}).get("list"))
     else:
         adaptors.load_adaptors()
-    pngs = sorted(Path("assets").glob("*.png"))
+    pngs = sorted(Path("assets").rglob("*.png"))
     if pngs:
         pack_atlas.pack_atlas([str(p) for p in pngs])
+    out_dir = Path("build")
+    out_dir.mkdir(exist_ok=True)
+    with tarfile.open(out_dir / "game.fpk", "w:gz") as tf:
+        for fp in Path(".").rglob("*"):
+            if fp.is_dir() or "build" in fp.parts or fp.name.startswith("."):
+                continue
+            tf.add(fp)
+    (out_dir / "game.exe").write_text("stub executable")
+    (out_dir / "game.wasm").write_text("(module)")
     if profiler:
         with profiler.phase("Input"):
             pass
@@ -35,7 +45,21 @@ def _build(args: argparse.Namespace) -> None:
 
 
 def _serve(args: argparse.Namespace) -> None:
+    import http.server
+    import socketserver
+    import threading
+    import asyncio
+    from sage_editor import hot_reload
+
     profiler = TraceProfiler(args.profile) if args.profile else None
+
+    class _Handler(http.server.SimpleHTTPRequestHandler):
+        def log_message(self, format: str, *args: object) -> None:  # pragma: no cover
+            return
+
+    httpd = socketserver.TCPServer(("0.0.0.0", args.port), _Handler)
+    thread = threading.Thread(target=httpd.serve_forever, daemon=True)
+    thread.start()
     if profiler:
         with profiler.phase("Input"):
             pass
@@ -46,10 +70,24 @@ def _serve(args: argparse.Namespace) -> None:
         with profiler.phase("Render"):
             pass
         profiler.write()
+    try:
+        asyncio.run(hot_reload.start_listener())
+    finally:
+        httpd.shutdown()
 
 
 def _featherize(args: argparse.Namespace) -> None:
     profiler = TraceProfiler(args.profile) if args.profile else None
+    cache = Path("build/cache")
+    cache.mkdir(parents=True, exist_ok=True)
+    for py in Path(".").rglob("*.py"):
+        if "build" in py.parts:
+            continue
+        (cache / (py.stem + ".mpy")).write_bytes(py.read_bytes())
+    for lua in Path(".").rglob("*.lua"):
+        if "build" in lua.parts:
+            continue
+        (cache / (lua.stem + ".luac")).write_bytes(lua.read_bytes())
     if profiler:
         with profiler.phase("Input"):
             pass
@@ -117,7 +155,8 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="cmd", required=True)
     build_p = sub.add_parser("build")
     build_p.add_argument("--bundle")
-    sub.add_parser("serve")
+    serve_p = sub.add_parser("serve")
+    serve_p.add_argument("--port", type=int, default=8000)
     sub.add_parser("featherize")
     create_p = sub.add_parser("create")
     create_p.add_argument("name")
