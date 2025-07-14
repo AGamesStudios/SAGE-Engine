@@ -22,6 +22,7 @@ from engine.mesh_utils import (  # noqa: F401
 )
 from sage_editor.qt import GLWidget  # noqa: F401
 from sage_editor.plugins.viewport_base import apply_ember_style
+import sage_editor.plugins.editor_window as editor_window
 from sage_editor.plugins.editor_window import EditorWindow
 from sage_editor.plugins.editor_widgets import (  # noqa: F401
     NoWheelLineEdit,
@@ -32,6 +33,12 @@ from sage_editor import widgets as _widgets  # noqa: F401
 ViewportWidget = _widgets.ViewportWidget
 SDLViewportWidget = _widgets.SDLViewportWidget
 PropertiesWidget = _widgets.PropertiesWidget
+
+# keep key classes in sync so tests can patch attributes via this module
+editor_window.OpenGLRenderer = OpenGLRenderer
+editor_window.Scene = Scene
+editor_window.Camera = Camera
+editor_window.GameObject = GameObject
 
 log = logging.getLogger(__name__)
 
@@ -71,6 +78,10 @@ class _ViewportProxy(ModuleType):
 
     def __setattr__(self, name: str, value) -> None:  # pragma: no cover - proxy
         globals()[name] = value
+        try:
+            setattr(editor_window, name, value)
+        except Exception:
+            pass
 
 module = _ViewportProxy('viewport')
 sys.modules['viewport'] = module

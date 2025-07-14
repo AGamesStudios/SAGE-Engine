@@ -5,7 +5,6 @@ import os
 import math
 from typing import Optional, cast
 
-from engine.renderers.opengl.core import OpenGLRenderer
 
 from PyQt6.QtWidgets import (  # type: ignore[import-not-found]
     QMainWindow,
@@ -309,14 +308,19 @@ class EditorWindow(QMainWindow):
         w = self.viewport.width() or 640
         h = self.viewport.height() or 480
         if backend == "opengl":
-            rcls = OpenGLRenderer
+            from . import viewport as vp
+            rcls = vp.OpenGLRenderer
         else:
             from engine.renderers import get_renderer
             rcls = get_renderer(backend)
             if rcls is None:
-                self.log_warning(f"Renderer '{backend}' unavailable; falling back to OpenGL")
-                rcls = OpenGLRenderer
-        self.renderer_backend = backend if rcls is not OpenGLRenderer else "opengl"
+                self.log_warning(
+                    f"Renderer '{backend}' unavailable; falling back to OpenGL"
+                )
+                from . import viewport as vp
+                rcls = vp.OpenGLRenderer
+        from . import viewport as vp
+        self.renderer_backend = backend if rcls is not vp.OpenGLRenderer else "opengl"
         self.renderer = rcls(
             width=w,
             height=h,
@@ -1092,8 +1096,9 @@ class EditorWindow(QMainWindow):
         """Display a preview from *cam* in the corner of the viewport."""
         self.preview_camera = cam
         if self.preview_renderer is None:
+            from . import viewport as vp
             try:
-                self.preview_renderer = OpenGLRenderer(
+                self.preview_renderer = vp.OpenGLRenderer(
                     width=160,
                     height=120,
                     widget=self.preview_widget,
@@ -1431,13 +1436,15 @@ class EditorWindow(QMainWindow):
 
     def change_renderer(self, backend: str) -> None:
         if backend == "opengl":
-            rcls = OpenGLRenderer
+            from . import viewport as vp
+            rcls = vp.OpenGLRenderer
         else:
             from engine.renderers import get_renderer
             rcls = get_renderer(backend)
             if rcls is None:
                 self.log_warning(f"Renderer '{backend}' unavailable; falling back to OpenGL")
-                rcls = OpenGLRenderer
+                from . import viewport as vp
+                rcls = vp.OpenGLRenderer
         if self.renderer is not None:
             try:
                 self.renderer.close()
@@ -1460,7 +1467,8 @@ class EditorWindow(QMainWindow):
             self.preview_widget = new_view.preview_widget  # type: ignore[attr-defined]
             self.preview_frame = new_view.preview_frame  # type: ignore[attr-defined]
         self.renderer = rcls(width=w, height=h, widget=self.viewport, vsync=False, keep_aspect=False)
-        self.renderer_backend = backend if rcls is not OpenGLRenderer else "opengl"
+        from . import viewport as vp
+        self.renderer_backend = backend if rcls is not vp.OpenGLRenderer else "opengl"
         self.set_renderer(self.renderer)
         self.draw_scene()
 

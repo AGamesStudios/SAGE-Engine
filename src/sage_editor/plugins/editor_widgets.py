@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import logging
 import math
-import json
 import zlib
+import pickle
 from typing import Any, TYPE_CHECKING
 
 from PyQt6.QtCore import Qt  # type: ignore[import-not-found]
@@ -61,25 +61,25 @@ class UndoStack:
         self._redo: list[bytes] = []
 
     def snapshot(self, scene: "Scene") -> None:
-        data = json.dumps(scene.to_dict()).encode("utf-8")
-        self._undo.append(zlib.compress(data))
+        # pickle the scene so meshes and custom objects survive round-trips
+        self._undo.append(zlib.compress(pickle.dumps(scene)))
         self._redo.clear()
 
     def undo(self, window: "EditorWindow") -> None:
         if not self._undo:
             return
-        state = json.loads(zlib.decompress(self._undo.pop()).decode("utf-8"))
-        self._redo.append(zlib.compress(json.dumps(window.scene.to_dict()).encode("utf-8")))
-        window.scene = Scene.from_dict(state)
+        state = pickle.loads(zlib.decompress(self._undo.pop()))
+        self._redo.append(zlib.compress(pickle.dumps(window.scene)))
+        window.scene = state
         window.update_object_list(preserve=False)
         window.draw_scene()
 
     def redo(self, window: "EditorWindow") -> None:
         if not self._redo:
             return
-        state = json.loads(zlib.decompress(self._redo.pop()).decode("utf-8"))
-        self._undo.append(zlib.compress(json.dumps(window.scene.to_dict()).encode("utf-8")))
-        window.scene = Scene.from_dict(state)
+        state = pickle.loads(zlib.decompress(self._redo.pop()))
+        self._undo.append(zlib.compress(pickle.dumps(window.scene)))
+        window.scene = state
         window.update_object_list(preserve=False)
         window.draw_scene()
 
