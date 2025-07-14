@@ -122,6 +122,8 @@ packaged with PyInstaller if standalone executables are required.
 
 Runtime state can be saved and loaded with `engine.save_game` and
 `engine.load_game`, producing `.sagesave` files.
+Use `engine.NanoTree` for a lightweight mapped tree of slices.
+See `docs/en/nano_tree.md` for an overview.
 For incremental snapshots use `engine.ChronoPatchTree` which stores
 compressed patches in a memory mapped file. Patches can be iterated for
 network sync or loaded later with `replay()`. See

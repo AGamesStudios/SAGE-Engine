@@ -141,6 +141,8 @@ _lazy = {
     'EDITOR_API_VERSION': ('engine.editor_api', 'EDITOR_API_VERSION'),
     'ChronoPatchTree': ('engine.chrono_patch', 'ChronoPatchTree'),
     'SmartSlice': ('engine.chrono_patch', 'SmartSlice'),
+    'NanoTree': ('engine.nano_tree', 'NanoTree'),
+    'Node': ('engine.nano_tree', 'Node'),
 }
 
 __all__ = sorted(
