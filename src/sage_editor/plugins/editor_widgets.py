@@ -437,13 +437,25 @@ class StatsWidget(QWidget):
         self._window = window
         if hasattr(self, "setStyleSheet"):
             self.setStyleSheet(
-                "background:#222;border:1px solid #ffb84d;color:white;"
-                "border-radius:4px;"
+                "background:rgba(34,34,34,0.8);"
+                "border:2px solid #ffb84d;color:white;border-radius:4px;"
             )
         layout = QHBoxLayout(self)
         if hasattr(layout, "setContentsMargins"):
-            layout.setContentsMargins(6, 4, 6, 4)
+            layout.setContentsMargins(8, 6, 8, 6)
+        if hasattr(layout, "setSpacing"):
+            layout.setSpacing(4)
         self.label = QLabel("", self)
+        metrics = self.fontMetrics() if hasattr(self, "fontMetrics") else None
+        if metrics is not None and hasattr(self.label, "setFixedWidth"):
+            self.label.setFixedWidth(metrics.horizontalAdvance("Objs: 9999"))
+        if hasattr(self.label, "setAlignment"):
+            from PyQt6.QtCore import Qt
+            self.label.setAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
+        if hasattr(self.label, "font"):
+            font = self.label.font()
+            font.setPointSize(font.pointSize() + 1)
+            self.label.setFont(font)
         layout.addWidget(self.label)
         try:  # pragma: no cover - real Qt
             from PyQt6.QtWidgets import QToolButton  # type: ignore[import-not-found]
@@ -468,12 +480,10 @@ class StatsWidget(QWidget):
         txt = "\u25B2" if not checked else "\u25BC"
         if hasattr(self.toggle, "setText"):
             self.toggle.setText(txt)
-        if hasattr(self, "adjustSize"):
-            self.adjustSize()
 
     def update_stats(self) -> None:
         scene = getattr(self._window, "scene", None)
         count = len(getattr(scene, "objects", [])) if scene else 0
         if hasattr(self.label, "setText"):
-            self.label.setText(f"Objs: {count}")
+            self.label.setText(f"Objs: {count:4d}")
 
