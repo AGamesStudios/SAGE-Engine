@@ -4,6 +4,7 @@ import logging
 import math
 import zlib
 import pickle
+import time
 from typing import Any, TYPE_CHECKING
 
 from PyQt6.QtCore import Qt  # type: ignore[import-not-found]
@@ -448,7 +449,9 @@ class StatsWidget(QWidget):
         self.label = QLabel("", self)
         metrics = self.fontMetrics() if hasattr(self, "fontMetrics") else None
         if metrics is not None and hasattr(self.label, "setFixedWidth"):
-            self.label.setFixedWidth(metrics.horizontalAdvance("Objs: 9999"))
+            self.label.setFixedWidth(
+                metrics.horizontalAdvance("Objs: 9999 FPS: 999")
+            )
         if hasattr(self.label, "setAlignment"):
             from PyQt6.QtCore import Qt
             self.label.setAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
@@ -474,6 +477,10 @@ class StatsWidget(QWidget):
         if hasattr(layout, "addStretch"):
             layout.addStretch()
 
+        self._last = time.perf_counter()
+        self._frames = 0
+        self._fps = 0.0
+
     def _on_toggle(self, checked: bool) -> None:
         if hasattr(self.label, "setVisible"):
             self.label.setVisible(checked)
@@ -484,6 +491,16 @@ class StatsWidget(QWidget):
     def update_stats(self) -> None:
         scene = getattr(self._window, "scene", None)
         count = len(getattr(scene, "objects", [])) if scene else 0
+        engine = getattr(self._window, "_engine", None)
+        fps = getattr(engine, "current_fps", None)
+        if fps is None:
+            self._frames += 1
+            now = time.perf_counter()
+            if now - self._last >= 1.0:
+                self._fps = self._frames / (now - self._last)
+                self._frames = 0
+                self._last = now
+            fps = self._fps
         if hasattr(self.label, "setText"):
-            self.label.setText(f"Objs: {count:4d}")
+            self.label.setText(f"Objs: {count:4d} FPS: {fps:4.0f}")
 

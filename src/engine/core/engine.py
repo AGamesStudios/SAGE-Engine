@@ -195,6 +195,9 @@ class Engine:
                 self.input = cls()  # pyright: ignore[reportCallIssue]
         self.last_time = time.perf_counter()
         self.delta_time = 0.0
+        self.current_fps = 0.0
+        self._fps_frames = 0
+        self._fps_time = self.last_time
         self.logic_active = False
         self.extensions: list[EngineExtension] = []
         self.physics_world = None
@@ -253,6 +256,12 @@ class Engine:
                 except Exception:
                     logger.exception("Renderer recovery failed")
             raise
+        self._fps_frames += 1
+        elapsed = now - self._fps_time
+        if elapsed >= 1.0:
+            self.current_fps = self._fps_frames / elapsed
+            self._fps_frames = 0
+            self._fps_time = now
 
     async def step_async(self) -> None:
         """Asynchronous version of :meth:`step`."""
@@ -277,6 +286,12 @@ class Engine:
                 except Exception:
                     logger.exception("Renderer recovery failed")
             raise
+        self._fps_frames += 1
+        elapsed = now - self._fps_time
+        if elapsed >= 1.0:
+            self.current_fps = self._fps_frames / elapsed
+            self._fps_frames = 0
+            self._fps_time = now
 
     def to_settings(self) -> EngineSettings:
         """Return the current configuration as :class:`EngineSettings`."""

@@ -376,8 +376,6 @@ class _ViewportMixin:
             self._last_world = None
             wx, wy = self._window.screen_to_world(self._press_pos)
             self._press_hit = self._window.find_object_at(wx, wy)
-            if self._press_hit is None:
-                self._window.select_object(None)
             obj = self._window.selected_obj
             if obj is not None and self._window.modeling:
                 mods = ev.modifiers() if hasattr(ev, "modifiers") else 0
@@ -458,6 +456,8 @@ class _ViewportMixin:
                 if self._hit_rotate_handle(self._press_pos):
                     self._drag_mode = "rotate"
                     self._last_world = self._window.screen_to_world(self._press_pos)
+            if self._drag_mode == "pan" and self._press_hit is None:
+                self._window.select_object(None)
             try:
                 from PyQt6.QtGui import QCursor  # type: ignore[import-not-found]
                 cast(QWidget, self).setCursor(QCursor(Qt.CursorShape.ClosedHandCursor))
