@@ -12,5 +12,8 @@ OpenGL fallback binds textures one by one but uses the same atlas layout.
 Performance stats are written to Chrome Trace when profiling is enabled. Look for
 "SpritePass CPU" and "GPUSubmit" events.
 
+To view the trace, open `chrome://tracing` or navigate to
+<https://ui.perfetto.dev> and drop the generated `trace.json` onto the page.
+
 Sprite roles require the fields `x`, `y`, `width`, `height` and `atlas_index`
 to select the region in the atlas.

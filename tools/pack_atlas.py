@@ -16,7 +16,17 @@ def pack_atlas(images: Iterable[str], out_dir: str | Path = "build") -> Path:
     """
     out_path = Path(out_dir)
     out_path.mkdir(parents=True, exist_ok=True)
-    loaded = [Image.open(img).convert("RGBA") for img in images]
+    loaded = []
+    names: set[str] = set()
+    for img in images:
+        path = Path(img)
+        if not path.is_file():
+            raise FileNotFoundError(path)
+        name = path.stem
+        if name in names:
+            raise ValueError(f"duplicate image name: {name}")
+        names.add(name)
+        loaded.append(Image.open(path).convert("RGBA"))
     if not loaded:
         raise ValueError("no images to pack")
     atlas_w = sum(im.width for im in loaded)
@@ -42,5 +52,11 @@ if __name__ == "__main__":  # pragma: no cover - CLI utility
     p.add_argument("output", help="output directory")
     p.add_argument("images", nargs="+", help="input PNG images")
     args = p.parse_args()
-    pack_atlas(args.images, args.output)
-    print(f"Atlas written to {Path(args.output) / 'atlas.png'}")
+    try:
+        path = pack_atlas(args.images, args.output)
+    except Exception as exc:
+        import sys
+
+        print(exc, file=sys.stderr)
+        raise SystemExit(1)
+    print(f"Atlas written to {path}")

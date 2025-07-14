@@ -45,6 +45,7 @@ def test_sprite_pass_perf(monkeypatch):
         fabric.sprite_pass.add_sprite(1, (0.0, 0.0, 1.0, 1.0))
     fabric.sprite_pass.draw()
     elapsed = time.perf_counter() - start
+    print(f"sprite pass cpu {elapsed*1000:.3f} ms")
     if elapsed > 0.002:
         import pytest
 
