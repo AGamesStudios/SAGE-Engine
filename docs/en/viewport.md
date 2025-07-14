@@ -5,6 +5,8 @@ Use the **Renderer** menu to switch between OpenGL and SDL if both backends are 
 Drag with the left mouse button to pan the camera, use the mouse wheel to zoom
 and left click to select objects under the cursor.
 Hold **Ctrl** or **Shift** and click to add or remove objects from the selection.
+Hold **Alt** and drag a rectangle to perform a box selection that picks every
+object or vertex inside the area.
 Right clicking a selected object opens a menu with **Copy**, **Paste** and
 **Delete** actions. Right clicking empty space opens a menu to create a new
 object. You can also create square, triangle, circle or polygon shapes from this menu.

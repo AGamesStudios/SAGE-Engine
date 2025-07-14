@@ -1108,3 +1108,40 @@ def test_click_empty_deselects(monkeypatch):
     win.select_object(found)
     assert win.selected_obj is None
 
+
+def test_box_select_objects(monkeypatch):
+    _stub_gl(monkeypatch, {})
+    _setup_qt(monkeypatch)
+
+    spec = importlib.util.spec_from_file_location(
+        'viewport', Path('src/sage_editor/plugins/viewport.py')
+    )
+    viewport = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(viewport)
+
+    win = viewport.EditorWindow()
+    obj_a = win.create_shape('square', x=0.0)
+    obj_b = win.create_shape('square', x=3.0)
+    win.box_select(-1.5, -1.5, 1.5, 1.5)
+    assert obj_a in win.selected_objs
+    assert obj_b not in win.selected_objs
+
+
+def test_box_select_vertices(monkeypatch):
+    _stub_gl(monkeypatch, {})
+    _setup_qt(monkeypatch)
+
+    spec = importlib.util.spec_from_file_location(
+        'viewport', Path('src/sage_editor/plugins/viewport.py')
+    )
+    viewport = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(viewport)
+
+    win = viewport.EditorWindow()
+    obj = win.create_shape('square')
+    win.select_object(obj)
+    win.toggle_model(True)
+    win.set_selection_mode('vertex')
+    win.box_select(-1.5, -1.5, 0.0, 0.0)
+    assert win.selected_vertices == {0}
+

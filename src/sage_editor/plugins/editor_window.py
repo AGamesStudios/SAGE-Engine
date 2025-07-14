@@ -1749,6 +1749,86 @@ class EditorWindow(QMainWindow, ModelingMixin):
         self.update_object_list()
         self.draw_scene()
 
+    def box_select(
+        self,
+        x0: float,
+        y0: float,
+        x1: float,
+        y1: float,
+        additive: bool = False,
+    ) -> None:
+        """Select objects or vertices within a rectangle."""
+        left = min(x0, x1)
+        right = max(x0, x1)
+        bottom = min(y0, y1)
+        top = max(y0, y1)
+        if (
+            self.modeling
+            and self.selected_obj is not None
+            and getattr(self.selected_obj, "mesh", None) is not None
+        ):
+            obj = self.selected_obj
+            verts = obj.mesh.vertices
+            if self.selection_mode == "vertex":
+                if not additive:
+                    self.selected_vertices.clear()
+                    self.selected_edges.clear()
+                    self.selected_face = False
+                for i, (vx, vy) in enumerate(verts):
+                    wx, wy = self.mesh_to_world(obj, vx, vy)
+                    if left <= wx <= right and bottom <= wy <= top:
+                        self.select_vertex(i, additive=True)
+                return
+            if self.selection_mode == "edge":
+                if not additive:
+                    self.selected_edges.clear()
+                n = len(verts)
+                for i in range(n):
+                    v0 = verts[i]
+                    v1 = verts[(i + 1) % n]
+                    w0 = self.mesh_to_world(obj, *v0)
+                    w1 = self.mesh_to_world(obj, *v1)
+                    if (
+                        left <= w0[0] <= right
+                        and bottom <= w0[1] <= top
+                        and left <= w1[0] <= right
+                        and bottom <= w1[1] <= top
+                    ):
+                        self.select_edge(i, additive=True)
+                return
+            if self.selection_mode == "face":
+                inside = True
+                for vx, vy in verts:
+                    wx, wy = self.mesh_to_world(obj, vx, vy)
+                    if not (left <= wx <= right and bottom <= wy <= top):
+                        inside = False
+                        break
+                if not additive:
+                    self.selected_face = inside
+                elif inside:
+                    self.selected_face = True
+                self.draw_scene(update_list=False)
+                return
+        if not additive:
+            self.selected_objs = []
+        for obj in self.scene.objects:
+            if isinstance(obj, Camera):
+                continue
+            left0, bottom0, w, h = obj.rect()
+            right0 = left0 + w
+            top0 = bottom0 + h
+            if not (right0 < left or left0 > right or top0 < bottom or bottom0 > top):
+                if additive:
+                    if obj in self.selected_objs:
+                        self.selected_objs.remove(obj)
+                    else:
+                        self.selected_objs.append(obj)
+                else:
+                    self.selected_objs.append(obj)
+        self.selected_obj = self.selected_objs[-1] if self.selected_objs else None
+        self.update_properties()
+        self.draw_scene(update_list=False)
+
     def _list_context_menu(self, point):
         menu = QMenu(self.objects)
         if self.selected_obj is not None:
