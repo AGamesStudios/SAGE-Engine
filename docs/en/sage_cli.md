@@ -7,12 +7,13 @@ The `sage` command provides basic project utilities. Available subcommands:
 * `featherize`
 * `create <name>` – generate a project from a template
 
-`build`, `serve` and `featherize` remain placeholders. `create` copies the
-`minimal_platformer` template when invoked with ``-t platformer`` so you can
-start a new game with:
+`build`, `serve` and `featherize` remain placeholders. `create` copies one of
+two templates: ``minimal_platformer`` with ``-t platformer`` or
+``hello_sprite_py`` for a simple Python script. Start a new project with:
 
 ```bash
 sage create mygame -t platformer
+sage create myhello -t hello_sprite_py
 ```
 
 The optional ``--profile`` flag writes a Chrome Trace JSON file capturing the

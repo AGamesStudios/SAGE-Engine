@@ -50,10 +50,13 @@ def _featherize(args: argparse.Namespace) -> None:
 
 
 def _create(args: argparse.Namespace) -> None:
-    template = args.template
-    if template != "platformer":
-        raise SystemExit(f"unknown template: {template}")
-    src = Path(__file__).resolve().parent / "minimal_platformer"
+    templates = {
+        "platformer": Path(__file__).resolve().parent / "minimal_platformer",
+        "hello_sprite_py": Path(__file__).resolve().parent / "hello_sprite_py",
+    }
+    src = templates.get(args.template)
+    if not src:
+        raise SystemExit(f"unknown template: {args.template}")
     dest = Path(args.name)
     if dest.exists():
         raise SystemExit(f"path exists: {dest}")

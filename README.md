@@ -17,9 +17,7 @@ For known caveats such as dependency requirements and experimental features see
 ## Quick start
 ```bash
 pip install -r requirements.txt
-ruff check .
-PYTHONPATH=src pytest -q
-python scripts/build_nano_core.py
+python tools/bootstrap.py
 ```
 Run `python scripts/clean_pycache.py` afterwards to delete leftover `__pycache__` directories.
 You can gather performance statistics with `engine.utils.Profiler`:
