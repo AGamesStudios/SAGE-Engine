@@ -205,7 +205,7 @@ class Engine:
             logger.exception("Failed to load engine plugins")
             raise
         try:
-            from .. import load_engine_libraries
+            from ..core.library import load_engine_libraries
             load_engine_libraries(self)  # pyright: ignore[reportCallIssue]
         except Exception:
             logger.exception("Failed to load engine libraries")

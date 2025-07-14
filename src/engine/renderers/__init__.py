@@ -176,9 +176,9 @@ class Renderer(ABC):
 
 __all__ = [
     "Renderer",
-    "OpenGLRenderer",
-    "SDLRenderer",
-    "NullRenderer",
+    "get_opengl_renderer",
+    "get_sdl_renderer",
+    "get_null_renderer",
     "SDLWidget",
     "register_sdlwidget",
     "register_renderer",
@@ -189,20 +189,28 @@ __all__ = [
 ]
 
 
-def __getattr__(name):
-    if name == "OpenGLRenderer":
-        _ensure_default()
-        return RENDERER_REGISTRY["opengl"]
-    if name == "SDLRenderer":
-        _ensure_default()
-        if "sdl" not in RENDERER_REGISTRY:
+def get_opengl_renderer():
+    """Return the OpenGL renderer class if available."""
+    _ensure_default()
+    return RENDERER_REGISTRY.get("opengl")
+
+
+def get_sdl_renderer():
+    """Return the SDL renderer class if available."""
+    _ensure_default()
+    if "sdl" not in RENDERER_REGISTRY:
+        try:
             from .sdl_renderer import SDLRenderer
-            register_renderer("sdl", SDLRenderer)
-        return RENDERER_REGISTRY["sdl"]
-    if name == "NullRenderer":
-        _ensure_default()
-        if "null" not in RENDERER_REGISTRY:
-            from .null_renderer import NullRenderer
-            register_renderer("null", NullRenderer)
-        return RENDERER_REGISTRY["null"]
-    raise AttributeError(name)
+        except Exception:  # pragma: no cover - optional dependency
+            return None
+        register_renderer("sdl", SDLRenderer)
+    return RENDERER_REGISTRY.get("sdl")
+
+
+def get_null_renderer():
+    """Return the Null renderer class."""
+    _ensure_default()
+    if "null" not in RENDERER_REGISTRY:
+        from .null_renderer import NullRenderer
+        register_renderer("null", NullRenderer)
+    return RENDERER_REGISTRY.get("null")

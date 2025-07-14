@@ -931,3 +931,40 @@ def test_translate_edges_and_face(monkeypatch):
     before = list(obj.mesh.vertices)
     win.translate_selection(0.0, 0.2)
     assert obj.mesh.vertices != before
+
+
+def test_move_vertex_prevents_self_intersection(monkeypatch):
+    _stub_gl(monkeypatch, {})
+    _setup_qt(monkeypatch)
+
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    viewport = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(viewport)
+
+    win = viewport.EditorWindow()
+    obj = win.create_shape('square')
+    win.select_object(obj)
+    win.toggle_model(True)
+
+    bow = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+    assert win._has_self_intersections(bow)
+
+
+def test_move_vertex_valid(monkeypatch):
+    _stub_gl(monkeypatch, {})
+    _setup_qt(monkeypatch)
+
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    viewport = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(viewport)
+
+    win = viewport.EditorWindow()
+    obj = win.create_shape('square')
+    win.select_object(obj)
+    win.toggle_model(True)
+
+    win.select_vertex(1)
+    before = list(obj.mesh.vertices)
+    win.translate_selection(0.2, 0.0)
+    assert win.scene.objects[0].mesh.vertices != before
+

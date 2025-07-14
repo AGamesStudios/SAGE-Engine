@@ -130,14 +130,89 @@ def create_circle_mesh(radius: float = 0.5, segments: int = 64) -> Mesh:
     return create_polygon_mesh(verts)
 
 
+def _polygon_area(verts: list[tuple[float, float]]) -> float:
+    area = 0.0
+    for i, (x1, y1) in enumerate(verts):
+        x2, y2 = verts[(i + 1) % len(verts)]
+        area += x1 * y2 - x2 * y1
+    return area / 2
+
+
+def _point_in_triangle(p: tuple[float, float], a, b, c) -> bool:
+    px, py = p
+    ax, ay = a
+    bx, by = b
+    cx, cy = c
+    v0x, v0y = cx - ax, cy - ay
+    v1x, v1y = bx - ax, by - ay
+    v2x, v2y = px - ax, py - ay
+    dot00 = v0x * v0x + v0y * v0y
+    dot01 = v0x * v1x + v0y * v1y
+    dot02 = v0x * v2x + v0y * v2y
+    dot11 = v1x * v1x + v1y * v1y
+    dot12 = v1x * v2x + v1y * v2y
+    inv_denom = 1.0 / (dot00 * dot11 - dot01 * dot01)
+    u = (dot11 * dot02 - dot01 * dot12) * inv_denom
+    v = (dot00 * dot12 - dot01 * dot02) * inv_denom
+    return u >= 0 and v >= 0 and u + v <= 1
+
+
+def _ear_clip(vertices: list[tuple[float, float]]) -> Mesh:
+    order = list(range(len(vertices)))
+    if _polygon_area(vertices) < 0:
+        order.reverse()
+    indices: list[int] = []
+    while len(order) > 2:
+        n = len(order)
+        ear_found = False
+        for i in range(n):
+            prev_i = order[(i - 1) % n]
+            curr_i = order[i]
+            next_i = order[(i + 1) % n]
+            ax, ay = vertices[prev_i]
+            bx, by = vertices[curr_i]
+            cx, cy = vertices[next_i]
+            if (bx - ax) * (cy - ay) - (by - ay) * (cx - ax) <= 0:
+                continue
+            inside = False
+            tri = (vertices[prev_i], vertices[curr_i], vertices[next_i])
+            for j in order:
+                if j in (prev_i, curr_i, next_i):
+                    continue
+                if _point_in_triangle(vertices[j], *tri):
+                    inside = True
+                    break
+            if not inside:
+                indices.extend([prev_i, curr_i, next_i])
+                del order[i]
+                ear_found = True
+                break
+        if not ear_found:
+            break
+    return Mesh(list(vertices), indices)
+
+
 def create_polygon_mesh(vertices: list[tuple[float, float]]) -> Mesh:
     """Return a mesh from an arbitrary polygon defined by ``vertices``."""
     if len(vertices) < 3:
         raise ValueError("At least three vertices required")
-    inds = []
-    for i in range(1, len(vertices) - 1):
-        inds.extend([0, i, i + 1])
-    return Mesh(list(vertices), inds)
+    if _Polygon is not None:
+        poly = _Polygon(vertices)  # pyright: ignore[reportOptionalCall]
+        tris = triangulate(poly)
+        verts = list(vertices)
+        indices: list[int] = []
+        for tri in tris:
+            pts = list(tri.exterior.coords)[:-1]
+            tri_idx: list[int] = []
+            for pt in pts:
+                if pt in verts:
+                    tri_idx.append(verts.index(pt))
+                else:
+                    verts.append(pt)
+                    tri_idx.append(len(verts) - 1)
+            indices.extend(tri_idx)
+        return Mesh(verts, indices)
+    return _ear_clip(list(vertices))
 
 
 def union_meshes(

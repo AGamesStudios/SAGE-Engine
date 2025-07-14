@@ -22,7 +22,7 @@ from PIL import Image, ImageDraw  # type: ignore[import-not-found]
 
 from engine.core.camera import Camera
 from engine.entities.game_object import GameObject
-from engine import units
+from engine.utils import units
 from engine.utils.log import logger
 from engine.mesh_utils import Mesh
 from engine.entities.tile_map import TileMap

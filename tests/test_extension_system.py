@@ -59,6 +59,19 @@ class GameObject:
         pass
 sys.modules['engine.entities.game_object'] = game_mod
 game_mod.GameObject = GameObject
+class SpriteCache:
+    def __init__(self, limit=32):
+        self.limit = limit
+    def get(self, path):
+        return None
+    def put(self, path, img):
+        pass
+    def clear(self):
+        pass
+game_mod.SpriteCache = SpriteCache
+def set_sprite_cache(cache):
+    pass
+game_mod.set_sprite_cache = set_sprite_cache
 
 cam_mod = types.ModuleType('engine.core.camera')
 class Camera(GameObject):

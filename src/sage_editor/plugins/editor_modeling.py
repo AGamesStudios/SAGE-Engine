@@ -5,6 +5,44 @@ from __future__ import annotations
 class ModelingMixin:
     """Helper methods for mesh editing."""
 
+    def _segments_intersect(
+        self,
+        a1: tuple[float, float],
+        a2: tuple[float, float],
+        b1: tuple[float, float],
+        b2: tuple[float, float],
+    ) -> bool:
+        def orient(p, q, r) -> float:
+            return (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0])
+
+        o1 = orient(a1, a2, b1)
+        o2 = orient(a1, a2, b2)
+        o3 = orient(b1, b2, a1)
+        o4 = orient(b1, b2, a2)
+        if o1 == o2 == o3 == o4 == 0:
+            return False
+        return o1 * o2 < 0 and o3 * o4 < 0
+
+    def _has_self_intersections(self, verts: list[tuple[float, float]]) -> bool:
+        try:
+            from shapely.geometry import Polygon
+        except Exception:
+            Polygon = None
+        if Polygon is not None:
+            return not Polygon(verts).is_valid  # type: ignore[arg-type]
+        n = len(verts)
+        for i in range(n):
+            a1 = verts[i]
+            a2 = verts[(i + 1) % n]
+            for j in range(i + 1, n):
+                if j in {i, (i + 1) % n, (i - 1) % n}:
+                    continue
+                b1 = verts[j]
+                b2 = verts[(j + 1) % n]
+                if self._segments_intersect(a1, a2, b1, b2):
+                    return True
+        return False
+
     def set_selection_mode(self, mode: str) -> None:
         self.selection_mode = mode
         self.selected_vertices.clear()
@@ -51,6 +89,9 @@ class ModelingMixin:
                 new_selection.add(idx + 1)
         if new_selection:
             self.selected_vertices = new_selection
+        if self._has_self_intersections(mesh.vertices):
+            self.undo_stack.undo(self)
+            return
         self.draw_scene(update_list=False)
 
     def new_face_from_edge(self) -> None:
@@ -179,4 +220,7 @@ class ModelingMixin:
                 wx = self.snap_value(wx, self.move_step)
                 wy = self.snap_value(wy, self.move_step)
             verts[i] = self.world_to_mesh(obj, wx, wy)
+        if self.selection_mode == "vertex" and self._has_self_intersections(verts):
+            self.undo_stack.undo(self)
+            return
         self.draw_scene(update_list=False)

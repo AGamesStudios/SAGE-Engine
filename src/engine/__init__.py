@@ -138,17 +138,17 @@ __all__ = sorted(
         'warn', 'error', 'exception',
         'register_engine_plugin', 'load_engine_plugins',
         'require_version', 'EDITOR_API_VERSION',
+        'get_engine_attr',
     ]
 )
 
 
-def __getattr__(name):
+def get_engine_attr(name: str):
+    """Return an engine attribute defined in ``_lazy``."""
     if name in _lazy:
         module_name, attr = _lazy[name]
         module = import_module(module_name)
-        value = getattr(module, attr) if attr else module
-        globals()[name] = value
-        return value
+        return getattr(module, attr) if attr else module
     raise AttributeError(name)
 
 

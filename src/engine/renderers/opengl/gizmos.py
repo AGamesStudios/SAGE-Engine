@@ -13,7 +13,7 @@ from typing import Optional
 
 from engine.core.camera import Camera
 from engine.entities.game_object import GameObject
-from engine import units
+from engine.utils import units
 from engine.gizmos import Gizmo
 
 

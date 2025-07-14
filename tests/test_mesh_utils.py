@@ -49,9 +49,7 @@ def test_polygon_mesh_and_editing():
     mesh.translate(1, 2)
     mesh.scale(2)
     mesh.rotate(math.pi / 2)
-    xs = [v[0] for v in mesh.vertices]
-    ys = [v[1] for v in mesh.vertices]
-    assert len(xs) == 4 and len(ys) == 4
+    assert len(mesh.vertices) == 4
 
 
 def test_mesh_apply_matrix():
@@ -117,3 +115,27 @@ def test_union_requires_shapely(monkeypatch):
     square = create_square_mesh()
     with pytest.raises(ImportError):
         mu.union_meshes([square], negatives=[square])
+
+
+def test_concave_polygon_triangulation():
+    verts = [(0, 0), (2, 0), (2, 2), (1, 1), (0, 2)]
+    mesh = create_polygon_mesh(verts)
+    assert len(mesh.indices) % 3 == 0
+    assert len(mesh.indices) >= 3 * (len(verts) - 2)
+    assert max(mesh.indices) < len(mesh.vertices)
+
+
+def test_concave_polygon_no_shapely(monkeypatch):
+    monkeypatch.setitem(sys.modules, "shapely", None)
+    monkeypatch.setitem(sys.modules, "shapely.geometry", None)
+    monkeypatch.setitem(sys.modules, "shapely.geometry.base", None)
+    monkeypatch.setitem(sys.modules, "shapely.ops", None)
+    import importlib
+    import engine.mesh_utils as mu
+    importlib.reload(mu)
+    verts = [(0, 0), (2, 0), (2, 2), (1, 1), (0, 2)]
+    mesh = mu.create_polygon_mesh(verts)
+    assert len(mesh.indices) % 3 == 0
+    assert len(mesh.indices) >= 3 * (len(verts) - 2)
+    assert max(mesh.indices) < len(mesh.vertices)
+

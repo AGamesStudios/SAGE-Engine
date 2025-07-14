@@ -23,7 +23,7 @@ shaders_mod.compileProgram = lambda *a, **k: 1
 shaders_mod.compileShader = lambda *a, **k: 1
 
 from engine.inputs import get_input, INPUT_REGISTRY, NullInput  # noqa: E402
-from engine.renderers import get_renderer, RENDERER_REGISTRY, NullRenderer  # noqa: E402
+from engine.renderers import get_renderer, get_null_renderer, RENDERER_REGISTRY  # noqa: E402
 
 
 def test_sdl_fallback(monkeypatch):
@@ -40,4 +40,4 @@ def test_opengl_fallback(monkeypatch):
     RENDERER_REGISTRY.clear()
     monkeypatch.delitem(sys.modules, 'engine.renderers.opengl_renderer', raising=False)
     cls = get_renderer('opengl')
-    assert cls is NullRenderer
+    assert cls is get_null_renderer()

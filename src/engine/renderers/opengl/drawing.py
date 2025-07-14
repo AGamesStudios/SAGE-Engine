@@ -14,7 +14,7 @@ from typing import Optional, cast
 
 from engine.core.camera import Camera
 from engine.entities.game_object import GameObject
-from engine import units
+from engine.utils import units
 from engine.mesh_utils import (
     Mesh,
     create_square_mesh,

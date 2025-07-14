@@ -39,7 +39,7 @@ sys.modules['PIL.Image'] = stub_image
 def test_runtime_aliases():
     import engine
     import engine.runtime as er
-    assert er.Engine is engine.Engine
+    assert er.get_attr("Engine") is engine.get_engine_attr("Engine")
 
 
 def test_runtime_entrypoints():

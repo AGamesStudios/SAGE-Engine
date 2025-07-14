@@ -17,7 +17,7 @@ from ..animation import Animation
 from ..core.objects import register_object
 from .object import Object, Transform2D
 from ..logic import EventSystem, event_from_dict
-from .. import units
+from ..utils import units
 
 class SpriteCache:
     """Simple LRU cache for sprite images."""

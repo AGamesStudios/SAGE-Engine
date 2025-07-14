@@ -178,7 +178,7 @@ def test_projection_orientation(monkeypatch):
         def update(self):
             pass
 
-    from engine import units
+    from engine.utils import units
     units.set_y_up(True)
     monkeypatch.setattr(ogl, 'GLWidget', DummyWidget)
     r = ogl.OpenGLRenderer(width=640, height=480)

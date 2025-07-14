@@ -11,5 +11,12 @@ main = _main
 if "main" not in __all__:
     __all__.append("main")
 
-def __getattr__(name: str):
-    return getattr(_engine, name)
+__all__.append("get_attr")
+
+
+def get_attr(name: str):
+    """Return an attribute from the core ``engine`` module."""
+    try:
+        return getattr(_engine, name)
+    except AttributeError:
+        return getattr(_engine, "get_engine_attr")(name)
