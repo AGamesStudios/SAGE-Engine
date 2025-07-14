@@ -1,6 +1,7 @@
 import threading
+import pytest
 
-import nano_core
+nano_core = pytest.importorskip("nano_core")
 
 
 def test_nano_core_functions():

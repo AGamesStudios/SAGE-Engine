@@ -46,3 +46,15 @@ alloc.free_mark(mark)
 ```
 Use `mark()` to store a snapshot position and `free_mark()` to release
 older blocks in bulk.
+
+## Working from PyCharm
+1. Create a virtual environment with `python -m venv .venv`.
+2. Build the Rust extension using `maturin develop --release`.
+3. Run `main.py` from the IDE.
+
+```
+$ python -q
+>>> import nano_core
+>>> nano_core.merge_chunk_delta(b'a', b'b')
+b'ab'
+```

@@ -4,8 +4,16 @@ import re
 from .crash import write_crash_report
 from .profiler import Profiler
 from .trace_profiler import TraceProfiler
+from .reload_watcher import check_reload, watch_reload
 
-__all__ = ['load_json', 'write_crash_report', 'Profiler', 'TraceProfiler']
+__all__ = [
+    'load_json',
+    'write_crash_report',
+    'Profiler',
+    'TraceProfiler',
+    'check_reload',
+    'watch_reload',
+]
 
 
 def load_json(path: str):

@@ -19,6 +19,9 @@ For known caveats such as dependency requirements and experimental features see
 pip install -r requirements.txt
 python tools/bootstrap.py
 ```
+Use `make watch-rust` in a separate terminal to rebuild the Rust core when
+`.rs` files change. The Python process can watch for `reload.flag` and reload the
+module automatically.
 Run `python scripts/clean_pycache.py` afterwards to delete leftover `__pycache__` directories.
 You can gather performance statistics with `engine.utils.Profiler`:
 ```python
