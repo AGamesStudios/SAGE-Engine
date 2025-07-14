@@ -6,6 +6,7 @@ Select a topic from the list to learn about the engine and editor features.
 * [File Formats](formats.md)
 * [Logic and Scripting](logic.md)
 * [Saving and Loading](save_load.md)
+* [ChronoPatch Tree](chronopatch.md)
 * [Limitations and Caveats](limitations.md)
 * [Plugins](plugins.md)
 * [Gizmos](gizmos.md)

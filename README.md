@@ -122,6 +122,9 @@ packaged with PyInstaller if standalone executables are required.
 
 Runtime state can be saved and loaded with `engine.save_game` and
 `engine.load_game`, producing `.sagesave` files.
+For incremental snapshots use `engine.ChronoPatchTree` which stores
+compressed patches in a memory mapped file. See `docs/en/chronopatch.md`
+for details.
 
 Open `examples/blank.sageproject` with the editor or runtime to see the basic structure. The sample scene now contains two sprites and a camera. Additional resources in `examples/Resources/` demonstrate `.sageaudio`, `.sagemesh`, `.sageanimation`, `.sagemap` and `.sagelogic` files. Tile maps are pre‑rendered to textures so large maps draw efficiently. Example scenes under `examples/Scenes/` showcase animation, audio playback, event groups, multiple tile maps and basic physics (`Physics.sagescene`). Call ``renderer.unload_texture(obj)`` when removing objects to release the cached sprite texture.
 For a larger demonstration use `examples/advanced.sageproject`, which links several scenes to show animations, physics and large tile maps.

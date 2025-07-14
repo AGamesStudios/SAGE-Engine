@@ -139,6 +139,8 @@ _lazy = {
     'load_game': ('engine.savegame', 'load_game'),
     'EditorInterface': ('engine.editor_api', 'EditorInterface'),
     'EDITOR_API_VERSION': ('engine.editor_api', 'EDITOR_API_VERSION'),
+    'ChronoPatchTree': ('engine.chrono_patch', 'ChronoPatchTree'),
+    'SmartSlice': ('engine.chrono_patch', 'SmartSlice'),
 }
 
 __all__ = sorted(
