@@ -68,6 +68,27 @@ def _setup_qt(monkeypatch):
             super().__init__(*a, **k)
             self.clicked = DummySignal()
 
+    class QToolButton(QWidget):
+        def __init__(self, *a, **k):
+            super().__init__(*a, **k)
+            self._checkable = False
+            self._checked = False
+            self.clicked = DummySignal()
+            self.toggled = DummySignal()
+
+        def setCheckable(self, b):
+            self._checkable = b
+
+        def isCheckable(self):
+            return self._checkable
+
+        def setChecked(self, b):
+            self._checked = b
+            self.toggled.emit(b)
+
+        def isChecked(self):
+            return self._checked
+
     class QVBoxLayout:
         def __init__(self, *a, **k):
             pass
@@ -339,6 +360,7 @@ def _setup_qt(monkeypatch):
     qtwidgets.QLabel = QLabel
     qtwidgets.QMenuBar = QMenuBar
     qtwidgets.QToolBar = QToolBar
+    qtwidgets.QToolButton = QToolButton
     qtwidgets.QWidget = QWidget
     qtwidgets.QPushButton = QPushButton
     qtwidgets.QVBoxLayout = QVBoxLayout
@@ -661,6 +683,9 @@ def test_quickbar_toggles(monkeypatch):
     assert not win.cursor_label.isVisible()
     win.toggle_grid(False)
     assert not win.renderer.show_grid
+    assert win.snap_button.isCheckable()
+    win.snap_button.setChecked(True)
+    assert win.snap_to_grid
 
 
 def test_create_shape(monkeypatch):
@@ -739,6 +764,26 @@ def test_extrude_and_loop_cut(monkeypatch):
     count = len(obj.mesh.vertices)
     win.loop_cut()
     assert len(obj.mesh.vertices) == count * 2
+
+
+def test_union_selected(monkeypatch):
+    _stub_gl(monkeypatch, {})
+    _setup_qt(monkeypatch)
+
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    viewport = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(viewport)
+
+    win = viewport.EditorWindow()
+    obj_a = win.create_shape('square')
+    obj_b = win.create_shape('triangle')
+    win.selected_objs = [obj_a, obj_b]
+    win.selected_obj = obj_b
+    win.toggle_model(True)
+    before = len(obj_a.mesh.vertices) + len(obj_b.mesh.vertices)
+    win.union_selected()
+    assert len(win.selected_obj.mesh.vertices) >= before
+    assert obj_b not in win.scene.objects or not obj_b.visible
 
 
 def test_toggle_fill_action(monkeypatch):

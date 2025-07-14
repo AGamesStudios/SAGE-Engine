@@ -206,6 +206,7 @@ class EditorWindow(QMainWindow):
         self.model_bar.extrude_btn.clicked.connect(self.extrude_selection)
         self.model_bar.loop_btn.clicked.connect(self.loop_cut)
         self.model_bar.fill_btn.clicked.connect(self.toggle_fill)
+        self.model_bar.union_btn.clicked.connect(self.union_selected)
         if hasattr(self.mode_bar.move_btn, "setChecked"):
             self.mode_bar.move_btn.setChecked(True)
         if hasattr(self.model_bar.vert_btn, "setChecked"):
@@ -700,7 +701,8 @@ class EditorWindow(QMainWindow):
         if checked:
             if pop is not None:
                 target = menu_btn if menu_btn is not None else self.snap_button
-                pop.show_near(target)
+                if hasattr(target, "mapToGlobal") and hasattr(target, "rect"):
+                    pop.show_near(target)
         elif pop is not None:
             pop.hide()
 
@@ -993,6 +995,46 @@ class EditorWindow(QMainWindow):
         obj.filled = not obj.filled
         self.update_properties()
         self.draw_scene(update_list=False)
+
+    def union_selected(self) -> None:
+        objs = [o for o in self.selected_objs if getattr(o, "mesh", None) is not None]
+        if len(objs) < 2:
+            return
+        self.undo_stack.snapshot(self.scene)
+        from engine.mesh_utils import Mesh, union_meshes
+
+        meshes = []
+        for obj in objs:
+            verts = [self.mesh_to_world(obj, vx, vy) for vx, vy in obj.mesh.vertices]
+            meshes.append(Mesh(list(verts), list(obj.mesh.indices or [])))
+
+        result = union_meshes(meshes)
+        min_x = min(v[0] for v in result.vertices)
+        max_x = max(v[0] for v in result.vertices)
+        min_y = min(v[1] for v in result.vertices)
+        max_y = max(v[1] for v in result.vertices)
+
+        base = objs[0]
+        base.x = (min_x + max_x) / 2
+        base.y = (min_y + max_y) / 2
+        base.width = max_x - min_x
+        base.height = max_y - min_y
+        base.angle = 0.0
+        base.scale_x = base.scale_y = 1.0
+        base.pivot_x = base.pivot_y = 0.5
+
+        base.mesh = Mesh(
+            [self.world_to_mesh(base, x, y) for x, y in result.vertices],
+            result.indices,
+        )
+
+        for obj in objs[1:]:
+            self.scene.remove_object(obj)
+
+        self.selected_objs = [base]
+        self.selected_obj = base
+        self.update_object_list()
+        self.draw_scene()
 
     def translate_selection(self, dx: float, dy: float) -> None:
         """Move the currently selected mesh elements by ``dx, dy`` world units."""
@@ -1838,12 +1880,16 @@ class EditorWindow(QMainWindow):
             copy_a = menu.addAction("Copy") if hasattr(menu, "addAction") else None
             paste_a = menu.addAction("Paste") if hasattr(menu, "addAction") else None
             del_a = menu.addAction("Delete") if hasattr(menu, "addAction") else None
+            if self.modeling and len(self.selected_objs) > 1:
+                union_a = menu.addAction("Union") if hasattr(menu, "addAction") else None
             if copy_a is not None and hasattr(copy_a, "triggered"):
                 copy_a.triggered.connect(self.copy_selected)
             if paste_a is not None and hasattr(paste_a, "triggered"):
                 paste_a.triggered.connect(self.paste_object)
             if del_a is not None and hasattr(del_a, "triggered"):
                 del_a.triggered.connect(self.delete_selected)
+            if self.modeling and len(self.selected_objs) > 1 and union_a is not None and hasattr(union_a, "triggered"):
+                union_a.triggered.connect(self.union_selected)
             if hasattr(menu, "addSeparator"):
                 menu.addSeparator()
         sprite_a = menu.addAction("Create Sprite") if hasattr(menu, "addAction") else None
