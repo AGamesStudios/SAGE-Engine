@@ -13,6 +13,7 @@ Select a topic from the list to learn about the engine and editor features.
 * [NanoTree](nano_tree.md)
 * [NanoMerge](nano_merge.md)
 * [NanoSched](nano_sched.md)
+* [NanoCore](nano_core.md)
 * [RenderFabric](render_fabric.md)
 * [Sage Command Line](sage_cli.md)
 * [Limitations and Caveats](limitations.md)

@@ -3,5 +3,9 @@ name = "nano_core"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+name = "nano_core"
+crate-type = ["cdylib"]
+
 [dependencies]
-crossbeam = "0.8"
+pyo3 = { version = "0.21", features = ["extension-module"] }

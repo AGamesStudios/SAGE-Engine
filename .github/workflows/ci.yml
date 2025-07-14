@@ -16,8 +16,9 @@ jobs:
         with:
           toolchain: stable
           override: true
-      - run: pip install ruff pytest markdown
+      - run: pip install ruff pytest markdown maturin
       - run: ruff check .
+      - run: python scripts/build_nano_core.py
       - run: PYTHONPATH=. pytest -q
       - run: cargo test --manifest-path native/nano_core/Cargo.toml
         shell: bash
