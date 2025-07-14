@@ -10,6 +10,8 @@ Select a topic from the list to learn about the engine and editor features.
 * [SmartSlice Allocator](smart_slice.md)
 * [ChunkΔ Codec](chunk_delta.md)
 * [NanoTree](nano_tree.md)
+* [NanoMerge](nano_merge.md)
+* [NanoSched](nano_sched.md)
 * [Limitations and Caveats](limitations.md)
 * [Plugins](plugins.md)
 * [Gizmos](gizmos.md)

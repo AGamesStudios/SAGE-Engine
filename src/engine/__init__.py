@@ -146,6 +146,9 @@ _lazy = {
     'decode_chunk': ('engine.chunk_delta', 'decode'),
     'NanoTree': ('engine.nano_tree', 'NanoTree'),
     'Node': ('engine.nano_tree', 'Node'),
+    'merge_ops': ('engine.nano_merge', 'merge_ops'),
+    'PatcherTask': ('engine.nano_sched', 'PatcherTask'),
+    'run_sched': ('engine.nano_sched', 'run_sched'),
 }
 
 __all__ = sorted(

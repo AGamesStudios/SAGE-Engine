@@ -131,6 +131,9 @@ network sync or loaded later with `replay()`. See
 `SmartSliceAllocator` manages circular 1 KiB blocks and `encode_ops()`
 compresses patch operations for network or storage. See `docs/en/smart_slice.md`
 and `docs/en/chunk_delta.md`.
+`merge_ops()` from NanoMerge accelerates patch merging with NumPy, while
+`run_sched()` executes `PatcherTask` objects in dependency order. See
+`docs/en/nano_merge.md` and `docs/en/nano_sched.md`.
 
 Open `examples/blank.sageproject` with the editor or runtime to see the basic structure. The sample scene now contains two sprites and a camera. Additional resources in `examples/Resources/` demonstrate `.sageaudio`, `.sagemesh`, `.sageanimation`, `.sagemap` and `.sagelogic` files. Tile maps are pre‑rendered to textures so large maps draw efficiently. Example scenes under `examples/Scenes/` showcase animation, audio playback, event groups, multiple tile maps and basic physics (`Physics.sagescene`). Call ``renderer.unload_texture(obj)`` when removing objects to release the cached sprite texture.
 For a larger demonstration use `examples/advanced.sageproject`, which links several scenes to show animations, physics and large tile maps.
