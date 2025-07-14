@@ -1,0 +1,25 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.10']
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+      - run: pip install ruff pytest markdown
+      - run: ruff check .
+      - run: PYTHONPATH=. pytest -q
+      - run: cargo test --manifest-path native/nano_core/Cargo.toml
+        shell: bash
+      - run: python scripts/build_docs.py
+        shell: bash

@@ -4,3 +4,4 @@ PyQt6>=6.5
 PyOpenGL>=3.1
 PySDL2
 pygame>=2.6
+markdown

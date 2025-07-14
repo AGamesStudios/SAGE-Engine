@@ -10,7 +10,7 @@ Custom resources use compact `.sageaudio`, `.sagemesh` and `.sageanimation` desc
 Sprite animations expose speed, pause and reverse options while ``AudioManager`` supports simple music playback.
 ``ResourceManager`` can load and import files asynchronously to avoid blocking the event loop when using ``asyncio``.
 
-Documentation lives under `docs/`. Start with [docs/en/index.md](docs/en/index.md) for an overview, see [plugins](docs/en/plugins.md) for extension points and [optimisation tips](docs/en/optimisation.md) for performance advice.
+Documentation lives under `docs/`. Begin with [docs/en/getting_started.md](docs/en/getting_started.md) for a simple tutorial or read [docs/en/index.md](docs/en/index.md) for a full list of guides. See [plugins](docs/en/plugins.md) for extension points and [optimisation tips](docs/en/optimisation.md) for performance advice.
 For known caveats such as dependency requirements and experimental features see
 [limitations](docs/en/limitations.md).
 
@@ -122,8 +122,8 @@ packaged with PyInstaller if standalone executables are required.
 
 Runtime state can be saved and loaded with `engine.save_game` and
 `engine.load_game`, producing `.sagesave` files.
-Use `engine.NanoTree` for a lightweight mapped tree of slices.
-See `docs/en/nano_tree.md` for an overview.
+Use [``engine.NanoTree``](docs/en/nano_tree.md) for a lightweight mapped tree
+of slices.
 For incremental snapshots use `engine.ChronoPatchTree` which stores
 compressed patches in a memory mapped file. Patches can be iterated for
 network sync or loaded later with `replay()`. See
