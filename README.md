@@ -16,7 +16,7 @@ For known caveats such as dependency requirements and experimental features see
 proposals live in [ROADMAP.md](ROADMAP.md) and the [rfcs/](rfcs) directory.
 Run ``python scripts/build_docs.py`` to generate the HTML documentation with
 MkDocs and view the API reference.
-The ``sage migrate`` command upgrades older projects to the latest format.
+The ``sage migrate`` command upgrades YAML project files from the previous version and lists changed files.
 
 ## Quick start
 ```bash

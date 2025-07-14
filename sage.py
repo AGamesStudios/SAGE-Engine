@@ -8,7 +8,7 @@ from engine import adaptors
 from engine import bundles
 
 from engine.utils import TraceProfiler
-import json
+import yaml
 
 
 def _build(args: argparse.Namespace) -> None:
@@ -80,14 +80,17 @@ def _migrate(args: argparse.Namespace) -> None:
     else:
         files = list(path.rglob("*.sageproject")) + list(path.rglob("*.sagescene"))
     for fp in files:
-        data = json.loads(fp.read_text())
+        data = yaml.safe_load(fp.read_text())
+        modified = False
         if "scene" in data:
             data["scene_file"] = data.pop("scene")
-            changed.append(fp)
-        if "version" not in data:
+            modified = True
+        if data.get("version") != "0.0.1":
             data["version"] = "0.0.1"
+            modified = True
+        if modified:
+            fp.write_text(yaml.safe_dump(data, sort_keys=False))
             changed.append(fp)
-        fp.write_text(json.dumps(data, indent=2))
     for fp in changed:
         print(f"Migrated {fp}")
 

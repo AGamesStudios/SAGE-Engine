@@ -10,3 +10,4 @@ websockets
 mkdocs-material
 mkdocstrings[python]
 mkdocstrings[rust]
+PyYAML

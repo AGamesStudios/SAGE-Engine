@@ -1,4 +1,4 @@
-import json
+import yaml
 import sage
 
 
@@ -24,14 +24,14 @@ def test_sage_cli_create_hello(tmp_path):
 def test_sage_cli_profile(tmp_path):
     prof = tmp_path / "trace.json"
     assert sage.main(["--profile", str(prof), "serve"]) == 0
-    data = json.loads(prof.read_text())
+    data = yaml.safe_load(prof.read_text())
     assert len(data.get("traceEvents", [])) == 4
 
 
 def test_sage_cli_migrate(tmp_path):
     proj = tmp_path / "proj.sageproject"
-    proj.write_text(json.dumps({"scene": "x.sagescene"}))
+    proj.write_text(yaml.safe_dump({"scene": "x.sagescene"}))
     assert sage.main(["migrate", str(tmp_path)]) == 0
-    data = json.loads(proj.read_text())
+    data = yaml.safe_load(proj.read_text())
     assert data["scene_file"] == "x.sagescene"
     assert data["version"] == "0.0.1"
