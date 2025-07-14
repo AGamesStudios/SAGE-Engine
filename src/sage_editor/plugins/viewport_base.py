@@ -739,6 +739,7 @@ class _ViewportMixin:
                 if del_a is not None and hasattr(del_a, "triggered"):
                     del_a.triggered.connect(self._window.delete_selected)
         else:
+            self._window.select_object(None)
             sprite_a = menu.addAction("Create Sprite") if hasattr(menu, "addAction") else None
             empty_a = menu.addAction("Create Empty") if hasattr(menu, "addAction") else None
             cam_a = menu.addAction("Create Camera") if hasattr(menu, "addAction") else None

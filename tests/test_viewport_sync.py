@@ -1090,3 +1090,21 @@ def test_move_vertex_valid(monkeypatch):
     win.translate_selection(0.2, 0.0)
     assert win.scene.objects[0].mesh.vertices != before
 
+
+def test_click_empty_deselects(monkeypatch):
+    _stub_gl(monkeypatch, {})
+    _setup_qt(monkeypatch)
+
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    viewport = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(viewport)
+
+    win = viewport.EditorWindow()
+    obj = win.create_object()
+    win.select_object(obj)
+    assert win.selected_obj is obj
+
+    found = win.find_object_at(999.0, 999.0)
+    win.select_object(found)
+    assert win.selected_obj is None
+
