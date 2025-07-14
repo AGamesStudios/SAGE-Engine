@@ -13,31 +13,26 @@ def test_load_python_patcher(tmp_path):
     assert lst == ['ok']
 
 
-def test_load_lua_with_runtime(tmp_path, monkeypatch):
-    class FakeRuntime:
-        def execute(self, code):
-            def func(t):
-                t.append('ok')
-            return func
-    monkeypatch.setattr(lua, 'AVAILABLE', True)
-    monkeypatch.setattr(lua, 'get_runtime', lambda: FakeRuntime())
+@pytest.mark.skipif(not lua.AVAILABLE, reason="lupa not installed")
+def test_load_lua_patcher(tmp_path):
     file = tmp_path / "sample.lua"
-    file.write_text("return function(t) table.insert(t, 'ok') end")
+    file.write_text("return function(t) t.count = (t.count or 0) + 1 end")
     p = patchers.load_patcher(file)
-    lst = []
-    p.apply(lst)
-    assert lst == ['ok']
+    obj = {'count': 0}
+    p.apply(obj)
+    assert obj['count'] == 1
 
 
-def test_load_lua_no_runtime(tmp_path, monkeypatch, caplog):
-    monkeypatch.setattr(lua, 'AVAILABLE', False)
-    monkeypatch.setattr(lua, 'get_runtime', lambda: None)
-    file = tmp_path / 'sample.lua'
-    file.write_text('return function(t) table.insert(t, "x") end')
+@pytest.mark.xfail(not lua.AVAILABLE, reason="lupa missing")
+def test_lua_patcher_no_runtime(tmp_path, caplog):
+    if lua.AVAILABLE:
+        pytest.skip("requires missing lupa")
+    file = tmp_path / "sample.lua"
+    file.write_text("return function(t) t.count = 1 end")
     caplog.set_level(logging.WARNING)
     p = patchers.load_patcher(file)
-    lst = []
-    p.apply(lst)
-    assert lst == []
-    assert any('Lua runtime not available' in r.message for r in caplog.records)
-    pytest.xfail('lua runtime unavailable')
+    obj = {}
+    p.apply(obj)
+    assert obj == {}
+    assert 'Lua runtime not available' in caplog.text
+

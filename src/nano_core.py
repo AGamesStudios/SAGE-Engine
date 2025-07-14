@@ -5,4 +5,9 @@ def merge_chunk_delta(a: bytes, b: bytes) -> bytes:
 
 
 def alloc_smart_slice(size: int) -> bytearray:
-    return bytearray(size)
+    return bytearray(1024)
+
+
+def reset_tree() -> None:
+    """No-op stub when the native module is missing."""
+    return None

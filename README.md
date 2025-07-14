@@ -71,7 +71,9 @@ colour and is passed to ``EngineSettings`` when creating an engine.
 Patcher scripts are loaded at runtime via ``engine.load_patcher()``. Both
 Python and Lua files are supported, allowing quick prototyping with your
 preferred language. Lua patchers rely on the optional ``lupa`` package and are
-ignored when the dependency is missing.
+ignored when the dependency is missing. Scenes that use Lua scripts should add
+``vm_lua`` to their capability list so the engine can warn when Lua support is
+unavailable.
 
 ### Editor
 The editor uses the custom **SAGE Ember** style.
