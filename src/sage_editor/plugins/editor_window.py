@@ -62,8 +62,7 @@ from sage_editor.qt import GLWidget
 from sage_editor.plugins.editor_widgets import (
     ConsoleHandler,
     UndoStack,
-    TransformBar,
-    ModelBar,
+    ToolStack,
     NoWheelLineEdit,
     NoWheelSpinBox,  # noqa: F401 - re-exported for widgets
     ProgressWheel,  # noqa: F401 - re-exported for widgets
@@ -99,20 +98,17 @@ class EditorWindow(QMainWindow, ModelingMixin):
             layout.setContentsMargins(8, 8, 0, 0)
         if hasattr(layout, "setSpacing"):
             layout.setSpacing(4)
-        bar = TransformBar(container)
-        mbar = ModelBar(container)
-        if hasattr(bar, "setSizePolicy"):
+        tools = ToolStack(container)
+        if hasattr(tools.transform_bar, "setSizePolicy"):
             pol = getattr(QSizePolicy, "Policy", QSizePolicy)
             horiz = getattr(pol, "Preferred", 0)
             vert = getattr(pol, "Expanding", 0)
-            bar.setSizePolicy(horiz, vert)
-        if hasattr(bar, "setFixedWidth"):
-            bar.setFixedWidth(60)
-        if hasattr(mbar, "setFixedWidth"):
-            mbar.setFixedWidth(80)
-        mbar.hide()
-        layout.addWidget(bar)
-        layout.addWidget(mbar)
+            tools.transform_bar.setSizePolicy(horiz, vert)
+        if hasattr(tools.transform_bar, "setFixedWidth"):
+            tools.transform_bar.setFixedWidth(60)
+        if hasattr(tools.model_bar, "setFixedWidth"):
+            tools.model_bar.setFixedWidth(80)
+        layout.addWidget(tools)
 
         view_area = QWidget(container)
         vlayout = QVBoxLayout(view_area)
@@ -163,8 +159,9 @@ class EditorWindow(QMainWindow, ModelingMixin):
         if hasattr(view, "setMouseTracking"):
             view.setMouseTracking(True)
         container.viewport = view  # type: ignore[attr-defined]
-        container.mode_bar = bar  # type: ignore[attr-defined]
-        container.model_bar = mbar  # type: ignore[attr-defined]
+        container.mode_bar = tools.transform_bar  # type: ignore[attr-defined]
+        container.model_bar = tools.model_bar  # type: ignore[attr-defined]
+        container.tool_stack = tools  # type: ignore[attr-defined]
         container.h_ruler = h_ruler  # type: ignore[attr-defined]
         container.v_ruler = v_ruler  # type: ignore[attr-defined]
         return container
@@ -182,6 +179,7 @@ class EditorWindow(QMainWindow, ModelingMixin):
         self.viewport = container.viewport  # type: ignore[attr-defined]
         self.mode_bar = container.mode_bar  # type: ignore[attr-defined]
         self.model_bar = container.model_bar  # type: ignore[attr-defined]
+        self.tool_stack = container.tool_stack  # type: ignore[attr-defined]
         self.cursor_label = container.cursor_label  # type: ignore[attr-defined]
         self.preview_widget = container.preview_widget  # type: ignore[attr-defined]
         self.preview_frame = container.preview_frame  # type: ignore[attr-defined]
@@ -849,10 +847,11 @@ class EditorWindow(QMainWindow, ModelingMixin):
                 cur = new_idx
             if cur != new_idx and hasattr(self.mode_combo, "setCurrentIndex"):
                 self.mode_combo.setCurrentIndex(new_idx)
-        if hasattr(self.model_bar, "setVisible"):
-            self.model_bar.setVisible(modeling)
-        if hasattr(self.mode_bar, "setVisible"):
-            self.mode_bar.setVisible(not modeling)
+        if hasattr(self, "tool_stack"):
+            if modeling:
+                self.tool_stack.show_model()
+            else:
+                self.tool_stack.show_transform()
         if not modeling:
             self.selected_vertices.clear()
             self.selected_edges.clear()
@@ -927,9 +926,6 @@ class EditorWindow(QMainWindow, ModelingMixin):
     def resizeEvent(self, ev):  # pragma: no cover - gui layout
         super().resizeEvent(ev)
         try:
-            h = self.viewport.height()
-            if hasattr(self.mode_bar, "setFixedHeight"):
-                self.mode_bar.setFixedHeight(h)
             self._reposition_preview()
             self._update_rulers()
         except Exception:
@@ -1336,6 +1332,8 @@ class EditorWindow(QMainWindow, ModelingMixin):
             self.viewport_container = new_view
             self.viewport = new_view.viewport  # type: ignore[attr-defined]
             self.mode_bar = new_view.mode_bar  # type: ignore[attr-defined]
+            self.model_bar = new_view.model_bar  # type: ignore[attr-defined]
+            self.tool_stack = new_view.tool_stack  # type: ignore[attr-defined]
             self.cursor_label = new_view.cursor_label  # type: ignore[attr-defined]
             self.preview_widget = new_view.preview_widget  # type: ignore[attr-defined]
             self.preview_frame = new_view.preview_frame  # type: ignore[attr-defined]

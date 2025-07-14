@@ -16,6 +16,10 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+try:  # optional for tests
+    from PyQt6.QtWidgets import QStackedLayout  # type: ignore[import-not-found]
+except Exception:  # pragma: no cover - fallback when missing
+    QStackedLayout = QVBoxLayout  # type: ignore[assignment]
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints
     from engine.core.scenes.scene import Scene
@@ -149,6 +153,30 @@ class ModelBar(QWidget):
         layout.addWidget(self.bake_btn)
         if hasattr(layout, "addStretch"):
             layout.addStretch()
+
+
+class ToolStack(QWidget):
+    """Container that swaps between transform and modeling toolbars."""
+
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.stack = QStackedLayout(self)
+        if hasattr(self.stack, "setContentsMargins"):
+            self.stack.setContentsMargins(0, 0, 0, 0)
+        self.transform_bar = TransformBar(self)
+        self.model_bar = ModelBar(self)
+        self.stack.addWidget(self.transform_bar)
+        self.stack.addWidget(self.model_bar)
+        if hasattr(self.stack, "setCurrentWidget"):
+            self.stack.setCurrentWidget(self.transform_bar)
+
+    def show_transform(self) -> None:
+        if hasattr(self.stack, "setCurrentWidget"):
+            self.stack.setCurrentWidget(self.transform_bar)
+
+    def show_model(self) -> None:
+        if hasattr(self.stack, "setCurrentWidget"):
+            self.stack.setCurrentWidget(self.model_bar)
 
 
 class ProgressWheel(QWidget):
