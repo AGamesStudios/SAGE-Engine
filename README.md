@@ -135,7 +135,7 @@ and `docs/en/chunk_delta.md`.
 `run_sched()` executes `PatcherTask` objects in dependency order. See
 `docs/en/nano_merge.md` and `docs/en/nano_sched.md`.
 `RenderFabric` initialises a WGPU device with an OpenGL 3.3 fallback to draw sprites via `SpritePass`.
-The `sage` CLI offers placeholder `build`, `serve` and `featherize` commands for external tools.
+The `sage` CLI now supports `create` to generate a project template and `--profile` to log Chrome Trace events.
 
 Open `examples/blank.sageproject` with the editor or runtime to see the basic structure. The sample scene now contains two sprites and a camera. Additional resources in `examples/Resources/` demonstrate `.sageaudio`, `.sagemesh`, `.sageanimation`, `.sagemap` and `.sagelogic` files. Tile maps are pre‑rendered to textures so large maps draw efficiently. Example scenes under `examples/Scenes/` showcase animation, audio playback, event groups, multiple tile maps and basic physics (`Physics.sagescene`). Call ``renderer.unload_texture(obj)`` when removing objects to release the cached sprite texture.
 For a larger demonstration use `examples/advanced.sageproject`, which links several scenes to show animations, physics and large tile maps.

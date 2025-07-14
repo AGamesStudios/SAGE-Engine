@@ -3,8 +3,9 @@ import re
 
 from .crash import write_crash_report
 from .profiler import Profiler
+from .trace_profiler import TraceProfiler
 
-__all__ = ['load_json', 'write_crash_report', 'Profiler']
+__all__ = ['load_json', 'write_crash_report', 'Profiler', 'TraceProfiler']
 
 
 def load_json(path: str):
