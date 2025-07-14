@@ -4,6 +4,14 @@ import argparse
 import shutil
 import tarfile
 from pathlib import Path
+import hashlib
+import json
+import time
+import asyncio
+import signal
+import threading
+
+import websockets
 
 from engine import adaptors
 from engine import bundles
@@ -13,11 +21,22 @@ from tools import pack_atlas
 import yaml
 
 
+async def _notify_reload() -> None:
+    """Notify running clients to reload textures."""
+    try:
+        async with websockets.connect("ws://localhost:8765") as ws:
+            await ws.send("toast textures updated")
+    except Exception:
+        pass
+
+
 def _build(args: argparse.Namespace) -> None:
     profiler = TraceProfiler(args.profile) if args.profile else None
+    selected = None
     if args.bundle:
         config = bundles.load_bundle(args.bundle)
-        adaptors.load_adaptors(config.get("adaptors", {}).get("list"))
+        selected = config.get("adaptors", {}).get("list")
+        adaptors.load_adaptors(selected)
     else:
         adaptors.load_adaptors()
     pngs = sorted(Path("assets").rglob("*.png"))
@@ -25,13 +44,24 @@ def _build(args: argparse.Namespace) -> None:
         pack_atlas.pack_atlas([str(p) for p in pngs])
     out_dir = Path("build")
     out_dir.mkdir(exist_ok=True)
+    manifest: dict[str, str] = {}
     with tarfile.open(out_dir / "game.fpk", "w:gz") as tf:
         for fp in Path(".").rglob("*"):
             if fp.is_dir() or "build" in fp.parts or fp.name.startswith("."):
                 continue
+            if selected and "sage_adaptors" in fp.parts:
+                idx = fp.parts.index("sage_adaptors")
+                if fp.parts[idx + 1] not in selected:
+                    continue
             tf.add(fp)
+            manifest[str(fp)] = hashlib.sha256(fp.read_bytes()).hexdigest()
+    with open(out_dir / "manifest.json", "w", encoding="utf-8") as f:
+        json.dump(manifest, f, indent=2)
     (out_dir / "game.exe").write_text("stub executable")
     (out_dir / "game.wasm").write_text("(module)")
+    (out_dir / "index.html").write_text(
+        "<html><body><script src='game.wasm'></script></body></html>"
+    )
     if profiler:
         with profiler.phase("Input"):
             pass
@@ -47,8 +77,6 @@ def _build(args: argparse.Namespace) -> None:
 def _serve(args: argparse.Namespace) -> None:
     import http.server
     import socketserver
-    import threading
-    import asyncio
     from sage_editor import hot_reload
 
     profiler = TraceProfiler(args.profile) if args.profile else None
@@ -58,8 +86,34 @@ def _serve(args: argparse.Namespace) -> None:
             return
 
     httpd = socketserver.TCPServer(("0.0.0.0", args.port), _Handler)
-    thread = threading.Thread(target=httpd.serve_forever, daemon=True)
+
+    def run_server() -> None:
+        httpd.serve_forever()
+
+    thread = threading.Thread(target=run_server, daemon=True)
     thread.start()
+
+    stop = threading.Event()
+
+    def watch_assets() -> None:
+        last = 0.0
+        while not stop.is_set():
+            files = list(Path("assets").rglob("*.png")) + list(Path("assets").rglob("*.ogg"))
+            cur = max((f.stat().st_mtime for f in files), default=0.0)
+            if cur != last:
+                pngs = [str(p) for p in Path("assets").rglob("*.png")]
+                if pngs:
+                    try:
+                        pack_atlas.pack_atlas(pngs)
+                        asyncio.run(_notify_reload())
+                    except Exception:
+                        pass
+                last = cur
+            time.sleep(1.0)
+
+    watcher = threading.Thread(target=watch_assets, daemon=True)
+    watcher.start()
+
     if profiler:
         with profiler.phase("Input"):
             pass
@@ -70,10 +124,30 @@ def _serve(args: argparse.Namespace) -> None:
         with profiler.phase("Render"):
             pass
         profiler.write()
+
+    def handle_sig(signum, frame) -> None:  # pragma: no cover - signal handler
+        stop.set()
+
+    signal.signal(signal.SIGINT, handle_sig)
+
+    async def ws_main() -> None:
+        task = asyncio.create_task(hot_reload.start_listener())
+        while not stop.is_set() and not task.done():
+            await asyncio.sleep(0.1)
+        stop.set()
+        if not task.done():
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
+
     try:
-        asyncio.run(hot_reload.start_listener())
+        asyncio.run(ws_main())
     finally:
+        stop.set()
         httpd.shutdown()
+        thread.join()
 
 
 def _featherize(args: argparse.Namespace) -> None:

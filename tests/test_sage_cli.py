@@ -1,5 +1,32 @@
 import yaml
+import tarfile
+import json
+import asyncio
+import websockets
 import sage
+
+from engine import bundles, adaptors
+from sage_editor import hot_reload
+import socketserver
+
+
+class DummyServer:
+    def __init__(self, *args, **kwargs):
+        self.events = kwargs.get("events") if "events" in kwargs else {}
+        if isinstance(self.events, dict):
+            self.events.setdefault("addr", args[0] if args else ("", 0))
+
+    def serve_forever(self):
+        if isinstance(self.events, dict):
+            self.events["run"] = True
+        else:
+            self.events.append("run")
+
+    def shutdown(self):
+        if isinstance(self.events, dict):
+            self.events["shutdown"] = True
+        else:
+            self.events.append("shutdown")
 
 
 def test_sage_cli_commands(monkeypatch):
@@ -32,21 +59,15 @@ def test_featherize_creates_cache(tmp_path, monkeypatch):
 
 def test_serve_starts_server(monkeypatch):
     events = {}
+    import http.server  # noqa: F401
 
-    class DummyServer:
-        def __init__(self, addr, handler):
-            events["addr"] = addr
-
-        def serve_forever(self):
-            events["run"] = True
-
-        def shutdown(self):
-            events["shutdown"] = True
+    def server_factory(addr, handler):
+        return DummyServer(addr, handler, events=events)
 
     async def fake_start():
         events["ws"] = True
 
-    monkeypatch.setattr("socketserver.TCPServer", DummyServer)
+    monkeypatch.setattr(socketserver, "TCPServer", server_factory)
     monkeypatch.setattr("sage_editor.hot_reload.start_listener", fake_start)
     assert sage.main(["serve", "--port", "0"]) == 0
     assert events == {"addr": ("0.0.0.0", 0), "run": True, "ws": True, "shutdown": True}
@@ -78,3 +99,45 @@ def test_sage_cli_migrate(tmp_path):
     data = yaml.safe_load(proj.read_text())
     assert data["scene_file"] == "x.sagescene"
     assert data["version"] == "0.0.1"
+
+
+def test_build_bundle_excludes_unused(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    pkg = tmp_path / "src" / "sage_adaptors"
+    (pkg / "render").mkdir(parents=True)
+    (pkg / "render" / "__init__.py").write_text("")
+    (pkg / "audio").mkdir()
+    (pkg / "audio" / "__init__.py").write_text("")
+    (tmp_path / "assets").mkdir()
+
+    monkeypatch.setattr(bundles, "load_bundle", lambda n: {"adaptors": {"list": ["render"]}})
+    monkeypatch.setattr(adaptors, "load_adaptors", lambda names=None: None)
+
+    assert sage.main(["build", "--bundle", "retro2d"]) == 0
+    with tarfile.open(tmp_path / "build" / "game.fpk", "r:gz") as tf:
+        names = tf.getnames()
+    assert "src/sage_adaptors/render/__init__.py" in names
+    assert "src/sage_adaptors/audio/__init__.py" not in names
+    manifest = json.loads((tmp_path / "build" / "manifest.json").read_text())
+    assert any(p.endswith("render/__init__.py") for p in manifest)
+
+
+def test_serve_websocket(monkeypatch):
+    events = []
+
+    import http.server  # noqa: F401
+
+    async def dummy_listener(host="localhost", port=8765):
+        async def handler(ws):
+            await ws.send("hello")
+        server = await websockets.serve(handler, host, port)
+        await asyncio.sleep(0.1)
+        server.close()
+        await server.wait_closed()
+        events.append("done")
+
+    monkeypatch.setattr(hot_reload, "start_listener", dummy_listener)
+    monkeypatch.setattr(socketserver, "TCPServer", lambda *a, **k: DummyServer(*a, events=events, **k))
+
+    assert sage.main(["serve", "--port", "0"]) == 0
+    assert "done" in events
