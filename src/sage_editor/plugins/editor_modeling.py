@@ -232,5 +232,7 @@ class ModelingMixin:
         from engine.mesh_utils import triangulate_mesh
 
         self.undo_stack.snapshot(self.scene)
+        ngon = list(obj.mesh.vertices)
         obj.mesh = triangulate_mesh(obj.mesh)
+        setattr(obj.mesh, "ngon_vertices", ngon)
         self.toggle_model(False)

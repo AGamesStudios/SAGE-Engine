@@ -821,6 +821,8 @@ def test_bake_model(monkeypatch):
     win.bake_model()
     assert obj.mesh.indices is not None
     assert not win.modeling
+    win.toggle_model(True)
+    assert obj.mesh.indices is None
 
 
 def test_toggle_fill_action(monkeypatch):

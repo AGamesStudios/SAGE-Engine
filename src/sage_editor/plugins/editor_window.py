@@ -833,6 +833,14 @@ class EditorWindow(QMainWindow, ModelingMixin):
     def toggle_model(self, modeling: bool) -> None:
         """Switch between edit and model modes."""
         self.modeling = modeling
+        if modeling:
+            for obj in self.scene.objects:
+                mesh = getattr(obj, "mesh", None)
+                if mesh is not None and mesh.indices is not None:
+                    ngon = getattr(mesh, "ngon_vertices", None)
+                    if ngon is not None:
+                        mesh.vertices = list(ngon)
+                        mesh.indices = None
         if hasattr(self, "mode_combo") and hasattr(self.mode_combo, "currentIndex"):
             new_idx = 1 if modeling else 0
             try:
