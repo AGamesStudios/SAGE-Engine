@@ -51,10 +51,10 @@ def load_backend(name: str = "auto") -> RenderBackend:
     return HeadlessBackend()
 
 
-def get_backend(name: Optional[str] = None) -> RenderBackend:
+def get_backend(name: str = "auto") -> RenderBackend:
     """Return the current render backend, loading it on first use."""
     global _BACKEND
-    if name is None:
+    if name == "auto":
         name = os.environ.get("SAGE_RENDER", "auto")
     if _BACKEND is None or name != "auto":
         _BACKEND = load_backend(name)
