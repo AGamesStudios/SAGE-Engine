@@ -20,3 +20,11 @@ def test_one_way_platform():
     for _ in range(60):
         world.step(0.1)
     assert ball.y >= platform.y
+
+
+def test_xray_toggle():
+    physics.debug_xray = False
+    physics.handle_key("F3")
+    assert physics.debug_xray is True
+    physics.handle_key("F3")
+    assert physics.debug_xray is False

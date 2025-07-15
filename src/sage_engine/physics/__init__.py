@@ -4,6 +4,17 @@ from dataclasses import dataclass
 from typing import Callable, List
 
 
+# Toggle for rendering physics in X-Ray mode
+debug_xray: bool = False
+
+
+def handle_key(key: str) -> None:
+    """Toggle :data:`debug_xray` when *key* is ``'F3'``."""
+    global debug_xray
+    if key.upper() == "F3":
+        debug_xray = not debug_xray
+
+
 @dataclass
 class Body:
     x: float = 0.0
@@ -42,4 +53,4 @@ class World:
                         if other.behaviour == "sensor" and other.on_contact:
                             other.on_contact(body)
 
-__all__ = ["World", "Body"]
+__all__ = ["World", "Body", "debug_xray", "handle_key"]
