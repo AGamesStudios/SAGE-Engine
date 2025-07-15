@@ -1,5 +1,6 @@
 import types
 import sys
+from pathlib import Path
 
 # ruff: noqa: E402
 
@@ -19,6 +20,9 @@ gl_mod.glUniform1f = gl_mod.glUniform2f = gl_mod.glUniform3f = gl_mod.glUniform4
 sh_mod = sys.modules['OpenGL.GL.shaders']
 sh_mod.compileProgram = lambda *a, **k: 1
 sh_mod.compileShader = lambda *a, **k: 1
+
+# allow running without installing the package
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
 
 from sage_engine.core.engine import Engine
 from sage_engine.core.scenes.scene import Scene
