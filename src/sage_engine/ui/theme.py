@@ -57,6 +57,22 @@ current: Theme = Theme.load(_current_path)
 _widgets: List[Any] = []
 
 
+def color_rgba(hex_color: str) -> tuple[float, float, float, float]:
+    """Convert ``#RRGGBB`` or ``#RRGGBBAA`` to floats."""
+    c = hex_color.lstrip("#")
+    if len(c) == 6:
+        r, g, b = int(c[0:2], 16), int(c[2:4], 16), int(c[4:6], 16)
+        a = 255
+    else:
+        r, g, b, a = (
+            int(c[0:2], 16),
+            int(c[2:4], 16),
+            int(c[4:6], 16),
+            int(c[6:8], 16),
+        )
+    return r / 255.0, g / 255.0, b / 255.0, a / 255.0
+
+
 def register(widget: Any) -> None:
     _widgets.append(widget)
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Sequence
+from typing import Sequence, Any
 
 from .base import RenderBackend, NDArray
 
@@ -31,6 +31,12 @@ class HeadlessBackend(RenderBackend):
         self.frames += 1
 
     def resize(self, width: int, height: int) -> None:
+        pass
+
+    def create_texture(self, image: Any) -> int:
+        return 0
+
+    def set_camera(self, matrix: Sequence[float]) -> None:
         pass
 
     def draw_lines(self, vertices: Sequence[float], color: Sequence[float]) -> None:

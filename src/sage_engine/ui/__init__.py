@@ -70,10 +70,13 @@ class Panel(Widget):
 
 def collect_instances() -> NDArray | list[list[float]]:
     if np is None:
-        return [[w.x, w.y, 0.0, 0.0] for w in _widgets]
-    arr = np.zeros((len(_widgets), 4), dtype=np.float32)
+        return [
+            [w.x, w.y, 0.0, 0.0, *theme.color_rgba(w.bg_color)]
+            for w in _widgets
+        ]
+    arr = np.zeros((len(_widgets), 8), dtype=np.float32)
     for i, w in enumerate(_widgets):
-        arr[i] = (w.x, w.y, 0.0, 0.0)
+        arr[i] = (w.x, w.y, 0.0, 0.0, *theme.color_rgba(w.bg_color))
     return arr
 
 

@@ -9,7 +9,7 @@ from typing import Optional
 
 from .base import RenderBackend
 from .headless_backend import HeadlessBackend
-from .. import sprites, ui, physics
+from .. import sprites, ui, physics, camera
 
 _BACKEND: Optional[RenderBackend] = None
 
@@ -29,7 +29,8 @@ def _load_entry(name: str) -> Optional[RenderBackend]:
             if attr.endswith("Backend") and attr != "RenderBackend":
                 backend_cls = getattr(module, attr)
                 return backend_cls()
-    except Exception:
+    except Exception as exc:
+        warnings.warn(f"Failed to import backend '{name}': {exc}")
         return None
     return None
 
@@ -68,6 +69,7 @@ def draw_frame(backend: RenderBackend | None = None, *, world: physics.World | N
     """Render sprites and UI widgets in one frame."""
     if backend is None:
         backend = get_backend()
+    backend.set_camera(camera.matrix())
     backend.begin_frame()
     backend.draw_sprites(sprites.collect_instances())
     if world is not None and physics.debug_xray:

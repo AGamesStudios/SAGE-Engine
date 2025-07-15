@@ -35,6 +35,14 @@ class RenderBackend(ABC):
     def resize(self, width: int, height: int) -> None:
         """Resize the rendering surface."""
 
+    def create_texture(self, image: Any) -> int:
+        """Upload *image* and return a texture id."""
+        raise NotImplementedError
+
+    def set_camera(self, matrix: Sequence[float]) -> None:
+        """Set camera view-projection matrix."""
+        pass
+
     def draw_lines(self, vertices: Sequence[float], color: Sequence[float]) -> None:
         """Optional debug line drawing."""
         pass

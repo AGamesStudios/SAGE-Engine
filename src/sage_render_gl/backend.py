@@ -1,7 +1,8 @@
 """OpenGL render backend using moderngl."""
 
 from __future__ import annotations
-from typing import Sequence
+from typing import Sequence, Any
+
 
 try:  # pragma: no cover - optional dependency
     import moderngl
@@ -28,6 +29,12 @@ class OpenGLBackend(RenderBackend):
         self.window = None
         self.prog = None
         self.line_prog = None
+        self.tex = None
+        self.uvs: list[tuple[float, float, float, float]] = []
+        self.atlas_size = 2048
+        self.next_x = 0
+        self.next_y = 0
+        self.row_h = 0
         self.vbo = None
         self.instance_buffer = None
         self.vao = None
@@ -60,7 +67,7 @@ class OpenGLBackend(RenderBackend):
             0.5,
         ], dtype="f4")
         self.vbo = self.ctx.buffer(quad.tobytes())
-        self.instance_buffer = self.ctx.buffer(reserve=16 * 4096)
+        self.instance_buffer = self.ctx.buffer(reserve=32 * 4096)
 
         vert_src = """
         #version 330
@@ -68,23 +75,44 @@ class OpenGLBackend(RenderBackend):
         in vec2 in_pos;
         in float in_rot;
         in float in_tex;
+        in vec4 in_color;
+        uniform mat3 u_viewProj;
+        uniform vec4 u_uv[256];
+        out vec2 v_uv;
+        out vec4 v_color;
         void main() {
             mat2 r = mat2(cos(in_rot), -sin(in_rot), sin(in_rot), cos(in_rot));
-            gl_Position = vec4(r * in_vert + in_pos, 0.0, 1.0);
+            vec2 pos = r * in_vert + in_pos;
+            gl_Position = vec4((u_viewProj * vec3(pos, 1.0)).xy, 0.0, 1.0);
+            vec4 uv = u_uv[int(in_tex)];
+            v_uv = mix(uv.xy, uv.zw, in_vert + vec2(0.5));
+            v_color = in_color;
         }
         """
         frag_src = """
         #version 330
+        uniform sampler2D u_tex;
+        in vec2 v_uv;
+        in vec4 v_color;
         out vec4 color;
         void main() {
-            color = vec4(1.0);
+            color = texture(u_tex, v_uv) * v_color;
         }
         """
         self.prog = self.ctx.program(vertex_shader=vert_src, fragment_shader=frag_src)
         self.vao = self.ctx.vertex_array(
             self.prog,
-            [(self.vbo, "2f", "in_vert"), (self.instance_buffer, "2f 1f 1f/i", "in_pos", "in_rot", "in_tex")],
+            [
+                (self.vbo, "2f", "in_vert"),
+                (self.instance_buffer, "2f 1f 1f 4f/i", "in_pos", "in_rot", "in_tex", "in_color"),
+            ],
         )
+        if self.tex is None:
+            self.tex = self.ctx.texture((self.atlas_size, self.atlas_size), 4)
+            self.tex.filter = (moderngl.NEAREST, moderngl.NEAREST)
+            self.tex.use()
+        self.prog["u_viewProj"].write(np.eye(3, dtype="f4").tobytes())
+        self.prog["u_uv"].write(np.zeros((256, 4), dtype="f4").tobytes())
 
         line_vert = """
         #version 330
@@ -142,5 +170,34 @@ class OpenGLBackend(RenderBackend):
         vao = self.ctx.vertex_array(self.line_prog, [(vbo, "2f", "in_pos")])
         self.line_prog["u_color"].value = tuple(color[:3])
         vao.render(moderngl.LINES)
+
+    def create_texture(self, image: Any) -> int:
+        if self.ctx is None or self.tex is None:
+            return 0
+        img = image.convert("RGBA")
+        w, h = img.size
+        if self.next_x + w > self.atlas_size:
+            self.next_x = 0
+            self.next_y += self.row_h
+            self.row_h = 0
+        if self.next_y + h > self.atlas_size:
+            raise RuntimeError("atlas full")
+        self.tex.write(img.tobytes(), viewport=(self.next_x, self.next_y, w, h))
+        u0 = self.next_x / self.atlas_size
+        v0 = self.next_y / self.atlas_size
+        u1 = (self.next_x + w) / self.atlas_size
+        v1 = (self.next_y + h) / self.atlas_size
+        self.uvs.append((u0, v0, u1, v1))
+        self.next_x += w
+        self.row_h = max(self.row_h, h)
+        uv_data = np.zeros((256, 4), dtype="f4")
+        for i, uv in enumerate(self.uvs):
+            uv_data[i] = uv
+        self.prog["u_uv"].write(uv_data.tobytes())
+        return len(self.uvs) - 1
+
+    def set_camera(self, matrix: Sequence[float]) -> None:
+        if self.prog is not None:
+            self.prog["u_viewProj"].write(np.array(matrix, dtype="f4").tobytes())
 
 __all__ = ["OpenGLBackend"]

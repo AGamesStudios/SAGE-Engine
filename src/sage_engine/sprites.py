@@ -17,6 +17,7 @@ class Sprite:
     y: float
     rot: float = 0.0
     tex_id: float = 0.0
+    color: tuple[float, float, float, float] = (1.0, 1.0, 1.0, 1.0)
 
 
 _sprites: List[Sprite] = []
@@ -32,8 +33,11 @@ def clear() -> None:
 
 def collect_instances() -> NDArray | list[list[float]]:
     if np is None:
-        return [[s.x, s.y, s.rot, s.tex_id] for s in _sprites]
-    arr = np.zeros((len(_sprites), 4), dtype=np.float32)
+        return [
+            [s.x, s.y, s.rot, s.tex_id, *s.color]
+            for s in _sprites
+        ]
+    arr = np.zeros((len(_sprites), 8), dtype=np.float32)
     for i, s in enumerate(_sprites):
-        arr[i] = (s.x, s.y, s.rot, s.tex_id)
+        arr[i] = (s.x, s.y, s.rot, s.tex_id, *s.color)
     return arr
