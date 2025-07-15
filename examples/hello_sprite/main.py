@@ -18,13 +18,24 @@ def main() -> None:
     if not isinstance(backend, gui.headless.HeadlessBackend):
         try:
             backend.create_window(200, 200, "Hello Sprite")
-            from tkinter import Label
-            from PIL import ImageTk
+            if backend.__class__.__module__.startswith("gui_qt"):
+                from PyQt6 import QtWidgets as QtW, QtGui as QtG
+                from PIL import ImageQt
 
-            photo = ImageTk.PhotoImage(img)
-            lbl = Label(backend.root, image=photo)  # type: ignore[attr-defined]
-            lbl.pack()
-            backend.process_events()
+                label = QtW.QLabel()
+                label.setPixmap(QtG.QPixmap.fromImage(ImageQt.ImageQt(img)))
+                layout = QtW.QVBoxLayout()
+                layout.addWidget(label)
+                backend._window.setLayout(layout)  # type: ignore[attr-defined]
+                backend._app.exec()  # type: ignore[attr-defined]
+            else:
+                from tkinter import Label
+                from PIL import ImageTk
+
+                photo = ImageTk.PhotoImage(img)
+                lbl = Label(backend.root, image=photo)  # type: ignore[attr-defined]
+                lbl.pack()
+                backend.root.mainloop()  # type: ignore[attr-defined]
             return
         except Exception as exc:  # pragma: no cover - UI
             print(f"GUI failed: {exc}")
