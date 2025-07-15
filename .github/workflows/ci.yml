@@ -9,7 +9,7 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
-      - run: python bootstrap.py
+      - run: python -m pip install .[dev,audio_conv]
       - run: ruff check .
       - run: pytest -q
 
@@ -20,7 +20,7 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
-      - run: python -m pip install .[dev,qt6]
+      - run: python -m pip install .[dev,audio_conv,qt6]
       - run: ruff check .
       - run: pytest -q
 
@@ -31,6 +31,6 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
-      - run: python -m pip install .[dev,tk]
+      - run: python -m pip install .[dev,audio_conv,tk]
       - run: ruff check .
       - run: pytest tests/gui/test_auto_load.py -q

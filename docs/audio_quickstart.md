@@ -14,8 +14,8 @@ handle.stop()
 ```
 
 ## SoundMint: automatic converter
-
-Convert audio files on the fly using FFmpeg. The ``convert`` helper writes
+Install the optional ``audio_conv`` extras to enable on-the-fly conversion
+via FFmpeg. The ``convert`` helper writes
 to ``build/audio_cache`` and skips re-encoding when the source file hasn't
 changed.
 
