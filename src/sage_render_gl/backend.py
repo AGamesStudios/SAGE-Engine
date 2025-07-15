@@ -30,7 +30,9 @@ class OpenGLBackend(RenderBackend):
             self.fbo.clear(0.0, 0.0, 0.0, 1.0)
 
     def draw_sprites(self, instances: NDArray) -> None:
-        self.draw_calls += len(instances)
+        # Count a single instanced draw call
+        if len(instances):
+            self.draw_calls += 1
 
     def end_frame(self) -> None:
         pass

@@ -1,7 +1,4 @@
-"""Local-import convenience for tests.
-
-TODO: remove after version 1.1.
-"""
+"""Local-import convenience for tests."""
 from importlib import import_module
 import sys
 

@@ -1,6 +1,12 @@
 from __future__ import annotations
 
-from typing import Callable, List
+from typing import Callable, List, Any
+
+try:  # pragma: no cover - optional dependency
+    import numpy as np  # type: ignore
+    from numpy.typing import NDArray
+except Exception:  # pragma: no cover - numpy optional
+    NDArray = Any  # type: ignore
 
 from . import theme
 
@@ -17,12 +23,20 @@ class Signal:
             fn(*args, **kwargs)
 
 
+_widgets: List["Widget"] = []
+
+
 class Widget:
     """Base widget applying the global UI theme."""
 
     def __init__(self) -> None:
+        self.x = 0.0
+        self.y = 0.0
+        self.width = 0.0
+        self.height = 0.0
         self.apply_theme()
         theme.register(self)
+        _widgets.append(self)
 
     def apply_theme(self) -> None:  # pragma: no cover - trivial
         self.bg_color = theme.current.colors.get("bg", "#000000")
@@ -53,4 +67,19 @@ class Panel(Widget):
     pass
 
 
-__all__ = ["Signal", "Widget", "Button", "Label", "Panel", "theme"]
+def collect_instances() -> NDArray[np.float32]:
+    arr = np.zeros((len(_widgets), 4), dtype=np.float32)
+    for i, w in enumerate(_widgets):
+        arr[i] = (w.x, w.y, 0.0, 0.0)
+    return arr
+
+
+__all__ = [
+    "Signal",
+    "Widget",
+    "Button",
+    "Label",
+    "Panel",
+    "theme",
+    "collect_instances",
+]

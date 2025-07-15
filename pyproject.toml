@@ -10,6 +10,7 @@ qt6 = ["PyQt6>=6.5"]
 qt5 = ["PyQt5>=5.15"]
 tk = []
 audio_conv = ["pydub>=0.25.0", "ffmpeg-python>=0.2.0"]
+opengl = ["moderngl>=5.8"]
 
 [build-system]
 requires = ["setuptools>=64", "wheel"]

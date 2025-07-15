@@ -53,4 +53,21 @@ class World:
                         if other.behaviour == "sensor" and other.on_contact:
                             other.on_contact(body)
 
-__all__ = ["World", "Body", "debug_xray", "handle_key"]
+
+def collect_debug_lines(world: "World") -> list[float]:
+    """Return simple line segments for each body."""
+    verts: list[float] = []
+    for body in world.bodies:
+        x = body.x
+        y = body.y
+        s = 0.5
+        verts += [x - s, y - s, x + s, y - s, x + s, y + s, x - s, y + s, x - s, y - s]
+    return verts
+
+__all__ = [
+    "World",
+    "Body",
+    "debug_xray",
+    "handle_key",
+    "collect_debug_lines",
+]

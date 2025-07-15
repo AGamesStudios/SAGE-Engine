@@ -11,6 +11,7 @@ __all__ = [
     "soundmint",
     "tilemap",
     "ink",
+    "sprites",
 ]
 
 from importlib import import_module

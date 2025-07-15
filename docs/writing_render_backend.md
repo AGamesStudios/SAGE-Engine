@@ -13,6 +13,26 @@ A minimal backend must implement `create_device`, `begin_frame`,
 `draw_sprites`, `end_frame` and `resize`. Optional helpers such as
 `draw_lines` can be left empty.
 
+```python
+from sage_engine.render.base import RenderBackend
+
+class VulkanBackend(RenderBackend):
+    def create_device(self, width: int, height: int) -> None:
+        ...
+
+    def begin_frame(self) -> None:
+        ...
+
+    def draw_sprites(self, instances) -> None:
+        ...
+
+    def end_frame(self) -> None:
+        ...
+
+    def resize(self, width: int, height: int) -> None:
+        ...
+```
+
 During development you can select the backend via the CLI:
 
 ```bash

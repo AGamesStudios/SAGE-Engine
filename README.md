@@ -26,6 +26,9 @@ sage run --gui list   # show available GUI backends
 sage run --render opengl script.py
 ```
 
+Running with the OpenGL backend renders sprites via GPU instancing. The first
+frame of the hello example is shown below (screenshot omitted here).
+
 See [Writing your own GUI backend](docs/writing_gui_backend.md) for details.
 See [Writing your own render backend](docs/writing_render_backend.md) for details.
 The folder `examples/plugins/gui_dummy` contains a minimal plugin template.
