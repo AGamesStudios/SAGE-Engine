@@ -2,10 +2,10 @@
 
 Minimal starting point for the SAGE Engine.
 
-## Commands
+## Quick Start
 
 ```bash
-python -m pip install -e .
+python bootstrap.py
 python examples/hello_sprite/main.py
 pytest -q
 ```

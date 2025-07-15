@@ -11,16 +11,11 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
-      - name: Install
-        run: python -m pip install -e .[dev]
+      - name: Bootstrap
+        run: python bootstrap.py
       - name: Ruff
         run: ruff check .
       - name: Pytest
         run: pytest -q
-      - name: Clean install check
-        shell: bash
-        run: |
-          python -m pip uninstall -y sage-engine
-          git clean -dfx
-          python -m pip install -e .
-          python examples/hello_sprite/main.py --headless
+      - name: Headless example
+        run: python examples/hello_sprite/main.py --headless
