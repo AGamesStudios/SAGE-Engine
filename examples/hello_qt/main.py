@@ -22,7 +22,7 @@ def main() -> None:
     layout = QtW.QVBoxLayout()
     layout.addWidget(label)
     backend._window.setLayout(layout)  # type: ignore[attr-defined]
-    backend.process_events()
+    backend._app.exec()  # type: ignore[attr-defined]
 
 
 if __name__ == "__main__":
