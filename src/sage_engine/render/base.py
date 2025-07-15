@@ -35,8 +35,8 @@ class RenderBackend(ABC):
     def resize(self, width: int, height: int) -> None:
         """Resize the rendering surface."""
 
-    def create_texture(self, image: Any) -> int:
-        """Upload *image* and return a texture id."""
+    def create_texture(self, image: Any) -> tuple[int, tuple[float, float, float, float]]:
+        """Upload *image* and return *(atlas_id, uv_rect)*."""
         raise NotImplementedError
 
     def set_camera(self, matrix: Sequence[float]) -> None:

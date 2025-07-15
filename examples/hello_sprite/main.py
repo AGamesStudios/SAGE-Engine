@@ -17,7 +17,7 @@ def main() -> None:
     backend = render.get_backend("auto")
     backend.create_device(200, 200)
     tex = resources.manager.get_texture(img_path)
-    sprites.add(sprites.Sprite(0.0, 0.0, tex_id=float(tex.id)))
+    sprites.add(sprites.Sprite(0.0, 0.0, atlas=float(tex.atlas), uv=tex.uv))
     camera.set(0.0, 0.0, 1.0)
     render.draw_frame(backend)
 

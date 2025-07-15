@@ -51,14 +51,14 @@ Images for the atlas can be loaded with Pillow:
 
 ```python
 from PIL import Image
-tex_id = backend.create_texture(Image.open("hero.png"))
+atlas_id, uv = backend.create_texture(Image.open("hero.png"))
 ```
 
 Instances passed to `draw_sprites` are arrays of floats with the
 following layout:
 
 ```
-[x, y, sx, sy, rot, tex_id, u0, v0, u1, v1, blend, r, g, b, a, depth]
+[x, y, sx, sy, rot, atlas_id, u0, v0, u1, v1, blend, r, g, b, a, depth]
 ```
 
 `blend` is `0.0` for standard alpha blending and `1.0` for premultiplied

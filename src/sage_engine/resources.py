@@ -12,9 +12,9 @@ from . import render
 
 @dataclass
 class Texture:
-    """Entry in the global texture atlas."""
+    """Location of an image inside a texture atlas."""
 
-    id: int
+    atlas: int
     uv: Tuple[float, float, float, float]
 
 
@@ -34,10 +34,10 @@ class ResourceManager:
             image_path = Path(json_path).with_name(data["image"])
         img = Image.open(image_path)
         key = str(image_path)
-        tex_id = self._atlas_textures.get(key)
-        if tex_id is None:
-            tex_id = self.backend.create_texture(img)
-            self._atlas_textures[key] = tex_id
+        atlas_id = self._atlas_textures.get(key)
+        if atlas_id is None:
+            atlas_id, _ = self.backend.create_texture(img)
+            self._atlas_textures[key] = atlas_id
         w, h = data.get("size", img.size)
         for name, rect in data["sprites"].items():
             x, y, rw, rh = rect
@@ -45,7 +45,7 @@ class ResourceManager:
             v0 = y / h
             u1 = (x + rw) / w
             v1 = (y + rh) / h
-            self._atlas_slots[name] = Texture(id=tex_id, uv=(u0, v0, u1, v1))
+            self._atlas_slots[name] = Texture(atlas=atlas_id, uv=(u0, v0, u1, v1))
 
     def get_texture(self, path: str) -> Texture:
         if self.backend is None:
@@ -58,8 +58,8 @@ class ResourceManager:
         if tex is not None:
             return tex
         img = Image.open(key)
-        tex_id = self.backend.create_texture(img)
-        tex = Texture(id=tex_id, uv=(0.0, 0.0, 1.0, 1.0))
+        atlas_id, uv = self.backend.create_texture(img)
+        tex = Texture(atlas=atlas_id, uv=uv)
         self._cache[key] = tex
         return tex
 

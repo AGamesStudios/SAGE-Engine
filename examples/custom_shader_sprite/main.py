@@ -22,7 +22,7 @@ def main() -> None:
     shader = load("gray", vert, frag)
     material = Material(shader)
     backend.register_shader(shader)
-    sprites.add(sprites.Sprite(0.0, 0.0, tex_id=float(tex.id), material=material))
+    sprites.add(sprites.Sprite(0.0, 0.0, atlas=float(tex.atlas), uv=tex.uv, material=material))
     camera.set(0.0, 0.0, 1.0)
     render.draw_frame(backend)
 

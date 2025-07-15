@@ -17,9 +17,18 @@ except Exception:  # pragma: no cover - optional
 import numpy as np
 
 from importlib import resources
+from dataclasses import dataclass
 from sage_engine.render.base import NDArray, RenderBackend
 from sage_engine.render.shader import ShaderProgram
 from sage_engine.render.material import Material
+
+
+@dataclass
+class _Atlas:
+    texture: Any
+    next_x: int = 0
+    next_y: int = 0
+    row_h: int = 0
 
 
 class OpenGLBackend(RenderBackend):
@@ -32,12 +41,8 @@ class OpenGLBackend(RenderBackend):
         self.window = None
         self.prog = None
         self.line_prog = None
-        self.tex = None
-        self.uvs: list[tuple[float, float, float, float]] = []
         self.atlas_size = 2048
-        self.next_x = 0
-        self.next_y = 0
-        self.row_h = 0
+        self.atlases: list[_Atlas] = []
         self.vbo = None
         self.instance_buffer = None
         self.vao = None
@@ -93,7 +98,7 @@ class OpenGLBackend(RenderBackend):
                     "in_pos",
                     "in_scale",
                     "in_rot",
-                    "in_tex",
+                    "in_atlas",
                     "in_uv",
                     "in_blend",
                     "in_color",
@@ -102,10 +107,10 @@ class OpenGLBackend(RenderBackend):
             ],
         )
         self.current_material = self.default_material
-        if self.tex is None:
-            self.tex = self.ctx.texture((self.atlas_size, self.atlas_size), 4)
-            self.tex.filter = (moderngl.NEAREST, moderngl.NEAREST)
-            self.tex.use()
+        for i in range(8):
+            name = f"u_tex[{i}]"
+            if name in self.prog:
+                self.prog[name].value = i
         self.prog["u_viewProj"].write(np.eye(3, dtype="f4").tobytes())
 
         line_vert = """
@@ -131,6 +136,8 @@ class OpenGLBackend(RenderBackend):
         self.draw_calls = 0
         if self.ctx:
             self.ctx.clear(0.0, 0.0, 0.0, 1.0)
+            for i, atlas in enumerate(self.atlases):
+                atlas.texture.use(location=i)
 
     def draw_sprites(self, instances: NDArray) -> None:
         if self.ctx is None or self.vao is None:
@@ -180,7 +187,7 @@ class OpenGLBackend(RenderBackend):
                     "in_pos",
                     "in_scale",
                     "in_rot",
-                    "in_tex",
+                    "in_atlas",
                     "in_uv",
                     "in_blend",
                     "in_color",
@@ -188,6 +195,10 @@ class OpenGLBackend(RenderBackend):
                 ),
             ],
         )
+        for i in range(8):
+            name = f"u_tex[{i}]"
+            if name in prog:
+                prog[name].value = i
         for name, value in material.uniforms.items():
             if name in prog:
                 prog[name].value = value if not isinstance(value, (list, tuple)) else tuple(value)
@@ -221,26 +232,48 @@ class OpenGLBackend(RenderBackend):
         self.line_prog["u_color"].value = tuple(color[:3])
         vao.render(moderngl.LINES)
 
-    def create_texture(self, image: Any) -> int:
-        if self.ctx is None or self.tex is None:
-            return 0
+    def _alloc(self, atlas: _Atlas, w: int, h: int) -> tuple[int, int] | None:
+        if atlas.next_x + w > self.atlas_size:
+            atlas.next_x = 0
+            atlas.next_y += atlas.row_h
+            atlas.row_h = 0
+        if atlas.next_y + h > self.atlas_size:
+            return None
+        x, y = atlas.next_x, atlas.next_y
+        atlas.next_x += w
+        atlas.row_h = max(atlas.row_h, h)
+        return x, y
+
+    def create_texture(self, image: Any) -> tuple[int, tuple[float, float, float, float]]:
+        if self.ctx is None:
+            return 0, (0.0, 0.0, 1.0, 1.0)
         img = image.convert("RGBA")
         w, h = img.size
-        if self.next_x + w > self.atlas_size:
-            self.next_x = 0
-            self.next_y += self.row_h
-            self.row_h = 0
-        if self.next_y + h > self.atlas_size:
+        for i, atlas in enumerate(self.atlases):
+            pos = self._alloc(atlas, w, h)
+            if pos is not None:
+                x, y = pos
+                atlas.texture.write(img.tobytes(), viewport=(x, y, w, h))
+                u0 = x / self.atlas_size
+                v0 = y / self.atlas_size
+                u1 = (x + w) / self.atlas_size
+                v1 = (y + h) / self.atlas_size
+                return i, (u0, v0, u1, v1)
+        tex = self.ctx.texture((self.atlas_size, self.atlas_size), 4)
+        tex.filter = (moderngl.NEAREST, moderngl.NEAREST)
+        tex.use(location=len(self.atlases))
+        atlas = _Atlas(tex)
+        self.atlases.append(atlas)
+        pos = self._alloc(atlas, w, h)
+        if pos is None:
             raise RuntimeError("atlas full")
-        self.tex.write(img.tobytes(), viewport=(self.next_x, self.next_y, w, h))
-        u0 = self.next_x / self.atlas_size
-        v0 = self.next_y / self.atlas_size
-        u1 = (self.next_x + w) / self.atlas_size
-        v1 = (self.next_y + h) / self.atlas_size
-        self.uvs.append((u0, v0, u1, v1))
-        self.next_x += w
-        self.row_h = max(self.row_h, h)
-        return len(self.uvs) - 1
+        x, y = pos
+        atlas.texture.write(img.tobytes(), viewport=(x, y, w, h))
+        u0 = x / self.atlas_size
+        v0 = y / self.atlas_size
+        u1 = (x + w) / self.atlas_size
+        v1 = (y + h) / self.atlas_size
+        return len(self.atlases) - 1, (u0, v0, u1, v1)
 
     def set_camera(self, matrix: Sequence[float]) -> None:
         if self.prog is not None:

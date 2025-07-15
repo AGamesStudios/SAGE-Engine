@@ -33,8 +33,8 @@ class HeadlessBackend(RenderBackend):
     def resize(self, width: int, height: int) -> None:
         pass
 
-    def create_texture(self, image: Any) -> int:
-        return 0
+    def create_texture(self, image: Any) -> tuple[int, tuple[float, float, float, float]]:
+        return 0, (0.0, 0.0, 1.0, 1.0)
 
     def set_camera(self, matrix: Sequence[float]) -> None:
         pass

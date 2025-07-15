@@ -29,7 +29,7 @@ class Sprite:
     sx: float = 1.0
     sy: float = 1.0
     rot: float = 0.0
-    tex_id: float = 0.0
+    atlas: float = 0.0
     uv: tuple[float, float, float, float] = (0.0, 0.0, 1.0, 1.0)
     blend: str = "alpha"
     color: tuple[float, float, float, float] = (1.0, 1.0, 1.0, 1.0)
@@ -79,7 +79,7 @@ def collect_instances() -> NDArray | list[list[float]]:
                 s.sx,
                 s.sy,
                 s.rot,
-                s.tex_id,
+                s.atlas,
                 *s.uv,
                 blend,
                 *s.color,
@@ -96,7 +96,7 @@ def collect_instances() -> NDArray | list[list[float]]:
             s.sx,
             s.sy,
             s.rot,
-            s.tex_id,
+            s.atlas,
             *s.uv,
             blend,
             *s.color,
@@ -117,7 +117,7 @@ def collect_groups() -> list[tuple[Material, NDArray | list[list[float]]]]:
             s.sx,
             s.sy,
             s.rot,
-            s.tex_id,
+            s.atlas,
             *s.uv,
             blend,
             *s.color,

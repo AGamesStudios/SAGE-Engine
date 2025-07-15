@@ -13,7 +13,7 @@ def test_get_texture_cached(tmp_path, monkeypatch):
 
     def fake_create(image):
         calls.append(True)
-        return len(calls) - 1
+        return 0, (0.0, 0.0, 1.0, 1.0)
 
     monkeypatch.setattr(resources.manager, "backend", backend, raising=False)
     monkeypatch.setattr(backend, "create_texture", fake_create)
@@ -48,5 +48,5 @@ def test_load_atlas(tmp_path, monkeypatch):
     resources.manager.load_atlas(str(tmp_path / "atlas.json"))
     tex_a = resources.manager.get_texture("a")
     tex_b = resources.manager.get_texture("b")
-    assert tex_a.id == tex_b.id == 0
+    assert tex_a.atlas == tex_b.atlas == 0
     assert tex_a.uv != tex_b.uv
