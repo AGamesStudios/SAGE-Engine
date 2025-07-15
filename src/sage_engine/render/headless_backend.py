@@ -8,25 +8,27 @@ from .base import RenderBackend, NDArray
 
 
 class HeadlessBackend(RenderBackend):
-    """Dummy backend that counts draw calls."""
+    """Dummy backend that merely counts frames and draw calls."""
 
     def __init__(self) -> None:
         self.draw_calls = 0
+        self.frames = 0
         self.last_instances: NDArray | None = None
 
     def create_device(self, width: int, height: int) -> None:
         self.draw_calls = 0
+        self.frames = 0
 
     def begin_frame(self) -> None:
-        self.frame_calls = 0
+        self._frame_calls = 0
 
     def draw_sprites(self, instances: NDArray) -> None:
         self.last_instances = instances
-        self.frame_calls += 1
+        self._frame_calls += 1
         self.draw_calls += 1
 
     def end_frame(self) -> None:
-        pass
+        self.frames += 1
 
     def resize(self, width: int, height: int) -> None:
         pass
