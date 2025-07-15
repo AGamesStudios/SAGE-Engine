@@ -67,7 +67,7 @@ class OpenGLBackend(RenderBackend):
             0.5,
         ], dtype="f4")
         self.vbo = self.ctx.buffer(quad.tobytes())
-        # 11 floats per instance -> 44 bytes
+        # 12 floats per instance -> 48 bytes
         self.instance_buffer = self.ctx.buffer(reserve=48 * 4096)
 
         vert_src = """
@@ -79,6 +79,7 @@ class OpenGLBackend(RenderBackend):
         in float in_tex;
         in float in_blend;
         in vec4 in_color;
+        in float in_depth;
         uniform mat3 u_viewProj;
         uniform vec4 u_uv[256];
         out vec2 v_uv;
@@ -88,7 +89,7 @@ class OpenGLBackend(RenderBackend):
             float c = cos(in_rot);
             float s = sin(in_rot);
             vec2 pos = in_pos + vec2(c * scaled.x - s * scaled.y, s * scaled.x + c * scaled.y);
-            gl_Position = vec4((u_viewProj * vec3(pos, 1.0)).xy, 0.0, 1.0);
+            gl_Position = vec4((u_viewProj * vec3(pos, 1.0)).xy, in_depth, 1.0);
             vec4 uv = u_uv[int(in_tex)];
             v_uv = mix(uv.xy, uv.zw, in_vert + vec2(0.5));
             v_color = in_color;
@@ -111,13 +112,14 @@ class OpenGLBackend(RenderBackend):
                 (self.vbo, "2f", "in_vert"),
                 (
                     self.instance_buffer,
-                    "2f 2f 1f 1f 1f 4f/i",
+                    "2f 2f 1f 1f 1f 4f 1f/i",
                     "in_pos",
                     "in_scale",
                     "in_rot",
                     "in_tex",
                     "in_blend",
                     "in_color",
+                    "in_depth",
                 ),
             ],
         )

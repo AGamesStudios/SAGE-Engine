@@ -8,7 +8,7 @@ def test_headless_basic():
     sprites.clear()
     sprites.add(sprites.Sprite(x=1.0, y=2.0))
     # avoid numpy dependency in test
-    instances = [[1.0, 2.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0]]
+    instances = [[1.0, 2.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0]]
     backend.begin_frame()
     backend.draw_sprites(instances)
     backend.end_frame()

@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from typing import List, Any
 from .transform import Transform
 
+_LAYER_SCALE = 0.01
+
 try:  # pragma: no cover - optional dependency
     import numpy as np  # type: ignore
     from numpy.typing import NDArray
@@ -60,6 +62,7 @@ def collect_instances() -> NDArray | list[list[float]]:
         out = []
         for s in ordered:
             blend = 0.0 if s.blend == "alpha" else 1.0
+            depth = s.layer * _LAYER_SCALE + s.z
             out.append([
                 s.x,
                 s.y,
@@ -69,11 +72,13 @@ def collect_instances() -> NDArray | list[list[float]]:
                 s.tex_id,
                 blend,
                 *s.color,
+                depth,
             ])
         return out
-    arr = np.zeros((len(ordered), 11), dtype=np.float32)
+    arr = np.zeros((len(ordered), 12), dtype=np.float32)
     for i, s in enumerate(ordered):
         blend = 0.0 if s.blend == "alpha" else 1.0
+        depth = s.layer * _LAYER_SCALE + s.z
         arr[i] = (
             s.x,
             s.y,
@@ -83,5 +88,6 @@ def collect_instances() -> NDArray | list[list[float]]:
             s.tex_id,
             blend,
             *s.color,
+            depth,
         )
     return arr

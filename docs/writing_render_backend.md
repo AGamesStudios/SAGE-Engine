@@ -53,3 +53,22 @@ Images for the atlas can be loaded with Pillow:
 from PIL import Image
 tex_id = backend.create_texture(Image.open("hero.png"))
 ```
+
+Instances passed to `draw_sprites` are arrays of floats with the
+following layout:
+
+```
+[x, y, sx, sy, rot, tex_id, blend, r, g, b, a, depth]
+```
+
+`blend` is `0.0` for standard alpha blending and `1.0` for premultiplied
+alpha.
+
+## Depth handling
+
+Sprites have integer `layer` and float `z` values. The engine sorts
+instances by `(layer, z)` before rendering and passes a combined
+`depth` float to the backend. Your vertex shader should assign this
+value to `gl_Position.z` so that sprites in higher layers appear on
+top. Depth is calculated as `layer * 0.01 + z`, so avoid using hundreds
+of consecutive layers to keep precision reasonable.
