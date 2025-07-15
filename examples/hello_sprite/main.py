@@ -16,8 +16,8 @@ def main() -> None:
     draw.rectangle([0, 0, 63, 63], fill=(255, 0, 0, 255))
     backend = gui.load_backend(args.gui)
     if not isinstance(backend, gui.headless.HeadlessBackend):
-        backend.create_window(200, 200, "Hello Sprite")
         try:
+            backend.create_window(200, 200, "Hello Sprite")
             from tkinter import Label
             from PIL import ImageTk
 
@@ -26,8 +26,8 @@ def main() -> None:
             lbl.pack()
             backend.process_events()
             return
-        except Exception:
-            pass
+        except Exception as exc:  # pragma: no cover - UI
+            print(f"GUI failed: {exc}")
     img.save("hello_sprite.png")
     print("Saved sprite to hello_sprite.png")
 
