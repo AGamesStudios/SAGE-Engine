@@ -37,7 +37,8 @@ Short guides: [Audio](docs/audio_quickstart.md),
 [Physics](docs/physics_quickstart.md),
 [UI](docs/ui_quickstart.md),
 [Tilemap](docs/tilemap_quickstart.md) and
-[Particles](docs/particles_quickstart.md).
+[Particles](docs/particles_quickstart.md),
+[Custom shaders](docs/render_shaders.md).
 
 ## Папки проекта
 

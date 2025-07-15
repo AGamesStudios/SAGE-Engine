@@ -41,3 +41,13 @@ class HeadlessBackend(RenderBackend):
 
     def draw_lines(self, vertices: Sequence[float], color: Sequence[float]) -> None:
         pass
+
+    # material support --------------------------------------------------------
+    def register_shader(self, program: Any) -> None:
+        self.last_shader = program
+
+    def set_material(self, material: Any) -> None:
+        self.current_material = material
+
+    def draw_material_group(self, instances: NDArray) -> None:
+        self.draw_sprites(instances)

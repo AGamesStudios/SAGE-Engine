@@ -1,10 +1,18 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Any
+from typing import List, Any, Dict
 from .transform import Transform
+from .render.material import Material
+from .render import shader as _shader
+from pathlib import Path
 
 _LAYER_SCALE = 0.01
+
+_base = Path(__file__).resolve().parent / "render" / "shaders"
+_vert_path = _base / "basic.vert"
+_frag_path = _base / "basic.frag"
+DEFAULT_MATERIAL = Material(_shader.load("default", _vert_path, _frag_path))
 
 try:  # pragma: no cover - optional dependency
     import numpy as np  # type: ignore
@@ -27,6 +35,7 @@ class Sprite:
     color: tuple[float, float, float, float] = (1.0, 1.0, 1.0, 1.0)
     layer: int = 0
     z: float = 0.0
+    material: Material | None = None
 
     def set_transform(
         self,
@@ -94,3 +103,33 @@ def collect_instances() -> NDArray | list[list[float]]:
             depth,
         )
     return arr
+
+
+def collect_groups() -> list[tuple[Material, NDArray | list[list[float]]]]:
+    grouped: Dict[Material, List[list[float]]] = {}
+    ordered = sorted(_sprites, key=lambda s: (s.layer, s.z))
+    for s in ordered:
+        blend = 0.0 if s.blend == "alpha" else 1.0
+        depth = s.layer * _LAYER_SCALE + s.z
+        row = [
+            s.x,
+            s.y,
+            s.sx,
+            s.sy,
+            s.rot,
+            s.tex_id,
+            *s.uv,
+            blend,
+            *s.color,
+            depth,
+        ]
+        mat = s.material or DEFAULT_MATERIAL
+        grouped.setdefault(mat, []).append(row)
+
+    result: list[tuple[Material, NDArray | list[list[float]]]] = []
+    for mat, rows in grouped.items():
+        if np is None:
+            result.append((mat, rows))
+        else:
+            result.append((mat, np.asarray(rows, dtype=np.float32)))
+    return result

@@ -46,3 +46,16 @@ class RenderBackend(ABC):
     def draw_lines(self, vertices: Sequence[float], color: Sequence[float]) -> None:
         """Optional debug line drawing."""
         pass
+
+    # --- materials and shaders -------------------------------------------------
+    def register_shader(self, program: Any) -> None:
+        """Register *program* with the backend."""
+        pass
+
+    def set_material(self, material: Any) -> None:
+        """Set the current draw material."""
+        pass
+
+    def draw_material_group(self, instances: NDArray) -> None:
+        """Draw a group of instances using the current material."""
+        self.draw_sprites(instances)

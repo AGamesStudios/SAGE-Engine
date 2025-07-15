@@ -16,7 +16,10 @@ except Exception:  # pragma: no cover - optional
 
 import numpy as np
 
+from importlib import resources
 from sage_engine.render.base import NDArray, RenderBackend
+from sage_engine.render.shader import ShaderProgram
+from sage_engine.render.material import Material
 
 
 class OpenGLBackend(RenderBackend):
@@ -39,6 +42,9 @@ class OpenGLBackend(RenderBackend):
         self.instance_buffer = None
         self.vao = None
         self.draw_calls = 0
+        self.shaders: dict[ShaderProgram, Any] = {}
+        self.current_material: Material | None = None
+        self.default_material: Material | None = None
 
     def _create_context(self, width: int, height: int) -> None:
         if glfw is not None and glfw.init():  # pragma: no cover - window creation
@@ -70,43 +76,15 @@ class OpenGLBackend(RenderBackend):
         # 16 floats per instance -> 64 bytes
         self.instance_buffer = self.ctx.buffer(reserve=64 * 4096)
 
-        vert_src = """
-        #version 330
-        in vec2 in_vert;
-        in vec2 in_pos;
-        in vec2 in_scale;
-        in float in_rot;
-        in float in_tex;
-        in vec4 in_uv;
-        in float in_blend;
-        in vec4 in_color;
-        in float in_depth;
-        uniform mat3 u_viewProj;
-        out vec2 v_uv;
-        out vec4 v_color;
-        void main() {
-            vec2 scaled = in_vert * in_scale;
-            float c = cos(in_rot);
-            float s = sin(in_rot);
-            vec2 pos = in_pos + vec2(c * scaled.x - s * scaled.y, s * scaled.x + c * scaled.y);
-            gl_Position = vec4((u_viewProj * vec3(pos, 1.0)).xy, in_depth, 1.0);
-            v_uv = mix(in_uv.xy, in_uv.zw, in_vert + vec2(0.5));
-            v_color = in_color;
-        }
-        """
-        frag_src = """
-        #version 330
-        uniform sampler2D u_tex;
-        in vec2 v_uv;
-        in vec4 v_color;
-        out vec4 color;
-        void main() {
-            color = texture(u_tex, v_uv) * v_color;
-        }
-        """
-        self.prog = self.ctx.program(vertex_shader=vert_src, fragment_shader=frag_src)
+        vert_src = resources.files("sage_engine.render.shaders").joinpath("basic.vert").read_text()
+        frag_src = resources.files("sage_engine.render.shaders").joinpath("basic.frag").read_text()
+        shader = ShaderProgram("default", vert_src, frag_src)
+        self.default_material = Material(shader)
+        self.register_shader(shader)
+        program = self.shaders[shader]
+        self.prog = program
         self.vao = self.ctx.vertex_array(
-            self.prog,
+            program,
             [
                 (self.vbo, "2f", "in_vert"),
                 (
@@ -123,6 +101,7 @@ class OpenGLBackend(RenderBackend):
                 ),
             ],
         )
+        self.current_material = self.default_material
         if self.tex is None:
             self.tex = self.ctx.texture((self.atlas_size, self.atlas_size), 4)
             self.tex.filter = (moderngl.NEAREST, moderngl.NEAREST)
@@ -172,6 +151,53 @@ class OpenGLBackend(RenderBackend):
                 self.ctx.blend_func = moderngl.ONE, moderngl.ONE_MINUS_SRC_ALPHA
             self.vao.render(moderngl.TRIANGLE_STRIP, instances=len(subset))
             self.draw_calls += 1
+
+    # material API ------------------------------------------------------------
+    def register_shader(self, program: ShaderProgram) -> None:
+        if self.ctx is None:
+            return
+        if program in self.shaders:
+            return
+        self.shaders[program] = self.ctx.program(
+            vertex_shader=program.vertex_source, fragment_shader=program.fragment_source
+        )
+
+    def set_material(self, material: Material) -> None:
+        if self.ctx is None:
+            return
+        self.current_material = material
+        if material.shader not in self.shaders:
+            self.register_shader(material.shader)
+        prog = self.shaders[material.shader]
+        self.prog = prog
+        self.vao = self.ctx.vertex_array(
+            prog,
+            [
+                (self.vbo, "2f", "in_vert"),
+                (
+                    self.instance_buffer,
+                    "2f 2f 1f 1f 4f 1f 4f 1f/i",
+                    "in_pos",
+                    "in_scale",
+                    "in_rot",
+                    "in_tex",
+                    "in_uv",
+                    "in_blend",
+                    "in_color",
+                    "in_depth",
+                ),
+            ],
+        )
+        for name, value in material.uniforms.items():
+            if name in prog:
+                prog[name].value = value if not isinstance(value, (list, tuple)) else tuple(value)
+        if material.blend == "premultiplied":
+            self.ctx.blend_func = moderngl.ONE, moderngl.ONE_MINUS_SRC_ALPHA
+        else:
+            self.ctx.blend_func = moderngl.SRC_ALPHA, moderngl.ONE_MINUS_SRC_ALPHA
+
+    def draw_material_group(self, instances: NDArray) -> None:
+        self.draw_sprites(instances)
 
     def end_frame(self) -> None:
         if self.window is not None:  # pragma: no cover - window sync
