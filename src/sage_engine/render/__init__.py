@@ -41,7 +41,7 @@ def load_backend(name: str = "auto") -> RenderBackend:
             print(f"Render backend: {name}")
             return backend
     else:
-        for candidate in ("vulkan", "opengl", "headless"):
+        for candidate in ("opengl", "headless"):
             backend = _load_entry(candidate)
             if backend:
                 print(f"Render backend: {candidate}")

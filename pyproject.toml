@@ -29,5 +29,4 @@ qt6 = "gui_qt6.backend:PyQtBackend"
 tk = "gui_tk.backend:TkBackend"
 
 [project.entry-points.sage_render]
-opengl = "sage_render_gl.backend:OpenGLBackend"
 headless = "sage_render_headless.backend:HeadlessBackend"

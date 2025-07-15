@@ -15,7 +15,7 @@ def list_backends() -> None:
 
 def list_renderers() -> None:
     found = {ep.name for ep in metadata.entry_points(group="sage_render")}
-    known = ["opengl", "vulkan", "headless"]
+    known = ["opengl", "headless"]
     names = sorted(found.union(known))
     for name in names:
         status = "installed" if name in found else "missing"
