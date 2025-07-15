@@ -2,29 +2,29 @@
 from PIL import Image, ImageDraw
 import argparse
 
-from sage_engine import render
+from sage_engine import render, gui
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--headless", action="store_true")
+    parser.add_argument("--gui", default="auto")
     args = parser.parse_args()
 
     img = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
     render._Stub()  # placeholder use
     draw = ImageDraw.Draw(img)
     draw.rectangle([0, 0, 63, 63], fill=(255, 0, 0, 255))
-    if not args.headless:
+    backend = gui.load_backend(args.gui)
+    if not isinstance(backend, gui.headless.HeadlessBackend):
+        backend.create_window(200, 200, "Hello Sprite")
         try:
-            from tkinter import Tk, Label
+            from tkinter import Label
             from PIL import ImageTk
 
-            root = Tk()
-            root.title("Hello Sprite")
-            root.bind("<Escape>", lambda e: root.destroy())
             photo = ImageTk.PhotoImage(img)
-            Label(root, image=photo).pack()
-            root.mainloop()
+            lbl = Label(backend.root, image=photo)  # type: ignore[attr-defined]
+            lbl.pack()
+            backend.process_events()
             return
         except Exception:
             pass

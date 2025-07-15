@@ -8,6 +8,7 @@ dependencies = ["typing-extensions", "pillow"]
 dev = ["ruff", "pytest"]
 qt6 = ["PyQt6>=6.5"]
 qt5 = ["PyQt5>=5.15"]
+tk = []
 
 [build-system]
 requires = ["setuptools>=64", "wheel"]
@@ -15,4 +16,8 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-packages = ["sage_engine"]
+packages = ["sage_engine", "gui_qt6", "gui_tk"]
+
+[project.entry-points.sage_gui]
+qt6 = "gui_qt6.backend:PyQtBackend"
+tk = "gui_tk.backend:TkBackend"

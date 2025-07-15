@@ -10,13 +10,21 @@ python examples/hello_sprite/main.py
 pytest -q
 ```
 
-To use the optional Qt interface install the corresponding extras:
+GUI backends are loaded via plugins. Install the desired extra:
 
 ```bash
-pip install .[qt6]  # or .[qt5]
+pip install .[qt6]   # PyQt 6 window
+pip install .[tk]    # Tk window
 ```
 
-See [Using SAGE UI with Qt](docs/using_sage_ui_with_qt.md) for details.
+Run examples with `--gui` to choose a backend:
+
+```bash
+python examples/hello_sprite/main.py --gui qt6
+python examples/hello_sprite/main.py --gui auto
+```
+
+See [Writing your own GUI backend](docs/writing_gui_backend.md) for details.
 
 ## Папки проекта
 
