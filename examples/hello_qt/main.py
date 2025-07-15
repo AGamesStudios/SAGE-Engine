@@ -36,7 +36,7 @@ def main() -> None:
     light.triggered.connect(lambda: switch("light"))
     menu.addAction(dark)
     menu.addAction(light)
-    backend._window.setMenuBar(menu_bar)  # type: ignore[attr-defined]
+    layout.setMenuBar(menu_bar)
     backend._window.setLayout(layout)  # type: ignore[attr-defined]
     backend._app.exec()  # type: ignore[attr-defined]
 
