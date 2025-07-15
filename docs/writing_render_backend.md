@@ -12,3 +12,9 @@ custom = "my_package.backend:MyBackend"
 A minimal backend must implement `create_device`, `begin_frame`,
 `draw_sprites`, `end_frame` and `resize`. Optional helpers such as
 `draw_lines` can be left empty.
+
+During development you can select the backend via the CLI:
+
+```bash
+sage run --render opengl your_game.py
+```

@@ -13,12 +13,26 @@ def list_backends() -> None:
         print(f"{name} ({status})")
 
 
+def list_renderers() -> None:
+    found = {ep.name for ep in metadata.entry_points(group="sage_render")}
+    known = ["opengl", "vulkan", "headless"]
+    names = sorted(found.union(known))
+    for name in names:
+        status = "installed" if name in found else "missing"
+        print(f"{name} ({status})")
+
+
 def cmd_run(args: argparse.Namespace) -> None:
     if args.gui == "list":
         list_backends()
         return
+    if args.render == "list":
+        list_renderers()
+        return
     if args.gui:
         os.environ["SAGE_GUI"] = args.gui
+    if args.render:
+        os.environ["SAGE_RENDER"] = args.render
     runpy.run_path(args.script, run_name="__main__")
 
 
@@ -28,6 +42,7 @@ def main() -> None:
     run_p = subparsers.add_parser("run", help="run a script")
     run_p.add_argument("script")
     run_p.add_argument("--gui", default="auto")
+    run_p.add_argument("--render", default="auto")
     args = parser.parse_args()
     if args.cmd == "run":
         cmd_run(args)

@@ -1,4 +1,4 @@
-"""Fallback render backend that does nothing."""
+"""Headless render backend for CI and testing."""
 
 from __future__ import annotations
 
@@ -7,15 +7,23 @@ from typing import Sequence
 from .base import RenderBackend, NDArray
 
 
-class NullRenderBackend(RenderBackend):
+class HeadlessBackend(RenderBackend):
+    """Dummy backend that counts draw calls."""
+
+    def __init__(self) -> None:
+        self.draw_calls = 0
+        self.last_instances: NDArray | None = None
+
     def create_device(self, width: int, height: int) -> None:
-        pass
+        self.draw_calls = 0
 
     def begin_frame(self) -> None:
-        pass
+        self.frame_calls = 0
 
     def draw_sprites(self, instances: NDArray) -> None:
-        self._last = instances
+        self.last_instances = instances
+        self.frame_calls += 1
+        self.draw_calls += 1
 
     def end_frame(self) -> None:
         pass

@@ -17,12 +17,13 @@ pip install .[qt6]   # PyQt 6 window
 pip install .[tk]    # Tk window
 ```
 
-Run examples with `--gui` to choose a backend:
+Run examples with `--gui` to choose a GUI backend. Use `--render` to pick a render backend:
 
 ```bash
-python examples/hello_sprite/main.py --gui qt6
-python examples/hello_sprite/main.py --gui auto
-sage run --gui list  # show available backends
+python examples/hello_sprite/main.py --gui qt6 --render opengl
+python examples/hello_sprite/main.py --gui auto --render auto
+sage run --gui list   # show available GUI backends
+sage run --render opengl script.py
 ```
 
 See [Writing your own GUI backend](docs/writing_gui_backend.md) for details.

@@ -8,7 +8,7 @@ from importlib import import_module, metadata
 from typing import Optional
 
 from .base import RenderBackend
-from .null_backend import NullRenderBackend
+from .headless_backend import HeadlessBackend
 
 _BACKEND: Optional[RenderBackend] = None
 
@@ -23,7 +23,7 @@ def _load_entry(name: str) -> Optional[RenderBackend]:
                 warnings.warn(f"Failed to load render backend '{name}': {exc}")
                 return None
     try:
-        module = import_module(f"render_{name}.backend")
+        module = import_module(f"sage_render_{name}.backend")
         for attr in dir(module):
             if attr.endswith("Backend") and attr != "RenderBackend":
                 backend_cls = getattr(module, attr)
@@ -41,14 +41,14 @@ def load_backend(name: str = "auto") -> RenderBackend:
             print(f"Render backend: {name}")
             return backend
     else:
-        for candidate in ("null",):
+        for candidate in ("vulkan", "opengl", "headless"):
             backend = _load_entry(candidate)
             if backend:
                 print(f"Render backend: {candidate}")
                 return backend
-    warnings.warn("No render backend available, falling back to null")
-    print("Render backend: null")
-    return NullRenderBackend()
+    warnings.warn("No render backend available, falling back to headless")
+    print("Render backend: headless")
+    return HeadlessBackend()
 
 
 def get_backend(name: Optional[str] = None) -> RenderBackend:

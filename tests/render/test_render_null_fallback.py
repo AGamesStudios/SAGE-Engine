@@ -8,4 +8,4 @@ def test_null_fallback(monkeypatch):
     importlib.reload(render)
     monkeypatch.setattr(render, "import_module", lambda *a, **k: (_ for _ in ()).throw(ImportError()))
     backend = render.load_backend()
-    assert backend.__class__.__name__ == "NullRenderBackend"
+    assert backend.__class__.__name__ == "HeadlessBackend"
