@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sage_editor.qt import SDLWidget
+from sage_engine.editor.qt import SDLWidget
 
 from ..plugins.viewport_base import _ViewportMixin
 

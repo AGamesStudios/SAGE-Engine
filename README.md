@@ -13,8 +13,8 @@ Sprite animations expose speed, pause and reverse options while ``sage_audio`` p
 Documentation lives under `docs/`. Begin with [docs/en/getting_started.md](docs/en/getting_started.md) for a simple tutorial or read [docs/en/index.md](docs/en/index.md) for a full list of guides. See [plugins](docs/en/plugins.md) and [creating a plugin](docs/en/create_plugin.md) for extension points. Refer to [optimisation tips](docs/en/optimisation.md) for performance advice.
 For known caveats such as dependency requirements and experimental features see
 [limitations](docs/en/limitations.md). The development roadmap and design
-proposals live in [ROADMAP.md](ROADMAP.md) and the [rfcs/](rfcs) directory.
-Run ``python scripts/build_docs.py`` to generate the HTML documentation with
+proposals live in [ROADMAP.md](ROADMAP.md) and the [docs/rfcs](docs/rfcs) directory.
+Run ``python tools/build_docs.py`` to generate the HTML documentation with
 MkDocs and view the API reference.
 The ``sage migrate`` command upgrades YAML project files from the previous version and lists changed files.
 
@@ -26,12 +26,12 @@ python tools/bootstrap.py
 Use `make watch-rust` in a separate terminal to rebuild the Rust core when
 `.rs` files change. The Python process can watch for `reload.flag` and reload the
 module automatically. Set `SAGE_BUILD=debug` before running
-`scripts/build_nano_core.py` to keep debug symbols. Release builds are
+`tools/build_nano_core.py` to keep debug symbols. Release builds are
 compressed with `upx` if available.
-Run `python scripts/clean_pycache.py` afterwards to delete leftover `__pycache__` directories.
+Run `python tools/clean_pycache.py` afterwards to delete leftover `__pycache__` directories.
 You can gather performance statistics with `engine.utils.Profiler`:
 ```python
-from engine.utils import Profiler
+from sage_engine.utils import Profiler
 with Profiler("game.prof"):
     Engine(scene=my_scene).run()
 ```
@@ -48,6 +48,18 @@ The Qt based editor requires `PyQt6` and `PyOpenGL`. The SDL renderer depends on
 disabled and a warning is logged. Scenes containing objects with
 ``physics_enabled`` trigger a message if ``pymunk`` is not installed, so run
 ``pip install .[physics]`` to enable physics support.
+
+## Project structure
+``src/sage_engine`` – engine package
+``examples/`` – runnable demos and templates
+``tests/`` – pytest suite
+``docs/`` – MkDocs documentation
+``tools/`` – build helpers
+
+Install the project in editable mode with:
+```bash
+pip install -e .
+```
 Plugin modules live in `~/.sage_plugins` by default. Configure a different
 location or extra search paths in `sage.toml` under the `[plugins]` table:
 ```toml
@@ -158,7 +170,7 @@ installed without modifying the engine.
 Scene files may include a list of required capabilities in `metadata.caps`. The
 runtime checks these against the features defined in `caps.toml` and logs a
 warning when a capability is missing instead of crashing.
-`sage build --bundle <name>` loads configuration from `config/bundles` so only
+`sage build --bundle <name>` loads configuration from `tools/bundles` so only
 the required adaptors and assets are included for a target platform.
 The `sage` CLI now supports `create` to generate a project template and `--profile` to log Chrome Trace events.
 

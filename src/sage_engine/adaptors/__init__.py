@@ -1,19 +1,17 @@
-"""Load registered adaptors via entry points."""
+"""Modular adaptors for rendering, audio, networking and GUI."""
 
 from importlib import metadata
 import logging
 
 logger = logging.getLogger(__name__)
 
+__all__ = ["render", "audio", "network", "gui", "load_adaptors"]
+
 _LOADED: set[str] = set()
 
 
 def load_adaptors(selected: list[str] | None = None) -> None:
-    """Load and register available adaptors.
-
-    If ``selected`` is provided, only adaptors with matching entry point names
-    are loaded.
-    """
+    """Load and register available adaptors."""
     global _LOADED
     try:
         eps = metadata.entry_points()

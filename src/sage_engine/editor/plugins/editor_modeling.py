@@ -113,7 +113,7 @@ class ModelingMixin:
                 return
         else:
             return
-        from engine.mesh_utils import create_polygon_mesh
+        from sage_engine.mesh_utils import create_polygon_mesh
         nx, ny = self._edge_normal(verts, idx)
         off = 0.5
         a = verts[idx]
@@ -133,7 +133,7 @@ class ModelingMixin:
         if obj is None or getattr(obj, "mesh", None) is None:
             return
         self.undo_stack.snapshot(self.scene)
-        from engine.mesh_utils import create_polygon_mesh
+        from sage_engine.mesh_utils import create_polygon_mesh
         verts = obj.mesh.vertices
         new_verts: list[tuple[float, float]] = []
         for i, v in enumerate(verts):
@@ -174,7 +174,7 @@ class ModelingMixin:
         objs = [o for o in self.selected_objs if getattr(o, "mesh", None) is not None]
         if len(objs) < 2:
             return
-        from engine.mesh_utils import Mesh, union_meshes, difference_meshes, intersection_meshes
+        from sage_engine.mesh_utils import Mesh, union_meshes, difference_meshes, intersection_meshes
 
         self.undo_stack.snapshot(self.scene)
         base_obj = objs[0]
@@ -260,7 +260,7 @@ class ModelingMixin:
         obj = self.selected_obj
         if obj is None or getattr(obj, "mesh", None) is None:
             return
-        from engine.mesh_utils import triangulate_mesh
+        from sage_engine.mesh_utils import triangulate_mesh
 
         self.undo_stack.snapshot(self.scene)
         ngon = list(obj.mesh.vertices)

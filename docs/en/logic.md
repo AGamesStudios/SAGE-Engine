@@ -9,7 +9,7 @@ When running events concurrently, pass a ``VariableStore`` instance to
 ``EventSystem`` so variable access is guarded by a lock:
 
 ```python
-from engine.logic.base import VariableStore, EventSystem
+from sage_engine.logic.base import VariableStore, EventSystem
 es = EventSystem(variables=VariableStore())
 ```
 Variables can be marked as private when set with ``SetVariable`` or

@@ -6,7 +6,7 @@ import websockets
 import sage
 
 from sage_engine import bundles, adaptors
-from sage_editor import hot_reload
+from sage_engine.editor import hot_reload
 import socketserver
 
 
@@ -103,7 +103,7 @@ def test_sage_cli_migrate(tmp_path):
 
 def test_build_bundle_excludes_unused(monkeypatch, tmp_path):
     monkeypatch.chdir(tmp_path)
-    pkg = tmp_path / "src" / "sage_adaptors"
+    pkg = tmp_path / "src" / "sage_engine.adaptors"
     (pkg / "render").mkdir(parents=True)
     (pkg / "render" / "__init__.py").write_text("")
     (pkg / "audio").mkdir()
@@ -116,8 +116,8 @@ def test_build_bundle_excludes_unused(monkeypatch, tmp_path):
     assert sage.main(["build", "--bundle", "retro2d"]) == 0
     with tarfile.open(tmp_path / "build" / "game.fpk", "r:gz") as tf:
         names = tf.getnames()
-    assert "src/sage_adaptors/render/__init__.py" in names
-    assert "src/sage_adaptors/audio/__init__.py" not in names
+    assert "src/sage_engine.adaptors/render/__init__.py" in names
+    assert "src/sage_engine.adaptors/audio/__init__.py" not in names
     manifest = json.loads((tmp_path / "build" / "manifest.json").read_text())
     assert any(p.endswith("render/__init__.py") for p in manifest)
 

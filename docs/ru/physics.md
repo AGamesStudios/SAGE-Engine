@@ -8,7 +8,7 @@ pip install .[physics]
 ```
 
 ```python
-from engine.physics import PhysicsWorld, PhysicsExtension
+from sage_engine.physics import PhysicsWorld, PhysicsExtension
 world = PhysicsWorld()
 obj = scene.objects[0]
 world.add_box(obj, size=(32, 32))

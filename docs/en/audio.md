@@ -10,7 +10,7 @@ pip install .[audio]
 Play a sound from your resources folder:
 
 ```python
-from engine.audio import play
+from sage_engine.audio import play
 
 snd = play('sounds/jump.ogg', loop=False, gain=0.8, pan=-0.3)
 snd.set_pitch(1.2)

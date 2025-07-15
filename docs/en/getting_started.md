@@ -11,7 +11,7 @@ PYTHONPATH=src python hello_sprite.py
 ## Hello Sprite
 Create `hello_sprite.py` with the following code:
 ```python
-from engine import Engine, GameObject, ResourceManager
+from sage_engine import Engine, GameObject, ResourceManager
 
 res = ResourceManager()
 tex = res.load_image('examples/Resources/logo.png')
@@ -24,7 +24,7 @@ Running the script opens a window and displays the sprite.
 ## NanoTree API
 `NanoTree` maps a file into memory and stores nodes with 1 KiB slices:
 ```python
-from engine import NanoTree
+from sage_engine import NanoTree
 
 with NanoTree('state.bin') as tree:
     node = tree.add_node(crc=0x12345678)
@@ -37,7 +37,7 @@ Nodes and slices persist so the tree can be reopened later.
 ## SmartSlice API
 `SmartSliceAllocator` manages a circular queue of 1 KiB blocks:
 ```python
-from engine import SmartSliceAllocator
+from sage_engine import SmartSliceAllocator
 
 alloc = SmartSliceAllocator('pool.bin', 128)
 mark = alloc.mark(snapshot_id=0)

@@ -7,7 +7,7 @@ SAGE Engine can be extended at runtime with your own object types, input backend
 Use `engine.core.objects.register_object` as a decorator:
 
 ```python
-from engine.core.objects import register_object
+from sage_engine.core.objects import register_object
 
 @register_object('my_object', [('name', None)])
 class MyObject:
@@ -25,7 +25,7 @@ Objects may set ``group`` to categorize them. The scene helper
 Create a class implementing `InputBackend` and register it:
 
 ```python
-from engine.inputs import InputBackend, register_input
+from sage_engine.inputs import InputBackend, register_input
 
 class FancyInput(InputBackend):
     def poll(self):
@@ -47,7 +47,7 @@ Built-in backends include `sdl`, `null` and `qt`.
 Renderers subclass `Renderer`:
 
 ```python
-from engine.renderers import Renderer, register_renderer
+from sage_engine.renderers import Renderer, register_renderer
 
 class FancyRenderer(Renderer):
     def clear(self, color=(0, 0, 0)):

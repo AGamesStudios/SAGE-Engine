@@ -12,11 +12,11 @@ except ModuleNotFoundError:  # pragma: no cover
 
 logger = logging.getLogger(__name__)
 
-_BUNDLE_DIR = Path(__file__).resolve().parent.parent.parent / "config" / "bundles"
+_BUNDLE_DIR = Path(__file__).resolve().parent.parent.parent / "tools" / "bundles"
 
 
 def load_bundle(name: str) -> dict:
-    """Return bundle configuration from ``config/bundles``."""
+    """Return bundle configuration from ``tools/bundles``."""
     path = _BUNDLE_DIR / f"{name}.toml"
     if not path.exists():
         raise FileNotFoundError(f"unknown bundle: {name}")

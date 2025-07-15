@@ -1,7 +1,7 @@
 __version__ = "0.1.0"
 
-from engine.entities.object import register_role
-from sage_adaptors.audio import register as register_audio
+from sage_engine.entities.object import register_role
+from sage_engine.adaptors.audio import register as register_audio
 
 
 def _blink(obj, dt):

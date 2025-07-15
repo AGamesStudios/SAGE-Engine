@@ -11,5 +11,5 @@ Formalise the adaptor registration API so that third-party packages can plug int
 Allow developers to provide alternative render, audio or input backends without modifying the core.
 
 ## Design
-Each adaptor is a package under ``sage_adaptors`` exposing ``register()`` and ``get_capabilities()``. Entry points under ``sage_adaptor`` automatically load these packages.
+Each adaptor is a package under ``sage_engine.adaptors`` exposing ``register()`` and ``get_capabilities()``. Entry points under ``sage_adaptor`` automatically load these packages.
 

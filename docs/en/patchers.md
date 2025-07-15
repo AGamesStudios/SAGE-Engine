@@ -8,7 +8,7 @@ Scenes relying on Lua should declare the `vm_lua` capability so the engine can w
 if Lua support is missing.
 
 ```python
-from engine import patchers
+from sage_engine import patchers
 p = patchers.load_patcher("logic/blink.lua")
 ```
 

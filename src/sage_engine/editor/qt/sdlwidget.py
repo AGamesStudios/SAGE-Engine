@@ -5,7 +5,7 @@ import logging
 from PyQt6.QtWidgets import QWidget  # type: ignore[import-not-found]
 from PyQt6.QtCore import QEvent  # type: ignore[import-not-found]
 
-from engine.renderers.sdl_widget import register_sdlwidget
+from sage_engine.renderers.sdl_widget import register_sdlwidget
 
 log = logging.getLogger(__name__)
 

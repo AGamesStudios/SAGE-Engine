@@ -5,8 +5,8 @@ from __future__ import annotations
 from typing import Callable, Any
 import sys
 
-from engine.core.engine import _exception_handler
-from engine.utils.log import init_logger, logger
+from sage_engine.core.engine import _exception_handler
+from sage_engine.utils.log import init_logger, logger
 import threading
 import asyncio
 import os
@@ -14,8 +14,8 @@ from . import hot_reload
 
 from pathlib import Path
 
-from engine.editor_api import EditorInterface
-from engine.plugins import PluginManager
+from sage_engine.editor_api import EditorInterface
+from sage_engine.plugins import PluginManager
 
 
 class Editor(EditorInterface):

@@ -1,4 +1,4 @@
-from sage_editor import main, Editor
+from sage_engine.editor import main, Editor
 from sage_engine.utils import log as elog
 import sage_engine.core.engine as core_engine
 

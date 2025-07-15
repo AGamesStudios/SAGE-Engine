@@ -447,7 +447,7 @@ def test_object_list_sync(monkeypatch):
     _stub_gl(monkeypatch, {})
     _setup_qt(monkeypatch)
 
-    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_engine/editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
 
@@ -485,7 +485,7 @@ def test_viewport_click_and_context_menu(monkeypatch):
     _stub_gl(monkeypatch, {})
     _setup_qt(monkeypatch)
 
-    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_engine/editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
 
@@ -514,7 +514,7 @@ def test_find_object_uses_shape(monkeypatch):
     sys.modules.pop('engine.mesh_utils', None)
     import sage_engine.mesh_utils  # noqa: F401
 
-    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_engine/editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
 
@@ -531,7 +531,7 @@ def test_apply_properties_validation(monkeypatch):
     _stub_gl(monkeypatch, {})
     _setup_qt(monkeypatch)
 
-    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_engine/editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
 
@@ -549,7 +549,7 @@ def test_pivot_edit(monkeypatch):
     _stub_gl(monkeypatch, {})
     _setup_qt(monkeypatch)
 
-    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_engine/editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
 
@@ -567,7 +567,7 @@ def test_selection_persists(monkeypatch):
     _stub_gl(monkeypatch, {})
     _setup_qt(monkeypatch)
 
-    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_engine/editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
 
@@ -584,7 +584,7 @@ def test_properties_populated_on_select(monkeypatch):
     _stub_gl(monkeypatch, {})
     _setup_qt(monkeypatch)
 
-    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_engine/editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
 
@@ -606,7 +606,7 @@ def test_edit_shortcuts(monkeypatch):
     _stub_gl(monkeypatch, {})
     _setup_qt(monkeypatch)
 
-    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_engine/editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
 
@@ -620,7 +620,7 @@ def test_mirror_resize_toggle(monkeypatch):
     _stub_gl(monkeypatch, {})
     _setup_qt(monkeypatch)
 
-    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_engine/editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
 
@@ -635,7 +635,7 @@ def test_local_coords_toggle(monkeypatch):
     _setup_qt(monkeypatch)
 
     spec = importlib.util.spec_from_file_location(
-        'viewport', Path('src/sage_editor/plugins/viewport.py')
+        'viewport', Path('src/sage_engine/editor/plugins/viewport.py')
     )
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
@@ -651,7 +651,7 @@ def test_wireframe_toggle(monkeypatch):
     _setup_qt(monkeypatch)
 
     spec = importlib.util.spec_from_file_location(
-        'viewport', Path('src/sage_editor/plugins/viewport.py')
+        'viewport', Path('src/sage_engine/editor/plugins/viewport.py')
     )
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
@@ -666,7 +666,7 @@ def test_rect_mode_gizmos(monkeypatch):
     _stub_gl(monkeypatch, {})
     _setup_qt(monkeypatch)
 
-    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_engine/editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
 
@@ -682,7 +682,7 @@ def test_model_toggle(monkeypatch):
     _stub_gl(monkeypatch, {})
     _setup_qt(monkeypatch)
 
-    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_engine/editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
 
@@ -696,7 +696,7 @@ def test_mode_combo(monkeypatch):
     _stub_gl(monkeypatch, {})
     _setup_qt(monkeypatch)
 
-    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_engine/editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
 
@@ -712,7 +712,7 @@ def test_modeling_normals(monkeypatch):
     _stub_gl(monkeypatch, {})
     _setup_qt(monkeypatch)
 
-    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_engine/editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
 
@@ -732,7 +732,7 @@ def test_quickbar_toggles(monkeypatch):
     _stub_gl(monkeypatch, {})
     _setup_qt(monkeypatch)
 
-    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_engine/editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
 
@@ -760,7 +760,7 @@ def test_create_shape(monkeypatch):
     sys.modules.pop('engine.mesh_utils', None)
     import sage_engine.mesh_utils  # noqa: F401  - reload real module
 
-    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_engine/editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
 
@@ -776,7 +776,7 @@ def test_create_polygon(monkeypatch):
 
     import importlib
 
-    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_engine/editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
 
@@ -791,7 +791,7 @@ def test_shape_fill_property(monkeypatch):
 
     import importlib
 
-    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_engine/editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
 
@@ -809,7 +809,7 @@ def test_extrude_and_loop_cut(monkeypatch):
     _stub_gl(monkeypatch, {})
     _setup_qt(monkeypatch)
 
-    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_engine/editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
 
@@ -832,7 +832,7 @@ def test_union_selected(monkeypatch):
     _stub_gl(monkeypatch, {})
     _setup_qt(monkeypatch)
 
-    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_engine/editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
 
@@ -854,7 +854,7 @@ def test_difference_selected(monkeypatch):
     _stub_gl(monkeypatch, {})
     _setup_qt(monkeypatch)
 
-    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_engine/editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
 
@@ -874,7 +874,7 @@ def test_intersection_selected(monkeypatch):
     _stub_gl(monkeypatch, {})
     _setup_qt(monkeypatch)
 
-    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_engine/editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
 
@@ -893,7 +893,7 @@ def test_toggle_negative(monkeypatch):
     _stub_gl(monkeypatch, {})
     _setup_qt(monkeypatch)
 
-    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_engine/editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
 
@@ -913,7 +913,7 @@ def test_bake_model(monkeypatch):
     _setup_qt(monkeypatch)
 
     spec = importlib.util.spec_from_file_location(
-        'viewport', Path('src/sage_editor/plugins/viewport.py')
+        'viewport', Path('src/sage_engine/editor/plugins/viewport.py')
     )
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
@@ -934,7 +934,7 @@ def test_toggle_fill_action(monkeypatch):
     _stub_gl(monkeypatch, {})
     _setup_qt(monkeypatch)
 
-    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_engine/editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
 
@@ -950,7 +950,7 @@ def test_view_focus_policy(monkeypatch):
     _stub_gl(monkeypatch, {})
     _setup_qt(monkeypatch)
 
-    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_engine/editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
 
@@ -963,7 +963,7 @@ def test_select_two_vertices_highlights_edge(monkeypatch):
     _stub_gl(monkeypatch, {})
     _setup_qt(monkeypatch)
 
-    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_engine/editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
 
@@ -981,7 +981,7 @@ def test_new_face_from_edge(monkeypatch):
     _stub_gl(monkeypatch, {})
     _setup_qt(monkeypatch)
 
-    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_engine/editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
 
@@ -1001,7 +1001,7 @@ def test_concave_vertex_normal(monkeypatch):
     _stub_gl(monkeypatch, {})
     _setup_qt(monkeypatch)
 
-    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_engine/editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
 
@@ -1027,7 +1027,7 @@ def test_bevel_vertex_normal(monkeypatch):
     _stub_gl(monkeypatch, {})
     _setup_qt(monkeypatch)
 
-    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_engine/editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
 
@@ -1053,7 +1053,7 @@ def test_translate_edges_and_face(monkeypatch):
     _stub_gl(monkeypatch, {})
     _setup_qt(monkeypatch)
 
-    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_engine/editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
 
@@ -1081,7 +1081,7 @@ def test_move_vertex_prevents_self_intersection(monkeypatch):
     _stub_gl(monkeypatch, {})
     _setup_qt(monkeypatch)
 
-    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_engine/editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
 
@@ -1098,7 +1098,7 @@ def test_move_vertex_valid(monkeypatch):
     _stub_gl(monkeypatch, {})
     _setup_qt(monkeypatch)
 
-    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_engine/editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
 
@@ -1117,7 +1117,7 @@ def test_click_empty_deselects(monkeypatch):
     _stub_gl(monkeypatch, {})
     _setup_qt(monkeypatch)
 
-    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_engine/editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
 
@@ -1136,7 +1136,7 @@ def test_box_select_objects(monkeypatch):
     _setup_qt(monkeypatch)
 
     spec = importlib.util.spec_from_file_location(
-        'viewport', Path('src/sage_editor/plugins/viewport.py')
+        'viewport', Path('src/sage_engine/editor/plugins/viewport.py')
     )
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
@@ -1154,7 +1154,7 @@ def test_box_select_vertices(monkeypatch):
     _setup_qt(monkeypatch)
 
     spec = importlib.util.spec_from_file_location(
-        'viewport', Path('src/sage_editor/plugins/viewport.py')
+        'viewport', Path('src/sage_engine/editor/plugins/viewport.py')
     )
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)

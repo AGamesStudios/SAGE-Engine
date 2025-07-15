@@ -10,10 +10,10 @@ sys.modules.setdefault('OpenGL', types.ModuleType('OpenGL'))
 sys.modules.setdefault('OpenGL.GL', types.ModuleType('OpenGL.GL'))
 sys.modules.setdefault('OpenGL.GL.shaders', types.ModuleType('OpenGL.GL.shaders'))
 
-from engine.core.engine import Engine
-from engine.core.scenes.scene import Scene
-from engine.renderers.null_renderer import NullRenderer
-from engine.inputs.null_input import NullInput
+from sage_engine.core.engine import Engine
+from sage_engine.core.scenes.scene import Scene
+from sage_engine.renderers.null_renderer import NullRenderer
+from sage_engine.inputs.null_input import NullInput
 
 
 class StopRenderer(NullRenderer):

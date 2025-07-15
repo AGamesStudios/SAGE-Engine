@@ -2,7 +2,7 @@
 
 The `sage` command provides basic project utilities. Available subcommands:
 
-* `build` – optional `--bundle <name>` loads configuration from `config/bundles` and creates `build/game.fpk` along with stub `game.exe` and `game.wasm`
+* `build` – optional `--bundle <name>` loads configuration from `tools/bundles` and creates `build/game.fpk` along with stub `game.exe` and `game.wasm`
 * `serve` – starts a local HTTP server and WebSocket hot‑reload listener (use `--port` to change the port)
 * `featherize` – compiles `.py` and `.lua` patchers into `build/cache`
 * `create <name>` – generate a project from a template

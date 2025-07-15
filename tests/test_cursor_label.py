@@ -12,7 +12,7 @@ def test_cursor_label(monkeypatch):
     _setup_qt(monkeypatch)
     monkeypatch.delitem(sys.modules, 'engine.renderers', raising=False)
     importlib.import_module('engine.renderers')
-    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_engine/editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
     win = viewport.EditorWindow()

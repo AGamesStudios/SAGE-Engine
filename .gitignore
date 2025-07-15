@@ -15,4 +15,4 @@ logs/
 *.ico
 
 site/
-native/nano_core/target/
+tools/native/nano_core/target/

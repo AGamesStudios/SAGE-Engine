@@ -9,14 +9,14 @@ from PyQt6.QtWidgets import (
     QWidget,
     QMenu,  # type: ignore[import-not-found]
 )
-from engine.core.camera import Camera
+from sage_engine.core.camera import Camera
 import logging
-from engine.utils import units
+from sage_engine.utils import units
 
 log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints
-    from sage_editor.plugins.editor_window import EditorWindow
+    from sage_engine.editor.plugins.editor_window import EditorWindow
 
 ACCENT_COLOR = "#ffb84d"
 

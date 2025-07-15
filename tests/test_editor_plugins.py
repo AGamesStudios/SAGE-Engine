@@ -1,4 +1,4 @@
-from sage_editor import Editor
+from sage_engine.editor import Editor
 from sage_engine.plugins import PluginManager
 
 

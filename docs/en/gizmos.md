@@ -4,7 +4,7 @@ Debug shapes help visualize object positions or custom data. Use the helpers in
 `engine.gizmos` to create simple overlays:
 
 ```python
-from engine.gizmos import cross_gizmo, polyline_gizmo
+from sage_engine.gizmos import cross_gizmo, polyline_gizmo
 renderer.add_gizmo(cross_gizmo(0, 0, size=20,
                                color=(1, 0, 0, 1), thickness=3))
 renderer.add_gizmo(polyline_gizmo([(0, 0), (1, 1), (2, 0)],

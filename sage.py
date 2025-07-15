@@ -13,11 +13,11 @@ import threading
 
 import websockets
 
-from engine import adaptors
-from engine import bundles
+from sage_engine import adaptors
+from sage_engine import bundles
 
-from engine.utils import TraceProfiler
-from engine.utils.log import logger
+from sage_engine.utils import TraceProfiler
+from sage_engine.utils.log import logger
 from tools import pack_atlas, sound_mint
 import yaml
 
@@ -57,8 +57,8 @@ def _build(args: argparse.Namespace) -> None:
         for fp in Path(".").rglob("*"):
             if fp.is_dir() or "build" in fp.parts or fp.name.startswith("."):
                 continue
-            if selected and "sage_adaptors" in fp.parts:
-                idx = fp.parts.index("sage_adaptors")
+            if selected and "sage_engine.adaptors" in fp.parts:
+                idx = fp.parts.index("sage_engine.adaptors")
                 if fp.parts[idx + 1] not in selected:
                     continue
             if args.bundle == "windows" and fp.suffix == ".ogg":
@@ -87,7 +87,7 @@ def _build(args: argparse.Namespace) -> None:
 def _serve(args: argparse.Namespace) -> None:
     import http.server
     import socketserver
-    from sage_editor import hot_reload
+    from sage_engine.editor import hot_reload
 
     profiler = TraceProfiler(args.profile) if args.profile else None
 
@@ -186,8 +186,8 @@ def _featherize(args: argparse.Namespace) -> None:
 
 def _create(args: argparse.Namespace) -> None:
     templates = {
-        "platformer": Path(__file__).resolve().parent / "minimal_platformer",
-        "hello_sprite_py": Path(__file__).resolve().parent / "hello_sprite_py",
+        "platformer": Path(__file__).resolve().parent / "examples" / "minimal_platformer",
+        "hello_sprite_py": Path(__file__).resolve().parent / "examples" / "templates" / "hello_sprite_py",
     }
     src = templates.get(args.template)
     if not src:

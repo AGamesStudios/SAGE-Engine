@@ -14,7 +14,7 @@ def test_start_game_twice(monkeypatch):
     monkeypatch.delitem(sys.modules, 'engine.renderers', raising=False)
     import importlib
     importlib.import_module('engine.renderers')
-    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_engine/editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
 
@@ -60,7 +60,7 @@ def test_close_game_on_window_close(monkeypatch):
     monkeypatch.delitem(sys.modules, 'engine.renderers', raising=False)
     import importlib
     importlib.import_module('engine.renderers')
-    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_engine/editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
 

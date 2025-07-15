@@ -1,6 +1,6 @@
 import asyncio
 import types
-from sage_editor import hot_reload
+from sage_engine.editor import hot_reload
 
 
 class DummyWS:
@@ -36,9 +36,9 @@ def test_handle_reload(monkeypatch):
     monkeypatch.setattr(hot_reload.importlib, "import_module", fake_import)
     monkeypatch.setattr(hot_reload.importlib, "reload", fake_reload)
     monkeypatch.setattr(hot_reload.adaptors, "load_adaptors", lambda names: called.setdefault("load", names))
-    ws = DummyWS(["reload sage_adaptors.render"])
+    ws = DummyWS(["reload sage_engine.adaptors.render"])
     asyncio.run(run_handler(ws))
-    assert called == {"name": "sage_adaptors.render", "reloaded": True, "load": ["render"]}
+    assert called == {"name": "sage_engine.adaptors.render", "reloaded": True, "load": ["render"]}
 
 
 def test_handle_toast():

@@ -10,26 +10,26 @@ import logging
 import sys
 from types import ModuleType
 from PyQt6.QtWidgets import QApplication  # type: ignore[import-not-found]
-from engine.renderers.opengl.core import OpenGLRenderer  # noqa: F401
-from engine.core.scenes.scene import Scene  # noqa: F401
-from engine.core.camera import Camera  # noqa: F401
-from engine.entities.game_object import GameObject  # noqa: F401
-from engine import gizmos  # noqa: F401
-from engine.mesh_utils import (  # noqa: F401
+from sage_engine.renderers.opengl.core import OpenGLRenderer  # noqa: F401
+from sage_engine.core.scenes.scene import Scene  # noqa: F401
+from sage_engine.core.camera import Camera  # noqa: F401
+from sage_engine.entities.game_object import GameObject  # noqa: F401
+from sage_engine import gizmos  # noqa: F401
+from sage_engine.mesh_utils import (  # noqa: F401
     create_circle_mesh,
     create_square_mesh,
     create_triangle_mesh,
 )
-from sage_editor.qt import GLWidget  # noqa: F401
-from sage_editor.plugins.viewport_base import apply_ember_style
-import sage_editor.plugins.editor_window as editor_window
-from sage_editor.plugins.editor_window import EditorWindow
-from sage_editor.plugins.editor_widgets import (  # noqa: F401
+from sage_engine.editor.qt import GLWidget  # noqa: F401
+from sage_engine.editor.plugins.viewport_base import apply_ember_style
+import sage_engine.editor.plugins.editor_window as editor_window
+from sage_engine.editor.plugins.editor_window import EditorWindow
+from sage_engine.editor.plugins.editor_widgets import (  # noqa: F401
     NoWheelLineEdit,
     NoWheelSpinBox,
     ProgressWheel,
 )
-from sage_editor import widgets as _widgets  # noqa: F401
+from sage_engine.editor import widgets as _widgets  # noqa: F401
 ViewportWidget = _widgets.ViewportWidget
 SDLViewportWidget = _widgets.SDLViewportWidget
 PropertiesWidget = _widgets.PropertiesWidget

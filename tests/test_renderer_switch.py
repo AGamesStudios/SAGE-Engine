@@ -28,7 +28,7 @@ def test_change_renderer(monkeypatch):
 
     register_renderer('sdl', DummySDL)
 
-    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_engine/editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
 

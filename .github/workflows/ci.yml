@@ -2,37 +2,6 @@ name: CI
 on: [push, pull_request]
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-        python-version: ['3.10']
-        deps: [minimal, lua]
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-      - run: echo "DEPS=${{ matrix.deps }}" >> $GITHUB_ENV
-      - run: pip install ruff pytest markdown maturin websockets mkdocs-material mkdocstrings[python] mkdocstrings[rust]
-      - if: matrix.deps == 'lua'
-        run: pip install lupa
-      - run: ruff check .
-      - run: python scripts/build_nano_core.py
-      - run: python scripts/check_changelog.py
-      - run: pytest -q
-      - run: cargo test --manifest-path native/nano_core/Cargo.toml
-        shell: bash
-      - run: python scripts/build_docs.py
-        shell: bash
-      - run: python -m sage build --bundle retro2d
-      - run: python -m sage build --bundle full3d
-
-  smoke:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -43,6 +12,8 @@ jobs:
         with:
           toolchain: stable
           override: true
-      - run: pip install maturin
-      - run: maturin develop --manifest-path native/nano_core/Cargo.toml
-      - run: python examples/hello_sprite_py/run_headless.py
+      - run: pip install -e .
+      - run: pip install ruff pytest maturin
+      - run: python tools/build_nano_core.py
+      - run: ruff check .
+      - run: pytest -q

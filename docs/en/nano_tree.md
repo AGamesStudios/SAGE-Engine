@@ -8,7 +8,7 @@ index for data.
 Use :class:`engine.nano_tree.NanoTree` to allocate nodes and slices:
 
 ```python
-from engine import NanoTree
+from sage_engine import NanoTree
 
 with NanoTree('state.bin') as tree:
     node = tree.add_node(crc=0x12345678)

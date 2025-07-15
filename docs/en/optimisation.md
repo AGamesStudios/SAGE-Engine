@@ -43,7 +43,7 @@ To keep large projects running smoothly consider the following options:
 `engine.utils.profiler.Profiler` can capture statistics for a section of code:
 
 ```python
-from engine.utils.profiler import Profiler
+from sage_engine.utils.profiler import Profiler
 with Profiler("run.prof"):
     Engine(scene=my_scene).run()
 ```

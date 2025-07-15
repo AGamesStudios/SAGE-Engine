@@ -10,7 +10,7 @@ def test_properties_physics_group(monkeypatch):
     _setup_qt(monkeypatch)
 
     spec = importlib.util.spec_from_file_location(
-        "viewport", Path("src/sage_editor/plugins/viewport.py")
+        "viewport", Path("src/sage_engine/editor/plugins/viewport.py")
     )
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
@@ -25,7 +25,7 @@ def test_physics_toggle_updates_object(monkeypatch):
     _setup_qt(monkeypatch)
 
     spec = importlib.util.spec_from_file_location(
-        "viewport", Path("src/sage_editor/plugins/viewport.py")
+        "viewport", Path("src/sage_engine/editor/plugins/viewport.py")
     )
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)

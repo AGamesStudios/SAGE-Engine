@@ -24,7 +24,7 @@ def test_sdl_widget_creation(monkeypatch):
     mod.register_sdlwidget = lambda cls: None
     monkeypatch.setitem(sys.modules, 'engine.renderers.sdl_widget', mod)
 
-    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
+    spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_engine/editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
 

@@ -31,7 +31,7 @@ def main(argv: list[str] | None = None) -> int:
             pass
         return editor_main(argv)
 
-    from engine.runtime import main as runtime_main
+    from sage_engine.runtime import main as runtime_main
 
     return runtime_main(argv)
 

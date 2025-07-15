@@ -23,8 +23,8 @@ except Exception:  # pragma: no cover - fallback when missing
     QStackedLayout = QVBoxLayout  # type: ignore[assignment]
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints
-    from engine.core.scenes.scene import Scene
-    from sage_editor.plugins.editor_window import EditorWindow
+    from sage_engine.core.scenes.scene import Scene
+    from sage_engine.editor.plugins.editor_window import EditorWindow
 
 try:  # optional for tests
     from PyQt6.QtWidgets import QAbstractSpinBox  # type: ignore[import-not-found]

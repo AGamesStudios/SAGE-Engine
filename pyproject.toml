@@ -38,22 +38,22 @@ Homepage = "https://github.com/AGamesStudios/SAGE-Engine"
 Repository = "https://github.com/AGamesStudios/SAGE-Engine"
 [project.scripts]
 sage-runtime = "sage_engine.runtime.__main__:main"
-sage-editor = "sage_editor:main"
+sage-editor = "sage_engine.editor:main"
 sage = "sage:main"
 
 [project.entry-points."sage_adaptor"]
-render = "sage_adaptors.render:register"
-audio = "sage_adaptors.audio:register"
-network = "sage_adaptors.network:register"
-gui = "sage_adaptors.gui:register"
-opengl = "sage_adaptors.opengl:register"
+render = "sage_engine.adaptors.render:register"
+audio = "sage_engine.adaptors.audio:register"
+network = "sage_engine.adaptors.network:register"
+gui = "sage_engine.adaptors.gui:register"
+opengl = "sage_engine.adaptors.opengl:register"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["sage_engine*", "sage_editor*", "sage_adaptors*"]
+include = ["sage_engine*"]
 
 [tool.setuptools.package-data]
-"sage_editor" = ["plugins/plugins.json", "translations/*.json"]
+"sage_engine.editor" = ["plugins/plugins.json", "translations/*.json"]
 "sage_engine" = ["caps.toml", "renderers/wgsl/*.wgsl"]
 
 [tool.pyright]

@@ -2,11 +2,11 @@ import importlib
 import pytest
 
 ADAPTORS = [
-    "sage_adaptors.render",
-    "sage_adaptors.audio",
-    "sage_adaptors.network",
-    "sage_adaptors.gui",
-    "sage_adaptors.opengl",
+    "sage_engine.adaptors.render",
+    "sage_engine.adaptors.audio",
+    "sage_engine.adaptors.network",
+    "sage_engine.adaptors.gui",
+    "sage_engine.adaptors.opengl",
 ]
 
 @pytest.mark.adaptor
@@ -17,5 +17,5 @@ def test_adaptor_smoke(mod_name):
     mod.register()
     caps = mod.get_capabilities()
     assert isinstance(caps, list)
-    if mod_name == "sage_adaptors.opengl":
+    if mod_name == "sage_engine.adaptors.opengl":
         assert "render_opengl" in caps

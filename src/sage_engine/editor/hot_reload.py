@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import importlib
-from engine import adaptors
+from sage_engine import adaptors
 import websockets
 from typing import Set
 

@@ -14,7 +14,7 @@ from PyQt6.QtWidgets import (  # type: ignore[import-not-found]
     QWidget,
 )
 from PyQt6.QtCore import Qt  # type: ignore[import-not-found]
-from engine.entities.game_object import GameObject
+from sage_engine.entities.game_object import GameObject
 from ..plugins.editor_widgets import ProgressWheel, NoWheelSpinBox, NoWheelLineEdit
 from .tag_bar import TagBar
 
@@ -251,7 +251,7 @@ class PropertiesWidget(QWidget):
             self.sprite_group.hide()
 
         try:
-            from engine import physics  # noqa: F401
+            from sage_engine import physics  # noqa: F401
         except Exception:
             self.physics_group = None
         else:

@@ -9,7 +9,7 @@ def test_shape_and_sprite_groups(monkeypatch):
     _setup_qt(monkeypatch)
 
     spec = importlib.util.spec_from_file_location(
-        "viewport", Path("src/sage_editor/plugins/viewport.py")
+        "viewport", Path("src/sage_engine/editor/plugins/viewport.py")
     )
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
@@ -24,7 +24,7 @@ def test_properties_blank_when_none(monkeypatch):
     _setup_qt(monkeypatch)
 
     spec = importlib.util.spec_from_file_location(
-        "viewport", Path("src/sage_editor/plugins/viewport.py")
+        "viewport", Path("src/sage_engine/editor/plugins/viewport.py")
     )
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
@@ -39,7 +39,7 @@ def test_role_change_updates_groups(monkeypatch):
     _setup_qt(monkeypatch)
 
     spec = importlib.util.spec_from_file_location(
-        "viewport", Path("src/sage_editor/plugins/viewport.py")
+        "viewport", Path("src/sage_engine/editor/plugins/viewport.py")
     )
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)

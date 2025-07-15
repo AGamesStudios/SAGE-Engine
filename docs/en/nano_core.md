@@ -2,7 +2,7 @@
 
 `NanoCore` is a tiny Rust component that exposes high performance helpers to Python.
 Set ``SAGE_BUILD=debug`` for a debug build or ``SAGE_BUILD=release`` for an optimised one.
-`python scripts/build_nano_core.py` uses this variable when calling `maturin` so the wheel is installed
+`python tools/build_nano_core.py` uses this variable when calling `maturin` so the wheel is installed
 into the active environment. Release wheels are compressed with ``upx`` if available.
 After compilation the module can be imported with
 `import nano_core`.

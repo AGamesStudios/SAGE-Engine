@@ -51,16 +51,16 @@ try:  # support minimal test stubs
 except Exception:  # pragma: no cover - fallback when QTextEdit missing
     QTextEdit = QPlainTextEdit
 from PyQt6.QtCore import Qt  # type: ignore[import-not-found]
-from engine.utils import units
+from sage_engine.utils import units
 
-from engine.core.scenes.scene import Scene
-from engine.core.camera import Camera
-from engine.entities.game_object import GameObject
+from sage_engine.core.scenes.scene import Scene
+from sage_engine.core.camera import Camera
+from sage_engine.entities.game_object import GameObject
 from copy import deepcopy
-from engine import gizmos
+from sage_engine import gizmos
 
-from sage_editor.qt import GLWidget
-from sage_editor.plugins.editor_widgets import (
+from sage_engine.editor.qt import GLWidget
+from sage_engine.editor.plugins.editor_widgets import (
     ConsoleHandler,
     UndoStack,
     ToolStack,
@@ -71,10 +71,10 @@ from sage_editor.plugins.editor_widgets import (
     SnapPopup,
     StatsWidget,
 )
-from sage_editor.plugins.viewport_base import _ViewportMixin
-from sage_editor.plugins.editor_modeling import ModelingMixin
-import sage_editor.i18n as i18n
-from sage_editor.i18n import LANGUAGES, set_language, tr, language_label
+from sage_engine.editor.plugins.viewport_base import _ViewportMixin
+from sage_engine.editor.plugins.editor_modeling import ModelingMixin
+import sage_engine.editor.i18n as i18n
+from sage_engine.editor.i18n import LANGUAGES, set_language, tr, language_label
 
 log = logging.getLogger(__name__)
 
@@ -82,7 +82,7 @@ class EditorWindow(QMainWindow, ModelingMixin):
     """Main editor window with dockable widgets."""
 
     def _create_viewport_widget(self, backend: str):
-        from sage_editor import widgets as _w
+        from sage_engine.editor import widgets as _w
         global ViewportWidget, SDLViewportWidget, PropertiesWidget
         ViewportWidget = _w.ViewportWidget
         SDLViewportWidget = _w.SDLViewportWidget
@@ -269,7 +269,7 @@ class EditorWindow(QMainWindow, ModelingMixin):
             self.console.append("Welcome to SAGE Editor")
         else:
             self.console.setPlainText(ascii_plain + "\nWelcome to SAGE Editor")
-        from engine.utils.log import logger
+        from sage_engine.utils.log import logger
 
         self._console_handler = ConsoleHandler(self.console)
         logger.addHandler(self._console_handler)
@@ -324,7 +324,7 @@ class EditorWindow(QMainWindow, ModelingMixin):
             from . import viewport as vp
             rcls = vp.OpenGLRenderer
         else:
-            from engine.renderers import get_renderer
+            from sage_engine.renderers import get_renderer
             rcls = get_renderer(backend)
             if rcls is None:
                 self.log_warning(
@@ -1143,8 +1143,8 @@ class EditorWindow(QMainWindow, ModelingMixin):
         self.open_snap_dock()
 
     def load_project(self, path: str) -> None:
-        from engine.core.project import Project
-        from engine.core.resources import set_resource_root
+        from sage_engine.core.project import Project
+        from sage_engine.core.resources import set_resource_root
 
         proj = Project.load(path)
         base = os.path.dirname(path)
@@ -1162,7 +1162,7 @@ class EditorWindow(QMainWindow, ModelingMixin):
         self.draw_scene()
 
     def save_project(self, path: str) -> None:
-        from engine.core.project import Project
+        from sage_engine.core.project import Project
 
         proj = Project(
             scene=self.scene.to_dict(),
@@ -1383,7 +1383,7 @@ class EditorWindow(QMainWindow, ModelingMixin):
             from . import viewport as vp
             rcls = vp.OpenGLRenderer
         else:
-            from engine.renderers import get_renderer
+            from sage_engine.renderers import get_renderer
             rcls = get_renderer(backend)
             if rcls is None:
                 self.log_warning(f"Renderer '{backend}' unavailable; falling back to OpenGL")
@@ -1674,8 +1674,8 @@ class EditorWindow(QMainWindow, ModelingMixin):
         self.update_stats()
 
     def start_game(self):
-        from engine.core.engine import Engine
-        from engine.game_window import GameWindow
+        from sage_engine.core.engine import Engine
+        from sage_engine.game_window import GameWindow
         self.close_game()
         w = self.renderer.width
         h = self.renderer.height
@@ -1759,7 +1759,7 @@ class EditorWindow(QMainWindow, ModelingMixin):
         obj.transform.x = x
         obj.transform.y = y
         obj.filled = True
-        from engine.mesh_utils import (
+        from sage_engine.mesh_utils import (
             create_square_mesh,
             create_triangle_mesh,
             create_circle_mesh,
@@ -1769,7 +1769,7 @@ class EditorWindow(QMainWindow, ModelingMixin):
         elif shape == "circle":
             obj.mesh = create_circle_mesh()
         elif shape == "polygon":
-            from engine.mesh_utils import create_polygon_mesh
+            from sage_engine.mesh_utils import create_polygon_mesh
             verts = [
                 (
                     math.cos(2 * math.pi * i / 5) * 1.0,
@@ -1793,7 +1793,7 @@ class EditorWindow(QMainWindow, ModelingMixin):
     def copy_selected(self) -> None:
         if self.selected_obj is None:
             return
-        from engine.core.objects import object_to_dict
+        from sage_engine.core.objects import object_to_dict
         data = object_to_dict(self.selected_obj)
         if data is None:
             self._clipboard = deepcopy(self.selected_obj)
@@ -1805,7 +1805,7 @@ class EditorWindow(QMainWindow, ModelingMixin):
             return None
         self.undo_stack.snapshot(self.scene)
         if isinstance(self._clipboard, dict):
-            from engine.core.objects import object_from_dict
+            from sage_engine.core.objects import object_from_dict
             try:
                 obj = cast(GameObject, object_from_dict(dict(self._clipboard)))
             except Exception:
@@ -1981,7 +1981,7 @@ class EditorWindow(QMainWindow, ModelingMixin):
                 self.renderer.close()
             except Exception:
                 log.exception("Renderer close failed")
-        from engine.utils.log import logger
+        from sage_engine.utils.log import logger
         if getattr(self, "_console_handler", None) is not None:
             try:
                 logger.removeHandler(self._console_handler)

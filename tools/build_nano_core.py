@@ -16,7 +16,7 @@ def _compress(path: Path) -> None:
 
 
 def build() -> None:
-    manifest = ROOT / "native" / "nano_core" / "Cargo.toml"
+    manifest = ROOT / "tools" / "native" / "nano_core" / "Cargo.toml"
     build_type = os.environ.get("SAGE_BUILD", "release").lower()
     args = [
         "maturin",
