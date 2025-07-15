@@ -12,6 +12,10 @@ __all__ = [
     "tilemap",
     "ink",
     "sprites",
+    "camera",
+    "coord",
+    "transform",
+    "depth",
 ]
 
 from importlib import import_module

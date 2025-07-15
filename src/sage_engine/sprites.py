@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import List, Any
+from .transform import Transform
 
 try:  # pragma: no cover - optional dependency
     import numpy as np  # type: ignore
@@ -15,9 +16,30 @@ except Exception:  # pragma: no cover - numpy optional
 class Sprite:
     x: float
     y: float
+    sx: float = 1.0
+    sy: float = 1.0
     rot: float = 0.0
     tex_id: float = 0.0
     color: tuple[float, float, float, float] = (1.0, 1.0, 1.0, 1.0)
+    layer: int = 0
+    z: float = 0.0
+
+    def set_transform(
+        self,
+        *,
+        pos: tuple[float, float] | None = None,
+        scale: tuple[float, float] | None = None,
+        rot: float | None = None,
+    ) -> None:
+        if pos is not None:
+            self.x, self.y = pos
+        if scale is not None:
+            self.sx, self.sy = scale
+        if rot is not None:
+            self.rot = rot
+
+    def transform(self) -> Transform:
+        return Transform((self.x, self.y), (self.sx, self.sy), self.rot)
 
 
 _sprites: List[Sprite] = []
@@ -32,12 +54,15 @@ def clear() -> None:
 
 
 def collect_instances() -> NDArray | list[list[float]]:
+    ordered = sorted(_sprites, key=lambda s: (s.layer, s.z))
     if np is None:
-        return [
-            [s.x, s.y, s.rot, s.tex_id, *s.color]
-            for s in _sprites
-        ]
-    arr = np.zeros((len(_sprites), 8), dtype=np.float32)
-    for i, s in enumerate(_sprites):
-        arr[i] = (s.x, s.y, s.rot, s.tex_id, *s.color)
+        out = []
+        for s in ordered:
+            a, c2, tx, b, d, ty = s.transform().matrix()
+            out.append([a, c2, tx, b, d, ty, s.tex_id, *s.color])
+        return out
+    arr = np.zeros((len(ordered), 11), dtype=np.float32)
+    for i, s in enumerate(ordered):
+        a, c2, tx, b, d, ty = s.transform().matrix()
+        arr[i] = (a, c2, tx, b, d, ty, s.tex_id, *s.color)
     return arr
