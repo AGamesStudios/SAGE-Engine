@@ -2,7 +2,7 @@
 from PIL import Image, ImageDraw
 import argparse
 
-from sage_engine import render, gui
+from sage_engine import gui
 
 
 def main() -> None:
@@ -11,7 +11,6 @@ def main() -> None:
     args = parser.parse_args()
 
     img = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
-    render._Stub()  # placeholder use
     draw = ImageDraw.Draw(img)
     draw.rectangle([0, 0, 63, 63], fill=(255, 0, 0, 255))
     backend = gui.load_backend(args.gui)
