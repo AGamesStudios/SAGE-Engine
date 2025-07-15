@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import hashlib
 import os
-import shutil
 from pathlib import Path
+
+from ..soundmint import convert as _convert
 
 
 def sha1(path: str | os.PathLike[str]) -> str:
@@ -16,16 +17,26 @@ def sha1(path: str | os.PathLike[str]) -> str:
 
 
 def convert_audio(path: str, cache_dir: str) -> Path:
-    """Copy an OGG or MP3 file into *cache_dir* using its SHA-1 name."""
+    """Convert *path* to the opposite format using :mod:`soundmint`."""
+
     ext = Path(path).suffix.lower()
-    if ext not in {".ogg", ".mp3"}:
+    if ext == ".ogg":
+        target_fmt = "mp3"
+    elif ext in {".mp3", ".wav"}:
+        target_fmt = "ogg"
+    else:
         raise ValueError("unsupported format")
+
     os.makedirs(cache_dir, exist_ok=True)
     digest = sha1(path)
-    target_ext = ".mp3" if ext == ".ogg" else ".ogg"
-    dest = Path(cache_dir) / f"{digest}{target_ext}"
-    if not dest.exists():
-        shutil.copy2(path, dest)
+    dest = Path(cache_dir) / f"{digest}.{target_fmt}"
+
+    if dest.exists() and dest.stat().st_mtime >= Path(path).stat().st_mtime:
+        return dest
+
+    converted = _convert(path, target_fmt)
+    if converted != dest:
+        os.replace(converted, dest)
     return dest
 
 

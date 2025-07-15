@@ -8,6 +8,7 @@ __all__ = [
     "gui",
     "physics",
     "build",
+    "soundmint",
 ]
 
 from importlib import import_module
