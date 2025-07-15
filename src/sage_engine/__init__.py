@@ -5,6 +5,7 @@ __all__ = [
     "render",
     "audio",
     "ui",
+    "gui",
     "physics",
     "build",
 ]
