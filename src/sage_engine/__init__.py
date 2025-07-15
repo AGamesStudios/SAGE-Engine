@@ -16,6 +16,7 @@ __all__ = [
     "coord",
     "transform",
     "depth",
+    "resources",
 ]
 
 from importlib import import_module
