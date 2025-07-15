@@ -15,10 +15,10 @@ def main() -> None:
         return
 
     backend.create_window(200, 200, "SAGE Engine")
-    from PyQt6 import QtWidgets as QtW
+    from PyQt6 import QtWidgets as QtW, QtGui as QtG
 
     label = QtW.QLabel()
-    label.setPixmap(QtW.QPixmap.fromImage(ImageQt.ImageQt(img)))
+    label.setPixmap(QtG.QPixmap.fromImage(ImageQt.ImageQt(img)))
     layout = QtW.QVBoxLayout()
     layout.addWidget(label)
     backend._window.setLayout(layout)  # type: ignore[attr-defined]
