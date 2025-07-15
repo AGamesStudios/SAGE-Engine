@@ -22,9 +22,11 @@ Run examples with `--gui` to choose a backend:
 ```bash
 python examples/hello_sprite/main.py --gui qt6
 python examples/hello_sprite/main.py --gui auto
+sage run --gui list  # show available backends
 ```
 
 See [Writing your own GUI backend](docs/writing_gui_backend.md) for details.
+The folder `examples/plugins/gui_dummy` contains a minimal plugin template.
 
 ## Папки проекта
 

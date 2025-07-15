@@ -35,16 +35,20 @@ def _load_entry(name: str) -> Optional[GuiBackend]:
 
 
 def load_backend(name: str = "auto") -> GuiBackend:
+    """Load a GUI backend by name and announce the result."""
     if name != "auto":
         backend = _load_entry(name)
         if backend:
+            print(f"GUI backend: {name}")
             return backend
     else:
         for candidate in ("qt6", "qt5", "tk"):
             backend = _load_entry(candidate)
             if backend:
+                print(f"GUI backend: {candidate}")
                 return backend
     warnings.warn("No GUI backend available, falling back to headless")
+    print("GUI backend: headless")
     return HeadlessBackend()
 
 
