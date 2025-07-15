@@ -2,7 +2,7 @@
 name = "sage_engine"
 version = "0.1.0a0"
 requires-python = ">=3.8"
-dependencies = ["typing-extensions", "pillow"]
+dependencies = ["typing-extensions", "pillow", "PyYAML>=6.0"]
 
 [project.optional-dependencies]
 dev = ["ruff", "pytest"]

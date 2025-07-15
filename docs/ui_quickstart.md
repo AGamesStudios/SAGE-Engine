@@ -16,3 +16,29 @@ button.on_hover.connect(lambda inside: print("hover", inside))
 button.hover(True)
 ````
 ```
+
+## Themes
+
+UI colors and fonts come from `.vel` theme files:
+
+```yaml
+colors:
+  bg: "#1e1e1e"
+  fg: "#ffffff"
+  accent: "#ffb400"
+font:
+  family: "Roboto"
+  size: 14
+radius: 6
+```
+
+Switch the current theme at runtime:
+
+```python
+from sage_engine.ui import theme
+
+theme.set_theme("ui/light.vel")
+```
+
+When using ``sage serve`` any change to a ``.vel`` file automatically
+reloads the theme on connected clients.

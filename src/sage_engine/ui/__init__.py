@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Callable, List
 
+from . import theme
+
 
 class Signal:
     def __init__(self) -> None:
@@ -15,8 +17,22 @@ class Signal:
             fn(*args, **kwargs)
 
 
-class Button:
+class Widget:
+    """Base widget applying the global UI theme."""
+
     def __init__(self) -> None:
+        self.apply_theme()
+        theme.register(self)
+
+    def apply_theme(self) -> None:  # pragma: no cover - trivial
+        self.bg_color = theme.current.colors.get("bg", "#000000")
+        self.fg_color = theme.current.colors.get("fg", "#ffffff")
+        self.radius = theme.current.radius
+
+
+class Button(Widget):
+    def __init__(self) -> None:
+        super().__init__()
         self.on_hover = Signal()
         self.on_click = Signal()
 
@@ -27,4 +43,14 @@ class Button:
         self.on_click.emit()
 
 
-__all__ = ["Signal", "Button"]
+class Label(Widget):
+    def __init__(self, text: str = "") -> None:
+        super().__init__()
+        self.text = text
+
+
+class Panel(Widget):
+    pass
+
+
+__all__ = ["Signal", "Widget", "Button", "Label", "Panel", "theme"]

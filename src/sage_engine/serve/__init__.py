@@ -26,9 +26,15 @@ class LiveServer:
 
     def handle_change(self, path: str | Path) -> None:
         p = Path(path)
+        payload: dict[str, str]
         if p.suffix.lower() in {".ogg", ".wav", ".mp3"}:
             convert_audio(str(p), str(self.watch_dir / "audio_cache"))
-        msg = json.dumps({"type": "reload_asset", "path": str(p)})
+            payload = {"path": str(p)}
+        elif p.suffix.lower() == ".vel":
+            payload = {"type": "theme", "name": p.stem}
+        else:
+            payload = {"path": str(p)}
+        msg = json.dumps({"type": "reload_asset", **payload})
         for ws in list(self.websockets):
             ws.send(msg)
 
