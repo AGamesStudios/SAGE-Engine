@@ -9,6 +9,7 @@ from typing import Optional
 
 from .base import RenderBackend
 from .headless_backend import HeadlessBackend
+from .. import sprites, ui, physics
 
 _BACKEND: Optional[RenderBackend] = None
 
@@ -61,4 +62,19 @@ def get_backend(name: str = "auto") -> RenderBackend:
     return _BACKEND
 
 
-__all__ = ["RenderBackend", "get_backend", "load_backend"]
+
+
+def draw_frame(backend: RenderBackend | None = None, *, world: physics.World | None = None) -> RenderBackend:
+    """Render sprites and UI widgets in one frame."""
+    if backend is None:
+        backend = get_backend()
+    backend.begin_frame()
+    backend.draw_sprites(sprites.collect_instances())
+    if world is not None and physics.debug_xray:
+        backend.draw_lines(physics.collect_debug_lines(world), (1.0, 1.0, 1.0))
+    backend.draw_sprites(ui.collect_instances())
+    backend.end_frame()
+    return backend
+
+
+__all__ = ["RenderBackend", "get_backend", "load_backend", "draw_frame"]
