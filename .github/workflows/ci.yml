@@ -22,7 +22,7 @@ jobs:
           python-version: '3.x'
       - run: python -m pip install .[dev,qt6]
       - run: ruff check .
-      - run: pytest tests/gui/test_auto_load.py -q
+      - run: pytest -q
 
   tk:
     runs-on: ubuntu-latest
