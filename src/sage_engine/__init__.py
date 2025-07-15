@@ -9,6 +9,7 @@ __all__ = [
     "physics",
     "build",
     "soundmint",
+    "tilemap",
 ]
 
 from importlib import import_module
