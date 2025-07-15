@@ -13,4 +13,4 @@ __all__ = [
 from importlib import import_module
 
 for _name in __all__:
-    import_module(f"{__name__}.{_name}")
+    globals()[_name] = import_module(f"{__name__}.{_name}")
