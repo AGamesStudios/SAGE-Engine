@@ -10,6 +10,16 @@ sys.modules.setdefault('OpenGL', types.ModuleType('OpenGL'))
 sys.modules.setdefault('OpenGL.GL', types.ModuleType('OpenGL.GL'))
 sys.modules.setdefault('OpenGL.GL.shaders', types.ModuleType('OpenGL.GL.shaders'))
 
+gl_mod = sys.modules['OpenGL.GL']
+gl_mod.GL_VERTEX_SHADER = 0
+gl_mod.GL_FRAGMENT_SHADER = 0
+gl_mod.glUseProgram = lambda *a, **k: None
+gl_mod.glGetUniformLocation = lambda *a, **k: 0
+gl_mod.glUniform1f = gl_mod.glUniform2f = gl_mod.glUniform3f = gl_mod.glUniform4f = lambda *a, **k: None
+sh_mod = sys.modules['OpenGL.GL.shaders']
+sh_mod.compileProgram = lambda *a, **k: 1
+sh_mod.compileShader = lambda *a, **k: 1
+
 from sage_engine.core.engine import Engine
 from sage_engine.core.scenes.scene import Scene
 from sage_engine.renderers.null_renderer import NullRenderer
