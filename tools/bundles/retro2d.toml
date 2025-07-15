@@ -1,2 +1,0 @@
-[adaptors]
-list = ["render", "audio", "gui"]

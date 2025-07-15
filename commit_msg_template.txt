@@ -1,8 +1,0 @@
-feat: short summary
-
-# or
-fix: fix summary
-
-docs: update docs
-
-refactor: refactor code

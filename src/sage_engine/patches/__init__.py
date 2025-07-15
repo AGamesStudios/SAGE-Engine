@@ -1,0 +1,2 @@
+class Patches:
+    pass

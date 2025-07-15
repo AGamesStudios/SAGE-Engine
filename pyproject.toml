@@ -1,64 +1,16 @@
-[build-system]
-requires = ["setuptools>=68"]
-build-backend = "setuptools.build_meta"
-
 [project]
-name = "sage-engine"
-version = "0.0.1-alpha"
-description = "SAGE 2D game engine with compact resource formats"
-authors = [{name = "Amckinator Games Studios (AGStudios)", email = "amckinatorgames@gmail.com"}]
-license = {file = "LICENSE"}
-readme = "README.md"
-requires-python = ">=3.10"
-classifiers = [
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3",
-    "Development Status :: 3 - Alpha",
-    "Intended Audience :: Developers",
-    "Topic :: Games/Entertainment",
-]
-keywords = ["game", "engine", "sage", "sageaudio", "sagemesh"]
-dependencies = [
-    "Pillow",
-    "tomli; python_version < '3.11'",
-    "websockets",
-    "PyYAML",
-]
+name = "sage_engine"
+version = "0.1.0a0"
+requires-python = ">=3.8"
+dependencies = ["typing-extensions"]
 
 [project.optional-dependencies]
-opengl = ["PyQt6>=6.5", "PyOpenGL>=3.1"]
-sdl = ["PySDL2"]
-qt = ["PyQt6>=6.5"]
-audio = ["miniaudio>=1.61", "lameenc>=1.8"]
-geometry = ["shapely>=2.0"]
-physics = ["pymunk>=6.0"]
+dev = ["ruff", "pytest", "pillow"]
 
-[project.urls]
-Homepage = "https://github.com/AGamesStudios/SAGE-Engine"
-Repository = "https://github.com/AGamesStudios/SAGE-Engine"
-[project.scripts]
-sage-runtime = "sage_engine.runtime.__main__:main"
-sage-editor = "sage_engine.editor:main"
-sage = "sage:main"
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
 
-[project.entry-points."sage_adaptor"]
-render = "sage_engine.adaptors.render:register"
-audio = "sage_engine.adaptors.audio:register"
-network = "sage_engine.adaptors.network:register"
-gui = "sage_engine.adaptors.gui:register"
-opengl = "sage_engine.adaptors.opengl:register"
-
-[tool.setuptools.packages.find]
-where = ["src"]
-include = ["sage_engine*"]
-
-[tool.setuptools.package-data]
-"sage_engine.editor" = ["plugins/plugins.json", "translations/*.json"]
-"sage_engine" = ["caps.toml", "renderers/wgsl/*.wgsl"]
-
-[tool.pyright]
-include = ["src"]
-typeCheckingMode = "basic"
-reportMissingImports = false
-reportMissingModuleSource = false
-reportUnsupportedDunderAll = false
+[tool.setuptools]
+package-dir = {"" = "src"}
+packages = ["sage_engine"]
