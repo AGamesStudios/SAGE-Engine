@@ -18,6 +18,8 @@ class TileLayer:
     tiles: list[int]
     parallax_x: float = 1.0
     parallax_y: float = 1.0
+    tile_width: int = 32
+    tile_height: int = 32
     bodies: list[physics.Body] = field(default_factory=list)
 
     def draw_offset(self, cam_x: float, cam_y: float) -> tuple[float, float]:
@@ -27,6 +29,19 @@ class TileLayer:
     def grid(self) -> list[tuple[int, int]]:
         """Return tile grid coordinates for debug rendering."""
         return [(x, y) for y in range(self.height) for x in range(self.width)]
+
+    def grid_lines(self) -> list[tuple[float, float, float, float]]:
+        """Return line segments covering the tile grid."""
+        lines = []
+        w = self.width * self.tile_width
+        h = self.height * self.tile_height
+        for x in range(self.width + 1):
+            px = x * self.tile_width
+            lines.append((px, 0, px, h))
+        for y in range(self.height + 1):
+            py = y * self.tile_height
+            lines.append((0, py, w, py))
+        return lines
 
     @classmethod
     def from_tmx(
@@ -45,8 +60,9 @@ class TileLayer:
         tree = ET.parse(path)
         root = tree.getroot()
 
-        # gather collidable tile ids
+        # gather collidable and one-way tile ids
         collidable: set[int] = set()
+        one_way: set[int] = set()
         for ts in root.findall("tileset"):
             firstgid = int(ts.attrib.get("firstgid", "1"))
             for tile in ts.findall("tile"):
@@ -54,10 +70,12 @@ class TileLayer:
                 if props is None:
                     continue
                 for prop in props.findall("property"):
-                    if prop.attrib.get("name") == "collidable" and prop.attrib.get(
-                        "value", "false"
-                    ) in {"true", "1"}:
+                    name = prop.attrib.get("name")
+                    val = prop.attrib.get("value", "false")
+                    if name == "collidable" and val in {"true", "1"}:
                         collidable.add(firstgid + int(tile.attrib.get("id", "0")))
+                    if name == "one_way" and val in {"true", "1"}:
+                        one_way.add(firstgid + int(tile.attrib.get("id", "0")))
 
         layers = root.findall("layer")
         if not layers:
@@ -96,12 +114,26 @@ class TileLayer:
             for y in range(height):
                 for x in range(width):
                     gid = tiles[y * width + x]
-                    if gid in collidable:
+                    if gid in collidable or gid in one_way:
+                        behaviour = "one_way" if gid in one_way else "static"
                         bodies.append(
-                            world.create_box(x=x * tilewidth, y=y * tileheight, behaviour="static")
+                            world.create_box(
+                                x=x * tilewidth,
+                                y=y * tileheight,
+                                behaviour=behaviour,
+                            )
                         )
 
-        return cls(width, height, tiles, parallax_x, parallax_y, bodies)
+        return cls(
+            width,
+            height,
+            tiles,
+            parallax_x,
+            parallax_y,
+            tilewidth,
+            tileheight,
+            bodies,
+        )
 
 
 def autowang(layer: TileLayer, offset: int = 1) -> None:
