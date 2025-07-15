@@ -9,6 +9,7 @@ class Body:
     x: float = 0.0
     y: float = 0.0
     vy: float = 0.0
+    prev_y: float = 0.0
     behaviour: str = "dynamic"  # dynamic, sensor, one_way
     on_contact: Callable[["Body"], None] | None = None
 
@@ -25,9 +26,15 @@ class World:
 
     def step(self, dt: float) -> None:
         for body in self.bodies:
+            body.prev_y = body.y
+        for body in self.bodies:
             if body.behaviour == "dynamic":
                 body.vy -= self.gravity * dt
                 body.y += body.vy * dt
+                for other in self.bodies:
+                    if other.behaviour == "one_way" and body.prev_y >= other.y > body.y and body.vy < 0:
+                        body.y = other.y
+                        body.vy = 0
                 if body.y <= 0:
                     body.y = 0
                     body.vy = -body.vy

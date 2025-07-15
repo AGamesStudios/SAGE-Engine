@@ -7,6 +7,11 @@ jump through platforms.
 ```python
 from sage_engine import physics
 
-body = physics.RigidBody2D(dynamic=True)
-platform = physics.OneWayCollider()
+world = physics.World()
+ball = world.create_box(y=5)
+sensor = world.create_box(behaviour="sensor")
+sensor.on_contact = lambda b: print("hit", b)
+platform = world.create_box(y=2, behaviour="one_way")
+for _ in range(60):
+    world.step(0.1)
 ```

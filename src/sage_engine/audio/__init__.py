@@ -36,10 +36,29 @@ class AudioHandle:
         return self._playing
 
 
+class Mixer:
+    """Very small mixer tracking active audio handles."""
+
+    def __init__(self) -> None:
+        self.master_volume: float = 1.0
+        self._handles: list[AudioHandle] = []
+
+    def register(self, handle: AudioHandle) -> None:
+        self._handles.append(handle)
+
+    def active(self) -> list[AudioHandle]:
+        self._handles = [h for h in self._handles if h.is_playing()]
+        return list(self._handles)
+
+
+mixer = Mixer()
+
+
 def play(path: str, *, loop: bool = False, pan: float = 0.0, pitch: float = 1.0) -> AudioHandle:
     """Play an audio file and return a handle."""
     handle = AudioHandle(path=path, loop=loop, pan=pan, pitch=pitch)
     handle.play()
+    mixer.register(handle)
     return handle
 
-__all__ = ["AudioHandle", "play"]
+__all__ = ["AudioHandle", "Mixer", "mixer", "play"]

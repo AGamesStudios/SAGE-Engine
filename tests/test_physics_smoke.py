@@ -11,3 +11,12 @@ def test_sensor_callback():
         world.step(0.1)
     assert sensor_triggered
     assert ball.y >= 0
+
+
+def test_one_way_platform():
+    world = physics.World(gravity=10.0)
+    platform = world.create_box(y=2, behaviour="one_way")
+    ball = world.create_box(y=5)
+    for _ in range(60):
+        world.step(0.1)
+    assert ball.y >= platform.y
