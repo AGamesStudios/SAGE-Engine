@@ -2,10 +2,10 @@ import unittest
 import logging
 from io import StringIO
 
-from engine.utils.log import logger, init_logger
-from engine.core.scenes.scene import Scene
-from engine.core.camera import Camera
-from engine.logic.base import EventSystem, Event
+from sage_engine.utils.log import logger, init_logger
+from sage_engine.core.scenes.scene import Scene
+from sage_engine.core.camera import Camera
+from sage_engine.logic.base import EventSystem, Event
 
 class TestDebugLogging(unittest.TestCase):
     def test_event_logging(self):
@@ -40,7 +40,7 @@ class TestDebugLogging(unittest.TestCase):
         self.assertIn('Removed event', log_output)
 
     def test_set_stream_console_only(self):
-        from engine.utils.log import set_stream
+        from sage_engine.utils.log import set_stream
         original_files = [h.baseFilename for h in logger.handlers if isinstance(h, logging.FileHandler)]
         stream = StringIO()
         set_stream(stream)
@@ -50,7 +50,7 @@ class TestDebugLogging(unittest.TestCase):
         self.assertEqual(original_files, new_files)
 
     def test_set_level_helper(self):
-        from engine.utils.log import set_level
+        from sage_engine.utils.log import set_level
         old = logger.level
         set_level('DEBUG')
         try:

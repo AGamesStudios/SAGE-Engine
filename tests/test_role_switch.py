@@ -1,4 +1,4 @@
-from engine.entities.game_object import GameObject
+from sage_engine.entities.game_object import GameObject
 
 
 def test_empty_role_clears_graphics():

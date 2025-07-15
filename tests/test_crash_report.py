@@ -1,5 +1,5 @@
 import os
-from engine.utils import crash
+from sage_engine.utils import crash
 
 def test_write_crash_report(tmp_path):
     try:

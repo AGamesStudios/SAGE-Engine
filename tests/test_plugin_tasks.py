@@ -2,7 +2,7 @@ import asyncio
 import types
 from pathlib import Path
 
-from engine.plugins import (
+from sage_engine.plugins import (
     PluginManager,
     wait_plugin_tasks,
     cancel_plugin_tasks,

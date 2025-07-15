@@ -1,5 +1,5 @@
 import os
-from engine.chrono_patch import ChronoPatchTree
+from sage_engine.chrono_patch import ChronoPatchTree
 
 
 def test_chrono_patch(tmp_path):

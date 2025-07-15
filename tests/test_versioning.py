@@ -1,6 +1,6 @@
 import pytest
 
-import engine
+import sage_engine as engine
 
 
 def test_require_version_pass():

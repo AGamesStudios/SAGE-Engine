@@ -1,5 +1,5 @@
 from sage_editor import Editor
-from engine.plugins import PluginManager
+from sage_engine.plugins import PluginManager
 
 
 def test_editor_plugin_loading(tmp_path):

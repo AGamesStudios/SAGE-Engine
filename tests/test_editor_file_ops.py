@@ -3,8 +3,8 @@ from pathlib import Path
 
 from tests.test_viewport_sync import _setup_qt
 from tests.test_opengl_tilemap import _stub_gl
-from engine.core.project import Project
-from engine.core.scenes.scene import Scene
+from sage_engine.core.project import Project
+from sage_engine.core.scenes.scene import Scene
 
 
 def _load_viewport(monkeypatch):

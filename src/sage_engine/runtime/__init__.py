@@ -6,7 +6,7 @@ __all__ = getattr(_engine, "__all__", [])
 __version__ = getattr(_engine, "__version__", "0")
 
 # expose ``main`` directly for static analysis tools
-from engine.core.engine import main as _main  # noqa: E402
+from sage_engine.core.engine import main as _main  # noqa: E402
 main = _main
 if "main" not in __all__:
     __all__.append("main")

@@ -1,4 +1,4 @@
-from engine.nano_tree import NanoTree
+from sage_engine.nano_tree import NanoTree
 
 
 def test_nano_tree(tmp_path):

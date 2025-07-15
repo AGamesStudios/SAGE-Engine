@@ -13,10 +13,10 @@ sys.modules.setdefault('PyQt6', types.ModuleType('PyQt6'))
 sys.modules['PyQt6.QtCore'] = qtcore
 sys.modules['PyQt6.QtWidgets'] = types.ModuleType('PyQt6.QtWidgets')
 
-from engine.core.engine import Engine  # noqa: E402
-from engine.core.scenes.scene import Scene  # noqa: E402
-from engine.entities.tile_map import TileMap  # noqa: E402
-from engine.inputs import InputBackend  # noqa: E402
+from sage_engine.core.engine import Engine  # noqa: E402
+from sage_engine.core.scenes.scene import Scene  # noqa: E402
+from sage_engine.entities.tile_map import TileMap  # noqa: E402
+from sage_engine.inputs import InputBackend  # noqa: E402
 
 
 class DummyRenderer:
@@ -94,7 +94,7 @@ def test_tilemap_cleanup(monkeypatch):
 
 
 def test_image_cache_cleared(monkeypatch):
-    import engine.entities.game_object as go
+    import sage_engine.entities.game_object as go
     go.get_sprite_cache()._cache['img'] = object()
     scene = Scene(with_defaults=False)
     eng = DemoEngine(scene=scene, renderer=DummyRenderer, input_backend=DummyInput)

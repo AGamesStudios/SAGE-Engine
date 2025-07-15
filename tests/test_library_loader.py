@@ -1,6 +1,6 @@
 import types
 import pytest
-from engine.core.library import LibraryLoader
+from sage_engine.core.library import LibraryLoader
 
 
 def test_load_module(tmp_path):

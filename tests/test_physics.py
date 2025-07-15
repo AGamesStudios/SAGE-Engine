@@ -7,7 +7,7 @@ import pytest
 def test_physics_requires_pymunk(monkeypatch):
     monkeypatch.setitem(sys.modules, "pymunk", None)
     sys.modules.pop("engine.physics", None)
-    import engine.physics as phys
+    import sage_engine.physics as phys
     importlib.reload(phys)
     with pytest.raises(ImportError):
         phys.PhysicsWorld()
@@ -57,7 +57,7 @@ def test_remove_body(monkeypatch):
     )
     monkeypatch.setitem(sys.modules, "pymunk", fake)
     sys.modules.pop("engine.physics", None)
-    import engine.physics as phys
+    import sage_engine.physics as phys
     importlib.reload(phys)
     world = phys.PhysicsWorld()
     pb = world.add_box(object(), size=(1, 1))
@@ -78,9 +78,9 @@ def test_engine_auto_world(monkeypatch):
     )
     monkeypatch.setitem(sys.modules, "pymunk", fake)
     sys.modules.pop("engine.physics", None)
-    from engine.core.scenes.scene import Scene
-    from engine.entities.game_object import GameObject
-    from engine.core.engine import Engine
+    from sage_engine.core.scenes.scene import Scene
+    from sage_engine.entities.game_object import GameObject
+    from sage_engine.core.engine import Engine
 
     scene = Scene(with_defaults=False)
     obj = GameObject(image_path="", shape="square")
@@ -104,7 +104,7 @@ def test_debug_draw(monkeypatch):
     )
     monkeypatch.setitem(sys.modules, "pymunk", fake)
     sys.modules.pop("engine.physics", None)
-    import engine.physics as phys
+    import sage_engine.physics as phys
     import importlib
     importlib.reload(phys)
 
@@ -144,7 +144,7 @@ def test_body_sync(monkeypatch):
     )
     monkeypatch.setitem(sys.modules, "pymunk", fake)
     sys.modules.pop("engine.physics", None)
-    import engine.physics as phys
+    import sage_engine.physics as phys
     import importlib
     importlib.reload(phys)
 

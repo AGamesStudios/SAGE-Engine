@@ -1,5 +1,5 @@
 import zipfile
-from engine.core.resources import ResourceManager
+from sage_engine.core.resources import ResourceManager
 
 
 def test_import_file(tmp_path):

@@ -49,14 +49,14 @@ class Camera(GameObject):
 cam_mod.Camera = Camera
 sys.modules.setdefault('engine.core.camera', cam_mod)
 
-from engine.entities.object import (  # noqa: E402
+from sage_engine.entities.object import (  # noqa: E402
     Object,
     Transform2D,
     Material,
     create_role,
     register_role,
 )
-from engine.core.scenes.scene import Scene  # noqa: E402
+from sage_engine.core.scenes.scene import Scene  # noqa: E402
 
 
 class TestObject(unittest.TestCase):
@@ -131,15 +131,15 @@ class TestObject(unittest.TestCase):
         self.assertEqual(t.angle, 10)
         t.angle = -45
         self.assertEqual(t.angle, 315)
-        from engine.core.math2d import set_max_angle
+        from sage_engine.core.math2d import set_max_angle
         set_max_angle(180)
         t.angle = 190
         self.assertEqual(t.angle, 10)
         set_max_angle(360)
 
     def test_material_defaults_applied(self):
-        from engine.entities.object import Material
-        from engine.entities.game_object import GameObject
+        from sage_engine.entities.object import Material
+        from sage_engine.entities.game_object import GameObject
         from unittest.mock import patch
 
         with patch.object(GameObject, '_load_image', lambda self: None):

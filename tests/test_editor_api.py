@@ -1,4 +1,4 @@
-from engine.editor_api import EditorInterface
+from sage_engine.editor_api import EditorInterface
 
 class DummyEditor:
     def add_menu(self, name, callback):

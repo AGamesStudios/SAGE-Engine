@@ -1,5 +1,5 @@
 import types
-from engine.logic.conditions.evalexpr import EvalExpr
+from sage_engine.logic.conditions.evalexpr import EvalExpr
 
 
 def test_evalexpr_disallows_builtins():

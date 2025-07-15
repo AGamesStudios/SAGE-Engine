@@ -22,8 +22,8 @@ shaders_mod = sys.modules['OpenGL.GL.shaders']
 shaders_mod.compileProgram = lambda *a, **k: 1
 shaders_mod.compileShader = lambda *a, **k: 1
 
-from engine.inputs import get_input, INPUT_REGISTRY, NullInput  # noqa: E402
-from engine.renderers import get_renderer, get_null_renderer, RENDERER_REGISTRY  # noqa: E402
+from sage_engine.inputs import get_input, INPUT_REGISTRY, NullInput  # noqa: E402
+from sage_engine.renderers import get_renderer, get_null_renderer, RENDERER_REGISTRY  # noqa: E402
 
 
 def test_sdl_fallback(monkeypatch):

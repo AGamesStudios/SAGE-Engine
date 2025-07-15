@@ -1,5 +1,5 @@
-from engine.core.scenes.scene import Scene
-from engine.entities.game_object import GameObject
+from sage_engine.core.scenes.scene import Scene
+from sage_engine.entities.game_object import GameObject
 
 
 def test_scene_aggregates_public_variables_only():

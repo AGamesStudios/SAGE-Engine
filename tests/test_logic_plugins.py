@@ -2,11 +2,12 @@ import importlib
 import sys
 from importlib import metadata
 import pytest
+import sage_engine as engine
 
 def test_logic_plugin_entry_point(tmp_path, monkeypatch):
     plugin = tmp_path / "logic_plugin.py"
     plugin.write_text(
-        "from engine.logic.base import Action, register_action\n"
+        "from sage_engine.logic.base import Action, register_action\n"
         "@register_action('DummyAction')\n"
         "class DummyAction(Action):\n"
         "    def execute(self, engine, scene, dt):\n"
@@ -27,9 +28,8 @@ def test_logic_plugin_entry_point(tmp_path, monkeypatch):
     sys.path.insert(0, str(tmp_path))
     importlib.invalidate_caches()
     try:
-        from engine.logic import base as logic_base
+        from sage_engine.logic import base as logic_base
         logic_base._PLUGINS_LOADED = False
-        import engine.logic
         importlib.reload(engine.logic.base)
         sys.modules.pop('engine.logic.actions', None)
         sys.modules.pop('engine.logic.conditions', None)

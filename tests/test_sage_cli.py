@@ -5,7 +5,7 @@ import asyncio
 import websockets
 import sage
 
-from engine import bundles, adaptors
+from sage_engine import bundles, adaptors
 from sage_editor import hot_reload
 import socketserver
 

@@ -1,5 +1,5 @@
-from engine.core.project import Project
-from engine.core.scenes.scene import Scene
+from sage_engine.core.project import Project
+from sage_engine.core.scenes.scene import Scene
 
 
 def test_project_save_load(tmp_path):

@@ -1,7 +1,7 @@
 import asyncio
 import zipfile
 
-from engine.core.resources import ResourceManager
+from sage_engine.core.resources import ResourceManager
 
 
 def test_import_file_async(tmp_path):

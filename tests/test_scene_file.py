@@ -10,9 +10,9 @@ sys.modules.setdefault('engine.renderers', types.ModuleType('engine.renderers'))
 sys.modules.setdefault('engine.renderers.shader', types.ModuleType('engine.renderers.shader'))
 sys.modules.setdefault('engine.mesh_utils', types.ModuleType('engine.mesh_utils'))
 
-from engine.core.scene_file import SceneFile  # noqa: E402
-from engine.core.scenes.scene import Scene  # noqa: E402
-from engine.core.objects import register_object  # noqa: E402
+from sage_engine.core.scene_file import SceneFile  # noqa: E402
+from sage_engine.core.scenes.scene import Scene  # noqa: E402
+from sage_engine.core.objects import register_object  # noqa: E402
 
 
 @register_object('dummy', [('name', None), ('visible', None), ('group', None)])
@@ -60,7 +60,7 @@ def test_scene_file_roundtrip(tmp_path):
 
 def test_group_updates_on_change():
     scene = Scene(with_defaults=False)
-    from engine.entities.object import Object
+    from sage_engine.entities.object import Object
     obj = Object(role="empty")
     scene.add_object(obj)
     assert list(scene.iter_group("alpha")) == []

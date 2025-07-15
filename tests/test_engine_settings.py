@@ -1,9 +1,9 @@
 import importlib
 import pytest
-from engine.core.engine import Engine
-from engine.core.settings import EngineSettings
-from engine.inputs import InputBackend
-from engine.renderers import Renderer
+from sage_engine.core.engine import Engine
+from sage_engine.core.settings import EngineSettings
+from sage_engine.inputs import InputBackend
+from sage_engine.renderers import Renderer
 
 missing = []
 for name in ["PIL.Image", "PyQt6", "OpenGL.GL"]:

@@ -1,6 +1,7 @@
 import types
 import sys
 import importlib.machinery
+import sage_engine as engine
 
 # stub heavy dependencies so engine imports
 qtcore = types.ModuleType('PyQt6.QtCore')
@@ -37,8 +38,8 @@ sys.modules['PIL.Image'] = stub_image
 
 
 def test_runtime_aliases():
-    import engine
-    import engine.runtime as er
+    import sage_engine  # noqa: F401
+    import sage_engine.runtime as er
     assert er.get_attr("Engine") is engine.get_engine_attr("Engine")
 
 
@@ -48,13 +49,13 @@ def test_runtime_entrypoints():
         called.append(argv)
     sys.modules['engine.core.engine'] = types.ModuleType('engine.core.engine')
     sys.modules['engine.core.engine'].main = fake_main
-    import engine.runtime.__main__ as erm
+    import sage_engine.runtime.__main__ as erm
     erm.main(['two'])
     assert called == [['two']]
 
 
 def test_versions_match():
-    import engine
-    import engine.runtime as er
+    import sage_engine  # noqa: F401
+    import sage_engine.runtime as er
     assert er.__version__ == engine.__version__
     assert 'paint' not in dir(engine)

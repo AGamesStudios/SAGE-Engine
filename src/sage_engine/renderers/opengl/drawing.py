@@ -12,10 +12,10 @@ from OpenGL.GL import (
 
 from typing import Optional, cast
 
-from engine.core.camera import Camera
-from engine.entities.game_object import GameObject
-from engine.utils import units
-from engine.mesh_utils import (
+from sage_engine.core.camera import Camera
+from sage_engine.entities.game_object import GameObject
+from sage_engine.utils import units
+from sage_engine.mesh_utils import (
     Mesh,
     create_square_mesh,
     create_triangle_mesh,

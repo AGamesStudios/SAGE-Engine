@@ -11,10 +11,10 @@ from OpenGL.GL import (
 
 from typing import Optional
 
-from engine.core.camera import Camera
-from engine.entities.game_object import GameObject
-from engine.utils import units
-from engine.gizmos import Gizmo
+from sage_engine.core.camera import Camera
+from sage_engine.entities.game_object import GameObject
+from sage_engine.utils import units
+from sage_engine.gizmos import Gizmo
 
 
 def draw_gizmo(

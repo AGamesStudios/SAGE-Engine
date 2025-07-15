@@ -1,4 +1,4 @@
-from engine.core.scene_file import SceneFile
+from sage_engine.core.scene_file import SceneFile
 
 
 def test_example_scenes_load():
@@ -14,7 +14,7 @@ def test_example_scenes_load():
 
 
 def test_advanced_project_scenes():
-    from engine.core.project import Project
+    from sage_engine.core.project import Project
     proj = Project.load('examples/advanced.sageproject')
     for node in proj.scene_graph.get('nodes', {}).values():
         path = 'examples/' + node['scene_file']

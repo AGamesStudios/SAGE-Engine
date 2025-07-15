@@ -34,7 +34,7 @@ def test_flip_opengl_no_offset(monkeypatch):
     sys.modules['OpenGL.GL'].GL_TRIANGLE_FAN = 0
     sys.modules['OpenGL.GL'].glBufferSubData = gl.glBufferSubData
 
-    import engine.renderers.opengl.core as ogl_core
+    import sage_engine.renderers.opengl.core as ogl_core
     ogl_core.glGetUniformLocation = gl.glGetUniformLocation
     ogl_core.glUniform4f = gl.glUniform4f
     ogl_core.glBindBuffer = gl.glBindBuffer

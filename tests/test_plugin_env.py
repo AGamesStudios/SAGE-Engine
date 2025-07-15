@@ -3,15 +3,16 @@ import types
 from pathlib import Path
 import shutil
 
-import engine.plugins
-import engine.utils.config as cfgmod
+import sage_engine as engine
+import sage_engine.plugins
+import sage_engine.utils.config as cfgmod
 
 
 def test_plugin_dir_env(monkeypatch, tmp_path):
     plugin = tmp_path / "plg_mod.py"
     plugin.write_text("def init_engine(engine): engine.flag = True")
     monkeypatch.setenv("SAGE_PLUGIN_DIR", str(tmp_path))
-    import engine.utils.config as cfgmod
+    import sage_engine.utils.config as cfgmod
     cfgmod._config_cache = None
     manager = engine.plugins.PluginManager("engine")
     obj = types.SimpleNamespace()
@@ -56,7 +57,7 @@ def test_engine_plugins_env(monkeypatch, tmp_path):
     plugin = tmp_path / "env_engine.py"
     plugin.write_text("def init_engine(engine): engine.flag = True")
     monkeypatch.setenv("SAGE_ENGINE_PLUGINS", str(tmp_path))
-    import engine.utils.config as cfgmod
+    import sage_engine.utils.config as cfgmod
     cfgmod._config_cache = None
     manager = engine.plugins.PluginManager("engine")
     ns = types.SimpleNamespace()
@@ -96,7 +97,7 @@ def test_expanduser_env(monkeypatch, tmp_path):
     test_dir.mkdir(exist_ok=True)
     (test_dir / "u.py").write_text("def init_engine(e): e.x=True")
     monkeypatch.setenv("SAGE_PLUGIN_DIR", f"~/{test_dir.name}")
-    import engine.utils.config as cfgmod
+    import sage_engine.utils.config as cfgmod
     cfgmod._config_cache = None
     manager = engine.plugins.PluginManager("engine")
     obj = types.SimpleNamespace()

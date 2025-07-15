@@ -1,7 +1,7 @@
 import sys
 import types
 import ctypes
-from engine.entities.game_object import GameObject
+from sage_engine.entities.game_object import GameObject
 
 
 def _stub_sdl(monkeypatch, calls):
@@ -76,7 +76,7 @@ def _stub_sdl(monkeypatch, calls):
 def test_sprite_and_mesh(monkeypatch):
     calls = {'tex':0,'copy':0,'lines':0}
     _stub_sdl(monkeypatch, calls)
-    from engine.renderers.sdl_renderer import SDLRenderer
+    from sage_engine.renderers.sdl_renderer import SDLRenderer
     class Img:
         width = 1
         height = 1
@@ -101,7 +101,7 @@ def test_sprite_and_mesh(monkeypatch):
 def test_vsync_flag(monkeypatch):
     calls = {'tex': 0, 'copy': 0, 'lines': 0, 'flags': 0}
     _stub_sdl(monkeypatch, calls)
-    from engine.renderers.sdl_renderer import SDLRenderer
+    from sage_engine.renderers.sdl_renderer import SDLRenderer
     SDLRenderer(2, 2, 't', vsync=True)
     assert calls['flags'] & 2
 
@@ -109,7 +109,7 @@ def test_vsync_flag(monkeypatch):
 def test_close_logs_cleanup(monkeypatch, caplog):
     calls = {'tex': 0, 'copy': 0, 'lines': 0, 'flags': 0}
     _stub_sdl(monkeypatch, calls)
-    import engine.renderers.sdl_renderer as mod
+    import sage_engine.renderers.sdl_renderer as mod
 
     def destroy(tex):
         raise RuntimeError('bad')

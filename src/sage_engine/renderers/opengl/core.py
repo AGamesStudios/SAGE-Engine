@@ -20,12 +20,12 @@ else:
 from ..shader import Shader
 from PIL import Image, ImageDraw  # type: ignore[import-not-found]
 
-from engine.core.camera import Camera
-from engine.entities.game_object import GameObject
-from engine.utils import units
-from engine.utils.log import logger
-from engine.mesh_utils import Mesh
-from engine.entities.tile_map import TileMap
+from sage_engine.core.camera import Camera
+from sage_engine.entities.game_object import GameObject
+from sage_engine.utils import units
+from sage_engine.utils.log import logger
+from sage_engine.mesh_utils import Mesh
+from sage_engine.entities.tile_map import TileMap
 from . import drawing, gizmos, shaders
 
 # role-specific draw callbacks
@@ -203,7 +203,7 @@ class OpenGLRenderer(Renderer):
 
     def setup_view(self):
         """Configure the OpenGL projection and store it for later."""
-        from engine.core import math2d
+        from sage_engine.core import math2d
         GL.glMatrixMode(GL.GL_PROJECTION)
         GL.glLoadIdentity()
         # center the origin so camera transforms are stable
@@ -508,7 +508,7 @@ class OpenGLRenderer(Renderer):
         return x, y, vp_w, vp_h
 
     def _apply_projection(self, camera: Optional[Camera]) -> None:
-        from engine.core import math2d
+        from sage_engine.core import math2d
         w = (camera.width if (self.keep_aspect and camera) else self.width)
         h = (camera.height if (self.keep_aspect and camera) else self.height)
         sign = 1.0 if units.Y_UP else -1.0

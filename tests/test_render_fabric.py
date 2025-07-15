@@ -1,7 +1,7 @@
 import types
 import sys
 
-import engine.render_fabric as rf
+import sage_engine.render_fabric as rf
 
 
 def test_render_fabric_fallback(monkeypatch):

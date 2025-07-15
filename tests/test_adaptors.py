@@ -1,5 +1,5 @@
 from importlib import metadata
-import engine.adaptors as adaptors
+import sage_engine.adaptors as adaptors
 
 
 class _EP:

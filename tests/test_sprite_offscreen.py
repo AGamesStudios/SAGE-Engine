@@ -1,6 +1,6 @@
 import hashlib
 import types
-import engine.render_fabric as rf
+import sage_engine.render_fabric as rf
 
 try:
     from PIL import Image, ImageDraw

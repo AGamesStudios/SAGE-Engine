@@ -1,10 +1,10 @@
-from engine.capabilities import (
+from sage_engine.capabilities import (
     caps_from_flags,
     missing_caps_from_flags,
     FEATURES,
     check_scene_caps,
 )
-from engine.extras import lua
+from sage_engine.extras import lua
 
 
 def test_caps_mapping():

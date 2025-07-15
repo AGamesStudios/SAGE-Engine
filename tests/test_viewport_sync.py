@@ -512,7 +512,7 @@ def test_find_object_uses_shape(monkeypatch):
     import sys
     import importlib
     sys.modules.pop('engine.mesh_utils', None)
-    import engine.mesh_utils  # noqa: F401
+    import sage_engine.mesh_utils  # noqa: F401
 
     spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
@@ -758,7 +758,7 @@ def test_create_shape(monkeypatch):
     import sys
 
     sys.modules.pop('engine.mesh_utils', None)
-    import engine.mesh_utils  # noqa: F401  - reload real module
+    import sage_engine.mesh_utils  # noqa: F401  - reload real module
 
     spec = importlib.util.spec_from_file_location('viewport', Path('src/sage_editor/plugins/viewport.py'))
     viewport = importlib.util.module_from_spec(spec)
@@ -1005,7 +1005,7 @@ def test_concave_vertex_normal(monkeypatch):
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
 
-    from engine.mesh_utils import create_polygon_mesh
+    from sage_engine.mesh_utils import create_polygon_mesh
 
     win = viewport.EditorWindow()
     obj = win.create_shape('square')
@@ -1031,7 +1031,7 @@ def test_bevel_vertex_normal(monkeypatch):
     viewport = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viewport)
 
-    from engine.mesh_utils import create_polygon_mesh
+    from sage_engine.mesh_utils import create_polygon_mesh
 
     win = viewport.EditorWindow()
     obj = win.create_shape('square')

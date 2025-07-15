@@ -36,7 +36,7 @@ shaders_mod.compileProgram = lambda *a, **k: 1
 shaders_mod.compileShader = lambda *a, **k: 1
 
 sys.modules.pop('engine.entities.game_object', None)
-import engine.entities.game_object as go  # noqa: E402
+import sage_engine.entities.game_object as go  # noqa: E402
 
 
 def test_env_var_limits_cache(monkeypatch):
@@ -56,11 +56,11 @@ def test_env_var_limits_cache(monkeypatch):
 def test_engine_setting_updates_cache(monkeypatch):
     monkeypatch.delenv('SAGE_IMAGE_CACHE_LIMIT', raising=False)
     go.set_sprite_cache(go.SpriteCache(2))
-    from engine.core.settings import EngineSettings
-    from engine.core.engine import Engine
-    from engine.renderers.null_renderer import NullRenderer
-    from engine.inputs.null_input import NullInput
-    from engine.core.scenes.scene import Scene
+    from sage_engine.core.settings import EngineSettings
+    from sage_engine.core.engine import Engine
+    from sage_engine.renderers.null_renderer import NullRenderer
+    from sage_engine.inputs.null_input import NullInput
+    from sage_engine.core.scenes.scene import Scene
 
     settings = EngineSettings(image_cache_limit=1)
     eng = Engine(scene=Scene(with_defaults=False), renderer=NullRenderer, input_backend=NullInput, settings=settings)

@@ -59,7 +59,7 @@ def _stub_sdl(monkeypatch, calls):
 def test_unload_texture(monkeypatch):
     calls = {'create': 0, 'destroy': 0}
     _stub_sdl(monkeypatch, calls)
-    from engine.renderers.sdl_renderer import SDLRenderer
+    from sage_engine.renderers.sdl_renderer import SDLRenderer
 
     class Img:
         width = 1

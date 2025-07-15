@@ -5,9 +5,10 @@ import pytest
 spec = importlib.util.find_spec("engine.mesh_utils")
 if not spec or spec.loader is None:
     pytest.xfail("engine.mesh_utils unavailable")
-import engine.mesh_utils  # noqa: E402
+import sage_engine as engine  # noqa: E402
+import sage_engine.mesh_utils  # noqa: E402
 importlib.reload(engine.mesh_utils)
-from engine.mesh_utils import (  # noqa: E402
+from sage_engine.mesh_utils import (  # noqa: E402
     create_square_mesh,
     create_triangle_mesh,
     create_polygon_mesh,
@@ -54,7 +55,7 @@ def test_polygon_mesh_and_editing():
 
 
 def test_mesh_apply_matrix():
-    from engine.core.math2d import make_transform
+    from sage_engine.core.math2d import make_transform
 
     mesh = create_square_mesh()
     mat = make_transform(1, 2)
@@ -97,7 +98,7 @@ def test_difference_requires_shapely(monkeypatch):
     monkeypatch.setitem(sys.modules, "shapely.geometry.base", None)
     monkeypatch.setitem(sys.modules, "shapely.ops", None)
     import importlib
-    import engine.mesh_utils as mu
+    import sage_engine.mesh_utils as mu
     importlib.reload(mu)
     square = create_square_mesh()
     with pytest.raises(ImportError):
@@ -110,7 +111,7 @@ def test_union_requires_shapely(monkeypatch):
     monkeypatch.setitem(sys.modules, "shapely.geometry.base", None)
     monkeypatch.setitem(sys.modules, "shapely.ops", None)
     import importlib
-    import engine.mesh_utils as mu
+    import sage_engine.mesh_utils as mu
     importlib.reload(mu)
     square = create_square_mesh()
     with pytest.raises(ImportError):
@@ -129,7 +130,7 @@ def test_concave_polygon_no_shapely(monkeypatch):
     monkeypatch.setitem(sys.modules, "shapely.geometry.base", None)
     monkeypatch.setitem(sys.modules, "shapely.ops", None)
     import importlib
-    import engine.mesh_utils as mu
+    import sage_engine.mesh_utils as mu
     importlib.reload(mu)
     verts = [(0, 0), (2, 0), (2, 2), (1, 1), (0, 2)]
     mesh = mu.create_polygon_mesh(verts)
@@ -162,7 +163,7 @@ def test_triangulate_mesh_no_shapely(monkeypatch):
     monkeypatch.setitem(sys.modules, "shapely.geometry.base", None)
     monkeypatch.setitem(sys.modules, "shapely.ops", None)
     import importlib
-    import engine.mesh_utils as mu
+    import sage_engine.mesh_utils as mu
     importlib.reload(mu)
     poly = mu.create_polygon_mesh([(0, 0), (2, 0), (2, 2), (1, 1), (0, 2)])
     tri = mu.triangulate_mesh(poly)

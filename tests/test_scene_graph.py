@@ -1,5 +1,5 @@
 import unittest
-from engine.core.scene_graph import SceneGraph
+from sage_engine.core.scene_graph import SceneGraph
 
 
 class TestSceneGraph(unittest.TestCase):

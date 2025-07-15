@@ -8,12 +8,12 @@ sys.modules.setdefault('OpenGL.GL', types.ModuleType('OpenGL.GL'))
 
 from tests.test_opengl_tilemap import _stub_gl  # noqa: E402
 
-from engine.core.objects import object_to_dict, object_from_dict  # noqa: E402
+from sage_engine.core.objects import object_to_dict, object_from_dict  # noqa: E402
 
 
 def test_set_serialization_roundtrip(monkeypatch):
     _stub_gl(monkeypatch, {})
-    from engine.entities.game_object import GameObject
+    from sage_engine.entities.game_object import GameObject
     obj = GameObject(public_vars={'a', 'b'})
     data = object_to_dict(obj)
     assert set(data.get('public_vars', [])) == {'a', 'b'}

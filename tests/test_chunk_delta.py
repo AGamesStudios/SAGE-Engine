@@ -1,5 +1,5 @@
-from engine import chunk_delta
-from engine.chunk_delta import encode_ops, decode
+from sage_engine import chunk_delta
+from sage_engine.chunk_delta import encode_ops, decode
 
 
 def test_chunk_delta_roundtrip():

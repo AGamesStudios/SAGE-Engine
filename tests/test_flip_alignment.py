@@ -74,7 +74,7 @@ def _stub_sdl(monkeypatch, calls):
 def test_flip_does_not_shift(monkeypatch):
     calls = {}
     _stub_sdl(monkeypatch, calls)
-    from engine.renderers.sdl_renderer import SDLRenderer
+    from sage_engine.renderers.sdl_renderer import SDLRenderer
 
     class DummyObj:
         class Img:

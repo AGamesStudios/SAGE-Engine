@@ -93,11 +93,11 @@ import importlib  # noqa: E402
 if 'engine.core.scenes.scene' in sys.modules:
     importlib.reload(sys.modules['engine.core.scenes.scene'])
 
-from engine.core.engine import Engine  # noqa: E402
-from engine.core.extensions import EngineExtension  # noqa: E402
-from engine.core.settings import EngineSettings  # noqa: E402
-from engine.inputs import InputBackend  # noqa: E402
-from engine.renderers import Renderer  # noqa: E402
+from sage_engine.core.engine import Engine  # noqa: E402
+from sage_engine.core.extensions import EngineExtension  # noqa: E402
+from sage_engine.core.settings import EngineSettings  # noqa: E402
+from sage_engine.inputs import InputBackend  # noqa: E402
+from sage_engine.renderers import Renderer  # noqa: E402
 
 class DummyRenderer(Renderer):
     def __init__(self, width, height, title):
@@ -200,7 +200,7 @@ class AsyncObj(GameObject):
 
 
 def test_async_object_update():
-    from engine.core.scenes.scene import Scene
+    from sage_engine.core.scenes.scene import Scene
 
     scene = Scene(with_defaults=False)
     obj = AsyncObj()

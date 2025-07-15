@@ -1,4 +1,4 @@
-from engine.core.project import Project
+from sage_engine.core.project import Project
 
 
 def test_blank_project_load():

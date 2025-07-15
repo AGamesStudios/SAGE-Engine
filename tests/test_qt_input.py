@@ -23,7 +23,7 @@ qtcore.QEvent = types.SimpleNamespace(
 sys.modules.setdefault('PyQt6', types.ModuleType('PyQt6'))
 sys.modules['PyQt6.QtCore'] = qtcore
 
-from engine.inputs import get_input, INPUT_REGISTRY  # noqa: E402
+from sage_engine.inputs import get_input, INPUT_REGISTRY  # noqa: E402
 
 INPUT_REGISTRY.clear()
 cls = get_input('qt')

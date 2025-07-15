@@ -1,7 +1,7 @@
 import logging
 import pytest
-from engine import patchers
-from engine.extras import lua
+from sage_engine import patchers
+from sage_engine.extras import lua
 
 
 def test_load_python_patcher(tmp_path):

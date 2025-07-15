@@ -1,8 +1,8 @@
-from engine.core.engine import Engine
-from engine.core.settings import EngineSettings
-from engine.renderers import Renderer
-from engine.inputs import NullInput
-from engine.environment import Environment
+from sage_engine.core.engine import Engine
+from sage_engine.core.settings import EngineSettings
+from sage_engine.renderers import Renderer
+from sage_engine.inputs import NullInput
+from sage_engine.environment import Environment
 
 class DummyRenderer(Renderer):
     def __init__(self, width, height, title):

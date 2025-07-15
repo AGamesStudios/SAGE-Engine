@@ -1,10 +1,10 @@
 import pytest
-from engine.core.math2d import (
+from sage_engine.core.math2d import (
     make_transform,
     multiply_matrix,
     decompose_matrix,
 )
-from engine.entities.object import Transform2D
+from sage_engine.entities.object import Transform2D
 
 
 def test_matrix_multiply_and_decompose():

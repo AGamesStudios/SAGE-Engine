@@ -1,5 +1,5 @@
 import pytest
-from engine.logic.base import event_from_dict
+from sage_engine.logic.base import event_from_dict
 
 
 def test_invalid_condition_error():

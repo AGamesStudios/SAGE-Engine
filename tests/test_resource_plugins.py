@@ -1,4 +1,4 @@
-from engine.formats import load_resource, save_resource
+from sage_engine.formats import load_resource, save_resource
 
 def test_load_save_resource(tmp_path):
     path = tmp_path / "map.sagemap"

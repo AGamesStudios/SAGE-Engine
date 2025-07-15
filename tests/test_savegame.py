@@ -2,7 +2,7 @@ import json
 import sys
 import types
 import pytest
-from engine.inputs import InputBackend  # noqa: E402
+from sage_engine.inputs import InputBackend  # noqa: E402
 
 
 def _setup_stubs():
@@ -51,11 +51,11 @@ def stubs(monkeypatch):
 
 
 def test_save_and_load(tmp_path):
-    from engine.entities.game_object import GameObject
-    from engine.core.engine import Engine
-    from engine.core.scenes.scene import Scene
-    from engine.renderers.null_renderer import NullRenderer
-    from engine.savegame import save_game, load_game
+    from sage_engine.entities.game_object import GameObject
+    from sage_engine.core.engine import Engine
+    from sage_engine.core.scenes.scene import Scene
+    from sage_engine.renderers.null_renderer import NullRenderer
+    from sage_engine.savegame import save_game, load_game
 
     scene = Scene(with_defaults=False)
     obj = GameObject(name="player")

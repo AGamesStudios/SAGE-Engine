@@ -24,7 +24,7 @@ jobs:
       - run: ruff check .
       - run: python scripts/build_nano_core.py
       - run: python scripts/check_changelog.py
-      - run: PYTHONPATH=. pytest -q
+      - run: pytest -q
       - run: cargo test --manifest-path native/nano_core/Cargo.toml
         shell: bash
       - run: python scripts/build_docs.py

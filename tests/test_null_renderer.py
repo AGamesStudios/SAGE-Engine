@@ -89,9 +89,9 @@ class Camera(GameObject):
 cam_mod.Camera = Camera
 sys.modules.setdefault('engine.core.camera', cam_mod)
 
-from engine.core.engine import Engine  # noqa: E402
-from engine.core.scenes.scene import Scene  # noqa: E402
-from engine.inputs import InputBackend  # noqa: E402
+from sage_engine.core.engine import Engine  # noqa: E402
+from sage_engine.core.scenes.scene import Scene  # noqa: E402
+from sage_engine.inputs import InputBackend  # noqa: E402
 
 class DummyInput(InputBackend):
     def __init__(self, widget=None):

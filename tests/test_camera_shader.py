@@ -3,15 +3,15 @@ import pytest
 
 try:
     importlib.import_module("OpenGL.GL")
-    from engine.renderers.shader import Shader
+    from sage_engine.renderers.shader import Shader
     _HAVE = True
 except Exception as exc:  # pragma: no cover - optional dependency
     _HAVE = False
     _reason = str(exc)
     Shader = None
 
-from engine.core.camera import Camera
-from engine.core.objects import object_to_dict, object_from_dict
+from sage_engine.core.camera import Camera
+from sage_engine.core.objects import object_to_dict, object_from_dict
 
 
 @pytest.fixture(autouse=True)

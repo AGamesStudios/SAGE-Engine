@@ -2,7 +2,7 @@ import mmap
 import tempfile
 import pytest
 
-from engine.smart_slice import SmartSliceAllocator, SLICE_SIZE
+from sage_engine.smart_slice import SmartSliceAllocator, SLICE_SIZE
 
 
 def test_smart_slice_allocator_wrap_and_free():

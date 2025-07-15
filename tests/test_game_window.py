@@ -54,7 +54,7 @@ sys.modules.setdefault('PyQt6', types.ModuleType('PyQt6'))
 sys.modules['PyQt6.QtWidgets'] = qtwidgets
 sys.modules['PyQt6.QtCore'] = qtcore
 
-from engine import game_window  # noqa: E402
+from sage_engine import game_window  # noqa: E402
 
 class DummyEngine:
     def __init__(self):

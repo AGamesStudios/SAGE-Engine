@@ -19,8 +19,8 @@ sh_mod = types.ModuleType('OpenGL.GL.shaders')
 sh_mod.compileProgram = lambda *a, **k: 1
 sh_mod.compileShader = lambda *a, **k: 1
 sys.modules.setdefault('OpenGL.GL.shaders', sh_mod)
-from engine.core.engine import Engine  # noqa: E402
-from engine.core.scene_file import SceneFile  # noqa: E402
+from sage_engine.core.engine import Engine  # noqa: E402
+from sage_engine.core.scene_file import SceneFile  # noqa: E402
 
 
 def test_sdl_renderer_run():

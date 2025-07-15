@@ -15,7 +15,7 @@ import re
 from typing import Callable, Any, Coroutine
 import weakref
 
-from engine.utils.config import get as cfg_get
+from sage_engine.utils.config import get as cfg_get
 
 # name of the environment variable overriding the default plugin directory
 PLUGIN_DIR_ENV = "SAGE_PLUGIN_DIR"
@@ -352,7 +352,7 @@ def _call_plugin_init(module, target, instance):
             reg = getattr(plugin_obj, 'register_logic', None)
             if callable(reg):
                 try:
-                    from engine.logic import register_condition, register_action
+                    from sage_engine.logic import register_condition, register_action
                     _run_sync_or_async(reg, register_condition, register_action)
                 except Exception:
                     logger.exception('register_logic failed in %s', module.__name__)
@@ -369,7 +369,7 @@ def _call_plugin_init(module, target, instance):
         reg = getattr(module, 'register_logic', None)
         if callable(reg):
             try:
-                from engine.logic import register_condition, register_action
+                from sage_engine.logic import register_condition, register_action
                 _run_sync_or_async(reg, register_condition, register_action)
             except Exception:
                 logger.exception('register_logic failed in %s', module.__name__)

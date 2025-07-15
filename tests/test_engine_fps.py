@@ -1,8 +1,8 @@
 import time
 import pytest
 
-from engine.core.engine import Engine
-from engine.core.scenes.scene import Scene
+from sage_engine.core.engine import Engine
+from sage_engine.core.scenes.scene import Scene
 from tests.test_null_renderer import NullRendererStub, DummyInput
 
 

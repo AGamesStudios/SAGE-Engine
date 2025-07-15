@@ -1,6 +1,6 @@
 import os
 import types
-from engine.plugins import PluginManager
+from sage_engine.plugins import PluginManager
 
 
 def test_plugin_unload_and_reload(tmp_path):

@@ -1,4 +1,4 @@
-from engine.nano_merge import merge_ops
+from sage_engine.nano_merge import merge_ops
 
 
 def test_merge_ops_sort_and_match():

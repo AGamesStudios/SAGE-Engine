@@ -1,4 +1,4 @@
-from engine.utils.diagnostics import analyze_exception
+from sage_engine.utils.diagnostics import analyze_exception
 
 
 def test_analyze_exception_basic():

@@ -1,4 +1,4 @@
-from engine.nano_sched import PatcherTask, run_sched
+from sage_engine.nano_sched import PatcherTask, run_sched
 
 
 def test_run_sched_dependencies():

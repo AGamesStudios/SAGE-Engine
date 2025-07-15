@@ -1,6 +1,6 @@
 import types
 import pytest
-from engine.plugins import PluginManager, PluginBase
+from sage_engine.plugins import PluginManager, PluginBase
 
 def test_load_module_plugin(tmp_path):
     p = tmp_path / "p1.py"
@@ -18,7 +18,7 @@ class MyPlugin(PluginBase):
 def test_load_object_plugin(tmp_path):
     p = tmp_path / "p2.py"
     p.write_text(
-        "from engine.plugins import PluginBase\n"
+        "from sage_engine.plugins import PluginBase\n"
         "class P(PluginBase):\n"
         "    def init_engine(self, engine):\n"
         "        engine.v = 1\n"
@@ -62,7 +62,7 @@ def test_async_module_plugin(tmp_path):
 def test_async_object_plugin(tmp_path):
     p = tmp_path / "async_obj.py"
     p.write_text(
-        "from engine.plugins import PluginBase\n"
+        "from sage_engine.plugins import PluginBase\n"
         "class P(PluginBase):\n"
         "    async def init_engine(self, engine):\n"
         "        engine.async_val = 5\n"

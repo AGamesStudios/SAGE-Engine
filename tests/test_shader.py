@@ -3,13 +3,13 @@ import pytest
 
 try:
     importlib.import_module("OpenGL.GL")
-    from engine.renderers.shader import Shader
+    from sage_engine.renderers.shader import Shader
     _HAVE = True
 except Exception as exc:  # pragma: no cover - optional dependency
     _HAVE = False
     _reason = str(exc)
     Shader = None
-from engine.entities.game_object import GameObject
+from sage_engine.entities.game_object import GameObject
 
 
 @pytest.fixture(autouse=True)

@@ -1,5 +1,5 @@
 import types
-from engine.plugins import PluginManager
+from sage_engine.plugins import PluginManager
 
 
 def test_plugins_same_filename(tmp_path):

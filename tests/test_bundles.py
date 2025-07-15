@@ -1,5 +1,5 @@
 import sage
-from engine import bundles, adaptors
+from sage_engine import bundles, adaptors
 
 
 def test_load_bundle():

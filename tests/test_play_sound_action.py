@@ -1,6 +1,6 @@
 import types
 
-import engine.logic.actions.playsound as playsound_mod
+import sage_engine.logic.actions.playsound as playsound_mod
 
 class DummySound:
     def __init__(self):

@@ -24,9 +24,12 @@ sys.modules['engine.log'] = log_mod
 lang_mod = types.ModuleType('engine.lang')
 lang_mod.LANGUAGES = {}
 sys.modules['engine.lang'] = lang_mod
+utils_mod = types.ModuleType('engine.utils')
+sys.modules['engine.utils'] = utils_mod
+sys.modules['engine.utils.log'] = log_mod
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-base_path = ROOT / 'src' / 'engine' / 'logic'
+base_path = ROOT / 'src' / 'sage_engine' / 'logic'
 
 spec = importlib.util.spec_from_file_location('engine.logic.base', base_path / 'base.py')
 logic_base = importlib.util.module_from_spec(spec)

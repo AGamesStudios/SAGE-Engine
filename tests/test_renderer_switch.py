@@ -2,7 +2,7 @@ import importlib.util
 from pathlib import Path
 from tests.test_opengl_tilemap import _stub_gl
 from tests.test_viewport_sync import _setup_qt
-from engine.renderers import register_renderer, Renderer
+from sage_engine.renderers import register_renderer, Renderer
 
 class DummySDL(Renderer):
     def __init__(self, width=0, height=0, title=None, widget=None, vsync=False, keep_aspect=False):

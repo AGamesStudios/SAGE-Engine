@@ -1,9 +1,9 @@
 import importlib
 import sys
 import pytest
-import engine
+import sage_engine as engine
 
-from engine.formats import (
+from sage_engine.formats import (
     load_sageaudio,
     save_sageaudio,
     load_sagemesh,

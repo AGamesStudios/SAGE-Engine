@@ -4,7 +4,7 @@ import sys
 
 pytest.importorskip("OpenGL.GL")
 
-from engine.gizmos import Gizmo
+from sage_engine.gizmos import Gizmo
 
 sys.modules.pop("engine.renderers", None)
 sys.modules.pop("engine.renderers.shader", None)

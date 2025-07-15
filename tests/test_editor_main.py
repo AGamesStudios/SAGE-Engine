@@ -1,6 +1,6 @@
 from sage_editor import main, Editor
-from engine.utils import log as elog
-import engine.core.engine as core_engine
+from sage_engine.utils import log as elog
+import sage_engine.core.engine as core_engine
 
 
 def test_main_no_window(monkeypatch):

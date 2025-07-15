@@ -11,8 +11,8 @@ from ..core.math2d import (
     normalize_angle,
 )
 from PIL import Image  # type: ignore[import-not-found]
-from engine.renderers import Shader
-from engine.mesh_utils import Mesh
+from sage_engine.renderers import Shader
+from sage_engine.mesh_utils import Mesh
 from ..animation import Animation
 from ..core.objects import register_object
 from .object import Object, Transform2D

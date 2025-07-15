@@ -19,7 +19,7 @@ def _stub_sdl(monkeypatch):
 
 def test_gamepad_backend(monkeypatch):
     _stub_sdl(monkeypatch)
-    from engine.inputs.gamepad import GamepadInput
+    from sage_engine.inputs.gamepad import GamepadInput
     gp = GamepadInput()
     gp.poll()
     assert gp.is_button_down(0)

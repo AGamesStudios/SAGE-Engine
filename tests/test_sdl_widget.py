@@ -10,7 +10,7 @@ from tests.test_sdl_render_extra import _stub_sdl
 def test_sdl_widget_creation(monkeypatch):
     calls = {'from': None}
     _stub_sdl(monkeypatch, calls)
-    import engine.renderers.sdl_renderer as sdl_mod
+    import sage_engine.renderers.sdl_renderer as sdl_mod
     def create_from(handle):
         calls['from'] = handle
         return object()

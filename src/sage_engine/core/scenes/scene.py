@@ -7,7 +7,7 @@ from typing import Optional
 from ...utils import load_json
 
 
-from engine.entities.game_object import GameObject
+from sage_engine.entities.game_object import GameObject
 from ..camera import Camera
 from ..objects import object_from_dict, object_to_dict
 from ...utils.log import logger

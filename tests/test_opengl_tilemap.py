@@ -1,6 +1,6 @@
 import sys
 import types
-from engine.entities.tile_map import TileMap
+from sage_engine.entities.tile_map import TileMap
 
 
 def _stub_gl(monkeypatch, calls):
@@ -151,7 +151,7 @@ def test_apply_projection_updates(monkeypatch):
     r = ogl.OpenGLRenderer(width=640, height=480)
     r._apply_projection(None)
     proj = r.get_projection()
-    from engine.core import math2d
+    from sage_engine.core import math2d
     assert proj == math2d.make_ortho(-320.0, 320.0, -240.0, 240.0)
 
 
@@ -178,12 +178,12 @@ def test_projection_orientation(monkeypatch):
         def update(self):
             pass
 
-    from engine.utils import units
+    from sage_engine.utils import units
     units.set_y_up(True)
     monkeypatch.setattr(ogl, 'GLWidget', DummyWidget)
     r = ogl.OpenGLRenderer(width=640, height=480)
     r._apply_projection(None)
-    from engine.core import math2d
+    from sage_engine.core import math2d
     assert r.get_projection() == math2d.make_ortho(-320.0, 320.0, -240.0, 240.0)
     units.set_y_up(False)
     r._apply_projection(None)

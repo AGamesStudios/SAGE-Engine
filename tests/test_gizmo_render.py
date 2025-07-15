@@ -1,7 +1,7 @@
 import sys
 import types
 
-import engine.gizmos as gizmos
+import sage_engine.gizmos as gizmos
 
 def _stub_gl(monkeypatch, calls):
     gl = types.ModuleType('OpenGL.GL')
@@ -47,7 +47,7 @@ def _load_gizmos(monkeypatch, calls):
     monkeypatch.setitem(sys.modules, 'engine.entities.game_object', dummy_go_mod)
     import importlib.util
     from pathlib import Path
-    path = Path('src/engine/renderers/opengl/gizmos.py')
+    path = Path('src/sage_engine/renderers/opengl/gizmos.py')
     spec = importlib.util.spec_from_file_location('ogl_gizmos', path)
     module = importlib.util.module_from_spec(spec)
     assert spec.loader

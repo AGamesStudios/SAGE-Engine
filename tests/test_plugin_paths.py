@@ -1,6 +1,6 @@
 import types
 import pytest
-from engine.plugins import PluginManager
+from sage_engine.plugins import PluginManager
 
 
 def test_plugin_rejects_outside_relative(tmp_path):

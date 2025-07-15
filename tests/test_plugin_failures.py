@@ -16,7 +16,7 @@ class _EPS(list):
         return self if group == self.group else []
 
 def test_object_plugin_warning(monkeypatch, caplog):
-    from engine.core import objects
+    from sage_engine.core import objects
     caplog.set_level(logging.WARNING)
     eps = _EPS('sage_engine.objects')
     monkeypatch.setattr(metadata, 'entry_points', lambda: eps)
@@ -26,7 +26,7 @@ def test_object_plugin_warning(monkeypatch, caplog):
     assert 'Failed object plugins: bad1, bad2' in caplog.text
 
 def test_input_plugin_error(monkeypatch, caplog):
-    from engine import inputs
+    from sage_engine import inputs
     caplog.set_level(logging.WARNING)
     eps = _EPS('sage_engine.inputs')
     monkeypatch.setattr(metadata, 'entry_points', lambda: eps)
@@ -36,7 +36,7 @@ def test_input_plugin_error(monkeypatch, caplog):
     assert 'Failed input plugins: bad1, bad2' in caplog.text
 
 def test_renderer_plugin_error(monkeypatch, caplog):
-    from engine import renderers
+    from sage_engine import renderers
     caplog.set_level(logging.WARNING)
     eps = _EPS('sage_engine.renderers')
     monkeypatch.setattr(metadata, 'entry_points', lambda: eps)
@@ -48,10 +48,10 @@ def test_renderer_plugin_error(monkeypatch, caplog):
 
 
 def test_engine_plugin_error(monkeypatch):
-    from engine.core.scenes.scene import Scene
-    from engine.core.engine import Engine
-    from engine.renderers.null_renderer import NullRenderer
-    from engine.inputs.null_input import NullInput
+    from sage_engine.core.scenes.scene import Scene
+    from sage_engine.core.engine import Engine
+    from sage_engine.renderers.null_renderer import NullRenderer
+    from sage_engine.inputs.null_input import NullInput
 
     def bad_loader(engine, paths=None):
         raise RuntimeError('boom')
@@ -64,7 +64,7 @@ def test_engine_plugin_error(monkeypatch):
 
 
 def test_logic_plugin_error(monkeypatch):
-    from engine.logic import base as logic_base
+    from sage_engine.logic import base as logic_base
     import builtins
 
     orig_import = builtins.__import__
@@ -80,11 +80,11 @@ def test_logic_plugin_error(monkeypatch):
 
 
 def test_print_action_skips_none(caplog):
-    from engine.logic.actions.print import Print
-    from engine.core.scenes.scene import Scene
-    from engine.core.engine import Engine
-    from engine.renderers.null_renderer import NullRenderer
-    from engine.inputs.null_input import NullInput
+    from sage_engine.logic.actions.print import Print
+    from sage_engine.core.scenes.scene import Scene
+    from sage_engine.core.engine import Engine
+    from sage_engine.renderers.null_renderer import NullRenderer
+    from sage_engine.inputs.null_input import NullInput
 
     scene = Scene(with_defaults=False)
     eng = Engine(scene=scene, renderer=NullRenderer, input_backend=NullInput)
@@ -95,7 +95,7 @@ def test_print_action_skips_none(caplog):
 
 
 def test_plugin_missing_dependency(tmp_path, caplog):
-    from engine.plugins import PluginManager
+    from sage_engine.plugins import PluginManager
 
     bad = tmp_path / "bad.py"
     bad.write_text("import nonexistent\n")

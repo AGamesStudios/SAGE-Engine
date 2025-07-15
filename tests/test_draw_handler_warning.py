@@ -2,7 +2,7 @@ import sys
 import logging
 import types
 
-from engine.renderers import register_draw_handler
+from sage_engine.renderers import register_draw_handler
 
 
 def test_draw_handler_warning(monkeypatch, caplog):

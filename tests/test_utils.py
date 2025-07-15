@@ -1,7 +1,7 @@
 import unittest
 import tempfile
 import os
-from engine.utils import load_json
+from sage_engine.utils import load_json
 
 class TestLoadJson(unittest.TestCase):
     def test_load_with_trailing_commas_and_comments(self):

@@ -1,5 +1,5 @@
-from engine.core.resources import ResourceManager
-from engine.cache import SAGE_CACHE
+from sage_engine.core.resources import ResourceManager
+from sage_engine.cache import SAGE_CACHE
 
 
 def test_shared_cache(tmp_path):

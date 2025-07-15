@@ -23,10 +23,10 @@ shaders_mod.compileShader = lambda *a, **k: 1
 mesh_mod = sys.modules['engine.mesh_utils']
 mesh_mod.Mesh = type('Mesh', (), {})
 
-from engine.core.scenes.scene import Scene  # noqa: E402
-from engine.core.engine import Engine  # noqa: E402
-from engine.renderers.null_renderer import NullRenderer  # noqa: E402
-from engine.inputs.null_input import NullInput  # noqa: E402
+from sage_engine.core.scenes.scene import Scene  # noqa: E402
+from sage_engine.core.engine import Engine  # noqa: E402
+from sage_engine.renderers.null_renderer import NullRenderer  # noqa: E402
+from sage_engine.inputs.null_input import NullInput  # noqa: E402
 
 
 def test_async_update_called(monkeypatch):

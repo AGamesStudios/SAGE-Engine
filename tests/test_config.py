@@ -1,5 +1,6 @@
 import types
-import engine.plugins
+import sage_engine.plugins
+import sage_engine as engine
 
 
 def test_plugin_config(tmp_path, monkeypatch):
@@ -9,7 +10,7 @@ def test_plugin_config(tmp_path, monkeypatch):
     (plugdir / "c.py").write_text("def init_engine(e): e.hit=True")
     cfg.write_text(f"[plugins]\ndir='{plugdir}'\n")
     monkeypatch.setenv("SAGE_CONFIG", str(cfg))
-    import engine.utils.config as cfgmod
+    import sage_engine.utils.config as cfgmod
     cfgmod._config_cache = None
     obj = types.SimpleNamespace()
     engine.plugins.PluginManager('engine').load(obj)

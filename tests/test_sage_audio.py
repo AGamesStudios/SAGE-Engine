@@ -2,7 +2,7 @@ import wave
 import struct
 import math
 
-from engine import play_sound
+from sage_engine import play_sound
 
 
 def make_wave(path: str) -> None:

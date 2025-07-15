@@ -1,8 +1,8 @@
 import sys
 import types
 
-from engine.animation import Animation, Frame  # noqa: E402
-from engine.formats import load_sageanimation, save_sageanimation  # noqa: E402
+from sage_engine.animation import Animation, Frame  # noqa: E402
+from sage_engine.formats import load_sageanimation, save_sageanimation  # noqa: E402
 
 
 def test_save_and_load(tmp_path):
@@ -45,7 +45,7 @@ def test_gameobject_animation(monkeypatch):
     shader_mod.Shader = type('Shader', (), {'from_files': staticmethod(lambda v, f: None)})
     monkeypatch.setitem(sys.modules, 'engine.renderers.shader', shader_mod)
 
-    from engine.entities.game_object import GameObject  # noqa: E402
+    from sage_engine.entities.game_object import GameObject  # noqa: E402
 
     anim = Animation([Frame('a.png', 0.05), Frame('b.png', 0.05)])
     obj = GameObject(animation=anim)

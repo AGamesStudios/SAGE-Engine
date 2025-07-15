@@ -1,5 +1,5 @@
-from engine.core.scenes.scene import Scene
-from engine.formats import save_sagelogic, load_sagelogic
+from sage_engine.core.scenes.scene import Scene
+from sage_engine.formats import save_sagelogic, load_sagelogic
 
 
 def test_sagelogic_roundtrip(tmp_path):

@@ -2,7 +2,7 @@ import logging
 import os
 import atexit
 import faulthandler
-from engine.utils.config import get as cfg_get
+from sage_engine.utils.config import get as cfg_get
 
 LOG_DIR = os.path.expanduser(
     str(cfg_get('logs.dir', os.path.join('~', '.cache', 'sage', 'logs')))

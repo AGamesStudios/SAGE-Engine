@@ -2,7 +2,7 @@ import sys
 import types
 import ctypes
 
-from engine import gizmos
+from sage_engine import gizmos
 
 
 def _stub_sdl(monkeypatch, calls):
@@ -64,7 +64,7 @@ def _stub_sdl(monkeypatch, calls):
 def test_gizmo_thickness_scales(monkeypatch):
     calls = {'lines': 0}
     _stub_sdl(monkeypatch, calls)
-    from engine.renderers.sdl_renderer import SDLRenderer
+    from sage_engine.renderers.sdl_renderer import SDLRenderer
 
     cam = types.SimpleNamespace(zoom=1.0)
     r = SDLRenderer(2, 2, 't')

@@ -1,4 +1,4 @@
-from engine.logic import Event, EventSystem
+from sage_engine.logic import Event, EventSystem
 
 class DummyAct:
     def __init__(self):

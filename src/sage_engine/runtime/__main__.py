@@ -1,4 +1,4 @@
-from engine.core.engine import main as _main
+from sage_engine.core.engine import main as _main
 import sys
 
 def main(argv=None):

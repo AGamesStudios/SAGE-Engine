@@ -2,7 +2,7 @@ import sys
 import types
 import ctypes
 
-from engine.entities.tile_map import TileMap
+from sage_engine.entities.tile_map import TileMap
 
 
 def _stub_sdl(monkeypatch):
@@ -74,7 +74,7 @@ def _stub_sdl(monkeypatch):
 def test_tilemap_render_cached(monkeypatch):
     calls = _stub_sdl(monkeypatch)
     monkeypatch.setitem(sys.modules, 'engine.renderers.opengl.drawing', types.SimpleNamespace(parse_color=lambda c: (255,0,0,255)))
-    from engine.renderers.sdl_renderer import SDLRenderer
+    from sage_engine.renderers.sdl_renderer import SDLRenderer
 
     tm = TileMap()
     tm.width = tm.height = 1

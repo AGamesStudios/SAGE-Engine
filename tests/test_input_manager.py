@@ -1,4 +1,4 @@
-from engine.inputs import InputManager, get_input
+from sage_engine.inputs import InputManager, get_input
 
 
 class DummyBackend:

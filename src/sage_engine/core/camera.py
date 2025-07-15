@@ -4,7 +4,7 @@ from .objects import register_object
 from ..logic import EventSystem, event_from_dict
 from ..utils.log import logger
 from ..utils import units
-from engine.renderers import Shader
+from sage_engine.renderers import Shader
 
 @register_object(
     'camera',
