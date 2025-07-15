@@ -26,8 +26,8 @@ def main() -> None:
     layout.addWidget(label)
     menu_bar = QtW.QMenuBar()
     menu = menu_bar.addMenu("Theme")
-    dark = QtW.QAction("Dark", menu)
-    light = QtW.QAction("Light", menu)
+    dark = QtG.QAction("Dark", menu)
+    light = QtG.QAction("Light", menu)
 
     def switch(name: str) -> None:
         theme.set_theme(str(Path(__file__).with_name(f"{name}.vel")))
