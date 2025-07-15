@@ -4,7 +4,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, List
 
-import yaml
+try:
+    import yaml
+except ModuleNotFoundError as exc:  # pragma: no cover - missing optional dep
+    raise RuntimeError(
+        "PyYAML is required for theme support. Install the 'PyYAML' package."
+    ) from exc
 
 
 @dataclass
