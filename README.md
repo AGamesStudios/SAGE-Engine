@@ -15,6 +15,7 @@ GUI backends are loaded via plugins. Install the desired extra:
 ```bash
 pip install .[qt6]   # PyQt 6 window
 pip install .[tk]    # Tk window
+pip install .[opengl]  # OpenGL renderer
 ```
 
 Run examples with `--gui` to choose a GUI backend. Use `--render` to pick a render backend:
