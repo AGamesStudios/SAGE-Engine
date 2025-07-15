@@ -8,6 +8,7 @@ import pytest
 # Create minimal engine package so logic modules with relative imports load.
 _orig_engine = sys.modules.get('engine')
 _orig_logic = sys.modules.get('engine.logic')
+_orig_utils = sys.modules.get('engine.utils')
 engine_pkg = types.ModuleType('engine')
 sys.modules['engine'] = engine_pkg
 logic_pkg = types.ModuleType('engine.logic')
@@ -67,6 +68,10 @@ if _orig_logic is not None:
     sys.modules['engine.logic'] = _orig_logic
 else:
     sys.modules.pop('engine.logic', None)
+if _orig_utils is not None:
+    sys.modules['engine.utils'] = _orig_utils
+else:
+    sys.modules.pop('engine.utils', None)
 importlib.invalidate_caches()
 
 class DummyObj:

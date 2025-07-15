@@ -5,11 +5,14 @@ basic storage APIs.
 
 ```bash
 pip install -r requirements.txt
-PYTHONPATH=src python hello_sprite.py
+pip install -e .
+python examples/templates/hello_sprite_py/hello_sprite.py
 ```
 
 ## Hello Sprite
-Create `hello_sprite.py` with the following code:
+You can use the ready-made example at
+`examples/templates/hello_sprite_py/hello_sprite.py` or create
+`hello_sprite.py` yourself with the following code:
 ```python
 from sage_engine import Engine, GameObject, ResourceManager
 

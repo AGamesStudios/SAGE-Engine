@@ -5,7 +5,7 @@ import shutil
 
 import sage_engine as engine
 import sage_engine.plugins
-import sage_engine.utils.config as cfgmod
+import engine.utils.config as cfgmod
 
 
 def test_plugin_dir_env(monkeypatch, tmp_path):
