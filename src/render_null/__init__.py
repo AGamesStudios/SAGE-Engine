@@ -1,0 +1,1 @@
+"""Null render backend plugin."""

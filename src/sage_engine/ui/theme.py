@@ -4,12 +4,32 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, List
 
-try:
+try:  # pragma: no cover - optional dependency
     import yaml
-except ModuleNotFoundError as exc:  # pragma: no cover - missing optional dep
-    raise RuntimeError(
-        "PyYAML is required for theme support. Install the 'PyYAML' package."
-    ) from exc
+except ModuleNotFoundError:  # pragma: no cover - fallback parser
+    yaml = None  # type: ignore
+
+
+def _parse_simple(path: Path) -> dict[str, Any]:
+    data: dict[str, Any] = {"colors": {}, "font": {}, "radius": 0}
+    current = None
+    for line in path.read_text().splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        if line.endswith(":"):
+            key = line[:-1]
+            current = data.setdefault(key, {})
+            continue
+        key, value = line.split(":", 1)
+        value = value.strip().strip("'").strip('"')
+        if current is None:
+            data[key] = value
+        elif key == "radius":
+            data[key] = int(value)
+        else:
+            current[key] = int(value) if value.isdigit() else value
+    return data
 
 
 @dataclass
@@ -20,7 +40,10 @@ class Theme:
 
     @classmethod
     def load(cls, path: str | Path) -> "Theme":
-        data = yaml.safe_load(Path(path).read_text())
+        if yaml is not None:
+            data = yaml.safe_load(Path(path).read_text())
+        else:
+            data = _parse_simple(Path(path))
         return cls(
             colors=data.get("colors", {}),
             font=data.get("font", {}),

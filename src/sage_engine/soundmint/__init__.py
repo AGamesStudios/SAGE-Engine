@@ -6,7 +6,10 @@ import hashlib
 import os
 from pathlib import Path
 
-from pydub import AudioSegment
+try:  # pragma: no cover - optional dependency
+    from pydub import AudioSegment
+except ModuleNotFoundError:  # pragma: no cover - dummy converter
+    AudioSegment = None
 
 
 def _sha1(path: Path) -> str:
@@ -37,11 +40,15 @@ def convert(src_path: str, target_fmt: str) -> Path:
     if dest.exists() and dest.stat().st_mtime >= src.stat().st_mtime:
         return dest
 
-    try:
-        audio = AudioSegment.from_file(src)
-        audio.export(dest, format=target_fmt)
-    except Exception:
-        # Invalid or unsupported file; fall back to simple copy
+    if AudioSegment is not None:
+        try:
+            audio = AudioSegment.from_file(src)
+            audio.export(dest, format=target_fmt)
+        except Exception:
+            import shutil
+
+            shutil.copy2(src, dest)
+    else:  # pragma: no cover - converter unavailable
         import shutil
 
         shutil.copy2(src, dest)

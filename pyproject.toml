@@ -17,7 +17,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-packages = ["sage_engine", "gui_qt6", "gui_tk"]
+packages = ["sage_engine", "gui_qt6", "gui_tk", "render_null"]
 py-modules = ["sage_cli"]
 
 [project.scripts]
@@ -26,3 +26,6 @@ sage = "sage_cli:main"
 [project.entry-points.sage_gui]
 qt6 = "gui_qt6.backend:PyQtBackend"
 tk = "gui_tk.backend:TkBackend"
+
+[project.entry-points.sage_render]
+null = "render_null.backend:NullRenderBackend"
