@@ -28,8 +28,9 @@ sage run --gui list  # show available backends
 See [Writing your own GUI backend](docs/writing_gui_backend.md) for details.
 The folder `examples/plugins/gui_dummy` contains a minimal plugin template.
 Short guides: [Audio](docs/audio_quickstart.md),
-[Physics](docs/physics_quickstart.md) and
-[UI](docs/ui_quickstart.md).
+[Physics](docs/physics_quickstart.md),
+[UI](docs/ui_quickstart.md) and
+[Tilemap](docs/tilemap_quickstart.md).
 
 ## Папки проекта
 

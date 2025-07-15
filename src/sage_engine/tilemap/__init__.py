@@ -1,8 +1,10 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 import xml.etree.ElementTree as ET
+
+from .. import physics
 
 
 def _parse_csv(data: str) -> list[int]:
@@ -14,23 +16,92 @@ class TileLayer:
     width: int
     height: int
     tiles: list[int]
-    parallax: float = 1.0
+    parallax_x: float = 1.0
+    parallax_y: float = 1.0
+    bodies: list[physics.Body] = field(default_factory=list)
+
+    def draw_offset(self, cam_x: float, cam_y: float) -> tuple[float, float]:
+        """Return drawing offset based on camera position and parallax."""
+        return cam_x * self.parallax_x, cam_y * self.parallax_y
+
+    def grid(self) -> list[tuple[int, int]]:
+        """Return tile grid coordinates for debug rendering."""
+        return [(x, y) for y in range(self.height) for x in range(self.width)]
 
     @classmethod
-    def from_tmx(cls, path: str | Path, layer: int = 0, *, parallax: float = 1.0) -> "TileLayer":
+    def from_tmx(
+        cls,
+        path: str | Path,
+        layer: int = 0,
+        *,
+        world: physics.World | None = None,
+    ) -> "TileLayer":
+        """Load one layer from a TMX map.
+
+        If *world* is provided, tiles with ``collidable=true`` create static
+        bodies in that physics world.
+        """
+
         tree = ET.parse(path)
         root = tree.getroot()
-        layers = root.findall('layer')
+
+        # gather collidable tile ids
+        collidable: set[int] = set()
+        for ts in root.findall("tileset"):
+            firstgid = int(ts.attrib.get("firstgid", "1"))
+            for tile in ts.findall("tile"):
+                props = tile.find("properties")
+                if props is None:
+                    continue
+                for prop in props.findall("property"):
+                    if prop.attrib.get("name") == "collidable" and prop.attrib.get(
+                        "value", "false"
+                    ) in {"true", "1"}:
+                        collidable.add(firstgid + int(tile.attrib.get("id", "0")))
+
+        layers = root.findall("layer")
         if not layers:
-            raise ValueError('no layers in map')
+            raise ValueError("no layers in map")
         lyr = layers[layer]
-        width = int(lyr.attrib['width'])
-        height = int(lyr.attrib['height'])
-        data = lyr.find('data')
-        if data is None or data.get('encoding') != 'csv':
-            raise ValueError('only csv-encoded layers supported')
-        tiles = _parse_csv(data.text or '')
-        return cls(width, height, tiles, parallax=parallax)
+
+        width = int(lyr.attrib["width"])
+        height = int(lyr.attrib["height"])
+        parallax_x = float(
+            lyr.attrib.get(
+                "parallaxx", lyr.attrib.get("parallax_x", lyr.attrib.get("parallax", 1))
+            )
+        )
+        parallax_y = float(
+            lyr.attrib.get(
+                "parallaxy", lyr.attrib.get("parallax_y", lyr.attrib.get("parallax", 1))
+            )
+        )
+        props = lyr.find("properties")
+        if props is not None:
+            for prop in props.findall("property"):
+                if prop.attrib.get("name") == "parallax":
+                    val = float(prop.attrib.get("value", "1"))
+                    parallax_x = parallax_y = val
+
+        data = lyr.find("data")
+        if data is None or data.get("encoding") != "csv":
+            raise ValueError("only csv-encoded layers supported")
+        tiles = _parse_csv(data.text or "")
+
+        tilewidth = int(root.attrib.get("tilewidth", "32"))
+        tileheight = int(root.attrib.get("tileheight", "32"))
+
+        bodies: list[physics.Body] = []
+        if world is not None:
+            for y in range(height):
+                for x in range(width):
+                    gid = tiles[y * width + x]
+                    if gid in collidable:
+                        bodies.append(
+                            world.create_box(x=x * tilewidth, y=y * tileheight, behaviour="static")
+                        )
+
+        return cls(width, height, tiles, parallax_x, parallax_y, bodies)
 
 
 def autowang(layer: TileLayer, offset: int = 1) -> None:
