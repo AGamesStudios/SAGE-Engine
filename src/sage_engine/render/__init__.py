@@ -10,7 +10,7 @@ from typing import Optional
 from .base import RenderBackend
 from .headless_backend import HeadlessBackend
 from . import shader, material
-from .. import sprites, ui, physics, camera
+from .. import sprites, ui, physics, camera, text
 
 _BACKEND: Optional[RenderBackend] = None
 
@@ -73,6 +73,9 @@ def draw_frame(backend: RenderBackend | None = None, *, world: physics.World | N
     backend.set_camera(camera.matrix())
     backend.begin_frame()
     for mat, inst in sprites.collect_groups():
+        backend.set_material(mat)
+        backend.draw_material_group(inst)
+    for mat, inst in text.collect_groups():
         backend.set_material(mat)
         backend.draw_material_group(inst)
     if world is not None and physics.debug_xray:

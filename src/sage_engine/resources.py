@@ -23,9 +23,11 @@ class ResourceManager:
         self._cache: Dict[str, Texture] = {}
         self._atlas_slots: Dict[str, Texture] = {}
         self._atlas_textures: Dict[str, int] = {}
-        self.backend = render.get_backend()
+        self.backend = None
 
     def load_atlas(self, json_path: str) -> None:
+        if self.backend is None:
+            self.backend = render.get_backend()
         data = json.loads(Path(json_path).read_text())
         image_path = Path(json_path).with_suffix(".png")
         if "image" in data:
@@ -46,6 +48,8 @@ class ResourceManager:
             self._atlas_slots[name] = Texture(id=tex_id, uv=(u0, v0, u1, v1))
 
     def get_texture(self, path: str) -> Texture:
+        if self.backend is None:
+            self.backend = render.get_backend()
         atl = self._atlas_slots.get(path)
         if atl is not None:
             return atl
