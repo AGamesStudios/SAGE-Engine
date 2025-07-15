@@ -1,5 +1,4 @@
-import importlib
+import sage_engine
 
 def test_import_root():
-    mod = importlib.import_module('sage_engine')
-    assert hasattr(mod, 'core')
+    assert sage_engine

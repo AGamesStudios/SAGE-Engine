@@ -1,2 +1,2 @@
-class Audio:
+class _Stub:
     pass

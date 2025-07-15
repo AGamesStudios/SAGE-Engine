@@ -1,2 +1,2 @@
-class Core:
+class _Stub:
     pass

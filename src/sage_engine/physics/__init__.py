@@ -1,2 +1,2 @@
-class Physics:
+class _Stub:
     pass

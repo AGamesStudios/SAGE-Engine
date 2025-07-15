@@ -1,2 +1,2 @@
-class Ui:
+class _Stub:
     pass

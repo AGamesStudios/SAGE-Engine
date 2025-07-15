@@ -1,2 +1,2 @@
-class Patches:
+class _Stub:
     pass

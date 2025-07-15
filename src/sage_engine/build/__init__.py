@@ -1,2 +1,2 @@
-class Build:
+class _Stub:
     pass

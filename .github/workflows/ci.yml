@@ -17,3 +17,10 @@ jobs:
         run: ruff check .
       - name: Pytest
         run: pytest -q
+      - name: Clean install check
+        shell: bash
+        run: |
+          python -m pip uninstall -y sage-engine
+          git clean -dfx
+          python -m pip install -e .
+          python examples/hello_sprite/main.py --headless

@@ -1,2 +1,2 @@
-class Render:
+class _Stub:
     pass

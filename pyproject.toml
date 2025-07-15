@@ -2,10 +2,10 @@
 name = "sage_engine"
 version = "0.1.0a0"
 requires-python = ">=3.8"
-dependencies = ["typing-extensions"]
+dependencies = ["typing-extensions", "pillow"]
 
 [project.optional-dependencies]
-dev = ["ruff", "pytest", "pillow"]
+dev = ["ruff", "pytest"]
 
 [build-system]
 requires = ["setuptools>=64", "wheel"]
