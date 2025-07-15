@@ -67,8 +67,8 @@ class OpenGLBackend(RenderBackend):
             0.5,
         ], dtype="f4")
         self.vbo = self.ctx.buffer(quad.tobytes())
-        # 12 floats per instance -> 48 bytes
-        self.instance_buffer = self.ctx.buffer(reserve=48 * 4096)
+        # 16 floats per instance -> 64 bytes
+        self.instance_buffer = self.ctx.buffer(reserve=64 * 4096)
 
         vert_src = """
         #version 330
@@ -77,11 +77,11 @@ class OpenGLBackend(RenderBackend):
         in vec2 in_scale;
         in float in_rot;
         in float in_tex;
+        in vec4 in_uv;
         in float in_blend;
         in vec4 in_color;
         in float in_depth;
         uniform mat3 u_viewProj;
-        uniform vec4 u_uv[256];
         out vec2 v_uv;
         out vec4 v_color;
         void main() {
@@ -90,8 +90,7 @@ class OpenGLBackend(RenderBackend):
             float s = sin(in_rot);
             vec2 pos = in_pos + vec2(c * scaled.x - s * scaled.y, s * scaled.x + c * scaled.y);
             gl_Position = vec4((u_viewProj * vec3(pos, 1.0)).xy, in_depth, 1.0);
-            vec4 uv = u_uv[int(in_tex)];
-            v_uv = mix(uv.xy, uv.zw, in_vert + vec2(0.5));
+            v_uv = mix(in_uv.xy, in_uv.zw, in_vert + vec2(0.5));
             v_color = in_color;
         }
         """
@@ -112,11 +111,12 @@ class OpenGLBackend(RenderBackend):
                 (self.vbo, "2f", "in_vert"),
                 (
                     self.instance_buffer,
-                    "2f 2f 1f 1f 1f 4f 1f/i",
+                    "2f 2f 1f 1f 4f 1f 4f 1f/i",
                     "in_pos",
                     "in_scale",
                     "in_rot",
                     "in_tex",
+                    "in_uv",
                     "in_blend",
                     "in_color",
                     "in_depth",
@@ -128,7 +128,6 @@ class OpenGLBackend(RenderBackend):
             self.tex.filter = (moderngl.NEAREST, moderngl.NEAREST)
             self.tex.use()
         self.prog["u_viewProj"].write(np.eye(3, dtype="f4").tobytes())
-        self.prog["u_uv"].write(np.zeros((256, 4), dtype="f4").tobytes())
 
         line_vert = """
         #version 330
@@ -161,8 +160,8 @@ class OpenGLBackend(RenderBackend):
         if arr.size == 0:
             return
         # split by blend mode so OpenGL blend function matches
-        for blend in np.unique(arr[:, 6]).astype(int):
-            subset = arr[arr[:, 6] == float(blend)]
+        for blend in np.unique(arr[:, 10]).astype(int):
+            subset = arr[arr[:, 10] == float(blend)]
             if subset.size == 0:
                 continue
             self.instance_buffer.orphan(subset.nbytes)
@@ -215,10 +214,6 @@ class OpenGLBackend(RenderBackend):
         self.uvs.append((u0, v0, u1, v1))
         self.next_x += w
         self.row_h = max(self.row_h, h)
-        uv_data = np.zeros((256, 4), dtype="f4")
-        for i, uv in enumerate(self.uvs):
-            uv_data[i] = uv
-        self.prog["u_uv"].write(uv_data.tobytes())
         return len(self.uvs) - 1
 
     def set_camera(self, matrix: Sequence[float]) -> None:

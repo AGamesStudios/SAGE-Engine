@@ -22,6 +22,7 @@ class Sprite:
     sy: float = 1.0
     rot: float = 0.0
     tex_id: float = 0.0
+    uv: tuple[float, float, float, float] = (0.0, 0.0, 1.0, 1.0)
     blend: str = "alpha"
     color: tuple[float, float, float, float] = (1.0, 1.0, 1.0, 1.0)
     layer: int = 0
@@ -70,12 +71,13 @@ def collect_instances() -> NDArray | list[list[float]]:
                 s.sy,
                 s.rot,
                 s.tex_id,
+                *s.uv,
                 blend,
                 *s.color,
                 depth,
             ])
         return out
-    arr = np.zeros((len(ordered), 12), dtype=np.float32)
+    arr = np.zeros((len(ordered), 16), dtype=np.float32)
     for i, s in enumerate(ordered):
         blend = 0.0 if s.blend == "alpha" else 1.0
         depth = s.layer * _LAYER_SCALE + s.z
@@ -86,6 +88,7 @@ def collect_instances() -> NDArray | list[list[float]]:
             s.sy,
             s.rot,
             s.tex_id,
+            *s.uv,
             blend,
             *s.color,
             depth,
