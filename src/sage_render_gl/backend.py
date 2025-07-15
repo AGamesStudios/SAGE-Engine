@@ -73,18 +73,21 @@ class OpenGLBackend(RenderBackend):
         vert_src = """
         #version 330
         in vec2 in_vert;
-        in vec2 in_mat0;
-        in vec2 in_mat1;
         in vec2 in_pos;
+        in vec2 in_scale;
+        in float in_rot;
         in float in_tex;
+        in float in_blend;
         in vec4 in_color;
         uniform mat3 u_viewProj;
         uniform vec4 u_uv[256];
         out vec2 v_uv;
         out vec4 v_color;
         void main() {
-            mat2 m = mat2(in_mat0, in_mat1);
-            vec2 pos = m * in_vert + in_pos;
+            vec2 scaled = in_vert * in_scale;
+            float c = cos(in_rot);
+            float s = sin(in_rot);
+            vec2 pos = in_pos + vec2(c * scaled.x - s * scaled.y, s * scaled.x + c * scaled.y);
             gl_Position = vec4((u_viewProj * vec3(pos, 1.0)).xy, 0.0, 1.0);
             vec4 uv = u_uv[int(in_tex)];
             v_uv = mix(uv.xy, uv.zw, in_vert + vec2(0.5));
@@ -108,11 +111,12 @@ class OpenGLBackend(RenderBackend):
                 (self.vbo, "2f", "in_vert"),
                 (
                     self.instance_buffer,
-                    "2f 2f 2f 1f 4f/i",
-                    "in_mat0",
-                    "in_mat1",
+                    "2f 2f 1f 1f 1f 4f/i",
                     "in_pos",
+                    "in_scale",
+                    "in_rot",
                     "in_tex",
+                    "in_blend",
                     "in_color",
                 ),
             ],
@@ -154,10 +158,19 @@ class OpenGLBackend(RenderBackend):
         arr = np.asarray(instances, dtype="f4")
         if arr.size == 0:
             return
-        self.instance_buffer.orphan(arr.nbytes)
-        self.instance_buffer.write(arr.tobytes())
-        self.vao.render(moderngl.TRIANGLE_STRIP, instances=len(arr))
-        self.draw_calls += 1
+        # split by blend mode so OpenGL blend function matches
+        for blend in np.unique(arr[:, 6]).astype(int):
+            subset = arr[arr[:, 6] == float(blend)]
+            if subset.size == 0:
+                continue
+            self.instance_buffer.orphan(subset.nbytes)
+            self.instance_buffer.write(subset.tobytes())
+            if blend == 0:
+                self.ctx.blend_func = moderngl.SRC_ALPHA, moderngl.ONE_MINUS_SRC_ALPHA
+            else:
+                self.ctx.blend_func = moderngl.ONE, moderngl.ONE_MINUS_SRC_ALPHA
+            self.vao.render(moderngl.TRIANGLE_STRIP, instances=len(subset))
+            self.draw_calls += 1
 
     def end_frame(self) -> None:
         if self.window is not None:  # pragma: no cover - window sync

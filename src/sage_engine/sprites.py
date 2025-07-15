@@ -20,6 +20,7 @@ class Sprite:
     sy: float = 1.0
     rot: float = 0.0
     tex_id: float = 0.0
+    blend: str = "alpha"
     color: tuple[float, float, float, float] = (1.0, 1.0, 1.0, 1.0)
     layer: int = 0
     z: float = 0.0
@@ -58,11 +59,29 @@ def collect_instances() -> NDArray | list[list[float]]:
     if np is None:
         out = []
         for s in ordered:
-            a, c2, tx, b, d, ty = s.transform().matrix()
-            out.append([a, c2, tx, b, d, ty, s.tex_id, *s.color])
+            blend = 0.0 if s.blend == "alpha" else 1.0
+            out.append([
+                s.x,
+                s.y,
+                s.sx,
+                s.sy,
+                s.rot,
+                s.tex_id,
+                blend,
+                *s.color,
+            ])
         return out
     arr = np.zeros((len(ordered), 11), dtype=np.float32)
     for i, s in enumerate(ordered):
-        a, c2, tx, b, d, ty = s.transform().matrix()
-        arr[i] = (a, c2, tx, b, d, ty, s.tex_id, *s.color)
+        blend = 0.0 if s.blend == "alpha" else 1.0
+        arr[i] = (
+            s.x,
+            s.y,
+            s.sx,
+            s.sy,
+            s.rot,
+            s.tex_id,
+            blend,
+            *s.color,
+        )
     return arr
