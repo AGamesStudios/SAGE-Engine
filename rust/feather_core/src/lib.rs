@@ -175,3 +175,123 @@ pub extern "C" fn cpt_free(ptr: *mut ChronoPatchTree) {
     }
 }
 
+
+// --- DAG Scheduler -------------------------------------------------------
+use std::collections::{HashMap, VecDeque};
+use std::ffi::c_void;
+use std::thread;
+
+type TaskFn = unsafe extern "C" fn(*mut c_void);
+
+struct DagTask {
+    func: TaskFn,
+    data: *mut c_void,
+    deps: Vec<usize>,
+}
+
+#[repr(C)]
+pub struct DagScheduler {
+    tasks: HashMap<usize, DagTask>,
+}
+
+impl DagScheduler {
+    fn new() -> Self {
+        DagScheduler { tasks: HashMap::new() }
+    }
+
+    fn add_task(&mut self, id: usize, func: TaskFn, data: *mut c_void) {
+        self.tasks.insert(id, DagTask { func, data, deps: Vec::new() });
+    }
+
+    fn add_dep(&mut self, task: usize, depends_on: usize) {
+        if let Some(t) = self.tasks.get_mut(&task) {
+            t.deps.push(depends_on);
+        }
+    }
+
+    fn execute(&self) -> bool {
+        let mut indeg: HashMap<usize, usize> = HashMap::new();
+        let mut adj: HashMap<usize, Vec<usize>> = HashMap::new();
+        for (&id, task) in &self.tasks {
+            indeg.entry(id).or_insert(0);
+            for &d in &task.deps {
+                *indeg.entry(id).or_insert(0) += 1;
+                adj.entry(d).or_default().push(id);
+            }
+        }
+
+        let mut ready: VecDeque<usize> = indeg
+            .iter()
+            .filter_map(|(&id, &deg)| if deg == 0 { Some(id) } else { None })
+            .collect();
+        let mut processed = 0usize;
+
+        while !ready.is_empty() {
+            let mut batch = Vec::new();
+            for _ in 0..ready.len() {
+                if let Some(id) = ready.pop_front() {
+                    batch.push(id);
+                }
+            }
+            for id in &batch {
+                if let Some(task) = self.tasks.get(id) {
+                    unsafe { (task.func)(task.data) };
+                }
+            }
+            processed += batch.len();
+
+            let mut next = Vec::new();
+            for (&from, list) in &adj {
+                if indeg.get(&from) == Some(&0) {
+                    for &to in list {
+                        if let Some(entry) = indeg.get_mut(&to) {
+                            if *entry > 0 {
+                                *entry -= 1;
+                                if *entry == 0 {
+                                    next.push(to);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            ready.extend(next);
+        }
+
+        processed == self.tasks.len()
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn dag_new() -> *mut DagScheduler {
+    Box::into_raw(Box::new(DagScheduler::new()))
+}
+
+#[no_mangle]
+pub extern "C" fn dag_free(ptr: *mut DagScheduler) {
+    if !ptr.is_null() {
+        unsafe { Box::from_raw(ptr); }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn dag_add_task(ptr: *mut DagScheduler, id: usize, func: TaskFn, data: *mut c_void) {
+    if let Some(s) = unsafe { ptr.as_mut() } {
+        s.add_task(id, func, data);
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn dag_add_dependency(ptr: *mut DagScheduler, task: usize, depends_on: usize) {
+    if let Some(s) = unsafe { ptr.as_mut() } {
+        s.add_dep(task, depends_on);
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn dag_execute(ptr: *mut DagScheduler) -> bool {
+    match unsafe { ptr.as_ref() } {
+        Some(s) => s.execute(),
+        None => false,
+    }
+}

@@ -22,6 +22,7 @@ that must be finished before removing the "Candidate" label from this release.
 
 The minimal runtime "Feather Core" lives under ``rust/feather_core``. Build it
 with ``cargo build --release`` to produce a shared library for FFI bindings.
+Feather Core also exposes a DAG scheduler for running dependent tasks in order.
 
 GUI backends are loaded via plugins. Install the desired extra:
 
