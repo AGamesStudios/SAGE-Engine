@@ -19,7 +19,8 @@ button.hover(True)
 
 ## Themes
 
-UI colors and fonts come from `.vel` theme files:
+UI colors and fonts come from `.vel` theme files. Define hover and active
+colors to highlight buttons and provide a bitmap font path for text:
 
 ```yaml
 colors:
@@ -29,6 +30,7 @@ colors:
 font:
   family: "Roboto"
   size: 14
+  file: "build/font.json"
 radius: 6
 ```
 
@@ -48,4 +50,7 @@ reloads the theme on connected clients.
 `render.draw_frame()` renders UI widgets after sprites using the
 currently loaded theme. Each widget contributes a ``UIInstance`` with
 position, size, color and depth so they can share the same GPU pipeline
-as sprites.
+as sprites. Widgets use ``hover`` and ``active`` colors from the theme
+when the mouse is over them or a click is in progress. Call
+``set_icon(path)`` on a widget to display an image loaded through the
+resource manager.

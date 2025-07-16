@@ -12,7 +12,7 @@ except Exception:  # pragma: no cover - numpy optional
 from . import theme
 from .. import text as _text
 from ..render.font import Font
-from .. import sprites
+from .. import sprites, resources
 
 
 class Signal:
@@ -42,6 +42,7 @@ class Widget:
         self.z = 0.0
         self.hovered = False
         self.active = False
+        self.icon: resources.Texture | None = None
         self.apply_theme()
         theme.register(self)
         _widgets.append(self)
@@ -49,9 +50,15 @@ class Widget:
     def apply_theme(self) -> None:  # pragma: no cover - trivial
         self.bg_color = theme.current.colors.get("bg", "#000000")
         self.fg_color = theme.current.colors.get("fg", "#ffffff")
+        self.hover_color = theme.current.colors.get("hover", self.bg_color)
+        self.active_color = theme.current.colors.get("active", self.hover_color)
         self.radius = theme.current.radius
         if hasattr(self, "text_obj") and self.text_obj is not None:
             self.text_obj.color = theme.color_rgba(self.fg_color)
+
+    def set_icon(self, path: str) -> None:
+        """Load *path* as widget icon."""
+        self.icon = resources.manager.get_texture(path)
 
 
 class Button(Widget):
@@ -59,6 +66,8 @@ class Button(Widget):
         super().__init__()
         self.on_hover = Signal()
         self.on_click = Signal()
+        if font is None:
+            font = theme.get_font()
         self.text_obj = None
         if font is not None:
             fg = theme.current.colors.get("fg", "#ffffff")
@@ -79,6 +88,8 @@ class Label(Widget):
         super().__init__()
         self.text = text
         self.text_obj = None
+        if font is None:
+            font = theme.get_font()
         if font is not None:
             fg = theme.current.colors.get("fg", "#ffffff")
             self.text_obj = _text.TextObject(text, font=font, color=theme.color_rgba(fg))
@@ -98,19 +109,29 @@ def collect_instances() -> NDArray | list[list[float]]:
                 w.text_obj.x = w.x
                 w.text_obj.y = w.y
             depth = w.layer * sprites._LAYER_SCALE + w.z
+            atlas = float(w.icon.atlas) if w.icon else 0.0
+            if w.icon:
+                u0, v0, u1, v1 = w.icon.uv
+            else:
+                u0, v0, u1, v1 = 0.0, 0.0, 1.0, 1.0
+            color_hex = w.bg_color
+            if w.active:
+                color_hex = w.active_color
+            elif w.hovered:
+                color_hex = w.hover_color
             result.append([
                 w.x,
                 w.y,
                 w.width,
                 w.height,
                 0.0,
+                atlas,
+                u0,
+                v0,
+                u1,
+                v1,
                 0.0,
-                0.0,
-                0.0,
-                1.0,
-                1.0,
-                0.0,
-                *theme.color_rgba(w.bg_color),
+                *theme.color_rgba(color_hex),
                 depth,
             ])
         return result
@@ -120,19 +141,29 @@ def collect_instances() -> NDArray | list[list[float]]:
             w.text_obj.x = w.x
             w.text_obj.y = w.y
         depth = w.layer * sprites._LAYER_SCALE + w.z
+        atlas = float(w.icon.atlas) if w.icon else 0.0
+        if w.icon:
+            u0, v0, u1, v1 = w.icon.uv
+        else:
+            u0, v0, u1, v1 = 0.0, 0.0, 1.0, 1.0
+        color_hex = w.bg_color
+        if w.active:
+            color_hex = w.active_color
+        elif w.hovered:
+            color_hex = w.hover_color
         arr[i] = (
             w.x,
             w.y,
             w.width,
             w.height,
             0.0,
+            atlas,
+            u0,
+            v0,
+            u1,
+            v1,
             0.0,
-            0.0,
-            0.0,
-            1.0,
-            1.0,
-            0.0,
-            *theme.color_rgba(w.bg_color),
+            *theme.color_rgba(color_hex),
             depth,
         )
     return arr

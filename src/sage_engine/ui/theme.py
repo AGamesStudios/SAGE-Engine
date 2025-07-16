@@ -2,7 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, List
+from typing import Any, List, Dict, Optional
+
+from ..render import font as _font
+from ..render.font import Font
 
 try:  # pragma: no cover - optional dependency
     import yaml
@@ -55,6 +58,22 @@ _current_path = Path(__file__).with_name("default.vel")
 current: Theme = Theme.load(_current_path)
 
 _widgets: List[Any] = []
+_font_cache: Dict[str, "Font"] = {}
+
+
+def get_font() -> Optional[Font]:
+    """Return the font defined in the current theme if available."""
+    path = current.font.get("file")
+    if not path:
+        return None
+    font = _font_cache.get(path)
+    if font is None:
+        try:
+            font = _font.load(path)
+            _font_cache[path] = font
+        except Exception:
+            return None
+    return font
 
 
 def color_rgba(hex_color: str) -> tuple[float, float, float, float]:
@@ -80,6 +99,10 @@ def register(widget: Any) -> None:
 def set_theme(path: str) -> None:
     global current
     current = Theme.load(path)
+    _font_cache.clear()
     for w in list(_widgets):
         if hasattr(w, "apply_theme"):
             w.apply_theme()
+
+
+__all__ = ["Theme", "current", "set_theme", "color_rgba", "register", "get_font"]

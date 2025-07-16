@@ -2,7 +2,10 @@ colors:
   bg: "#1e1e1e"
   fg: "#ffffff"
   accent: "#ffb400"
+  hover: "#2c2c2c"
+  active: "#404040"
 font:
   family: "Roboto"
   size: 14
+  # file: "build/font.json"
 radius: 6
