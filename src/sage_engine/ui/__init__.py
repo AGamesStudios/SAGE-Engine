@@ -12,6 +12,7 @@ except Exception:  # pragma: no cover - numpy optional
 from . import theme
 from .. import text as _text
 from ..render.font import Font
+from .. import sprites
 
 
 class Signal:
@@ -35,8 +36,12 @@ class Widget:
     def __init__(self) -> None:
         self.x = 0.0
         self.y = 0.0
-        self.width = 0.0
-        self.height = 0.0
+        self.width = 64.0
+        self.height = 24.0
+        self.layer = 0
+        self.z = 0.0
+        self.hovered = False
+        self.active = False
         self.apply_theme()
         theme.register(self)
         _widgets.append(self)
@@ -61,9 +66,11 @@ class Button(Widget):
             _text.add(self.text_obj)
 
     def hover(self, inside: bool) -> None:
+        self.hovered = inside
         self.on_hover.emit(inside)
 
     def click(self) -> None:
+        self.active = True
         self.on_click.emit()
 
 
@@ -83,20 +90,51 @@ class Panel(Widget):
 
 
 def collect_instances() -> NDArray | list[list[float]]:
+    ordered = sorted(_widgets, key=lambda w: (w.layer, w.z))
     if np is None:
         result = []
-        for w in _widgets:
+        for w in ordered:
             if hasattr(w, "text_obj") and w.text_obj is not None:
                 w.text_obj.x = w.x
                 w.text_obj.y = w.y
-            result.append([w.x, w.y, 0.0, 0.0, *theme.color_rgba(w.bg_color)])
+            depth = w.layer * sprites._LAYER_SCALE + w.z
+            result.append([
+                w.x,
+                w.y,
+                w.width,
+                w.height,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0,
+                1.0,
+                0.0,
+                *theme.color_rgba(w.bg_color),
+                depth,
+            ])
         return result
-    arr = np.zeros((len(_widgets), 8), dtype=np.float32)
-    for i, w in enumerate(_widgets):
+    arr = np.zeros((len(ordered), 16), dtype=np.float32)
+    for i, w in enumerate(ordered):
         if hasattr(w, "text_obj") and w.text_obj is not None:
             w.text_obj.x = w.x
             w.text_obj.y = w.y
-        arr[i] = (w.x, w.y, 0.0, 0.0, *theme.color_rgba(w.bg_color))
+        depth = w.layer * sprites._LAYER_SCALE + w.z
+        arr[i] = (
+            w.x,
+            w.y,
+            w.width,
+            w.height,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            1.0,
+            0.0,
+            *theme.color_rgba(w.bg_color),
+            depth,
+        )
     return arr
 
 

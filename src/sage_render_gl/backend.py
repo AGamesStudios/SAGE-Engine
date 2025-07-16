@@ -22,6 +22,7 @@ from sage_engine.render.base import NDArray, RenderBackend
 from sage_engine.render.shader import ShaderProgram
 from sage_engine.render.material import Material
 from sage_engine import camera
+from PIL import Image
 
 
 @dataclass
@@ -68,6 +69,10 @@ class OpenGLBackend(RenderBackend):
         assert self.ctx is not None
         self.ctx.enable(moderngl.BLEND)
         self.ctx.blend_func = moderngl.SRC_ALPHA, moderngl.ONE_MINUS_SRC_ALPHA
+
+        # default white pixel for UI elements
+        white = Image.new("RGBA", (1, 1), (255, 255, 255, 255))
+        self.create_texture(white)
 
         quad = np.array([
             -0.5,

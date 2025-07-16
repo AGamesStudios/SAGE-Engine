@@ -42,3 +42,10 @@ theme.set_theme("ui/light.vel")
 
 When using ``sage serve`` any change to a ``.vel`` file automatically
 reloads the theme on connected clients.
+
+## Rendering widgets
+
+`render.draw_frame()` renders UI widgets after sprites using the
+currently loaded theme. Each widget contributes a ``UIInstance`` with
+position, size, color and depth so they can share the same GPU pipeline
+as sprites.
