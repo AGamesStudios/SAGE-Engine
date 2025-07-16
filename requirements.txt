@@ -3,3 +3,4 @@ pillow
 pydub
 ffmpeg-python
 box2d-py
+simpleaudio

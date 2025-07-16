@@ -3,7 +3,8 @@
 The audio subsystem loads short sound effects using `sage_audio.play`. Playback
 supports looping, stereo panning and pitch control. Handles returned by
 `play()` can be stopped later. The global ``mixer`` lists active tracks and
-exposes a master volume slider.
+exposes a master volume slider. Audio playback relies on ``simpleaudio`` (and
+optionally ``pydub``) which are listed in ``requirements.txt``.
 
 ```python
 from sage_engine import audio

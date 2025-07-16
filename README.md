@@ -14,6 +14,9 @@ python examples/hello_sprite/main.py
 pytest -q
 ```
 
+Install the packages from ``requirements.txt`` to run the examples and tests
+on a clean environment.
+
 GUI backends are loaded via plugins. Install the desired extra:
 
 ```bash
