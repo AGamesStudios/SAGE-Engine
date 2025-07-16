@@ -13,6 +13,9 @@ from . import theme
 from .. import text as _text
 from ..render.font import Font
 from .. import sprites, resources
+from ..render import shader as _shader
+from ..render.material import Material
+from pathlib import Path
 
 
 class Signal:
@@ -28,6 +31,12 @@ class Signal:
 
 
 _widgets: List["Widget"] = []
+
+# default UI material with rounding support
+_base = Path(__file__).resolve().parents[1] / "render" / "shaders"
+_ui_vert = _base / "ui.vert"
+_ui_frag = _base / "ui.frag"
+UI_MATERIAL = Material(_shader.load("ui", _ui_vert, _ui_frag))
 
 
 class Widget:
@@ -53,6 +62,12 @@ class Widget:
         self.hover_color = theme.current.colors.get("hover", self.bg_color)
         self.active_color = theme.current.colors.get("active", self.hover_color)
         self.radius = theme.current.radius
+        name = self.__class__.__name__.lower()
+        if name in theme.current.icons:
+            try:
+                self.icon = resources.manager.get_texture(theme.current.icons[name])
+            except Exception:
+                self.icon = None
         if hasattr(self, "text_obj") and self.text_obj is not None:
             self.text_obj.color = theme.color_rgba(self.fg_color)
 
@@ -119,12 +134,13 @@ def collect_instances() -> NDArray | list[list[float]]:
                 color_hex = w.active_color
             elif w.hovered:
                 color_hex = w.hover_color
+            r = 0.0 if w.radius <= 0 else w.radius / max(w.width, w.height)
             result.append([
                 w.x,
                 w.y,
                 w.width,
                 w.height,
-                0.0,
+                r,
                 atlas,
                 u0,
                 v0,
@@ -135,6 +151,7 @@ def collect_instances() -> NDArray | list[list[float]]:
                 depth,
             ])
         return result
+
     arr = np.zeros((len(ordered), 16), dtype=np.float32)
     for i, w in enumerate(ordered):
         if hasattr(w, "text_obj") and w.text_obj is not None:
@@ -151,12 +168,13 @@ def collect_instances() -> NDArray | list[list[float]]:
             color_hex = w.active_color
         elif w.hovered:
             color_hex = w.hover_color
+        r = 0.0 if w.radius <= 0 else w.radius / max(w.width, w.height)
         arr[i] = (
             w.x,
             w.y,
             w.width,
             w.height,
-            0.0,
+            r,
             atlas,
             u0,
             v0,
@@ -177,4 +195,5 @@ __all__ = [
     "Panel",
     "theme",
     "collect_instances",
+    "UI_MATERIAL",
 ]

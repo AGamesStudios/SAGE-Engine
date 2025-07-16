@@ -59,7 +59,7 @@ def collect_groups() -> List[tuple[Material, NDArray | List[List[float]]]]:
                 0.0,
                 float(obj.font.texture.atlas),
                 *glyph.uv,
-                0.0,
+                2.0,
                 *obj.color,
                 depth,
             ]

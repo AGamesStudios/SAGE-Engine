@@ -32,6 +32,8 @@ font:
   size: 14
   file: "build/font.json"
 radius: 6
+icons:
+  button: "play_icon.png"
 ```
 
 Switch the current theme at runtime:
@@ -54,3 +56,6 @@ as sprites. Widgets use ``hover`` and ``active`` colors from the theme
 when the mouse is over them or a click is in progress. Call
 ``set_icon(path)`` on a widget to display an image loaded through the
 resource manager.
+
+Widgets are drawn with a special shader that rounds their corners using the
+``radius`` value from the theme.

@@ -14,7 +14,7 @@ except ModuleNotFoundError:  # pragma: no cover - fallback parser
 
 
 def _parse_simple(path: Path) -> dict[str, Any]:
-    data: dict[str, Any] = {"colors": {}, "font": {}, "radius": 0}
+    data: dict[str, Any] = {"colors": {}, "font": {}, "radius": 0, "icons": {}}
     current = None
     for line in path.read_text().splitlines():
         line = line.strip()
@@ -40,6 +40,7 @@ class Theme:
     colors: dict[str, str]
     font: dict[str, Any]
     radius: int
+    icons: dict[str, str]
 
     @classmethod
     def load(cls, path: str | Path) -> "Theme":
@@ -51,6 +52,7 @@ class Theme:
             colors=data.get("colors", {}),
             font=data.get("font", {}),
             radius=data.get("radius", 0),
+            icons=data.get("icons", {}),
         )
 
 

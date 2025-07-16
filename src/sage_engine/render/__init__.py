@@ -80,7 +80,7 @@ def draw_frame(backend: RenderBackend | None = None, *, world: physics.World | N
         backend.draw_material_group(inst)
     if world is not None and physics.debug_xray:
         backend.draw_lines(physics.collect_debug_lines(world), (1.0, 1.0, 1.0))
-    backend.set_material(sprites.DEFAULT_MATERIAL)
+    backend.set_material(ui.UI_MATERIAL)
     backend.draw_material_group(ui.collect_instances())
     backend.end_frame()
     return backend

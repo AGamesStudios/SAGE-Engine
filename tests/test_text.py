@@ -44,3 +44,5 @@ def test_text_object_instances(tmp_path, monkeypatch):
     assert len(groups) == 1
     mat, inst = groups[0]
     assert len(inst) == 2
+    row = inst[0] if not hasattr(inst, "shape") else inst[0]
+    assert row[10] == 2.0
