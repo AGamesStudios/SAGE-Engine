@@ -1,0 +1,12 @@
+[package]
+name = "feather_core"
+version = "0.1.0"
+edition = "2021"
+authors = ["SAGE Team"]
+description = "SAGE Feather Core runtime"
+license = "MIT"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]

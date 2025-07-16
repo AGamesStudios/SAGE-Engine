@@ -20,6 +20,9 @@ on a clean environment.
 The file [SAGE_ALPHA_1.0_checklist.md](SAGE_ALPHA_1.0_checklist.md) lists tasks
 that must be finished before removing the "Candidate" label from this release.
 
+The minimal runtime "Feather Core" lives under ``rust/feather_core``. Build it
+with ``cargo build --release`` to produce a shared library for FFI bindings.
+
 GUI backends are loaded via plugins. Install the desired extra:
 
 ```bash
@@ -53,6 +56,7 @@ Short guides: [Audio](docs/audio_quickstart.md),
 [Camera & coordinates](docs/camera_coords.md).
 [Fonts and text](docs/fonts_and_text.md).
 [Objects](docs/objects.md).
+[Feather Core](docs/feather_core.md).
 
 ## Папки проекта
 
