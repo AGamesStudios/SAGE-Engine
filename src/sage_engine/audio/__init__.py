@@ -56,8 +56,11 @@ class AudioHandle:
             self._load()
         while self._playing:
             if self._wave_obj:
-                self._play_obj = self._wave_obj.play()
-                self._play_obj.wait_done()
+                try:
+                    self._play_obj = self._wave_obj.play()
+                    self._play_obj.wait_done()
+                except Exception:
+                    break
             if not self.loop:
                 break
         self._playing = False
@@ -72,7 +75,10 @@ class AudioHandle:
     def stop(self) -> None:
         self._playing = False
         if self._play_obj is not None:
-            self._play_obj.stop()
+            try:
+                self._play_obj.stop()
+            except Exception:
+                pass
 
     def is_playing(self) -> bool:
         return self._playing
