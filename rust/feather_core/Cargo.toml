@@ -10,3 +10,5 @@ license = "MIT"
 crate-type = ["cdylib"]
 
 [dependencies]
+memmap2 = "0.9"
+xz2 = "0.1"
