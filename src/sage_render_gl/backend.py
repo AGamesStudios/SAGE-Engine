@@ -21,6 +21,7 @@ from dataclasses import dataclass
 from sage_engine.render.base import NDArray, RenderBackend
 from sage_engine.render.shader import ShaderProgram
 from sage_engine.render.material import Material
+from sage_engine import camera
 
 
 @dataclass
@@ -63,6 +64,7 @@ class OpenGLBackend(RenderBackend):
 
     def create_device(self, width: int, height: int) -> None:
         self._create_context(width, height)
+        camera.resize(width, height)
         assert self.ctx is not None
         self.ctx.enable(moderngl.BLEND)
         self.ctx.blend_func = moderngl.SRC_ALPHA, moderngl.ONE_MINUS_SRC_ALPHA
@@ -220,6 +222,7 @@ class OpenGLBackend(RenderBackend):
             self.ctx.viewport = (0, 0, width, height)
         if self.window is not None:  # pragma: no cover - window resize
             glfw.set_window_size(self.window, width, height)
+        camera.resize(width, height)
 
     def draw_lines(self, vertices: Sequence[float], color: Sequence[float]) -> None:
         if self.ctx is None or self.line_prog is None:

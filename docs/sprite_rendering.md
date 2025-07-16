@@ -23,3 +23,6 @@ summary like:
 
 New atlases are only allocated once existing ones have no room for the next
 image.
+
+Sprite positions are transformed by the camera each frame. Use `camera.set`
+and helpers from the `coord` module to convert between world and screen space.
