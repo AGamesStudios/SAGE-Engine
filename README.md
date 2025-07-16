@@ -1,5 +1,7 @@
 # SAGE Engine
 
+**Alpha 1.0 Candidate**
+
 Minimal starting point for the SAGE Engine.
 
 ⚠️ **Note**: Several subsystems (Audio, Physics, Particles) are currently experimental. These modules are under active development and may be incomplete or non-functional in the current version.
