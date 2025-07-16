@@ -1,4 +1,4 @@
-use std::ffi::{CStr, c_char};
+use std::ffi::{CStr, CString, c_char};
 use std::fs::OpenOptions;
 use std::io::{Read, Write};
 use std::path::Path;
@@ -8,6 +8,7 @@ use memmap2::{MmapMut, MmapOptions};
 use xz2::read::XzDecoder;
 use xz2::write::XzEncoder;
 use pyo3::prelude::*;
+use pyo3::types::PyDict;
 
 const TILE_SIZE: usize = 1024;
 
@@ -75,6 +76,53 @@ pub extern "C" fn mp_exec(_ptr: *mut MicroPy, script: *const c_char) -> bool {
     let ok = Python::with_gil(|py| py.run(code, None, None).is_ok());
     log_profile("micropython.exec", start.elapsed());
     ok
+}
+
+#[no_mangle]
+pub extern "C" fn mp_exec_json(
+    _ptr: *mut MicroPy,
+    script: *const c_char,
+    state: *const c_char,
+) -> *mut c_char {
+    if script.is_null() || state.is_null() {
+        return std::ptr::null_mut();
+    }
+    let code = unsafe { CStr::from_ptr(script) };
+    let code = match code.to_str() {
+        Ok(s) => s,
+        Err(_) => return std::ptr::null_mut(),
+    };
+    let state_str = unsafe { CStr::from_ptr(state) };
+    let state_str = match state_str.to_str() {
+        Ok(s) => s,
+        Err(_) => return std::ptr::null_mut(),
+    };
+    let start = Instant::now();
+    let out = Python::with_gil(|py| {
+        let locals = PyDict::new(py);
+        locals.set_item("state_json", state_str).ok()?;
+        py.run("import json\nstate = json.loads(state_json)", None, Some(locals))
+            .ok()?;
+        py.run(code, None, Some(locals)).ok()?;
+        let res: String = py
+            .eval("json.dumps(state)", None, Some(locals))
+            .ok()?
+            .extract()
+            .ok()?;
+        Some(res)
+    });
+    log_profile("micropython.exec", start.elapsed());
+    match out {
+        Some(s) => CString::new(s).unwrap().into_raw(),
+        None => std::ptr::null_mut(),
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn mp_free_cstring(ptr: *mut c_char) {
+    if !ptr.is_null() {
+        unsafe { drop(CString::from_raw(ptr)) };
+    }
 }
 
 struct Patch {
