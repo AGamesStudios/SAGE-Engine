@@ -39,6 +39,7 @@ Short guides: [Audio](docs/audio_quickstart.md),
 [Tilemap](docs/tilemap_quickstart.md) and
 [Particles](docs/particles_quickstart.md),
 [Custom shaders](docs/render_shaders.md).
+[Sprite rendering](docs/sprite_rendering.md).
 [Fonts and text](docs/fonts_and_text.md).
 
 ## Папки проекта

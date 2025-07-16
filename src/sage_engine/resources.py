@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List
 import json
+import hashlib
 
 from PIL import Image
 
@@ -23,6 +24,7 @@ class ResourceManager:
         self._cache: Dict[str, Texture] = {}
         self._atlas_slots: Dict[str, Texture] = {}
         self._atlas_textures: Dict[str, int] = {}
+        self._hash_map: Dict[str, Texture] = {}
         self.backend = None
 
     def load_atlas(self, json_path: str) -> None:
@@ -57,14 +59,41 @@ class ResourceManager:
         tex = self._cache.get(key)
         if tex is not None:
             return tex
-        img = Image.open(key)
+        data = Path(key).read_bytes()
+        digest = hashlib.sha1(data).hexdigest()
+        tex = self._hash_map.get(digest)
+        if tex is not None:
+            self._cache[key] = tex
+            return tex
+        img = Image.open(Path(key))
         atlas_id, uv = self.backend.create_texture(img)
         tex = Texture(atlas=atlas_id, uv=uv)
         self._cache[key] = tex
+        self._hash_map[digest] = tex
         return tex
+
+    def stats(self) -> dict:
+        """Return atlas usage statistics."""
+        if self.backend is None:
+            return {"atlases": 0, "textures": [], "free_space": []}
+        atlas_list = getattr(self.backend, "atlases", [])
+        size = getattr(self.backend, "atlas_size", 0)
+        free: List[int] = []
+        if atlas_list and size:
+            for atlas in atlas_list:
+                used = atlas.next_y * size + atlas.next_x * atlas.row_h
+                free.append(size * size - used)
+        textures = list(self._cache.keys()) + list(self._atlas_slots.keys())
+        return {"atlases": len(atlas_list), "textures": textures, "free_space": free}
+
+    def print_stats(self) -> None:
+        info = self.stats()
+        if not info["atlases"]:
+            return
+        size = getattr(self.backend, "atlas_size", 0)
+        print(f"🧵 {info['atlases']} atlases created ({size}×{size}), {len(info['textures'])} textures loaded")
 
 
 manager = ResourceManager()
-
 
 __all__ = ["Texture", "ResourceManager", "manager"]
