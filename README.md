@@ -1,6 +1,6 @@
 # SAGE Engine
 
-**Alpha 1.0 Candidate**
+**Alpha 0.1 (Core & Tree Complete — I/O and Tests Pending)**
 
 Minimal starting point for the SAGE Engine.
 
@@ -15,7 +15,14 @@ pytest -q
 ```
 
 Install the packages from ``requirements.txt`` to run the examples and tests
-on a clean environment. Build the Feather Core library with ``--features
+on a clean environment.
+Some optional libraries require system packages:
+
+- ``box2d-py`` needs ``swig`` to build.
+- ``simpleaudio`` requires ALSA headers (``libasound2-dev`` on Debian).
+
+Use ``--skip-audio`` or ``--skip-physics`` when running ``pytest`` if these
+dependencies are missing. Build the Feather Core library with ``--features
 profiling`` to print timing information for each frame.
 
 The file [SAGE_ALPHA_1.0_checklist.md](SAGE_ALPHA_1.0_checklist.md) lists tasks

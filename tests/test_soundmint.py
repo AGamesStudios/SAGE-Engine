@@ -2,9 +2,12 @@ import math
 import os
 import struct
 import wave
+import pytest
 
 from sage_engine.soundmint import convert
 from sage_engine.build import sha1
+
+pytestmark = pytest.mark.audio
 
 
 def generate_tone(path: str) -> None:

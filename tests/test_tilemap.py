@@ -1,5 +1,8 @@
 from sage_engine.tilemap import TileLayer, autowang
 from sage_engine import physics
+import pytest
+
+pytestmark = pytest.mark.physics
 
 
 def test_load_layer(tmp_path):

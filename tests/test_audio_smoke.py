@@ -1,8 +1,11 @@
 import wave
 import math
 import struct
+import pytest
 
 from sage_engine import audio
+
+pytestmark = pytest.mark.audio
 
 
 def generate_tone(path: str) -> None:

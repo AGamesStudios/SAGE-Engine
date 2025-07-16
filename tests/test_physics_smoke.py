@@ -1,4 +1,7 @@
 from sage_engine import physics
+import pytest
+
+pytestmark = pytest.mark.physics
 
 
 def test_sensor_callback():
