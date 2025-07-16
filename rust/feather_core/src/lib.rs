@@ -6,6 +6,7 @@ use std::path::Path;
 use memmap2::{MmapMut, MmapOptions};
 use xz2::read::XzDecoder;
 use xz2::write::XzEncoder;
+use pyo3::prelude::*;
 
 const TILE_SIZE: usize = 1024;
 
@@ -30,6 +31,38 @@ pub extern "C" fn fc_destroy(ptr: *mut FeatherCore) {
     if !ptr.is_null() {
         unsafe { Box::from_raw(ptr); }
     }
+}
+
+// --- MicroPython integration -----------------------------------------------
+
+#[repr(C)]
+pub struct MicroPy {
+    _private: u8,
+}
+
+#[no_mangle]
+pub extern "C" fn mp_new() -> *mut MicroPy {
+    Box::into_raw(Box::new(MicroPy { _private: 0 }))
+}
+
+#[no_mangle]
+pub extern "C" fn mp_free(ptr: *mut MicroPy) {
+    if !ptr.is_null() {
+        unsafe { Box::from_raw(ptr); }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn mp_exec(_ptr: *mut MicroPy, script: *const c_char) -> bool {
+    if script.is_null() {
+        return false;
+    }
+    let c_str = unsafe { CStr::from_ptr(script) };
+    let code = match c_str.to_str() {
+        Ok(s) => s,
+        Err(_) => return false,
+    };
+    Python::with_gil(|py| py.run(code, None, None).is_ok())
 }
 
 struct Patch {

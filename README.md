@@ -57,6 +57,7 @@ Short guides: [Audio](docs/audio_quickstart.md),
 [Camera & coordinates](docs/camera_coords.md).
 [Fonts and text](docs/fonts_and_text.md).
 [Objects](docs/objects.md).
+[MicroPython](docs/micropython.md).
 [Feather Core](docs/feather_core.md).
 
 ## Папки проекта
