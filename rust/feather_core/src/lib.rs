@@ -2,6 +2,7 @@ use std::ffi::{CStr, c_char};
 use std::fs::OpenOptions;
 use std::io::{Read, Write};
 use std::path::Path;
+use std::time::Instant;
 
 use memmap2::{MmapMut, MmapOptions};
 use xz2::read::XzDecoder;
@@ -9,6 +10,14 @@ use xz2::write::XzEncoder;
 use pyo3::prelude::*;
 
 const TILE_SIZE: usize = 1024;
+
+#[cfg(feature = "profiling")]
+fn log_profile(name: &str, dur: std::time::Duration) {
+    println!("{} = {:.2} ms", name, dur.as_secs_f64() * 1000.0);
+}
+
+#[cfg(not(feature = "profiling"))]
+fn log_profile(_name: &str, _dur: std::time::Duration) {}
 
 #[repr(C)]
 pub struct FeatherCore {
@@ -29,7 +38,7 @@ pub extern "C" fn fc_create() -> *mut FeatherCore {
 #[no_mangle]
 pub extern "C" fn fc_destroy(ptr: *mut FeatherCore) {
     if !ptr.is_null() {
-        unsafe { Box::from_raw(ptr); }
+        unsafe { drop(Box::from_raw(ptr)); }
     }
 }
 
@@ -48,7 +57,7 @@ pub extern "C" fn mp_new() -> *mut MicroPy {
 #[no_mangle]
 pub extern "C" fn mp_free(ptr: *mut MicroPy) {
     if !ptr.is_null() {
-        unsafe { Box::from_raw(ptr); }
+        unsafe { drop(Box::from_raw(ptr)); }
     }
 }
 
@@ -62,7 +71,10 @@ pub extern "C" fn mp_exec(_ptr: *mut MicroPy, script: *const c_char) -> bool {
         Ok(s) => s,
         Err(_) => return false,
     };
-    Python::with_gil(|py| py.run(code, None, None).is_ok())
+    let start = Instant::now();
+    let ok = Python::with_gil(|py| py.run(code, None, None).is_ok());
+    log_profile("micropython.exec", start.elapsed());
+    ok
 }
 
 struct Patch {
@@ -119,6 +131,7 @@ impl ChronoPatchTree {
             return;
         }
         let old = self.mmap[offset..offset + data.len()].to_vec();
+        let start = Instant::now();
         self.mmap[offset..offset + data.len()].copy_from_slice(data);
         let patch = Patch { offset, old, new: data.to_vec() };
         if self.cursor < self.patches.len() {
@@ -126,13 +139,16 @@ impl ChronoPatchTree {
         }
         self.patches.push(Self::encode_patch(&patch));
         self.cursor += 1;
+        log_profile("cpt.write", start.elapsed());
     }
 
     pub fn read(&self, offset: usize, buf: &mut [u8]) {
         if offset + buf.len() > self.mmap.len() {
             return;
         }
+        let start = Instant::now();
         buf.copy_from_slice(&self.mmap[offset..offset + buf.len()]);
+        log_profile("cpt.read", start.elapsed());
     }
 
     pub fn apply_patch(&mut self) {
@@ -140,8 +156,10 @@ impl ChronoPatchTree {
             return;
         }
         let patch = Self::decode_patch(&self.patches[self.cursor]);
+        let start = Instant::now();
         self.mmap[patch.offset..patch.offset + patch.new.len()].copy_from_slice(&patch.new);
         self.cursor += 1;
+        log_profile("cpt.apply", start.elapsed());
     }
 
     pub fn revert_patch(&mut self) {
@@ -150,7 +168,9 @@ impl ChronoPatchTree {
         }
         self.cursor -= 1;
         let patch = Self::decode_patch(&self.patches[self.cursor]);
+        let start = Instant::now();
         self.mmap[patch.offset..patch.offset + patch.old.len()].copy_from_slice(&patch.old);
+        log_profile("cpt.revert", start.elapsed());
     }
 }
 
@@ -204,7 +224,7 @@ pub extern "C" fn cpt_revert(ptr: *mut ChronoPatchTree) {
 #[no_mangle]
 pub extern "C" fn cpt_free(ptr: *mut ChronoPatchTree) {
     if !ptr.is_null() {
-        unsafe { Box::from_raw(ptr); }
+        unsafe { drop(Box::from_raw(ptr)); }
     }
 }
 
@@ -243,6 +263,7 @@ impl DagScheduler {
     }
 
     fn execute(&self) -> bool {
+        let total_start = Instant::now();
         let mut indeg: HashMap<usize, usize> = HashMap::new();
         let mut adj: HashMap<usize, Vec<usize>> = HashMap::new();
         for (&id, task) in &self.tasks {
@@ -268,7 +289,9 @@ impl DagScheduler {
             }
             for id in &batch {
                 if let Some(task) = self.tasks.get(id) {
+                    let start = Instant::now();
                     unsafe { (task.func)(task.data) };
+                    log_profile(&format!("dag.task.{}", id), start.elapsed());
                 }
             }
             processed += batch.len();
@@ -290,8 +313,9 @@ impl DagScheduler {
             }
             ready.extend(next);
         }
-
-        processed == self.tasks.len()
+        let ok = processed == self.tasks.len();
+        log_profile("dag.execute", total_start.elapsed());
+        ok
     }
 }
 
@@ -303,7 +327,7 @@ pub extern "C" fn dag_new() -> *mut DagScheduler {
 #[no_mangle]
 pub extern "C" fn dag_free(ptr: *mut DagScheduler) {
     if !ptr.is_null() {
-        unsafe { Box::from_raw(ptr); }
+        unsafe { drop(Box::from_raw(ptr)); }
     }
 }
 

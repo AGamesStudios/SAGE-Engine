@@ -13,3 +13,6 @@ crate-type = ["cdylib"]
 memmap2 = "0.9"
 xz2 = "0.1"
 pyo3 = { version = "0.21", features = ["auto-initialize"] }
+
+[features]
+profiling = []

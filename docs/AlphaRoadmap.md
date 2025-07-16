@@ -7,5 +7,6 @@ This document tracks the remaining steps towards the Alpha 1.0 release. Each sub
 - Verify physics interactions and X-Ray overlay.
 - Ensure render and UI examples display correctly.
 - Document resources and plugin system.
+- Implement `ProfileFrame` for measuring performance of core subsystems.
 
 When all items are checked off, the project graduates from "Alpha 1.0 Candidate" to "Alpha 1.0".

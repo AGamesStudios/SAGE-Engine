@@ -15,7 +15,8 @@ pytest -q
 ```
 
 Install the packages from ``requirements.txt`` to run the examples and tests
-on a clean environment.
+on a clean environment. Build the Feather Core library with ``--features
+profiling`` to print timing information for each frame.
 
 The file [SAGE_ALPHA_1.0_checklist.md](SAGE_ALPHA_1.0_checklist.md) lists tasks
 that must be finished before removing the "Candidate" label from this release.
@@ -59,6 +60,7 @@ Short guides: [Audio](docs/audio_quickstart.md),
 [Objects](docs/objects.md).
 [MicroPython](docs/micropython.md).
 [Feather Core](docs/feather_core.md).
+[ProfileFrame](docs/profile_frame.md).
 
 ## Папки проекта
 
