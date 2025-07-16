@@ -17,6 +17,9 @@ pytest -q
 Install the packages from ``requirements.txt`` to run the examples and tests
 on a clean environment.
 
+The file [SAGE_ALPHA_1.0_checklist.md](SAGE_ALPHA_1.0_checklist.md) lists tasks
+that must be finished before removing the "Candidate" label from this release.
+
 GUI backends are loaded via plugins. Install the desired extra:
 
 ```bash

@@ -10,5 +10,7 @@ This project contains a modular game engine (`engine`), an optional editor (`sag
 - **Commits**: Write descriptive commit messages that summarise the change.
 - **Custom style only.** Never use Qt's built-in styles such as "Fusion".
   The editor must apply its own palette and stylesheet.
+- **Release checklist**: Consult `SAGE_ALPHA_1.0_checklist.md` for tasks that
+  must be completed before the Alpha release.
 
 Following these rules helps keep the engine lightweight, extensible and easy to maintain.
