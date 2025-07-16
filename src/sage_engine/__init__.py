@@ -17,6 +17,7 @@ __all__ = [
     "transform",
     "depth",
     "resources",
+    "objects",
 ]
 
 from importlib import import_module

@@ -42,6 +42,7 @@ Short guides: [Audio](docs/audio_quickstart.md),
 [Sprite rendering](docs/sprite_rendering.md).
 [Camera & coordinates](docs/camera_coords.md).
 [Fonts and text](docs/fonts_and_text.md).
+[Objects](docs/objects.md).
 
 ## Папки проекта
 
