@@ -1,8 +1,0 @@
-colors:
-  bg: "#1e1e1e"
-  fg: "#ffffff"
-  accent: "#ffb400"
-font:
-  family: "Roboto"
-  size: 14
-radius: 6

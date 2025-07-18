@@ -1,1 +1,0 @@
-"""OpenGL render backend plugin."""

@@ -1,33 +1,14 @@
 [project]
-name = "sage_engine"
+name = "sage_feather"
 version = "0.1.0a0"
 requires-python = ">=3.8"
-dependencies = ["typing-extensions", "pillow", "PyYAML>=6.0"]
 
 [project.optional-dependencies]
 dev = ["ruff", "pytest"]
-qt6 = ["PyQt6>=6.5"]
-qt5 = ["PyQt5>=5.15"]
-tk = []
-audio_conv = ["pydub>=0.25.0", "ffmpeg-python>=0.2.0"]
-opengl = ["moderngl>=5.8", "glfw>=2.6"]
 
 [build-system]
 requires = ["setuptools>=64", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-package-dir = {"" = "src"}
-packages = ["sage_engine", "gui_qt6", "gui_tk", "sage_render_headless", "sage_render_gl"]
-py-modules = ["sage_cli"]
-
-[project.scripts]
-sage = "sage_cli:main"
-
-[project.entry-points.sage_gui]
-qt6 = "gui_qt6.backend:PyQtBackend"
-tk = "gui_tk.backend:TkBackend"
-
-[project.entry-points.sage_render]
-headless = "sage_render_headless.backend:HeadlessBackend"
-opengl = "sage_render_gl.backend:OpenGLBackend"
+packages = []

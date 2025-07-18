@@ -1,79 +1,39 @@
-# SAGE Engine
+# SAGE Feather
 
-**Alpha 0.1 (Core & Tree Complete — I/O and Tests Pending)**
+This repository contains **SAGE Feather**, a minimal runtime for the SAGE Engine written in Rust.
+It exposes a simple C API that can be used from Python or other languages.
 
-Minimal starting point for the SAGE Engine.
+The library includes a ChronoPatch Tree for state storage, a DAG scheduler for tasks
+and bindings for running MicroPython scripts.
 
-⚠️ **Note**: Several subsystems (Audio, Physics, Particles) are currently experimental. These modules are under active development and may be incomplete or non-functional in the current version.
-
-## Quick Start
-
-```bash
-python bootstrap.py
-python examples/hello_sprite/main.py
-pytest -q
-```
-
-Install the packages from ``requirements.txt`` to run the examples and tests
-on a clean environment.
-Some optional libraries require system packages:
-
-- ``box2d-py`` needs ``swig`` to build.
-- ``simpleaudio`` requires ALSA headers (``libasound2-dev`` on Debian).
-
-Use ``--skip-audio`` or ``--skip-physics`` when running ``pytest`` if these
-dependencies are missing. Build the Feather Core library with ``--features
-profiling`` to print timing information for each frame.
-
-The file [SAGE_ALPHA_1.0_checklist.md](SAGE_ALPHA_1.0_checklist.md) lists tasks
-that must be finished before removing the "Candidate" label from this release.
-
-The minimal runtime "Feather Core" lives under ``rust/feather_core``. Build it
-with ``cargo build --release`` to produce a shared library for FFI bindings.
-Feather Core targets Python 3.8 through 3.13. Use `PYO3_USE_ABI3_FORWARD_COMPATIBILITY=1` when building against newer interpreters.
-Feather Core also exposes a DAG scheduler for running dependent tasks in order.
-
-GUI backends are loaded via plugins. Install the desired extra:
+## Building
 
 ```bash
-pip install .[qt6]   # PyQt 6 window
-pip install .[tk]    # Tk window
-pip install .[opengl]  # OpenGL renderer
+cargo build --release --manifest-path rust/feather_core/Cargo.toml
 ```
 
-Run examples with `--gui` to choose a GUI backend. Use `--render` to pick a render backend:
+The library targets Python 3.8 through 3.13 via PyO3. Set
+`PYO3_USE_ABI3_FORWARD_COMPATIBILITY=1` when using newer interpreters.
+
+## Example
+
+Run the Alpha demo to see Feather in action:
 
 ```bash
-python examples/hello_sprite/main.py --gui qt6 --render opengl
-python examples/hello_sprite/main.py --gui auto --render auto
-sage run --gui list   # show available GUI backends
-sage run --render opengl script.py
+python examples/alpha_demo/main.py
 ```
 
-Running with the OpenGL backend renders sprites via GPU instancing. The first
-frame of the hello example is shown below (screenshot omitted here).
+This example creates a ChronoPatch Tree, patches object velocity,
+executes a MicroPython script via a DAG task and prints the final state.
 
-See [Writing your own GUI backend](docs/writing_gui_backend.md) for details.
-See [Writing your own render backend](docs/writing_render_backend.md) for details.
-The folder `examples/plugins/gui_dummy` contains a minimal plugin template.
-Short guides: [Audio](docs/audio_quickstart.md),
-[Physics](docs/physics_quickstart.md),
-[UI](docs/ui_quickstart.md),
-[Tilemap](docs/tilemap_quickstart.md) and
-[Particles](docs/particles_quickstart.md),
-[Custom shaders](docs/render_shaders.md).
-[Sprite rendering](docs/sprite_rendering.md).
-[Camera & coordinates](docs/camera_coords.md).
-[Fonts and text](docs/fonts_and_text.md).
-[Objects](docs/objects.md).
-[MicroPython](docs/micropython.md).
-[Feather Core](docs/feather_core.md).
-[ProfileFrame](docs/profile_frame.md).
+## Tests
 
-## Папки проекта
+Run the code style check and unit tests with:
 
-- `src` - исходники движка
-- `examples` - примеры
-- `tests` - тесты
-- `docs` - документация
-- `tools` - служебные скрипты
+```bash
+ruff check .
+PYTHONPATH=. pytest -q
+```
+
+The checklist for the Alpha release lives in
+[SAGE_ALPHA_1.0_checklist.md](SAGE_ALPHA_1.0_checklist.md).

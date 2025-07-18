@@ -1,6 +1,0 @@
-[project]
-name = "gui_dummy"
-version = "0.0.0"
-
-[project.entry-points.sage_gui]
-dummy = "gui_dummy.backend:DummyBackend"

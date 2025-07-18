@@ -1,9 +1,2 @@
-# Dependencies required to run tests for SAGE Engine
-pillow
-# optional: audio conversion
-pydub
-ffmpeg-python
-# optional: physics backend
-box2d-py
-# optional: audio playback
-simpleaudio
+ruff
+pytest

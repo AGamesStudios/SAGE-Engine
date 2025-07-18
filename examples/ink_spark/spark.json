@@ -1,6 +1,0 @@
-{
-  "rate": 200,
-  "velocity_range": [-20, 20],
-  "life_time": 0.7,
-  "color": "#ff7f00"
-}
