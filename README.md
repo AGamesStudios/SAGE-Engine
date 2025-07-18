@@ -40,6 +40,12 @@ See [docs/sage_object.md](docs/sage_object.md) for the file format.
 The ``tools/build_core.py`` script compiles the engine into ``dist/sage_core.lzma``.
 Plugins can be loaded at runtime via ``sage_engine.plugin.load_plugins``.
 
+## Scene
+
+Objects are organised in a Scene using parent/child links. Use
+``add_object`` and ``remove_object`` from ``sage_engine.object`` to manage
+hierarchy. See ``docs/sage_scene.md`` for details.
+
 ## Render and UI
 
 Sprite objects are batched by image to minimise draw calls. UI elements are
