@@ -40,6 +40,12 @@ See [docs/sage_object.md](docs/sage_object.md) for the file format.
 The ``tools/build_core.py`` script compiles the engine into ``dist/sage_core.lzma``.
 Plugins can be loaded at runtime via ``sage_engine.plugin.load_plugins``.
 
+## Render and UI
+
+Sprite objects are batched by image to minimise draw calls. UI elements are
+handled by the ``sage_engine.ui`` subsystem. See ``docs/render.md`` and
+``docs/ui.md`` for details. A demo scene lives in ``data/objects/ui_demo.sage_object``.
+
 ## Tests
 
 Run the code style check and unit tests with:

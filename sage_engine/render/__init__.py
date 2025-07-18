@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import time
-from typing import Optional
+from collections import defaultdict
+from typing import Iterable, Optional
 
 from sage_object import SAGEObject
 
@@ -43,6 +44,22 @@ def render_object(obj: SAGEObject) -> str:
     if obj.role == "UI":
         return f"UI text={obj.params.get('text')}"
     return "Empty"
+
+
+def render_scene(objs: Iterable[SAGEObject]) -> list[str]:
+    """Render a list of objects, returning a description of draw calls."""
+    sprites: dict[str | None, list[SAGEObject]] = defaultdict(list)
+    calls: list[str] = []
+    for obj in sorted(objs, key=lambda o: o.layer):
+        if obj.role == "Sprite":
+            sprites[obj.params.get("image")].append(obj)
+        elif obj.role == "UI":
+            calls.append(f"UI text={obj.params.get('text')}")
+        elif obj.role == "Camera":
+            calls.append(f"Camera zoom={obj.params.get('zoom')}" )
+    for image, group in sprites.items():
+        calls.append(f"SpriteBatch image={image} count={len(group)}")
+    return calls
 
 
 # Backwards compatibility
