@@ -7,6 +7,7 @@ import time
 from types import ModuleType
 
 from .. import dag, render, resource, ui, object as object_mod
+from sage import get_event_handlers
 from ..profiling import ProfileEntry, ProfileFrame
 
 _LOGGER = logging.getLogger(__name__)
@@ -87,12 +88,24 @@ def core_reset() -> ProfileFrame:
     return core_boot()
 
 
+def core_debug() -> None:
+    """Print current objects and active event handlers for debugging."""
+    print("Objects:")
+    for obj in object_mod.get_objects():
+        print(f" - {obj.id} role={obj.role} parent={obj.parent_id}")
+    print("Events:")
+    for event, handlers in get_event_handlers().items():
+        print(f" - {event}: {len(handlers)} handlers")
+
+
 __all__ = [
     "register_subsystem",
     "get_subsystem",
     "BOOT_SEQUENCE",
     "core_boot",
     "core_reset",
+    "core_debug",
     "ProfileFrame",
     "ProfileEntry",
 ]
+

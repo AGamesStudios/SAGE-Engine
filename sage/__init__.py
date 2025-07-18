@@ -1,4 +1,12 @@
-from .events import on, once, off, emit, cleanup_events, register_events
+from .events import (
+    on,
+    once,
+    off,
+    emit,
+    cleanup_events,
+    register_events,
+    get_event_handlers,
+)
 
 __all__ = [
     'on',
@@ -7,4 +15,5 @@ __all__ = [
     'emit',
     'cleanup_events',
     'register_events',
+    'get_event_handlers',
 ]

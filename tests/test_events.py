@@ -1,4 +1,4 @@
-from sage import on, once, off, emit, cleanup_events
+from sage import on, once, off, emit, cleanup_events, get_event_handlers
 from sage_object import object_from_dict
 from sage_engine.object import add_object, remove_object, reset
 
@@ -31,3 +31,5 @@ def test_object_event_registration_and_cleanup():
     cleanup_events()
     emit("test", None)
     assert out == ["o"]
+    table = get_event_handlers()
+    assert "test" not in table

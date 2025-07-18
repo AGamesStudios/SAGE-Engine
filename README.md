@@ -30,6 +30,7 @@ python examples/alpha_demo/main.py --skip-audio --skip-physics
 
 This example creates a ChronoPatch Tree, patches object velocity,
 executes a MicroPython script via a DAG task and prints the final state.
+Use ``core_debug()`` to print the current scene and active event handlers.
 
 ## Object Files
 

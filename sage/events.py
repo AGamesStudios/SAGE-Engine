@@ -47,6 +47,11 @@ def cleanup_events() -> None:
             _events.pop(event, None)
 
 
+def get_event_handlers() -> dict[str, list[Callable]]:
+    """Return current event -> handlers mapping (for debugging)."""
+    return {evt: [h[0] for h in slot.handlers] for evt, slot in _events.items()}
+
+
 def register_events(obj) -> None:
     for key, value in obj.params.items():
         if key.startswith('on_'):
@@ -60,5 +65,13 @@ def register_events(obj) -> None:
             elif callable(value):
                 on(event, value, owner=obj)
 
-__all__ = ['on', 'once', 'off', 'emit', 'cleanup_events', 'register_events']
+__all__ = [
+    'on',
+    'once',
+    'off',
+    'emit',
+    'cleanup_events',
+    'register_events',
+    'get_event_handlers',
+]
 

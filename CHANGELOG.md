@@ -11,3 +11,4 @@
 - implement Scene hierarchy with parent_id and cleanup
 - document render and UI subsystems
 - introduce events system with object integration
+- add `core_debug()` and `get_event_handlers()` for inspecting runtime state

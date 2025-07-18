@@ -1,4 +1,4 @@
-from sage_engine import core_boot, core_reset
+from sage_engine import core_boot, core_reset, core_debug
 from sage_engine.object import get_objects
 
 
@@ -9,3 +9,4 @@ def test_core_boot_and_reset():
     # ensure reset does not raise and returns a new profile
     profile2 = core_reset()
     assert profile2.entries
+    core_debug()

@@ -21,3 +21,5 @@ When this object enters the scene the string is executed every time the
 
 Call `cleanup_events()` periodically or when objects are removed to discard
 handlers whose owners have been marked for removal.
+Use `get_event_handlers()` to inspect the current mapping of events to
+callbacks during debugging.
