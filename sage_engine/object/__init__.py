@@ -7,6 +7,7 @@ from sage_object import (
     object_from_dict,
     get_available_roles,
 )
+from sage.events import register_events, cleanup_events
 
 _initialized = False
 _objects: list[SAGEObject] = []
@@ -58,6 +59,7 @@ def add_object(obj: SAGEObject) -> None:
     _cache_by_layer.setdefault(obj.layer, []).append(obj)
     _children_map.setdefault(obj.parent_id, []).append(obj)
     obj.on_scene_enter()
+    register_events(obj)
 
 
 def remove_object(obj_id: str) -> None:
@@ -77,6 +79,8 @@ def _remove_recursive(obj: SAGEObject) -> None:
         _id_index.pop(obj.id, None)
     _cache_by_role.get(obj.role, []).remove(obj)
     _cache_by_layer.get(obj.layer, []).remove(obj)
+    obj.remove = True
+    cleanup_events()
     obj.on_scene_exit()
 
 

@@ -10,3 +10,4 @@
 - batch sprite draw calls and add basic UI rendering
 - implement Scene hierarchy with parent_id and cleanup
 - document render and UI subsystems
+- introduce events system with object integration

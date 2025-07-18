@@ -23,4 +23,5 @@ packages = [
     "sage_engine.config",
     "sage_engine.plugin",
     "sage_object",
+    "sage",
 ]

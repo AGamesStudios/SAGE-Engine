@@ -52,6 +52,13 @@ Sprite objects are batched by image to minimise draw calls. UI elements are
 handled by the ``sage_engine.ui`` subsystem. See ``docs/render.md`` and
 ``docs/ui.md`` for details. A demo scene lives in ``data/objects/ui_demo.sage_object``.
 
+## Events
+
+The ``sage`` package provides a lightweight event system. Register handlers with
+``on(event, handler)`` and trigger them via ``emit(event, data)``. Object fields
+prefixed with ``on_`` are automatically connected when added to the scene. See
+``docs/events_system.md``.
+
 ## Tests
 
 Run the code style check and unit tests with:
