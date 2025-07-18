@@ -30,6 +30,7 @@ that must be finished before removing the "Candidate" label from this release.
 
 The minimal runtime "Feather Core" lives under ``rust/feather_core``. Build it
 with ``cargo build --release`` to produce a shared library for FFI bindings.
+Feather Core targets Python 3.8 through 3.13. Use `PYO3_USE_ABI3_FORWARD_COMPATIBILITY=1` when building against newer interpreters.
 Feather Core also exposes a DAG scheduler for running dependent tasks in order.
 
 GUI backends are loaded via plugins. Install the desired extra:

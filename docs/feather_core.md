@@ -9,6 +9,9 @@ Build with:
 cargo build --release
 ```
 
+### Python Compatibility
+Feather Core depends on PyO3 0.22 which supports Python up to 3.13. Cargo automatically detects your Python interpreter. If you need a newer version, set `PYO3_USE_ABI3_FORWARD_COMPATIBILITY=1` when building.
+
 This produces a shared library that the engine can load at runtime.
 
 The API currently exposes constructors and destructors for `FeatherCore`
