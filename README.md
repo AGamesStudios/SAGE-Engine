@@ -31,6 +31,12 @@ python examples/alpha_demo/main.py --skip-audio --skip-physics
 This example creates a ChronoPatch Tree, patches object velocity,
 executes a MicroPython script via a DAG task and prints the final state.
 
+## Object Files
+
+Game objects can be stored in JSON files with the ``.sage_object`` extension.
+During ``core_boot()`` all files in ``data/objects/`` are loaded automatically.
+See [docs/sage_object.md](docs/sage_object.md) for the file format.
+
 ## Tests
 
 Run the code style check and unit tests with:

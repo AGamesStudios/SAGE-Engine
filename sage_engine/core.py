@@ -43,6 +43,13 @@ def core_boot() -> InitProfile:
     entries.append(_init_step("Render", render.init_render))
     entries.append(_init_step("Resources", resource.init_resource))
     entries.append(_init_step("Objects", object_mod.init_object))
+    def _load_objects():
+        mgr = resource.get_manager()
+        objects = mgr.load_all_objects("data/objects")
+        for obj in objects:
+            object_mod.register_object(obj)
+
+    entries.append(_init_step("LoadObjects", _load_objects))
     entries.append(_init_step("DAG", dag.init_dag))
     entries.append(_init_step("UI", ui.init_ui))
 

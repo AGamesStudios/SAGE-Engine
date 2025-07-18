@@ -6,3 +6,4 @@
 - feat: CLI backend listing and capability ping
 - add lightweight core_boot() system with profiling
 - introduce minimal object roles and rendering hooks
+- load `.sage_object` files via ResourceManager during boot
