@@ -11,4 +11,4 @@ requires = ["setuptools>=64", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["sage_engine"]
+packages = ["sage_engine", "sage_object"]
