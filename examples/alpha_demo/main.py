@@ -1,16 +1,41 @@
 import json
+import os
 import subprocess
+import shutil
 import ctypes
+import sys
 from pathlib import Path
 
-def build_lib():
-    lib_path = Path('rust/feather_core/target/release/libfeather_core.so')
-    subprocess.run(
-        ['cargo', 'build', '--release', '--features', 'profiling'],
-        cwd='rust/feather_core',
-        check=True,
+def build_lib() -> Path:
+    cargo_dir = os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__),
+            '..', '..',
+            'rust', 'feather_core'
+        )
     )
-    return lib_path
+    if not os.path.isdir(cargo_dir):
+        raise NotADirectoryError(f"Не найдена папка: {cargo_dir}")
+    cargo = shutil.which('cargo')
+    if cargo is None:
+        raise RuntimeError('cargo не найден в PATH')
+    print(f"[build_lib] Building Rust project in: {cargo_dir}")
+    print(f"[build_lib] Using cargo at: {cargo}")
+    try:
+        subprocess.run(
+            ['cargo', 'build', '--release', '--features', 'profiling'],
+            cwd=cargo_dir,
+            check=True,
+        )
+    except subprocess.CalledProcessError as e:
+        print(f"[build_lib] cargo build failed with {e}")
+        raise
+    lib_name = 'libfeather_core.so'
+    if os.name == 'nt':
+        lib_name = 'feather_core.dll'
+    elif sys.platform == 'darwin':
+        lib_name = 'libfeather_core.dylib'
+    return Path(cargo_dir) / 'target' / 'release' / lib_name
 
 def main():
     lib_path = build_lib()
