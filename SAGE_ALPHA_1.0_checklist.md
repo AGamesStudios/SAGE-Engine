@@ -11,4 +11,4 @@ Alpha 1.0 release.
 - [x] **Documentation**: README and guides reflect current behaviour.
 
 Once these tasks are complete, remove the "Candidate" label from the README and
-mark the repository as **Alpha 1.0**.
+mark the repository as **Alpha 0.2**.

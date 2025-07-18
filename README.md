@@ -1,5 +1,7 @@
 # SAGE Feather
 
+Status: **Alpha 0.2 (Stable Core)**
+
 This repository contains **SAGE Feather**, a minimal runtime for the SAGE Engine written in Rust.
 It exposes a simple C API that can be used from Python or other languages.
 
@@ -52,6 +54,7 @@ hierarchy. See ``docs/sage_scene.md`` for details.
 Sprite objects are batched by image to minimise draw calls. UI elements are
 handled by the ``sage_engine.ui`` subsystem. See ``docs/render.md`` and
 ``docs/ui.md`` for details. A demo scene lives in ``data/objects/ui_demo.sage_object``.
+For an overview of the modules see [docs/architecture.md](docs/architecture.md).
 
 ## Events
 

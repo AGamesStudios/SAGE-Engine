@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## Alpha 0.2 - Stable Core
 - feat: optional Qt6 / Qt5 support, auto-fallback
 - feat: pluggable GUI backends (entry-point sage_gui)
 - feat: CLI backend listing and capability ping
