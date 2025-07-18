@@ -6,6 +6,11 @@ import ctypes
 import sys
 from pathlib import Path
 
+# allow running the example directly from its folder
+sys.path.insert(
+    0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+)
+
 from sage_engine import core_boot, core_reset
 
 def build_lib() -> Path:

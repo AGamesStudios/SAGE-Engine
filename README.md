@@ -30,6 +30,13 @@ Audio and physics can be disabled if the dependencies are missing:
 python examples/alpha_demo/main.py --skip-audio --skip-physics
 ```
 
+You can also launch it from within the folder:
+
+```bash
+cd examples/alpha_demo
+python main.py
+```
+
 This example creates a ChronoPatch Tree, patches object velocity,
 executes a MicroPython script via a DAG task and prints the final state.
 Use ``core_debug()`` to print the current scene and active event handlers.
