@@ -27,4 +27,4 @@ See the tests for an example of writing data, reverting and reapplying patches.
 
 ## DAG Scheduler
 
-Feather Core also provides a small task scheduler based on a directed acyclic graph. Tasks are registered with a C callback and optional data pointer. Dependencies between tasks are described by task IDs. When executed, the scheduler automatically runs tasks in topological order and detects cycles. Independent tasks run in parallel on separate threads.
+Feather Core also provides a small task scheduler based on a directed acyclic graph. Tasks are registered with a C callback and optional data pointer. Dependencies between tasks are described by task IDs. When executed, the scheduler automatically runs tasks in topological order and detects cycles. Independent tasks will eventually run in parallel, but the current implementation is single-threaded.

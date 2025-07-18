@@ -6,6 +6,9 @@ It exposes a simple C API that can be used from Python or other languages.
 The library includes a ChronoPatch Tree for state storage, a DAG scheduler for tasks
 and bindings for running MicroPython scripts.
 
+Audio and physics bindings are optional. When running tests or examples you can
+skip them with the ``--skip-audio`` and ``--skip-physics`` flags.
+
 ## Building
 
 ```bash
@@ -18,10 +21,11 @@ The library targets Python 3.8 through 3.13 via PyO3. Set
 ## Example
 
 Run the Alpha demo to see Feather in action. The demo initialises the Python
-engine modules via ``core_boot()`` before calling into the Rust library:
+engine modules via ``core_boot()`` before calling into the Rust library.
+Audio and physics can be disabled if the dependencies are missing:
 
 ```bash
-python examples/alpha_demo/main.py
+python examples/alpha_demo/main.py --skip-audio --skip-physics
 ```
 
 This example creates a ChronoPatch Tree, patches object velocity,
