@@ -20,7 +20,6 @@ packages = [
     "sage_engine.resource",
     "sage_engine.ui",
     "sage_engine.profiling",
-    "sage_engine.config",
     "sage_engine.plugin",
     "sage_object",
     "sage",
