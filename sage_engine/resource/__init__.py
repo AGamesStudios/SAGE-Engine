@@ -62,11 +62,34 @@ class ResourceManager:
 _manager: ResourceManager | None = None
 
 
-def init_resource() -> None:
+def boot() -> None:
+    """Initialise the resource subsystem."""
     global _manager
     _manager = ResourceManager()
+
+
+def reset() -> None:
+    global _manager
+    _manager = None
+
+
+def destroy() -> None:
+    reset()
 
 
 def get_manager() -> ResourceManager:
     assert _manager is not None, "ResourceManager not initialised"
     return _manager
+
+
+# Backwards compatibility
+init_resource = boot
+
+__all__ = [
+    "ResourceManager",
+    "boot",
+    "reset",
+    "destroy",
+    "get_manager",
+    "init_resource",
+]

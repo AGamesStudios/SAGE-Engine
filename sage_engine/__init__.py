@@ -1,5 +1,5 @@
 """SAGE Engine Python package."""
 
-from .core import core_boot, core_reset, InitProfile
+from .core import core_boot, core_reset, ProfileFrame
 
-__all__ = ["core_boot", "core_reset", "InitProfile"]
+__all__ = ["core_boot", "core_reset", "ProfileFrame"]

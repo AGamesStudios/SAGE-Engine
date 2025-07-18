@@ -11,4 +11,16 @@ requires = ["setuptools>=64", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["sage_engine", "sage_object"]
+packages = [
+    "sage_engine",
+    "sage_engine.core",
+    "sage_engine.object",
+    "sage_engine.dag",
+    "sage_engine.render",
+    "sage_engine.resource",
+    "sage_engine.ui",
+    "sage_engine.profiling",
+    "sage_engine.config",
+    "sage_engine.plugin",
+    "sage_object",
+]

@@ -10,12 +10,22 @@ _initialized = False
 _current_camera: Optional[SAGEObject] = None
 
 
-def init_render() -> None:
+def boot() -> None:
     """Initialize the render subsystem."""
     global _initialized, _current_camera
     time.sleep(0)  # placeholder for real setup
     _initialized = True
     _current_camera = None
+
+
+def reset() -> None:
+    global _initialized, _current_camera
+    _initialized = False
+    _current_camera = None
+
+
+def destroy() -> None:
+    reset()
 
 
 def is_initialized() -> bool:
@@ -33,3 +43,16 @@ def render_object(obj: SAGEObject) -> str:
     if obj.role == "UI":
         return f"UI text={obj.params.get('text')}"
     return "Empty"
+
+
+# Backwards compatibility
+init_render = boot
+
+__all__ = [
+    "boot",
+    "reset",
+    "destroy",
+    "render_object",
+    "init_render",
+    "is_initialized",
+]

@@ -37,6 +37,9 @@ Game objects can be stored in JSON files with the ``.sage_object`` extension.
 During ``core_boot()`` all files in ``data/objects/`` are loaded automatically.
 See [docs/sage_object.md](docs/sage_object.md) for the file format.
 
+The ``tools/build_core.py`` script compiles the engine into ``dist/sage_core.lzma``.
+Plugins can be loaded at runtime via ``sage_engine.plugin.load_plugins``.
+
 ## Tests
 
 Run the code style check and unit tests with:

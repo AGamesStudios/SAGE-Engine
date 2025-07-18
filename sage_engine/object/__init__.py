@@ -12,10 +12,22 @@ _initialized = False
 _objects: list[SAGEObject] = []
 
 
-def init_object() -> None:
+def boot() -> None:
+    """Initialise the object subsystem."""
     global _initialized, _objects
     _initialized = True
     _objects = []
+
+
+def reset() -> None:
+    """Reset the subsystem state."""
+    global _initialized, _objects
+    _objects.clear()
+    _initialized = False
+
+
+def destroy() -> None:
+    reset()
 
 
 def is_initialized() -> bool:
@@ -29,8 +41,15 @@ def register_object(obj: SAGEObject) -> None:
 def get_objects() -> list[SAGEObject]:
     return list(_objects)
 
+
+# Backwards compatibility
+init_object = boot
+
 __all__ = [
     "init_object",
+    "boot",
+    "reset",
+    "destroy",
     "is_initialized",
     "SAGEObject",
     "InvalidRoleError",
