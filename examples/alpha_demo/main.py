@@ -6,6 +6,8 @@ import ctypes
 import sys
 from pathlib import Path
 
+from sage_engine import core_boot, core_reset
+
 def build_lib() -> Path:
     cargo_dir = os.path.abspath(
         os.path.join(
@@ -38,6 +40,8 @@ def build_lib() -> Path:
     return Path(cargo_dir) / 'target' / 'release' / lib_name
 
 def main():
+    # initialise Python side of the engine
+    core_boot()
     lib_path = build_lib()
     lib = ctypes.CDLL(str(lib_path))
 
@@ -100,6 +104,9 @@ def main():
 
     lib.mp_free(mp)
     lib.cpt_free(tree)
+
+    # allow hot reinitialisation in development
+    core_reset()
 
 if __name__ == "__main__":
     main()

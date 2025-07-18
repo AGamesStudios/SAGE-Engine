@@ -17,7 +17,8 @@ The library targets Python 3.8 through 3.13 via PyO3. Set
 
 ## Example
 
-Run the Alpha demo to see Feather in action:
+Run the Alpha demo to see Feather in action. The demo initialises the Python
+engine modules via ``core_boot()`` before calling into the Rust library:
 
 ```bash
 python examples/alpha_demo/main.py
