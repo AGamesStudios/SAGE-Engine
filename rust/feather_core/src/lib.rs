@@ -10,8 +10,6 @@ use xz2::write::XzEncoder;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 
-const TILE_SIZE: usize = 1024;
-
 #[cfg(feature = "profiling")]
 fn log_profile(name: &str, dur: std::time::Duration) {
     println!("{} = {:.2} ms", name, dur.as_secs_f64() * 1000.0);
@@ -73,7 +71,7 @@ pub extern "C" fn mp_exec(_ptr: *mut MicroPy, script: *const c_char) -> bool {
         Err(_) => return false,
     };
     let start = Instant::now();
-    let ok = Python::with_gil(|py| py.run(code, None, None).is_ok());
+    let ok = Python::with_gil(|py| py.run_bound(code, None, None).is_ok());
     log_profile("micropython.exec", start.elapsed());
     ok
 }
@@ -99,13 +97,13 @@ pub extern "C" fn mp_exec_json(
     };
     let start = Instant::now();
     let out = Python::with_gil(|py| {
-        let locals = PyDict::new(py);
+        let locals = PyDict::new_bound(py);
         locals.set_item("state_json", state_str).ok()?;
-        py.run("import json\nstate = json.loads(state_json)", None, Some(locals))
+        py.run_bound("import json\nstate = json.loads(state_json)", None, Some(&locals))
             .ok()?;
-        py.run(code, None, Some(locals)).ok()?;
+        py.run_bound(code, None, Some(&locals)).ok()?;
         let res: String = py
-            .eval("json.dumps(state)", None, Some(locals))
+            .eval_bound("json.dumps(state)", None, Some(&locals))
             .ok()?
             .extract()
             .ok()?;
@@ -280,7 +278,6 @@ pub extern "C" fn cpt_free(ptr: *mut ChronoPatchTree) {
 // --- DAG Scheduler -------------------------------------------------------
 use std::collections::{HashMap, VecDeque};
 use std::ffi::c_void;
-use std::thread;
 
 type TaskFn = unsafe extern "C" fn(*mut c_void);
 
