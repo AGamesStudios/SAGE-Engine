@@ -9,7 +9,7 @@ from sage.config import DEFAULT_WINDOW_CONFIG
 from sage import emit
 from sage_engine import core_boot, core_reset, framesync, input, time
 from sage_engine.render import render_scene
-from sage_engine.object import get_objects
+from sage_engine.object import get_objects, get_object
 from sage_engine.window import get_window, poll as poll_window, present as present_window
 
 
@@ -54,6 +54,13 @@ def main() -> None:
     import sage_engine.window as window
     print("Window size:", window.get_size())
     print("Window title:", window.get_title())
+    player = get_object("player")
+    print("Player:", player)
+    if player:
+        print("Image:", player.params.get("image"))
+        print("Role:", player.role)
+        print("Position:", player.params.get("x"), player.params.get("y"))
+        print("Visible:", player.visible)
     emit("ready")
     time.mark()
 

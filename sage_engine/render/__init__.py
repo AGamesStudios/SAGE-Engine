@@ -3,12 +3,41 @@ from __future__ import annotations
 
 import time
 from collections import defaultdict
+from pathlib import Path
 from typing import Iterable, Optional
+
+import pygame
 
 from sage_object import SAGEObject
 
 _initialized = False
 _current_camera: Optional[SAGEObject] = None
+_images: dict[str, pygame.Surface] = {}
+
+
+def _get_image(name: str | None) -> pygame.Surface:
+    if name is None:
+        key = "__placeholder__"
+    else:
+        key = name
+    surf = _images.get(key)
+    if surf is None:
+        if name is not None:
+            path = Path("data/images") / name
+            if path.is_file():
+                try:
+                    surf = pygame.image.load(str(path)).convert_alpha()
+                    print(f"[render] loaded image: {path}")
+                except Exception:
+                    surf = None
+                    print(f"[render] failed to load image: {path}")
+        if surf is None:
+            surf = pygame.Surface((32, 32))
+            surf.fill((255, 0, 0))
+            if name is not None:
+                print(f"[render] missing image {name}, using placeholder")
+        _images[key] = surf
+    return surf
 
 
 def boot() -> None:
@@ -50,9 +79,17 @@ def render_scene(objs: Iterable[SAGEObject]) -> list[str]:
     """Render a list of objects, returning a description of draw calls."""
     sprites: dict[str | None, list[SAGEObject]] = defaultdict(list)
     calls: list[str] = []
+    surface = pygame.display.get_surface() if pygame.get_init() else None
+    if surface is not None:
+        surface.fill((0, 0, 0))
     for obj in sorted(objs, key=lambda o: o.layer):
         if obj.role == "Sprite":
             sprites[obj.params.get("image")].append(obj)
+            if surface is not None:
+                img = _get_image(obj.params.get("image"))
+                x = int(obj.params.get("x", 0))
+                y = int(obj.params.get("y", 0))
+                surface.blit(img, (x, y))
         elif obj.role == "UI":
             calls.append(f"UI text={obj.params.get('text')}")
         elif obj.role == "Camera":
