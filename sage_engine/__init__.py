@@ -12,6 +12,7 @@ from .logic_api import (
     on_update,
 )
 from .scripts_watcher import ScriptsWatcher
+from . import input, time
 
 __all__ = [
     "core_boot",
@@ -28,5 +29,7 @@ __all__ = [
     "emit_event",
     "on_ready",
     "on_update",
+    "input",
+    "time",
 ]
 

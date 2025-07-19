@@ -19,6 +19,8 @@ packages = [
     "sage_engine.dag",
     "sage_engine.render",
     "sage_engine.window",
+    "sage_engine.time",
+    "sage_engine.input",
     "sage_engine.resource",
     "sage_engine.ui",
     "sage_engine.profiling",

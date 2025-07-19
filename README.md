@@ -76,6 +76,15 @@ Settings live in `sage/config/framesync.yaml` where you can set `target_fps` and
 allow or disallow drift. Call `framesync.regulate()` once per frame to maintain
 smooth timing. See [docs/framesync.md](docs/framesync.md).
 
+## Time
+
+`sage_engine.time` offers `get_time()`, `get_delta()` and `wait(ms)`. Tune `time.scale` or set `time.paused` to control progression. See [docs/time.md](docs/time.md).
+
+## Input
+
+`sage_engine.input` tracks keyboard and mouse state. Use `is_key_down()` or `get_mouse_pos()` from any scripting language. Events like `key_down` and `click` are emitted. See [docs/input.md](docs/input.md).
+
+
 ## Events
 
 The ``sage`` package provides a lightweight event system. Register handlers with

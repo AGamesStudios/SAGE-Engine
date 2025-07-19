@@ -5,6 +5,7 @@ from typing import Any, Dict
 from sage_object import object_from_dict
 from .object import add_object, get_object, remove_object
 from sage import emit
+from . import input as input_mod, time as time_mod
 
 
 def create_object(obj_id: str, role: str, params: Dict[str, Any] | None = None):
@@ -70,6 +71,30 @@ def on_update(handler) -> None:
     from sage import on
     on("update", handler)
 
+
+def is_key_down(key: str) -> bool:
+    return input_mod.is_key_down(key)
+
+
+def is_mouse_pressed(button: str) -> bool:
+    return input_mod.is_mouse_pressed(button)
+
+
+def get_mouse_pos() -> tuple[int, int]:
+    return input_mod.get_mouse_pos()
+
+
+def get_time() -> float:
+    return time_mod.get_time()
+
+
+def get_delta() -> float:
+    return time_mod.get_delta()
+
+
+def wait(ms: float) -> None:
+    time_mod.wait(ms)
+
 __all__ = [
     "create_object",
     "set_param",
@@ -79,4 +104,10 @@ __all__ = [
     "log",
     "on_ready",
     "on_update",
+    "is_key_down",
+    "is_mouse_pressed",
+    "get_mouse_pos",
+    "get_time",
+    "get_delta",
+    "wait",
 ]

@@ -7,7 +7,17 @@ from pathlib import Path
 
 from types import ModuleType
 
-from .. import dag, render, resource, ui, object as object_mod, window, framesync
+from .. import (
+    dag,
+    render,
+    resource,
+    ui,
+    object as object_mod,
+    window,
+    framesync,
+    input as input_mod,
+    time as time_mod,
+)
 from sage_fs import FlowRunner
 from sage import get_event_handlers
 from ..lua_runner import run_lua_script, set_lua_globals
@@ -42,6 +52,8 @@ BOOT_SEQUENCE = [
     "window",
     "render",
     "framesync",
+    "time",
+    "input",
     "resource",
     "object",
     "dag",
@@ -52,6 +64,8 @@ BOOT_SEQUENCE = [
 register_subsystem("render", render)
 register_subsystem("window", window)
 register_subsystem("framesync", framesync)
+register_subsystem("time", time_mod)
+register_subsystem("input", input_mod)
 register_subsystem("resource", resource)
 register_subsystem("object", object_mod)
 register_subsystem("dag", dag)
@@ -94,6 +108,7 @@ def core_boot() -> ProfileFrame:
             def _init_flow():
                 cfg = load_config()
                 runner = FlowRunner()
+                runner.context.variables.update({"input": input_mod, "time": time_mod})
                 dag.register("flow.run", runner.run_file)
                 dag.register("lua.run", run_lua_script)
 
@@ -106,6 +121,8 @@ def core_boot() -> ProfileFrame:
                     destroy_object=destroy_object,
                     on_ready=on_ready,
                     on_update=on_update,
+                    input=input_mod,
+                    time=time_mod,
                 )
 
                 scripts = Path("data/scripts")
