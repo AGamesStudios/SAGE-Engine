@@ -84,6 +84,11 @@ def _remove_recursive(obj: SAGEObject) -> None:
     obj.on_scene_exit()
 
 
+def get_object(obj_id: str) -> SAGEObject | None:
+    """Return the object with *obj_id* if present."""
+    return _id_index.get(obj_id)
+
+
 def get_children(parent_id: str | None) -> list[SAGEObject]:
     return list(_children_map.get(parent_id, []))
 
@@ -124,5 +129,6 @@ __all__ = [
     "cleanup",
     "get_children",
     "get_parent",
+    "get_object",
     "get_objects",
 ]

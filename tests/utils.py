@@ -3,6 +3,7 @@ import subprocess
 import shutil
 import sys
 from pathlib import Path
+import pytest
 
 
 def build_lib() -> Path:
@@ -11,7 +12,7 @@ def build_lib() -> Path:
         raise NotADirectoryError(f"Не найдена папка: {cargo_dir}")
     cargo = shutil.which('cargo')
     if cargo is None:
-        raise RuntimeError('cargo не найден в PATH')
+        pytest.skip('cargo not found')
     subprocess.run([
         'cargo',
         'build',

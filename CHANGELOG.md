@@ -13,3 +13,4 @@
 - introduce events system with object integration
 - add `core_debug()` and `get_event_handlers()` for inspecting runtime state
 - integrate FlowScript parser and runner with DAG startup
+- extend FlowScript with variables, arithmetic and scene object helpers

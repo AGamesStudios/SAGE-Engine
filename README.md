@@ -72,9 +72,10 @@ prefixed with ``on_`` are automatically connected when added to the scene. See
 
 ## FlowScript
 
-FlowScript files (`.sage_fs`) provide simple scripted behaviours. The engine
-registers a ``flow.run`` DAG task during boot and automatically executes scripts
-from ``data/scripts``. See ``docs/flow_script.md``.
+FlowScript files (`.sage_fs`) provide simple scripted behaviours with variables
+and conditionals. The engine registers a ``flow.run`` DAG task during boot and
+automatically executes scripts from ``data/scripts``. See
+``docs/flow_script.md`` for the available commands.
 
 ## Tests
 
