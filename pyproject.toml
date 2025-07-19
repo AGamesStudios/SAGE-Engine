@@ -18,6 +18,7 @@ packages = [
     "sage_engine.object",
     "sage_engine.dag",
     "sage_engine.render",
+    "sage_engine.window",
     "sage_engine.resource",
     "sage_engine.ui",
     "sage_engine.profiling",

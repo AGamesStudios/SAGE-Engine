@@ -1,0 +1,7 @@
+window:
+  width: 1280
+  height: 720
+  title: "SAGE Engine Alpha 0.3"
+  vsync: true
+  resizable: true
+  fullscreen: false

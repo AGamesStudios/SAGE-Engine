@@ -3,6 +3,7 @@
 This document summarises the core modules that make up SAGE Feather 0.2.
 
 - **core** – handles boot, reset and subsystem registration.
+- **window** – opens the main application window and fires resize events.
 - **resource** – loads `.sage_object` files from disk.
 - **object** – stores objects in the Scene and manages parent links.
 - **render** – batches sprite draw calls and UI widgets.

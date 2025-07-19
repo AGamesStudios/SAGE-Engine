@@ -63,6 +63,12 @@ handled by the ``sage_engine.ui`` subsystem. See ``docs/render.md`` and
 ``docs/ui.md`` for details. A demo scene lives in ``data/objects/ui_demo.sage_object``.
 For an overview of the modules see [docs/architecture.md](docs/architecture.md).
 
+## Window
+
+The window subsystem creates the main application window and dispatches resize
+events. Configuration resides in `sage/config/window.yaml`. See
+[docs/window.md](docs/window.md).
+
 ## Events
 
 The ``sage`` package provides a lightweight event system. Register handlers with

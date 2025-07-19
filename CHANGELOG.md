@@ -16,3 +16,4 @@
 - extend FlowScript with variables, arithmetic and scene object helpers
 - make FlowScript grammar configurable via YAML with module loading
 - add Lua script runner and hot-reload watcher
+- introduce a lightweight window subsystem emitting resize events
