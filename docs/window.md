@@ -17,4 +17,5 @@ window:
 Use `on('window_resize', handler)` to react to resize events.
 
 Call `window.poll()` each frame to process OS events and `window.present()`
-after rendering to update the display.
+after rendering to update the display. Event data is forwarded to the input
+subsystem so key and mouse state stays in sync.

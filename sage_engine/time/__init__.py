@@ -23,7 +23,11 @@ def reset() -> None:
 
 
 def destroy() -> None:
-    pass
+    global _start, _last_mark, scale, paused
+    _start = 0.0
+    _last_mark = 0.0
+    scale = 1.0
+    paused = False
 
 
 def mark() -> None:

@@ -2,6 +2,7 @@
 from __future__ import annotations
 from typing import Set, Tuple
 
+import pygame
 from sage.events import emit
 
 _keys: Set[str] = set()
@@ -67,6 +68,22 @@ def get_mouse_pos() -> Tuple[int, int]:
     return _mouse_pos
 
 
+def handle_pygame_event(ev: pygame.event.Event) -> None:
+    """Update input state from a pygame event."""
+    if ev.type == pygame.KEYDOWN:
+        press_key(pygame.key.name(ev.key))
+    elif ev.type == pygame.KEYUP:
+        release_key(pygame.key.name(ev.key))
+    elif ev.type == pygame.MOUSEBUTTONDOWN:
+        move_mouse(ev.pos[0], ev.pos[1])
+        press_mouse(str(ev.button))
+    elif ev.type == pygame.MOUSEBUTTONUP:
+        move_mouse(ev.pos[0], ev.pos[1])
+        release_mouse(str(ev.button))
+    elif ev.type == pygame.MOUSEMOTION:
+        move_mouse(ev.pos[0], ev.pos[1])
+
+
 __all__ = [
     "boot",
     "reset",
@@ -79,4 +96,5 @@ __all__ = [
     "is_mouse_pressed",
     "move_mouse",
     "get_mouse_pos",
+    "handle_pygame_event",
 ]

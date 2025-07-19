@@ -14,3 +14,6 @@ input.release_key("A")
 Events dispatched:
 - `key_down`, `key_up`
 - `mouse_down`, `mouse_up`, `mouse_move`, `click`
+
+When using the built-in window subsystem, calling `window.poll()` automatically
+updates the input state from `pygame` events via `handle_pygame_event`.

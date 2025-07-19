@@ -8,6 +8,7 @@ import pygame
 
 from sage.events import emit
 from sage.config import load_window_config
+from sage_engine.input import handle_pygame_event
 
 
 @dataclass
@@ -40,6 +41,8 @@ class Window:
                 self.close()
             elif ev.type == pygame.VIDEORESIZE:
                 self.resize(ev.w, ev.h)
+            else:
+                handle_pygame_event(ev)
 
     def present(self) -> None:
         pygame.display.flip()
