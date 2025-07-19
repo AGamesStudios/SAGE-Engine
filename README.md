@@ -78,6 +78,13 @@ YAML files into ``sage_fs/flow_modules``. The engine registers a ``flow.run``
 DAG task during boot and automatically executes scripts from ``data/scripts``.
 See ``docs/flow_script.md`` for details.
 
+## Lua Scripts
+
+Lua 5.4 scripts are supported via the [`lupa`](https://github.com/scoder/lupa)
+bindings. Enable Lua in ``sage/config/scripts.yaml`` and place ``.lua`` files in
+``data/scripts``. They receive simple helpers like ``create_object`` and ``log``.
+Hot reloading can be enabled with ``watch_scripts: true``.
+
 ## Tests
 
 Run the code style check and unit tests with:

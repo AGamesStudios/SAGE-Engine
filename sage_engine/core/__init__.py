@@ -9,7 +9,11 @@ from types import ModuleType
 
 from .. import dag, render, resource, ui, object as object_mod
 from sage_fs import FlowRunner
-from sage import get_event_handlers
+from sage import get_event_handlers, emit
+from ..lua_runner import run_lua_script, set_lua_globals
+from ..scripts_watcher import ScriptsWatcher
+from sage_object import object_from_dict
+from sage.config import load_config
 from ..profiling import ProfileEntry, ProfileFrame
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,6 +48,7 @@ register_subsystem("ui", ui)
 
 _booted = False
 _profile: ProfileFrame | None = None
+_watcher: ScriptsWatcher | None = None
 
 
 def _init_step(name: str, func) -> ProfileEntry:
@@ -74,12 +79,35 @@ def core_boot() -> ProfileFrame:
             entries.append(_init_step("load_objects", _load_objects))
         if name == "dag":
             def _init_flow():
+                cfg = load_config()
                 runner = FlowRunner()
                 dag.register("flow.run", runner.run_file)
+                dag.register("lua.run", run_lua_script)
+
+                def _create(role: str, name: str):
+                    obj = object_from_dict({"role": role, "id": name})
+                    object_mod.add_object(obj)
+
+                set_lua_globals(
+                    log=print,
+                    emit=emit,
+                    create_object=_create,
+                    get_object=object_mod.get_object,
+                )
+
                 scripts = Path("data/scripts")
                 if scripts.is_dir():
-                    for script in scripts.glob("*.sage_fs"):
-                        runner.run_file(str(script))
+                    if cfg.get("enable_flow", True):
+                        for script in scripts.glob("*.sage_fs"):
+                            runner.run_file(str(script))
+                    if cfg.get("enable_lua", True):
+                        for script in scripts.glob("*.lua"):
+                            run_lua_script(str(script))
+
+                if cfg.get("watch_scripts"):
+                    global _watcher
+                    _watcher = ScriptsWatcher(str(scripts), runner, run_lua_script)
+                    _watcher.start(1.0)
 
             entries.append(_init_step("load_scripts", _init_flow))
 
@@ -90,7 +118,10 @@ def core_boot() -> ProfileFrame:
 
 def core_reset() -> ProfileFrame:
     """Re-initialize the engine without restarting Python."""
-    global _booted, _profile
+    global _booted, _profile, _watcher
+    if _watcher:
+        _watcher.stop()
+        _watcher = None
     for name in reversed(BOOT_SEQUENCE):
         subsystem = get_subsystem(name)
         if hasattr(subsystem, "reset"):

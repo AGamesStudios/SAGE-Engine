@@ -15,3 +15,4 @@
 - integrate FlowScript parser and runner with DAG startup
 - extend FlowScript with variables, arithmetic and scene object helpers
 - make FlowScript grammar configurable via YAML with module loading
+- add Lua script runner and hot-reload watcher

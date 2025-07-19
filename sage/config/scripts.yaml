@@ -1,0 +1,3 @@
+enable_lua: true
+enable_flow: true
+watch_scripts: false
