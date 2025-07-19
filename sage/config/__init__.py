@@ -18,6 +18,13 @@ DEFAULT_WINDOW_CONFIG = {
     "fullscreen": False,
 }
 
+DEFAULT_FRAMESYNC_CONFIG = {
+    "enabled": True,
+    "target_fps": 60,
+    "allow_drift": False,
+    "profile": "balanced",
+}
+
 
 def load_config() -> dict:
     """Load script configuration from scripts.yaml."""
@@ -37,9 +44,21 @@ def load_window_config() -> dict:
         return {**DEFAULT_WINDOW_CONFIG, **cfg}
     return DEFAULT_WINDOW_CONFIG.copy()
 
+
+def load_framesync_config() -> dict:
+    """Load FrameSync configuration from framesync.yaml."""
+    path = Path(__file__).with_name("framesync.yaml")
+    if path.is_file():
+        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        cfg = data.get("framesync", {})
+        return {**DEFAULT_FRAMESYNC_CONFIG, **cfg}
+    return DEFAULT_FRAMESYNC_CONFIG.copy()
+
 __all__ = [
     "load_config",
     "DEFAULT_CONFIG",
     "load_window_config",
     "DEFAULT_WINDOW_CONFIG",
+    "load_framesync_config",
+    "DEFAULT_FRAMESYNC_CONFIG",
 ]

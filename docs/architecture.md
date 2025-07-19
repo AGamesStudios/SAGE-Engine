@@ -7,6 +7,7 @@ This document summarises the core modules that make up SAGE Feather 0.2.
 - **resource** – loads `.sage_object` files from disk.
 - **object** – stores objects in the Scene and manages parent links.
 - **render** – batches sprite draw calls and UI widgets.
+- **framesync** – regulates the frame rate without GPU VSync.
 - **dag** – executes update tasks in topological order.
 - **events** – lightweight dispatcher used by the engine and game objects.
 - **ui** – minimal user interface elements and theming.

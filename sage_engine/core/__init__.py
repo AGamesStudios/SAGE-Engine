@@ -7,7 +7,7 @@ from pathlib import Path
 
 from types import ModuleType
 
-from .. import dag, render, resource, ui, object as object_mod, window
+from .. import dag, render, resource, ui, object as object_mod, window, framesync
 from sage_fs import FlowRunner
 from sage import get_event_handlers
 from ..lua_runner import run_lua_script, set_lua_globals
@@ -41,6 +41,7 @@ def get_subsystem(name: str) -> ModuleType:
 BOOT_SEQUENCE = [
     "window",
     "render",
+    "framesync",
     "resource",
     "object",
     "dag",
@@ -50,6 +51,7 @@ BOOT_SEQUENCE = [
 # Register built-in subsystems
 register_subsystem("render", render)
 register_subsystem("window", window)
+register_subsystem("framesync", framesync)
 register_subsystem("resource", resource)
 register_subsystem("object", object_mod)
 register_subsystem("dag", dag)

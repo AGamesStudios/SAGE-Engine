@@ -69,6 +69,13 @@ The window subsystem creates the main application window and dispatches resize
 events. Configuration resides in `sage/config/window.yaml`. See
 [docs/window.md](docs/window.md).
 
+## FrameSync
+
+`sage_engine.framesync` regulates the frame rate without relying on GPU VSync.
+Settings live in `sage/config/framesync.yaml` where you can set `target_fps` and
+allow or disallow drift. Call `framesync.regulate()` once per frame to maintain
+smooth timing. See [docs/framesync.md](docs/framesync.md).
+
 ## Events
 
 The ``sage`` package provides a lightweight event system. Register handlers with

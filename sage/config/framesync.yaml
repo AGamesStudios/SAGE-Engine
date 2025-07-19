@@ -1,0 +1,5 @@
+framesync:
+  enabled: true
+  target_fps: 60
+  allow_drift: false
+  profile: balanced

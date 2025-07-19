@@ -17,3 +17,4 @@
 - make FlowScript grammar configurable via YAML with module loading
 - add Lua script runner and hot-reload watcher
 - introduce a lightweight window subsystem emitting resize events
+- implement FrameSync for smooth timing without GPU VSync
