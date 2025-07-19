@@ -22,5 +22,6 @@ packages = [
     "sage_engine.profiling",
     "sage_engine.plugin",
     "sage_object",
+    "sage_fs",
     "sage",
 ]

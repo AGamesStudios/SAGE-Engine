@@ -12,3 +12,4 @@
 - document render and UI subsystems
 - introduce events system with object integration
 - add `core_debug()` and `get_event_handlers()` for inspecting runtime state
+- integrate FlowScript parser and runner with DAG startup

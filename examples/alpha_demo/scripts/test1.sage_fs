@@ -1,0 +1,2 @@
+print "Demo FlowScript"
+emit demo_event

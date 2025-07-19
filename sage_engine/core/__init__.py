@@ -3,10 +3,12 @@ from __future__ import annotations
 
 import logging
 import time
+from pathlib import Path
 
 from types import ModuleType
 
 from .. import dag, render, resource, ui, object as object_mod
+from sage_fs import FlowRunner
 from sage import get_event_handlers
 from ..profiling import ProfileEntry, ProfileFrame
 
@@ -70,6 +72,16 @@ def core_boot() -> ProfileFrame:
                     object_mod.register_object(obj)
 
             entries.append(_init_step("load_objects", _load_objects))
+        if name == "dag":
+            def _init_flow():
+                runner = FlowRunner()
+                dag.register("flow.run", runner.run_file)
+                scripts = Path("data/scripts")
+                if scripts.is_dir():
+                    for script in scripts.glob("*.sage_fs"):
+                        runner.run_file(str(script))
+
+            entries.append(_init_step("load_scripts", _init_flow))
 
     _profile = ProfileFrame(entries=entries)
     _booted = True

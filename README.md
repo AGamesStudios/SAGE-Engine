@@ -70,6 +70,12 @@ The ``sage`` package provides a lightweight event system. Register handlers with
 prefixed with ``on_`` are automatically connected when added to the scene. See
 ``docs/events_system.md``.
 
+## FlowScript
+
+FlowScript files (`.sage_fs`) provide simple scripted behaviours. The engine
+registers a ``flow.run`` DAG task during boot and automatically executes scripts
+from ``data/scripts``. See ``docs/flow_script.md``.
+
 ## Tests
 
 Run the code style check and unit tests with:
