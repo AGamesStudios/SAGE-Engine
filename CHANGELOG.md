@@ -1,5 +1,12 @@
 # Changelog
 
+## Alpha 0.3 - Preview
+- render sprites using pygame with placeholder images
+- new example project demonstrates Lua-driven movement
+- input and time subsystems handle keyboard and delta timing
+- documentation expanded with guides for each module
+- added `core_debug()` and runtime inspection helpers
+
 ## Alpha 0.2 - Stable Core
 - feat: optional Qt6 / Qt5 support, auto-fallback
 - feat: pluggable GUI backends (entry-point sage_gui)

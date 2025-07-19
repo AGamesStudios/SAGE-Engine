@@ -1,6 +1,6 @@
 # SAGE Feather
 
-Status: **Alpha 0.2 (Stable Core)**
+Status: **Alpha 0.3 (Preview)**
 
 This repository contains **SAGE Feather**, a minimal runtime for the SAGE Engine written in Rust.
 It exposes a simple C API that can be used from Python or other languages.
