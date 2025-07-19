@@ -28,6 +28,8 @@ if health < 50:
 Scripts can manipulate scene objects using commands such as `create Sprite id`
 and `set pos "id" x y`.
 
+These commands map to the [logic API](docs/logic_api.md) used by Lua scripts.
+
 Use `FlowRunner` to execute scripts or register a task named `flow.run` via the
 DAG subsystem.
 

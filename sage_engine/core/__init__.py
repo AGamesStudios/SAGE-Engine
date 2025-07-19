@@ -9,12 +9,21 @@ from types import ModuleType
 
 from .. import dag, render, resource, ui, object as object_mod
 from sage_fs import FlowRunner
-from sage import get_event_handlers, emit
+from sage import get_event_handlers
 from ..lua_runner import run_lua_script, set_lua_globals
 from ..scripts_watcher import ScriptsWatcher
-from sage_object import object_from_dict
 from sage.config import load_config
 from ..profiling import ProfileEntry, ProfileFrame
+from ..logic_api import (
+    create_object,
+    set_param,
+    get_param,
+    destroy_object,
+    emit_event,
+    on_ready,
+    on_update,
+    log as logic_log,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,15 +93,15 @@ def core_boot() -> ProfileFrame:
                 dag.register("flow.run", runner.run_file)
                 dag.register("lua.run", run_lua_script)
 
-                def _create(role: str, name: str):
-                    obj = object_from_dict({"role": role, "id": name})
-                    object_mod.add_object(obj)
-
                 set_lua_globals(
-                    log=print,
-                    emit=emit,
-                    create_object=_create,
-                    get_object=object_mod.get_object,
+                    log=logic_log,
+                    emit=emit_event,
+                    create_object=create_object,
+                    set_param=set_param,
+                    get_param=get_param,
+                    destroy_object=destroy_object,
+                    on_ready=on_ready,
+                    on_update=on_update,
                 )
 
                 scripts = Path("data/scripts")

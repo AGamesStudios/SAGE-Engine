@@ -7,9 +7,7 @@ import shlex
 import time
 import yaml
 
-from sage_engine import object as object_mod
-from sage_engine.object import object_from_dict
-from sage import emit
+from sage_engine.logic_api import create_object, set_param, destroy_object, emit_event
 
 
 def load_grammar() -> Tuple[Dict[str, Dict[str, Any]], Dict[str, str]]:
@@ -117,19 +115,17 @@ class FlowRunner:
 
     # object helpers
     def _create_obj(self, role: str, obj_id: str) -> None:
-        obj = object_from_dict({"role": role, "id": obj_id})
-        object_mod.add_object(obj)
+        create_object(obj_id, role)
 
     def _set_prop(self, obj_id: str, prop: str, values: List[str]) -> None:
-        obj = object_mod.get_object(obj_id)
-        if obj is None:
-            return
         if prop == "pos" and len(values) >= 2:
-            obj.transform["pos"] = [float(values[0]), float(values[1])]
+            set_param(obj_id, "x", float(values[0]))
+            set_param(obj_id, "y", float(values[1]))
         elif prop == "color" and len(values) == 3:
-            obj.params["color"] = [float(v) for v in values]
+            set_param(obj_id, "color", [float(v) for v in values])
         elif prop == "visible" and values:
-            obj.visible = bool(_eval([values[0]], self.locals, self.context.variables))
+            val = bool(_eval([values[0]], self.locals, self.context.variables))
+            set_param(obj_id, "visible", val)
 
     def _get_target(self) -> dict[str, Any]:
         return self.context.variables if self.global_mode else self.locals
@@ -209,7 +205,7 @@ class FlowRunner:
 
     def _act_emit(self, args: List[str], node: Node) -> None:
         if args:
-            emit(args[0], None)
+            emit_event(args[0], None)
 
     def _act_wait(self, args: List[str], node: Node) -> None:
         if args:
@@ -221,7 +217,7 @@ class FlowRunner:
 
     def _act_remove(self, args: List[str], node: Node) -> None:
         if args:
-            object_mod.remove_object(args[0])
+            destroy_object(args[0])
 
     def _act_if(self, args: List[str], node: Node) -> None:
         cond = _eval(args, self.locals, self.context.variables)

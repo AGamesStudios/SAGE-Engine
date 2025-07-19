@@ -10,8 +10,17 @@ The engine exposes a minimal API to Lua:
 
 ```lua
 log("hello")
-create_object("Sprite", "player")
-obj = get_object("player")
+create_object("player", "Sprite", {x = 10})
+set_param("player", "y", 20)
+value = get_param("player", "x")
+```
+
+Register callbacks using `on_ready` and `on_update`:
+
+```lua
+on_ready(function()
+  log("Lua ready")
+end)
 ```
 
 When `watch_scripts` is enabled the `ScriptsWatcher` monitors the folder and automatically reloads files on change.
