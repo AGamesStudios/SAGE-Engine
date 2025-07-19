@@ -24,6 +24,7 @@ The library targets Python 3.8 through 3.13 via PyO3. Set
 
 Run the Alpha demo to see Feather in action. The demo initialises the Python
 engine modules via ``core_boot()`` before calling into the Rust library.
+More demos are listed in [docs/examples.md](docs/examples.md).
 Audio and physics can be disabled if the dependencies are missing:
 
 ```bash
@@ -40,6 +41,10 @@ python main.py
 This example creates a ChronoPatch Tree, patches object velocity,
 executes a MicroPython script via a DAG task and prints the final state.
 Use ``core_debug()`` to print the current scene and active event handlers.
+
+A simpler example lives in `examples/example_project`. It opens a window,
+loads objects and executes a Lua script that moves the `player` sprite.
+Run it with `python examples/example_project/main.py`.
 
 ## Object Files
 
