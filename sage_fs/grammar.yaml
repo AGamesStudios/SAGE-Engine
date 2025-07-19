@@ -1,0 +1,50 @@
+print:
+  args: [text]
+  action: print
+  aliases: ["сказать", "лог"]
+emit:
+  args: [event]
+  action: emit
+var:
+  args: [name, value]
+  action: var
+  aliases: [let, "задать", "перем"]
+set:
+  args: [name, value]
+  action: set
+get:
+  args: [name]
+  action: get
+add:
+  args: [name, value]
+  action: add
+sub:
+  args: [name, value]
+  action: sub
+mul:
+  args: [name, value]
+  action: mul
+div:
+  args: [name, value]
+  action: div
+if:
+  args: [condition]
+  action: if
+else:
+  args: []
+  action: else
+while:
+  args: [condition]
+  action: while
+loop:
+  args: [count]
+  action: loop
+wait:
+  args: [time]
+  action: wait
+create:
+  args: [role, name]
+  action: create
+remove:
+  args: [name]
+  action: remove

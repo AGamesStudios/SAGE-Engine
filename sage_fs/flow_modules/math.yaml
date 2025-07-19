@@ -1,0 +1,4 @@
+sqrt:
+  args: [value]
+  action: sqrt
+  aliases: ["корень"]

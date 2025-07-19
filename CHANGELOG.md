@@ -14,3 +14,4 @@
 - add `core_debug()` and `get_event_handlers()` for inspecting runtime state
 - integrate FlowScript parser and runner with DAG startup
 - extend FlowScript with variables, arithmetic and scene object helpers
+- make FlowScript grammar configurable via YAML with module loading

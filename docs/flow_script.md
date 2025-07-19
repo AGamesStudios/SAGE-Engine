@@ -1,8 +1,8 @@
 # SAGE FlowScript
 
 FlowScript is a tiny scripting language used for quick object or scene logic.
-Each line contains a command followed by arguments. Keywords also have Russian
-synonyms so scripts can be written in either language.
+Commands are defined in ``grammar.yaml`` and can be aliased in multiple
+languages. Additional command sets can be loaded from ``flow_modules``.
 
 Example script:
 
@@ -30,3 +30,5 @@ and `set pos "id" x y`.
 
 Use `FlowRunner` to execute scripts or register a task named `flow.run` via the
 DAG subsystem.
+
+Run ``from sage_fs import load_grammar`` to inspect the available commands.
