@@ -1,3 +1,6 @@
+import os
+os.environ["SDL_VIDEODRIVER"] = "dummy"
+
 from sage_engine.window import boot, reset, get_window, is_initialized
 from sage.events import on
 

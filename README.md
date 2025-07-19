@@ -70,9 +70,9 @@ For an overview of the modules see [docs/architecture.md](docs/architecture.md).
 
 ## Window
 
-The window subsystem creates the main application window and dispatches resize
-events. Configuration resides in `sage/config/window.yaml`. See
-[docs/window.md](docs/window.md).
+The window subsystem creates the main application window using
+`pygame` and dispatches resize events. Configuration resides in
+`sage/config/window.yaml`. See [docs/window.md](docs/window.md).
 
 ## FrameSync
 

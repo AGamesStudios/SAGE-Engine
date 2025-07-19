@@ -2,10 +2,10 @@
 name = "sage_feather"
 version = "0.1.0a0"
 requires-python = ">=3.8"
-dependencies = ["pyyaml", "lupa"]
+dependencies = ["pyyaml", "lupa", "pygame"]
 
 [project.optional-dependencies]
-dev = ["ruff", "pytest", "pyyaml", "lupa"]
+dev = ["ruff", "pytest", "pyyaml", "lupa", "pygame"]
 
 [build-system]
 requires = ["setuptools>=64", "wheel"]

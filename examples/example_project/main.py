@@ -10,7 +10,7 @@ from sage import emit
 from sage_engine import core_boot, core_reset, framesync, input, time
 from sage_engine.render import render_scene
 from sage_engine.object import get_objects
-from sage_engine.window import get_window
+from sage_engine.window import get_window, poll as poll_window, present as present_window
 
 
 def load_cfg():
@@ -51,11 +51,15 @@ else:
 def main() -> None:
     load_cfg()
     core_boot()
+    import sage_engine.window as window
+    print("Window size:", window.get_size())
+    print("Window title:", window.get_title())
     emit("ready")
     time.mark()
 
     try:
         while not get_window().should_close:
+            poll_window()
             key = poll_key()
             if key:
                 up_key = key.upper()
@@ -66,6 +70,7 @@ def main() -> None:
             dt = time.get_delta()
             emit("update", dt)
             print("draw calls:", render_scene(get_objects()))
+            present_window()
             framesync.regulate()
             time.mark()
             if key:
