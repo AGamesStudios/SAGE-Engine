@@ -21,6 +21,7 @@ from .. import (
 from sage_fs import FlowRunner
 from sage import get_event_handlers
 from ..lua_runner import run_lua_script, set_lua_globals
+from ..python_runner import run_python_script, set_python_globals
 from ..scripts_watcher import ScriptsWatcher
 from sage.config import load_config
 from ..profiling import ProfileEntry, ProfileFrame
@@ -111,8 +112,21 @@ def core_boot() -> ProfileFrame:
                 runner.context.variables.update({"input": input_mod, "time": time_mod})
                 dag.register("flow.run", runner.run_file)
                 dag.register("lua.run", run_lua_script)
+                dag.register("python.run", run_python_script)
 
                 set_lua_globals(
+                    log=logic_log,
+                    emit=emit_event,
+                    create_object=create_object,
+                    set_param=set_param,
+                    get_param=get_param,
+                    destroy_object=destroy_object,
+                    on_ready=on_ready,
+                    on_update=on_update,
+                    input=input_mod,
+                    time=time_mod,
+                )
+                set_python_globals(
                     log=logic_log,
                     emit=emit_event,
                     create_object=create_object,
@@ -133,10 +147,15 @@ def core_boot() -> ProfileFrame:
                     if cfg.get("enable_lua", True):
                         for script in scripts.glob("*.lua"):
                             run_lua_script(str(script))
+                    if cfg.get("enable_python", True):
+                        for script in scripts.glob("*.py"):
+                            run_python_script(str(script))
 
                 if cfg.get("watch_scripts"):
                     global _watcher
-                    _watcher = ScriptsWatcher(str(scripts), runner, run_lua_script)
+                    _watcher = ScriptsWatcher(
+                        str(scripts), runner, run_lua_script, run_python_script
+                    )
                     _watcher.start(1.0)
 
             entries.append(_init_step("load_scripts", _init_flow))

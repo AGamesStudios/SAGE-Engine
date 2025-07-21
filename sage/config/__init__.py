@@ -6,6 +6,7 @@ import yaml
 DEFAULT_CONFIG = {
     "enable_lua": True,
     "enable_flow": True,
+    "enable_python": True,
     "watch_scripts": False,
 }
 

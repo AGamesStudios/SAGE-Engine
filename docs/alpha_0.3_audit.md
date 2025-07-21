@@ -9,7 +9,7 @@ This audit summarises the status of SAGE Engine following the development cycle 
 
 ## Resources
 - `.sage_object` files load from `data/objects` and populate the scene automatically.
-- FlowScript (`.sage_fs`) and Lua scripts load from `data/scripts` and can be hot reloaded by `ScriptsWatcher`.
+- FlowScript (`.sage_fs`), Lua and Python scripts load from `data/scripts` and can be hot reloaded by `ScriptsWatcher`.
 
 ## Scene and Objects
 - Objects maintain `parent_id` links and caches by role and layer.
@@ -29,7 +29,7 @@ This audit summarises the status of SAGE Engine following the development cycle 
 
 ## Logic
 - FlowScript supports variables, arithmetic and scene manipulation; the grammar is configurable via YAML modules.
-- Lua scripts have access to the same logic API and can be hot reloaded.
+- Lua and Python scripts have access to the same logic API and can be hot reloaded.
 
 ## Examples and Tests
 - `examples/alpha_demo` exercises the Rust FFI helpers.
@@ -39,7 +39,7 @@ This audit summarises the status of SAGE Engine following the development cycle 
 ## Files Included
 - Source code: `.py` modules under `sage_engine`, `sage`, `sage_fs` and `sage_object`.
 - Configuration: `.yaml` files in `sage/config` and `examples`.
-- Scripts: `.sage_fs` and `.lua` examples.
+- Scripts: `.sage_fs`, `.lua` and `.py` examples.
 - No binary assets other than empty placeholders tracked via `.gitkeep`.
 
 No blocking issues were found. All subsystems operate without crashes or memory leaks during prolonged runs, and the engine is ready for further development beyond Alpha 0.3.

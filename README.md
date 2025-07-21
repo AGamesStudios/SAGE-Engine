@@ -113,6 +113,13 @@ bindings. Enable Lua in ``sage/config/scripts.yaml`` and place ``.lua`` files in
 ``data/scripts``. They receive simple helpers like ``create_object`` and ``log``.
 Hot reloading can be enabled with ``watch_scripts: true``.
 
+## Python Scripts
+
+Regular Python files can also extend the engine. Enable them with
+``enable_python: true`` in ``sage/config/scripts.yaml``. Scripts placed inside
+``data/scripts`` execute during ``core_boot()`` in a sandboxed namespace with the
+same helpers available to Lua and FlowScript.
+
 ## Tests
 
 Run the code style check and unit tests with:

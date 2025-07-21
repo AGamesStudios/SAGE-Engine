@@ -9,13 +9,21 @@ from typing import Dict
 from sage_fs import FlowRunner
 
 from .lua_runner import run_lua_script
+from .python_runner import run_python_script
 
 
 class ScriptsWatcher:
-    def __init__(self, folder: str = "data/scripts", flow_runner: FlowRunner | None = None, lua_runner=run_lua_script) -> None:
+    def __init__(
+        self,
+        folder: str = "data/scripts",
+        flow_runner: FlowRunner | None = None,
+        lua_runner=run_lua_script,
+        python_runner=run_python_script,
+    ) -> None:
         self.folder = Path(folder)
         self.flow_runner = flow_runner or FlowRunner()
         self.lua_runner = lua_runner
+        self.python_runner = python_runner
         self._mtimes: Dict[Path, float] = {}
         self._stop = False
         self._thread: threading.Thread | None = None
@@ -24,13 +32,15 @@ class ScriptsWatcher:
         if not self.folder.is_dir():
             return
         for path in self.folder.iterdir():
-            if path.suffix not in {".lua", ".sage_fs"}:
+            if path.suffix not in {".lua", ".sage_fs", ".py"}:
                 continue
             mtime = path.stat().st_mtime
             if self._mtimes.get(path) != mtime:
                 self._mtimes[path] = mtime
                 if path.suffix == ".lua":
                     self.lua_runner(str(path))
+                elif path.suffix == ".py":
+                    self.python_runner(str(path))
                 else:
                     self.flow_runner.run_file(str(path))
 
