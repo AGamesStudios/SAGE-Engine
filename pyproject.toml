@@ -28,6 +28,7 @@ packages = [
     "sage_object",
     "sage_fs",
     "sage",
+    "sage_fx",
 ]
 
 [tool.setuptools.package-data]

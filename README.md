@@ -68,6 +68,12 @@ handled by the ``sage_engine.ui`` subsystem. See ``docs/render.md`` and
 ``docs/ui.md`` for details. A demo scene lives in ``data/objects/ui_demo.sage_object``.
 For an overview of the modules see [docs/architecture.md](docs/architecture.md).
 
+## Feather-FX
+
+`sage_fx` loads `.sage_fx` shader files and applies them using either a GPU or
+CPU backend. Files are parsed and cached with `load_fx()`. See
+[docs/feather_fx.md](docs/feather_fx.md) for the text format and API.
+
 ## Window
 
 The window subsystem creates the main application window using
