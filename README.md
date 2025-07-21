@@ -73,6 +73,7 @@ For an overview of the modules see [docs/architecture.md](docs/architecture.md).
 `sage_fx` loads `.sage_fx` shader files and applies them using either a GPU or
 CPU backend. Files are parsed and cached with `load_fx()`. See
 [docs/feather_fx.md](docs/feather_fx.md) for the text format and API.
+Run `python examples/fx_lab/main.py` to see a demo.
 
 ## Window
 

@@ -57,3 +57,11 @@ Press SPACE to emit a custom event.
 ```bash
 python examples/event_button/main.py
 ```
+
+## FX Lab
+
+Demonstrates Feather-FX shaders on a sprite.
+
+```bash
+python examples/fx_lab/main.py
+```

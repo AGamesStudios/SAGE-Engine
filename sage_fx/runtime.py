@@ -9,6 +9,8 @@ from typing import Dict, List
 import pygame
 
 from .optimizer import optimize_ops
+from .glsl_backend import generate_glsl
+# FIXME retro_backend to interpret on CPU
 from .parser import Operation, parse_fx
 
 
@@ -38,6 +40,10 @@ def apply_fx(surface: pygame.Surface, fx: List[Operation]) -> List[str]:
     """Apply operations, returning a log for testing."""
     backend = _detect_backend()
     log: List[str] = [f"backend={backend}"]
+    if backend == "gpu":
+        shader = generate_glsl(fx)
+        log.append("shader")
+        log.append(shader)
     for op in fx:
         log.append(op.name)
     return log

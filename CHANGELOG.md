@@ -26,3 +26,6 @@
 - introduce a lightweight window subsystem emitting resize events
 - implement FrameSync for smooth timing without GPU VSync
 - add Input and Time subsystems with keyboard/mouse helpers
+
+## Alpha 0.4 - Work in Progress
+- Added Feather-FX prototype (.sage_fx)

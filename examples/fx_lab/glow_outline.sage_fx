@@ -1,0 +1,4 @@
+PASS
+blit
+outline color:#00FFFF radius:2
+blend_add factor:0.5

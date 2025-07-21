@@ -1,5 +1,7 @@
-from sage_fx import load_fx, apply_fx, FXParseError
+from sage_fx import load_fx, apply_fx, FXParseError, optimize_ops, parse_fx
+import os
 import pygame
+import pytest
 
 
 def test_parse_and_apply(tmp_path):
@@ -13,18 +15,36 @@ blend_add factor:1.0
     pygame.display.init()
     pygame.display.set_mode((4, 4))
     surf = pygame.display.get_surface()
+    os.environ["FEATHER_FX_BACKEND"] = "gpu"
     result = apply_fx(surf, fx)
-    assert result[0].startswith("backend=")
-    assert result[1:] == ["blit", "blend_add"]
+    assert result[0] == "backend=gpu"
+    assert result[-2:] == ["blit", "blend_add"]
     pygame.display.quit()
+    del os.environ["FEATHER_FX_BACKEND"]
 
 
 def test_invalid_op(tmp_path):
     fx_file = tmp_path / "bad.sage_fx"
     fx_file.write_text("PASS\nunknown\n", encoding="utf-8")
-    try:
+    with pytest.raises(FXParseError):
         load_fx(str(fx_file))
-    except FXParseError:
-        pass
-    else:
-        assert False, "Should raise FXParseError"
+
+
+def test_missing_argument(tmp_path):
+    fx_file = tmp_path / "bad2.sage_fx"
+    fx_file.write_text("PASS\noutline color:#fff\n", encoding="utf-8")
+    with pytest.raises(FXParseError):
+        load_fx(str(fx_file))
+
+
+def test_optimize(tmp_path):
+    fx_file = tmp_path / "chain.sage_fx"
+    fx_file.write_text("""\
+PASS
+blit
+noop
+blit
+""", encoding="utf-8")
+    ops = parse_fx(str(fx_file))
+    out = optimize_ops(ops)
+    assert [op.name for op in out] == ["blit"]

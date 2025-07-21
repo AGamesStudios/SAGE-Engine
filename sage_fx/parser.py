@@ -36,8 +36,8 @@ def parse_fx(path: str | Path) -> List[Operation]:
     ops: List[Operation] = []
     in_pass = False
     for raw in lines:
-        line = raw.split("#", 1)[0].strip()
-        if not line:
+        line = raw.strip()
+        if not line or line.startswith("#"):
             continue
         if line.upper().startswith("PASS"):
             in_pass = True
