@@ -8,11 +8,14 @@ def test_scripts_watcher(tmp_path, capsys):
     fs.write_text('print "FS"', encoding='utf-8')
     lua = tmp_path / "hello.lua"
     lua.write_text("print('LUA')", encoding='utf-8')
+    py = tmp_path / "hello.py"
+    py.write_text("print('PY')", encoding='utf-8')
     watcher = ScriptsWatcher(folder=str(tmp_path))
     capsys.readouterr()
     watcher.scan()
     out = capsys.readouterr().out
     assert "FS" in out
+    assert "PY" in out
 
     fs.write_text('print "NEW"', encoding='utf-8')
     watcher.scan()
