@@ -125,7 +125,8 @@ Hot reloading can be enabled with ``watch_scripts: true``.
 Regular Python files can also extend the engine. Enable them with
 ``enable_python: true`` in ``sage/config/scripts.yaml``. Scripts placed inside
 ``data/scripts`` execute during ``core_boot()`` in a sandboxed namespace with the
-same helpers available to Lua and FlowScript.
+same helpers available to Lua and FlowScript. See
+[docs/python_scripts.md](docs/python_scripts.md) for details.
 
 ## Tests
 

@@ -29,3 +29,4 @@
 
 ## Alpha 0.4 - Work in Progress
 - Added Feather-FX prototype (.sage_fx)
+- Added Python script runner with sandboxed execution
