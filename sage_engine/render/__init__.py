@@ -13,6 +13,7 @@ from sage_object import SAGEObject
 _initialized = False
 _current_camera: Optional[SAGEObject] = None
 _images: dict[str, pygame.Surface] = {}
+_clear_color: tuple[int, int, int, int] = (0, 0, 0, 255)
 
 
 def _get_image(name: str | None) -> pygame.Surface:
@@ -58,6 +59,11 @@ def destroy() -> None:
     reset()
 
 
+def set_clear_color(r: int, g: int, b: int, a: int = 255) -> None:
+    global _clear_color
+    _clear_color = (r, g, b, a)
+
+
 def is_initialized() -> bool:
     return _initialized
 
@@ -81,7 +87,7 @@ def render_scene(objs: Iterable[SAGEObject]) -> list[str]:
     calls: list[str] = []
     surface = pygame.display.get_surface() if pygame.get_init() else None
     if surface is not None:
-        surface.fill((0, 0, 0))
+        surface.fill(_clear_color)
     for obj in sorted(objs, key=lambda o: o.layer):
         if obj.role == "Sprite":
             sprites[obj.params.get("image")].append(obj)
@@ -106,6 +112,7 @@ __all__ = [
     "boot",
     "reset",
     "destroy",
+    "set_clear_color",
     "render_object",
     "init_render",
     "is_initialized",

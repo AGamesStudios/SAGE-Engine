@@ -1,0 +1,4 @@
+[
+  {"id": "MainCamera", "role": "Camera", "zoom": 1.0},
+  {"id": "btn", "role": "UI", "text": "Press SPACE"}
+]

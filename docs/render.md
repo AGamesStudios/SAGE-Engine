@@ -8,3 +8,5 @@ step.
 The function `render_scene(objects)` returns a list describing the draw calls
 for testing purposes. Each `SpriteBatch` entry notes the image and how many
 sprites were batched together.
+
+Use `set_clear_color(r, g, b, a)` to change the background color before each frame.

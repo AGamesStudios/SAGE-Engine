@@ -41,3 +41,19 @@ Loads FlowScript, Lua and Python at once.
 ```bash
 python examples/multi_script/main.py
 ```
+
+## Camera Follow
+
+Camera follows the moving sprite using Python.
+
+```bash
+python examples/camera_follow/main.py
+```
+
+## Event Button
+
+Press SPACE to emit a custom event.
+
+```bash
+python examples/event_button/main.py
+```
