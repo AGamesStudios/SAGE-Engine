@@ -33,6 +33,9 @@ This audit summarises the status of SAGE Engine following the development cycle 
 
 ## Examples and Tests
 - `examples/alpha_demo` exercises the Rust FFI helpers.
+`examples/basic_display` shows a simple scene via FlowScript.
+`examples/object_control` moves a sprite with Lua.
+`examples/multi_script` loads FlowScript, Lua and Python together.
 - `examples/example_project` demonstrates window creation, sprite rendering and Lua-driven movement.
 - Automated test suite (`pytest -q`) covers all subsystems; `ruff` ensures style compliance.
 

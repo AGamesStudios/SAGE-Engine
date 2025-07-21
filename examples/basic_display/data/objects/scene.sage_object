@@ -1,0 +1,4 @@
+[
+  {"id": "MainCamera", "role": "Camera", "zoom": 1.0},
+  {"id": "label", "role": "UI", "text": "Hello from SAGE"}
+]
