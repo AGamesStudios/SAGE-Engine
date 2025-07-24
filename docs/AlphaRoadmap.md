@@ -9,6 +9,7 @@ This document tracks the remaining steps towards the Alpha 1.0 release. Each sub
 - Ensure render and UI examples display correctly.
 - Document resources and plugin system.
 - Implement `ProfileFrame` for measuring performance of core subsystems.
+- Finalise SAGE Math module with vector helpers and expression evaluation.
 - Add low performance mode with CPU fallback.
 
 When all items are checked off, the project graduates from "Alpha 1.0 Candidate" to "Alpha 1.0".

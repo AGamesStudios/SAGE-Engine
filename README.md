@@ -81,6 +81,12 @@ Run `python examples/fx_lab/main.py` to see a demo.
 `sage_engine.gizmo` builds on top to visualise object positions. Refer to
 [docs/draw.md](docs/draw.md) and [docs/gizmo.md](docs/gizmo.md).
 
+## Math Module
+
+`sage_engine.math` contains small vector and matrix helpers along with
+`eval_expr()` for safe expression evaluation. The `plot()` function generates
+points for simple graphs. See [docs/math.md](docs/math.md).
+
 ## Window
 
 The window subsystem creates the main application window using

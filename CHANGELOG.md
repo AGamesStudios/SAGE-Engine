@@ -34,3 +34,5 @@
 - Introduced low performance mode with `--low-perf` flag and automatic
   detection
 - Added Draw and Gizmo subsystems for debug visuals
+- Added math helpers with safe expression evaluation and vector operations
+- Added `profile_frame` context manager for measuring frame time

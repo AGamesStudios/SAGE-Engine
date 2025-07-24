@@ -25,6 +25,7 @@ packages = [
     "sage_engine.ui",
     "sage_engine.draw",
     "sage_engine.gizmo",
+    "sage_engine.math",
     "sage_engine.profiling",
     "sage_engine.plugin",
     "sage_object",

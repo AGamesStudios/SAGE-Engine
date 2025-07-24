@@ -16,6 +16,7 @@ from .scripts_watcher import ScriptsWatcher
 from . import input, time
 from . import perf
 from . import draw, gizmo
+from . import math as sage_math
 
 __all__ = [
     "core_boot",
@@ -39,5 +40,6 @@ __all__ = [
     "perf",
     "draw",
     "gizmo",
+    "sage_math",
 ]
 

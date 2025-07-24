@@ -122,6 +122,14 @@ Shows how to inject custom globals for Python scripts.
 python examples/python_globals/main.py
 ```
 
+## Math Demo
+
+Uses the math helpers to evaluate expressions and generate points.
+
+```bash
+python examples/math_demo/main.py
+```
+
 ### Low Performance Mode
 
 Append `--low-perf` to any example command to force simple rendering and
