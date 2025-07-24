@@ -103,7 +103,9 @@ smooth timing. See [docs/framesync.md](docs/framesync.md).
 
 Low-end machines can start the engine in **low performance mode** by passing
 `--low-perf` or setting `SAGE_LOW_PERF=1`. See
-[docs/performance.md](docs/performance.md) for details.
+[docs/performance.md](docs/performance.md) for details. Memory checks rely on
+the `psutil` package on Windows and fall back to the standard `resource` module
+elsewhere.
 
 ## Time
 
