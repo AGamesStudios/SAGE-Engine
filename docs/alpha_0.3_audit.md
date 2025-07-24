@@ -39,6 +39,7 @@ This audit summarises the status of SAGE Engine following the development cycle 
 `examples/multi_script` loads FlowScript, Lua and Python together.
 `examples/camera_follow` demonstrates camera tracking.
 `examples/event_button` emits events from a button.
+- `examples/final_example` showcases a full game loop with hot reloading.
 - `examples/example_project` demonstrates window creation, sprite rendering and Lua-driven movement.
 - Automated test suite (`pytest -q`) covers all subsystems; `ruff` ensures style compliance.
 

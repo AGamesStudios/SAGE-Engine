@@ -38,3 +38,5 @@
 - Added `profile_frame` context manager for measuring frame time
 - Extended events with async handlers and data filters
 - Introduced minimal interactive terminal for running scripts
+- Added ScriptsWatcher to hot reload Lua, Python and FlowScript scripts
+- Added Final Example demonstrating a full game loop with Python logic

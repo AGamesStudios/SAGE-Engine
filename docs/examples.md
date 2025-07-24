@@ -129,6 +129,14 @@ Uses the math helpers to evaluate expressions and generate points.
 ```bash
 python examples/math_demo/main.py
 ```
+## Final Example
+
+Demonstrates a full game loop with hot reloadable Python logic.
+
+```bash
+python examples/final_example/main.py
+```
+
 
 ### Low Performance Mode
 
