@@ -28,3 +28,20 @@ def test_import_blocked(tmp_path):
     script.write_text("import os", encoding="utf-8")
     with pytest.raises(ImportError):
         run_python_script(str(script))
+
+
+def test_builtins_blocked(tmp_path):
+    script = tmp_path / "bad.py"
+    script.write_text("open('x')", encoding="utf-8")
+    with pytest.raises(Exception):
+        run_python_script(str(script))
+
+
+def test_env_reset(tmp_path):
+    script = tmp_path / "s1.py"
+    script.write_text("a = 1", encoding="utf-8")
+    run_python_script(str(script))
+    script2 = tmp_path / "s2.py"
+    script2.write_text("a", encoding="utf-8")
+    with pytest.raises(NameError):
+        run_python_script(str(script2))
