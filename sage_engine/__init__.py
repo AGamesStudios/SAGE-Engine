@@ -15,7 +15,7 @@ from .logic_api import (
 from .scripts_watcher import ScriptsWatcher
 from . import input, time
 from . import perf
-from . import draw, gizmo
+from . import draw, gizmo, scene
 from . import math as sage_math
 
 __all__ = [
@@ -41,5 +41,6 @@ __all__ = [
     "draw",
     "gizmo",
     "sage_math",
+    "scene",
 ]
 

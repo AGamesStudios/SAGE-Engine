@@ -58,9 +58,9 @@ Plugins can be loaded at runtime via ``sage_engine.plugin.load_plugins``.
 
 ## Scene
 
-Objects are organised in a Scene using parent/child links. Use
-``add_object`` and ``remove_object`` from ``sage_engine.object`` to manage
-hierarchy. See ``docs/sage_scene.md`` for details.
+Objects are organised in a Scene using parent/child links. Import helpers from
+``sage_engine.scene`` to add or remove objects and to serialise a scene to a
+``.sage_scene`` file. See ``docs/sage_scene.md`` for details.
 
 ## Render and UI
 

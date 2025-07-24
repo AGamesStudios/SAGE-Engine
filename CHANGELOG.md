@@ -40,3 +40,4 @@
 - Introduced minimal interactive terminal for running scripts
 - Added ScriptsWatcher to hot reload Lua, Python and FlowScript scripts
 - Added Final Example demonstrating a full game loop with Python logic
+- Introduced Scene module with serialization and DAG traversal
