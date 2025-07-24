@@ -88,6 +88,10 @@ Settings live in `sage/config/framesync.yaml` where you can set `target_fps` and
 allow or disallow drift. Call `framesync.regulate()` once per frame to maintain
 smooth timing. See [docs/framesync.md](docs/framesync.md).
 
+Low-end machines can start the engine in **low performance mode** by passing
+`--low-perf` or setting `SAGE_LOW_PERF=1`. See
+[docs/performance.md](docs/performance.md) for details.
+
 ## Time
 
 `sage_engine.time` offers `get_time()`, `get_delta()` and `wait(ms)`. Tune `time.scale` or set `time.paused` to control progression. See [docs/time.md](docs/time.md).

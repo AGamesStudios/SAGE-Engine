@@ -31,3 +31,5 @@
 - Added Feather-FX prototype (.sage_fx)
 - Added Python script runner with sandboxed execution
 - Added Python Spawn and Globals examples
+- Introduced low performance mode with `--low-perf` flag and automatic
+  detection

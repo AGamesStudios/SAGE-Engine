@@ -23,6 +23,7 @@ from sage import get_event_handlers
 from ..lua_runner import run_lua_script, set_lua_globals
 from ..python_runner import run_python_script, set_python_globals
 from ..scripts_watcher import ScriptsWatcher
+from .. import perf
 from sage.config import load_config
 from ..profiling import ProfileEntry, ProfileFrame
 from ..logic_api import (
@@ -94,10 +95,15 @@ def core_boot() -> ProfileFrame:
         return _profile if _profile is not None else ProfileFrame([])
 
     entries: list[ProfileEntry] = []
+    if perf.detect_low_perf():
+        print("[boot] low performance mode enabled")
     entries.append(_init_step("core", lambda: None))
     for name in BOOT_SEQUENCE:
         subsystem = get_subsystem(name)
         entries.append(_init_step(name, subsystem.boot))
+        if perf.check_memory(256):
+            perf.set_low_perf(True)
+            print("[boot] memory high, switching to low perf")
         if name == "object":
             def _load_objects():
                 mgr = resource.get_manager()

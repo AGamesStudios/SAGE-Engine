@@ -10,6 +10,7 @@ This audit summarises the status of SAGE Engine following the development cycle 
 ## Resources
 - `.sage_object` files load from `data/objects` and populate the scene automatically.
 - FlowScript (`.sage_fs`), Lua and Python scripts load from `data/scripts` and can be hot reloaded by `ScriptsWatcher`.
+- A low performance mode can be enabled with `--low-perf` for weak devices.
 
 ## Scene and Objects
 - Objects maintain `parent_id` links and caches by role and layer.

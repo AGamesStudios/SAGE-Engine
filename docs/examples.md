@@ -121,3 +121,8 @@ Shows how to inject custom globals for Python scripts.
 ```bash
 python examples/python_globals/main.py
 ```
+
+### Low Performance Mode
+
+Append `--low-perf` to any example command to force simple rendering and
+reduced effects for weak devices.

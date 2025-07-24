@@ -14,6 +14,7 @@ from .logic_api import (
 )
 from .scripts_watcher import ScriptsWatcher
 from . import input, time
+from . import perf
 
 __all__ = [
     "core_boot",
@@ -34,5 +35,6 @@ __all__ = [
     "on_update",
     "input",
     "time",
+    "perf",
 ]
 
