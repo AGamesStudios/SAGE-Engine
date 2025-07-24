@@ -45,3 +45,14 @@ def test_env_reset(tmp_path):
     script2.write_text("a", encoding="utf-8")
     with pytest.raises(NameError):
         run_python_script(str(script2))
+
+
+def test_import_from_logic_api(tmp_path):
+    script = tmp_path / "api.py"
+    script.write_text(
+        "from sage_engine.logic_api import on_ready\n"
+        "def cb():\n    pass\n"
+        "on_ready(cb)\n",
+        encoding="utf-8",
+    )
+    run_python_script(str(script))

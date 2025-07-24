@@ -7,7 +7,14 @@ import sys
 from pathlib import Path
 from typing import Any, Dict
 
-SAFE_IMPORTS = {"math", "random", "time", "logic_api", "builtins"}
+SAFE_IMPORTS = {
+    "math",
+    "random",
+    "time",
+    "logic_api",
+    "sage_engine.logic_api",
+    "builtins",
+}
 _BLOCKED_MODULES = {
     "os",
     "sys",
@@ -29,7 +36,7 @@ def set_python_globals(**values: Any) -> None:
 
 def _safe_import(name: str, globals=None, locals=None, fromlist=(), level=0):
     root = name.split(".")[0]
-    if root not in SAFE_IMPORTS:
+    if root not in SAFE_IMPORTS and name not in SAFE_IMPORTS:
         raise ImportError(f"Module '{root}' not allowed")
     return __import__(name, globals, locals, fromlist, level)
 
@@ -40,11 +47,19 @@ def _validate_ast(tree: ast.AST) -> None:
         for child in ast.iter_child_nodes(parent):
             setattr(child, "parent", parent)
     for node in ast.walk(tree):
-        if isinstance(node, (ast.Import, ast.ImportFrom)):
+        if isinstance(node, ast.Import):
             for alias in node.names:
                 root = alias.name.split(".")[0]
                 if root not in SAFE_IMPORTS or root in _BLOCKED_MODULES:
                     raise ImportError(f"Module '{root}' not allowed")
+        elif isinstance(node, ast.ImportFrom):
+            module_name = node.module or ""
+            module_root = module_name.split(".")[0]
+            if (
+                module_root not in SAFE_IMPORTS
+                and module_name not in SAFE_IMPORTS
+            ) or module_root in _BLOCKED_MODULES:
+                raise ImportError(f"Module '{module_root}' not allowed")
         elif isinstance(node, ast.Call):
             if isinstance(node.func, ast.Name) and node.func.id in {
                 "eval",
