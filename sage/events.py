@@ -1,6 +1,7 @@
 from typing import Any, Callable
 import asyncio
 import inspect
+import logging
 
 class EventSlot:
     __slots__ = ['handlers']
@@ -10,10 +11,23 @@ class EventSlot:
 _events: dict[str, EventSlot] = {}
 _filters: dict[str, list[Callable[[Any], Any]]] = {}
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def on(event: str, handler, *, owner=None) -> None:
     if not callable(handler):
         raise TypeError('handler must be callable')
+    try:
+        sig = inspect.signature(handler)
+        params = list(sig.parameters.values())
+        positional = [p for p in params if p.kind in (inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY)]
+        param_count = len(positional)
+        if param_count == 0 and any(p.kind in (inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD) for p in params):
+            param_count = 1
+    except (ValueError, TypeError):
+        param_count = 1
+    if param_count > 1:
+        raise ValueError(f"Handler '{getattr(handler, '__name__', repr(handler))}' must accept 0 or 1 parameters")
     slot = _events.setdefault(event, EventSlot())
     slot.handlers.append((handler, owner))
 
@@ -22,14 +36,41 @@ def async_on(event: str, handler, *, owner=None) -> None:
     """Register an async event handler."""
     if not callable(handler):
         raise TypeError('handler must be callable')
+    try:
+        sig = inspect.signature(handler)
+        params = list(sig.parameters.values())
+        positional = [p for p in params if p.kind in (inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY)]
+        param_count = len(positional)
+        if param_count == 0 and any(p.kind in (inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD) for p in params):
+            param_count = 1
+    except (ValueError, TypeError):
+        param_count = 1
+    if param_count > 1:
+        raise ValueError(f"Handler '{getattr(handler, '__name__', repr(handler))}' must accept 0 or 1 parameters")
     slot = _events.setdefault(event, EventSlot())
     slot.handlers.append((handler, owner))
 
 
 def once(event: str, handler, *, owner=None) -> None:
-    def wrapper(data):
+    try:
+        sig = inspect.signature(handler)
+        params = list(sig.parameters.values())
+        positional = [p for p in params if p.kind in (inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY)]
+        param_count = len(positional)
+        if param_count == 0 and any(p.kind in (inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD) for p in params):
+            param_count = 1
+    except (ValueError, TypeError):
+        param_count = 1
+    if param_count > 1:
+        raise ValueError(f"Handler '{getattr(handler, '__name__', repr(handler))}' must accept 0 or 1 parameters")
+
+    def wrapper(data=None):
         off(event, wrapper)
-        handler(data)
+        if param_count == 0:
+            handler()
+        else:
+            handler(data)
+
     on(event, wrapper, owner=owner)
 
 
@@ -48,11 +89,22 @@ def emit(event: str, data=None) -> int:
         return 0
     for f in _filters.get(event, []):
         data = f(data)
+    _LOGGER.info(f"[event_emit] '{event}' (data={data}) dispatched to {len(slot.handlers)} handler(s)")
     for func, _ in list(slot.handlers):
-        if inspect.iscoroutinefunction(func):
-            asyncio.create_task(func(data))
-        else:
-            func(data)
+        try:
+            params = inspect.signature(func).parameters
+            if len(params) == 0:
+                if inspect.iscoroutinefunction(func):
+                    asyncio.create_task(func())
+                else:
+                    func()
+            else:
+                if inspect.iscoroutinefunction(func):
+                    asyncio.create_task(func(data))
+                else:
+                    func(data)
+        except Exception as e:
+            _LOGGER.error(f"[event_emit] handler '{func.__name__}' failed: {e}")
     return len(slot.handlers)
 
 
@@ -78,11 +130,22 @@ async def emit_async(event: str, data=None) -> int:
         return 0
     for f in _filters.get(event, []):
         data = await f(data) if inspect.iscoroutinefunction(f) else f(data)
+    _LOGGER.info(f"[event_emit] '{event}' (data={data}) dispatched to {len(slot.handlers)} handler(s)")
     for func, _ in list(slot.handlers):
-        if inspect.iscoroutinefunction(func):
-            await func(data)
-        else:
-            func(data)
+        try:
+            params = inspect.signature(func).parameters
+            if inspect.iscoroutinefunction(func):
+                if len(params) == 0:
+                    await func()
+                else:
+                    await func(data)
+            else:
+                if len(params) == 0:
+                    func()
+                else:
+                    func(data)
+        except Exception as e:
+            _LOGGER.error(f"[event_emit] handler '{func.__name__}' failed: {e}")
     return len(slot.handlers)
 
 

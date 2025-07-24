@@ -1,4 +1,5 @@
 import asyncio
+import pytest
 from sage import (
     on,
     once,
@@ -25,6 +26,41 @@ def test_on_emit_and_off_once():
     emit("evt", 3)
     emit("evt", 4)
     assert out == [1, 3]
+
+
+def test_emit_various_handlers():
+    events = []
+
+    def no_arg():
+        events.append("no")
+
+    def with_data(data):
+        events.append(data)
+
+    on("mix", no_arg)
+    on("mix", with_data)
+    emit("mix", "ok")
+    assert events == ["no", "ok"]
+
+
+def test_emit_none_and_error_handler():
+    events = []
+
+    def capture(data):
+        events.append(data)
+
+    def bad_handler(_):
+        raise RuntimeError("boom")
+
+    on("none", capture)
+    on("none", bad_handler)
+    emit("none")  # should not raise
+    assert events == [None]
+
+
+def test_invalid_handler_registration():
+    with pytest.raises(ValueError):
+        on("bad", lambda a, b: None)
 
 
 def test_object_event_registration_and_cleanup():
