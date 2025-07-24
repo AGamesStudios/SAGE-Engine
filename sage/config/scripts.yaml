@@ -2,3 +2,4 @@ enable_lua: true
 enable_flow: true
 enable_python: true
 watch_scripts: false
+allowed_modules: []

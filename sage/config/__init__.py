@@ -8,6 +8,7 @@ DEFAULT_CONFIG = {
     "enable_flow": True,
     "enable_python": True,
     "watch_scripts": False,
+    "allowed_modules": [],
 }
 
 DEFAULT_WINDOW_CONFIG = {

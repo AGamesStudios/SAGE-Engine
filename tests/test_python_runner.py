@@ -30,6 +30,30 @@ def test_import_blocked(tmp_path):
         run_python_script(str(script))
 
 
+def test_from_import_allowed(tmp_path):
+    script = tmp_path / "good.py"
+    script.write_text("from math import sin\nassert sin(0) == 0", encoding="utf-8")
+    run_python_script(str(script))
+
+
+def test_from_import_blocked(tmp_path):
+    script = tmp_path / "bad.py"
+    script.write_text("from os import system", encoding="utf-8")
+    with pytest.raises(ImportError):
+        run_python_script(str(script))
+
+
+def test_custom_allowed_module(tmp_path, monkeypatch):
+    script = tmp_path / "custom.py"
+    script.write_text("import textwrap", encoding="utf-8")
+
+    def fake_config():
+        return {"enable_python": True, "allowed_modules": ["textwrap"]}
+
+    monkeypatch.setattr("sage.config.load_config", fake_config)
+    monkeypatch.setattr("sage_engine.python_runner.load_config", fake_config)
+    run_python_script(str(script))
+
 def test_builtins_blocked(tmp_path):
     script = tmp_path / "bad.py"
     script.write_text("open('x')", encoding="utf-8")
@@ -56,3 +80,4 @@ def test_import_from_logic_api(tmp_path):
         encoding="utf-8",
     )
     run_python_script(str(script))
+
