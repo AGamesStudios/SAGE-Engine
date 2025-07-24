@@ -15,6 +15,7 @@ from .logic_api import (
 from .scripts_watcher import ScriptsWatcher
 from . import input, time
 from . import perf
+from . import draw, gizmo
 
 __all__ = [
     "core_boot",
@@ -36,5 +37,7 @@ __all__ = [
     "input",
     "time",
     "perf",
+    "draw",
+    "gizmo",
 ]
 

@@ -33,3 +33,4 @@
 - Added Python Spawn and Globals examples
 - Introduced low performance mode with `--low-perf` flag and automatic
   detection
+- Added Draw and Gizmo subsystems for debug visuals

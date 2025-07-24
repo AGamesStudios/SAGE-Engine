@@ -75,6 +75,12 @@ CPU backend. Files are parsed and cached with `load_fx()`. See
 [docs/feather_fx.md](docs/feather_fx.md) for the text format and API.
 Run `python examples/fx_lab/main.py` to see a demo.
 
+## Draw and Gizmo
+
+`sage_engine.draw` exposes helpers like `draw_line` for rendering debug shapes.
+`sage_engine.gizmo` builds on top to visualise object positions. Refer to
+[docs/draw.md](docs/draw.md) and [docs/gizmo.md](docs/gizmo.md).
+
 ## Window
 
 The window subsystem creates the main application window using
