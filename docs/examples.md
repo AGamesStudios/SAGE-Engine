@@ -65,3 +65,19 @@ Demonstrates Feather-FX shaders on a sprite.
 ```bash
 python examples/fx_lab/main.py
 ```
+
+## Clear Color Demo
+
+Shows how to change the background color.
+
+```bash
+python examples/clear_color_demo/main.py
+```
+
+## Script Watch Demo
+
+Demonstrates the `ScriptsWatcher`. Edit `hello.py` while the demo is running to reload it.
+
+```bash
+python examples/script_watch/main.py
+```
