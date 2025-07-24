@@ -116,7 +116,9 @@ Low-end machines can start the engine in **low performance mode** by passing
 ## Events
 
 The ``sage`` package provides a lightweight event system. Register handlers with
-``on(event, handler)`` and trigger them via ``emit(event, data)``. Object fields
+``on(event, handler)`` or an ``async def`` function. Use ``emit(event, data)`` to
+trigger them or ``emit_async`` when awaiting inside async code. Event data may
+be transformed via filters registered with ``add_filter``. Object fields
 prefixed with ``on_`` are automatically connected when added to the scene. See
 ``docs/events_system.md``.
 
@@ -143,6 +145,12 @@ Regular Python files can also extend the engine. Enable them with
 ``data/scripts`` execute during ``core_boot()`` in a sandboxed namespace with the
 same helpers available to Lua and FlowScript. See
 [docs/python_scripts.md](docs/python_scripts.md) for details.
+
+## Terminal
+
+Run `python -m sage_engine.terminal` to start an interactive prompt for
+running scripts and managing scenes. See [docs/terminal.md](docs/terminal.md)
+for available commands.
 
 ## Tests
 

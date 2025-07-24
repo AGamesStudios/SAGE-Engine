@@ -36,3 +36,5 @@
 - Added Draw and Gizmo subsystems for debug visuals
 - Added math helpers with safe expression evaluation and vector operations
 - Added `profile_frame` context manager for measuring frame time
+- Extended events with async handlers and data filters
+- Introduced minimal interactive terminal for running scripts

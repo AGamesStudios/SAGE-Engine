@@ -1,8 +1,13 @@
 from .events import (
     on,
+    async_on,
     once,
     off,
     emit,
+    emit_async,
+    add_filter,
+    remove_filter,
+    clear_filters,
     cleanup_events,
     register_events,
     get_event_handlers,
@@ -10,9 +15,14 @@ from .events import (
 
 __all__ = [
     'on',
+    'async_on',
     'once',
     'off',
     'emit',
+    'emit_async',
+    'add_filter',
+    'remove_filter',
+    'clear_filters',
     'cleanup_events',
     'register_events',
     'get_event_handlers',

@@ -23,3 +23,7 @@ Call `cleanup_events()` periodically or when objects are removed to discard
 handlers whose owners have been marked for removal.
 Use `get_event_handlers()` to inspect the current mapping of events to
 callbacks during debugging.
+
+Asynchronous handlers can be registered with `async def` functions. Use
+`emit_async()` to await them or `emit()` to schedule them in the background.
+Event data can be modified by filters registered with `add_filter(event, func)`.

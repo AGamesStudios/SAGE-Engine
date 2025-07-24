@@ -1,4 +1,6 @@
 from typing import Any, Callable
+import asyncio
+import inspect
 
 class EventSlot:
     __slots__ = ['handlers']
@@ -6,9 +8,18 @@ class EventSlot:
         self.handlers: list[tuple[Callable[[Any], None], Any]] = []
 
 _events: dict[str, EventSlot] = {}
+_filters: dict[str, list[Callable[[Any], Any]]] = {}
 
 
 def on(event: str, handler, *, owner=None) -> None:
+    if not callable(handler):
+        raise TypeError('handler must be callable')
+    slot = _events.setdefault(event, EventSlot())
+    slot.handlers.append((handler, owner))
+
+
+def async_on(event: str, handler, *, owner=None) -> None:
+    """Register an async event handler."""
     if not callable(handler):
         raise TypeError('handler must be callable')
     slot = _events.setdefault(event, EventSlot())
@@ -35,8 +46,43 @@ def emit(event: str, data=None) -> int:
     slot = _events.get(event)
     if not slot:
         return 0
+    for f in _filters.get(event, []):
+        data = f(data)
     for func, _ in list(slot.handlers):
-        func(data)
+        if inspect.iscoroutinefunction(func):
+            asyncio.create_task(func(data))
+        else:
+            func(data)
+    return len(slot.handlers)
+
+
+def add_filter(event: str, func: Callable[[Any], Any]) -> None:
+    _filters.setdefault(event, []).append(func)
+
+
+def remove_filter(event: str, func: Callable[[Any], Any]) -> None:
+    lst = _filters.get(event)
+    if lst and func in lst:
+        lst.remove(func)
+    if lst and not lst:
+        _filters.pop(event, None)
+
+
+def clear_filters() -> None:
+    _filters.clear()
+
+
+async def emit_async(event: str, data=None) -> int:
+    slot = _events.get(event)
+    if not slot:
+        return 0
+    for f in _filters.get(event, []):
+        data = await f(data) if inspect.iscoroutinefunction(f) else f(data)
+    for func, _ in list(slot.handlers):
+        if inspect.iscoroutinefunction(func):
+            await func(data)
+        else:
+            func(data)
     return len(slot.handlers)
 
 
@@ -67,9 +113,14 @@ def register_events(obj) -> None:
 
 __all__ = [
     'on',
+    'async_on',
     'once',
     'off',
     'emit',
+    'emit_async',
+    'add_filter',
+    'remove_filter',
+    'clear_filters',
     'cleanup_events',
     'register_events',
     'get_event_handlers',

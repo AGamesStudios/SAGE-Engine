@@ -1,4 +1,14 @@
-from sage import on, once, off, emit, cleanup_events, get_event_handlers
+import asyncio
+from sage import (
+    on,
+    once,
+    off,
+    emit,
+    emit_async,
+    add_filter,
+    cleanup_events,
+    get_event_handlers,
+)
 from sage_object import object_from_dict
 from sage_engine.object import add_object, remove_object, reset
 
@@ -33,3 +43,21 @@ def test_object_event_registration_and_cleanup():
     assert out == ["o"]
     table = get_event_handlers()
     assert "test" not in table
+
+
+def test_async_emit_and_filters():
+    events = []
+
+    def add_prefix(data):
+        return f"x{data}"
+
+    async def handler(value):
+        events.append(value)
+
+    async def main():
+        add_filter("aevt", add_prefix)
+        on("aevt", handler)
+        await emit_async("aevt", "1")
+
+    asyncio.run(main())
+    assert events == ["x1"]

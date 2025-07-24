@@ -28,6 +28,7 @@ packages = [
     "sage_engine.math",
     "sage_engine.profiling",
     "sage_engine.plugin",
+    "sage_engine.terminal",
     "sage_object",
     "sage_fs",
     "sage",
