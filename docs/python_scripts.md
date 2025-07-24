@@ -10,6 +10,9 @@ allowlist. By default `math`, `random`, `time`, `datetime` and helpers
 from `logic_api` are allowed. Functions like `open`, `eval` or `exec` are
 removed. Attempting to import other modules raises an `ImportError`.
 
+Lambda expressions are allowed by default. Set `allow_lambda: false` in
+`scripts.yaml` to forbid them if needed.
+
 You can extend the allowlist via `allowed_modules` in
 `sage/config/scripts.yaml`:
 

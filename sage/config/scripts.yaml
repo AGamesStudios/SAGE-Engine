@@ -3,3 +3,4 @@ enable_flow: true
 enable_python: true
 watch_scripts: false
 allowed_modules: []
+allow_lambda: true

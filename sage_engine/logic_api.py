@@ -7,6 +7,9 @@ from .object import add_object, get_object, remove_object
 from sage import emit
 from . import input as input_mod, time as time_mod
 
+input = input_mod
+time = time_mod
+
 
 def create_object(obj_id: str, role: str, params: Dict[str, Any] | None = None):
     data = {"id": obj_id, "role": role}
@@ -102,6 +105,7 @@ __all__ = [
     "destroy_object",
     "emit_event",
     "log",
+    "input",
     "on_ready",
     "on_update",
     "is_key_down",

@@ -23,6 +23,11 @@ def _allowed_modules() -> set[str]:
     return set(DEFAULT_ALLOWED_MODULES).union(custom)
 
 
+def _allow_lambda() -> bool:
+    cfg = load_config()
+    return cfg.get("allow_lambda", True)
+
+
 def _safe_import(name: str, globals=None, locals=None, fromlist=(), level=0):
     allowed = _allowed_modules()
     root = name.split(".")[0]
@@ -59,7 +64,8 @@ def _validate_ast(tree: ast.AST) -> None:
             if node.id in {"globals", "locals"}:
                 raise RuntimeError("Forbidden name usage")
         elif isinstance(node, ast.Lambda):
-            raise RuntimeError("lambda expressions not allowed")
+            if not _allow_lambda():
+                raise RuntimeError("lambda expressions not allowed")
         elif isinstance(node, ast.While):
             if isinstance(node.test, ast.Constant) and node.test.value is True:
                 raise RuntimeError("potential infinite loop")

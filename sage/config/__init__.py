@@ -9,6 +9,7 @@ DEFAULT_CONFIG = {
     "enable_python": True,
     "watch_scripts": False,
     "allowed_modules": [],
+    "allow_lambda": True,
 }
 
 DEFAULT_WINDOW_CONFIG = {

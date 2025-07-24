@@ -81,3 +81,21 @@ def test_import_from_logic_api(tmp_path):
     )
     run_python_script(str(script))
 
+
+def test_import_input_from_logic_api(tmp_path):
+    script = tmp_path / "input.py"
+    script.write_text(
+        "from sage_engine.logic_api import input\ninput.is_key_down('A')",
+        encoding="utf-8",
+    )
+    run_python_script(str(script))
+
+
+def test_lambda_allowed(tmp_path):
+    script = tmp_path / "lam.py"
+    script.write_text(
+        "f = lambda x: x * 2\nassert f(3) == 6",
+        encoding="utf-8",
+    )
+    run_python_script(str(script))
+

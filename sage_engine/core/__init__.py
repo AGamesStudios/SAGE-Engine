@@ -22,6 +22,7 @@ from sage_fs import FlowRunner
 from sage import get_event_handlers
 from ..lua_runner import run_lua_script, set_lua_globals
 from ..python_runner import run_python_script, set_python_globals
+import traceback
 from ..scripts_watcher import ScriptsWatcher
 from .. import perf
 from sage.config import load_config
@@ -155,7 +156,12 @@ def core_boot() -> ProfileFrame:
                             run_lua_script(str(script))
                     if cfg.get("enable_python", True):
                         for script in scripts.glob("*.py"):
-                            run_python_script(str(script))
+                            try:
+                                run_python_script(str(script))
+                            except Exception as exc:
+                                tb = getattr(exc, "__traceback__", None)
+                                line = traceback.extract_tb(tb)[-1].lineno if tb else "?"
+                                print(f"Script '{script.name}' failed at line {line}: {exc}")
 
                 if cfg.get("watch_scripts"):
                     global _watcher
