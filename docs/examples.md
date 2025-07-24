@@ -105,3 +105,19 @@ Displays the measured FPS.
 ```bash
 python examples/framesync_demo/main.py
 ```
+
+## Python Spawn
+
+Creates a few sprite objects from a Python script.
+
+```bash
+python examples/python_spawn/main.py
+```
+
+## Python Globals
+
+Shows how to inject custom globals for Python scripts.
+
+```bash
+python examples/python_globals/main.py
+```
