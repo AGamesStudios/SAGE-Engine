@@ -81,3 +81,27 @@ Demonstrates the `ScriptsWatcher`. Edit `hello.py` while the demo is running to 
 ```bash
 python examples/script_watch/main.py
 ```
+
+## Profile Demo
+
+Prints initialization timings for each subsystem.
+
+```bash
+python examples/profile_demo/main.py
+```
+
+## Timer Event
+
+Emits a `tick` event every second using a Python script.
+
+```bash
+python examples/timer_event/main.py
+```
+
+## FrameSync Demo
+
+Displays the measured FPS.
+
+```bash
+python examples/framesync_demo/main.py
+```
