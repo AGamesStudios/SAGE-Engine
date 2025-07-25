@@ -1,52 +1,54 @@
-# Changelog
+📜 Changelog — SAGE Engine (Alpha)
 
-## Alpha 0.3 - Preview
-- render sprites with a temporary pygame backend
-- new example project demonstrates Lua-driven movement
-- input and time subsystems handle keyboard and delta timing
-- documentation expanded with guides for each module
-- added `core_debug()` and runtime inspection helpers
+🔹 Alpha 0.1 – Minimal Boot Core ✅
+Первая стабильная версия ядра движка
+Реализован core_boot() и базовая система инициализации
+Добавлен SAGE ProfileFrame — профилировка DAG, скриптов, загрузки
+Загружаются .sage_object из data/objects/
+Документация, README, тесты
+Поддержка ChronoPatch Tree и MicroPython интеграции
 
-## Alpha 0.2 - Stable Core
-- feat: optional Qt6 / Qt5 support, auto-fallback
-- feat: pluggable GUI backends (entry-point sage_gui)
-- feat: CLI backend listing and capability ping
-- add lightweight core_boot() system with profiling
-- introduce minimal object roles and rendering hooks
-- load `.sage_object` files via ResourceManager during boot
-- batch sprite draw calls and add basic UI rendering
-- implement Scene hierarchy with parent_id and cleanup
-- document render and UI subsystems
-- introduce events system with object integration
-- add `core_debug()` and `get_event_handlers()` for inspecting runtime state
-- integrate FlowScript parser and runner with DAG startup
-- extend FlowScript with variables, arithmetic and scene object helpers
-- make FlowScript grammar configurable via YAML with module loading
-- add Lua script runner and hot-reload watcher
-- introduce a lightweight window subsystem emitting resize events
-- implement FrameSync for smooth timing without GPU VSync
-- add Input and Time subsystems with keyboard/mouse helpers
+🔹 Alpha 0.2 – Modular Architecture & FlowScript ✅
+Завершение архитектуры, модульности и начальной логики
+Поддержка подсистем с register_subsystem и ленивой загрузкой
+Загрузка ресурсов через ResourceManager
+Объекты имеют роли (Sprite, Camera, UI и т.д.)
+Добавлен SAGE Events — оригинальная событийная система
+Поддержка .sage_object с авто-подстановкой и сериализацией
+Добавлен SAGE FlowScript + поддержка .fs + парсер, DAG
+Добавлен SAGE Scene, иерархия и сериализация сцен
+Улучшено ядро: изоляция, модульность, скорость
+Все примеры и тесты проходят
+Финальный аудит стабильности, багфиксы
 
-## Alpha 0.4 - Clean Structure & Input
-- Added Feather-FX prototype (.sage_fx)
-- Added Python script runner with sandboxed execution
-- Added Python Spawn and Globals examples
-- Introduced low performance mode with `--low-perf` flag and automatic
-  detection
-- Added Draw and Gizmo subsystems for debug visuals
-- Added math helpers with safe expression evaluation and vector operations
-- Added `profile_frame` context manager for measuring frame time
-- Extended events with async handlers and data filters
-- Introduced minimal interactive terminal for running scripts
-- Added ScriptsWatcher to hot reload Lua, Python and FlowScript scripts
-- Added Final Example demonstrating a full game loop with Python logic
-- Introduced Scene module with serialization and DAG traversal
-- Fixed script import sandbox error (on_ready); validated example script loading
-- Added SafeImport system for validating Python script imports
-- Introduced modular input subsystem with pluggable backends
-- Unified example structure and added detailed documentation
-- Added graphical SAGE Terminal for project management
-- Fixed terminal imports and theme; terminal can run via module
-- Removed pygame dependency; window, input and render are now custom
-- Added cross-platform platform layer with Windows, Linux and macOS stubs
-- Added optional input backends for `pygame` and `sdl2`
+🔹 Alpha 0.3 – Скрипты, FX, Тест проекта ✅
+Поддержка Lua, Python, шейдеров, финальный пример
+Полноценная поддержка Lua, горячая перезагрузка .lua
+Поддержка Python логики (с песочницей и SafeImport)
+Расширение FlowScript: переменные, арифметика, доступ к объектам
+Введение .sage_fs формата (FlowScript)
+Добавлен SAGE Draw, SAGE Gizmo, SAGE Math
+Прототип шейдерной системы Feather-FX (.sage_fx)
+Добавлен режим --low-perf для слабых устройств
+Визуальный результат: отрисовка объектов со скриптами
+Финальный пример игры: управление через Python + объекты
+Обновление структуры проекта, документации
+Горячая перезагрузка всех скриптов: Lua, Python, FlowScript
+
+🔹 Alpha 0.4 – Ввод, Терминал, Очистка 🛠️ (в разработке)
+Масштабное обновление, улучшение структуры и ввода
+Удалён pygame, заменён на собственные подсистемы
+Новый модуль SAGE Input — поддержка разных бекендов
+Поддержка Windows, Linux, macOS (включая 32-бит)
+Поддержка всех устройств: CPU / GPU, старые ПК
+Графический терминал SAGE Terminal на CustomTkinter
+Утверждена и реализована структура проекта (SAGE Project Layout)
+Генератор шаблонов и валидатор структуры
+Улучшена безопасность загрузки скриптов
+Начата доработка архитектуры SAGE Feather v1.0
+Расширяемость и модульность системы подтверждены
+
+🧾 Итог
+Всё структурировано по этапам
+Видно, что было сделано на каждом этапе
+Легко понять, на каком уровне зрелости находится движок
