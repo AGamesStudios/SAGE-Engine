@@ -56,6 +56,7 @@ python examples/camera_follow/main.py
 
 Запускайте примеры из каталога `examples`. Подробности в [docs/examples.md](docs/examples.md).
 Для управления проектами воспользуйтесь графическим [SAGE Terminal](docs/terminal.md).
+Запустите его командой `python -m tools.sage_terminal.terminal`.
 
 ## 📜 Лицензия
 

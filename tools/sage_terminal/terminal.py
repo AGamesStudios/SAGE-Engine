@@ -1,14 +1,19 @@
 """Graphical SAGE Terminal based on CustomTkinter."""
 from __future__ import annotations
 
-import customtkinter as ctk
+try:
+    import customtkinter as ctk
+except Exception as exc:  # pragma: no cover - import check
+    raise SystemExit(f"customtkinter missing: {exc}")
 
-from . import commands
+from tools.sage_terminal import commands
+from .utils import check_dependencies
 
 
 class TerminalApp:
     def __init__(self) -> None:
-        ctk.set_default_color_theme("dark")
+        check_dependencies()
+        ctk.set_default_color_theme("blue")
         self.root = ctk.CTk()
         self.root.title("SAGE Terminal v1.0")
         self.output = ctk.CTkTextbox(self.root, height=300, width=600)
@@ -61,7 +66,14 @@ class TerminalApp:
 
 
 def main() -> None:
-    TerminalApp().run()
+    try:
+        TerminalApp().run()
+    except Exception as exc:  # pragma: no cover - runtime guard
+        try:
+            import tkinter.messagebox as messagebox
+            messagebox.showerror("SAGE Terminal", str(exc))
+        except Exception:
+            print("Error:", exc)
 
 
 if __name__ == "__main__":  # pragma: no cover - manual launch

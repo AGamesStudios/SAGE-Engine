@@ -3,7 +3,7 @@ from __future__ import annotations
 import shutil
 from pathlib import Path
 
-from sage_engine.project import ensure_layout, validate_structure, LAYOUT
+from .project_utils import ensure_layout, validate_structure, LAYOUT
 
 
 def cmd_help(app, *args: str) -> str:

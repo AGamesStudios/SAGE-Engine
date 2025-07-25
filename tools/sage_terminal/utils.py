@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import importlib
 
 
 def format_success(message: str) -> str:
@@ -21,3 +22,13 @@ def list_dir(path: str) -> str:
         for f in files:
             lines.append(f"{indent}{f}")
     return "\n".join(lines)
+
+
+def check_dependencies() -> None:
+    """Warn about missing optional packages."""
+    missing = []
+    for mod in ("customtkinter", "pygame", "yaml"):
+        if importlib.util.find_spec(mod) is None:
+            missing.append(mod)
+    if missing:
+        print("Warning: missing modules", ", ".join(missing))

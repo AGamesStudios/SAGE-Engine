@@ -5,7 +5,7 @@
 Run the terminal:
 
 ```bash
-python tools/sage_terminal/terminal.py
+python -m tools.sage_terminal.terminal
 ```
 
 Available commands include:

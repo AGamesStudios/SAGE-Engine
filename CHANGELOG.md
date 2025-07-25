@@ -46,3 +46,4 @@
 - Introduced modular input subsystem with pluggable backends
 - Unified example structure and added detailed documentation
 - Added graphical SAGE Terminal for project management
+- Fixed terminal imports and theme; terminal can run via module
