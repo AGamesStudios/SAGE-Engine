@@ -1,7 +1,8 @@
-# Python Globals
+# python globals
 
-Demonstrates injecting custom globals into Python scripts.
+Run with:
 
 ```bash
 python examples/python_globals/main.py
 ```
+

@@ -1,7 +1,8 @@
-# Multi Script
+# multi script
 
-Loads FlowScript, Lua and Python files together.
+Run with:
 
 ```bash
 python examples/multi_script/main.py
 ```
+

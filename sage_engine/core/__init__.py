@@ -149,13 +149,13 @@ def core_boot() -> ProfileFrame:
                 scripts = Path("data/scripts")
                 if scripts.is_dir():
                     if cfg.get("enable_flow", True):
-                        for script in scripts.glob("*.sage_fs"):
+                        for script in scripts.rglob("*.sage_fs"):
                             runner.run_file(str(script))
                     if cfg.get("enable_lua", True):
-                        for script in scripts.glob("*.lua"):
+                        for script in scripts.rglob("*.lua"):
                             run_lua_script(str(script))
                     if cfg.get("enable_python", True):
-                        for script in scripts.glob("*.py"):
+                        for script in scripts.rglob("*.py"):
                             try:
                                 run_python_script(str(script))
                             except Exception as exc:

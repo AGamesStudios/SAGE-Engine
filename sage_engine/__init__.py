@@ -42,5 +42,7 @@ __all__ = [
     "gizmo",
     "sage_math",
     "scene",
+    "project",
 ]
 
+from . import project

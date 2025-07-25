@@ -31,7 +31,7 @@ class ScriptsWatcher:
     def scan(self) -> None:
         if not self.folder.is_dir():
             return
-        for path in self.folder.iterdir():
+        for path in self.folder.rglob('*'):
             if path.suffix not in {".lua", ".sage_fs", ".py"}:
                 continue
             mtime = path.stat().st_mtime

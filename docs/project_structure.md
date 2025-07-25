@@ -1,20 +1,35 @@
 # Project Structure
 
-Each example must follow this layout:
+All projects must follow **SAGE Project Layout v1.0**. Each folder contains assets for that project only.
 
 ```
-examples/example_project/
-    main.py
-    config.yaml
+project_name/
+    main.py                # Entry point
+    config.yaml            # Window and runtime settings
+    project.yaml           # Name, author, description
+    README.md              # Instructions for this project
+    lang/
+        en.yaml
+        ru.yaml
     data/
+        scenes/
         objects/
         scripts/
-        scenes/
+            scene/
+            object/
+        textures/
+        ui/
+        audio/
+        particles/
+        shaders/
+        fonts/
 ```
 
-The root-level `data/` folder is not used anymore. Place assets inside each example's `data/` directory. Examples that do not conform to this structure may fail to load resources correctly.
+Create all directories even if they are empty. Put a `.gitkeep` file inside to keep them under version control.
 
-Forbidden items:
+### Forbidden Items
 - Hard-coded absolute paths
 - Temporary files (`*.bak`, `*.tmp`, `*.old`)
-- Mixed resources shared between examples
+- Mixed resources shared between projects
+
+Run `sage_engine.project.validate_structure(path)` to check a project's layout.

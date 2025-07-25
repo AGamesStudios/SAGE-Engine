@@ -1,7 +1,8 @@
-# Python Spawn
+# python spawn
 
-Create several sprite objects using a Python script.
+Run with:
 
 ```bash
 python examples/python_spawn/main.py
 ```
+

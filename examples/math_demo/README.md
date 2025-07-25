@@ -1,8 +1,8 @@
-# Math Demo
+# math demo
 
-This example prints results from the ``sage_engine.math`` module.
 Run with:
 
 ```bash
-python main.py
+python examples/math_demo/main.py
 ```
+

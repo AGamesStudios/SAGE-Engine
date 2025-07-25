@@ -15,20 +15,7 @@ SAGE использует малый набор обязательных зав�
 
 ## 📁 Структура проекта
 
-Каждый пример должен содержать собственную папку `data/`:
-
-```text
-examples/example_project/
-    main.py
-    config.yaml
-    data/
-        objects/
-        scripts/
-        scenes/
-```
-
-Общая верхнеуровневая `data/` больше не используется.
-Подробнее см. [docs/project_structure.md](docs/project_structure.md)
+Схема см. [docs/project_structure.md](docs/project_structure.md)
 
 ## ⚙️ Установка
 
@@ -38,6 +25,7 @@ cd sage-engine
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
+python tools/new_project.py MyGame
 python examples/camera_follow/main.py
 ```
 

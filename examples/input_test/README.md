@@ -1,7 +1,8 @@
-# Input Test
+# input test
 
-Move the red box with arrow keys. Close with Esc or the window button.
+Run with:
 
 ```bash
 python examples/input_test/main.py
 ```
+
