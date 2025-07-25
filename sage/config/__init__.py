@@ -10,6 +10,8 @@ DEFAULT_CONFIG = {
     "watch_scripts": False,
     "allowed_modules": [],
     "allow_lambda": True,
+    "plugins": [],
+    "disabled_subsystems": [],
 }
 
 DEFAULT_WINDOW_CONFIG = {

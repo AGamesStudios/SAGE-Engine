@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 import time
 from pathlib import Path
+from typing import Callable
 
 from types import ModuleType
 
@@ -26,6 +27,7 @@ import traceback
 from ..scripts_watcher import ScriptsWatcher
 from .. import perf
 from sage.config import load_config
+import importlib
 from ..profiling import ProfileEntry, ProfileFrame
 from ..logic_api import (
     create_object,
@@ -40,15 +42,31 @@ from ..logic_api import (
 
 _LOGGER = logging.getLogger(__name__)
 
+SUBSYSTEM_FACTORIES: dict[str, Callable[[], ModuleType]] = {}
 SUBSYSTEMS: dict[str, ModuleType] = {}
 
 
-def register_subsystem(name: str, system: ModuleType) -> None:
-    SUBSYSTEMS[name] = system
+def register_subsystem(name: str, factory: Callable[[], ModuleType]) -> None:
+    if name in SUBSYSTEM_FACTORIES:
+        raise ValueError(f"Subsystem '{name}' already registered")
+    SUBSYSTEM_FACTORIES[name] = factory
 
 
 def get_subsystem(name: str) -> ModuleType:
+    if name not in SUBSYSTEMS:
+        factory = SUBSYSTEM_FACTORIES.get(name)
+        if factory is None:
+            raise KeyError(name)
+        SUBSYSTEMS[name] = factory()
     return SUBSYSTEMS[name]
+
+
+def load_plugins(modules: list[str]) -> None:
+    for mod in modules:
+        try:
+            importlib.import_module(mod)
+        except Exception as exc:
+            print(f"[plugin] failed to load {mod}: {exc}")
 
 
 BOOT_SEQUENCE = [
@@ -64,15 +82,15 @@ BOOT_SEQUENCE = [
 ]
 
 # Register built-in subsystems
-register_subsystem("render", render)
-register_subsystem("window", window)
-register_subsystem("framesync", framesync)
-register_subsystem("time", time_mod)
-register_subsystem("input", input_mod)
-register_subsystem("resource", resource)
-register_subsystem("object", object_mod)
-register_subsystem("dag", dag)
-register_subsystem("ui", ui)
+register_subsystem("render", lambda: render)
+register_subsystem("window", lambda: window)
+register_subsystem("framesync", lambda: framesync)
+register_subsystem("time", lambda: time_mod)
+register_subsystem("input", lambda: input_mod)
+register_subsystem("resource", lambda: resource)
+register_subsystem("object", lambda: object_mod)
+register_subsystem("dag", lambda: dag)
+register_subsystem("ui", lambda: ui)
 
 
 
@@ -95,11 +113,17 @@ def core_boot() -> ProfileFrame:
     if _booted:
         return _profile if _profile is not None else ProfileFrame([])
 
+    cfg = load_config()
+    load_plugins(cfg.get("plugins", []))
+    disabled = set(cfg.get("disabled_subsystems", []))
+
     entries: list[ProfileEntry] = []
     if perf.detect_low_perf():
         print("[boot] low performance mode enabled")
     entries.append(_init_step("core", lambda: None))
     for name in BOOT_SEQUENCE:
+        if name in disabled:
+            continue
         subsystem = get_subsystem(name)
         entries.append(_init_step(name, subsystem.boot))
         if perf.check_memory(256):
@@ -114,7 +138,6 @@ def core_boot() -> ProfileFrame:
             entries.append(_init_step("load_objects", _load_objects))
         if name == "dag":
             def _init_flow():
-                cfg = load_config()
                 runner = FlowRunner()
                 runner.context.variables.update({"input": input_mod, "time": time_mod})
                 dag.register("flow.run", runner.run_file)
@@ -183,7 +206,11 @@ def core_reset() -> ProfileFrame:
     if _watcher:
         _watcher.stop()
         _watcher = None
+    cfg = load_config()
+    disabled = set(cfg.get("disabled_subsystems", []))
     for name in reversed(BOOT_SEQUENCE):
+        if name in disabled:
+            continue
         subsystem = get_subsystem(name)
         if hasattr(subsystem, "reset"):
             subsystem.reset()

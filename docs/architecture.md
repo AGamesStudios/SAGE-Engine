@@ -1,6 +1,9 @@
-# Feather Architecture
+# Feather Architecture v1.0
 
-This document summarises the core modules that make up SAGE Feather 0.2.
+The engine is composed of small, independent subsystems. Each subsystem
+registers itself with the core via ``register_subsystem(name, factory)`` where
+``factory`` lazily creates the module object. ``get_subsystem(name)`` returns the
+loaded module. Built‑in subsystems include:
 
 - **core** – handles boot, reset and subsystem registration.
 - **window** – opens the main application window and fires resize events.
@@ -12,5 +15,11 @@ This document summarises the core modules that make up SAGE Feather 0.2.
 - **events** – lightweight dispatcher used by the engine and game objects.
 - **ui** – minimal user interface elements and theming.
 
-Each subsystem is initialised via `core_boot()` in order. They can be
-reinitialised without restarting Python using `core_reset()`.
+The list of subsystem names is stored in ``BOOT_SEQUENCE``. ``core_boot()``
+initialises them unless they appear in ``disabled_subsystems`` in
+``scripts.yaml``. Extra plugins listed under ``plugins`` can register their own
+subsystems before boot.
+
+Call ``get_subsystem("input")`` or similar to interact with a subsystem instead
+of importing it directly. ``core_reset()`` reboots every active subsystem in
+reverse order.
