@@ -9,7 +9,7 @@ from sage import emit
 from sage_engine import core_boot, core_reset, framesync, time
 from sage_engine.render import render_scene
 from sage_engine.object import get_objects
-from sage_engine.window import poll as poll_window, present as present_window
+from sage_engine.window import poll as poll_window, present as present_window, should_close
 
 
 def load_cfg() -> None:
@@ -25,7 +25,7 @@ def main() -> None:
     emit("ready")
     time.mark()
     try:
-        while True:
+        while not should_close():
             poll_window()
             dt = time.get_delta()
             emit("update", dt)

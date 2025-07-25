@@ -32,7 +32,9 @@ class Window:
         emit("window_resize", {"width": width, "height": height})
 
     def close(self) -> None:
+        global _closed
         self.should_close = True
+        _closed = True
         emit("window_close", None)
 
     def poll(self) -> None:
@@ -50,11 +52,12 @@ class Window:
 
 _initialized = False
 _window: Optional[Window] = None
+_closed = False
 
 
 def boot() -> None:
     """Create the main application window."""
-    global _initialized, _window
+    global _initialized, _window, _closed
     cfg = load_window_config()
     pygame.init()
     flags = pygame.RESIZABLE if cfg.get("resizable", False) else 0
@@ -69,6 +72,7 @@ def boot() -> None:
     print("[window] created window:", cfg.get("title", "SAGE"), (cfg.get("width", 800), cfg.get("height", 600)))
     _window = Window(**cfg, surface=surface)
     _initialized = True
+    _closed = False
     emit("window_create", {"width": _window.width, "height": _window.height})
 
 
@@ -108,6 +112,10 @@ def present() -> None:
     get_window().present()
 
 
+def should_close() -> bool:
+    return _closed
+
+
 def is_initialized() -> bool:
     return _initialized
 
@@ -120,6 +128,7 @@ __all__ = [
     "is_initialized",
     "poll",
     "present",
+    "should_close",
     "get_size",
     "get_title",
     "Window",
