@@ -45,3 +45,4 @@
 - Added SafeImport system for validating Python script imports
 - Introduced modular input subsystem with pluggable backends
 - Unified example structure and added detailed documentation
+- Added graphical SAGE Terminal for project management
