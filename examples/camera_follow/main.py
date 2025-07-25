@@ -6,10 +6,15 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../.
 
 from sage.config import DEFAULT_WINDOW_CONFIG
 from sage import emit
-from sage_engine import core_boot, core_reset, framesync, time
+from sage_engine import core_boot, core_reset, framesync, time, input
 from sage_engine.render import render_scene
 from sage_engine.object import get_objects
-from sage_engine.window import poll as poll_window, present as present_window, should_close
+from sage_engine.window import (
+    poll as poll_window,
+    present as present_window,
+    should_close,
+    get_window,
+)
 
 
 def load_cfg() -> None:
@@ -27,6 +32,8 @@ def main() -> None:
     try:
         while not should_close():
             poll_window()
+            if input.is_key_down("escape"):
+                get_window().close()
             dt = time.get_delta()
             emit("update", dt)
             render_scene(get_objects())

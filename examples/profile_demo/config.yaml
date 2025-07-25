@@ -1,5 +1,0 @@
-window:
-  width: 640
-  height: 480
-  title: "Profile Demo"
-  vsync: true

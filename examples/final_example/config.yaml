@@ -1,8 +1,0 @@
-window:
-  width: 640
-  height: 480
-  title: "Final Example"
-
-scripts:
-  enable_python: true
-  watch_scripts: true

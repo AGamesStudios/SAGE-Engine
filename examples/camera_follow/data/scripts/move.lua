@@ -12,6 +12,6 @@ on_update(function(dt)
   if input.is_key_down("UP") then dy = dy - 100 end
   if input.is_key_down("DOWN") then dy = dy + 100 end
   if dx ~= 0 or dy ~= 0 then
-    move("player", dx * dt, dy * dt)
+    move("Player", dx * dt, dy * dt)
   end
 end)

@@ -33,15 +33,9 @@ This audit summarises the status of SAGE Engine following the development cycle 
 - Lua and Python scripts have access to the same logic API and can be hot reloaded.
 
 ## Examples and Tests
-- `examples/alpha_demo` exercises the Rust FFI helpers.
-`examples/basic_display` shows a simple scene via FlowScript.
-`examples/object_control` moves a sprite with Lua.
 `examples/multi_script` loads FlowScript, Lua and Python together.
 `examples/camera_follow` demonstrates camera tracking.
-`examples/event_button` emits events from a button.
-- `examples/final_example` showcases a full game loop with hot reloading.
-- `examples/example_project` demonstrates window creation, sprite rendering and Lua-driven movement.
-- Automated test suite (`pytest -q`) covers all subsystems; `ruff` ensures style compliance.
+Automated test suite (`pytest -q`) covers all subsystems; `ruff` ensures style compliance.
 
 ## Files Included
 - Source code: `.py` modules under `sage_engine`, `sage`, `sage_fs` and `sage_object`.
