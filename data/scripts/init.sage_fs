@@ -1,2 +1,0 @@
-print "Init script loaded"
-var init_done = 1

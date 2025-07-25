@@ -27,7 +27,7 @@
 - implement FrameSync for smooth timing without GPU VSync
 - add Input and Time subsystems with keyboard/mouse helpers
 
-## Alpha 0.4 - Work in Progress
+## Alpha 0.4 - Clean Structure & Input
 - Added Feather-FX prototype (.sage_fx)
 - Added Python script runner with sandboxed execution
 - Added Python Spawn and Globals examples
@@ -43,3 +43,5 @@
 - Introduced Scene module with serialization and DAG traversal
 - Fixed script import sandbox error (on_ready); validated example script loading
 - Added SafeImport system for validating Python script imports
+- Introduced modular input subsystem with pluggable backends
+- Unified example structure and added detailed documentation

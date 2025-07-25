@@ -1,5 +1,7 @@
 # Examples
 
+Each demo resides in its own folder with a `data/` directory for assets.
+
 The repository includes a few small demos showcasing different features of the engine.
 
 
