@@ -27,7 +27,7 @@ def list_dir(path: str) -> str:
 def check_dependencies() -> None:
     """Warn about missing optional packages."""
     missing = []
-    for mod in ("customtkinter", "pygame", "yaml"):
+    for mod in ("customtkinter", "yaml"):
         if importlib.util.find_spec(mod) is None:
             missing.append(mod)
     if missing:

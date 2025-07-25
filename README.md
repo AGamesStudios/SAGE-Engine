@@ -68,4 +68,4 @@ python examples/camera_follow/main.py
 
 Поддержка: SAGE Team, OpenSource Helpers
 
-Вдохновлено: PyGame, Godot, Defold, Unreal Nanite
+Вдохновлено различными игровыми движками, но код полностью оригинален

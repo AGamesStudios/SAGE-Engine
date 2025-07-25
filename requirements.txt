@@ -2,6 +2,5 @@ ruff
 pytest
 pyyaml
 lupa
-pygame
 psutil  # optional, for cross-platform memory checks
 customtkinter

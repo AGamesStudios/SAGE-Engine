@@ -1,6 +1,5 @@
-import os
-os.environ["SDL_VIDEODRIVER"] = "dummy"
 
+import os
 from sage_engine import core_boot, core_reset, core_debug
 from sage_engine.object import get_objects
 

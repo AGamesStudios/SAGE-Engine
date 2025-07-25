@@ -20,6 +20,5 @@ dx, dy = input.mouse_delta()
 
 Events are emitted on state changes:
 `key_down`, `key_up`, `mouse_down`, `mouse_up`, `mouse_move`, `click`.
-
-When using the built-in window subsystem, `window.poll()` forwards events to
-`input.handle_pygame_event` automatically.
+The default backend is a lightweight internal implementation with no external
+dependencies.

@@ -1,6 +1,6 @@
 # SAGE Draw
 
-The draw subsystem provides simple primitives for debug visuals. It can draw lines, rectangles and circles onto the current window surface using pygame.
+The draw subsystem provides simple primitives for debug visuals. It collects line, rectangle and circle requests so tests can inspect what would be rendered.
 
 ```python
 from sage_engine.draw import boot, draw_line, draw_rect, draw_circle

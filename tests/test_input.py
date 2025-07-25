@@ -1,5 +1,4 @@
 from sage_engine import input
-import pygame
 from sage.events import on
 
 
@@ -34,11 +33,6 @@ def test_mouse_button_and_move():
     input.input_poll()
 
 
-def test_handle_pygame_event_bridge():
-    input.input_boot()
-    ev = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_SPACE})
-    input.handle_pygame_event(ev)
-    assert input.input_key_down("space")
 
 
 def test_backend_switch():

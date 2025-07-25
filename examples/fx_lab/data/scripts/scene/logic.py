@@ -4,7 +4,6 @@ from sage_engine.render import render_scene
 from sage_engine.object import get_objects
 from sage_engine.window import poll as poll_window, present as present_window
 from sage_engine import framesync, time
-import pygame
 import os
 
 _fx = None
@@ -19,8 +18,7 @@ def ready() -> None:
 def update(dt: float) -> None:
     poll_window()
     render_scene(get_objects())
-    surf = pygame.display.get_surface()
-    apply_fx(surf, _fx)
+    apply_fx(None, _fx)
     present_window()
     framesync.regulate()
     time.mark()

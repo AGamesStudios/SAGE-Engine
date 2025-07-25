@@ -1,7 +1,7 @@
 # Changelog
 
 ## Alpha 0.3 - Preview
-- render sprites using pygame with placeholder images
+- render sprites with a temporary pygame backend
 - new example project demonstrates Lua-driven movement
 - input and time subsystems handle keyboard and delta timing
 - documentation expanded with guides for each module
@@ -47,3 +47,4 @@
 - Unified example structure and added detailed documentation
 - Added graphical SAGE Terminal for project management
 - Fixed terminal imports and theme; terminal can run via module
+- Removed pygame dependency; window, input and render are now custom

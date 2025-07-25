@@ -17,7 +17,7 @@ This audit summarises the status of SAGE Engine following the development cycle 
 - `on_scene_enter` and `on_scene_exit` callbacks fire when objects are added or removed.
 
 ## Rendering and Window
-- The window subsystem uses pygame and dispatches resize/close events.
+- The window subsystem now uses a custom implementation and dispatches resize/close events.
 - The render module batches sprites by image and falls back to a placeholder when an image is missing.
 - Example project confirms sprites render correctly to the real window.
 

@@ -6,7 +6,6 @@ import os
 from pathlib import Path
 from typing import Dict, List
 
-import pygame
 
 from .optimizer import optimize_ops
 from .glsl_backend import generate_glsl
@@ -36,7 +35,7 @@ def _detect_backend() -> str:
     return os.environ.get("FEATHER_FX_BACKEND", "cpu")
 
 
-def apply_fx(surface: pygame.Surface, fx: List[Operation]) -> List[str]:
+def apply_fx(surface: object, fx: List[Operation]) -> List[str]:
     """Apply operations, returning a log for testing."""
     backend = _detect_backend()
     log: List[str] = [f"backend={backend}"]

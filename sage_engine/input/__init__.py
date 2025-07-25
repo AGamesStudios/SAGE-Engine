@@ -6,7 +6,7 @@ from typing import Iterable, List, Optional, Tuple
 from sage.config import load_input_config
 from sage.events import emit
 
-from . import state, poller, keys, mouse
+from . import state, keys, mouse
 from .backend_base import BackendBase
 
 _backend: Optional[BackendBase] = None
@@ -16,11 +16,7 @@ def set_backend(name: str) -> None:
     """Select active input backend by name."""
     global _backend
     name = name.lower()
-    if name == "pygame":
-        from .backend_pygame import PygameBackend as Backend
-    elif name == "sdl2":
-        from .backend_sdl2 import SDL2Backend as Backend
-    elif name == "dummy":
+    if name == "dummy":
         from .backend_dummy import DummyBackend as Backend
     else:
         raise ValueError(f"Unknown backend '{name}'")
@@ -139,7 +135,6 @@ def release_mouse(button: str) -> None:
 is_mouse_pressed = is_mouse_down
 move_mouse = state.move_mouse
 get_mouse_pos = mouse_position
-handle_pygame_event = poller.handle_event
 
 # Backwards compatibility aliases
 input_key_down = is_key_down
@@ -182,7 +177,6 @@ __all__ = [
     "is_mouse_pressed",
     "move_mouse",
     "get_mouse_pos",
-    "handle_pygame_event",
     "input_key_down",
     "input_key_up",
     "input_key_pressed",

@@ -29,7 +29,7 @@ DEFAULT_FRAMESYNC_CONFIG = {
 }
 
 DEFAULT_INPUT_CONFIG = {
-    "backend": "pygame",
+    "backend": "dummy",
 }
 
 

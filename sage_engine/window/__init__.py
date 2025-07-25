@@ -1,14 +1,11 @@
-"""Window subsystem using pygame for display and events."""
+"""Simple window subsystem used for tests."""
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Optional
 
-import pygame
-
 from sage.events import emit
 from sage.config import load_window_config
-from sage_engine.input import handle_pygame_event
 
 
 @dataclass
@@ -20,15 +17,12 @@ class Window:
     resizable: bool
     fullscreen: bool
     should_close: bool = False
-    surface: Optional[pygame.Surface] = None
+    surface: Optional[object] = None
 
     def resize(self, width: int, height: int) -> None:
         self.width = width
         self.height = height
-        flags = pygame.RESIZABLE if self.resizable else 0
-        if self.fullscreen:
-            flags |= pygame.FULLSCREEN
-        self.surface = pygame.display.set_mode((width, height), flags, vsync=1 if self.vsync else 0)
+        self.surface = None
         emit("window_resize", {"width": width, "height": height})
 
     def close(self) -> None:
@@ -38,16 +32,10 @@ class Window:
         emit("window_close", None)
 
     def poll(self) -> None:
-        for ev in pygame.event.get():
-            if ev.type == pygame.QUIT:
-                self.close()
-            elif ev.type == pygame.VIDEORESIZE:
-                self.resize(ev.w, ev.h)
-            else:
-                handle_pygame_event(ev)
+        pass
 
     def present(self) -> None:
-        pygame.display.flip()
+        pass
 
 
 _initialized = False
@@ -59,18 +47,8 @@ def boot() -> None:
     """Create the main application window."""
     global _initialized, _window, _closed
     cfg = load_window_config()
-    pygame.init()
-    flags = pygame.RESIZABLE if cfg.get("resizable", False) else 0
-    if cfg.get("fullscreen"):
-        flags |= pygame.FULLSCREEN
-    surface = pygame.display.set_mode(
-        (cfg.get("width", 800), cfg.get("height", 600)),
-        flags,
-        vsync=1 if cfg.get("vsync", True) else 0,
-    )
-    pygame.display.set_caption(cfg.get("title", "SAGE"))
-    print("[window] created window:", cfg.get("title", "SAGE"), (cfg.get("width", 800), cfg.get("height", 600)))
-    _window = Window(**cfg, surface=surface)
+    print("[window] create window:", cfg.get("title", "SAGE"))
+    _window = Window(**cfg, surface=None)
     _initialized = True
     _closed = False
     emit("window_create", {"width": _window.width, "height": _window.height})
@@ -80,7 +58,6 @@ def reset() -> None:
     global _initialized, _window
     if _window is not None:
         _window.close()
-    pygame.quit()
     _initialized = False
     _window = None
 

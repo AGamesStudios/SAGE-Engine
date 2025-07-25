@@ -1,6 +1,5 @@
 from sage_fx import load_fx, apply_fx, FXParseError, optimize_ops, parse_fx
 import os
-import pygame
 import pytest
 
 
@@ -12,14 +11,10 @@ blit
 blend_add factor:1.0
 """, encoding="utf-8")
     fx = load_fx(str(fx_file))
-    pygame.display.init()
-    pygame.display.set_mode((4, 4))
-    surf = pygame.display.get_surface()
     os.environ["FEATHER_FX_BACKEND"] = "gpu"
-    result = apply_fx(surf, fx)
+    result = apply_fx(None, fx)
     assert result[0] == "backend=gpu"
     assert result[-2:] == ["blit", "blend_add"]
-    pygame.display.quit()
     del os.environ["FEATHER_FX_BACKEND"]
 
 
