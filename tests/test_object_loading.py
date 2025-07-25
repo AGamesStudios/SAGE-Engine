@@ -42,3 +42,12 @@ def test_load_all_objects(tmp_path: Path) -> None:
     objs = mgr.load_all_objects(str(folder))
     assert len(objs) == 1
     assert objs[0].role == "Sprite"
+
+
+def test_load_objects_multiple_jsons(tmp_path: Path) -> None:
+    file = tmp_path / "multi.sage_object"
+    file.write_text('{"role": "Sprite"}{"role": "Camera"}')
+    mgr = ResourceManager()
+    objs = mgr.load_objects(str(file))
+    roles = [o.role for o in objs]
+    assert roles == ["Sprite", "Camera"]

@@ -30,8 +30,25 @@ class ResourceManager:
     def load_objects(self, path: str) -> list[SAGEObject]:
         """Load SAGEObjects from a .sage_object file."""
         p = Path(path)
-        with p.open("r", encoding="utf-8") as fh:
-            data = json.load(fh)
+        text = p.read_text(encoding="utf-8")
+        try:
+            data = json.loads(text)
+        except json.JSONDecodeError:
+            decoder = json.JSONDecoder()
+            records_raw: list[object] = []
+            idx = 0
+            length = len(text)
+            while idx < length:
+                try:
+                    obj, end = decoder.raw_decode(text, idx)
+                except json.JSONDecodeError:
+                    print(f"[error] invalid JSON in: {p}")
+                    return []
+                records_raw.append(obj)
+                idx = end
+                while idx < length and text[idx].isspace():
+                    idx += 1
+            data = records_raw
         if data == []:
             return []
         if isinstance(data, dict):
