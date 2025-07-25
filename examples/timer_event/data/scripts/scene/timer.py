@@ -1,9 +1,3 @@
-from typing import Callable, Any
-
-log: Callable[[str], None]
-emit: Callable[[str], None]
-on: Callable[[str, Callable[..., Any]], None]
-
 counter = 0.0
 
 def tick():
