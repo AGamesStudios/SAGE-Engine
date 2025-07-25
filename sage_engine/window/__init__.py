@@ -4,6 +4,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
+from sage_engine.platform import get_window_backend
+
 from sage.events import emit
 from sage.config import load_window_config
 
@@ -40,13 +42,24 @@ class Window:
 
 _initialized = False
 _window: Optional[Window] = None
+_backend = None
 _closed = False
 
 
 def boot() -> None:
     """Create the main application window."""
-    global _initialized, _window, _closed
+    global _initialized, _window, _backend, _closed
     cfg = load_window_config()
+    backend_cls = get_window_backend()
+    _backend = backend_cls(
+        cfg.get("width", 640),
+        cfg.get("height", 480),
+        cfg.get("title", "SAGE"),
+        vsync=cfg.get("vsync", True),
+        resizable=cfg.get("resizable", True),
+        fullscreen=cfg.get("fullscreen", False),
+    )
+    _backend.boot()
     print("[window] create window:", cfg.get("title", "SAGE"))
     _window = Window(**cfg, surface=None)
     _initialized = True
@@ -55,11 +68,14 @@ def boot() -> None:
 
 
 def reset() -> None:
-    global _initialized, _window
+    global _initialized, _window, _backend
     if _window is not None:
         _window.close()
+    if _backend is not None:
+        _backend.shutdown()
     _initialized = False
     _window = None
+    _backend = None
 
 
 def destroy() -> None:
@@ -82,6 +98,8 @@ def get_title() -> str:
 
 
 def poll() -> None:
+    if _backend is not None:
+        _backend.poll()
     get_window().poll()
 
 

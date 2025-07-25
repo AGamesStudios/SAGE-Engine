@@ -48,3 +48,4 @@
 - Added graphical SAGE Terminal for project management
 - Fixed terminal imports and theme; terminal can run via module
 - Removed pygame dependency; window, input and render are now custom
+- Added cross-platform platform layer with Windows, Linux and macOS stubs

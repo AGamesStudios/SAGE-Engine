@@ -32,6 +32,10 @@ DEFAULT_INPUT_CONFIG = {
     "backend": "dummy",
 }
 
+DEFAULT_PLATFORM_CONFIG = {
+    "force": "",
+}
+
 
 def load_config() -> dict:
     """Load script configuration from scripts.yaml."""
@@ -71,6 +75,16 @@ def load_input_config() -> dict:
         return {**DEFAULT_INPUT_CONFIG, **cfg}
     return DEFAULT_INPUT_CONFIG.copy()
 
+
+def load_platform_config() -> dict:
+    """Load platform configuration from platform.yaml."""
+    path = Path(__file__).with_name("platform.yaml")
+    if path.is_file():
+        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        cfg = data.get("platform", {})
+        return {**DEFAULT_PLATFORM_CONFIG, **cfg}
+    return DEFAULT_PLATFORM_CONFIG.copy()
+
 __all__ = [
     "load_config",
     "DEFAULT_CONFIG",
@@ -80,4 +94,6 @@ __all__ = [
     "DEFAULT_FRAMESYNC_CONFIG",
     "load_input_config",
     "DEFAULT_INPUT_CONFIG",
+    "load_platform_config",
+    "DEFAULT_PLATFORM_CONFIG",
 ]
