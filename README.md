@@ -51,7 +51,7 @@ python examples/basic_display/main.py
 - `SAGE Object` — роли и объекты
 - `SAGE Scene` — иерархия и сохранение
 - `SAGE Events` — система событий
-- `SAGE Input` — клавиатура и мышь
+- `SAGE Input` — модульная система ввода
 - `SAGE FlowScript` — язык программирования
 - `SAGE Draw` / `SAGE Math` — математика и отладка
 - `SAGE Terminal` — встроенный терминал

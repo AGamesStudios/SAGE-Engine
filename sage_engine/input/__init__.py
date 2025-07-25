@@ -1,82 +1,120 @@
-"""SAGE Input subsystem handling keyboard and mouse state."""
+"""Modular input subsystem supporting multiple backends."""
 from __future__ import annotations
 
-from typing import Iterable, Tuple
+from typing import Iterable, List, Optional, Tuple
 
+from sage.config import load_input_config
 from sage.events import emit
 
 from . import state, poller, keys, mouse
+from .backend_base import BackendBase
+
+_backend: Optional[BackendBase] = None
 
 
-# Boot / reset -----------------------------------------------------------
+def set_backend(name: str) -> None:
+    """Select active input backend by name."""
+    global _backend
+    name = name.lower()
+    if name == "pygame":
+        from .backend_pygame import PygameBackend as Backend
+    elif name == "sdl2":
+        from .backend_sdl2 import SDL2Backend as Backend
+    elif name == "dummy":
+        from .backend_dummy import DummyBackend as Backend
+    else:
+        raise ValueError(f"Unknown backend '{name}'")
+    _backend = Backend()
 
-def boot() -> None:
-    """Initialise input state."""
-    state.reset()
+
+def _ensure_backend() -> None:
+    global _backend
+    if _backend is None:
+        cfg = load_input_config()
+        set_backend(cfg.get("backend", "dummy"))
 
 
-def reset() -> None:
-    state.reset()
+# Lifecycle ---------------------------------------------------------------
+
+def input_boot() -> None:
+    _ensure_backend()
+    assert _backend is not None
+    _backend.boot()
 
 
-def destroy() -> None:
-    reset()
+def input_poll() -> None:
+    _ensure_backend()
+    assert _backend is not None
+    _backend.poll()
 
 
-def update() -> None:
-    """Call once per frame to update input deltas."""
-    state.update()
+def input_shutdown() -> None:
+    if _backend is not None:
+        _backend.shutdown()
 
 
 # Query helpers ----------------------------------------------------------
 
-def input_key_down(key: str) -> bool:
+def is_key_down(key: str) -> bool:
     return key in state._keys_now
 
 
-def input_key_up(key: str) -> bool:
+def is_key_up(key: str) -> bool:
     return key not in state._keys_now
 
 
-def input_key_pressed(key: str) -> bool:
+def is_key_pressed(key: str) -> bool:
     return key in state._keys_now and key not in state._keys_prev
 
 
-def input_key_released(key: str) -> bool:
+def is_key_released(key: str) -> bool:
     return key not in state._keys_now and key in state._keys_prev
 
 
-def input_mouse_position() -> Tuple[int, int]:
+def mouse_position() -> Tuple[int, int]:
     return state._mouse_pos
 
 
-def input_mouse_delta() -> Tuple[int, int]:
+def is_mouse_down(button: str) -> bool:
+    return button in state._buttons_now
+
+
+def mouse_delta() -> Tuple[int, int]:
     x, y = state._mouse_pos
     px, py = state._mouse_prev
     return x - px, y - py
 
 
-def input_mouse_button_down(btn: str) -> bool:
-    return btn in state._buttons_now
+def mouse_button_pressed(button: str) -> bool:
+    return button in state._buttons_now and button not in state._buttons_prev
 
 
-def input_mouse_button_pressed(btn: str) -> bool:
-    return btn in state._buttons_now and btn not in state._buttons_prev
+def mouse_button_released(button: str) -> bool:
+    return button not in state._buttons_now and button in state._buttons_prev
 
 
-def input_mouse_button_released(btn: str) -> bool:
-    return btn not in state._buttons_now and btn in state._buttons_prev
-
-
-def input_mouse_scroll() -> Tuple[int, int]:
+def mouse_scroll() -> Tuple[int, int]:
     return state._scroll
 
 
+def get_events() -> List[object]:
+    _ensure_backend()
+    assert _backend is not None
+    return _backend.get_events()
+
+
 def input_combo(combo: Iterable[str]) -> bool:
-    return all(input_key_down(k) for k in combo)
+    return all(is_key_down(k) for k in combo)
 
 
 # Compatibility wrappers -------------------------------------------------
+boot = input_boot
+poll = input_poll
+update = input_poll
+shutdown = input_shutdown
+reset = state.reset
+
+
 def press_key(key: str) -> None:
     state.key_down(key)
     emit("key_down", {"key": key})
@@ -86,7 +124,6 @@ def release_key(key: str) -> None:
     state.key_up(key)
     emit("key_up", {"key": key})
 
-is_key_down = input_key_down
 
 def press_mouse(button: str) -> None:
     state.button_down(button)
@@ -98,16 +135,54 @@ def release_mouse(button: str) -> None:
     emit("mouse_up", {"button": button, "pos": state._mouse_pos})
     emit("click", {"button": button, "pos": state._mouse_pos})
 
-is_mouse_pressed = input_mouse_button_down
+
+is_mouse_pressed = is_mouse_down
 move_mouse = state.move_mouse
-get_mouse_pos = input_mouse_position
+get_mouse_pos = mouse_position
 handle_pygame_event = poller.handle_event
 
+# Backwards compatibility aliases
+input_key_down = is_key_down
+input_key_up = is_key_up
+input_key_pressed = is_key_pressed
+input_key_released = is_key_released
+input_mouse_position = mouse_position
+input_mouse_delta = mouse_delta
+input_mouse_button_down = is_mouse_down
+input_mouse_button_pressed = mouse_button_pressed
+input_mouse_button_released = mouse_button_released
+input_mouse_scroll = mouse_scroll
+
 __all__ = [
+    "input_boot",
+    "input_poll",
+    "input_shutdown",
+    "is_key_down",
+    "is_key_up",
+    "is_key_pressed",
+    "is_key_released",
+    "mouse_position",
+    "is_mouse_down",
+    "mouse_delta",
+    "mouse_button_pressed",
+    "mouse_button_released",
+    "mouse_scroll",
+    "get_events",
+    "input_combo",
+    "set_backend",
     "boot",
-    "reset",
-    "destroy",
+    "poll",
+    "shutdown",
     "update",
+    "reset",
+    "press_key",
+    "release_key",
+    "press_mouse",
+    "release_mouse",
+    "is_mouse_pressed",
+    "move_mouse",
+    "get_mouse_pos",
+    "handle_pygame_event",
     "input_key_down",
     "input_key_up",
     "input_key_pressed",
@@ -118,16 +193,6 @@ __all__ = [
     "input_mouse_button_pressed",
     "input_mouse_button_released",
     "input_mouse_scroll",
-    "input_combo",
-    "press_key",
-    "release_key",
-    "is_key_down",
-    "press_mouse",
-    "release_mouse",
-    "is_mouse_pressed",
-    "move_mouse",
-    "get_mouse_pos",
-    "handle_pygame_event",
     "keys",
     "mouse",
 ]

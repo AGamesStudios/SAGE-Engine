@@ -28,6 +28,10 @@ DEFAULT_FRAMESYNC_CONFIG = {
     "profile": "balanced",
 }
 
+DEFAULT_INPUT_CONFIG = {
+    "backend": "pygame",
+}
+
 
 def load_config() -> dict:
     """Load script configuration from scripts.yaml."""
@@ -57,6 +61,16 @@ def load_framesync_config() -> dict:
         return {**DEFAULT_FRAMESYNC_CONFIG, **cfg}
     return DEFAULT_FRAMESYNC_CONFIG.copy()
 
+
+def load_input_config() -> dict:
+    """Load input configuration from input.yaml."""
+    path = Path(__file__).with_name("input.yaml")
+    if path.is_file():
+        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        cfg = data.get("input", {})
+        return {**DEFAULT_INPUT_CONFIG, **cfg}
+    return DEFAULT_INPUT_CONFIG.copy()
+
 __all__ = [
     "load_config",
     "DEFAULT_CONFIG",
@@ -64,4 +78,6 @@ __all__ = [
     "DEFAULT_WINDOW_CONFIG",
     "load_framesync_config",
     "DEFAULT_FRAMESYNC_CONFIG",
+    "load_input_config",
+    "DEFAULT_INPUT_CONFIG",
 ]
