@@ -19,6 +19,14 @@ Camera follows the moving sprite using Python.
 python examples/camera_follow/main.py
 ```
 
+## Input Test
+
+Move a placeholder sprite with the arrow keys.
+
+```bash
+python examples/input_test/main.py
+```
+
 
 ## FX Lab
 

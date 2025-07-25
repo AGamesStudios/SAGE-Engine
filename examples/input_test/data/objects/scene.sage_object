@@ -1,0 +1,2 @@
+{"id": "MainCamera", "role": "Camera", "active": true, "x": 0.0, "y": 0.0, "zoom": 1.0}
+{"id": "Box", "role": "Sprite", "x": 100.0, "y": 100.0}

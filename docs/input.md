@@ -1,19 +1,24 @@
 # SAGE Input
 
-The input subsystem tracks keyboard and mouse state and emits events.
+The input subsystem provides unified keyboard and mouse handling. Call
+`input.update()` once per frame after polling the window to refresh the state.
 
 ```python
 from sage_engine import input
 
-input.press_key("A")
-if input.is_key_down("A"):
-    print("A is held")
-input.release_key("A")
+# query keyboard
+if input.input_key_pressed("space"):
+    print("jump")
+if input.input_key_down("left"):
+    move_left()
+
+# query mouse
+x, y = input.input_mouse_position()
+dx, dy = input.input_mouse_delta()
 ```
 
-Events dispatched:
-- `key_down`, `key_up`
-- `mouse_down`, `mouse_up`, `mouse_move`, `click`
+Events are emitted on state changes:
+`key_down`, `key_up`, `mouse_down`, `mouse_up`, `mouse_move`, `click`.
 
-When using the built-in window subsystem, calling `window.poll()` automatically
-updates the input state from `pygame` events via `handle_pygame_event`.
+When using the built-in window subsystem, `window.poll()` forwards events to
+`input.handle_pygame_event` automatically.

@@ -1,0 +1,11 @@
+"""Common key names used by SAGE Input."""
+
+ESCAPE = "escape"
+SPACE = "space"
+LEFT = "left"
+RIGHT = "right"
+UP = "up"
+DOWN = "down"
+CTRL = "ctrl"
+SHIFT = "shift"
+ALT = "alt"
