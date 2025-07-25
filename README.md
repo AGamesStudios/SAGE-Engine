@@ -46,6 +46,8 @@ python examples/camera_follow/main.py
 - `SAGE Scene` — сериализация сцен
 - `SAGE Events` — система событий
 - `SAGE Input` — модульная система ввода
+- `input.backend` в `sage/config/input.yaml` позволяет выбрать `pygame`, `sdl2`
+  или `dummy`-бэкенд
 - `SAGE FlowScript` — скриптовый язык
 - `SAGE Draw` / `SAGE Math` — визуализация и расчёты
  - `SAGE Terminal` — лёгкий GUI-терминал на CustomTkinter

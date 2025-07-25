@@ -18,6 +18,10 @@ def set_backend(name: str) -> None:
     name = name.lower()
     if name == "dummy":
         from .backend_dummy import DummyBackend as Backend
+    elif name == "pygame":
+        from .backend_pygame import PygameBackend as Backend
+    elif name == "sdl2":
+        from .backend_sdl2 import SDL2Backend as Backend
     else:
         raise ValueError(f"Unknown backend '{name}'")
     _backend = Backend()

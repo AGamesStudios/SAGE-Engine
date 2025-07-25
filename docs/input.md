@@ -4,6 +4,9 @@ The input subsystem provides unified keyboard and mouse handling. Call
 `input.input_poll()` once per frame to refresh the state. The active backend is
 chosen via `sage/config/input.yaml` or by calling `input.set_backend()`.
 
+Available backends are `dummy` (default), `pygame` and `sdl2`. They are loaded
+only when selected so optional dependencies can be omitted.
+
 ```python
 from sage_engine import input
 
