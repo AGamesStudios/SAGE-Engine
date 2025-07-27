@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, Iterator, List, Mapping
 
+from .view import SceneView
+
 from .. import roles
 
 
@@ -42,6 +44,8 @@ class Scene:
         self.storage: Dict[str, Dict[str, Dict[str, List[object]]]] = {}
 
         self.next_id = 0
+        self._to_commit: List[int] = []
+        self.view = SceneView(self)
 
     # --- Editing ---------------------------------------------------------
     def begin_edit(self) -> SceneEdit:
@@ -85,15 +89,27 @@ class Scene:
             role = self.roles[obj_id]
             if role is None:
                 return
+            self._to_commit.append(obj_id)
+
+    def commit(self) -> None:
+        """Physically remove objects marked for deletion."""
+        for obj_id in sorted(self._to_commit, reverse=True):
+            role = self.roles[obj_id]
+            if role is None:
+                continue
             row = self.role_index[obj_id]
             store = self.storage.get(role)
             if store:
                 for category in store.values():
                     for column in category.values():
-                        if row < len(column):
-                            column[row] = None
+                        column.pop(row)
+                for idx, r in enumerate(self.roles):
+                    if r == role and self.role_index[idx] > row:
+                        self.role_index[idx] -= 1
             self.roles[obj_id] = None
             self.names[obj_id] = None
+            self.role_index[obj_id] = -1
+        self._to_commit.clear()
 
     # --- Query -----------------------------------------------------------
     def each_role(self, role: str) -> Iterator[int]:
@@ -110,12 +126,11 @@ class Scene:
         store = self.storage[role_name]
         row = self.role_index[obj_id]
         data: dict = {"name": self.names[obj_id], "role": role_name}
-        for cat in schema.categories:
-            cat_data = {}
-            for col in cat.columns:
-                cat_data[col.name] = store[cat.name][col.name][row]
-            data[cat.name] = cat_data
+        data.update(schema.to_json(store, row))
         return data
+
+    def to_json(self) -> List[dict]:
+        return [self.serialize_object(i) for i, r in enumerate(self.roles) if r is not None]
 
 
 scene = Scene()
@@ -135,4 +150,5 @@ def reset() -> None:
     scene.role_index.clear()
     scene.storage.clear()
     scene.next_id = 0
+    scene._to_commit.clear()
 

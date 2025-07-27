@@ -1,4 +1,4 @@
-from sage_engine import time, timers
+from sage_engine import time, timers, profiling
 
 
 def test_timer_fires():
@@ -11,3 +11,18 @@ def test_timer_fires():
     timers.manager.set(0.0, cb)
     timers.update()
     assert fired
+
+
+def test_timer_overflow():
+    timers.reset()
+    time.boot({})
+    counter = []
+
+    def cb():
+        counter.append(1)
+
+    for _ in range(timers.manager.MAX_PER_FRAME + 5):
+        timers.manager.set(0.0, cb)
+    timers.update()
+    assert len(counter) == timers.manager.MAX_PER_FRAME
+    assert profiling.profile.timers_dropped > 0

@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from typing import Callable, List
 
 from .. import time
+from ..profiling import profile
 
 @dataclass(order=True)
 class _Timer:
@@ -17,6 +18,8 @@ class _Timer:
 
 
 class TimerManager:
+    MAX_PER_FRAME = 128
+
     def __init__(self) -> None:
         self._heap: List[_Timer] = []
 
@@ -31,12 +34,23 @@ class TimerManager:
 
     def update(self) -> None:
         now = time.get_time().time
-        while self._heap and self._heap[0].trigger <= now:
+        processed = 0
+        while (
+            self._heap
+            and self._heap[0].trigger <= now
+            and processed < self.MAX_PER_FRAME
+        ):
             timer = heapq.heappop(self._heap)
             timer.callback()
             if timer.repeat:
                 timer.trigger = now + timer.interval
                 heapq.heappush(self._heap, timer)
+            processed += 1
+        dropped = 0
+        while self._heap and self._heap[0].trigger <= now:
+            heapq.heappop(self._heap)
+            dropped += 1
+        profile.timers_dropped += dropped
 
 
 manager = TimerManager()
@@ -52,3 +66,4 @@ def update() -> None:
 
 def reset() -> None:
     manager._heap.clear()
+    profile.timers_dropped = 0

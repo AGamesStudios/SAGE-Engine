@@ -5,8 +5,12 @@ from __future__ import annotations
 from collections import deque
 from typing import Callable, Deque, Dict, List
 
+from ..profiling import profile
+
 
 class EventDispatcher:
+    MAX_PER_FRAME = 128
+
     def __init__(self) -> None:
         self._handlers: Dict[int, List[Callable]] = {}
         self._queue: Deque[tuple[int, tuple]] = deque()
@@ -19,6 +23,9 @@ class EventDispatcher:
             self._handlers[event_id].remove(handler)
 
     def emit(self, event_id: int, *args) -> None:
+        if len(self._queue) >= self.MAX_PER_FRAME:
+            profile.events_dropped += 1
+            return
         self._queue.append((event_id, args))
 
     def flush(self) -> None:
@@ -46,3 +53,4 @@ def flush() -> None:
 def reset() -> None:
     dispatcher._queue.clear()
     dispatcher._handlers.clear()
+    profile.events_dropped = 0

@@ -17,6 +17,7 @@ def test_create_destroy(roles):
     for i in ids:
         edit.destroy(i)
     scene.scene.apply(edit)
+    scene.scene.commit()
     assert all(scene.scene.roles[i] is None for i in ids)
 
 
@@ -24,6 +25,17 @@ def test_serialize():
     edit = scene.scene.begin_edit()
     obj_id = edit.create(role="sprite", name="hero", x=10, y=5, texture="hero.png")
     scene.scene.apply(edit)
+    scene.scene.commit()
     data = scene.scene.serialize_object(obj_id)
     assert data["name"] == "hero"
     assert data["sprite"]["texture"] == "hero.png"
+    assert obj_id in scene.scene.view.with_transform()
+
+
+def test_scene_to_json():
+    edit = scene.scene.begin_edit()
+    edit.create(role="sprite", name="hero2", x=1)
+    scene.scene.apply(edit)
+    scene.scene.commit()
+    data = scene.scene.to_json()
+    assert any(obj["name"] == "hero2" for obj in data)
