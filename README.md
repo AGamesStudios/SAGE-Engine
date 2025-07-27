@@ -1,9 +1,12 @@
 # SAGE Engine
 
-Документация проекта расположена в каталоге [docs](docs/). Основные разделы:
+Документация проекта расположена в каталоге [docs](docs/). Полезные разделы:
 
 - [Введение](docs/intro.md)
+- [Быстрый старт](docs/getting_started.md)
 - [Архитектура](docs/architecture.md)
+- [Модули](docs/modules.md)
+- [Структура проекта](docs/structure.md)
 - [Роли](docs/roles.md)
 - [Сцена](docs/scene.md)
 - [События](docs/events.md)
@@ -12,8 +15,10 @@
 - [RenderStream](docs/renderstream.md)
 - [Плагины](docs/plugin.md)
 - [Редактор](docs/editor.md)
-- [DAG](docs/architecture.md)
+- [Руководство разработчика](docs/dev_guidelines.md)
+- [Правила проектирования](docs/design_rules.md)
 - [Руководство по стилю](docs/style_guide.md)
-- Тестирование запускается командой `sage-test`
+
+Тестирование запускается командой `sage-test`.
 
 Примеры находятся в [docs/examples](docs/examples/).
