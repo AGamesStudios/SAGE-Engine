@@ -4,3 +4,6 @@ pyyaml
 lupa
 psutil  # optional, for cross-platform memory checks
 customtkinter
+miniaudio
+numpy
+soundfile

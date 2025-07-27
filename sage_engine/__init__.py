@@ -13,7 +13,7 @@ from .logic_api import (
     on_update,
 )
 from .scripts_watcher import ScriptsWatcher
-from . import input, time
+from . import input, time, audio
 from . import perf
 from . import draw, gizmo, scene
 from . import math as sage_math
@@ -36,6 +36,7 @@ __all__ = [
     "on_ready",
     "on_update",
     "input",
+    "audio",
     "time",
     "perf",
     "draw",
