@@ -9,7 +9,7 @@ def setup_module():
 @given(st.lists(st.sampled_from(["sprite", "camera"]), min_size=1, max_size=5))
 def test_create_destroy(roles):
     edit = scene.scene.begin_edit()
-    ids = [edit.create(r) for r in roles]
+    ids = [edit.create(role=r) for r in roles]
     scene.scene.apply(edit)
     assert len(scene.scene.roles) >= len(roles)
 
@@ -18,3 +18,12 @@ def test_create_destroy(roles):
         edit.destroy(i)
     scene.scene.apply(edit)
     assert all(scene.scene.roles[i] is None for i in ids)
+
+
+def test_serialize():
+    edit = scene.scene.begin_edit()
+    obj_id = edit.create(role="sprite", name="hero", x=10, y=5, texture="hero.png")
+    scene.scene.apply(edit)
+    data = scene.scene.serialize_object(obj_id)
+    assert data["name"] == "hero"
+    assert data["sprite"]["texture"] == "hero.png"

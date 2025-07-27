@@ -1,9 +1,9 @@
-"""Scene graph storage with simple SoA layout."""
+"""Scene graph storage with category-aware SoA layout."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Iterator, List, Mapping, Tuple
+from typing import Dict, Iterator, List, Mapping
 
 from .. import roles
 
@@ -12,9 +12,7 @@ from .. import roles
 class ObjectRequest:
     role: str
     fields: Mapping[str, object]
-    x: float = 0.0
-    y: float = 0.0
-    layer: int = 0
+    name: str | None = None
 
 
 class SceneEdit:
@@ -25,8 +23,8 @@ class SceneEdit:
         self.to_create: List[ObjectRequest] = []
         self.to_destroy: List[int] = []
 
-    def create(self, role: str, **fields: object) -> int:
-        req = ObjectRequest(role, fields)
+    def create(self, role: str, name: str | None = None, **fields: object) -> int:
+        req = ObjectRequest(role, fields, name)
         self.to_create.append(req)
         return self.scene.next_id + len(self.to_create) - 1
 
@@ -36,15 +34,12 @@ class SceneEdit:
 
 class Scene:
     def __init__(self) -> None:
-        # per object data
         self.roles: List[str | None] = []
-        self.x: List[float] = []
-        self.y: List[float] = []
-        self.layer: List[int] = []
+        self.names: List[str | None] = []
         self.role_index: List[int] = []
 
-        # per role SoA storage: role -> field -> list
-        self.storage: Dict[str, Dict[str, List[object]]] = {}
+        # per role storage: role -> category -> field -> list
+        self.storage: Dict[str, Dict[str, Dict[str, List[object]]]] = {}
 
         self.next_id = 0
 
@@ -60,16 +55,28 @@ class Scene:
 
     def _apply_create(self, req: ObjectRequest) -> None:
         role_def = roles.get_role(req.role)
-        store = self.storage.setdefault(req.role, {f: [] for f in role_def.schema})
-        row = len(next(iter(store.values()), []))
+        schema = role_def.schema
 
-        for field in role_def.schema:
-            store[field].append(req.fields.get(field))
+        store = self.storage.setdefault(
+            schema.name,
+            {
+                cat.name: {col.name: [] for col in cat.columns}
+                for cat in schema.categories
+            },
+        )
+        # row determined by first column of first category
+        first_cat = schema.categories[0]
+        first_col = first_cat.columns[0].name
+        row = len(store[first_cat.name][first_col])
+
+        for cat in schema.categories:
+            for col in cat.columns:
+                store[cat.name][col.name].append(
+                    req.fields.get(col.name, col.default)
+                )
 
         self.roles.append(req.role)
-        self.x.append(req.x)
-        self.y.append(req.y)
-        self.layer.append(req.layer)
+        self.names.append(req.name)
         self.role_index.append(row)
         self.next_id += 1
 
@@ -81,16 +88,34 @@ class Scene:
             row = self.role_index[obj_id]
             store = self.storage.get(role)
             if store:
-                for field in store.values():
-                    if row < len(field):
-                        field[row] = None
+                for category in store.values():
+                    for column in category.values():
+                        if row < len(column):
+                            column[row] = None
             self.roles[obj_id] = None
+            self.names[obj_id] = None
 
     # --- Query -----------------------------------------------------------
     def each_role(self, role: str) -> Iterator[int]:
         for obj_id, r in enumerate(self.roles):
             if r == role:
                 yield obj_id
+
+    def serialize_object(self, obj_id: int) -> dict:
+        """Return a JSON serialisable representation of an object."""
+        role_name = self.roles[obj_id]
+        if role_name is None:
+            raise ValueError("Object destroyed")
+        schema = roles.get_role(role_name).schema
+        store = self.storage[role_name]
+        row = self.role_index[obj_id]
+        data: dict = {"name": self.names[obj_id], "role": role_name}
+        for cat in schema.categories:
+            cat_data = {}
+            for col in cat.columns:
+                cat_data[col.name] = store[cat.name][col.name][row]
+            data[cat.name] = cat_data
+        return data
 
 
 scene = Scene()
@@ -106,9 +131,7 @@ def update() -> None:  # pragma: no cover - placeholder
 
 def reset() -> None:
     scene.roles.clear()
-    scene.x.clear()
-    scene.y.clear()
-    scene.layer.clear()
+    scene.names.clear()
     scene.role_index.clear()
     scene.storage.clear()
     scene.next_id = 0

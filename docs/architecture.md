@@ -9,7 +9,8 @@ This document describes the high level architecture for SAGE Engine based on the
 - **timers** – simple timer manager without allocations in the update loop.
 - **events** – event dispatcher with ring buffer.
 - **scene** – scene graph storing objects as IDs with roles.
-- **roles** – role schemas such as sprite or camera.
+- **roles** – role schemas such as sprite or camera. Schemas are organised into
+  *categories* grouping related fields.
 
 The engine executes in well defined phases ordered as a DAG. Each module registers its callbacks for update or draw phases.
 
