@@ -1,0 +1,14 @@
+{
+  "modules": [
+    "core",
+    "dag",
+    "scheduler",
+    "blueprint",
+    "sprite",
+    "flow.python",
+    "profiler",
+    "ui"
+  ],
+  "build": "snapshot_2025_07_27",
+  "runtime": "autogear"
+}

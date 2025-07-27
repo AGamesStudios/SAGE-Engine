@@ -1,10 +1,10 @@
 # 📘 Пример: базовая сцена
 
 ```python
-from sage_engine import scene
+from sage_engine import world
 
-edit = scene.scene.begin_edit()
+edit = world.scene.begin_edit()
 player = edit.create(role="sprite", name="Player", x=0, y=0)
-scene.scene.apply(edit)
-scene.scene.commit()
+world.scene.apply(edit)
+world.scene.commit()
 ```

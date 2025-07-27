@@ -79,7 +79,7 @@ def _default_for(type_name: str) -> object:
 def load_json_roles(directory: Path | None = None, docs_path: Path | None = None) -> None:
     """Load role definitions from JSON files and optionally generate docs."""
     from .. import core  # local import to avoid cycles
-    from .. import scene, profiling
+    from .. import world, profiling
 
     if directory is None:
         directory = Path(__file__).resolve().parents[2] / "roles"
@@ -102,12 +102,12 @@ def load_json_roles(directory: Path | None = None, docs_path: Path | None = None
             for ph in schema.vtable:
                 if ph == "update":
                     def updater(r=schema.name):
-                        for obj in scene.scene.each_role(r):
+                        for obj in world.scene.each_role(r):
                             profiling.profile.role_calls[r] = profiling.profile.role_calls.get(r, 0) + 1
                     core.register("update", updater)
                 elif ph == "draw":
                     def drawer(r=schema.name):
-                        for _ in scene.scene.each_role(r):
+                        for _ in world.scene.each_role(r):
                             pass
                     core.register("draw", drawer)
 

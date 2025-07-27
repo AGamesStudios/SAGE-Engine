@@ -1,4 +1,5 @@
-from sage_engine import tasks, time
+from sage_engine import tasks
+from sage_engine.scheduler import time
 
 
 def test_task_schedule():

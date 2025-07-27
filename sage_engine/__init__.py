@@ -2,11 +2,10 @@
 
 __all__ = [
     "core",
-    "time",
-    "timers",
+    "scheduler",
     "events",
     "dag",
-    "scene",
+    "world",
     "roles",
     "profiling",
     "tasks",

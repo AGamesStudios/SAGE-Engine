@@ -6,7 +6,7 @@ import heapq
 from dataclasses import dataclass, field
 from typing import Callable, List
 
-from .. import time
+from . import time
 from ..profiling import profile
 
 @dataclass(order=True)

@@ -6,6 +6,8 @@ from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Dict, List
+import json
+from importlib import import_module
 
 from ..settings import settings
 import asyncio
@@ -21,6 +23,18 @@ _registry: Dict[str, List[_Phase]] = defaultdict(list)
 _booted = False
 
 
+def _load_modules_from_config() -> None:
+    path = Path(__file__).resolve().parents[2] / "engine.json"
+    if not path.exists():
+        return
+    data = json.loads(path.read_text())
+    for mod in data.get("modules", []):
+        try:
+            import_module(f"sage_engine.{mod}")
+        except ModuleNotFoundError:
+            continue
+
+
 def register(phase: str, func: Callable, *, parallelizable: bool = False) -> None:
     """Register a callable for execution in a given phase."""
     _registry[phase].append(_Phase(func, parallelizable))
@@ -32,6 +46,7 @@ def core_boot(config: dict | None = None) -> None:
     if _booted:
         return
     _booted = True
+    _load_modules_from_config()
     # load role definitions before booting modules
     from .. import roles
     roles.load_json_roles(docs_path=Path(__file__).resolve().parents[2] / "docs" / "roles.md")
@@ -45,6 +60,7 @@ async def core_boot_async(config: dict | None = None) -> None:
     if _booted:
         return
     _booted = True
+    _load_modules_from_config()
     loop = asyncio.get_event_loop()
     tasks = [
         loop.run_in_executor(None, ph.func, config or {})

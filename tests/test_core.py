@@ -1,4 +1,5 @@
-from sage_engine import core, time, timers, events
+from sage_engine import core, events
+from sage_engine.scheduler import time, timers
 
 
 def setup_module():

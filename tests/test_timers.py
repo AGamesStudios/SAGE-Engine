@@ -1,4 +1,5 @@
-from sage_engine import time, timers, profiling
+from sage_engine import profiling
+from sage_engine.scheduler import time, timers
 
 
 def test_timer_fires():

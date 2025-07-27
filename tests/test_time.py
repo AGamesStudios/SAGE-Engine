@@ -1,4 +1,4 @@
-from sage_engine import time
+from sage_engine.scheduler import time
 
 
 def test_time_advances():
