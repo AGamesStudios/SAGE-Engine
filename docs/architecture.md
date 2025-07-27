@@ -11,6 +11,10 @@ This document describes the high level architecture for SAGE Engine based on the
 - **scene** – scene graph storing objects as IDs with roles.
 - **roles** – role schemas such as sprite or camera. Schemas are organised into
   *categories* grouping related fields.
+- **tasks** – lightweight task scheduler for background logic.
+- **resource** – asynchronous resource loading helpers.
+- **render** – prepare/sort/flush rendering pipeline.
+- **settings** – engine configuration including thread limits.
 
 The engine executes in well defined phases ordered as a DAG. Each module registers its callbacks for update or draw phases.
 

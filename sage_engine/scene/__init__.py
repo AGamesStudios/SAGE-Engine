@@ -132,6 +132,19 @@ class Scene:
     def to_json(self) -> List[dict]:
         return [self.serialize_object(i) for i, r in enumerate(self.roles) if r is not None]
 
+    async def load_async(self, objects: List[Mapping[str, Mapping[str, object]]]) -> None:
+        """Load objects from JSON-like data asynchronously."""
+        for obj in objects:
+            role = obj.get("role")
+            if not role:
+                continue
+            name = obj.get("name")
+            fields = roles.get_role(role).schema.from_json(obj)
+            edit = self.begin_edit()
+            edit.create(role=role, name=name, **fields)
+            self.apply(edit)
+        self.commit()
+
 
 scene = Scene()
 

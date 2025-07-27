@@ -8,5 +8,6 @@ class ProfileFrame:
     role_calls: Dict[str, int] = field(default_factory=dict)
     events_dropped: int = 0
     timers_dropped: int = 0
+    threads: Dict[int, float] = field(default_factory=dict)
 
 profile = ProfileFrame()

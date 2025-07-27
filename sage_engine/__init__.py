@@ -1,6 +1,18 @@
 """SAGE Engine package."""
 
-__all__ = ["core", "time", "timers", "events", "scene", "roles", "profiling"]
+__all__ = [
+    "core",
+    "time",
+    "timers",
+    "events",
+    "scene",
+    "roles",
+    "profiling",
+    "tasks",
+    "resource",
+    "render",
+    "settings",
+]
 
 from importlib import import_module
 

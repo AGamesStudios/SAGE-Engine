@@ -1,15 +1,28 @@
 """Core module providing basic engine loop and dependency registry."""
 
+from __future__ import annotations
+
 from collections import defaultdict
+from dataclasses import dataclass
 from typing import Callable, Dict, List
 
-_registry: Dict[str, List[Callable]] = defaultdict(list)
+from ..settings import settings
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+
+@dataclass
+class _Phase:
+    func: Callable
+    parallelizable: bool = False
+
+
+_registry: Dict[str, List[_Phase]] = defaultdict(list)
 _booted = False
 
 
-def register(phase: str, func: Callable) -> None:
+def register(phase: str, func: Callable, *, parallelizable: bool = False) -> None:
     """Register a callable for execution in a given phase."""
-    _registry[phase].append(func)
+    _registry[phase].append(_Phase(func, parallelizable))
 
 
 def core_boot(config: dict | None = None) -> None:
@@ -18,29 +31,52 @@ def core_boot(config: dict | None = None) -> None:
     if _booted:
         return
     _booted = True
-    for func in _registry.get("boot", []):
-        func(config or {})
+    for phase in _registry.get("boot", []):
+        phase.func(config or {})
+
+
+async def core_boot_async(config: dict | None = None) -> None:
+    """Asynchronously boot the engine core."""
+    global _booted
+    if _booted:
+        return
+    _booted = True
+    loop = asyncio.get_event_loop()
+    tasks = [
+        loop.run_in_executor(None, ph.func, config or {})
+        for ph in _registry.get("boot", [])
+    ]
+    if tasks:
+        await asyncio.gather(*tasks)
 
 
 def core_tick() -> None:
     """Execute a single frame by running all phases in order."""
     if not _booted:
         raise RuntimeError("Engine not booted")
-    for phase in ("update", "draw", "flush"):
-        for func in _registry.get(phase, []):
-            func()
+    for phase_name in ("update", "draw", "flush"):
+        phases = _registry.get(phase_name, [])
+        serial = [p for p in phases if not p.parallelizable or not settings.enable_multithread]
+        parallel = [p for p in phases if p.parallelizable and settings.enable_multithread]
+
+        for p in serial:
+            p.func()
+
+        if parallel:
+            with ThreadPoolExecutor(max_workers=settings.cpu_threads) as ex:
+                list(ex.map(lambda ph: ph.func(), parallel))
 
 
 def core_reset() -> None:
     """Reset engine state while keeping modules alive."""
-    for func in _registry.get("reset", []):
-        func()
+    for phase in _registry.get("reset", []):
+        phase.func()
 
 
 def core_shutdown() -> None:
     """Shutdown the engine core."""
     global _booted
-    for func in _registry.get("shutdown", []):
-        func()
+    for phase in _registry.get("shutdown", []):
+        phase.func()
     _booted = False
     _registry.clear()
