@@ -8,6 +8,7 @@ This document describes the high level architecture for SAGE Engine based on the
 - **time** – time management. Tracks delta time and frame counters.
 - **timers** – simple timer manager without allocations in the update loop.
 - **events** – event dispatcher with ring buffer.
+- **dag** – defines execution phases with dependencies and optional parallelism.
 - **scene** – scene graph storing objects as IDs with roles.
 - **roles** – role schemas such as sprite or camera. Schemas are organised into
   *categories* grouping related fields.
@@ -17,6 +18,12 @@ This document describes the high level architecture for SAGE Engine based on the
 - **settings** – engine configuration including thread limits.
 
 The engine executes in well defined phases ordered as a DAG. Each module registers its callbacks for update or draw phases.
+
+```
+boot -> update -> draw -> flush
+```
+
+Custom phases can be added using the `dag` module which resolves dependencies to ensure deterministic execution.
 
 All modifications to scene objects happen via a `SceneEdit` transaction that is applied atomically between frames.
 

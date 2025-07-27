@@ -12,6 +12,7 @@
 - [RenderStream](docs/renderstream.md)
 - [Плагины](docs/plugin.md)
 - [Редактор](docs/editor.md)
+- [DAG](docs/architecture.md)
 - [Руководство по стилю](docs/style_guide.md)
 - Тестирование запускается командой `sage-test`
 

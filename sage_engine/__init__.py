@@ -5,6 +5,7 @@ __all__ = [
     "time",
     "timers",
     "events",
+    "dag",
     "scene",
     "roles",
     "profiling",
