@@ -11,6 +11,9 @@ pytest = "*"
 
 [tool.poetry.dev-dependencies]
 
+[tool.poetry.scripts]
+sage-test = "sage_testing.runner:main"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

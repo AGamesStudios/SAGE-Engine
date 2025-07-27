@@ -13,5 +13,6 @@
 - [Плагины](docs/plugin.md)
 - [Редактор](docs/editor.md)
 - [Руководство по стилю](docs/style_guide.md)
+- Тестирование запускается командой `sage-test`
 
 Примеры находятся в [docs/examples](docs/examples/).
