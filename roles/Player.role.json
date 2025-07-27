@@ -1,0 +1,21 @@
+{
+  "name": "Player",
+  "doc": "Управляемый игроком персонаж.",
+  "categories": {
+    "transform": {
+      "x": "float",
+      "y": "float",
+      "angle": "float"
+    },
+    "sprite": {
+      "tex_id": "int",
+      "layer": "int",
+      "color": "vec4"
+    },
+    "player": {
+      "hp": "int",
+      "speed": "float"
+    }
+  },
+  "phases": ["update", "draw"]
+}

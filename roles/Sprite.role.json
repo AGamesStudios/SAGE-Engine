@@ -1,0 +1,17 @@
+{
+  "name": "Sprite",
+  "doc": "Базовый графический объект с координатами и текстурой.",
+  "categories": {
+    "transform": {
+      "x": "float",
+      "y": "float",
+      "angle": "float"
+    },
+    "sprite": {
+      "tex_id": "int",
+      "layer": "int",
+      "color": "vec4"
+    }
+  },
+  "phases": ["update", "draw"]
+}

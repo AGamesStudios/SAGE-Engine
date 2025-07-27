@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Callable, Dict, List
 
 from ..settings import settings
@@ -31,6 +32,9 @@ def core_boot(config: dict | None = None) -> None:
     if _booted:
         return
     _booted = True
+    # load role definitions before booting modules
+    from .. import roles
+    roles.load_json_roles(docs_path=Path(__file__).resolve().parents[2] / "docs" / "roles.md")
     for phase in _registry.get("boot", []):
         phase.func(config or {})
 

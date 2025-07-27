@@ -24,6 +24,7 @@ class SceneEdit:
         self.scene = scene
         self.to_create: List[ObjectRequest] = []
         self.to_destroy: List[int] = []
+        self.to_set: List[tuple[int, str, str, object]] = []
 
     def create(self, role: str, name: str | None = None, **fields: object) -> int:
         req = ObjectRequest(role, fields, name)
@@ -32,6 +33,9 @@ class SceneEdit:
 
     def destroy(self, obj_id: int) -> None:
         self.to_destroy.append(obj_id)
+
+    def set(self, category: str, obj_id: int, field: str, value: object) -> None:
+        self.to_set.append((obj_id, category, field, value))
 
 
 class Scene:
@@ -56,6 +60,8 @@ class Scene:
             self._apply_create(req)
         for obj_id in edit.to_destroy:
             self._apply_destroy(obj_id)
+        for obj_id, cat, field, value in edit.to_set:
+            self._apply_set(obj_id, cat, field, value)
 
     def _apply_create(self, req: ObjectRequest) -> None:
         role_def = roles.get_role(req.role)
@@ -90,6 +96,18 @@ class Scene:
             if role is None:
                 return
             self._to_commit.append(obj_id)
+
+    def _apply_set(self, obj_id: int, category: str, field: str, value: object) -> None:
+        if 0 <= obj_id < len(self.roles):
+            role = self.roles[obj_id]
+            if role is None:
+                return
+            store = self.storage.get(role)
+            if not store:
+                return
+            row = self.role_index[obj_id]
+            if category in store and field in store[category]:
+                store[category][field][row] = value
 
     def commit(self) -> None:
         """Physically remove objects marked for deletion."""

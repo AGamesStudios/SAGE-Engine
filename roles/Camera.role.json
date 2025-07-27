@@ -1,0 +1,14 @@
+{
+  "name": "Camera",
+  "doc": "Простейшая камера.",
+  "categories": {
+    "transform": {
+      "x": "float",
+      "y": "float"
+    },
+    "camera": {
+      "zoom": "float"
+    }
+  },
+  "phases": ["update"]
+}

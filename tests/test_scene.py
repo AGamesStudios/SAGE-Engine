@@ -23,12 +23,12 @@ def test_create_destroy(roles):
 
 def test_serialize():
     edit = scene.scene.begin_edit()
-    obj_id = edit.create(role="sprite", name="hero", x=10, y=5, texture="hero.png")
+    obj_id = edit.create(role="sprite", name="hero", x=10, y=5, tex_id=1)
     scene.scene.apply(edit)
     scene.scene.commit()
     data = scene.scene.serialize_object(obj_id)
     assert data["name"] == "hero"
-    assert data["sprite"]["texture"] == "hero.png"
+    assert data["sprite"]["tex_id"] == 1
     assert obj_id in scene.scene.view.with_transform()
 
 
