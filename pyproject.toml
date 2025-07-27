@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "sage_engine"
+version = "0.1.0"
+description = "SAGE Engine core skeleton"
+authors = ["Auto"]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+hypothesis = "*"
+pytest = "*"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
