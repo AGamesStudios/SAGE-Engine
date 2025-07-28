@@ -6,6 +6,39 @@ import time
 from ctypes import wintypes
 from dataclasses import dataclass
 
+# ensure required Win32 types exist on all Python versions
+if not hasattr(wintypes, "LRESULT"):
+    if ctypes.sizeof(ctypes.c_void_p) == ctypes.sizeof(ctypes.c_longlong):
+        wintypes.LRESULT = ctypes.c_longlong
+        wintypes.WPARAM = ctypes.c_ulonglong
+        wintypes.LPARAM = ctypes.c_longlong
+    else:
+        wintypes.LRESULT = ctypes.c_long
+        wintypes.WPARAM = ctypes.c_uint
+        wintypes.LPARAM = ctypes.c_long
+
+if not hasattr(wintypes, "HCURSOR"):
+    wintypes.HCURSOR = wintypes.HANDLE
+
+if not hasattr(wintypes, "WNDCLASSEX"):
+    class WNDCLASSEX(ctypes.Structure):
+        _fields_ = [
+            ("cbSize", wintypes.UINT),
+            ("style", wintypes.UINT),
+            ("lpfnWndProc", ctypes.c_void_p),
+            ("cbClsExtra", ctypes.c_int),
+            ("cbWndExtra", ctypes.c_int),
+            ("hInstance", wintypes.HINSTANCE),
+            ("hIcon", wintypes.HICON),
+            ("hCursor", wintypes.HCURSOR),
+            ("hbrBackground", wintypes.HBRUSH),
+            ("lpszMenuName", wintypes.LPCWSTR),
+            ("lpszClassName", wintypes.LPCWSTR),
+            ("hIconSm", wintypes.HICON),
+        ]
+
+    wintypes.WNDCLASSEX = WNDCLASSEX
+
 from ...events import dispatcher as events
 from .. import WIN_CLOSE, WIN_RESIZE, WIN_KEY, WIN_MOUSE
 
@@ -25,18 +58,18 @@ class Win32Window:
 
     def __post_init__(self) -> None:
         """Create the native Win32 window and show it."""
+        logger.debug(
+            "Creating Win32 window '%s' %dx%d",
+            self.title,
+            self.width,
+            self.height,
+        )
         try:
-            logger.debug(
-                "Creating Win32 window '%s' %dx%d",
-                self.title,
-                self.width,
-                self.height,
-            )
             self._create_window()
         except Exception:
-            # Fallback for environments without Win32 APIs
             logger.exception("Failed to create Win32 window")
-            self.hwnd = None
+            raise
+        logger.info("Win32 window created hwnd=%s size=%dx%d", self.hwnd, self.width, self.height)
 
     def _create_window(self) -> None:
         user32 = ctypes.windll.user32
@@ -70,10 +103,23 @@ class Win32Window:
             return user32.DefWindowProcW(hwnd, msg, wparam, lparam)
 
         class_name = "SAGEWindow"
-        wndclass = wintypes.WNDCLASS()
-        wndclass.lpfnWndProc = wndproc
+        wndclass = wintypes.WNDCLASSEX()
+        wndclass.cbSize = ctypes.sizeof(wintypes.WNDCLASSEX)
+        wndclass.style = 0
+        wndclass.lpfnWndProc = ctypes.cast(wndproc, ctypes.c_void_p)
+        wndclass.cbClsExtra = 0
+        wndclass.cbWndExtra = 0
+        wndclass.hInstance = kernel32.GetModuleHandleW(None)
+        wndclass.hIcon = 0
+        wndclass.hCursor = 0
+        wndclass.hbrBackground = 0
+        wndclass.lpszMenuName = None
         wndclass.lpszClassName = class_name
-        user32.RegisterClassW(ctypes.byref(wndclass))
+        wndclass.hIconSm = 0
+
+        atom = user32.RegisterClassExW(ctypes.byref(wndclass))
+        if not atom:
+            raise ctypes.WinError(ctypes.get_last_error())
 
         self.hwnd = user32.CreateWindowExW(
             0,
@@ -89,6 +135,9 @@ class Win32Window:
             0,
             None,
         )
+
+        if not self.hwnd:
+            raise ctypes.WinError(ctypes.get_last_error())
 
         user32.ShowWindow(self.hwnd, 1)
         user32.UpdateWindow(self.hwnd)
