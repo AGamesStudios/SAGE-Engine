@@ -86,12 +86,12 @@ class Win32Window:
             if msg == 0x0010:  # WM_CLOSE
                 self._on_close()
                 user32.DestroyWindow(hwnd)
-                return LRESULT(0)
+                return 0
             elif msg == 0x0005:  # WM_SIZE
                 width = lparam & 0xFFFF
                 height = (lparam >> 16) & 0xFFFF
                 self._on_resize(width, height)
-                return LRESULT(0)
+                return 0
             elif msg == 0x0100:  # WM_KEYDOWN
                 self._on_key(wparam)
             elif msg == 0x0200:  # WM_MOUSEMOVE
@@ -99,12 +99,10 @@ class Win32Window:
                 y = (lparam >> 16) & 0xFFFF
                 self._on_mouse("move", x, y, 0)
             try:
-                hwnd = wintypes.HWND(hwnd)
-                msg = UINT(msg)
-                wparam = WPARAM(wparam)
-                lparam = LPARAM(lparam)
-                result = user32.DefWindowProcW(hwnd, msg, wparam, lparam)
-                return result.value if hasattr(result, "value") else result
+                result = user32.DefWindowProcW(
+                    int(hwnd), int(msg), int(wparam), int(lparam)
+                )
+                return int(result)
             except Exception as e:
                 logger.error("wndproc failed: %s", e)
                 return 0
@@ -151,7 +149,7 @@ class Win32Window:
                 "CreateWindowExW returned NULL, but GetLastError() is 0."
             )
 
-        user32.ShowWindow(self.hwnd.value if hasattr(self.hwnd, "value") else self.hwnd, 1)
+        user32.ShowWindow(int(self.hwnd), 1)
         user32.UpdateWindow(self.hwnd)
         logger.info("Win32 window shown handle=%s", self.hwnd)
         self._wndproc = wndproc  # keep reference
