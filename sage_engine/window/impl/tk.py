@@ -26,7 +26,7 @@ class TkWindow:
             self.root.overrideredirect(True)
         self.width = width
         self.height = height
-        self._should_close = False
+        self._closed = False
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
         self.root.bind("<Configure>", self._on_configure)
         self.root.bind("<Key>", self._on_key)
@@ -34,7 +34,7 @@ class TkWindow:
         self.root.bind("<Motion>", self._on_mouse)
 
     def _on_close(self, event=None) -> None:
-        self._should_close = True
+        self._closed = True
         events.emit(WIN_CLOSE)
 
     def _on_configure(self, event) -> None:  # pragma: no cover - tk only
@@ -67,3 +67,9 @@ class TkWindow:
             return self.root.winfo_id()
         except Exception:
             return None
+
+    def get_size(self) -> tuple[int, int]:
+        return (self.width, self.height)
+
+    def should_close(self) -> bool:
+        return self._closed
