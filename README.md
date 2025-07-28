@@ -10,6 +10,7 @@
 - [Роли](docs/roles.md)
 - [Сцена](docs/scene.md)
 - [События](docs/events.md)
+- [Blueprint](docs/blueprint.md)
 - [Таймеры](docs/timers.md)
 - [Профайлер](docs/profiler.md)
 - [RenderStream](docs/renderstream.md)

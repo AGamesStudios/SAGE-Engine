@@ -16,3 +16,17 @@ def test_task_schedule():
     time.update()
     tasks.update()
     assert called
+
+def test_task_budget():
+    tasks.reset()
+    time.reset()
+    called = []
+
+    def cb():
+        called.append(True)
+
+    tasks.tasks.schedule(cb, delay_frames=0, budget=0.0)
+    time.update()
+    tasks.update()
+    assert 'default' in tasks.tasks.heavy
+    assert called

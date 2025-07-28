@@ -13,6 +13,7 @@ pytest = "*"
 
 [tool.poetry.scripts]
 sage-test = "sage_testing.runner:main"
+sage-config = "sage_engine.devtools.config_cli:main"
 
 [build-system]
 requires = ["poetry-core"]

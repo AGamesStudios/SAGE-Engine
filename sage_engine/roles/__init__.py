@@ -53,6 +53,7 @@ class RoleSchema:
             cat_data = data.get(cat.name, {})
             for col in cat.columns:
                 fields[col.name] = cat_data.get(col.name, col.default)
+        validate_fields(self, fields)
         return fields
 
 
@@ -74,6 +75,30 @@ def _default_for(type_name: str) -> object:
     if type_name == "vec4":
         return [1.0, 1.0, 1.0, 1.0]
     return ""
+
+
+_TYPE_MAP = {
+    "float": float,
+    "f32": float,
+    "int": int,
+    "u32": int,
+    "i32": int,
+    "vec4": list,
+}
+
+
+def validate_fields(schema: RoleSchema, fields: Mapping[str, object]) -> None:
+    """Validate *fields* according to *schema* column types."""
+    for cat in schema.categories:
+        for col in cat.columns:
+            if col.name not in fields:
+                continue
+            py_type = _TYPE_MAP.get(col.type)
+            if py_type:
+                if py_type is float and isinstance(fields[col.name], int):
+                    continue
+                if not isinstance(fields[col.name], py_type):
+                    raise TypeError(f"{schema.name}.{col.name} expects {py_type.__name__}")
 
 
 def load_json_roles(directory: Path | None = None, docs_path: Path | None = None) -> None:

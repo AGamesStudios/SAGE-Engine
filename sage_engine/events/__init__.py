@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from collections import deque
-from typing import Callable, Deque, Dict, List
+from heapq import heappush, heappop
+from typing import Callable, Deque, Dict, List, Tuple
 
 from ..profiling import profile
 
@@ -13,7 +14,8 @@ class EventDispatcher:
 
     def __init__(self) -> None:
         self._handlers: Dict[int, List[Callable]] = {}
-        self._queue: Deque[tuple[int, tuple]] = deque()
+        self._queue: List[Tuple[int, int, tuple]] = []
+        self._history: Deque[int] = deque(maxlen=32)
 
     def on(self, event_id: int, handler: Callable) -> None:
         self._handlers.setdefault(event_id, []).append(handler)
@@ -22,17 +24,22 @@ class EventDispatcher:
         if event_id in self._handlers:
             self._handlers[event_id].remove(handler)
 
-    def emit(self, event_id: int, *args) -> None:
+    def emit(self, event_id: int, *args, priority: int = 0) -> None:
         if len(self._queue) >= self.MAX_PER_FRAME:
             profile.events_dropped += 1
             return
-        self._queue.append((event_id, args))
+        heappush(self._queue, (-priority, event_id, args))
+        self._history.append(event_id)
 
     def flush(self) -> None:
         while self._queue:
-            event_id, args = self._queue.popleft()
+            _, event_id, args = heappop(self._queue)
             for handler in self._handlers.get(event_id, []):
                 handler(*args)
+
+    @property
+    def history(self) -> List[int]:
+        return list(self._history)
 
 
 dispatcher = EventDispatcher()

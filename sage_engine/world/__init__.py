@@ -66,6 +66,7 @@ class Scene:
     def _apply_create(self, req: ObjectRequest) -> None:
         role_def = roles.get_role(req.role)
         schema = role_def.schema
+        roles.validate_fields(schema, req.fields)
 
         store = self.storage.setdefault(
             schema.name,
