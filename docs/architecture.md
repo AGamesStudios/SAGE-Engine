@@ -34,3 +34,13 @@ Custom phases can be added using the `dag` module which resolves dependencies to
 All modifications to scene objects happen via a `SceneEdit` transaction that is applied atomically between frames.
 
 The design tries to minimize allocations during the update/draw loop and favors a Struct-of-Arrays layout for cache efficiency.
+
+### Frame cycle
+
+During each tick the engine executes phases in order:
+
+1. **update** – time, timers, tasks and world logic.
+2. **draw** – render preparation and sorting.
+3. **flush** – final rendering and profiling.
+
+The world module commits any pending `SceneEdit` operations during update so all reads remain consistent.

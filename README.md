@@ -18,6 +18,7 @@
 - [Редактор](docs/editor.md)
 - [Руководство разработчика](docs/dev_guidelines.md)
 - [Правила проектирования](docs/design_rules.md)
+- [Demo Game](examples/demo_game/README.md)
 - [Совместимость](docs/compatibility.md)
 - [Руководство по стилю](docs/style_guide.md)
 - [Стабильные интерфейсы](docs/stable_api.md)
