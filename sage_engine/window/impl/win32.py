@@ -34,6 +34,21 @@ if not hasattr(wintypes, "WNDCLASSEX"):
 
     wintypes.WNDCLASSEX = WNDCLASSEX
 
+if not hasattr(wintypes, "PAINTSTRUCT"):
+    class PAINTSTRUCT(ctypes.Structure):
+        _fields_ = [
+            ("hdc", wintypes.HDC),
+            ("fErase", wintypes.BOOL),
+            ("rcPaint", wintypes.RECT),
+            ("fRestore", wintypes.BOOL),
+            ("fIncUpdate", wintypes.BOOL),
+            ("rgbReserved", ctypes.c_byte * 32),
+        ]
+
+    wintypes.PAINTSTRUCT = PAINTSTRUCT
+
+PAINTSTRUCT = wintypes.PAINTSTRUCT
+
 from ...events import dispatcher as events
 from .. import WIN_CLOSE, WIN_RESIZE, WIN_KEY, WIN_MOUSE
 
@@ -72,6 +87,29 @@ class Win32Window:
         user32.DefWindowProcW.argtypes = [wintypes.HWND, UINT, WPARAM, LPARAM]
         user32.ShowWindow.restype = ctypes.c_int
         user32.ShowWindow.argtypes = [wintypes.HWND, ctypes.c_int]
+        user32.BeginPaint.restype = wintypes.HDC
+        user32.BeginPaint.argtypes = [wintypes.HWND, ctypes.POINTER(PAINTSTRUCT)]
+        user32.EndPaint.restype = wintypes.BOOL
+        user32.EndPaint.argtypes = [wintypes.HWND, ctypes.POINTER(PAINTSTRUCT)]
+        user32.AdjustWindowRectEx.argtypes = [
+            ctypes.POINTER(wintypes.RECT),
+            wintypes.DWORD,
+            wintypes.BOOL,
+            wintypes.DWORD,
+        ]
+        user32.AdjustWindowRectEx.restype = wintypes.BOOL
+        user32.SetWindowPos.argtypes = [
+            wintypes.HWND,
+            wintypes.HWND,
+            ctypes.c_int,
+            ctypes.c_int,
+            ctypes.c_int,
+            ctypes.c_int,
+            wintypes.UINT,
+        ]
+        user32.SetWindowPos.restype = wintypes.BOOL
+        user32.GetSystemMetrics.argtypes = [ctypes.c_int]
+        user32.GetSystemMetrics.restype = ctypes.c_int
 
         WNDPROCTYPE = ctypes.WINFUNCTYPE(
             LRESULT,
@@ -92,12 +130,21 @@ class Win32Window:
                 height = (lparam >> 16) & 0xFFFF
                 self._on_resize(width, height)
                 return 0
+            elif msg == 0x000F:  # WM_PAINT
+                ps = PAINTSTRUCT()
+                hdc = user32.BeginPaint(hwnd, ctypes.byref(ps))
+                user32.EndPaint(hwnd, ctypes.byref(ps))
+                return 0
             elif msg == 0x0100:  # WM_KEYDOWN
                 self._on_key(wparam)
             elif msg == 0x0200:  # WM_MOUSEMOVE
                 x = lparam & 0xFFFF
                 y = (lparam >> 16) & 0xFFFF
                 self._on_mouse("move", x, y, 0)
+            elif msg == 0x0084:  # WM_NCHITTEST
+                y_pos = (lparam >> 16) & 0xFFFF
+                if y_pos < 30:
+                    return 2  # HTCAPTION
             try:
                 result = user32.DefWindowProcW(
                     int(hwnd), int(msg), int(wparam), int(lparam)
@@ -126,15 +173,35 @@ class Win32Window:
         if not atom:
             raise ctypes.WinError(ctypes.get_last_error())
 
+        WS_OVERLAPPEDWINDOW = 0x00CF0000
+        WS_CAPTION = 0x00C00000
+        WS_SYSMENU = 0x00080000
+        WS_THICKFRAME = 0x00040000
+        WS_MINIMIZEBOX = 0x00020000
+        WS_MAXIMIZEBOX = 0x00010000
+        WS_POPUP = 0x80000000
+
+        style = WS_OVERLAPPEDWINDOW
+        if not self.resizable:
+            style &= ~(WS_THICKFRAME | WS_MAXIMIZEBOX)
+        if self.borderless:
+            style &= ~(WS_CAPTION | WS_SYSMENU | WS_THICKFRAME)
+        exstyle = 0
+        if self.fullscreen:
+            style = WS_POPUP
+
+        rect = wintypes.RECT(0, 0, self.width, self.height)
+        user32.AdjustWindowRectEx(ctypes.byref(rect), style, False, exstyle)
+
         self.hwnd = user32.CreateWindowExW(
-            0,
+            exstyle,
             class_name,
             self.title,
-            0xCF0000,  # WS_OVERLAPPEDWINDOW
+            style,
             0,
             0,
-            self.width,
-            self.height,
+            rect.right - rect.left,
+            rect.bottom - rect.top,
             0,
             0,
             0,
@@ -151,6 +218,21 @@ class Win32Window:
 
         user32.ShowWindow(int(self.hwnd), 1)
         user32.UpdateWindow(self.hwnd)
+        if self.fullscreen:
+            SM_CXSCREEN = 0
+            SM_CYSCREEN = 1
+            width = user32.GetSystemMetrics(SM_CXSCREEN)
+            height = user32.GetSystemMetrics(SM_CYSCREEN)
+            SWP_FRAMECHANGED = 0x0020
+            user32.SetWindowPos(
+                self.hwnd,
+                0,
+                0,
+                0,
+                width,
+                height,
+                SWP_FRAMECHANGED,
+            )
         logger.info("Win32 window shown handle=%s", self.hwnd)
         self._wndproc = wndproc  # keep reference
 
