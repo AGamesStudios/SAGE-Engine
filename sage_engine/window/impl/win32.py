@@ -91,6 +91,10 @@ class Win32Window:
         user32.BeginPaint.argtypes = [wintypes.HWND, ctypes.POINTER(PAINTSTRUCT)]
         user32.EndPaint.restype = wintypes.BOOL
         user32.EndPaint.argtypes = [wintypes.HWND, ctypes.POINTER(PAINTSTRUCT)]
+
+        gdi32 = ctypes.windll.gdi32
+        gdi32.PatBlt.argtypes = [wintypes.HDC, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int, wintypes.DWORD]
+        gdi32.PatBlt.restype = wintypes.BOOL
         user32.AdjustWindowRectEx.argtypes = [
             ctypes.POINTER(wintypes.RECT),
             wintypes.DWORD,
@@ -126,13 +130,17 @@ class Win32Window:
                 user32.DestroyWindow(hwnd)
                 return 0
             elif msg == 0x0005:  # WM_SIZE
-                width = lparam & 0xFFFF
-                height = (lparam >> 16) & 0xFFFF
+                rect = wintypes.RECT()
+                user32.GetClientRect(hwnd, ctypes.byref(rect))
+                width = rect.right - rect.left
+                height = rect.bottom - rect.top
                 self._on_resize(width, height)
+                user32.InvalidateRect(hwnd, None, True)
                 return 0
             elif msg == 0x000F:  # WM_PAINT
                 ps = PAINTSTRUCT()
                 hdc = user32.BeginPaint(hwnd, ctypes.byref(ps))
+                gdi32.PatBlt(hdc, 0, 0, self.width, self.height, 0x42)
                 user32.EndPaint(hwnd, ctypes.byref(ps))
                 return 0
             elif msg == 0x0100:  # WM_KEYDOWN
@@ -157,7 +165,9 @@ class Win32Window:
         class_name = "SAGEWindow"
         wndclass = wintypes.WNDCLASSEX()
         wndclass.cbSize = ctypes.sizeof(wintypes.WNDCLASSEX)
-        wndclass.style = 0
+        CS_HREDRAW = 0x0002
+        CS_VREDRAW = 0x0001
+        wndclass.style = CS_HREDRAW | CS_VREDRAW
         wndclass.lpfnWndProc = ctypes.cast(wndproc, ctypes.c_void_p)
         wndclass.cbClsExtra = 0
         wndclass.cbWndExtra = 0
@@ -216,6 +226,11 @@ class Win32Window:
                 "CreateWindowExW returned NULL, but GetLastError() is 0."
             )
 
+        rect_client = wintypes.RECT()
+        user32.GetClientRect(self.hwnd, ctypes.byref(rect_client))
+        self.width = rect_client.right - rect_client.left
+        self.height = rect_client.bottom - rect_client.top
+
         user32.ShowWindow(int(self.hwnd), 1)
         user32.UpdateWindow(self.hwnd)
         if self.fullscreen:
@@ -243,9 +258,14 @@ class Win32Window:
         user32 = ctypes.windll.user32
         msg = wintypes.MSG()
         PM_REMOVE = 1
+        got_msg = False
         while user32.PeekMessageW(ctypes.byref(msg), 0, 0, 0, PM_REMOVE):
+            got_msg = True
             user32.TranslateMessage(ctypes.byref(msg))
             user32.DispatchMessageW(ctypes.byref(msg))
+        if not got_msg:
+            import time
+            time.sleep(0.001)
 
     def destroy(self) -> None:
         if self.hwnd:
