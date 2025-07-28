@@ -32,11 +32,13 @@ Backend выбирается через `settings.render_backend` или пер�
 ## 🔹 Пример
 
 ```python
-from sage_engine import render
+from sage_engine import render, window
 
-render.init(None)
+window.init("Example", 640, 480)
+render.init(window.get_window_handle())
 render.begin_frame()
 render.draw_rect(10, 10, 30, 40, (1, 0, 0, 1))
 render.end_frame()
 render.shutdown()
+window.shutdown()
 ```

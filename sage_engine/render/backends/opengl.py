@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any, List
 
 from ..api import RenderBackend
+from ..context import RenderContext
 
 
 class OpenGLBackend(RenderBackend):
@@ -29,6 +30,9 @@ class OpenGLBackend(RenderBackend):
     def shutdown(self) -> None:
         self.commands.clear()
         self.output_target = None
+
+    def create_context(self, output_target: Any) -> RenderContext:
+        return RenderContext(self, output_target)
 
 
 def get_backend() -> OpenGLBackend:

@@ -24,3 +24,8 @@ class RenderBackend:
 
     def shutdown(self) -> None:
         raise NotImplementedError
+
+    def create_context(self, output_target: Any):
+        """Return a :class:`RenderContext` bound to ``output_target``."""
+        from .context import RenderContext
+        return RenderContext(self, output_target)

@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..api import RenderBackend
+from ..context import RenderContext
 
 
 class VulkanBackend(RenderBackend):
@@ -24,6 +25,9 @@ class VulkanBackend(RenderBackend):
 
     def shutdown(self) -> None:
         pass  # pragma: no cover
+
+    def create_context(self, output_target: Any) -> RenderContext:
+        return RenderContext(self, output_target)
 
 
 def get_backend() -> VulkanBackend:

@@ -1,4 +1,6 @@
-from sage_engine import render
+import os
+
+from sage_engine import render, window
 from sage_engine.settings import settings
 
 
@@ -14,3 +16,17 @@ def test_basic_draw_calls():
     assert backend.commands[-1] == "end"
     assert ("rect", 0, 0, 10, 10, (1, 0, 0, 1)) in backend.commands
     render.shutdown()
+
+
+def test_render_with_window_handle():
+    os.environ['SAGE_HEADLESS'] = '1'
+    settings.render_backend = "software"
+    window.init('t', 20, 20)
+    render.init(window.get_window_handle())
+    render.begin_frame()
+    render.draw_rect(0, 0, 5, 5, (1, 1, 1, 1))
+    render.end_frame()
+    backend = render._get_backend()
+    assert backend.output_target == window.get_window_handle()
+    render.shutdown()
+    window.shutdown()
