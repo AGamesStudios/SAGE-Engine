@@ -45,8 +45,9 @@ core.register("draw", render_frame)
 
 def main() -> None:
     """Run a minimal game loop with window events."""
-    # create the main window
+    # create the main window and initialize rendering with its handle
     window.init("Demo", 640, 480)
+    render.init(window.get_window_handle())
     core.core_boot({})
 
     edit = world.scene.begin_edit()
@@ -98,7 +99,8 @@ def main() -> None:
         core.core_tick()
     logger.info("Exiting main loop")
 
-    # close the window and clean up modules
+    # close the window, render and modules
+    render.shutdown()
     window.shutdown()
     core.core_shutdown()
 
