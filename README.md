@@ -23,6 +23,7 @@
 - [Руководство разработчика](docs/dev_guidelines.md)
 - [Правила проектирования](docs/design_rules.md)
 - [Пример Software Render](examples/software_render.py)
+- [Пример Graphic](examples/graphic_test.py)
 - [Интеграция рендера](docs/examples/render_integration.md)
 - [Совместимость](docs/compatibility.md)
 - [Руководство по стилю](docs/style_guide.md)

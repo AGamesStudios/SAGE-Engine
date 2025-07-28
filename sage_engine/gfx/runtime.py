@@ -5,6 +5,9 @@ import ctypes
 from ctypes import wintypes
 from typing import Tuple
 
+from ..graphic.color import to_rgba
+from ..graphic import fx
+
 if not hasattr(wintypes, "BITMAPINFOHEADER"):
     class BITMAPINFOHEADER(ctypes.Structure):
         _fields_ = [
@@ -43,11 +46,12 @@ class GraphicRuntime:
         self.mem_dc = None
         self.hbmp = None
         self._old_obj = None
+        self.effects: list[str] = []
 
     def init(self, window_handle: int) -> None:
         self.window_handle = int(window_handle) if window_handle is not None else 0
         self.width, self.height = get_size()
-        self.pitch = self.width * 3
+        self.pitch = self.width * 4
         self.buffer = bytearray(self.height * self.pitch)
         if sys.platform.startswith("win") and self.window_handle:
             self._init_win32()
@@ -64,7 +68,7 @@ class GraphicRuntime:
         bmi.bmiHeader.biWidth = self.width
         bmi.bmiHeader.biHeight = -self.height
         bmi.bmiHeader.biPlanes = 1
-        bmi.bmiHeader.biBitCount = 24
+        bmi.bmiHeader.biBitCount = 32
         bmi.bmiHeader.biCompression = 0
         bmi.bmiHeader.biSizeImage = self.pitch * self.height
         buf = ctypes.c_void_p()
@@ -76,16 +80,36 @@ class GraphicRuntime:
         if self.buffer is not None:
             self.buffer[:] = b"\x00" * len(self.buffer)
 
-    def draw_rect(self, x: int, y: int, w: int, h: int, color: Tuple[int, int, int]) -> None:
+    def draw_rect(self, x: int, y: int, w: int, h: int, color) -> None:
         if self.buffer is None:
             return
-        r, g, b = color
+        r, g, b, a = to_rgba(color)
         for yy in range(max(0, y), min(self.height, y + h)):
             for xx in range(max(0, x), min(self.width, x + w)):
-                offset = yy * self.pitch + xx * 3
-                self.buffer[offset:offset+3] = bytes((b, g, r))
+                off = yy * self.pitch + xx * 4
+                if a == 255:
+                    self.buffer[off:off+4] = bytes((b, g, r, 255))
+                else:
+                    db = self.buffer[off]
+                    dg = self.buffer[off + 1]
+                    dr = self.buffer[off + 2]
+                    da = self.buffer[off + 3]
+                    na = a + da * (255 - a) // 255
+                    nb = (b * a + db * (255 - a)) // 255
+                    ng = (g * a + dg * (255 - a)) // 255
+                    nr = (r * a + dr * (255 - a)) // 255
+                    self.buffer[off:off+4] = bytes((nb, ng, nr, na))
+
+    def add_effect(self, name: str) -> None:
+        if name not in self.effects:
+            self.effects.append(name)
+
+    def clear_effects(self) -> None:
+        self.effects.clear()
 
     def end_frame(self) -> None:
+        for name in self.effects:
+            fx.apply(name, self.buffer, self.width, self.height)
         if sys.platform.startswith("win") and self.window_handle and self.hdc:
             if self.hbmp is None or self.mem_dc is None:
                 return
