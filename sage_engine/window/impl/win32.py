@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import ctypes
-import time
 from ctypes import wintypes
 from dataclasses import dataclass
 
@@ -71,6 +70,8 @@ class Win32Window:
 
         user32.DefWindowProcW.restype = LRESULT
         user32.DefWindowProcW.argtypes = [wintypes.HWND, UINT, WPARAM, LPARAM]
+        user32.ShowWindow.restype = ctypes.c_int
+        user32.ShowWindow.argtypes = [wintypes.HWND, ctypes.c_int]
 
         WNDPROCTYPE = ctypes.WINFUNCTYPE(
             LRESULT,
@@ -97,11 +98,16 @@ class Win32Window:
                 x = lparam & 0xFFFF
                 y = (lparam >> 16) & 0xFFFF
                 self._on_mouse("move", x, y, 0)
-            hwnd = wintypes.HWND(hwnd)
-            msg = UINT(msg)
-            wparam = WPARAM(wparam)
-            lparam = LPARAM(lparam)
-            return user32.DefWindowProcW(hwnd, msg, wparam, lparam)
+            try:
+                hwnd = wintypes.HWND(hwnd)
+                msg = UINT(msg)
+                wparam = WPARAM(wparam)
+                lparam = LPARAM(lparam)
+                result = user32.DefWindowProcW(hwnd, msg, wparam, lparam)
+                return result.value
+            except Exception as e:
+                logger.error("wndproc failed: %s", e)
+                return 0
 
         class_name = "SAGEWindow"
         wndclass = wintypes.WNDCLASSEX()
@@ -140,14 +146,13 @@ class Win32Window:
         if not self.hwnd:
             raise ctypes.WinError(ctypes.get_last_error())
 
-        user32.ShowWindow(self.hwnd, 1)
+        user32.ShowWindow(self.hwnd.value if hasattr(self.hwnd, "value") else self.hwnd, 1)
         user32.UpdateWindow(self.hwnd)
         logger.info("Win32 window shown handle=%s", self.hwnd)
         self._wndproc = wndproc  # keep reference
 
     def poll(self) -> None:
         if not self.hwnd:
-            time.sleep(0.005)
             return
         logger.debug("Polling Win32 events")
         user32 = ctypes.windll.user32
@@ -156,7 +161,6 @@ class Win32Window:
         while user32.PeekMessageW(ctypes.byref(msg), 0, 0, 0, PM_REMOVE):
             user32.TranslateMessage(ctypes.byref(msg))
             user32.DispatchMessageW(ctypes.byref(msg))
-        time.sleep(0.005)
 
     def destroy(self) -> None:
         if self.hwnd:
