@@ -3,11 +3,13 @@
     "core",
     "dag",
     "scheduler",
+    "compat",
     "blueprint",
-    "sprite",
-    "flow.python",
-    "profiler",
-    "ui"
+    "world",
+    "render",
+    "resource",
+    "tasks",
+    "profiling"
   ],
   "features": {
     "flow_variables": true,

@@ -57,7 +57,7 @@ manager = TimerManager()
 
 
 def boot(_config: dict) -> None:
-    pass
+    manager.MAX_PER_FRAME = _config.get("max_per_frame", manager.MAX_PER_FRAME)
 
 
 def update() -> None:

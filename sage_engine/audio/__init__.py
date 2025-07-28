@@ -10,7 +10,7 @@ class Audio:
         self.volumes: Dict[str, float] = {"master": 1.0}
 
     def play(self, name: str) -> None:  # pragma: no cover - placeholder
-        pass
+        print(f"play sound {name}")
 
     def set_volume(self, channel: str, value: float) -> None:
         self.volumes[channel] = value

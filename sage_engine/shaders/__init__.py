@@ -8,7 +8,7 @@ class Effect:
         self.name = name
 
     def apply(self):  # pragma: no cover - placeholder
-        pass
+        print(f"apply effect {self.name}")
 
 
 __all__ = ["Effect"]

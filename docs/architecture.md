@@ -23,6 +23,12 @@ The engine executes in well defined phases ordered as a DAG. Each module registe
 boot -> update -> draw -> flush
 ```
 
+### Boot sequence
+
+1. `core_core_boot` читает `engine.json` и импортирует перечисленные модули.
+2. Каждый модуль реализует функцию `boot(config)` и регистрирует свои фазы.
+3. После инициализации можно запускать цикл `core_tick`.
+
 Custom phases can be added using the `dag` module which resolves dependencies to ensure deterministic execution.
 
 All modifications to scene objects happen via a `SceneEdit` transaction that is applied atomically between frames.

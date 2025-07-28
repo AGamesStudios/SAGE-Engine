@@ -20,6 +20,8 @@
 - [Правила проектирования](docs/design_rules.md)
 - [Совместимость](docs/compatibility.md)
 - [Руководство по стилю](docs/style_guide.md)
+- [Стабильные интерфейсы](docs/stable_api.md)
+- [TODO](docs/todo.md)
 
 Тестирование запускается командой `sage-test`.
 

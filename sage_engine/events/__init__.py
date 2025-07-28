@@ -46,11 +46,11 @@ dispatcher = EventDispatcher()
 
 
 def boot(_config: dict) -> None:
-    pass
+    dispatcher.MAX_PER_FRAME = _config.get("max_per_frame", dispatcher.MAX_PER_FRAME)
 
 
 def update() -> None:
-    pass
+    dispatcher.flush()
 
 
 def flush() -> None:

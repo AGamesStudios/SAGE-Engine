@@ -187,11 +187,11 @@ scene = Scene()
 
 
 def boot(_config: dict) -> None:  # pragma: no cover - placeholder
-    pass
+    logger.debug("world booted")
 
 
 def update() -> None:  # pragma: no cover - placeholder
-    pass
+    scene.commit()
 
 
 def reset() -> None:

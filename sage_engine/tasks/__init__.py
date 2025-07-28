@@ -49,7 +49,7 @@ tasks = TaskSystem()
 
 
 def boot(_cfg: dict) -> None:
-    pass
+    tasks.heavy.clear()
 
 
 def update() -> None:
