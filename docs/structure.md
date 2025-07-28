@@ -120,6 +120,12 @@ SAGE-Engine/
 │   │   ├── camera_schema.py
 │   │   ├── interfaces.py
 │   │   └── sprite_schema.py
+│   ├── objects/
+│   │   ├── __init__.py
+│   │   ├── builder.py
+│   │   ├── runtime.py
+│   │   ├── store.py
+│   │   └── roles/
 │   ├── scheduler/
 │   │   ├── __init__.py
 │   │   ├── time.py

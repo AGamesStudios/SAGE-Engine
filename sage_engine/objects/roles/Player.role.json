@@ -1,0 +1,7 @@
+{
+  "id": "Player",
+  "categories": {
+    "Object": {"name": "Player"},
+    "Transform": {"x": 0, "y": 0}
+  }
+}

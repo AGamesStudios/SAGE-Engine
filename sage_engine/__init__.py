@@ -14,6 +14,7 @@ __all__ = [
     "render",
     "gfx",
     "effects",
+    "objects",
     "window",
     "settings",
     "api",
