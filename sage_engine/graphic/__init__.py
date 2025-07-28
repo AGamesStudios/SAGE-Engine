@@ -1,7 +1,9 @@
 from .color import Color, to_rgba
 from .fx import register as fx_register, apply as fx_apply
-from .scene import Scene, Layer, Rect
+from .scene import Scene, Layer, Rect, Group
 from .state import GraphicState
+from .version import __version__
+from .compat import convert
 
 __all__ = [
     "Color",
@@ -11,5 +13,8 @@ __all__ = [
     "Scene",
     "Layer",
     "Rect",
+    "Group",
     "GraphicState",
+    "__version__",
+    "convert",
 ]

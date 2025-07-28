@@ -39,7 +39,8 @@ SAGE-Engine/
 │       └── custom_role.md
 ├── engine.json
 ├── examples/
-│   └── software_render.py
+│   ├── software_render.py
+│   └── graphic_demo.py
 ├── pyproject.toml
 ├── roles/
 │   ├── Camera.role.json
@@ -100,6 +101,14 @@ SAGE-Engine/
 │   │   └── backends/
 │   │       ├── __init__.py
 │   │       └── software.py
+│   ├── graphic/
+│   │   ├── __init__.py
+│   │   ├── color.py
+│   │   ├── fx.py
+│   │   ├── scene.py
+│   │   ├── state.py
+│   │   ├── version.py
+│   │   └── compat.py
 │   ├── resource/
 │   │   └── __init__.py
 │   ├── roles/
