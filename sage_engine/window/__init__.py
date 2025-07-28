@@ -33,6 +33,16 @@ def _on_configure(event) -> None:  # pragma: no cover - tk only
     events.emit(WIN_RESIZE, event.width, event.height)
 
 
+def _on_key(event) -> None:  # pragma: no cover - tk only
+    """Keyboard event handler."""
+    events.emit(WIN_KEY, event.keysym, event.keycode)
+
+
+def _on_mouse(event) -> None:  # pragma: no cover - tk only
+    """Mouse event handler."""
+    events.emit(WIN_MOUSE, event.type, event.x, event.y, getattr(event, "button", 0))
+
+
 @dataclass
 class HeadlessWindow:
     width: int
@@ -88,6 +98,9 @@ def init(
         _root.overrideredirect(True)
     _root.protocol("WM_DELETE_WINDOW", _on_close)
     _root.bind("<Configure>", _on_configure)
+    _root.bind("<Key>", _on_key)
+    _root.bind("<Button>", _on_mouse)
+    _root.bind("<Motion>", _on_mouse)
 
 
 def poll_events() -> None:
@@ -102,12 +115,7 @@ def poll_events() -> None:
 
 
 def get_size() -> tuple[int, int]:
-    if _root is None:
-        return _size
-    try:
-        return _root.winfo_width(), _root.winfo_height()
-    except Exception:  # pragma: no cover - headless
-        return _size
+    return _size
 
 
 def should_close() -> bool:
@@ -125,7 +133,7 @@ def shutdown() -> None:
     _root = None
 
 
-def get_handle() -> int | None:
+def get_window_handle() -> int | None:
     if _root is None:
         return None
     try:
