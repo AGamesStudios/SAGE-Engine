@@ -10,22 +10,27 @@ class RenderBackend:
     def init(self, output_target: Any) -> None:
         raise NotImplementedError
 
-    def begin_frame(self) -> None:
+    def begin_frame(self, handle: Any | None = None) -> None:
         raise NotImplementedError
 
-    def draw_sprite(self, image: Any, x: int, y: int, w: int, h: int, rotation: float = 0.0) -> None:
+    def draw_sprite(
+        self, image: Any, x: int, y: int, w: int, h: int, rotation: float = 0.0, handle: Any | None = None
+    ) -> None:
         raise NotImplementedError
 
-    def draw_rect(self, x: int, y: int, w: int, h: int, color: Any) -> None:
+    def draw_rect(self, x: int, y: int, w: int, h: int, color: Any, handle: Any | None = None) -> None:
         raise NotImplementedError
 
-    def end_frame(self) -> None:
+    def end_frame(self, handle: Any | None = None) -> None:
         raise NotImplementedError
 
-    def present(self, buffer: memoryview) -> None:
+    def present(self, buffer: memoryview, handle: Any | None = None) -> None:
         raise NotImplementedError
 
-    def shutdown(self) -> None:
+    def resize(self, width: int, height: int, handle: Any | None = None) -> None:
+        raise NotImplementedError
+
+    def shutdown(self, handle: Any | None = None) -> None:
         raise NotImplementedError
 
     def create_context(self, output_target: Any):

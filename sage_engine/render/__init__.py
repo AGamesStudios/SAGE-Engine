@@ -51,9 +51,26 @@ def end_frame() -> None:
         _context.end_frame()
 
 
-def present(buffer: memoryview) -> None:
-    if _context:
-        _context.present(buffer)
+def present(buffer: memoryview, handle: Any = None) -> None:
+    if handle is None:
+        ctx = _context
+    else:
+        ctx = _backend.create_context(handle)
+    if ctx:
+        ctx.present(buffer)
+
+def create_context(handle: Any) -> Any:
+    if _backend:
+        return _backend.create_context(handle)
+    return None
+
+def resize(width: int, height: int, handle: Any = None) -> None:
+    if handle is None:
+        ctx = _context
+    else:
+        ctx = _backend.create_context(handle)
+    if ctx:
+        ctx.resize(width, height)
 
 
 def shutdown() -> None:
