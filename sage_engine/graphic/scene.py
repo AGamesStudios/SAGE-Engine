@@ -40,5 +40,7 @@ class Scene:
 
     def render(self) -> None:
         for layer in sorted(self.layers, key=lambda l: l.z):
+            gfx.state.z = layer.z
             for item in sorted(layer.items, key=lambda it: it.timestamp):
                 gfx.draw_rect(item.x, item.y, item.w, item.h, item.color)
+        gfx.state.z = 0
