@@ -104,7 +104,7 @@ class Win32Window:
                 wparam = WPARAM(wparam)
                 lparam = LPARAM(lparam)
                 result = user32.DefWindowProcW(hwnd, msg, wparam, lparam)
-                return result.value
+                return result.value if hasattr(result, "value") else result
             except Exception as e:
                 logger.error("wndproc failed: %s", e)
                 return 0
@@ -144,7 +144,12 @@ class Win32Window:
         )
 
         if not self.hwnd:
-            raise ctypes.WinError(ctypes.get_last_error())
+            err = ctypes.get_last_error()
+            if err != 0:
+                raise ctypes.WinError(err)
+            raise RuntimeError(
+                "CreateWindowExW returned NULL, but GetLastError() is 0."
+            )
 
         user32.ShowWindow(self.hwnd.value if hasattr(self.hwnd, "value") else self.hwnd, 1)
         user32.UpdateWindow(self.hwnd)

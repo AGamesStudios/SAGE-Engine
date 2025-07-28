@@ -49,6 +49,10 @@ class Logger:
     def error(self, msg: str, *args, tag: str = "core", extra: dict | None = None, exc_info: bool = False) -> None:
         self._log(ERROR, msg, tag, extra, exc_info, *args)
 
+    def exception(self, msg: str, *args, tag: str = "core", extra: dict | None = None) -> None:
+        """Log an error message with the current exception info."""
+        self.error(msg, *args, tag=tag, extra=extra, exc_info=True)
+
 logger = Logger()
 
 
