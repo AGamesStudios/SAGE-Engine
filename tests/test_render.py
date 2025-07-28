@@ -1,16 +1,16 @@
-from sage_engine import render, world, roles
+from sage_engine import render
+from sage_engine.settings import settings
 
 
-def test_prepare_sort_flush():
-    world.reset()
-    edit = world.scene.begin_edit()
-    edit.create(role="sprite", tex_id=1, x=0, y=0)
-    edit.create(role="sprite", tex_id=2, x=1, y=0)
-    world.scene.apply(edit)
-    world.scene.commit()
-    render.prepare(world.scene)
-    assert render.prepared_data
-    render.sort()
-    assert render.prepared_data == sorted(render.prepared_data)
-    render.flush()
-    assert not render.prepared_data
+def test_basic_draw_calls():
+    settings.render_backend = "software"
+    render.init(None)
+    render.begin_frame()
+    render.draw_rect(0, 0, 10, 10, (1, 0, 0, 1))
+    render.draw_sprite("img", 5, 5, 8, 8)
+    render.end_frame()
+    backend = render._get_backend()
+    assert backend.commands[0] == "begin"
+    assert backend.commands[-1] == "end"
+    assert ("rect", 0, 0, 10, 10, (1, 0, 0, 1)) in backend.commands
+    render.shutdown()

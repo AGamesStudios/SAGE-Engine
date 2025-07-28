@@ -9,5 +9,6 @@ class Settings:
     enable_multithread: bool = True
     features: dict = field(default_factory=dict)
     window_backend: str | None = None
+    render_backend: str | None = None
 
 settings = Settings()

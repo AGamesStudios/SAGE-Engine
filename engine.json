@@ -17,6 +17,7 @@
     "blueprint_meta": true
   },
   "settings": {
-    "window_backend": "auto"
+    "window_backend": "auto",
+    "render_backend": "software"
   }
 }

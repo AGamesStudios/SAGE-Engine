@@ -15,6 +15,7 @@
 - [Таймеры](docs/timers.md)
 - [Профайлер](docs/profiler.md)
 - [RenderStream](docs/renderstream.md)
+- [Рендер](docs/modules/render.md)
 - [Плагины](docs/plugin.md)
 - [Редактор](docs/editor.md)
 - [Руководство разработчика](docs/dev_guidelines.md)
