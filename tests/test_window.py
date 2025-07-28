@@ -45,3 +45,28 @@ def test_events_and_handle():
     assert window.get_window_handle() is not None
     window.shutdown()
 
+
+def test_mass_input_and_resize_close():
+    os.environ['SAGE_HEADLESS'] = '1'
+    events.reset()
+    window.init('t2', 60, 60)
+    from sage_engine.window import _on_key, _on_mouse, _on_configure, _on_close
+
+    class E:
+        def __init__(self, **kw):
+            self.__dict__.update(kw)
+
+    for i in range(10):
+        _on_key(E(keysym=f'k{i}', keycode=i))
+    for i in range(5):
+        _on_mouse(E(type='move', x=i, y=i, button=0))
+
+    _on_configure(E(width=70, height=80))
+    _on_close()
+
+    assert window.should_close()
+    assert window.get_size() == (70, 80)
+    assert events.dispatcher.history.count(window.WIN_KEY) >= 10
+    assert events.dispatcher.history.count(window.WIN_MOUSE) >= 5
+    window.shutdown()
+

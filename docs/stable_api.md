@@ -14,3 +14,7 @@
 - `api.Scene`
 - `api.RoleSchema`
 - `api.EventSystem`
+- `window.init`
+- `window.poll_events`
+- `window.get_window_handle`
+- `window.shutdown`
