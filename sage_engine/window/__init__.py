@@ -16,6 +16,8 @@ WIN_KEY = 3
 WIN_MOUSE = 4
 
 _window = None
+_windows = []
+_event_queue: list[tuple[int, tuple]] = []
 
 
 @dataclass
@@ -46,6 +48,9 @@ class HeadlessWindow:
     def should_close(self) -> bool:
         return self._should_close
 
+    def get_dpi_scale(self) -> float:
+        return 1.0
+
 
 backend = settings.window_backend
 if backend is None:
@@ -73,6 +78,24 @@ else:
         NativeWindow = None  # type: ignore
 
 
+def create_window(
+    title: str,
+    width: int,
+    height: int,
+    fullscreen: bool = False,
+    resizable: bool = True,
+    borderless: bool = False,
+) -> object:
+    """Create and return a window instance without assigning it globally."""
+    headless = os.environ.get("SAGE_HEADLESS") == "1" or NativeWindow is None
+    logger.info("Initializing window headless=%s", headless)
+    if headless:
+        win = HeadlessWindow(width, height)
+    else:
+        win = NativeWindow(title, width, height, fullscreen, resizable, borderless)
+    _windows.append(win)
+    return win
+
 def init(
     title: str,
     width: int,
@@ -83,12 +106,7 @@ def init(
 ) -> None:
     """Create the main application window."""
     global _window
-    headless = os.environ.get("SAGE_HEADLESS") == "1" or NativeWindow is None
-    logger.info("Initializing window headless=%s", headless)
-    if headless:
-        _window = HeadlessWindow(width, height)
-    else:
-        _window = NativeWindow(title, width, height, fullscreen, resizable, borderless)
+    _window = create_window(title, width, height, fullscreen, resizable, borderless)
     events.emit(WIN_RESIZE, width, height)
 
 
@@ -97,6 +115,9 @@ def poll_events() -> None:
     if _window is not None:
         logger.debug("poll_events")
         _window.poll()
+    while _event_queue:
+        evt = _event_queue.pop(0)
+        events.emit(evt[0], *evt[1])
 
 
 def get_size() -> tuple[int, int]:
@@ -130,6 +151,14 @@ def get_framebuffer() -> bytearray | None:
         return _window.get_framebuffer()
     return None
 
+
+def get_dpi_scale() -> float:
+    if _window is None:
+        return 1.0
+    if hasattr(_window, "get_dpi_scale"):
+        return _window.get_dpi_scale()
+    return 1.0
+
 # Internal helpers primarily for testing
 
 def _on_close(event=None) -> None:
@@ -139,7 +168,7 @@ def _on_close(event=None) -> None:
         _window._on_close(event)
     elif isinstance(_window, HeadlessWindow):
         _window._should_close = True
-        events.emit(WIN_CLOSE)
+        _event_queue.append((WIN_CLOSE, ()))
 
 
 def _on_configure(event) -> None:
@@ -150,7 +179,7 @@ def _on_configure(event) -> None:
     else:
         _window.width = event.width
         _window.height = event.height
-        events.emit(WIN_RESIZE, event.width, event.height)
+        _event_queue.append((WIN_RESIZE, (event.width, event.height)))
 
 
 def _on_key(event) -> None:
@@ -159,7 +188,7 @@ def _on_key(event) -> None:
     if hasattr(_window, "_on_key"):
         _window._on_key(event)
     else:
-        events.emit(WIN_KEY, event.keysym, event.keycode)
+        _event_queue.append((WIN_KEY, (event.keysym, event.keycode)))
 
 
 def _on_mouse(event) -> None:
@@ -168,4 +197,4 @@ def _on_mouse(event) -> None:
     if hasattr(_window, "_on_mouse"):
         _window._on_mouse(event)
     else:
-        events.emit(WIN_MOUSE, event.type, event.x, event.y, getattr(event, "button", 0))
+        _event_queue.append((WIN_MOUSE, (event.type, event.x, event.y, getattr(event, "button", 0))) )

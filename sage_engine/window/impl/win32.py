@@ -79,6 +79,14 @@ class Win32Window:
             raise
         logger.info("Win32 window created hwnd=%s size=%dx%d", self.hwnd, self.width, self.height)
 
+    def get_dpi_scale(self) -> float:
+        if hasattr(user32, "GetDpiForWindow") and self.hwnd:
+            user32.GetDpiForWindow.restype = wintypes.UINT
+            user32.GetDpiForWindow.argtypes = [wintypes.HWND]
+            dpi = user32.GetDpiForWindow(self.hwnd)
+            return float(dpi) / 96.0
+        return 1.0
+
     def _create_window(self) -> None:
         user32 = ctypes.windll.user32
         kernel32 = ctypes.windll.kernel32

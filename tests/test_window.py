@@ -16,6 +16,7 @@ def test_close_event():
     # emulate close
     from sage_engine.window import _on_close
     _on_close()
+    window.poll_events()
     assert window.should_close()
     assert events.dispatcher.history[-1] == window.WIN_CLOSE
     window.shutdown()
@@ -40,6 +41,7 @@ def test_events_and_handle():
     _on_configure(E(width=40, height=30))
     _on_key(E(keysym='a', keycode=65))
     _on_mouse(E(type='down', x=5, y=6, button=1))
+    window.poll_events()
     assert window.get_size() == (40, 30)
     assert events.dispatcher.history[-3:] == [window.WIN_RESIZE, window.WIN_KEY, window.WIN_MOUSE]
     assert window.get_window_handle() is not None
@@ -63,6 +65,7 @@ def test_mass_input_and_resize_close():
 
     _on_configure(E(width=70, height=80))
     _on_close()
+    window.poll_events()
 
     assert window.should_close()
     assert window.get_size() == (70, 80)
@@ -77,5 +80,14 @@ def test_headless_framebuffer_access():
     buf = window.get_framebuffer()
     assert isinstance(buf, bytearray)
     assert len(buf) == 16 * 16 * 4
+    window.shutdown()
+
+
+def test_dpi_and_multi_window():
+    os.environ['SAGE_HEADLESS'] = '1'
+    window.init('a', 10, 10)
+    assert window.get_dpi_scale() == 1.0
+    w2 = window.create_window('b', 5, 5)
+    assert w2.get_size() == (5, 5)
     window.shutdown()
 
