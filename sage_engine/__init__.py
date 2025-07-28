@@ -11,6 +11,7 @@ __all__ = [
     "tasks",
     "resource",
     "render",
+    "window",
     "settings",
     "api",
 ]

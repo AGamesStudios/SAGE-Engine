@@ -7,6 +7,7 @@
     "blueprint",
     "world",
     "render",
+    "window",
     "resource",
     "tasks",
     "profiling"

@@ -15,6 +15,7 @@ This document describes the high level architecture for SAGE Engine based on the
 - **tasks** – lightweight task scheduler for background logic.
 - **resource** – asynchronous resource loading helpers.
 - **render** – prepare/sort/flush rendering pipeline.
+- **window** – platform window management.
 - **settings** – engine configuration including thread limits.
 
 The engine executes in well defined phases ordered as a DAG. Each module registers its callbacks for update or draw phases.
