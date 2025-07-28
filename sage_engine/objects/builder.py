@@ -16,6 +16,11 @@ class ObjectBuilder:
         self.data["categories"].setdefault(category, {}).update(fields)
         return self
 
+    def set_many(self, categories: Mapping[str, Mapping[str, object]]) -> 'ObjectBuilder':
+        for cat, fields in categories.items():
+            self.set(cat, **fields)
+        return self
+
     def spawn(self) -> str:
         return self.store.create(self.data)
 

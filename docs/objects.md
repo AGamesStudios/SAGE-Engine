@@ -22,8 +22,12 @@ from sage_engine.objects import runtime, new
 
 builder = new(runtime.store, "player_01")
 player = (builder.role("Player")
-               .set("Transform", x=100, y=64)
+    .set("Transform", x=100, y=64)
                .spawn())
+
+store.apply_role(player, "Player")  # reapply defaults if needed
+store.set_many(player, {"Physics": {"vx": 1}})
 ```
 
 The store can query objects by category and export them back to JSON.
+Lookups use an internal `CategoryIndex` for constant time queries.

@@ -20,6 +20,17 @@ def test_builder_spawn():
     assert store.get(player_id)["categories"]["Transform"]["x"] == 5
 
 
+def test_apply_role_and_set_many():
+    store = ObjectStore()
+    obj_id = store.create({"categories": {}})
+    store.apply_role(obj_id, "Player")
+    assert store.get(obj_id)["categories"]["Transform"]["x"] == 0
+    store.set_many(obj_id, {"Transform": {"x": 10, "y": 3}})
+    ids = store.query_by_category("Transform")
+    assert obj_id in ids
+    assert store.get(obj_id)["categories"]["Transform"]["x"] == 10
+
+
 def test_runtime_load():
     data = {
         "schema_version": "1.0",
