@@ -1,96 +1,192 @@
-# 📘 Структура проекта и архитектурные правила
+# 📘 Структура проекта SAGE Engine
 
-Этот документ описывает устройство репозитория **SAGE Engine** и основные правила, которым должны следовать все разработчики. Он поможет новичкам быстро ориентироваться в коде и подскажет как масштабировать проект.
+Этот документ описывает все каталоги и файлы репозитория **SAGE Engine** и поясняет правила работы с архитектурой SAGE Feather. Любое изменение структуры проекта требует обновления этого файла.
 
 ## 🔹 Дерево каталогов
 
-```
+```text
 SAGE-Engine/
-├── docs/            # документация и руководства
-├── examples/        # игровые примеры
-├── roles/           # JSON схемы ролей
-├── sage_engine/     # исходники движка
-│   ├── core/        # запуск и фазы
-│   ├── events/      # система событий
-│   ├── scheduler/   # время и таймеры
-│   ├── world/       # сцены и объекты
-│   ├── window/      # кроссплатформенные окна
-│   ├── render/      # рендер-бэкенды
-│   ├── logger/      # логирование и Crash Intelligence
-│   ├── plugins/     # внешние расширения
-│   └── ...          # прочие модули
-├── sage_testing/    # инструменты тестирования
-├── tests/           # набор pytest
-├── engine.json      # подключаемые модули и флаги
-└── pyproject.toml   # зависимости и установка
+├── README.md
+├── audit_report.md
+├── docs/
+│   ├── architecture.md
+│   ├── blueprint.md
+│   ├── compatibility.md
+│   ├── design_rules.md
+│   ├── dev_guidelines.md
+│   ├── editor.md
+│   ├── events.md
+│   ├── flow_script.md
+│   ├── getting_started.md
+│   ├── intro.md
+│   ├── modules/
+│   │   ├── logger.md
+│   │   ├── render.md
+│   │   └── window.md
+│   ├── modules.md
+│   ├── plugin.md
+│   ├── profiler.md
+│   ├── renderstream.md
+│   ├── roles.md
+│   ├── scene.md
+│   ├── stable_api.md
+│   ├── structure.md
+│   ├── style_guide.md
+│   ├── timers.md
+│   ├── todo.md
+│   └── examples/
+│       ├── basic_scene.md
+│       └── custom_role.md
+├── engine.json
+├── examples/
+│   └── demo_game/
+│       ├── README.md
+│       └── demo.py
+├── pyproject.toml
+├── roles/
+│   ├── Camera.role.json
+│   ├── Player.role.json
+│   └── Sprite.role.json
+├── sage_engine/
+│   ├── __init__.py
+│   ├── api.py
+│   ├── audio/
+│   │   └── __init__.py
+│   ├── blueprint/
+│   │   └── __init__.py
+│   ├── compat/
+│   │   └── __init__.py
+│   ├── core/
+│   │   └── __init__.py
+│   ├── dag/
+│   │   └── __init__.py
+│   ├── devtools/
+│   │   ├── __init__.py
+│   │   ├── cli.py
+│   │   ├── config_cli.py
+│   │   └── generate_roles.py
+│   ├── events/
+│   │   └── __init__.py
+│   ├── flow/
+│   │   ├── __init__.py
+│   │   ├── lua/
+│   │   │   └── __init__.py
+│   │   └── python/
+│   │       └── __init__.py
+│   ├── game_state/
+│   │   └── __init__.py
+│   ├── logger/
+│   │   ├── __init__.py
+│   │   ├── core.py
+│   │   ├── crash.py
+│   │   ├── errors.py
+│   │   ├── handlers/
+│   │   │   ├── base.py
+│   │   │   └── console.py
+│   │   ├── hooks.py
+│   │   └── levels.py
+│   ├── plugins/
+│   │   └── __init__.py
+│   ├── profiling/
+│   │   └── __init__.py
+│   ├── render/
+│   │   ├── __init__.py
+│   │   ├── api.py
+│   │   └── backends/
+│   │       ├── __init__.py
+│   │       ├── opengl.py
+│   │       ├── software.py
+│   │       └── vulkan.py
+│   ├── resource/
+│   │   └── __init__.py
+│   ├── roles/
+│   │   ├── __init__.py
+│   │   ├── camera_schema.py
+│   │   ├── interfaces.py
+│   │   └── sprite_schema.py
+│   ├── scheduler/
+│   │   ├── __init__.py
+│   │   ├── time.py
+│   │   └── timers.py
+│   ├── shaders/
+│   │   └── __init__.py
+│   ├── tasks/
+│   │   └── __init__.py
+│   ├── window/
+│   │   ├── __init__.py
+│   │   └── impl/
+│   │       ├── cocoa.py
+│   │       ├── win32.py
+│   │       └── x11.py
+│   ├── world/
+│   │   ├── __init__.py
+│   │   └── view.py
+│   └── settings.py
+├── sage_testing/
+│   ├── __init__.py
+│   ├── assert.py
+│   ├── collect.py
+│   ├── performance.py
+│   ├── runner.py
+│   ├── visual.py
+│   ├── fixtures/
+│   │   └── __init__.py
+│   └── reports/
+│       └── __init__.py
+├── tests/
+│   ├── conftest.py
+│   ├── test_audio.py
+│   ├── test_blueprint.py
+│   ├── test_cli.py
+│   ├── test_compat.py
+│   ├── test_core.py
+│   ├── test_crash.py
+│   ├── test_dag.py
+│   ├── test_events.py
+│   ├── test_flow_run.py
+│   ├── test_game_state.py
+│   ├── test_logger.py
+│   ├── test_plugins.py
+│   ├── test_render.py
+│   ├── test_resource.py
+│   ├── test_roles_json.py
+│   ├── test_scene.py
+│   ├── test_tasks.py
+│   ├── test_time.py
+│   ├── test_timers.py
+│   ├── test_visual.py
+│   ├── test_window.py
+│   └── test_world_load.py
 ```
 
-Каталог `sage_engine/window/impl/` содержит реализации под платформы: `win32.py`, `x11.py`, `cocoa.py`. Выбор бэкенда происходит при запуске.
+## 🔹 Архитектурные правила
 
-## 🔹 Архитектура SAGE Feather
+- Все модули изолированы и подключаются через `core.register(phase, callback)`.
+- Цикл движка состоит из фаз `boot → update → draw → flush → shutdown`.
+- Любые изменения объектов возможны только через `SceneEdit`. Прямое изменение полей запрещено.
+- События создаются и обрабатываются модулем `events` через `emit` и `on`.
+- Логирование выполняется через `logger`, уровни задаются переменной `SAGE_LOGLEVEL`.
+- Для обратной совместимости все данные имеют поле `schema_version`; модуль `compat` выполняет миграции.
 
-Движок построен на фазовой модели:
+## 🔹 Масштабирование проекта
 
-```
-boot → update → draw → flush → shutdown
-```
+- Новые роли описываются JSON файлами в каталоге `roles/` и подключаются генератором `devtools/generate_roles.py`.
+- Подплатформенные реализации (Win32, X11, Cocoa) размещаются в `window/impl/`.
+- Дополнительные рендер-бэкенды добавляются в `render/backends/`.
+- При добавлении модуля его следует указать в `engine.json` и написать тесты в `tests/`.
 
-Каждый модуль регистрирует свои функции через `core.register(phase, callback)`. Изменения сцены выполняются только через `SceneEdit` и применяются между кадрами. Роли описываются схемами с категориями (см. каталог `roles/`).
+## 🔹 Правила логирования и тестирования
 
-### Кроссплатформенность
-
-Платформо‑зависимый код располагается в `impl/` внутри модуля. Имена файлов совпадают с платформой (`win32`, `x11`, `cocoa`). При добавлении новой платформы необходимо создать файл в этом каталоге и выбрать его при инициализации.
-
-## 🔹 DO
-
-- ✅ Используйте импорты вида `from sage_engine import world`.
-- ✅ Пишите докстринги и придерживайтесь PEP8.
-- ✅ Логируйте действия через `logger` с тегом модуля и фазой.
-- ✅ Добавляйте тесты в `tests/` при любом изменении.
-- ✅ Используйте `schema_version` и миграции из `compat` для совместимости.
-
-## 🔹 DON'T
-
-- 🚫 Нельзя создавать циклические зависимости между модулями.
-- 🚫 Нельзя модифицировать данные объекта вне `SceneEdit`.
-- 🚫 Не хардкодьте пути — применяйте `pathlib.Path`.
-- 🚫 Не добавляйте сторонние библиотеки без согласования.
-
-## 🔹 Масштабирование
-
-Новые подсистемы подключаются через фазу `boot`:
-
-```python
-from sage_engine import core
-
-def boot(config):
-    core.register("update", my_update)
-```
-
-Для новых ролей создайте JSON‑схему в каталоге `roles/` и зарегистрируйте её через генератор `devtools/generate_roles.py`.
-
-## 🔹 Тестирование и логирование
-
-Все ключевые модули должны иметь тесты. Запуск осуществляется командой:
-
-```bash
-pytest -q
-```
-
-Логи пишутся через модуль `logger`; уровни задаются переменной окружения `SAGE_LOGLEVEL`.
-
-## 🔹 Версионная независимость
-
-Проект не зависит от версии движка. Все данные содержат поле `schema_version`, а модуль `compat` автоматически мигрирует старые схемы. Новые функции включаются флагами в `engine.json`.
+- Все публичные функции сопровождаются докстрингами.
+- При изменениях необходимо дополнять тесты и запускать `pytest -q`.
+- Логи пишутся в консоль через `logger.handlers.console` и могут сохраняться в файлы.
 
 ## 🔹 Рекомендации новичкам
 
-- Изучите примеры в каталоге `examples/` и тесты в `tests/`.
-- Расширяйте проект через новые роли и модули, не меняя существующие файлы без необходимости.
-- Системные файлы (`*.scene`, `*.role.json`) генерируются инструментами и не редактируются вручную.
-- Соблюдайте стиль кода и обновляйте документацию при правках.
+1. Ознакомьтесь с `getting_started.md` и примерами в `examples/`.
+2. Изучите структуры ролей в каталоге `roles/` и попробуйте создать свою.
+3. Для поиска ошибок запускайте тесты и используйте профайлер из модуля `profiling`.
 
-## 🔹 Правило поддержки
+## 🔹 Обязанности по поддержке
 
-Любое изменение структуры каталогов, фаз или архитектурных соглашений требует обновления **этого документа** в том же pull request. Отсутствие обновлённой документации считается ошибкой ревью.
-
+Если при изменении проекта добавляются или переименовываются каталоги, модули или фазы, этот документ **обязательно** должен быть обновлён в том же pull request. Без актуальной документации изменение не принимается.
