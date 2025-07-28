@@ -1,6 +1,7 @@
-"""Demo game showcasing SAGE Window usage."""
+"""Demo game showcasing SAGE Render and Window usage."""
 
 import asyncio
+import os
 from sage_engine import (
     core,
     world,
@@ -26,9 +27,18 @@ core.register("update", events.update)
 core.register("update", tasks.update)
 core.register("update", world.update)
 
-core.register("draw", lambda: render.prepare(world.scene))
-core.register("draw", render.sort)
-core.register("flush", render.flush)
+
+
+def render_frame() -> None:
+    """Render one frame using the active render backend."""
+    # begin_frame/end_frame ensure proper batching and swap buffers
+    render.begin_frame()
+    render.draw_rect(50, 50, 100, 100, (255, 0, 0))
+    render.end_frame()
+
+
+# register our render function to be called each frame
+core.register("draw", render_frame)
 
 
 def main() -> None:
@@ -41,17 +51,14 @@ def main() -> None:
     # create a sprite object via SceneEdit
     edit.create(role="sprite", name="hero", tex_id=1, x=0, y=0)
     world.scene.apply(edit)
-    audio.audio.play("start.wav")
 
-    # log events from the window subsystem
-    events.dispatcher.on(window.WIN_RESIZE, lambda w, h: print(f"Resized to {w}x{h}"))
-    events.dispatcher.on(window.WIN_KEY, lambda key, code: print(f"Key down: {key}"))
-    events.dispatcher.on(
-        window.WIN_MOUSE,
-        lambda t, x, y, b: print(f"Mouse {t} {x} {y} button={b}"),
-    )
+    # play a sound if the file exists
+    if os.path.exists("start.wav"):
+        audio.audio.play("start.wav")
+    else:
+        print("[WARN] start.wav not found")
 
-    # flag controlled by window:close event
+    # flag controlled by window:close or ESC
     done = False
 
     def mark_done() -> None:
@@ -59,6 +66,23 @@ def main() -> None:
         done = True
         print("Window closed")
 
+    # subscribe to window events via the global dispatcher
+    events.dispatcher.on(window.WIN_RESIZE, lambda w, h: print(f"Resized to {w}x{h}"))
+
+    def on_key(key: str, code: int) -> None:
+        """Handle keyboard input."""
+        print(f"Key down: {key}")
+        if key == "Escape":
+            # allow closing the game with ESC
+            mark_done()
+
+    events.dispatcher.on(window.WIN_KEY, on_key)
+    events.dispatcher.on(
+        window.WIN_MOUSE,
+        lambda t, x, y, b: print(f"Mouse {t} {x} {y} button={b}"),
+    )
+
+    # closing the window or pressing ESC will end the loop
     events.dispatcher.on(window.WIN_CLOSE, mark_done)
 
     # FlowScript demo: run a simple script once
@@ -66,9 +90,10 @@ def main() -> None:
 
     # the loop ends when should_close() is True or window:close sets done
     while not done and not window.should_close():
-        # poll_events keeps the window responsive without heavy CPU load
+        # process OS events every frame so the window stays responsive
         window.poll_events()
-        core.core_tick()  # update, draw and flush
+        # core_tick runs update -> draw -> flush phases
+        core.core_tick()
 
     # close the window and clean up modules
     window.shutdown()
