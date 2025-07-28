@@ -20,11 +20,11 @@ def main():
     x = 0
     while not window.should_close() and x < 120:
         window.poll_events()
-        gfx.begin_frame()
+        gfx.begin_frame(clear=(0, 0, 0, 255))
+        scene.render()
         scene.rect(top, 80 + x, 80, 40, 40, (0, 255, 0, 128))
         gfx.draw_circle(160, 120, 20, (255, 255, 0, 180))
         gfx.draw_line(0, 0, 319, 239, (255, 0, 255, 255))
-        scene.render()
         buffer = gfx.end_frame()
         render.present(buffer)
         x += 2

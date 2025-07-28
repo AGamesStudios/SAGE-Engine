@@ -120,3 +120,55 @@ def test_blur_effect():
     fx.apply('blur', buf, 3, 3)
     assert buf[2] < 255
 
+
+def test_graphic_clear_no_trail():
+    rt = GraphicRuntime()
+    rt.init(4, 1)
+    rt.begin_frame()
+    rt.draw_rect(1, 0, 1, 1, (0, 255, 0, 255))
+    rt.end_frame()
+    rt.begin_frame()
+    rt.draw_rect(2, 0, 1, 1, (0, 255, 0, 255))
+    rt.end_frame()
+    assert rt.buffer[4:8] == bytes((0, 0, 0, 255))
+
+
+def test_graphic_z_order_stable():
+    rt = GraphicRuntime()
+    rt.init(1, 1)
+    rt.begin_frame()
+    rt.draw_rect(0,0,1,1,(255,0,0,255))
+    rt.draw_rect(0,0,1,1,(0,255,0,255))
+    rt.end_frame()
+    assert rt.buffer[1] == 255  # green on top
+
+
+def test_graphic_alpha_premul():
+    rt = GraphicRuntime()
+    rt.init(1,1)
+    rt.begin_frame()
+    rt.draw_rect(0,0,1,1,(255,0,0,255))
+    rt.draw_rect(0,0,1,1,(0,0,255,128))
+    rt.end_frame()
+    b = rt.buffer[0]
+    r = rt.buffer[2]
+    # expected blue addition: 255*128/255 = 128; formula: out=src + dst*(1-a)
+    expected_b = 128
+    expected_r = 127
+    assert abs(b - expected_b) <= 1
+    assert abs(r - expected_r) <= 1
+
+
+def test_scene_vs_direct_draw_order():
+    rt = GraphicRuntime()
+    rt.init(2,1)
+    scene = Scene()
+    layer = Layer(z=0)
+    scene.add(layer)
+    scene.rect(layer,0,0,1,1,(255,0,0,255))
+    rt.begin_frame()
+    scene.render()
+    rt.draw_line(0,0,1,0,(0,255,0,255))
+    rt.end_frame()
+    assert rt.buffer[1] == 255
+

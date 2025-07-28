@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Tuple, List, Any, Iterable
 
-from ..graphic.color import to_rgba
+from ..graphic.color import to_premul_rgba, to_bgra8_premul
 from ..graphic import fx
 from ..graphic.state import GraphicState
 from ..logger import logger
@@ -19,7 +19,8 @@ class GraphicRuntime:
         self.state = GraphicState()
         self._stack: List[tuple[int, tuple[int, int, int, int], list[str]]] = []
         self._commands: List[Any] = []
-        self.clear_color: tuple[int, int, int, int] = (0, 0, 0, 255)
+        self._seq_counter = 0
+        self.clear_color: int = to_bgra8_premul((0, 0, 0, 255))
 
     def init(self, width: int, height: int) -> None:
         """Initialize a framebuffer of the given size."""
@@ -31,16 +32,15 @@ class GraphicRuntime:
 
     def begin_frame(self, color=None) -> None:
         if color is not None:
-            self.clear_color = to_rgba(color)
+            self.clear_color = to_bgra8_premul(color)
         if self.buffer is not None:
-            r, g, b, a = self.clear_color
-            row = bytes((b, g, r, a)) * self.width
-            for y in range(self.height):
-                start = y * self.pitch
-                self.buffer[start:start+self.pitch] = row
+            view = memoryview(self.buffer).cast("I")
+            for i in range(len(view)):
+                view[i] = self.clear_color
         logger.debug("begin_frame clear=%s", self.clear_color, tag="gfx")
         self._commands.clear()
         self._stack.clear()
+        self._seq_counter = 0
 
     def push_state(self) -> None:
         self._stack.append(self.state.snapshot())
@@ -52,27 +52,32 @@ class GraphicRuntime:
     def draw_rect(self, x: int, y: int, w: int, h: int, color=None, z: int | None = None) -> None:
         color = color if color is not None else self.state.color
         z = self.state.z if z is None else z
-        self._commands.append((z, "rect", x, y, w, h, to_rgba(color)))
+        self._commands.append((z, self._seq_counter, "rect", x, y, w, h, to_premul_rgba(color)))
+        self._seq_counter += 1
 
     def draw_circle(self, x: int, y: int, radius: int, color=None, z: int | None = None) -> None:
         color = color if color is not None else self.state.color
         z = self.state.z if z is None else z
-        self._commands.append((z, "circle", x, y, radius, to_rgba(color)))
+        self._commands.append((z, self._seq_counter, "circle", x, y, radius, to_premul_rgba(color)))
+        self._seq_counter += 1
 
     def draw_line(self, x1: int, y1: int, x2: int, y2: int, color=None, z: int | None = None) -> None:
         color = color if color is not None else self.state.color
         z = self.state.z if z is None else z
-        self._commands.append((z, "line", x1, y1, x2, y2, to_rgba(color)))
+        self._commands.append((z, self._seq_counter, "line", x1, y1, x2, y2, to_premul_rgba(color)))
+        self._seq_counter += 1
 
     def draw_polygon(self, points: Iterable[tuple[int, int]], color=None, z: int | None = None) -> None:
         color = color if color is not None else self.state.color
         z = self.state.z if z is None else z
-        self._commands.append((z, "polygon", list(points), to_rgba(color)))
+        self._commands.append((z, self._seq_counter, "polygon", list(points), to_premul_rgba(color)))
+        self._seq_counter += 1
 
     def draw_rounded_rect(self, x: int, y: int, w: int, h: int, radius: int, color=None, z: int | None = None) -> None:
         color = color if color is not None else self.state.color
         z = self.state.z if z is None else z
-        self._commands.append((z, "rounded_rect", x, y, w, h, radius, to_rgba(color)))
+        self._commands.append((z, self._seq_counter, "rounded_rect", x, y, w, h, radius, to_premul_rgba(color)))
+        self._seq_counter += 1
 
     def draw_text(self, *args, **kwargs) -> None:
         pass
@@ -86,7 +91,7 @@ class GraphicRuntime:
     def end_frame(self) -> memoryview:
         if self.buffer is None:
             return memoryview(b"")
-        for _, cmd, *args in sorted(self._commands, key=lambda c: c[0]):
+        for _, _, cmd, *args in sorted(self._commands, key=lambda c: (c[0], c[1])):
             if cmd == "rect":
                 self._blit_rect(*args)
             elif cmd == "circle":
@@ -182,13 +187,16 @@ class GraphicRuntime:
         off = y * self.pitch + x * 4
         if a == 255:
             self.buffer[off:off+4] = bytes((b, g, r, 255))
+        elif a == 0:
+            return
         else:
             db = self.buffer[off]
             dg = self.buffer[off + 1]
             dr = self.buffer[off + 2]
             da = self.buffer[off + 3]
-            na = a + da * (255 - a) // 255
-            nb = (b * a + db * (255 - a)) // 255
-            ng = (g * a + dg * (255 - a)) // 255
-            nr = (r * a + dr * (255 - a)) // 255
+            inv = 255 - a
+            nb = b + (db * inv // 255)
+            ng = g + (dg * inv // 255)
+            nr = r + (dr * inv // 255)
+            na = a + (da * inv // 255)
             self.buffer[off:off+4] = bytes((nb, ng, nr, na))

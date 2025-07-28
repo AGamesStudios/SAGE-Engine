@@ -26,3 +26,6 @@ class GraphicState:
 
     def clear_effects(self) -> None:
         self.effects.clear()
+
+
+PixelFormat = ("BGRA8", "premultiplied")
