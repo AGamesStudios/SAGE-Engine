@@ -6,8 +6,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List, Mapping
 import json
+import logging
 
 from ..compat import migrate
+
+logger = logging.getLogger(__name__)
 
 CURRENT_SCHEMA_VERSION = "1.0"
 
@@ -29,7 +32,10 @@ def load(path: Path) -> Blueprint:
     """Load and validate a blueprint from JSON."""
     data = json.loads(path.read_text(encoding="utf8"))
     version = str(data.get("schema_version", CURRENT_SCHEMA_VERSION))
+    orig_version = version
     version, data = migrate("blueprint", version, CURRENT_SCHEMA_VERSION, data)
+    if version != orig_version:
+        logger.info("Migrated from %s -> %s", orig_version, version)
     meta = data.get("meta", {})
     bp_meta = BlueprintMeta(
         origin=meta.get("origin"),

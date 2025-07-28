@@ -4,10 +4,28 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Dict, Iterator, List, Mapping
+import logging
 
 from .view import SceneView
 
 from .. import roles
+from ..compat import migrate
+import json
+from pathlib import Path
+
+logger = logging.getLogger(__name__)
+CURRENT_SCHEMA_VERSION = "1.0"
+
+
+def load(path: Path) -> List[Mapping[str, Mapping[str, object]]]:
+    """Load scene objects from JSON applying migrations."""
+    data = json.loads(path.read_text(encoding="utf8"))
+    version = str(data.get("schema_version", data.get("engine_version", CURRENT_SCHEMA_VERSION)))
+    orig = version
+    version, data = migrate("scene", version, CURRENT_SCHEMA_VERSION, data)
+    if version != orig:
+        logger.info("Migrated scene from %s -> %s", orig, version)
+    return data.get("objects", [])
 
 
 @dataclass

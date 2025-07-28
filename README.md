@@ -18,6 +18,7 @@
 - [Редактор](docs/editor.md)
 - [Руководство разработчика](docs/dev_guidelines.md)
 - [Правила проектирования](docs/design_rules.md)
+- [Совместимость](docs/compatibility.md)
 - [Руководство по стилю](docs/style_guide.md)
 
 Тестирование запускается командой `sage-test`.
