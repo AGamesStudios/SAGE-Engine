@@ -14,6 +14,7 @@
 - [FlowScript](docs/flow_script.md)
 - [Таймеры](docs/timers.md)
 - [Профайлер](docs/profiler.md)
+- [Логирование](docs/modules/logger.md)
 - [RenderStream](docs/renderstream.md)
 - [Рендер](docs/modules/render.md)
 - [Плагины](docs/plugin.md)

@@ -9,6 +9,7 @@ __all__ = [
     "roles",
     "profiling",
     "tasks",
+    "logger",
     "resource",
     "render",
     "window",

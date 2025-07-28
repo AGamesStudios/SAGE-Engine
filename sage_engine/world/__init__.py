@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Dict, Iterator, List, Mapping
-import logging
+
+from ..logger import logger
 
 from .view import SceneView
 
@@ -13,7 +14,6 @@ from ..compat import migrate
 import json
 from pathlib import Path
 
-logger = logging.getLogger(__name__)
 CURRENT_SCHEMA_VERSION = "1.0"
 
 

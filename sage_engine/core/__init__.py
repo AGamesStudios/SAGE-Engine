@@ -10,6 +10,7 @@ import json
 from importlib import import_module
 
 from ..settings import settings
+from ..logger import logger
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
@@ -52,6 +53,7 @@ def core_boot(config: dict | None = None) -> None:
         return
     _booted = True
     _load_modules_from_config()
+    logger.phase_func = lambda: "boot"
     # load role definitions before booting modules
     from .. import roles
     roles.load_json_roles(docs_path=Path(__file__).resolve().parents[2] / "docs" / "roles.md")
@@ -80,6 +82,7 @@ def core_tick() -> None:
     if not _booted:
         raise RuntimeError("Engine not booted")
     for phase_name in ("update", "draw", "flush"):
+        logger.phase_func = lambda pn=phase_name: pn
         phases = _registry.get(phase_name, [])
         serial = [p for p in phases if not p.parallelizable or not settings.enable_multithread]
         parallel = [p for p in phases if p.parallelizable and settings.enable_multithread]

@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import ctypes
-import logging
 import time
 from ctypes import wintypes
 from dataclasses import dataclass
+
+from ...logger import logger
 
 # ensure required Win32 types exist on all Python versions
 if not hasattr(wintypes, "LRESULT"):
@@ -41,8 +42,6 @@ if not hasattr(wintypes, "WNDCLASSEX"):
 
 from ...events import dispatcher as events
 from .. import WIN_CLOSE, WIN_RESIZE, WIN_KEY, WIN_MOUSE
-
-logger = logging.getLogger(__name__)
 
 
 @dataclass

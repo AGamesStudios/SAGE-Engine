@@ -6,11 +6,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List, Mapping
 import json
-import logging
+
+from ..logger import logger
 
 from ..compat import migrate
-
-logger = logging.getLogger(__name__)
 
 CURRENT_SCHEMA_VERSION = "1.0"
 

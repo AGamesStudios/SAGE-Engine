@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from typing import Callable, Dict, List, Tuple
-import logging
 
-logger = logging.getLogger(__name__)
+from ..logger import logger
+
 
 _registry: Dict[str, List[Tuple[str, str, Callable[[dict], dict]]]] = {}
 

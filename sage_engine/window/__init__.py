@@ -5,7 +5,7 @@ import os
 import sys
 import time
 from dataclasses import dataclass
-import logging
+from ..logger import logger
 
 from ..events import dispatcher as events
 from ..settings import settings
@@ -15,7 +15,6 @@ WIN_RESIZE = 2
 WIN_KEY = 3
 WIN_MOUSE = 4
 
-logger = logging.getLogger(__name__)
 _window = None
 
 

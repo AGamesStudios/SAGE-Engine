@@ -2,11 +2,7 @@
 
 import asyncio
 import os
-import logging
-logging.basicConfig(
-    level=os.getenv("SAGE_LOGLEVEL", "INFO").upper(),
-    format="%(levelname)s %(message)s",
-)
+from sage_engine.logger import logger
 
 from sage_engine import (
     core,
@@ -60,10 +56,10 @@ def main() -> None:
 
     # play a sound if the file exists
     if os.path.exists("start.wav"):
-        logging.info("Playing start.wav")
+        logger.info("Playing start.wav")
         audio.audio.play("start.wav")
     else:
-        logging.warning("start.wav not found")
+        logger.warn("start.wav not found")
 
     # flag controlled by window:close or ESC
     done = False
@@ -71,14 +67,14 @@ def main() -> None:
     def mark_done() -> None:
         nonlocal done
         done = True
-        logging.info("Window closed")
+        logger.info("Window closed")
 
     # subscribe to window events via the global dispatcher
-    events.dispatcher.on(window.WIN_RESIZE, lambda w, h: logging.info("Resized to %dx%d", w, h))
+    events.dispatcher.on(window.WIN_RESIZE, lambda w, h: logger.info("Resized to %dx%d", w, h))
 
     def on_key(key: str, code: int) -> None:
         """Handle keyboard input."""
-        logging.debug("Key down: %s", key)
+        logger.debug("Key down: %s", key)
         if key == "Escape":
             # allow closing the game with ESC
             mark_done()
@@ -86,7 +82,7 @@ def main() -> None:
     events.dispatcher.on(window.WIN_KEY, on_key)
     events.dispatcher.on(
         window.WIN_MOUSE,
-        lambda t, x, y, b: logging.debug("Mouse %s %d %d button=%d", t, x, y, b),
+        lambda t, x, y, b: logger.debug("Mouse %s %d %d button=%d", t, x, y, b),
     )
 
     # closing the window or pressing ESC will end the loop
@@ -96,11 +92,11 @@ def main() -> None:
     asyncio.run(run_flow("ctx['done'] = True", {"ctx": {"done": False}}))
 
     # the loop ends when should_close() is True or window:close sets done
-    logging.info("Starting main loop")
+    logger.info("Starting main loop")
     while not done and not window.should_close():
         window.poll_events()
         core.core_tick()
-    logging.info("Exiting main loop")
+    logger.info("Exiting main loop")
 
     # close the window and clean up modules
     window.shutdown()
