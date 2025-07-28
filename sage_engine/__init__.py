@@ -12,6 +12,7 @@ __all__ = [
     "resource",
     "render",
     "settings",
+    "api",
 ]
 
 from importlib import import_module

@@ -28,6 +28,7 @@ def _load_modules_from_config() -> None:
     if not path.exists():
         return
     data = json.loads(path.read_text())
+    settings.features.update(data.get("features", {}))
     for mod in data.get("modules", []):
         try:
             import_module(f"sage_engine.{mod}")

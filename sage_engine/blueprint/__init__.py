@@ -7,16 +7,20 @@ from pathlib import Path
 from typing import List, Mapping
 import json
 
+from ..compat import migrate
+
+CURRENT_SCHEMA_VERSION = "1.0"
+
 
 @dataclass
 class BlueprintMeta:
-    version: str
     origin: str | None = None
     tags: List[str] = field(default_factory=list)
 
 
 @dataclass
 class Blueprint:
+    schema_version: str
     meta: BlueprintMeta
     objects: List[Mapping[str, Mapping[str, object]]]
 
@@ -24,18 +28,30 @@ class Blueprint:
 def load(path: Path) -> Blueprint:
     """Load and validate a blueprint from JSON."""
     data = json.loads(path.read_text(encoding="utf8"))
+    version = str(data.get("schema_version", CURRENT_SCHEMA_VERSION))
+    version, data = migrate("blueprint", version, CURRENT_SCHEMA_VERSION, data)
     meta = data.get("meta", {})
-    if "version" not in meta:
-        raise ValueError("blueprint missing meta.version")
     bp_meta = BlueprintMeta(
-        version=str(meta["version"]),
         origin=meta.get("origin"),
         tags=list(meta.get("tags", [])),
     )
     objects = data.get("objects", [])
     if not isinstance(objects, list):
         raise ValueError("objects must be a list")
-    return Blueprint(bp_meta, objects)
+    return Blueprint(version, bp_meta, objects)
 
 
 __all__ = ["Blueprint", "BlueprintMeta", "load"]
+
+
+def _migrate_0_9_to_1_0(data: dict) -> dict:
+    new_data = dict(data)
+    if "sprite" in new_data:
+        new_data["renderable"] = {"sprite": new_data.pop("sprite")}
+    new_data["schema_version"] = "1.0"
+    return new_data
+
+
+from ..compat import register as _register
+
+_register("blueprint", "0.9", "1.0", _migrate_0_9_to_1_0)

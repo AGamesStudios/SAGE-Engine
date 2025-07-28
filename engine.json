@@ -9,6 +9,8 @@
     "profiler",
     "ui"
   ],
-  "build": "snapshot_2025_07_27",
-  "runtime": "autogear"
+  "features": {
+    "flow_variables": true,
+    "blueprint_meta": true
+  }
 }

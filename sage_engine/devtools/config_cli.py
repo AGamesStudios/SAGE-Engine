@@ -13,7 +13,7 @@ ENGINE_JSON = Path("engine.json")
 def init_config() -> None:
     if ENGINE_JSON.exists():
         raise SystemExit("engine.json already exists")
-    data = {"modules": ["core"], "build": "snapshot", "runtime": "autogear"}
+    data = {"modules": ["core"], "features": {}}
     ENGINE_JSON.write_text(json.dumps(data, indent=2), encoding="utf8")
 
 
