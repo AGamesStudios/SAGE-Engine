@@ -11,6 +11,7 @@
 - [Сцена](docs/scene.md)
 - [События](docs/events.md)
 - [Blueprint](docs/blueprint.md)
+- [FlowScript](docs/flow_script.md)
 - [Таймеры](docs/timers.md)
 - [Профайлер](docs/profiler.md)
 - [RenderStream](docs/renderstream.md)

@@ -32,7 +32,7 @@ def main():
 
     events.dispatcher.on(1, on_click)
     scheduler.timers.manager.set(0.0, lambda: events.dispatcher.emit(1))
-    run_flow("ctx['done'] = True", {'ctx': {}})
+    asyncio.run(run_flow("ctx['done'] = True", {'ctx': {}}))
     for _ in range(3):
         core.core_tick()
     core.core_shutdown()
