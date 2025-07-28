@@ -1,4 +1,6 @@
 import os
+import sys
+import pytest
 
 from sage_engine import render, window
 from sage_engine.settings import settings
@@ -28,5 +30,20 @@ def test_render_with_window_handle():
     render.end_frame()
     backend = render._get_backend()
     assert backend.output_target == window.get_window_handle()
+    render.shutdown()
+    window.shutdown()
+
+
+def test_opengl_backend():
+    settings.render_backend = "opengl"
+    if not sys.platform.startswith("win"):
+        with pytest.raises(NotImplementedError):
+            render.init(0)
+        return
+    os.environ['SAGE_HEADLESS'] = '1'
+    window.init('t', 40, 40)
+    render.init(window.get_window_handle())
+    backend = render._get_backend()
+    assert backend.hglrc
     render.shutdown()
     window.shutdown()

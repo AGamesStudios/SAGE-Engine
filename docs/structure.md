@@ -94,7 +94,7 @@ SAGE-Engine/
 │   │   ├── api.py
 │   │   └── backends/
 │   │       ├── __init__.py
-│   │       ├── opengl.py
+│   │       ├── opengl.py         # Win32 OpenGL backend
 │   │       ├── software.py
 │   │       └── vulkan.py
 │   ├── resource/
@@ -172,7 +172,8 @@ SAGE-Engine/
 
 - Новые роли описываются JSON файлами в каталоге `roles/` и подключаются генератором `devtools/generate_roles.py`.
 - Подплатформенные реализации (Win32, X11, Cocoa) размещаются в `window/impl/`.
-- Дополнительные рендер-бэкенды добавляются в `render/backends/`.
+- Дополнительные рендер-бэкенды добавляются в `render/backends/`. По умолчанию
+  имеются `software.py` и `opengl.py` (Win32).
 - При добавлении модуля его следует указать в `engine.json` и написать тесты в `tests/`.
 
 ## 🔹 Правила логирования и тестирования
