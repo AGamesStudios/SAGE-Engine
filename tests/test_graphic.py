@@ -75,6 +75,25 @@ def test_state_stack():
     assert rt.buffer[1] == 255
 
 
+def test_frame_clearing():
+    rt = GraphicRuntime()
+    rt.init(2, 1)
+    rt.begin_frame()
+    rt.draw_rect(0, 0, 1, 1, (255, 0, 0, 255))
+    rt.end_frame()
+    rt.begin_frame()
+    rt.end_frame()
+    assert list(rt.buffer) == [0, 0, 0, 255, 0, 0, 0, 255]
+
+
+def test_begin_frame_color():
+    rt = GraphicRuntime()
+    rt.init(1, 1)
+    rt.begin_frame((10, 20, 30, 255))
+    rt.end_frame()
+    assert list(rt.buffer[:4]) == [30, 20, 10, 255]
+
+
 def test_scene_group_z():
     scene = Scene()
     base = Layer(z=0)

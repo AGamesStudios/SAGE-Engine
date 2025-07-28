@@ -8,7 +8,8 @@
 from sage_engine import gfx, render
 
 gfx.init(width, height)
-gfx.begin_frame()
+gfx.begin_frame()                  # очищает кадр чёрным цветом
+# gfx.begin_frame((r,g,b,a))       # можно указать свой цвет
 gfx.draw_rect(x, y, w, h, (r, g, b, a))
 gfx.draw_polygon([(0,0),(10,0),(5,5)], "#FF0000")
 gfx.push_state()
@@ -39,7 +40,7 @@ gfx.init(640, 480)
 render.init(window.get_window_handle())
 while not window.should_close():
     window.poll_events()
-    gfx.begin_frame()
+    gfx.begin_frame()  # можно передать цвет: begin_frame((0,0,0,255))
     gfx.draw_rect(10, 10, 30, 30, "#00FF0080")
     buffer = gfx.end_frame()
     render.present(buffer)

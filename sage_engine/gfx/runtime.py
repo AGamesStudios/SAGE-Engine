@@ -5,6 +5,7 @@ from typing import Tuple, List, Any, Iterable
 from ..graphic.color import to_rgba
 from ..graphic import fx
 from ..graphic.state import GraphicState
+from ..logger import logger
 
 
 
@@ -18,6 +19,7 @@ class GraphicRuntime:
         self.state = GraphicState()
         self._stack: List[tuple[int, tuple[int, int, int, int], list[str]]] = []
         self._commands: List[Any] = []
+        self.clear_color: tuple[int, int, int, int] = (0, 0, 0, 255)
 
     def init(self, width: int, height: int) -> None:
         """Initialize a framebuffer of the given size."""
@@ -27,9 +29,16 @@ class GraphicRuntime:
         self.buffer = bytearray(self.height * self.pitch)
 
 
-    def begin_frame(self) -> None:
+    def begin_frame(self, color=None) -> None:
+        if color is not None:
+            self.clear_color = to_rgba(color)
         if self.buffer is not None:
-            self.buffer[:] = b"\x00" * len(self.buffer)
+            r, g, b, a = self.clear_color
+            row = bytes((b, g, r, a)) * self.width
+            for y in range(self.height):
+                start = y * self.pitch
+                self.buffer[start:start+self.pitch] = row
+        logger.debug("begin_frame clear=%s", self.clear_color, tag="gfx")
         self._commands.clear()
         self._stack.clear()
 
@@ -90,6 +99,7 @@ class GraphicRuntime:
                 self._blit_rounded_rect(*args)
         for name in self.state.effects:
             fx.apply(name, self.buffer, self.width, self.height)
+        logger.debug("end_frame %d commands", len(self._commands), tag="gfx")
         return memoryview(self.buffer)
 
     def shutdown(self) -> None:
