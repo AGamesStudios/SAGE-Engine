@@ -5,18 +5,13 @@ import time
 from ctypes import wintypes
 from dataclasses import dataclass
 
-from ...logger import logger
+_PTR_SIZE = ctypes.sizeof(ctypes.c_void_p)
+LRESULT = getattr(wintypes, "LRESULT", ctypes.c_longlong if _PTR_SIZE == 8 else ctypes.c_long)
+WPARAM = getattr(wintypes, "WPARAM", ctypes.c_size_t)
+LPARAM = getattr(wintypes, "LPARAM", ctypes.c_ssize_t)
+UINT = getattr(wintypes, "UINT", ctypes.c_uint)
 
-# ensure required Win32 types exist on all Python versions
-if not hasattr(wintypes, "LRESULT"):
-    if ctypes.sizeof(ctypes.c_void_p) == ctypes.sizeof(ctypes.c_longlong):
-        wintypes.LRESULT = ctypes.c_longlong
-        wintypes.WPARAM = ctypes.c_ulonglong
-        wintypes.LPARAM = ctypes.c_longlong
-    else:
-        wintypes.LRESULT = ctypes.c_long
-        wintypes.WPARAM = ctypes.c_uint
-        wintypes.LPARAM = ctypes.c_long
+from ...logger import logger
 
 if not hasattr(wintypes, "HCURSOR"):
     wintypes.HCURSOR = wintypes.HANDLE
@@ -74,12 +69,15 @@ class Win32Window:
         user32 = ctypes.windll.user32
         kernel32 = ctypes.windll.kernel32
 
+        user32.DefWindowProcW.restype = LRESULT
+        user32.DefWindowProcW.argtypes = [wintypes.HWND, UINT, WPARAM, LPARAM]
+
         WNDPROCTYPE = ctypes.WINFUNCTYPE(
-            wintypes.LRESULT,
+            LRESULT,
             wintypes.HWND,
-            wintypes.UINT,
-            wintypes.WPARAM,
-            wintypes.LPARAM,
+            UINT,
+            WPARAM,
+            LPARAM,
         )
 
         @WNDPROCTYPE
@@ -87,18 +85,22 @@ class Win32Window:
             if msg == 0x0010:  # WM_CLOSE
                 self._on_close()
                 user32.DestroyWindow(hwnd)
-                return 0
+                return LRESULT(0)
             elif msg == 0x0005:  # WM_SIZE
                 width = lparam & 0xFFFF
                 height = (lparam >> 16) & 0xFFFF
                 self._on_resize(width, height)
-                return 0
+                return LRESULT(0)
             elif msg == 0x0100:  # WM_KEYDOWN
                 self._on_key(wparam)
             elif msg == 0x0200:  # WM_MOUSEMOVE
                 x = lparam & 0xFFFF
                 y = (lparam >> 16) & 0xFFFF
                 self._on_mouse("move", x, y, 0)
+            hwnd = wintypes.HWND(hwnd)
+            msg = UINT(msg)
+            wparam = WPARAM(wparam)
+            lparam = LPARAM(lparam)
             return user32.DefWindowProcW(hwnd, msg, wparam, lparam)
 
         class_name = "SAGEWindow"
