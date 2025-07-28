@@ -1,11 +1,12 @@
 # 🔹 Пример работы с `gfx` слоями и эффектами
 
 ```python
-from sage_engine import window, gfx
+from sage_engine import window, render, gfx
 from sage_engine.graphic.scene import Scene, Layer
 
 window.init("Graphic", 320, 240)
-gfx.init(window.get_window_handle())
+gfx.init(320, 240)
+render.init(window.get_window_handle())
 
 scene = Scene()
 base = Layer(z=0)
@@ -21,8 +22,10 @@ while not window.should_close():
     window.poll_events()
     gfx.begin_frame()
     scene.render()
-    gfx.end_frame()
+    buffer = gfx.end_frame()
+    render.present(buffer)
 
 gfx.shutdown()
+render.shutdown()
 window.shutdown()
 ```

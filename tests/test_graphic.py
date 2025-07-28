@@ -10,9 +10,7 @@ def test_color_parsing():
 
 def test_alpha_blend():
     rt = GraphicRuntime()
-    rt.width = rt.height = 1
-    rt.pitch = 4
-    rt.buffer = bytearray(4)
+    rt.init(1, 1)
     rt.begin_frame()
     rt.draw_rect(0, 0, 1, 1, (255, 0, 0, 255))
     rt.draw_rect(0, 0, 1, 1, (0, 0, 255, 128))

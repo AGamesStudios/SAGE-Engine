@@ -22,6 +22,9 @@ class RenderBackend:
     def end_frame(self) -> None:
         raise NotImplementedError
 
+    def present(self, buffer: memoryview) -> None:
+        raise NotImplementedError
+
     def shutdown(self) -> None:
         raise NotImplementedError
 

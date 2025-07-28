@@ -27,5 +27,8 @@ class RenderContext:
     def end_frame(self) -> None:
         self.backend.end_frame()
 
+    def present(self, buffer: memoryview) -> None:
+        self.backend.present(buffer)
+
     def shutdown(self) -> None:
         self.backend.shutdown()

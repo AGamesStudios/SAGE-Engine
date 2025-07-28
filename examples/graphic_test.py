@@ -1,11 +1,12 @@
-from sage_engine import window, gfx
+from sage_engine import window, render, gfx
 from sage_engine.graphic.scene import Scene, Layer
 from sage_engine.graphic import fx
 
 
 def main():
     window.init("Graphic Test", 320, 240)
-    gfx.init(window.get_window_handle())
+    gfx.init(320, 240)
+    render.init(window.get_window_handle())
 
     scene = Scene()
     base = Layer(z=0)
@@ -22,10 +23,12 @@ def main():
         window.poll_events()
         gfx.begin_frame()
         scene.render()
-        gfx.end_frame()
+        buffer = gfx.end_frame()
+        render.present(buffer)
         x += 1
 
     gfx.shutdown()
+    render.shutdown()
     window.shutdown()
 
 if __name__ == "__main__":

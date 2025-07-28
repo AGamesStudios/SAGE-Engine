@@ -51,6 +51,11 @@ def end_frame() -> None:
         _context.end_frame()
 
 
+def present(buffer: memoryview) -> None:
+    if _context:
+        _context.present(buffer)
+
+
 def shutdown() -> None:
     global _backend, _context
     if _context:
