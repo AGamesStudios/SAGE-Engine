@@ -40,7 +40,9 @@ class GraphicRuntime:
         self.buffer: bytearray | None = None
         self.pitch = 0
         self.hdc = None
+        self.mem_dc = None
         self.hbmp = None
+        self._old_obj = None
 
     def init(self, window_handle: int) -> None:
         self.window_handle = int(window_handle) if window_handle is not None else 0
@@ -56,6 +58,7 @@ class GraphicRuntime:
         self.user32 = user32
         self.gdi32 = gdi32
         self.hdc = user32.GetDC(self.window_handle)
+        self.mem_dc = gdi32.CreateCompatibleDC(self.hdc)
         bmi = wintypes.BITMAPINFO()
         bmi.bmiHeader.biSize = ctypes.sizeof(wintypes.BITMAPINFOHEADER)
         bmi.bmiHeader.biWidth = self.width
@@ -66,6 +69,7 @@ class GraphicRuntime:
         bmi.bmiHeader.biSizeImage = self.pitch * self.height
         buf = ctypes.c_void_p()
         self.hbmp = gdi32.CreateDIBSection(self.hdc, ctypes.byref(bmi), 0, ctypes.byref(buf), None, 0)
+        self._old_obj = gdi32.SelectObject(self.mem_dc, self.hbmp)
         self.buf_ptr = buf
 
     def begin_frame(self) -> None:
@@ -83,15 +87,25 @@ class GraphicRuntime:
 
     def end_frame(self) -> None:
         if sys.platform.startswith("win") and self.window_handle and self.hdc:
-            if self.hbmp is None:
+            if self.hbmp is None or self.mem_dc is None:
                 return
             ctypes.memmove(self.buf_ptr, bytes(self.buffer), len(self.buffer))
-            self.gdi32.BitBlt(self.hdc, 0, 0, self.width, self.height, self.hdc, 0, 0, 0x00CC0020)
+            SRCCOPY = 0x00CC0020
+            self.gdi32.BitBlt(
+                self.hdc, 0, 0, self.width, self.height, self.mem_dc, 0, 0, SRCCOPY
+            )
 
     def shutdown(self) -> None:
         if sys.platform.startswith("win") and self.hdc:
+            if self.mem_dc is not None:
+                if self._old_obj is not None:
+                    self.gdi32.SelectObject(self.mem_dc, self._old_obj)
+                self.gdi32.DeleteDC(self.mem_dc)
+                self.mem_dc = None
+            if self.hbmp is not None:
+                self.gdi32.DeleteObject(self.hbmp)
+                self.hbmp = None
             self.user32.ReleaseDC(self.window_handle, self.hdc)
             self.hdc = None
         self.buffer = None
-        self.hbmp = None
         self.window_handle = None
