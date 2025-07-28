@@ -15,5 +15,8 @@
   "features": {
     "flow_variables": true,
     "blueprint_meta": true
+  },
+  "settings": {
+    "window_backend": "auto"
   }
 }

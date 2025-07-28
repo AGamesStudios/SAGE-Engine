@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 import os
+import sys
 import time
 from dataclasses import dataclass
 
 from ..events import dispatcher as events
+from ..settings import settings
 
 WIN_CLOSE = 1
 WIN_RESIZE = 2
@@ -37,10 +39,30 @@ class HeadlessWindow:
         return self._should_close
 
 
-try:  # import optional tk backend
-    from .impl.tk import TkWindow  # type: ignore
-except Exception:  # pragma: no cover - tk not available
-    TkWindow = None  # type: ignore
+backend = settings.window_backend
+if backend is None:
+    if sys.platform.startswith("win"):
+        backend = "win32"
+    elif sys.platform == "darwin":
+        backend = "cocoa"
+    else:
+        backend = "x11"
+
+if backend == "win32":
+    try:
+        from .impl.win32 import Win32Window as NativeWindow
+    except Exception:  # pragma: no cover - missing backend
+        NativeWindow = None  # type: ignore
+elif backend == "cocoa":
+    try:
+        from .impl.cocoa import CocoaWindow as NativeWindow
+    except Exception:  # pragma: no cover - missing backend
+        NativeWindow = None  # type: ignore
+else:
+    try:
+        from .impl.x11 import X11Window as NativeWindow
+    except Exception:  # pragma: no cover - missing backend
+        NativeWindow = None  # type: ignore
 
 
 def init(
@@ -53,11 +75,11 @@ def init(
 ) -> None:
     """Create the main application window."""
     global _window
-    headless = os.environ.get("SAGE_HEADLESS") == "1" or TkWindow is None
+    headless = os.environ.get("SAGE_HEADLESS") == "1" or NativeWindow is None
     if headless:
         _window = HeadlessWindow(width, height)
     else:
-        _window = TkWindow(title, width, height, fullscreen, resizable, borderless)
+        _window = NativeWindow(title, width, height, fullscreen, resizable, borderless)
     events.emit(WIN_RESIZE, width, height)
 
 
