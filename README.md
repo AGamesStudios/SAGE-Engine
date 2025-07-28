@@ -29,3 +29,6 @@
 Тестирование запускается командой `sage-test`.
 
 Примеры находятся в [docs/examples](docs/examples/).
+The demo game in `examples/demo_game` illustrates basic usage. On Windows use
+Python 3.10–3.12 and run `python demo.py`. Set `SAGE_LOGLEVEL=DEBUG` for verbose
+logs.

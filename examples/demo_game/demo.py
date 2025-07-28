@@ -2,6 +2,12 @@
 
 import asyncio
 import os
+import logging
+logging.basicConfig(
+    level=os.getenv("SAGE_LOGLEVEL", "INFO").upper(),
+    format="%(levelname)s %(message)s",
+)
+
 from sage_engine import (
     core,
     world,
@@ -54,9 +60,10 @@ def main() -> None:
 
     # play a sound if the file exists
     if os.path.exists("start.wav"):
+        logging.info("Playing start.wav")
         audio.audio.play("start.wav")
     else:
-        print("[WARN] start.wav not found")
+        logging.warning("start.wav not found")
 
     # flag controlled by window:close or ESC
     done = False
@@ -64,14 +71,14 @@ def main() -> None:
     def mark_done() -> None:
         nonlocal done
         done = True
-        print("Window closed")
+        logging.info("Window closed")
 
     # subscribe to window events via the global dispatcher
-    events.dispatcher.on(window.WIN_RESIZE, lambda w, h: print(f"Resized to {w}x{h}"))
+    events.dispatcher.on(window.WIN_RESIZE, lambda w, h: logging.info("Resized to %dx%d", w, h))
 
     def on_key(key: str, code: int) -> None:
         """Handle keyboard input."""
-        print(f"Key down: {key}")
+        logging.debug("Key down: %s", key)
         if key == "Escape":
             # allow closing the game with ESC
             mark_done()
@@ -79,7 +86,7 @@ def main() -> None:
     events.dispatcher.on(window.WIN_KEY, on_key)
     events.dispatcher.on(
         window.WIN_MOUSE,
-        lambda t, x, y, b: print(f"Mouse {t} {x} {y} button={b}"),
+        lambda t, x, y, b: logging.debug("Mouse %s %d %d button=%d", t, x, y, b),
     )
 
     # closing the window or pressing ESC will end the loop
@@ -89,11 +96,11 @@ def main() -> None:
     asyncio.run(run_flow("ctx['done'] = True", {"ctx": {"done": False}}))
 
     # the loop ends when should_close() is True or window:close sets done
+    logging.info("Starting main loop")
     while not done and not window.should_close():
-        # process OS events every frame so the window stays responsive
         window.poll_events()
-        # core_tick runs update -> draw -> flush phases
         core.core_tick()
+    logging.info("Exiting main loop")
 
     # close the window and clean up modules
     window.shutdown()

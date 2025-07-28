@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import ctypes
+import logging
 import time
 from ctypes import wintypes
 from dataclasses import dataclass
 
 from ...events import dispatcher as events
 from .. import WIN_CLOSE, WIN_RESIZE, WIN_KEY, WIN_MOUSE
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -23,9 +26,16 @@ class Win32Window:
     def __post_init__(self) -> None:
         """Create the native Win32 window and show it."""
         try:
+            logger.debug(
+                "Creating Win32 window '%s' %dx%d",
+                self.title,
+                self.width,
+                self.height,
+            )
             self._create_window()
         except Exception:
             # Fallback for environments without Win32 APIs
+            logger.exception("Failed to create Win32 window")
             self.hwnd = None
 
     def _create_window(self) -> None:
@@ -82,23 +92,26 @@ class Win32Window:
 
         user32.ShowWindow(self.hwnd, 1)
         user32.UpdateWindow(self.hwnd)
+        logger.info("Win32 window shown handle=%s", self.hwnd)
         self._wndproc = wndproc  # keep reference
 
     def poll(self) -> None:
         if not self.hwnd:
-            time.sleep(0.001)
+            time.sleep(0.005)
             return
+        logger.debug("Polling Win32 events")
         user32 = ctypes.windll.user32
         msg = wintypes.MSG()
         PM_REMOVE = 1
         while user32.PeekMessageW(ctypes.byref(msg), 0, 0, 0, PM_REMOVE):
             user32.TranslateMessage(ctypes.byref(msg))
             user32.DispatchMessageW(ctypes.byref(msg))
-        time.sleep(0.001)
+        time.sleep(0.005)
 
     def destroy(self) -> None:
         if self.hwnd:
             try:
+                logger.debug("Destroying Win32 window")
                 ctypes.windll.user32.DestroyWindow(self.hwnd)
             except Exception:
                 pass
@@ -115,16 +128,20 @@ class Win32Window:
 
     # Example callbacks invoked by native message pump
     def _on_close(self):
+        logger.debug("WM_CLOSE received")
         self._closed = True
         events.emit(WIN_CLOSE)
 
     def _on_resize(self, width: int, height: int):
+        logger.debug("WM_SIZE %dx%d", width, height)
         self.width = width
         self.height = height
         events.emit(WIN_RESIZE, width, height)
 
     def _on_key(self, key: int):
+        logger.debug("WM_KEYDOWN %s", key)
         events.emit(WIN_KEY, key, key)
 
     def _on_mouse(self, typ: str, x: int, y: int, button: int):
+        logger.debug("WM_MOUSE %s %d %d b=%d", typ, x, y, button)
         events.emit(WIN_MOUSE, typ, x, y, button)

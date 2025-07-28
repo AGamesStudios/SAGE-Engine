@@ -5,6 +5,7 @@ import os
 import sys
 import time
 from dataclasses import dataclass
+import logging
 
 from ..events import dispatcher as events
 from ..settings import settings
@@ -14,6 +15,7 @@ WIN_RESIZE = 2
 WIN_KEY = 3
 WIN_MOUSE = 4
 
+logger = logging.getLogger(__name__)
 _window = None
 
 
@@ -24,7 +26,7 @@ class HeadlessWindow:
     _should_close: bool = False
 
     def poll(self) -> None:
-        time.sleep(0.001)
+        time.sleep(0.005)
 
     def destroy(self) -> None:
         pass
@@ -76,6 +78,7 @@ def init(
     """Create the main application window."""
     global _window
     headless = os.environ.get("SAGE_HEADLESS") == "1" or NativeWindow is None
+    logger.info("Initializing window headless=%s", headless)
     if headless:
         _window = HeadlessWindow(width, height)
     else:
@@ -86,6 +89,7 @@ def init(
 def poll_events() -> None:
     """Process OS events for the window."""
     if _window is not None:
+        logger.debug("poll_events")
         _window.poll()
 
 
@@ -102,6 +106,7 @@ def should_close() -> bool:
 def shutdown() -> None:
     global _window
     if _window is not None:
+        logger.info("Shutting down window")
         _window.destroy()
         _window = None
 
