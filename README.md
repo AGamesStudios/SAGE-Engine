@@ -40,3 +40,10 @@ Python 3.10–3.12 and run `python demo.py`. Set `SAGE_LOGLEVEL=DEBUG` for verbo
 logs.
 To validate the Win32 backend, run the demo and resize or move the window.
 Events will be printed in the console when `SAGE_LOGLEVEL=DEBUG`.
+
+- [Отчёт аудита](audit_report.md)
+- [Сводка находок](audit_findings.md)
+- [План исправлений](fix_roadmap.md)
+- [План тестирования](test_plan.md)
+- [Профили производительности](benchmark.md)
+

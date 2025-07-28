@@ -1,0 +1,10 @@
+# Audit Findings
+
+| ID | Subsystem | Severity | Description | Reproduction | Recommendation |
+|----|-----------|----------|-------------|--------------|----------------|
+| F1 | Window    | S1       | Missing UI backend leads to errors when module listed in engine.json. | Run `core.boot()` with default config. | Remove `ui` from engine.json or implement module. |
+| F2 | Audio     | S2       | `Audio.play` is stub, so examples fail to play sound. | Call `audio.play` in example. | Implement basic sound playback or mark as future work. |
+| F3 | Shaders   | S2       | `Effect.apply` placeholder, effects pipeline does nothing. | Run effects example. | Provide CPU implementation or disable in docs. |
+| F4 | Events    | S3       | `events.boot` and `events.update` are empty leading to queue never flushed automatically. | Emit events then call core.tick. | Implement these hooks or document manual flush. |
+| F5 | Visual Tests | S3 | `sage_testing.visual` lacks diff logic so graphical regressions aren't detected. | Run `sage-test`. | Implement screenshot comparison using Pillow. |
+
