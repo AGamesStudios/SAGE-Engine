@@ -28,4 +28,16 @@ def invert(buf, w, h):
 register("invert", invert)
 ```
 
-Эффекты по умолчанию: blur, glow, ripple, color_matrix.
+Дополнительно можно собрать цепочку эффектов:
+
+```python
+effects.apply_pipeline([
+    ("blur", {"radius": 2}),
+    ("glow", {"color": (255,255,0)}),
+])
+```
+
+Бэкенд выбирается через `effects.set_backend("cpu")` или `"gpu"`.
+
+Эффекты по умолчанию: blur, glow, ripple, wave, pixelate, glitch,
+fade, noise, outline и color_matrix.

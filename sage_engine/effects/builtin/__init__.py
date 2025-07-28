@@ -77,3 +77,88 @@ register("blur", blur)
 register("glow", glow)
 register("ripple", ripple)
 register("color_matrix", color_matrix)
+
+
+def wave(buffer: bytearray, width: int, height: int, amplitude: int = 2, period: int = 16) -> None:
+    import math
+    pitch = width * 4
+    src = buffer[:]
+    for y in range(height):
+        shift = int(math.sin(y / period * 2 * math.pi) * amplitude)
+        for x in range(width):
+            xx = (x + shift) % width
+            off_src = y * pitch + xx * 4
+            off_dst = y * pitch + x * 4
+            buffer[off_dst:off_dst+4] = src[off_src:off_src+4]
+
+
+def pixelate(buffer: bytearray, width: int, height: int, size: int = 4) -> None:
+    pitch = width * 4
+    src = buffer[:]
+    for y in range(0, height, size):
+        for x in range(0, width, size):
+            off = y * pitch + x * 4
+            color = src[off:off+4]
+            for yy in range(y, min(height, y + size)):
+                for xx in range(x, min(width, x + size)):
+                    dst = yy * pitch + xx * 4
+                    buffer[dst:dst+4] = color
+
+
+def glitch(buffer: bytearray, width: int, height: int, intensity: int = 4) -> None:
+    import random
+    pitch = width * 4
+    for _ in range(intensity * 10):
+        x = random.randint(0, width - 1)
+        y = random.randint(0, height - 1)
+        off = y * pitch + x * 4
+        for i in range(3):
+            buffer[off + i] = random.randint(0, 255)
+
+
+def fade(buffer: bytearray, width: int, height: int, alpha: float = 0.9) -> None:
+    pitch = width * 4
+    for y in range(height):
+        for x in range(width):
+            off = y * pitch + x * 4
+            buffer[off + 3] = int(buffer[off + 3] * alpha)
+
+
+def noise(buffer: bytearray, width: int, height: int, strength: int = 10) -> None:
+    import random
+    for i in range(0, len(buffer), 4):
+        for j in range(3):
+            val = buffer[i+j] + random.randint(-strength, strength)
+            buffer[i+j] = max(0, min(255, val))
+
+
+def outline(buffer: bytearray, width: int, height: int, color=(0,0,0)) -> None:
+    pitch = width * 4
+    src = buffer[:]
+    for y in range(height):
+        for x in range(width):
+            off = y * pitch + x * 4
+            a = src[off + 3]
+            if a == 0:
+                # check neighbors
+                for dy in (-1,0,1):
+                    for dx in (-1,0,1):
+                        ny = y + dy
+                        nx = x + dx
+                        if 0 <= ny < height and 0 <= nx < width:
+                            if src[ny*pitch+nx*4+3] > 0:
+                                buffer[off] = color[2]
+                                buffer[off+1] = color[1]
+                                buffer[off+2] = color[0]
+                                buffer[off+3] = 255
+                                dy = dx = 2
+                                break
+
+# register new builtins
+register("wave", wave)
+register("pixelate", pixelate)
+register("glitch", glitch)
+register("fade", fade)
+register("noise", noise)
+register("outline", outline)
+
