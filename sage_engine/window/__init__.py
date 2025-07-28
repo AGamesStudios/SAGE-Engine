@@ -23,6 +23,10 @@ class HeadlessWindow:
     width: int
     height: int
     _should_close: bool = False
+    framebuffer: bytearray | None = None
+
+    def __post_init__(self) -> None:
+        self.framebuffer = bytearray(self.width * self.height * 4)
 
     def poll(self) -> None:
         time.sleep(0.005)
@@ -32,6 +36,9 @@ class HeadlessWindow:
 
     def get_handle(self) -> int | None:
         return 0
+
+    def get_framebuffer(self) -> bytearray | None:
+        return self.framebuffer
 
     def get_size(self) -> tuple[int, int]:
         return (self.width, self.height)
@@ -114,6 +121,14 @@ def get_window_handle() -> int | None:
     if _window is None:
         return None
     return _window.get_handle()
+
+
+def get_framebuffer() -> bytearray | None:
+    if _window is None:
+        return None
+    if hasattr(_window, "get_framebuffer"):
+        return _window.get_framebuffer()
+    return None
 
 # Internal helpers primarily for testing
 

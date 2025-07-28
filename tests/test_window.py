@@ -70,3 +70,12 @@ def test_mass_input_and_resize_close():
     assert events.dispatcher.history.count(window.WIN_MOUSE) >= 5
     window.shutdown()
 
+
+def test_headless_framebuffer_access():
+    os.environ['SAGE_HEADLESS'] = '1'
+    window.init('buf', 16, 16)
+    buf = window.get_framebuffer()
+    assert isinstance(buf, bytearray)
+    assert len(buf) == 16 * 16 * 4
+    window.shutdown()
+

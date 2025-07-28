@@ -279,6 +279,9 @@ class Win32Window:
     def get_handle(self):
         return self.hwnd
 
+    def get_framebuffer(self) -> bytearray | None:
+        return None
+
     def get_size(self) -> tuple[int, int]:
         return (self.width, self.height)
 
