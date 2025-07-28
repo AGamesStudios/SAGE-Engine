@@ -18,6 +18,7 @@
 - [RenderStream](docs/renderstream.md)
 - [Рендер](docs/modules/render.md)
 - [SAGE Graphic](docs/modules/gfx.md)
+- [Эффекты](docs/modules/effects.md)
 - [Плагины](docs/plugin.md)
 - [Редактор](docs/editor.md)
 - [Руководство разработчика](docs/dev_guidelines.md)

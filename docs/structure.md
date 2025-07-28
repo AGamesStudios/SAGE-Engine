@@ -107,8 +107,12 @@ SAGE-Engine/
 │   │   ├── fx.py
 │   │   ├── scene.py
 │   │   ├── state.py
-│   │   ├── version.py
 │   │   └── compat.py
+│   ├── effects/
+│   │   ├── __init__.py
+│   │   ├── api.py
+│   │   ├── compat.py
+│   │   └── builtin/
 │   ├── resource/
 │   │   └── __init__.py
 │   ├── roles/

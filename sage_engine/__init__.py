@@ -13,6 +13,7 @@ __all__ = [
     "resource",
     "render",
     "gfx",
+    "effects",
     "window",
     "settings",
     "api",
