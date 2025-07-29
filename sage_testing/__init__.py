@@ -1,6 +1,4 @@
-"""SAGE Testing package."""
+"""Backward compatibility for old 'sage_testing' path."""
 from __future__ import annotations
 
-from .runner import main
-
-__all__ = ["main"]
+from sage_engine.testing import *  # type: ignore

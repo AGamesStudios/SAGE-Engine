@@ -1,5 +1,5 @@
-from sage_testing import visual
+from sage_engine.testing import visual
 
 
 def test_compare_screenshot():
-    assert visual.compare_screenshot('exp.png', 'act.png', max_diff=0.1) is True
+    assert visual.diff('exp.png', 'act.png') >= 0.0

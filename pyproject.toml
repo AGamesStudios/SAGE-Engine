@@ -13,7 +13,7 @@ PyYAML = "*"
 [tool.poetry.dev-dependencies]
 
 [tool.poetry.scripts]
-sage-test = "sage_testing.runner:main"
+sage-test = "sage_engine.testing.runner:main"
 sage-config = "sage_engine.devtools.config_cli:main"
 sage = "sage_engine.devtools.cli:main"
 

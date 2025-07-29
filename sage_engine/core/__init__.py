@@ -29,7 +29,11 @@ def _load_modules_from_config() -> None:
     path = Path(__file__).resolve().parents[2] / "engine.sagecfg"
     if not path.exists():
         return
-    data = load_sage_file(path)
+    try:
+        data = load_sage_file(path)
+    except Exception as e:
+        logger.error("failed to load engine.sagecfg: %s", e)
+        return
     settings.features.update(data.get("features", {}))
     settings_dict = data.get("settings", {})
     for k, v in settings_dict.items():
