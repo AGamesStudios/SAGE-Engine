@@ -1,42 +1,50 @@
-from sage_engine.objects import ObjectStore, new, runtime
+from sage_engine.objects import (
+    Object, ObjectStore, ObjectBuilder, BlueprintSystem, runtime
+)
+from sage_engine.objects.roles.builtins import PhysicsBody, EnemyAI, Sprite
 
 
-def test_create_get_patch_remove():
+def test_manual_object_lifecycle():
+    obj = Object(id="o1", name="hero")
+    role = PhysicsBody(mass=5)
+    obj.add_role("PhysicsBody", role)
+    assert obj.has_role("PhysicsBody")
+    obj.update(0.16)
+    assert role.updated
+    obj.remove_role("PhysicsBody")
+    assert not obj.has_role("PhysicsBody")
+
+
+def test_build_from_blueprint():
+    bps = BlueprintSystem()
+    bps.register({
+        "name": "enemy_base",
+        "roles": ["PhysicsBody"],
+        "parameters": {"PhysicsBody": {"mass": 2}}
+    })
+    bps.register({
+        "name": "enemy_tank",
+        "extends": "enemy_base",
+        "roles": ["EnemyAI"],
+        "parameters": {"EnemyAI": {"difficulty": "hard"}}
+    })
     store = ObjectStore()
-    obj_id = store.create({"roles": ["Player"], "categories": {"Transform": {"x": 1}}})
-    assert store.get(obj_id)["categories"]["Transform"]["x"] == 1
-    store.patch(obj_id, {"categories": {"Transform": {"x": 2}}})
-    assert store.get(obj_id)["categories"]["Transform"]["x"] == 2
-    store.remove(obj_id)
-    assert obj_id not in store.objects
+    builder = ObjectBuilder(store, bps)
+    obj = builder.build("enemy_tank", obj_id="tank1")
+    assert obj.get_role("PhysicsBody").mass == 2
+    assert obj.get_role("EnemyAI").difficulty == "hard"
+    assert store.get_object_by_id("tank1") is obj
 
 
-def test_builder_spawn():
-    store = ObjectStore()
-    player_id = (new(store)
-                 .role("Player")
-                 .set("Transform", x=5)
-                 .spawn())
-    assert store.get(player_id)["categories"]["Transform"]["x"] == 5
-
-
-def test_apply_role_and_set_many():
-    store = ObjectStore()
-    obj_id = store.create({"categories": {}})
-    store.apply_role(obj_id, "Player")
-    assert store.get(obj_id)["categories"]["Transform"]["x"] == 0
-    store.set_many(obj_id, {"Transform": {"x": 10, "y": 3}})
-    ids = store.query_by_category("Transform")
-    assert obj_id in ids
-    assert store.get(obj_id)["categories"]["Transform"]["x"] == 10
-
-
-def test_runtime_load():
-    data = {
-        "schema_version": "1.0",
-        "objects": [
-            {"roles": ["Player"], "categories": {"Transform": {"x": 7}}}
-        ],
-    }
-    runtime.load(data)
-    assert runtime.store.query_by_category("Transform")
+def test_store_update_render_query():
+    store = runtime.store
+    store.objects.clear()
+    ctx = []
+    bps = runtime.blueprints
+    bps.register({"name": "sprite_only", "roles": ["Sprite"], "parameters": {"Sprite": {"image": "hero.png"}}})
+    obj = runtime.builder().build("sprite_only", obj_id="s1")
+    store.update(0.1)
+    store.render(ctx)
+    assert "render:hero.png" in ctx
+    found = store.find_by_role("Sprite")
+    assert obj in found

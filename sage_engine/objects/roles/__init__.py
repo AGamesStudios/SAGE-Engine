@@ -1,27 +1,24 @@
-"""Role registry for SAGE Objects."""
+"""Role registry for SAGE Object system."""
+
 from __future__ import annotations
 
-import json
-from pathlib import Path
-from typing import Dict, Mapping
+from typing import Dict, Type
 
-_role_defs: Dict[str, Mapping[str, object]] = {}
+from .interfaces import Role
 
-
-def load_roles(directory: Path | None = None) -> None:
-    if directory is None:
-        directory = Path(__file__).resolve().parent
-    for path in directory.glob("*.role.json"):
-        with open(path, "r", encoding="utf8") as fh:
-            data = json.load(fh)
-        _role_defs[data["id"]] = data
+_ROLE_REGISTRY: Dict[str, Type[Role]] = {}
 
 
-def get_role(role_id: str) -> Mapping[str, object]:
-    return _role_defs[role_id]
+def register(name: str, cls: Type[Role]) -> None:
+    _ROLE_REGISTRY[name] = cls
 
 
-def registered_roles() -> Mapping[str, Mapping[str, object]]:
-    return _role_defs
+def get(name: str) -> Type[Role]:
+    return _ROLE_REGISTRY[name]
 
-load_roles()
+
+def registered() -> Dict[str, Type[Role]]:
+    return dict(_ROLE_REGISTRY)
+
+
+from . import builtins  # noqa: E402,F401

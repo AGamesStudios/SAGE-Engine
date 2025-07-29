@@ -1,17 +1,21 @@
-"""SAGE Objects: simple role-driven entity store."""
-from __future__ import annotations
+"""SAGE Object module."""
 
-from .store import ObjectStore, CategoryView, Transaction
-from .builder import ObjectBuilder, new
-from .runtime import runtime
-from . import roles
+from .object import Object, Vector2
+from .roles import register, get, registered
+from .runtime import runtime, ObjectRuntime
+from .store import ObjectStore
+from .builder import ObjectBuilder, BlueprintSystem, Blueprint
 
 __all__ = [
+    "Object",
+    "Vector2",
+    "ObjectRuntime",
     "ObjectStore",
-    "CategoryView",
-    "Transaction",
     "ObjectBuilder",
-    "new",
+    "BlueprintSystem",
+    "Blueprint",
+    "register",
+    "get",
+    "registered",
     "runtime",
-    "roles",
 ]

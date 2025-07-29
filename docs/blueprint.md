@@ -25,3 +25,4 @@ Blueprint поддерживает переменные, которые можн
 from sage_engine.blueprint import load
 bp = load(Path('scenes/level1.json'))
 ```
+\nObjects module uses small blueprints describing roles and parameters.

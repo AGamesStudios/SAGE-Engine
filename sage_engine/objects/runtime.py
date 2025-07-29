@@ -1,21 +1,24 @@
-"""Simple runtime helpers for SAGE Objects."""
 from __future__ import annotations
 
-from typing import Dict, Mapping
+"""Runtime helpers for SAGE Objects."""
+
+from dataclasses import dataclass, field
+from typing import Dict
 
 from .store import ObjectStore
-from ..compat import migrate
+from .builder import BlueprintSystem, ObjectBuilder
 
-CURRENT_SCHEMA_VERSION = "1.0"
 
+@dataclass
 class ObjectRuntime:
-    def __init__(self) -> None:
-        self.store = ObjectStore()
+    """Holds global object store and blueprint system."""
 
-    def load(self, data: Mapping[str, object]) -> None:
-        version = str(data.get("schema_version", CURRENT_SCHEMA_VERSION))
-        _, converted = migrate("object", version, CURRENT_SCHEMA_VERSION, data)
-        for obj in converted.get("objects", []):
-            self.store.create(obj)
+    store: ObjectStore = field(default_factory=ObjectStore)
+    blueprints: BlueprintSystem = field(default_factory=BlueprintSystem)
+
+    def builder(self) -> ObjectBuilder:
+        """Return a builder bound to the runtime store and blueprint system."""
+        return ObjectBuilder(self.store, self.blueprints)
+
 
 runtime = ObjectRuntime()
