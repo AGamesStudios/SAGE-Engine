@@ -73,6 +73,21 @@ def test_flush_frame_auto_realloc():
     window.shutdown()
 
 
+def test_resize_event_reallocates_buffer():
+    import os
+    from sage_engine import window, render, gfx
+
+    os.environ['SAGE_HEADLESS'] = '1'
+    window.init('e', 10, 10)
+    render.init(window.get_window_handle())
+    gfx.init(10, 10)
+    window.set_resolution(25, 18)
+    assert gfx._runtime.width == 25 and gfx._runtime.height == 18
+    gfx.shutdown()
+    render.shutdown()
+    window.shutdown()
+
+
 def test_flush_mismatch_skips_frame():
     import os
     from sage_engine import window, render

@@ -4,7 +4,7 @@ import time
 from dataclasses import dataclass
 
 from ...events import dispatcher as events
-from .. import WIN_CLOSE, WIN_RESIZE, WIN_KEY, WIN_MOUSE
+from .. import WIN_CLOSE, WIN_RESIZE, WIN_KEY, WIN_MOUSE, WINDOW_RESIZED
 
 
 @dataclass
@@ -51,6 +51,7 @@ class X11Window:
         self.width = width
         self.height = height
         events.emit(WIN_RESIZE, width, height)
+        emit_direct(WINDOW_RESIZED, width, height)
 
     def _on_key(self, key: int):
         events.emit(WIN_KEY, key, key)

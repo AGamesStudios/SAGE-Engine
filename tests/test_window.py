@@ -10,6 +10,16 @@ def test_init_shutdown():
     window.shutdown()
 
 
+def test_window_resized_event():
+    os.environ['SAGE_HEADLESS'] = '1'
+    events.reset()
+    window.init('r', 20, 20)
+    window.set_resolution(30, 25)
+    assert events.dispatcher.history[-1] == window.WINDOW_RESIZED
+    assert window.get_framebuffer_size() == (30, 25)
+    window.shutdown()
+
+
 def test_close_event():
     os.environ['SAGE_HEADLESS'] = '1'
     events.reset()
@@ -106,4 +116,5 @@ def test_set_fullscreen_and_resolution():
     window.set_resolution(640, 480)
     assert window.get_size() == (640, 480)
     assert window.get_framebuffer_size() == (640, 480)
+    assert events.dispatcher.history[-1] == window.WINDOW_RESIZED
     window.shutdown()

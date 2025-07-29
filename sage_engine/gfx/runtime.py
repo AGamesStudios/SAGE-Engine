@@ -26,13 +26,37 @@ class GraphicRuntime:
         self._last_error_key: str | None = None
         self._last_error_frame: int = -1
         self._error_interval = 60
+        try:
+            from ..events import dispatcher as events
+            from ..window import WINDOW_RESIZED
+            events.on(WINDOW_RESIZED, self.realloc_buffer)
+        except Exception:  # pragma: no cover - during early import
+            pass
 
     def init(self, width: int, height: int) -> None:
         """Initialize a framebuffer of the given size."""
+        try:
+            from ..events import dispatcher as events
+            from ..window import WINDOW_RESIZED
+            if self.realloc_buffer not in events._handlers.get(WINDOW_RESIZED, []):
+                events.on(WINDOW_RESIZED, self.realloc_buffer)
+        except Exception:
+            pass
         self.width = width
         self.height = height
         self.pitch = self.width * 4
         self.buffer = bytearray(self.height * self.pitch)
+
+    def realloc_buffer(self, width: int, height: int) -> None:
+        """Reallocate framebuffer immediately due to a resize event."""
+        if width <= 0 or height <= 0:
+            return
+        self.init(width, height)
+        logger.info(
+            "[gfx] Framebuffer reallocated due to window resize: %dx%d",
+            width,
+            height,
+        )
 
 
     def begin_frame(self, color=None) -> None:
@@ -46,8 +70,7 @@ class GraphicRuntime:
             self.init(w, h)
             logger.debug("[gfx] Framebuffer allocated %dx%d", w, h)
         elif w != self.width or h != self.height:
-            self.init(w, h)
-            logger.info("[gfx] Framebuffer reallocated to %dx%d", w, h)
+            self.realloc_buffer(w, h)
         if color is not None:
             self.clear_color = to_bgra8_premul(color)
         if self.buffer is not None:
@@ -68,8 +91,7 @@ class GraphicRuntime:
             return
         if w != self.width or h != self.height:
             if self.auto_resize:
-                self.init(w, h)
-                logger.info("[gfx] Framebuffer reallocated to %dx%d", w, h)
+                self.realloc_buffer(w, h)
             else:
                 key = f"{w}x{h}"
                 if (
