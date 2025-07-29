@@ -1,10 +1,18 @@
-"""Asynchronous resource loading stubs."""
+"""Resource loading, caching and packing utilities."""
 
 import asyncio
-from pathlib import Path
+from .manager import load, get, preload
+from .packer import pack
+
+__all__ = [
+    "load",
+    "get",
+    "preload",
+    "pack",
+]
 
 
 async def load_async(path: str) -> bytes:
-    await asyncio.sleep(0)  # simulate async I/O
-    with open(Path(path), 'rb') as fh:
-        return fh.read()
+    await asyncio.sleep(0)
+    return load(path)
+

@@ -126,7 +126,11 @@ SAGE-Engine/
 │   │   ├── compat.py
 │   │   └── builtin/
 │   ├── resource/
-│   │   └── __init__.py
+│   │   ├── __init__.py
+│   │   ├── loader.py
+│   │   ├── cache.py
+│   │   ├── packer.py
+│   │   └── manager.py
 │   ├── roles/
 │   │   ├── __init__.py
 │   │   ├── camera_schema.py

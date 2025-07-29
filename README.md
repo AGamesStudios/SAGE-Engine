@@ -24,6 +24,7 @@
 - [Рендер](docs/modules/render.md)
 - [SAGE Graphic](docs/modules/gfx.md)
 - [Graphic Module](docs/modules/graphic.md)
+- [Resource System](docs/modules/resource.md)
 - [Configuration](docs/configuration.md)
 - [Performance](docs/performance.md)
 - [SAGE Objects](docs/modules/objects.md)

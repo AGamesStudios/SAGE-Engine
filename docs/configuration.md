@@ -25,3 +25,9 @@ style = "default"
 hide_system_cursor = true
 follow_rate = 1.0
 
+[resource]
+limit_size_mb = 10
+enable_pack = true
+compression = "lz4"
+preload = ["sprites/", "audio/"]
+
