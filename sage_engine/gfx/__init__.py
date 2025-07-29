@@ -14,6 +14,7 @@ draw_polygon = _runtime.draw_polygon
 draw_rounded_rect = _runtime.draw_rounded_rect
 draw_text = _runtime.draw_text
 end_frame = _runtime.end_frame
+flush_frame = _runtime.flush_frame
 shutdown = _runtime.shutdown
 
 add_effect = _runtime.add_effect

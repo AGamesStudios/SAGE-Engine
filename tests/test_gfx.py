@@ -25,3 +25,14 @@ def test_begin_frame_clear_option():
     third = bytes(gfx._runtime.buffer)
     assert third != second
     gfx.shutdown()
+
+
+def test_frame_flush():
+    from sage_engine import render
+    render.init(None)
+    gfx.init(1, 1)
+    gfx.begin_frame()
+    gfx.draw_rect(0, 0, 1, 1, (255, 0, 0, 255))
+    gfx.flush_frame(None)
+    gfx.shutdown()
+    render.shutdown()

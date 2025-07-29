@@ -12,6 +12,9 @@ python examples/demo_game/main.py
 
 Configuration is stored in `examples/demo_game/game.sagecfg` and includes
 window size, style, input scheme and FPS sync settings.
+The demo uses the `gfx` backend and displays each frame via
+`gfx.flush_frame(window.get_window_handle())` instead of the old
+`render.api.present` call.
 
 ## Extending the game
 

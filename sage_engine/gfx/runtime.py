@@ -107,6 +107,13 @@ class GraphicRuntime:
         logger.debug("end_frame %d commands", len(self._commands), tag="gfx")
         return memoryview(self.buffer)
 
+    def flush_frame(self, handle: Any | None = None) -> None:
+        """Finish drawing and present the buffer via :mod:`render`."""
+        from .. import render
+
+        buf = self.end_frame()
+        render.present(buf, handle)
+
     def shutdown(self) -> None:
         self.buffer = None
 

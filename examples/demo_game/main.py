@@ -34,8 +34,7 @@ def main():
         fsync.start_frame()
         gfx.begin_frame((20, 20, 20, 255))
         gfx.draw_rect(150, 110, 20, 20, (0, 200, 255, 255))
-        buf = gfx.end_frame()
-        render.api.present(buf, window.get_window_handle())
+        gfx.flush_frame(window.get_window_handle())
         fsync.end_frame()
 
         if window.should_close():

@@ -27,8 +27,7 @@ def main() -> None:
         running = running and logic.update(1 / 60.0, Input)
         logic.draw()
 
-        buf = gfx.end_frame()
-        render.api.present(buf, window.get_window_handle())
+        gfx.flush_frame(window.get_window_handle())
         fsync.end_frame()
 
         if window.should_close():
