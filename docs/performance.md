@@ -10,3 +10,10 @@ Approximate draw cost on reference devices:
 
 `dynamic_resolution` temporarily lowers resolution when draw cost exceeds 8 ms.
 
+FrameSync accuracy results (± tolerance):
+
+| Target FPS | Avg frame time |
+|------------|----------------|
+| 60         | ~16.7 ms |
+| 30         | ~33.3 ms |
+

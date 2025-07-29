@@ -12,5 +12,10 @@ dynamic_resolution = true
 gamma_correction = true
 style = "neo-retro"
 fallback_mode = "EdgeAverage2x"
+[fsync]
+enabled = true
+target_fps = 60
+mode = "precise"
+tolerance = 0.2
 ```
 

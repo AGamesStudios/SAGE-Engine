@@ -18,6 +18,7 @@ __all__ = [
     "format",
     "window",
     "graphic",
+    "runtime",
     "settings",
     "api",
 ]
