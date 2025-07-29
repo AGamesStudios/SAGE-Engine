@@ -20,6 +20,7 @@ __all__ = [
     "graphic",
     "runtime",
     "cursor",
+    "sprite",
     "settings",
     "api",
 ]

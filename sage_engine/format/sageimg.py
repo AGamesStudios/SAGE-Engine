@@ -8,7 +8,7 @@ def encode(pixels: bytes, width: int, height: int) -> bytes:
 def decode(data: bytes):
     if not data.startswith(HEADER):
         raise ValueError('invalid sageimg header')
-    width = int.from_bytes(data[7:9], 'little')
-    height = int.from_bytes(data[9:11], 'little')
-    pixels = data[11:]
+    width = int.from_bytes(data[8:10], 'little')
+    height = int.from_bytes(data[10:12], 'little')
+    pixels = data[12:]
     return width, height, pixels

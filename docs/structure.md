@@ -106,6 +106,12 @@ SAGE-Engine/
 │   │   ├── core.py
 │   │   ├── style.py
 │   │   └── runtime.py
+│   ├── sprite/
+│   │   ├── __init__.py
+│   │   ├── draw.py
+│   │   ├── sprite.py
+│   │   ├── atlas.py
+│   │   └── cache.py
 │   ├── runtime/
 │   │   ├── __init__.py
 │   │   └── fsync.py
