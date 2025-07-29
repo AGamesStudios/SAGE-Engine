@@ -1,8 +1,11 @@
 import argparse
 import json
+from typing import Optional
+import yaml
 from pathlib import Path
 
 from ..compat import migrate
+from ..format import SAGECompiler, SAGEDecompiler
 from ..blueprint import CURRENT_SCHEMA_VERSION as BP_VERSION
 from ..world import CURRENT_SCHEMA_VERSION as SCENE_VERSION
 
@@ -28,6 +31,18 @@ def compat_check(path: Path) -> None:
         print("Scene is compatible")
 
 
+def format_compile(src: Path, dst: Path) -> None:
+    SAGECompiler().compile(src, dst)
+
+
+def format_decompile(src: Path, dst: Optional[Path]) -> None:
+    data = SAGEDecompiler().decompile(src)
+    if dst:
+        dst.write_text(yaml.safe_dump(data), encoding="utf8")
+    else:
+        print(yaml.safe_dump(data))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(prog="sage")
     sub = parser.add_subparsers(dest="topic")
@@ -42,11 +57,24 @@ def main() -> None:
     chk = comp_sub.add_parser("check")
     chk.add_argument("path")
 
+    fmt = sub.add_parser("format")
+    fmt_sub = fmt.add_subparsers(dest="cmd")
+    fc = fmt_sub.add_parser("compile")
+    fc.add_argument("src")
+    fc.add_argument("dst")
+    fd = fmt_sub.add_parser("decompile")
+    fd.add_argument("src")
+    fd.add_argument("dst", nargs="?")
+
     args = parser.parse_args()
     if args.topic == "blueprint" and args.cmd == "migrate":
         blueprint_migrate(Path(args.path))
     elif args.topic == "compat" and args.cmd == "check":
         compat_check(Path(args.path))
+    elif args.topic == "format" and args.cmd == "compile":
+        format_compile(Path(args.src), Path(args.dst))
+    elif args.topic == "format" and args.cmd == "decompile":
+        format_decompile(Path(args.src), Path(args.dst) if args.dst else None)
     else:
         parser.print_help()
 

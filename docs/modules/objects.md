@@ -1,7 +1,9 @@
 # 📘 Objects Module
 
 `objects` provides a lightweight runtime for building and updating game objects
-through **roles** and JSON **blueprints**.
+through **roles** and binary **blueprints** (`.sagebp`). Blueprints can be
+written in YAML or JSON and compiled to the binary format using the SAGE Format
+compiler.
 
 ## API overview
 
@@ -33,13 +35,13 @@ register("MyRole", MyRole)
 
 ## Blueprint format
 
-```json
-{
-  "name": "enemy_tank",
-  "roles": ["PhysicsBody", "EnemyAI"],
-  "parameters": {"PhysicsBody": {"mass": 10}},
-  "position": [100, 200]
-}
+```yaml
+name: enemy_tank
+roles: [PhysicsBody, EnemyAI]
+parameters:
+  PhysicsBody:
+    mass: 10
+position: [100, 200]
 ```
 
 Blueprints may inherit from others using `extends` and `override` fields.

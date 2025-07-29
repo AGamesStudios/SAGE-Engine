@@ -17,3 +17,10 @@ obj = SAGEDecompiler().decompile(Path('object.sageobj'))
 
 Schemas can be registered using `SAGESchemaSystem` to validate data when
 compiling.
+
+CLI helpers are available via `sage format`:
+
+```bash
+$ sage format compile object.yaml object.sageobj
+$ sage format decompile object.sageobj
+```

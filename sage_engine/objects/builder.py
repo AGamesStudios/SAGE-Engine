@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, Mapping, Optional
-import json
 
 from ..format import SAGEDecompiler
 
@@ -33,10 +32,7 @@ class BlueprintSystem:
         self._defs: Dict[str, Mapping[str, object]] = {}
 
     def load(self, path: Path) -> None:
-        if path.suffix == ".sagebp":
-            data = SAGEDecompiler().decompile(path)
-        else:
-            data = json.loads(path.read_text(encoding="utf8"))
+        data = SAGEDecompiler().decompile(path)
         self._defs[data["name"]] = data
 
     def register(self, data: Mapping[str, object]) -> None:
