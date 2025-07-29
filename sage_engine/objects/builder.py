@@ -7,6 +7,8 @@ from pathlib import Path
 from typing import Dict, Mapping, Optional
 import json
 
+from ..format import SAGEDecompiler
+
 from .object import Object, Vector2
 from .roles import get as get_role
 from .store import ObjectStore
@@ -31,7 +33,10 @@ class BlueprintSystem:
         self._defs: Dict[str, Mapping[str, object]] = {}
 
     def load(self, path: Path) -> None:
-        data = json.loads(path.read_text(encoding="utf8"))
+        if path.suffix == ".sagebp":
+            data = SAGEDecompiler().decompile(path)
+        else:
+            data = json.loads(path.read_text(encoding="utf8"))
         self._defs[data["name"]] = data
 
     def register(self, data: Mapping[str, object]) -> None:

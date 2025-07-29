@@ -19,6 +19,7 @@
 - [Рендер](docs/modules/render.md)
 - [SAGE Graphic](docs/modules/gfx.md)
 - [SAGE Objects](docs/modules/objects.md)
+- [SAGE Format](docs/modules/format.md)
 - [Эффекты](docs/modules/effects.md)
 - [Плагины](docs/plugin.md)
 - [Редактор](docs/editor.md)

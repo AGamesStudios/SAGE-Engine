@@ -8,6 +8,7 @@ authors = ["Auto"]
 python = "^3.11"
 hypothesis = "*"
 pytest = "*"
+PyYAML = "*"
 
 [tool.poetry.dev-dependencies]
 

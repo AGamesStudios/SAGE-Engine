@@ -33,6 +33,3 @@ update, draw
 
 ### 🔧 Фазы
 update, draw
-
-## Writing custom roles
-See `docs/modules/objects.md` for the class-based role API.

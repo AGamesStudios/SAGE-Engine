@@ -15,6 +15,7 @@ __all__ = [
     "gfx",
     "effects",
     "objects",
+    "format",
     "window",
     "settings",
     "api",
