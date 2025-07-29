@@ -2,7 +2,8 @@ from pathlib import Path
 
 import yaml
 
-from sage_engine.format import SAGECompiler, SAGEDecompiler
+from sage_engine.format import SAGECompiler
+from sage_engine.format.loader import load_sage_file
 from sage_engine.objects import ObjectBuilder, ObjectStore, BlueprintSystem
 
 
@@ -13,7 +14,7 @@ def test_roundtrip(tmp_path: Path):
     out = tmp_path / "obj.sageobj"
     SAGECompiler().compile(src, out)
     assert out.exists()
-    loaded = SAGEDecompiler().decompile(out)
+    loaded = load_sage_file(out)
     assert loaded == data
 
 

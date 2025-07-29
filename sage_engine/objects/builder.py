@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, Mapping, Optional
 
-from ..format import SAGEDecompiler
+from ..format.loader import load_sage_file
 
 from .object import Object, Vector2
 from .roles import get as get_role
@@ -32,7 +32,7 @@ class BlueprintSystem:
         self._defs: Dict[str, Mapping[str, object]] = {}
 
     def load(self, path: Path) -> None:
-        data = SAGEDecompiler().decompile(path)
+        data = load_sage_file(path)
         self._defs[data["name"]] = data
 
     def register(self, data: Mapping[str, object]) -> None:

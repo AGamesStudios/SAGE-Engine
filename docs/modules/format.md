@@ -4,6 +4,9 @@
 are integers (8/16/32 bit), floats, strings, arrays, maps and flags. Files start
 with the header `SAGE` and a version byte.
 
+🚫 Использование JSON, YAML, TOML, XML строго запрещено.
+✅ Допускается только использование `.sage*` форматов, генерируемых через `SAGECompiler`.
+
 Example usage:
 
 ```python
@@ -18,9 +21,12 @@ obj = SAGEDecompiler().decompile(Path('object.sageobj'))
 Schemas can be registered using `SAGESchemaSystem` to validate data when
 compiling.
 
-CLI helpers are available via `sage format`:
+CLI helpers are available:
 
 ```bash
 $ sage format compile object.yaml object.sageobj
 $ sage format decompile object.sageobj
+$ sage convert old.json new.sageobj
+$ sage validate new.sageobj --schema schema.yaml
+$ sage pack assets/ game.sagepack
 ```

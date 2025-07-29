@@ -1,9 +1,8 @@
 # 📘 Objects Module
 
 `objects` provides a lightweight runtime for building and updating game objects
-through **roles** and binary **blueprints** (`.sagebp`). Blueprints can be
-written in YAML or JSON and compiled to the binary format using the SAGE Format
-compiler.
+through **roles** and binary **blueprints** (`.sagebp`). Blueprints are
+компилируются заранее и хранятся в проекте только как `.sagebp`.
 
 ## API overview
 

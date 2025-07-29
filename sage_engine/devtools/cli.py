@@ -5,7 +5,12 @@ import yaml
 from pathlib import Path
 
 from ..compat import migrate
-from ..format import SAGECompiler, SAGEDecompiler
+from ..format import (
+    SAGECompiler,
+    SAGEDecompiler,
+    SAGESchemaSystem,
+    pack_directory,
+)
 from ..blueprint import CURRENT_SCHEMA_VERSION as BP_VERSION
 from ..world import CURRENT_SCHEMA_VERSION as SCENE_VERSION
 
@@ -43,6 +48,24 @@ def format_decompile(src: Path, dst: Optional[Path]) -> None:
         print(yaml.safe_dump(data))
 
 
+def convert_file(src: Path, dst: Path) -> None:
+    """Convert legacy YAML/JSON/etc. to a SAGE binary file."""
+    SAGECompiler().compile(src, dst)
+
+
+def validate_file(path: Path, schema: Path) -> None:
+    system = SAGESchemaSystem()
+    spec = yaml.safe_load(schema.read_text(encoding="utf8"))
+    system.register("tmp", spec)
+    data = SAGEDecompiler().decompile(path)
+    system.validate("tmp", data)
+    print("OK")
+
+
+def pack_dir(src: Path, dst: Path) -> None:
+    pack_directory(src, dst)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(prog="sage")
     sub = parser.add_subparsers(dest="topic")
@@ -66,6 +89,18 @@ def main() -> None:
     fd.add_argument("src")
     fd.add_argument("dst", nargs="?")
 
+    conv = sub.add_parser("convert")
+    conv.add_argument("src")
+    conv.add_argument("dst")
+
+    val = sub.add_parser("validate")
+    val.add_argument("path")
+    val.add_argument("--schema", required=True)
+
+    pack = sub.add_parser("pack")
+    pack.add_argument("src")
+    pack.add_argument("dst")
+
     args = parser.parse_args()
     if args.topic == "blueprint" and args.cmd == "migrate":
         blueprint_migrate(Path(args.path))
@@ -75,6 +110,12 @@ def main() -> None:
         format_compile(Path(args.src), Path(args.dst))
     elif args.topic == "format" and args.cmd == "decompile":
         format_decompile(Path(args.src), Path(args.dst) if args.dst else None)
+    elif args.topic == "convert":
+        convert_file(Path(args.src), Path(args.dst))
+    elif args.topic == "validate":
+        validate_file(Path(args.path), Path(args.schema))
+    elif args.topic == "pack":
+        pack_dir(Path(args.src), Path(args.dst))
     else:
         parser.print_help()
 

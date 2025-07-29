@@ -6,7 +6,8 @@ from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Dict, List
-import json
+
+from ..format.loader import load_sage_file
 from importlib import import_module
 
 from ..settings import settings
@@ -25,10 +26,10 @@ _booted = False
 
 
 def _load_modules_from_config() -> None:
-    path = Path(__file__).resolve().parents[2] / "engine.json"
+    path = Path(__file__).resolve().parents[2] / "engine.sagecfg"
     if not path.exists():
         return
-    data = json.loads(path.read_text())
+    data = load_sage_file(path)
     settings.features.update(data.get("features", {}))
     settings_dict = data.get("settings", {})
     for k, v in settings_dict.items():

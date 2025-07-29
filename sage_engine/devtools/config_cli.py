@@ -3,34 +3,34 @@
 from __future__ import annotations
 
 import argparse
-import json
+import yaml
 from pathlib import Path
 
 
-ENGINE_JSON = Path("engine.json")
+ENGINE_JSON = Path("engine.sagecfg")
 
 
 def init_config() -> None:
     if ENGINE_JSON.exists():
         raise SystemExit("engine.json already exists")
     data = {"modules": ["core"], "features": {}}
-    ENGINE_JSON.write_text(json.dumps(data, indent=2), encoding="utf8")
+    ENGINE_JSON.write_text(yaml.safe_dump(data), encoding="utf8")
 
 
 def add_module(name: str) -> None:
     if not ENGINE_JSON.exists():
-        raise SystemExit("engine.json missing")
-    data = json.loads(ENGINE_JSON.read_text(encoding="utf8"))
+        raise SystemExit("engine.sagecfg missing")
+    data = yaml.safe_load(ENGINE_JSON.read_text(encoding="utf8"))
     mods = set(data.get("modules", []))
     mods.add(name)
     data["modules"] = sorted(mods)
-    ENGINE_JSON.write_text(json.dumps(data, indent=2), encoding="utf8")
+    ENGINE_JSON.write_text(yaml.safe_dump(data), encoding="utf8")
 
 
 def validate() -> None:
     if not ENGINE_JSON.exists():
-        raise SystemExit("engine.json missing")
-    json.loads(ENGINE_JSON.read_text(encoding="utf8"))
+        raise SystemExit("engine.sagecfg missing")
+    yaml.safe_load(ENGINE_JSON.read_text(encoding="utf8"))
 
 
 def main() -> None:

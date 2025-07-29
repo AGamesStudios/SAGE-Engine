@@ -7,6 +7,7 @@ from enum import IntEnum
 from pathlib import Path
 from typing import Any, Tuple
 
+
 import struct
 import yaml
 
@@ -170,7 +171,12 @@ __all__ = [
     "SAGECompiler",
     "SAGEDecompiler",
     "SAGESchemaSystem",
+    "load_sage_file",
+    "pack_directory",
     "HEADER",
     "VERSION",
 ]
+
+from .loader import load_sage_file
+from .packer import pack_directory
 
