@@ -11,10 +11,13 @@ python examples/demo_game/main.py
 ```
 
 Configuration is stored in `examples/demo_game/game.sagecfg` and includes
-window size, style and FPS sync settings.
+window size, style, input scheme and FPS sync settings.
 
 ## Extending the game
 
 New levels can be added to `examples/demo_game/world/` as `.sagepack`
 files. Roles for objects live in `examples/demo_game/roles/` and logic
 scripts go under `scripts/`.
+
+The player role reads actions from `Input` such as `move_left` and `move_right`
+configured in `game.sagecfg`.

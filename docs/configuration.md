@@ -33,6 +33,11 @@ style = "default"
 hide_system_cursor = true
 follow_rate = 1.0
 
+[input]
+mouse_sensitivity = 1.0
+default_scheme = "keyboard_mouse"
+invert_y = false
+
 [resource]
 limit_size_mb = 10
 enable_pack = true

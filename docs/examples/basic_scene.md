@@ -2,6 +2,7 @@
 
 ```python
 from sage_engine import world, window, render, gfx
+from sage_engine.input import Input
 
 window.init("Example", 1280, 720)
 render.init(window.get_window_handle())
@@ -11,9 +12,12 @@ edit = world.scene.begin_edit()
 player = edit.create(role="sprite", name="Player", x=0, y=0)
 world.scene.apply(edit)
 world.scene.commit()
+Input.map_action("exit", key="ESCAPE")
 
 gfx.begin_frame()
 world.scene.render()
+if Input.is_action("exit"):
+    pass
 buf = gfx.end_frame()
 render.present(buf)
 ```

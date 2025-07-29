@@ -25,6 +25,7 @@
 - [SAGE Graphic](docs/modules/gfx.md)
 - [Graphic Module](docs/modules/graphic.md)
 - [Sprite Module](docs/modules/sprite.md)
+- [Input Module](docs/modules/input.md)
 - [Animation Module](docs/modules/animation.md)
 - [Resource System](docs/modules/resource.md)
 - [Configuration](docs/configuration.md)

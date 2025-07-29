@@ -17,6 +17,14 @@
    world.scene.apply(edit)
    world.scene.commit()
    ```
-4. Изучите примеры в каталоге `docs/examples/`.
+4. Обработайте ввод:
+   ```python
+   from sage_engine.input import Input
+
+   Input.map_action("quit", key="ESCAPE")
+   if Input.is_action("quit"):
+       print("bye")
+   ```
+5. Изучите примеры в каталоге `docs/examples/`.
 
 Теперь вы готовы экспериментировать с ролями и фазами.
