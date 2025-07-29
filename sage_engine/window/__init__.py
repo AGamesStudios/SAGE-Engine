@@ -198,3 +198,36 @@ def _on_mouse(event) -> None:
         _window._on_mouse(event)
     else:
         _event_queue.append((WIN_MOUSE, (event.type, event.x, event.y, getattr(event, "button", 0))) )
+
+from .fullscreen import set_fullscreen as _fs_toggle, set_resolution as _fs_res
+from .aspect import calculate_viewport, Viewport
+
+
+def set_fullscreen(enabled: bool) -> None:
+    """Enable or disable fullscreen for the main window."""
+    if _window is not None:
+        _fs_toggle(_window, enabled)
+
+
+def set_resolution(width: int, height: int) -> None:
+    """Change resolution of the main window."""
+    if _window is not None:
+        _fs_res(_window, width, height)
+        _event_queue.append((WIN_RESIZE, (width, height)))
+
+
+__all__ = [
+    "init",
+    "create_window",
+    "poll_events",
+    "get_size",
+    "should_close",
+    "shutdown",
+    "get_window_handle",
+    "get_framebuffer",
+    "get_dpi_scale",
+    "set_fullscreen",
+    "set_resolution",
+    "calculate_viewport",
+    "Viewport",
+]

@@ -35,3 +35,7 @@ class RenderContext:
 
     def resize(self, width: int, height: int) -> None:
         self.backend.resize(width, height, self.output_target)
+
+    def set_viewport(self, x: int, y: int, w: int, h: int) -> None:
+        self.backend.set_viewport(x, y, w, h, self.output_target)
+

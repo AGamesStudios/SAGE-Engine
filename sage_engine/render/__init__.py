@@ -9,6 +9,7 @@ from ..settings import settings
 
 _backend = None
 _context = None
+_viewport = None
 
 
 def _select_backend() -> str:
@@ -64,6 +65,16 @@ def create_context(handle: Any) -> Any:
         return _backend.create_context(handle)
     return None
 
+def set_viewport(width: int, height: int, preserve_aspect: bool = True, handle: Any = None) -> None:
+    global _viewport
+    if handle is None:
+        ctx = _context
+    else:
+        ctx = _backend.create_context(handle)
+    if ctx:
+        ctx.set_viewport(0, 0, width, height)
+    _viewport = (width, height, preserve_aspect)
+
 def resize(width: int, height: int, handle: Any = None) -> None:
     if handle is None:
         ctx = _context
@@ -91,3 +102,4 @@ def _get_backend():
 
 def _get_context():
     return _context
+

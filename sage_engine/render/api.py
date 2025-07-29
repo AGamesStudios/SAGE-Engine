@@ -30,6 +30,10 @@ class RenderBackend:
     def resize(self, width: int, height: int, handle: Any | None = None) -> None:
         raise NotImplementedError
 
+    def set_viewport(self, x: int, y: int, w: int, h: int, handle: Any | None = None) -> None:
+        """Adjust the viewport used for presenting the framebuffer."""
+        raise NotImplementedError
+
     def shutdown(self, handle: Any | None = None) -> None:
         raise NotImplementedError
 

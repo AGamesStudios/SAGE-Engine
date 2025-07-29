@@ -315,3 +315,12 @@ class Win32Window:
     def _on_mouse(self, typ: str, x: int, y: int, button: int):
         logger.debug("WM_MOUSE %s %d %d b=%d", typ, x, y, button)
         events.emit(WIN_MOUSE, typ, x, y, button)
+
+    def set_fullscreen(self, enabled: bool) -> None:
+        self.fullscreen = enabled
+        # Stub: real implementation would adjust window style and size
+
+    def set_resolution(self, width: int, height: int) -> None:
+        self.width = width
+        self.height = height
+

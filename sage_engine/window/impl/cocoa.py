@@ -54,3 +54,11 @@ class CocoaWindow:
 
     def _on_mouse(self, typ: str, x: int, y: int, button: int):
         events.emit(WIN_MOUSE, typ, x, y, button)
+
+    def set_fullscreen(self, enabled: bool) -> None:
+        self.fullscreen = enabled
+
+    def set_resolution(self, width: int, height: int) -> None:
+        self.width = width
+        self.height = height
+

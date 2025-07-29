@@ -155,6 +155,10 @@ class SoftwareBackend(RenderBackend):
                 self._default = None
             self._create_win32(ctx.hwnd)
 
+    def set_viewport(self, x: int, y: int, w: int, h: int, handle: Optional[int] = None) -> None:
+        # software backend does not implement scaling; stub for API completeness
+        pass
+
     def shutdown(self, handle: Optional[int] = None) -> None:
         self.commands.clear()
         if handle is None:
@@ -178,3 +182,4 @@ class SoftwareBackend(RenderBackend):
 
 def get_backend() -> SoftwareBackend:
     return SoftwareBackend()
+

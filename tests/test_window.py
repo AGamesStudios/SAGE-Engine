@@ -91,3 +91,17 @@ def test_dpi_and_multi_window():
     assert w2.get_size() == (5, 5)
     window.shutdown()
 
+
+def test_viewport_calc():
+    from sage_engine.window import calculate_viewport
+    vp = calculate_viewport(1920, 1080, 1280, 720)
+    assert vp.width == 1920 and vp.height == 1080 and vp.x == 0 and vp.y == 0
+
+
+def test_set_fullscreen_and_resolution():
+    os.environ['SAGE_HEADLESS'] = '1'
+    window.init('fs', 320, 240)
+    window.set_fullscreen(True)
+    window.set_resolution(640, 480)
+    assert window.get_size() == (640, 480)
+    window.shutdown()
