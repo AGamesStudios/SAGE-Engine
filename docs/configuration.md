@@ -19,3 +19,9 @@ mode = "precise"
 tolerance = 0.2
 ```
 
+[cursor]
+enabled = true
+style = "default"
+hide_system_cursor = true
+follow_rate = 1.0
+

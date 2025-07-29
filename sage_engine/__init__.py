@@ -19,6 +19,7 @@ __all__ = [
     "window",
     "graphic",
     "runtime",
+    "cursor",
     "settings",
     "api",
 ]
