@@ -20,10 +20,7 @@ def test_framebuffer_size_match():
     from sage_engine import gfx
     gfx.init(20, 20)
     gfx.begin_frame(color=(0, 0, 0, 255))
-    try:
-        gfx.flush_frame(handle)
-    except ValueError:
-        assert False, 'flush_frame raised ValueError \u2014 check size agreement'
+    gfx.flush_frame(handle)
     gfx.shutdown()
     render.shutdown()
     window.shutdown()

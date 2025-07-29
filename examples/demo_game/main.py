@@ -35,8 +35,7 @@ def main():
         gfx.begin_frame((20, 20, 20, 255))
         gfx.draw_rect(150, 110, 20, 20, (0, 200, 255, 255))
         gfx.draw_rect(0, 0, 10, 10, (255, 0, 0, 255))
-        gfx.flush_frame(window.get_window_handle())
-        fsync.end_frame()
+        gfx.flush_frame(window.get_window_handle(), fsync)
 
         if window.should_close():
             running = False

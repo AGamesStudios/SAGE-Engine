@@ -36,3 +36,35 @@ def test_frame_flush():
     gfx.flush_frame(None)
     gfx.shutdown()
     render.shutdown()
+
+
+def test_auto_resize_and_flush_no_error():
+    import os
+    from sage_engine import window, render
+    os.environ['SAGE_HEADLESS'] = '1'
+    window.init('t', 20, 20)
+    render.init(window.get_window_handle())
+    gfx.init(20, 20)
+    gfx.begin_frame()
+    window.set_resolution(40, 30)
+    gfx.begin_frame()
+    assert gfx._runtime.width == 40 and gfx._runtime.height == 30
+    gfx.flush_frame(window.get_window_handle())
+    gfx.shutdown()
+    render.shutdown()
+    window.shutdown()
+
+
+def test_flush_mismatch_skips_frame():
+    import os
+    from sage_engine import window, render
+    os.environ['SAGE_HEADLESS'] = '1'
+    window.init('m', 30, 30)
+    render.init(window.get_window_handle())
+    gfx.init(10, 10)
+    gfx.begin_frame()
+    # Should not raise when buffer smaller than render context
+    gfx.flush_frame(window.get_window_handle())
+    gfx.shutdown()
+    render.shutdown()
+    window.shutdown()

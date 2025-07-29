@@ -31,15 +31,18 @@ class GraphicRuntime:
 
 
     def begin_frame(self, color=None) -> None:
-        if self.buffer is None or self.width == 0 or self.height == 0:
-            from .. import window
+        from .. import window
 
-            w, h = window.get_size()
-            if w == 0 or h == 0:
-                w = max(w, 1)
-                h = max(h, 1)
+        w, h = window.get_framebuffer_size()
+        if w <= 0 or h <= 0:
+            w = self.width or 1
+            h = self.height or 1
+        if self.buffer is None:
             self.init(w, h)
-            logger.debug("[gfx] Auto-init framebuffer %dx%d", w, h)
+            logger.debug("[gfx] Framebuffer allocated %dx%d", w, h)
+        elif w != self.width or h != self.height:
+            self.init(w, h)
+            logger.info("[gfx] Framebuffer reallocated to %dx%d", w, h)
         if color is not None:
             self.clear_color = to_bgra8_premul(color)
         if self.buffer is not None:
@@ -116,7 +119,7 @@ class GraphicRuntime:
         logger.debug("end_frame %d commands", len(self._commands), tag="gfx")
         return memoryview(self.buffer)
 
-    def flush_frame(self, handle: Any | None = None) -> None:
+    def flush_frame(self, handle: Any | None = None, fsync: Any | None = None) -> None:
         """Finish drawing and present the buffer via :mod:`render`."""
         from .. import render
 
@@ -133,12 +136,12 @@ class GraphicRuntime:
                 logger.error(
                     "[gfx] Buffer size %d < expected %d", actual_size, expected_size
                 )
-                raise ValueError(
-                    f"Buffer size too small ({actual_size} < {expected_size})"
-                )
+                return
         logger.debug("[gfx] Framebuffer size: %d bytes", len(buf))
         logger.debug("[gfx] Sending to render: handle=%s", handle)
         render.present(buf, handle)
+        if fsync is not None and hasattr(fsync, "sleep_until_next_frame"):
+            fsync.sleep_until_next_frame()
 
     def shutdown(self) -> None:
         self.buffer = None

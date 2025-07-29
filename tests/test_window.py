@@ -6,6 +6,7 @@ def test_init_shutdown():
     os.environ['SAGE_HEADLESS'] = '1'
     window.init("t", 320, 240)
     assert window.get_size() == (320, 240)
+    assert window.get_framebuffer_size() == (320, 240)
     window.shutdown()
 
 
@@ -104,4 +105,5 @@ def test_set_fullscreen_and_resolution():
     window.set_fullscreen(True)
     window.set_resolution(640, 480)
     assert window.get_size() == (640, 480)
+    assert window.get_framebuffer_size() == (640, 480)
     window.shutdown()

@@ -42,6 +42,9 @@ class HeadlessWindow:
     def get_framebuffer(self) -> bytearray | None:
         return self.framebuffer
 
+    def get_framebuffer_size(self) -> tuple[int, int]:
+        return (self.width, self.height)
+
     def get_size(self) -> tuple[int, int]:
         return (self.width, self.height)
 
@@ -124,6 +127,17 @@ def get_size() -> tuple[int, int]:
     if _window is None:
         return (0, 0)
     return _window.get_size()
+
+
+def get_framebuffer_size() -> tuple[int, int]:
+    """Return framebuffer size of the main window."""
+    if _window is None:
+        return (0, 0)
+    if hasattr(_window, "get_framebuffer_size"):
+        return _window.get_framebuffer_size()  # type: ignore[attr-defined]
+    if hasattr(_window, "get_size"):
+        return _window.get_size()
+    return (0, 0)
 
 
 def should_close() -> bool:
@@ -221,6 +235,7 @@ __all__ = [
     "create_window",
     "poll_events",
     "get_size",
+    "get_framebuffer_size",
     "should_close",
     "shutdown",
     "get_window_handle",

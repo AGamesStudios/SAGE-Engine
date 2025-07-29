@@ -55,3 +55,16 @@ class FrameSync:
                 pass
         self._next_frame_ns = target_end
 
+    def sleep_until_next_frame(self) -> None:
+        """Sleep the remaining time of the frame without updating timers."""
+        if not self.enabled or self._next_frame_ns is None:
+            return
+        now = perf_counter_ns()
+        if now < self._next_frame_ns:
+            sleep_time = (self._next_frame_ns - now) / 1e9
+            if sleep_time > 0.0003:
+                time.sleep(sleep_time - 0.0003)
+            while perf_counter_ns() < self._next_frame_ns:
+                pass
+        self._next_frame_ns += int(self.target_dt * 1e9)
+

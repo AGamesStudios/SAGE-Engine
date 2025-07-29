@@ -34,6 +34,9 @@ class X11Window:
     def get_framebuffer(self) -> bytearray | None:
         return None
 
+    def get_framebuffer_size(self) -> tuple[int, int]:
+        return (self.width, self.height)
+
     def get_size(self) -> tuple[int, int]:
         return (self.width, self.height)
 

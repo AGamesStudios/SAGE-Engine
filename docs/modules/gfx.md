@@ -17,8 +17,7 @@ gfx.state.color = (0,255,0,128)
 gfx.draw_rounded_rect(1,1,8,8,2)
 gfx.pop_state()
 gfx.add_effect("blur")
-buffer = gfx.end_frame()
-render.present(buffer)
+gfx.flush_frame(window.get_window_handle())
 gfx.shutdown()
 ```
 
@@ -42,10 +41,21 @@ while not window.should_close():
     window.poll_events()
     gfx.begin_frame()  # можно передать цвет: begin_frame((0,0,0,255))
     gfx.draw_rect(10, 10, 30, 30, "#00FF0080")
-    buffer = gfx.end_frame()
-    render.present(buffer)
+    gfx.flush_frame(window.get_window_handle())
 
 gfx.shutdown()
 render.shutdown()
 window.shutdown()
 ```
+
+## Автосогласование графических модулей
+
+`gfx.begin_frame()` получает актуальные размеры из `window.get_framebuffer_size()`
+и автоматически пересоздаёт внутренний буфер при изменении окна. При каждом
+пересоздании выводится сообщение уровня INFO вида
+`[gfx] Framebuffer reallocated to 1280x720`.
+
+`gfx.flush_frame()` проверяет согласованность буфера с контекстом `render` и
+выводит кадр. В случае несоответствия ошибка логируется, кадр пропускается, но
+движок не падает. После успешного вывода может быть передан объект `FrameSync`
+для стабилизации FPS.
