@@ -10,3 +10,21 @@ def test_set_viewport_affects_state():
     assert render._get_context() is not None
     render.shutdown()
     window.shutdown()
+
+
+def test_framebuffer_size_match():
+    os.environ['SAGE_HEADLESS'] = '1'
+    window.init('t', 20, 20)
+    handle = window.get_window_handle()
+    render.init(handle)
+    from sage_engine import gfx
+    gfx.init(20, 20)
+    gfx.begin_frame(color=(0, 0, 0, 255))
+    try:
+        gfx.flush_frame(handle)
+    except ValueError:
+        assert False, 'flush_frame raised ValueError \u2014 check size agreement'
+    gfx.shutdown()
+    render.shutdown()
+    window.shutdown()
+

@@ -39,6 +39,7 @@ class BITMAPINFO(ctypes.Structure):
         ("bmiColors", RGBQUAD * 1),
     ]
 
+from ...logger import logger
 from ..api import RenderBackend
 from ..context import RenderContext
 
@@ -129,8 +130,17 @@ class SoftwareBackend(RenderBackend):
     def present(self, buffer: memoryview, handle: Optional[int] = None) -> None:
         ctx = self._get(handle)
         if ctx and sys.platform.startswith("win"):
-            src_ptr = (ctypes.c_char * (ctx.stride * ctx.height)).from_buffer(buffer)
-            ctypes.memmove(ctx.bits, src_ptr, ctx.stride * ctx.height)
+            expected_size = ctx.stride * ctx.height
+            actual_size = len(buffer)
+            if actual_size < expected_size:
+                logger.error(
+                    "[render] Invalid buffer size: %d < expected %d",
+                    actual_size,
+                    expected_size,
+                )
+                raise ValueError(f"Buffer too small ({actual_size} < {expected_size})")
+            src_ptr = (ctypes.c_char * expected_size).from_buffer(buffer)
+            ctypes.memmove(ctx.bits, src_ptr, expected_size)
             SRCCOPY = 0x00CC0020
             self.gdi32.BitBlt(
                 ctx.wnd_dc,

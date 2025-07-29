@@ -31,6 +31,15 @@ class GraphicRuntime:
 
 
     def begin_frame(self, color=None) -> None:
+        if self.buffer is None or self.width == 0 or self.height == 0:
+            from .. import window
+
+            w, h = window.get_size()
+            if w == 0 or h == 0:
+                w = max(w, 1)
+                h = max(h, 1)
+            self.init(w, h)
+            logger.debug("[gfx] Auto-init framebuffer %dx%d", w, h)
         if color is not None:
             self.clear_color = to_bgra8_premul(color)
         if self.buffer is not None:
@@ -112,6 +121,23 @@ class GraphicRuntime:
         from .. import render
 
         buf = self.end_frame()
+        backend = render._get_backend()
+        ctx = None
+        if backend and hasattr(backend, "_contexts"):
+            h = int(handle or getattr(render._get_context(), "output_target", 0) or 0)
+            ctx = backend._contexts.get(h)
+        if ctx:
+            expected_size = ctx.stride * ctx.height
+            actual_size = len(buf)
+            if actual_size < expected_size:
+                logger.error(
+                    "[gfx] Buffer size %d < expected %d", actual_size, expected_size
+                )
+                raise ValueError(
+                    f"Buffer size too small ({actual_size} < {expected_size})"
+                )
+        logger.debug("[gfx] Framebuffer size: %d bytes", len(buf))
+        logger.debug("[gfx] Sending to render: handle=%s", handle)
         render.present(buf, handle)
 
     def shutdown(self) -> None:
