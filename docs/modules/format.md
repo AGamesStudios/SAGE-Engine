@@ -18,6 +18,9 @@ compiler.compile(Path('object.yaml'), Path('object.sageobj'))
 obj = SAGEDecompiler().decompile(Path('object.sageobj'))
 ```
 
+Низкоуровневые модули доступны для работы с конкретными файлами:
+`sageimg`, `sagesfx`, `sagebp`, `sageflow` и `sagepack`.
+
 Schemas can be registered using `SAGESchemaSystem` to validate data when
 compiling.
 
@@ -28,5 +31,5 @@ $ sage format compile object.yaml object.sageobj
 $ sage format decompile object.sageobj
 $ sage convert old.json new.sageobj
 $ sage validate new.sageobj --schema schema.yaml
-$ sage pack assets/ game.sagepack
+$ sage-pack build assets/ game.sagepack
 ```

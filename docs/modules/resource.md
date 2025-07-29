@@ -12,3 +12,9 @@ img = resource.load("sprites/player.sageimg")
 
 `packer.pack()` собирает каталог в единый файл без дубликатов и проверяет
 лимит размера.
+
+CLI утилита `sage-pack` автоматизирует сборку:
+
+```bash
+sage-pack build assets/ build/resources.sagepack --report pack.json
+```

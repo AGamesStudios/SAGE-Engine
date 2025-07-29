@@ -175,8 +175,14 @@ __all__ = [
     "pack_directory",
     "HEADER",
     "VERSION",
+    "sageimg",
+    "sagesfx",
+    "sagebp",
+    "sageflow",
+    "sagepack",
 ]
 
 from .loader import load_sage_file
 from .packer import pack_directory
+from . import sageimg, sagesfx, sagebp, sageflow, sagepack
 

@@ -16,6 +16,7 @@ PyYAML = "*"
 sage-test = "sage_engine.testing.runner:main"
 sage-config = "sage_engine.devtools.config_cli:main"
 sage = "sage_engine.devtools.cli:main"
+sage-pack = "sage_engine.resource.sage_pack:main"
 
 [build-system]
 requires = ["poetry-core"]

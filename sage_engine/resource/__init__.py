@@ -3,12 +3,15 @@
 import asyncio
 from .manager import load, get, preload
 from .packer import pack
+from .sage_pack import main as pack_cli
 
 __all__ = [
     "load",
     "get",
     "preload",
     "pack",
+    "load_async",
+    "pack_cli",
 ]
 
 

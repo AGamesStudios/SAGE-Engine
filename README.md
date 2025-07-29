@@ -48,6 +48,7 @@
 The demo game in `examples/demo_game` illustrates basic usage. On Windows use
 Python 3.10–3.12 and run `python demo.py`. Set `SAGE_LOGLEVEL=DEBUG` for verbose
 logs.
+Use `sage-pack` to build compressed resource archives.
 To validate the Win32 backend, run the demo and resize or move the window.
 Events will be printed in the console when `SAGE_LOGLEVEL=DEBUG`.
 
