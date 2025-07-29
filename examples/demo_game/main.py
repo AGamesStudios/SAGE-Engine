@@ -2,6 +2,7 @@
 
 from sage_engine import window, render, graphic, sprite, resource, runtime
 from sage_engine.animation import AnimationPlayer
+from sage_engine.graphic import state as gfx_state
 
 
 def load_resources():
@@ -11,7 +12,7 @@ def load_resources():
 def main():
     window.init("Pixel Signals", 320, 240)
     render.init(window.get_window_handle())
-    graphic.state.set_state("style", "neo-retro")
+    gfx_state.set_state("style", "neo-retro")
 
     load_resources()
 

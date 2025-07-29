@@ -53,3 +53,25 @@ class GraphicConfig:
 
 config = GraphicConfig()
 
+
+# Module-level graphic state storage for quick access to configurable parameters
+_graphic_state: dict[str, object] = {}
+
+def set_state(key: str, value) -> None:
+    """Set a graphic parameter by key."""
+    _graphic_state[key] = value
+
+
+def get_state(key: str, default=None):
+    """Retrieve a graphic parameter or default."""
+    return _graphic_state.get(key, default)
+
+
+def clear_state() -> None:
+    """Reset all stored graphic parameters."""
+    _graphic_state.clear()
+
+
+def export_state() -> dict:
+    """Return a copy of the stored graphic state."""
+    return dict(_graphic_state)
