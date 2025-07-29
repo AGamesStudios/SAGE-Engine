@@ -112,6 +112,12 @@ SAGE-Engine/
 │   │   ├── sprite.py
 │   │   ├── atlas.py
 │   │   └── cache.py
+│   ├── animation/
+│   │   ├── __init__.py
+│   │   ├── runtime.py
+│   │   ├── player.py
+│   │   ├── sageanim.py
+│   │   └── types.py
 │   ├── runtime/
 │   │   ├── __init__.py
 │   │   └── fsync.py

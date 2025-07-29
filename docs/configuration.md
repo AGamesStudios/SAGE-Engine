@@ -31,3 +31,7 @@ enable_pack = true
 compression = "lz4"
 preload = ["sprites/", "audio/"]
 
+[animation]
+default_fps = 12
+preload = ["player/", "enemies/"]
+
