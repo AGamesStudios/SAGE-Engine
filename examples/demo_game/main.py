@@ -1,28 +1,42 @@
 """Pixel Signals demo game entry point."""
 
-from sage_engine import window, render, graphic, sprite, resource, runtime
-from sage_engine.animation import AnimationPlayer
+from sage_engine import window, render, gfx, resource
 from sage_engine.graphic import state as gfx_state
+from sage_engine.logger import logger
+from sage_engine.runtime import FrameSync
+from pathlib import Path
 
 
-def load_resources():
-    resource.load("demo.assets")  # placeholder for resource loading
+def load_resources() -> None:
+    """Load optional resources if the demo.assets file exists."""
+    assets = Path("demo.assets")
+    if assets.exists():
+        try:
+            resource.load(str(assets))
+        except Exception as exc:  # pragma: no cover - depends on environment
+            logger.warn("Failed to load demo.assets: %s", exc)
+    else:
+        logger.warn("demo.assets не найден, запускаемся без ресурсов")
 
 
 def main():
     window.init("Pixel Signals", 320, 240)
     render.init(window.get_window_handle())
+    gfx.init(320, 240)
     gfx_state.set_state("style", "neo-retro")
 
+    fsync = FrameSync(target_fps=60)
     load_resources()
 
     running = True
     while running:
         window.poll_events()
-        runtime.fsync.start_frame()
-        graphic.api.draw_sprite(None, 0, 0)  # placeholder
-        graphic.api.flush()
-        runtime.fsync.end_frame()
+        fsync.start_frame()
+        gfx.begin_frame((20, 20, 20, 255))
+        gfx.draw_rect(150, 110, 20, 20, (0, 200, 255, 255))
+        buf = gfx.end_frame()
+        render.api.present(buf, window.get_window_handle())
+        fsync.end_frame()
 
         if window.should_close():
             running = False
