@@ -52,3 +52,7 @@ Blueprint names can be referenced from FlowScript to spawn objects at runtime:
 ```python
 obj = runtime.builder().build("enemy_tank")
 ```
+
+Objects are always built via the builder returned from `runtime.builder()`. A
+previous helper called `new()` is no longer provided, so make sure to obtain a
+builder instance and call `build()`.

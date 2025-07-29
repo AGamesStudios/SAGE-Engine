@@ -1,12 +1,9 @@
-from sage_engine.objects import runtime, new
+from sage_engine.objects import runtime
 
-store = runtime.store
+# register a simple blueprint
+runtime.blueprints.register({"name": "Player", "roles": []})
 
-player_id = (
-    new(store, "player_01")
-    .role("Player")
-    .set("Transform", x=100, y=64)
-    .spawn()
-)
+# build an object instance from the blueprint
+player = runtime.builder().build("Player", obj_id="player_01")
 
-print(store.get(player_id))
+print(runtime.store.get_object_by_id("player_01"))
