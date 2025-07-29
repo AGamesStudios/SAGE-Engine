@@ -8,3 +8,6 @@
 - `assert_.role_attached(obj, "Role")`
 - `visual.diff(exp.png, act.png)`
 - `flowtest.assert_path_passed(flow, ["a", "b"])`
+
+`visual.diff` может сравнивать скриншоты с учётом режима сглаживания,
+что удобно для тестов `graphic`.

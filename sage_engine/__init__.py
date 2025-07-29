@@ -17,6 +17,7 @@ __all__ = [
     "objects",
     "format",
     "window",
+    "graphic",
     "settings",
     "api",
 ]

@@ -29,3 +29,27 @@ class GraphicState:
 
 
 PixelFormat = ("BGRA8", "premultiplied")
+
+
+class GraphicConfig:
+    """Configuration parameters loaded from ``engine.sagecfg``."""
+
+    def __init__(self) -> None:
+        self.antialiasing = "None"
+        self.filtering = "nearest"
+        self.dynamic_resolution = False
+        self.gamma_correction = False
+        self.style = "default"
+        self.fallback_mode = "None"
+
+    def load_from_dict(self, cfg: dict) -> None:
+        self.antialiasing = cfg.get("antialiasing", self.antialiasing)
+        self.filtering = cfg.get("filtering", self.filtering)
+        self.dynamic_resolution = bool(cfg.get("dynamic_resolution", self.dynamic_resolution))
+        self.gamma_correction = bool(cfg.get("gamma_correction", self.gamma_correction))
+        self.style = cfg.get("style", self.style)
+        self.fallback_mode = cfg.get("fallback_mode", self.fallback_mode)
+
+
+config = GraphicConfig()
+
