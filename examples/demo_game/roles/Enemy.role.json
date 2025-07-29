@@ -1,0 +1,5 @@
+{
+  "name": "Enemy",
+  "components": ["sprite"],
+  "properties": {"damage": 1}
+}

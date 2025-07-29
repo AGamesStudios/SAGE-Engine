@@ -1,0 +1,5 @@
+{
+  "name": "Camera",
+  "components": ["camera"],
+  "properties": {"follow": "Signal"}
+}

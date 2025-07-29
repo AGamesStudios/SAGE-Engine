@@ -1,0 +1,11 @@
+[window]
+width = 320
+height = 240
+fullscreen = false
+preserve_aspect = true
+
+[fsync]
+target_fps = 60
+
+[graphics]
+style = "neo-retro"
