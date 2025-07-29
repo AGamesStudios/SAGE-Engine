@@ -1,3 +1,3 @@
 class LogHandler:
-    def emit(self, record: str) -> None:
+    def emit(self, record: str, level: int) -> None:
         raise NotImplementedError
