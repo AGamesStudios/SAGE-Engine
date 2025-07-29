@@ -3,6 +3,8 @@ import json
 from typing import Optional
 import yaml
 from pathlib import Path
+import subprocess
+import sys
 
 from ..compat import migrate
 from ..format import (
@@ -66,6 +68,12 @@ def pack_dir(src: Path, dst: Path) -> None:
     pack_directory(src, dst)
 
 
+def build_assets_call(path: Path) -> None:
+    """Run the build_assets.py helper script."""
+    script = Path(__file__).resolve().parents[2] / "tools" / "build_assets.py"
+    subprocess.run([sys.executable, str(script), str(path)], check=True)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(prog="sage")
     sub = parser.add_subparsers(dest="topic")
@@ -101,6 +109,9 @@ def main() -> None:
     pack.add_argument("src")
     pack.add_argument("dst")
 
+    build = sub.add_parser("build-assets")
+    build.add_argument("path", nargs="?", default=".")
+
     args = parser.parse_args()
     if args.topic == "blueprint" and args.cmd == "migrate":
         blueprint_migrate(Path(args.path))
@@ -116,6 +127,8 @@ def main() -> None:
         validate_file(Path(args.path), Path(args.schema))
     elif args.topic == "pack":
         pack_dir(Path(args.src), Path(args.dst))
+    elif args.topic == "build-assets":
+        build_assets_call(Path(args.path))
     else:
         parser.print_help()
 
