@@ -21,6 +21,11 @@ class GraphicRuntime:
         self._commands: List[Any] = []
         self._seq_counter = 0
         self.clear_color: int = to_bgra8_premul((0, 0, 0, 255))
+        self.auto_resize = True
+        self._frame_counter = 0
+        self._last_error_key: str | None = None
+        self._last_error_frame: int = -1
+        self._error_interval = 60
 
     def init(self, width: int, height: int) -> None:
         """Initialize a framebuffer of the given size."""
@@ -53,6 +58,33 @@ class GraphicRuntime:
         self._commands.clear()
         self._stack.clear()
         self._seq_counter = 0
+
+    def _check_window_size(self) -> None:
+        """Ensure the framebuffer matches current window size."""
+        from .. import window
+
+        w, h = window.get_framebuffer_size()
+        if w <= 0 or h <= 0:
+            return
+        if w != self.width or h != self.height:
+            if self.auto_resize:
+                self.init(w, h)
+                logger.info("[gfx] Framebuffer reallocated to %dx%d", w, h)
+            else:
+                key = f"{w}x{h}"
+                if (
+                    self._last_error_key != key
+                    or self._frame_counter - self._last_error_frame >= self._error_interval
+                ):
+                    logger.error(
+                        "[gfx] Buffer mismatch: fb %dx%d vs window %dx%d",
+                        self.width,
+                        self.height,
+                        w,
+                        h,
+                    )
+                    self._last_error_key = key
+                    self._last_error_frame = self._frame_counter
 
     def push_state(self) -> None:
         self._stack.append(self.state.snapshot())
@@ -123,7 +155,9 @@ class GraphicRuntime:
         """Finish drawing and present the buffer via :mod:`render`."""
         from .. import render
 
+        self._check_window_size()
         buf = self.end_frame()
+        self._frame_counter += 1
         backend = render._get_backend()
         ctx = None
         if backend and hasattr(backend, "_contexts"):
