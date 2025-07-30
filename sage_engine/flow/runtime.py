@@ -4,6 +4,34 @@ from typing import Any
 from pathlib import Path
 
 from .bindings import get_builtins
+from ..input import Input
+from ..input.state import KEY_MAP
+from ..logger import logger
+
+
+class _FlowInputProxy:
+    """Proxy around Input that logs errors with [flow] prefix."""
+
+    def is_pressed(self, key: str) -> bool:
+        if not Input.is_action_bound(key) and key.upper() not in KEY_MAP:
+            logger.error("[flow] Invalid key name or unbound action: %s", key)
+            return False
+        return Input.is_pressed(key)
+
+    def is_down(self, key: str) -> bool:
+        if not Input.is_action_bound(key) and key.upper() not in KEY_MAP:
+            logger.error("[flow] Invalid key name or unbound action: %s", key)
+            return False
+        return Input.is_down(key)
+
+    def is_up(self, key: str) -> bool:
+        if not Input.is_action_bound(key) and key.upper() not in KEY_MAP:
+            logger.error("[flow] Invalid key name or unbound action: %s", key)
+            return False
+        return Input.is_up(key)
+
+    def __getattr__(self, name: str) -> Any:  # fallback to Input
+        return getattr(Input, name)
 
 from .compiler import compile_source, decode_bytes
 from .bytecode.vm import run as run_code
@@ -17,6 +45,7 @@ class FlowRuntime:
 
     def __init__(self) -> None:
         self.globals: dict[str, Any] = get_builtins()
+        self.globals["Input"] = _FlowInputProxy()
 
     def _exec(self, code: Any, ctx: dict[str, Any]) -> None:
         run_code(code, ctx)
@@ -56,12 +85,12 @@ def run_flow_script(path: str, input_obj: Any, *, lang: str = "ru") -> dict[str,
     """Execute a FlowScript file and invoke its on_update handler."""
     if path not in _CACHE:
         text = Path(path).read_text(encoding="utf-8")
-        ctx: dict[str, Any] = {"Input": input_obj}
+        ctx: dict[str, Any] = {"Input": _FlowInputProxy()}
         code = compile_source(text, lang=lang)
         exec(code, ctx)
         _CACHE[path] = (code, ctx)
     code, ctx = _CACHE[path]
-    ctx["Input"] = input_obj
+    ctx["Input"] = _FlowInputProxy()
     fn = ctx.get("on_update")
     if fn:
         asyncio.run(fn())

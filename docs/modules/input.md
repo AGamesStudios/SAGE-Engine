@@ -21,3 +21,20 @@ if Input.is_action("jump"):
 - `get_mouse_position()` — текущая позиция мыши
 - `get_mouse_delta()` — смещение мыши с прошлого кадра
 - `map_action(name, key)` и `is_action(name)` — привязка действий
+
+Допустимые клавиши: `A-Z`, `0-9`, `LEFT`, `RIGHT`, `UP`, `DOWN`, `SPACE`,
+`ENTER`, `ESCAPE`, а также модификаторы `SHIFT`, `CTRL`, `ALT`.
+
+Если в `map_action` указать неизвестное имя клавиши, в логе появится
+сообщение:
+
+```
+[ERROR] [input] Unknown key: LFT (action: move)
+```
+
+При обращении к непришитому действию через `is_pressed`/`is_down`/`is_up`
+выводится предупреждение:
+
+```
+[WARN] [input] Action 'move' not bound to any key
+```

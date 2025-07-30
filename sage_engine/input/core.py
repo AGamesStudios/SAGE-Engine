@@ -32,17 +32,46 @@ class InputCore:
         self._state.prev_x = self._state.mouse_x
         self._state.prev_y = self._state.mouse_y
 
+    def _resolve_key(self, name: str) -> str | None:
+        """Return normalized key name for a bound action or direct key."""
+        from .state import KEY_MAP
+        if name in self._actions:
+            return self._actions[name]
+        key = name.upper()
+        if key in KEY_MAP:
+            return key
+        return None
+
+    def _log_unbound(self, name: str) -> None:
+        from ..logger import logger
+        if name in self._actions:
+            logger.warn("[input] Action '%s' not bound to any key", name)
+        else:
+            logger.error("[input] Unknown key: %s", name)
+
     def is_pressed(self, key: str) -> bool:
-        """Return True while the key is held down."""
-        return key in self._state.pressed_keys
+        """Return True while the key or bound action is held down."""
+        real = self._resolve_key(key)
+        if not real:
+            self._log_unbound(key)
+            return False
+        return real in self._state.pressed_keys
 
     def is_down(self, key: str) -> bool:
-        """Return True only on the frame the key was pressed."""
-        return key in self._state.key_down
+        """Return True only on the frame the key or action was pressed."""
+        real = self._resolve_key(key)
+        if not real:
+            self._log_unbound(key)
+            return False
+        return real in self._state.key_down
 
     def is_up(self, key: str) -> bool:
-        """Return True only on the frame the key was released."""
-        return key in self._state.key_up
+        """Return True only on the frame the key or action was released."""
+        real = self._resolve_key(key)
+        if not real:
+            self._log_unbound(key)
+            return False
+        return real in self._state.key_up
 
     # Backwards compatibility
     was_pressed = is_down
@@ -63,7 +92,7 @@ class InputCore:
         if key:
             key = key.upper()
             if key not in KEY_MAP:
-                logger.warn("[input] Unknown key: %s", key)
+                logger.error("[input] Unknown key: %s (action: %s)", key, action)
                 return
             self._actions[action] = key
 
@@ -71,8 +100,14 @@ class InputCore:
         if action in self._actions:
             del self._actions[action]
 
+    def is_action_bound(self, action: str) -> bool:
+        """Return True if the action is mapped to a key."""
+        return action in self._actions
+
     def is_action(self, action: str) -> bool:
         key = self._actions.get(action)
         if not key:
+            from ..logger import logger
+            logger.warn("[input] Action '%s' not bound to any key", action)
             return False
         return self.is_pressed(key) or self.is_down(key)

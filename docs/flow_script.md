@@ -56,6 +56,21 @@ on update do
 end
 ```
 
+### Checking keyboard input
+
+```flow
+при обновление сделай
+    если нажата_клавиша("LEFT") тогда
+        move(player, -5, 0)
+конец
+```
+
+If a wrong key name is used, an error is logged:
+
+```
+[ERROR] [flow] Invalid key name or unbound action: LFT
+```
+
 ## Bytecode
 
 `compile_source()` converts FlowScript to Python source which is compiled to a code object. `compile_to_bytes()` serializes that code object so it can be stored in a `.sageflow` file. `FlowRuntime` can execute either plain source or the serialized bytecode using `run_bytecode()`.
