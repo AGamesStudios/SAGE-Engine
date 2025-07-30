@@ -28,13 +28,13 @@ class GraphicRuntime:
         self._last_error_key: str | None = None
         self._last_error_frame: int = -1
         self._error_interval = 60
-        from ..events import on
-        from ..window import WINDOW_RESIZED
-        on(WINDOW_RESIZED, self.realloc_buffer)
+
 
     def init(self, width: int, height: int) -> None:
         """Initialize a framebuffer of the given size."""
         # framebuffer will be resized on demand in flush_frame
+        from ..events import on
+        on("window_resized", self.realloc_buffer)
         self.width = width
         self.height = height
         self.pitch = self.width * BYTES_PER_PIXEL
@@ -53,17 +53,11 @@ class GraphicRuntime:
 
 
     def begin_frame(self, color=None) -> None:
-        from .. import window
-
-        w, h = window.get_framebuffer_size()
-        if w <= 0 or h <= 0:
-            w = self.width or 1
-            h = self.height or 1
+        """Start drawing a new frame."""
+        w, h = self.width or 1, self.height or 1
         if self.buffer is None:
             self.init(w, h)
             logger.debug("[gfx] Framebuffer allocated %dx%d", w, h)
-        elif w != self.width or h != self.height:
-            self.realloc_buffer(w, h)
         if color is not None:
             self.clear_color = to_bgra8_premul(color)
         if self.buffer is not None:
@@ -75,40 +69,37 @@ class GraphicRuntime:
         self._stack.clear()
         self._seq_counter = 0
 
-    def _check_window_size(self, handle: Any | None) -> None:
-        """Ensure the framebuffer matches current window size."""
-        from .. import window
-
-        w, h = window.get_size(handle)
-        if w <= 0 or h <= 0:
+    def _ensure_buffer_size(self) -> None:
+        """Ensure the framebuffer matches ``self.width`` and ``self.height``."""
+        if self.width <= 0 or self.height <= 0:
             return
+        expected_size = self.width * self.height * BYTES_PER_PIXEL
+        actual_size = len(self.buffer) if self.buffer is not None else 0
         logger.debug(
-            "[gfx] Validating framebuffer: %dx%d vs expected %dx%d",
-            self.width,
-            self.height,
-            w,
-            h,
+            "[gfx] Validating framebuffer: %d bytes vs expected %d",
+            actual_size,
+            expected_size,
         )
-        if w != self.width or h != self.height:
+        if actual_size != expected_size:
             if self.auto_resize:
-                self.realloc_buffer(w, h)
+                self.realloc_buffer(self.width, self.height)
                 logger.info(
                     "[gfx] Framebuffer reallocated due to resize: %dx%d",
-                    w,
-                    h,
+                    self.width,
+                    self.height,
                 )
             else:
-                key = f"{w}x{h}"
+                key = f"{self.width}x{self.height}"
                 if (
                     self._last_error_key != key
                     or self._frame_counter - self._last_error_frame >= self._error_interval
                 ):
                     logger.error(
-                        "[gfx] Buffer mismatch: fb %dx%d vs window %dx%d",
+                        "[gfx] Buffer mismatch: fb %dx%d bytes vs expected %dx%d",
+                        actual_size,
+                        expected_size,
                         self.width,
                         self.height,
-                        w,
-                        h,
                     )
                     self._last_error_key = key
                     self._last_error_frame = self._frame_counter
@@ -182,16 +173,13 @@ class GraphicRuntime:
         """Finish drawing and present the buffer via :mod:`render`."""
         from .. import render
 
-        from .. import window
-
-        self._check_window_size(handle)
+        self._ensure_buffer_size()
         buf = self.end_frame()
-        win_w, win_h = window.get_size(handle)
-        expected_size = win_w * win_h * BYTES_PER_PIXEL
+        expected_size = self.width * self.height * BYTES_PER_PIXEL
         actual_size = len(buf)
         if actual_size != expected_size:
-            self.realloc_buffer(win_w, win_h)
-            logger.info("[gfx] Framebuffer reallocated to %dx%d", win_w, win_h)
+            self.realloc_buffer(self.width, self.height)
+            logger.info("[gfx] Framebuffer reallocated to %dx%d", self.width, self.height)
             self.begin_frame()
             buf = self.end_frame()
         self._frame_counter += 1
