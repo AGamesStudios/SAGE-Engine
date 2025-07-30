@@ -1,4 +1,4 @@
 name = "Render Test"
 width = 640
 height = 360
-count = 10000
+count = 1000

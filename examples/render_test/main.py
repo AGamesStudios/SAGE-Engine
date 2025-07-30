@@ -20,7 +20,18 @@ def load_config(path: str | None = None):
 
 
 class RectObject(objects.roles.interfaces.Role):
-    def __init__(self, width: int = 10, height: int = 10, color: tuple[int, int, int, int] | None = None) -> None:
+    """Simple rectangular role used for the stress test."""
+
+    def __init__(self,
+        *,
+        x: int = 0,
+        y: int = 0,
+        width: int = 10,
+        height: int = 10,
+        color: tuple[int, int, int, int] | None = None,
+    ) -> None:
+        self.start_x = x
+        self.start_y = y
         self.width = width
         self.height = height
         self.color = color or (255, 255, 255, 255)
@@ -28,6 +39,8 @@ class RectObject(objects.roles.interfaces.Role):
 
     def on_attach(self, obj: objects.object.Object) -> None:  # type: ignore[override]
         self._obj = obj
+        obj.position.x = float(self.start_x)
+        obj.position.y = float(self.start_y)
 
     def on_render(self, ctx) -> None:  # type: ignore[override]
         if self._obj:
