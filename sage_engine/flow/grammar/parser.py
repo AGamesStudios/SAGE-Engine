@@ -9,13 +9,22 @@ __all__ = ["parse"]
 def _translate_ru(line: str) -> str:
     patterns = [
         (r"^переменная\s+(\w+)\s*=\s*(.+)$", r"\1 = \2"),
+        (r"^пусть\s+(\w+)\s*=\s*(.+)$", r"\1 = \2"),
+        (r"^функция\s+(\w+)\(\)$", r"def \1():"),
+        (r"^конец$", r""),
         (r"^если\s+(.+)\s+тогда$", r"if \1:"),
+        (r"^иначе$", r"else:"),
+        (r"^повторить\s+(.+)\s+раз$", r"for _ in range(\1):"),
         (r"^при\s+обновление\s+сделай$", "async def on_update():"),
         (r"^при\s+событие\s+\"([^\"]+)\"\s+сделай$", r"async def on_\1():"),
         (r"^вызвать\s+(\w+)\(\)$", r"\1()"),
         (r"найти\s+\"([^\"]+)\"", r'find("\1")'),
         (r"прибавить\s+(\w+)\s+на\s+([\w\d]+)", r"\1 += \2"),
         (r"уменьшить\s+(\w+)\s+на\s+([\w\d]+)", r"\1 -= \2"),
+        (r"умножить\s+(\w+)\s+на\s+([\w\d]+)", r"\1 *= \2"),
+        (r"разделить\s+(\w+)\s+на\s+([\w\d]+)", r"\1 /= \2"),
+        (r"(\w+)\.(\w+)\s+\"([^\"]+)\"\s+на\s+(-?\d+)$", r"\1.\2(\"\3\", \4)"),
+        (r"(\w+)\.(\w+)\s+\"([^\"]+)\"", r"\1.\2(\"\3\")"),
         (r"завершить игру\(\)", "end_game()"),
     ]
     for pat, repl in patterns:
@@ -27,13 +36,22 @@ def _translate_ru(line: str) -> str:
 def _translate_en(line: str) -> str:
     patterns = [
         (r"^variable\s+(\w+)\s*=\s*(.+)$", r"\1 = \2"),
+        (r"^let\s+(\w+)\s*=\s*(.+)$", r"\1 = \2"),
+        (r"^function\s+(\w+)\(\)$", r"def \1():"),
+        (r"^end$", r""),
         (r"^if\s+(.+)\s+then$", r"if \1:"),
+        (r"^else$", r"else:"),
+        (r"^repeat\s+(.+)\s+times$", r"for _ in range(\1):"),
         (r"^on\s+update\s+do$", "async def on_update():"),
         (r"^on\s+event\s+\"([^\"]+)\"\s+do$", r"async def on_\1():"),
         (r"^call\s+(\w+)\(\)$", r"\1()"),
         (r"find\s+\"([^\"]+)\"", r'find("\1")'),
         (r"add\s+(\w+)\s+by\s+([\w\d]+)", r"\1 += \2"),
-        (r"sub\s+(\w+)\s+by\s+([\w\d]+)", r"\1 -= \2"),
+        (r"subtract\s+(\w+)\s+by\s+([\w\d]+)", r"\1 -= \2"),
+        (r"multiply\s+(\w+)\s+by\s+([\w\d]+)", r"\1 *= \2"),
+        (r"divide\s+(\w+)\s+by\s+([\w\d]+)", r"\1 /= \2"),
+        (r"(\w+)\.(\w+)\s+\"([^\"]+)\"\s+by\s+(-?\d+)$", r"\1.\2(\"\3\", \4)"),
+        (r"(\w+)\.(\w+)\s+\"([^\"]+)\"", r"\1.\2(\"\3\")"),
     ]
     for pat, repl in patterns:
         if re.search(pat, line):

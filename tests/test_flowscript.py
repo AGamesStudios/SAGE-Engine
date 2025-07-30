@@ -31,6 +31,20 @@ if hp >= 3 then
     assert ctx["flag"] is True
 
 
+def test_else_en():
+    rt = FlowRuntime()
+    ctx = {"x": 0}
+    script = """
+if x == 0 then
+    add x by 1
+else
+    subtract x by 1
+end
+"""
+    asyncio.run(rt.run(script, ctx, dialect="en"))
+    assert ctx["x"] == 1
+
+
 def test_event_function_creation():
     rt = FlowRuntime()
     ctx = {}
@@ -41,3 +55,28 @@ def test_event_function_creation():
 """
     asyncio.run(rt.run(script, ctx, dialect="ru"))
     assert "on_hit" in ctx
+
+
+def test_function_definition():
+    rt = FlowRuntime()
+    ctx = {}
+    script = """
+функция hello()
+    pass
+конец
+"""
+    asyncio.run(rt.run(script, ctx, dialect="ru"))
+    assert "hello" in ctx
+
+
+def test_loop_ru():
+    rt = FlowRuntime()
+    ctx = {}
+    script = """
+пусть total = 0
+повторить 5 раз
+    прибавить total на 1
+конец
+"""
+    asyncio.run(rt.run(script, ctx, dialect="ru"))
+    assert ctx["total"] == 5

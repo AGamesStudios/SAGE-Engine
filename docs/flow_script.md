@@ -1,46 +1,63 @@
 # 📘 FlowScript
 
-💡 Модуль `flow` позволяет выполнять простые скрипты для управления сценой. FlowScript выглядит как естественный текст и компилируется в лёгкий байткод.
+FlowScript is a tiny scripting language for SAGE Engine. It is designed to look like natural text and compiles to compact Python bytecode. The same constructs are available in Russian and English.
 
-## 🔹 `run`
+## Keywords
 
-```python
-async def run(script: str, context: dict) -> None
-```
+| Русский                 | English            | Purpose                     |
+|-------------------------|--------------------|-----------------------------|
+| `переменная`, `пусть`   | `variable`, `let`  | Variable declaration        |
+| `функция`               | `function`         | Function definition         |
+| `конец`                 | `end`              | Block terminator            |
+| `если`                  | `if`               | Conditional start           |
+| `иначе`                 | `else`             | Conditional alternative     |
+| `повторить ... раз`     | `repeat ... times` | Simple loop                 |
+| `при обновление сделай` | `on update do`     | Update event                |
+| `при событие`           | `on event`         | Custom event handler        |
+| `вызвать`               | `call`             | Call a function             |
+| `прибавить`             | `add`              | Addition                    |
+| `уменьшить`             | `subtract`         | Subtraction                 |
+| `умножить`              | `multiply`         | Multiplication              |
+| `разделить`             | `divide`           | Division                    |
 
-Функция исполняет код в переданном контексте. Она асинхронная,
-поэтому её нужно вызывать через `await` или `asyncio.run`:
+## Grammar
 
-```python
-import asyncio
-from sage_engine.flow.python import run as run_flow
+FlowScript is translated line by line into simplified Python. Every command is written on a separate line with indentation preserved. `конец`/`end` simply closes the previous block by returning to a lower indentation level.
 
-asyncio.run(run_flow("ctx['done'] = True", {'ctx': {}}))
-```
-
-⚠️ Если вызвать `run` без `await`, интерпретатор выдаст предупреждение
-`RuntimeWarning: coroutine was never awaited`.
-
-
-## Architecture
-
-FlowScript consists of a tiny interpreter located in `sage_engine.flow`. The runtime can execute Python style code or parse the experimental FlowScript syntax via the parsers and compilers found under `flow/`.
-The entry point is `FlowRuntime.run(script, context, dialect='python')`.
-
-## Example script
+### Example
 
 ```flow
-переменная здоровье = 5
-если здоровье > 0 тогда
-    вызвать heal()
+пусть score = 0
+функция add_score()
+    прибавить score на 1
+конец
+
+при обновление сделай
+    если score < 10 тогда
+        вызвать add_score()
+    иначе
+        завершить игру()
+конец
 ```
 
-English variant:
+The same in English:
 
 ```flow
-variable health = 5
-if health > 0 then
-    call heal()
+let score = 0
+function add_score()
+    add score by 1
+end
+
+on update do
+    if score < 10 then
+        call add_score()
+    else
+        end_game()
+end
 ```
 
-Use `dialect="ru"` or `dialect="en"` with `FlowRuntime.run` to execute such scripts.
+## Bytecode
+
+`compile_source()` converts FlowScript to Python source code and then to a Python code object. This code object is executed by `bytecode.vm.run`. Each operation therefore corresponds to normal Python bytecode. The FlowScript layer simply provides a light‑weight textual syntax.
+
+*** End Patch
