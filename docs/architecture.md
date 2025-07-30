@@ -20,6 +20,8 @@ This document describes the high level architecture for SAGE Engine based on the
 
 Modules expose their public API via ``core.expose()`` and access others using ``core.get()`` or event subscriptions. Direct imports between modules are discouraged to keep coupling low.
 
+Roles define permitted fields and behavior for objects while the `world` module manages scenes and layers. All interactions with objects happen through `world.scene` using `SceneEdit` so that roles remain isolated.
+
 The engine executes in well defined phases ordered as a DAG. Each module registers its callbacks for update or draw phases.
 
 ```
