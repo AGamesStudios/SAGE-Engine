@@ -10,6 +10,7 @@ from ..settings import settings
 from ..events import on
 from ..logger import logger
 from .. import core
+from . import stats
 from types import SimpleNamespace
 
 _backend = None
@@ -195,6 +196,7 @@ core.expose(
         enable_culling=enable_culling,
         enable_batching=enable_batching,
         shutdown=shutdown,
+        stats=stats.stats,
     ),
 )
 
