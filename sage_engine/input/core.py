@@ -63,7 +63,7 @@ class InputCore:
         if key:
             key = key.upper()
             if key not in KEY_MAP:
-                logger.error("[input] Unknown key: %s", key)
+                logger.warn("[input] Unknown key: %s", key)
                 return
             self._actions[action] = key
 

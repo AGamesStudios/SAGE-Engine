@@ -81,7 +81,7 @@ def update(dt: float, input_core=Input) -> bool:
         enemy.update()
         shape = enemy.obj.get_role("Shape")
         h = getattr(shape, "height", 20)
-        if enemy.obj.position.y > HEIGHT + h:
+        if enemy.obj.position.y - h > HEIGHT:
             runtime.store.remove_object(enemy.obj.id)
             enemies.remove(enemy)
 
