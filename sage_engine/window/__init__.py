@@ -216,10 +216,12 @@ def _on_configure(event) -> None:
 def _on_key(event) -> None:
     if _window is None:
         return
+    down = getattr(event, "type", "press") != "release"
+    key = getattr(event, "keysym", "")
     if hasattr(_window, "_on_key"):
-        _window._on_key(event)
+        _window._on_key(key, down)
     else:
-        _event_queue.append((WIN_KEY, (event.keysym, event.keycode)))
+        _event_queue.append((WIN_KEY, (key, down)))
 
 
 def _on_mouse(event) -> None:

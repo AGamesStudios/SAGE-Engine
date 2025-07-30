@@ -1,7 +1,7 @@
 """Keyboard and mouse input handling."""
 
-from .core import InputCore
+from .runtime import InputRuntime
 
-Input = InputCore()
+Input = InputRuntime()
 
 __all__ = ["Input"]

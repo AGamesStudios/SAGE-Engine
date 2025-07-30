@@ -8,6 +8,7 @@ def main() -> None:
     window.init("Shape Shooter", logic.WIDTH, logic.HEIGHT)
     render.init(window.get_window_handle())
     gfx.init(logic.WIDTH, logic.HEIGHT)
+    Input.init(window.get_window_handle())
 
     Input.map_action("left", "LEFT")
     Input.map_action("right", "RIGHT")

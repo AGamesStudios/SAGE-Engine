@@ -152,7 +152,9 @@ class Win32Window:
                 user32.EndPaint(hwnd, ctypes.byref(ps))
                 return 0
             elif msg == 0x0100:  # WM_KEYDOWN
-                self._on_key(wparam)
+                self._on_key(wparam, True)
+            elif msg == 0x0101:  # WM_KEYUP
+                self._on_key(wparam, False)
             elif msg == 0x0200:  # WM_MOUSEMOVE
                 x = lparam & 0xFFFF
                 y = (lparam >> 16) & 0xFFFF
@@ -335,9 +337,9 @@ class Win32Window:
         events.emit(WIN_RESIZE, width, height)
         emit(WINDOW_RESIZED, width, height)
 
-    def _on_key(self, key: int):
-        logger.debug("WM_KEYDOWN %s", key)
-        events.emit(WIN_KEY, key, key)
+    def _on_key(self, key: int, down: bool) -> None:
+        logger.debug("WM_KEY %s %s", "DOWN" if down else "UP", key)
+        events.emit(WIN_KEY, key, down)
 
     def _on_mouse(self, typ: str, x: int, y: int, button: int):
         logger.debug("WM_MOUSE %s %d %d b=%d", typ, x, y, button)

@@ -53,8 +53,8 @@ class X11Window:
         events.emit(WIN_RESIZE, width, height)
         emit(WINDOW_RESIZED, width, height)
 
-    def _on_key(self, key: int):
-        events.emit(WIN_KEY, key, key)
+    def _on_key(self, key: int, down: bool) -> None:
+        events.emit(WIN_KEY, key, down)
 
     def _on_mouse(self, typ: str, x: int, y: int, button: int):
         events.emit(WIN_MOUSE, typ, x, y, button)

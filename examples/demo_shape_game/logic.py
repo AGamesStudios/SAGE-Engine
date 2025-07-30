@@ -63,7 +63,7 @@ def update(dt: float, input_core=Input) -> bool:
         return False
     player.update(input_core, WIDTH)
 
-    if input_core.was_pressed("SPACE"):
+    if input_core.is_down("SPACE"):
         bullets.append(Bullet.create(int(player.obj.position.x + 15), int(player.obj.position.y)))
 
     _spawn += dt

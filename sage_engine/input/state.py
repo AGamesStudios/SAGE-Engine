@@ -9,3 +9,4 @@ class InputState:
         self.mouse_y = 0
         self.prev_x = 0
         self.prev_y = 0
+
