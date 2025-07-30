@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 from typing import Any
+from pathlib import Path
 
 from .bindings import get_builtins
 
 from .compiler import compile_source, decode_bytes
 from .bytecode.vm import run as run_code
+import asyncio
 
-__all__ = ["FlowRuntime", "run", "run_bytecode"]
+__all__ = ["FlowRuntime", "run", "run_bytecode", "run_flow_script"]
 
 
 class FlowRuntime:
@@ -45,3 +47,22 @@ class FlowRuntime:
 def run(script: str, context: dict[str, Any]) -> Any:
     rt = FlowRuntime()
     return rt.run(script, context)
+
+
+_CACHE: dict[str, tuple[Any, dict[str, Any]]] = {}
+
+
+def run_flow_script(path: str, input_obj: Any, *, lang: str = "ru") -> dict[str, Any]:
+    """Execute a FlowScript file and invoke its on_update handler."""
+    if path not in _CACHE:
+        text = Path(path).read_text(encoding="utf-8")
+        ctx: dict[str, Any] = {"Input": input_obj}
+        code = compile_source(text, lang=lang)
+        exec(code, ctx)
+        _CACHE[path] = (code, ctx)
+    code, ctx = _CACHE[path]
+    ctx["Input"] = input_obj
+    fn = ctx.get("on_update")
+    if fn:
+        asyncio.run(fn())
+    return ctx

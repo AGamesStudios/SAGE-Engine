@@ -37,17 +37,15 @@ SAGE-Engine/
 │   └── examples/
 │       ├── basic_scene.md
 │       ├── custom_role.md
-│       └── demo_game.md
+│       └── flow_test_game.md
 ├── engine.json
 ├── examples/
-│   └── demo_game/
-│       ├── __init__.py
+│   └── flow_test_game/
 │       ├── main.py
+│       ├── logic.flow
 │       ├── game.sagecfg
 │       ├── assets/
-│       ├── world/
-│       ├── roles/
-│       └── scripts/
+│       └── roles/
 ├── pyproject.toml
 ├── roles/
 │   ├── Camera.role.json

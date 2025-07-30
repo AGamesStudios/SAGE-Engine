@@ -1,6 +1,0 @@
-start:
-  -> move
-move:
-  signal.move()
-  wait(0.1)
-  -> move
