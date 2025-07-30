@@ -6,6 +6,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Dict, List
+from .extensible import IExtensible
 
 from ..format.loader import load_sage_file
 from importlib import import_module

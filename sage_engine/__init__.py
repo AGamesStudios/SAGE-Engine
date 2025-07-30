@@ -23,6 +23,7 @@ __all__ = [
     "input",
     "sprite",
     "animation",
+    "plugins",
     "settings",
     "api",
 ]

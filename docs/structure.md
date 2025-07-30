@@ -63,7 +63,8 @@ SAGE-Engine/
 │   ├── compat/
 │   │   └── __init__.py
 │   ├── core/
-│   │   └── __init__.py
+│   │   ├── __init__.py
+│   │   └── extensible.py
 │   ├── dag/
 │   │   └── __init__.py
 │   ├── devtools/
