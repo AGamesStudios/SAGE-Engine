@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from ..events import on
 from ..logger import logger
-from .. import window
+from .. import core
 from .core import InputCore
 
 WM_KEYDOWN = 0x0100
@@ -45,8 +45,11 @@ class InputRuntime(InputCore):
     def init(self, hwnd: int | None) -> None:
         """Initialize input and subscribe to window events."""
         self.set_window_handle(hwnd)
-        on(window.WIN_KEY, self._on_key_event)
-        on(window.WIN_MOUSE, self._on_mouse_event)
+        win = core.get("window")
+        if win is None:
+            from .. import window as win  # type: ignore
+        on(win.WIN_KEY, self._on_key_event)
+        on(win.WIN_MOUSE, self._on_mouse_event)
         logger.info("[input] initialized")
 
     # event callbacks

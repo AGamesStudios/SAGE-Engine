@@ -6,6 +6,7 @@ import sys
 import time
 from dataclasses import dataclass
 from ..logger import logger
+from .. import core
 
 from ..events import dispatcher as events, emit, flush
 from ..settings import settings
@@ -269,3 +270,5 @@ __all__ = [
     "calculate_viewport",
     "Viewport",
 ]
+
+core.expose("window", {name: globals()[name] for name in __all__})

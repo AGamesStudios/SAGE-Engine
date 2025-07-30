@@ -58,5 +58,15 @@ def _migrate_0_9_to_1_0(data: dict) -> dict:
 
 
 from ..compat import register as _register
+from .. import core
 
 _register("blueprint", "0.9", "1.0", _migrate_0_9_to_1_0)
+
+core.expose(
+    "blueprint",
+    {
+        "Blueprint": Blueprint,
+        "BlueprintMeta": BlueprintMeta,
+        "load": load,
+    },
+)

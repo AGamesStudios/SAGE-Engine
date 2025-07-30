@@ -84,3 +84,15 @@ def serialize(obj: Object | str) -> dict:
         "roles": {n: vars(r) for n, r in o.roles.items()},
         "data": dict(o.data),
     }
+
+
+core.expose(
+    "objects",
+    {
+        "spawn": spawn,
+        "delete": delete,
+        "clone": clone,
+        "serialize": serialize,
+        "runtime": runtime,
+    },
+)
