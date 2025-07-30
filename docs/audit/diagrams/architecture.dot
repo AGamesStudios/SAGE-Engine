@@ -1,0 +1,13 @@
+digraph architecture {
+    rankdir=LR;
+    core -> window;
+    core -> render;
+    core -> gfx;
+    core -> input;
+    core -> flow;
+    core -> resource;
+    core -> world;
+    render -> gfx;
+    window -> input;
+    world -> flow;
+}

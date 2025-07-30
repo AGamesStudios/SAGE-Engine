@@ -1,0 +1,5 @@
+ID,Module,Priority,Description,Location
+A1,gfx,P1,Direct dependency on window via get_framebuffer_size,sage_engine/gfx/runtime.py:24
+A2,input,P2,X11 and Cocoa backends are placeholders without implementations,sage_engine/input/impl/x11.py:1
+A3,core,P2,Modules sometimes call each other without interfaces causing tight coupling,docs/structure.md:241-246
+A4,world,P2,Lack of clear boundaries for scene management leads to potential God-object,docs/structure.md:172-200
