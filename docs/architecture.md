@@ -26,7 +26,7 @@ boot -> update -> draw -> flush
 
 ### Boot sequence
 
-1. `core_core_boot` читает `engine.json` и импортирует перечисленные модули.
+1. `core_core_boot` читает `engine.sagecfg` и импортирует перечисленные модули.
 2. Каждый модуль реализует функцию `boot(config)` и регистрирует свои фазы.
 3. После инициализации можно запускать цикл `core_tick`.
 

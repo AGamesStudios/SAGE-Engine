@@ -42,9 +42,11 @@ class _FlowInputProxy:
     def __getattr__(self, name: str) -> Any:  # fallback to Input
         return getattr(Input, name)
 
+import ast
+import asyncio
+
 from .compiler import compile_source, decode_bytes
 from .bytecode.vm import run as run_code
-import asyncio
 
 __all__ = ["FlowRuntime", "run", "run_bytecode", "run_flow_script"]
 
@@ -56,7 +58,7 @@ class FlowRuntime:
         self.globals: dict[str, Any] = get_builtins()
         self.globals["Input"] = _FlowInputProxy()
 
-    def _exec(self, code: Any, ctx: dict[str, Any]) -> None:
+    def _exec(self, code: ast.Module, ctx: dict[str, Any]) -> None:
         run_code(code, ctx)
 
     async def run(
@@ -66,7 +68,7 @@ class FlowRuntime:
         ctx = {} if context is None else context
         exec_ctx = {**self.globals, **ctx}
         if dialect == "python":
-            code = compile(script, "<python>", "exec")
+            code = ast.parse(script, "<python>")
         elif dialect in {"flow", "ru", "en"}:
             code = compile_source(script, lang="ru" if dialect == "flow" else dialect)
         else:
@@ -96,7 +98,7 @@ def run_flow_script(path: str, input_obj: Any, *, lang: str = "ru") -> dict[str,
         text = Path(path).read_text(encoding="utf-8")
         ctx: dict[str, Any] = {"Input": _FlowInputProxy()}
         code = compile_source(text, lang=lang)
-        exec(code, ctx)
+        run_code(code, ctx)
         _CACHE[path] = (code, ctx)
     code, ctx = _CACHE[path]
     ctx["Input"] = _FlowInputProxy()

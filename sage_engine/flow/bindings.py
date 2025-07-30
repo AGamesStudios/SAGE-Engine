@@ -19,6 +19,7 @@ def log(msg: str) -> None:
 _BUILTINS = {
     "move": move,
     "log": log,
+    "range": range,
 }
 
 

@@ -1,6 +1,9 @@
 import json
 from pathlib import Path
 import yaml
+from pathlib import Path
+from ..logger import logger
+
 
 _PACK_INDEX = None
 _PACK_FILE = None
@@ -59,3 +62,23 @@ def load_cfg(path: str | Path) -> dict:
         except Exception:
             data[key] = val.strip('"\'')
     return data
+
+
+_ENGINE_ALLOWED = {
+    "name",
+    "script",
+    "width",
+    "height",
+    "fullscreen",
+    "language",
+}
+
+
+def load_engine_cfg(path: str | Path) -> dict:
+    """Load and validate ``engine.sagecfg``."""
+    cfg = load_cfg(path)
+    for key in list(cfg):
+        if key not in _ENGINE_ALLOWED:
+            logger.warn("[config] Unknown key in %s: %s", path, key)
+            cfg.pop(key)
+    return cfg

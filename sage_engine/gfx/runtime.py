@@ -28,7 +28,9 @@ class GraphicRuntime:
         self._last_error_key: str | None = None
         self._last_error_frame: int = -1
         self._error_interval = 60
-        # no direct event subscription; resize handled during flush_frame
+        from ..events import on
+        from ..window import WINDOW_RESIZED
+        on(WINDOW_RESIZED, self.realloc_buffer)
 
     def init(self, width: int, height: int) -> None:
         """Initialize a framebuffer of the given size."""
