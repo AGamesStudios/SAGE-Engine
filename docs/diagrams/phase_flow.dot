@@ -1,0 +1,4 @@
+digraph phases {
+    rankdir=LR;
+    boot -> update -> draw -> flush -> shutdown;
+}

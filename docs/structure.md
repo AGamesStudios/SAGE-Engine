@@ -34,6 +34,9 @@ SAGE-Engine/
 │   ├── style_guide.md
 │   ├── timers.md
 │   ├── todo.md
+│   └── diagrams/
+│       ├── module_dependencies.svg
+│       └── phase_flow.svg
 │   └── examples/
 │       ├── basic_scene.md
 │       ├── custom_role.md

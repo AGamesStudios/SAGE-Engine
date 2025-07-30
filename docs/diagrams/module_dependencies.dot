@@ -1,0 +1,12 @@
+digraph modules {
+    rankdir=LR;
+    core -> window;
+    core -> render;
+    core -> gfx;
+    core -> input;
+    core -> flow;
+    core -> resource;
+    window -> input;
+    render -> gfx;
+    gfx -> render;
+}

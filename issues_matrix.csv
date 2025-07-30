@@ -1,0 +1,8 @@
+ID,Module,Priority,Description,Location
+I1,Core,P2,Documentation references missing engine.json,docs/structure.md:10
+I2,Config,P2,engine.sagecfg binary format undocumented,engine.sagecfg
+I3,FlowScript,P1,Runtime executes arbitrary Python via exec,sage_engine/flow/runtime.py:53
+I4,Render,P1,Buffer size mismatch on resize leads to ValueError,sage_engine/gfx/runtime.py:80
+I5,Input,P2,No cross-platform backends for Linux/macOS,sage_engine/input/
+I6,Resource,P2,Config loader accepts unknown fields without warning,sage_engine/resource/loader.py:27
+I7,Docs,P3,Many modules lack up-to-date usage examples,docs/modules/
