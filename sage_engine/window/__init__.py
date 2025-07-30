@@ -126,10 +126,23 @@ def poll_events() -> None:
         events.emit(evt[0], *evt[1])
 
 
-def get_size() -> tuple[int, int]:
-    if _window is None:
+def get_size(handle: object | None = None) -> tuple[int, int]:
+    """Return window size for the given handle or main window."""
+    win = None
+    if handle is None:
+        win = _window
+    else:
+        h = int(handle)
+        if _window is not None and hasattr(_window, "get_handle") and int(_window.get_handle()) == h:
+            win = _window
+        else:
+            for w in reversed(_windows):
+                if hasattr(w, "get_handle") and int(w.get_handle()) == h:
+                    win = w
+                    break
+    if win is None:
         return (0, 0)
-    return _window.get_size()
+    return win.get_size()
 
 
 def get_framebuffer_size() -> tuple[int, int]:

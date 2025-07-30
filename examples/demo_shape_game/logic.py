@@ -1,6 +1,9 @@
 import random
 from sage_engine.objects import Object, runtime
-from .shape_role import Shape
+try:
+    from .shape_role import Shape
+except ImportError:  # fallback when run as script
+    from shape_role import Shape
 
 
 def create(role: str, **fields) -> Object:
@@ -12,9 +15,14 @@ def create(role: str, **fields) -> Object:
     return obj
 
 
-from .player import Player
-from .bullet import Bullet
-from .enemy import Enemy
+try:
+    from .player import Player
+    from .bullet import Bullet
+    from .enemy import Enemy
+except ImportError:
+    from player import Player
+    from bullet import Bullet
+    from enemy import Enemy
 from sage_engine.input import Input
 
 WIDTH = 640

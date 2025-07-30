@@ -26,38 +26,24 @@ class GraphicRuntime:
         self._last_error_key: str | None = None
         self._last_error_frame: int = -1
         self._error_interval = 60
-        try:
-            from ..events import on
-            from ..window import WINDOW_RESIZED
-            on(WINDOW_RESIZED, self.realloc_buffer)
-        except Exception:  # pragma: no cover - during early import
-            pass
+        # no direct event subscription; resize handled during flush_frame
 
     def init(self, width: int, height: int) -> None:
         """Initialize a framebuffer of the given size."""
-        try:
-            from ..events import on
-            from ..window import WINDOW_RESIZED
-            from ..events import dispatcher as events
-            if self.realloc_buffer not in events._handlers.get(WINDOW_RESIZED, []):
-                on(WINDOW_RESIZED, self.realloc_buffer)
-        except Exception:
-            pass
+        # framebuffer will be resized on demand in flush_frame
         self.width = width
         self.height = height
         self.pitch = self.width * 4
         self.buffer = bytearray(self.height * self.pitch)
 
     def realloc_buffer(self, width: int, height: int) -> None:
-        """Reallocate framebuffer immediately due to a resize event."""
+        """Reallocate the internal framebuffer to the given size."""
         if width <= 0 or height <= 0:
             return
-        self.init(width, height)
-        logger.info(
-            "[gfx] Framebuffer reallocated due to window resize: %dx%d",
-            width,
-            height,
-        )
+        self.width = width
+        self.height = height
+        self.pitch = self.width * 4
+        self.buffer = bytearray(self.height * self.pitch)
 
 
     def begin_frame(self, color=None) -> None:
@@ -83,16 +69,28 @@ class GraphicRuntime:
         self._stack.clear()
         self._seq_counter = 0
 
-    def _check_window_size(self) -> None:
+    def _check_window_size(self, handle: Any | None) -> None:
         """Ensure the framebuffer matches current window size."""
         from .. import window
 
-        w, h = window.get_framebuffer_size()
+        w, h = window.get_size(handle)
         if w <= 0 or h <= 0:
             return
+        logger.debug(
+            "[gfx] Validating framebuffer: %dx%d vs expected %dx%d",
+            self.width,
+            self.height,
+            w,
+            h,
+        )
         if w != self.width or h != self.height:
             if self.auto_resize:
                 self.realloc_buffer(w, h)
+                logger.info(
+                    "[gfx] Framebuffer reallocated due to resize: %dx%d",
+                    w,
+                    h,
+                )
             else:
                 key = f"{w}x{h}"
                 if (
@@ -178,7 +176,7 @@ class GraphicRuntime:
         """Finish drawing and present the buffer via :mod:`render`."""
         from .. import render
 
-        self._check_window_size()
+        self._check_window_size(handle)
         buf = self.end_frame()
         self._frame_counter += 1
         backend = render._get_backend()

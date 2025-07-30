@@ -88,6 +88,7 @@ def test_resize_event_reallocates_buffer():
     gfx.init(10, 10)
     window.set_resolution(25, 18)
     events.flush()
+    gfx.flush_frame(window.get_window_handle())
     assert gfx._runtime.width == 25 and gfx._runtime.height == 18
     gfx.shutdown()
     render.shutdown()

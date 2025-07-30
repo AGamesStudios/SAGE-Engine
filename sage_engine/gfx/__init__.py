@@ -2,8 +2,6 @@
 from __future__ import annotations
 
 from .backends import get_backend
-from ..events import on
-from ..window import WINDOW_RESIZED
 
 _runtime = get_backend()
 
@@ -30,11 +28,3 @@ from ..graphic.scene import Scene, Layer, Rect, Group
 from ..graphic.color import Color, to_rgba
 from ..graphic import fx
 
-# automatically resize framebuffer when the window changes
-def _resize_handler(w: int, h: int) -> None:
-    _runtime.realloc_buffer(w, h)
-    from ..logger import logger
-    logger.info("[gfx] Framebuffer reallocated due to window resize: %dx%d", w, h)
-
-
-on(WINDOW_RESIZED, _resize_handler)

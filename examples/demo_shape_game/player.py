@@ -1,7 +1,11 @@
 from dataclasses import dataclass
 from sage_engine.objects import Object, Vector2
-from .shape_role import Shape
-from . import logic
+try:
+    from .shape_role import Shape
+    from . import logic
+except ImportError:
+    from shape_role import Shape
+    import logic
 
 
 @dataclass

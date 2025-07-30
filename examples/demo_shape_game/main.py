@@ -1,7 +1,7 @@
 from sage_engine import window, render, gfx
 from sage_engine.runtime import FrameSync
 from sage_engine.input import Input
-from . import logic
+import logic
 
 
 def main() -> None:
