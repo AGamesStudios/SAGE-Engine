@@ -1,0 +1,20 @@
+{
+  "name": "Enemy",
+  "categories": {
+    "transform": {
+      "x": "float",
+      "y": "float",
+      "angle": "float"
+    },
+    "sprite": {
+      "tex_id": "int",
+      "layer": "int",
+      "color": "vec4"
+    },
+    "enemy": {
+      "hp": "int",
+      "speed": "float"
+    }
+  },
+  "phases": ["update", "draw"]
+}

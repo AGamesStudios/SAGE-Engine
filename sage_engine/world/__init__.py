@@ -1,4 +1,4 @@
-"""Scene graph storage with category-aware SoA layout."""
+"""Scene graph storage and high-level world loader."""
 
 from __future__ import annotations
 
@@ -201,4 +201,14 @@ def reset() -> None:
     scene.storage.clear()
     scene.next_id = 0
     scene._to_commit.clear()
+
+
+from .runtime import WorldRuntime
+
+runtime = WorldRuntime()
+
+__all__ = [
+    'Scene', 'SceneEdit', 'scene', 'runtime', 'WorldRuntime',
+    'load'
+]
 
