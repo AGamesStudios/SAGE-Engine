@@ -1,6 +1,6 @@
 # 📘 FlowScript
 
-FlowScript is a tiny scripting language for SAGE Engine. It is designed to look like natural text and compiles to compact Python bytecode. The same constructs are available in Russian and English.
+FlowScript is a tiny scripting language for SAGE Engine. It is designed to look like natural text and compiles to compact bytecode. The same constructs are available in Russian and English.
 
 ## Keywords
 
@@ -58,6 +58,6 @@ end
 
 ## Bytecode
 
-`compile_source()` converts FlowScript to Python source code and then to a Python code object. This code object is executed by `bytecode.vm.run`. Each operation therefore corresponds to normal Python bytecode. The FlowScript layer simply provides a light‑weight textual syntax.
+`compile_source()` converts FlowScript to Python source which is compiled to a code object. `compile_to_bytes()` serializes that code object so it can be stored in a `.sageflow` file. `FlowRuntime` can execute either plain source or the serialized bytecode using `run_bytecode()`.
 
 *** End Patch

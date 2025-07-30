@@ -1,5 +1,6 @@
 import asyncio
 from sage_engine.flow.runtime import FlowRuntime
+from sage_engine.flow.compiler import compile_to_bytes
 
 
 def test_compile_and_run_ru():
@@ -80,3 +81,12 @@ def test_loop_ru():
 """
     asyncio.run(rt.run(script, ctx, dialect="ru"))
     assert ctx["total"] == 5
+
+
+def test_compile_to_bytes_and_run():
+    rt = FlowRuntime()
+    ctx = {}
+    script = "переменная a = 2\nувеличить a на 3"
+    data = compile_to_bytes(script, lang="ru")
+    rt.run_bytecode(data, ctx)
+    assert ctx["a"] == 5
