@@ -21,3 +21,8 @@ asyncio.run(run_flow("ctx['done'] = True", {'ctx': {}}))
 ⚠️ Если вызвать `run` без `await`, интерпретатор выдаст предупреждение
 `RuntimeWarning: coroutine was never awaited`.
 
+
+## Architecture
+
+FlowScript consists of a tiny interpreter located in `sage_engine.flow`. The runtime can execute Python style code or parse the experimental FlowScript syntax via the parsers and compilers found under `flow/`.
+The entry point is `FlowRuntime.run(script, context, dialect='python')`.

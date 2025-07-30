@@ -1,9 +1,9 @@
-"""Python FlowScript stub."""
+"""Python FlowScript dialect."""
 
-import inspect
+from ..runtime import FlowRuntime
 
+_runtime = FlowRuntime()
 
 async def run(script: str, context: dict) -> None:
-    if not inspect.iscoroutinefunction(run):
-        raise RuntimeError("run_flow must be awaited or run via asyncio")
-    exec(script, context)
+    """Execute a snippet of Python code as FlowScript."""
+    await _runtime.run(script, context, dialect="python")

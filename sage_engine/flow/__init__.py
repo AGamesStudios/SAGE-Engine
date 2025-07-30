@@ -1,8 +1,15 @@
-"""FlowScript placeholder modules."""
+"""SAGE FlowScript package."""
 
 from importlib import import_module
 
-__all__ = ["python", "lua"]
+__all__ = [
+    "runtime",
+    "parser",
+    "compiler",
+    "types",
+    "bindings",
+    "dialects",
+]
 
 
 def __getattr__(name: str):
