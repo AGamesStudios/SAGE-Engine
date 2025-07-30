@@ -152,13 +152,35 @@ class Win32Window:
                 user32.EndPaint(hwnd, ctypes.byref(ps))
                 return 0
             elif msg == 0x0100:  # WM_KEYDOWN
+                try:
+                    from sage_engine.input.runtime import process_win32_key_event
+                    process_win32_key_event(msg, wparam, lparam)
+                except Exception:
+                    pass
                 self._on_key(wparam, True)
             elif msg == 0x0101:  # WM_KEYUP
+                try:
+                    from sage_engine.input.runtime import process_win32_key_event
+                    process_win32_key_event(msg, wparam, lparam)
+                except Exception:
+                    pass
                 self._on_key(wparam, False)
-            elif msg == 0x0200:  # WM_MOUSEMOVE
+            elif msg in (0x0200, 0x0201, 0x0202, 0x0204, 0x0205, 0x0207, 0x0208):
                 x = lparam & 0xFFFF
                 y = (lparam >> 16) & 0xFFFF
-                self._on_mouse("move", x, y, 0)
+                try:
+                    from sage_engine.input.runtime import process_win32_mouse_event
+                    process_win32_mouse_event(msg, wparam, lparam)
+                except Exception:
+                    pass
+                if msg == 0x0200:
+                    self._on_mouse("move", x, y, 0)
+                elif msg in (0x0201, 0x0204, 0x0207):
+                    btn = 1 if msg == 0x0201 else 2 if msg == 0x0204 else 3
+                    self._on_mouse("down", x, y, btn)
+                elif msg in (0x0202, 0x0205, 0x0208):
+                    btn = 1 if msg == 0x0202 else 2 if msg == 0x0205 else 3
+                    self._on_mouse("up", x, y, btn)
             elif msg == 0x0084:  # WM_NCHITTEST
                 pt_x = ctypes.c_short(lparam & 0xFFFF).value
                 pt_y = ctypes.c_short((lparam >> 16) & 0xFFFF).value

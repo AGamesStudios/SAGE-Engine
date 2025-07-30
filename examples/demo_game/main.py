@@ -1,6 +1,7 @@
 """Pixel Signals demo game entry point."""
 
 from sage_engine import window, render, gfx, resource
+from sage_engine.input import Input
 from sage_engine.graphic import state as gfx_state
 from sage_engine.logger import logger
 from sage_engine.runtime import FrameSync
@@ -23,6 +24,7 @@ def main():
     window.init("Pixel Signals", 320, 240)
     render.init(window.get_window_handle())
     gfx.init(320, 240)
+    Input.init(window.get_window_handle())
     gfx_state.set_state("style", "neo-retro")
 
     fsync = FrameSync(target_fps=60)

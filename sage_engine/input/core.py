@@ -12,13 +12,13 @@ class InputCore:
     # internal event hooks
     def _handle_key(self, key: str, down: bool) -> None:
         if down:
-            if key not in self._state.held:
-                self._state.pressed.add(key)
-                self._state.held.add(key)
+            if key not in self._state.pressed_keys:
+                self._state.key_down.add(key)
+                self._state.pressed_keys.add(key)
         else:
-            if key in self._state.held:
-                self._state.held.remove(key)
-                self._state.released.add(key)
+            if key in self._state.pressed_keys:
+                self._state.pressed_keys.remove(key)
+                self._state.key_up.add(key)
 
     def _handle_mouse_move(self, x: int, y: int) -> None:
         self._state.mouse_x = x
@@ -27,22 +27,22 @@ class InputCore:
     # public API
     def poll(self) -> None:
         """Advance to next frame clearing transient states."""
-        self._state.pressed.clear()
-        self._state.released.clear()
+        self._state.key_down.clear()
+        self._state.key_up.clear()
         self._state.prev_x = self._state.mouse_x
         self._state.prev_y = self._state.mouse_y
 
     def is_pressed(self, key: str) -> bool:
         """Return True while the key is held down."""
-        return key in self._state.held
+        return key in self._state.pressed_keys
 
     def is_down(self, key: str) -> bool:
         """Return True only on the frame the key was pressed."""
-        return key in self._state.pressed
+        return key in self._state.key_down
 
     def is_up(self, key: str) -> bool:
         """Return True only on the frame the key was released."""
-        return key in self._state.released
+        return key in self._state.key_up
 
     # Backwards compatibility
     was_pressed = is_down

@@ -1,7 +1,7 @@
 from sage_engine.input import Input
 
 
-def test_key_mapping():
+def test_input_mapping():
     Input.map_action('jump', key='SPACE')
     Input.poll()
     Input._handle_key('SPACE', True)

@@ -1,7 +1,7 @@
 from sage_engine.input import Input
 
 
-def test_key_states():
+def test_input_key_state():
     Input.poll()
     Input._handle_key('A', True)
     assert Input.is_down('A')
