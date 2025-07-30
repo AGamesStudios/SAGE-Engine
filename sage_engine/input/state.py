@@ -13,3 +13,11 @@ class InputState:
         self.prev_x = 0
         self.prev_y = 0
 
+
+# Mapping from key names to Win32 virtual key codes
+from .keys import CODE_TO_NAME
+
+# Reverse mapping of CODE_TO_NAME, allowing lookups by name
+KEY_MAP: dict[str, int] = {name: code for code, name in CODE_TO_NAME.items()}
+
+

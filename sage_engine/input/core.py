@@ -57,7 +57,14 @@ class InputCore:
         return self._state.mouse_x - self._state.prev_x, self._state.mouse_y - self._state.prev_y
 
     def map_action(self, action: str, key: str | None = None, gamepad_button: str | None = None) -> None:
+        from .state import KEY_MAP
+        from ..logger import logger
+
         if key:
+            key = key.upper()
+            if key not in KEY_MAP:
+                logger.error("[input] Unknown key: %s", key)
+                return
             self._actions[action] = key
 
     def unmap_action(self, action: str) -> None:
