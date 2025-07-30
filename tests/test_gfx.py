@@ -1,4 +1,4 @@
-from sage_engine import gfx
+from sage_engine import gfx, events
 
 
 def test_draw_rect_commands():
@@ -42,11 +42,13 @@ def test_auto_resize_and_flush_no_error():
     import os
     from sage_engine import window, render
     os.environ['SAGE_HEADLESS'] = '1'
+    events.reset()
     window.init('t', 20, 20)
     render.init(window.get_window_handle())
     gfx.init(20, 20)
     gfx.begin_frame()
     window.set_resolution(40, 30)
+    events.flush()
     gfx.begin_frame()
     assert gfx._runtime.width == 40 and gfx._runtime.height == 30
     gfx.flush_frame(window.get_window_handle())
@@ -60,12 +62,14 @@ def test_flush_frame_auto_realloc():
     from sage_engine import window, render
 
     os.environ['SAGE_HEADLESS'] = '1'
+    events.reset()
     window.init('r', 20, 20)
     handle = window.get_window_handle()
     render.init(handle)
     gfx.init(20, 20)
     gfx.begin_frame()
     window.set_resolution(50, 40)
+    events.flush()
     gfx.flush_frame(handle)
     assert gfx._runtime.width == 50 and gfx._runtime.height == 40
     gfx.shutdown()
@@ -78,10 +82,12 @@ def test_resize_event_reallocates_buffer():
     from sage_engine import window, render, gfx
 
     os.environ['SAGE_HEADLESS'] = '1'
+    events.reset()
     window.init('e', 10, 10)
     render.init(window.get_window_handle())
     gfx.init(10, 10)
     window.set_resolution(25, 18)
+    events.flush()
     assert gfx._runtime.width == 25 and gfx._runtime.height == 18
     gfx.shutdown()
     render.shutdown()

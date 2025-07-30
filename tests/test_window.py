@@ -15,6 +15,7 @@ def test_window_resized_event():
     events.reset()
     window.init('r', 20, 20)
     window.set_resolution(30, 25)
+    events.flush()
     assert events.dispatcher.history[-1] == window.WINDOW_RESIZED
     assert window.get_framebuffer_size() == (30, 25)
     window.shutdown()
@@ -114,6 +115,7 @@ def test_set_fullscreen_and_resolution():
     window.init('fs', 320, 240)
     window.set_fullscreen(True)
     window.set_resolution(640, 480)
+    events.flush()
     assert window.get_size() == (640, 480)
     assert window.get_framebuffer_size() == (640, 480)
     assert events.dispatcher.history[-1] == window.WINDOW_RESIZED

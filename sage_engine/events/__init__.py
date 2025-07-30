@@ -71,3 +71,18 @@ def emit_direct(event_id: object, *args) -> None:
     for handler in dispatcher._handlers.get(event_id, []):
         handler(*args)
     dispatcher._history.append(event_id)
+
+
+def emit(event_id: object, *args, priority: int = 0) -> None:
+    """Queue an event for dispatch."""
+    dispatcher.emit(event_id, *args, priority=priority)
+
+
+def on(event_id: object, handler: Callable) -> None:
+    """Register a handler for the given event."""
+    dispatcher.on(event_id, handler)
+
+
+def off(event_id: object, handler: Callable) -> None:
+    """Remove a handler for the given event."""
+    dispatcher.off(event_id, handler)

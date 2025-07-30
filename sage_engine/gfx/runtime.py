@@ -27,19 +27,20 @@ class GraphicRuntime:
         self._last_error_frame: int = -1
         self._error_interval = 60
         try:
-            from ..events import dispatcher as events
+            from ..events import on
             from ..window import WINDOW_RESIZED
-            events.on(WINDOW_RESIZED, self.realloc_buffer)
+            on(WINDOW_RESIZED, self.realloc_buffer)
         except Exception:  # pragma: no cover - during early import
             pass
 
     def init(self, width: int, height: int) -> None:
         """Initialize a framebuffer of the given size."""
         try:
-            from ..events import dispatcher as events
+            from ..events import on
             from ..window import WINDOW_RESIZED
+            from ..events import dispatcher as events
             if self.realloc_buffer not in events._handlers.get(WINDOW_RESIZED, []):
-                events.on(WINDOW_RESIZED, self.realloc_buffer)
+                on(WINDOW_RESIZED, self.realloc_buffer)
         except Exception:
             pass
         self.width = width

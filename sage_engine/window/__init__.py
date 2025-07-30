@@ -7,7 +7,7 @@ import time
 from dataclasses import dataclass
 from ..logger import logger
 
-from ..events import dispatcher as events, emit_direct
+from ..events import dispatcher as events, emit, flush
 from ..settings import settings
 
 WIN_CLOSE = 1
@@ -113,7 +113,7 @@ def init(
     global _window
     _window = create_window(title, width, height, fullscreen, resizable, borderless)
     events.emit(WIN_RESIZE, width, height)
-    emit_direct(WINDOW_RESIZED, width, height)
+    emit(WINDOW_RESIZED, width, height)
 
 
 def poll_events() -> None:
@@ -197,7 +197,7 @@ def _on_configure(event) -> None:
         _window.width = event.width
         _window.height = event.height
         _event_queue.append((WIN_RESIZE, (event.width, event.height)))
-        emit_direct(WINDOW_RESIZED, event.width, event.height)
+        emit(WINDOW_RESIZED, event.width, event.height)
 
 
 def _on_key(event) -> None:
@@ -232,7 +232,7 @@ def set_resolution(width: int, height: int) -> None:
     if _window is not None:
         _fs_res(_window, width, height)
         _event_queue.append((WIN_RESIZE, (width, height)))
-        emit_direct(WINDOW_RESIZED, width, height)
+        emit(WINDOW_RESIZED, width, height)
 
 
 __all__ = [
