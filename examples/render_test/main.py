@@ -74,7 +74,8 @@ def main() -> None:
         fsync.start_frame()
         gfx.begin_frame((0, 0, 0, 255))
 
-        for obj in objects.runtime.store.objects:
+        # iterate over object instances and render each
+        for obj in objects.runtime.store.objects.values():
             obj.render(None)
 
         gfx.flush_frame(window.get_window_handle())
