@@ -9,6 +9,8 @@ from .roles import get as get_role
 from dataclasses import replace
 from .. import core
 
+MAX_OBJECTS = 100_000
+
 __all__ = [
     "Object",
     "Vector2",
@@ -46,6 +48,8 @@ def spawn(role: str, *, name: str | None = None, world_id: str = "default", **fi
             roles.load_json_roles()
         role_def = roles.get_role(role_key)
     roles.validate(role_key, fields)
+    if len(runtime.store.objects) >= MAX_OBJECTS:
+        raise RuntimeError("object limit reached")
     obj = Object(id=f"{world_id}_{len(runtime.store.objects)}", name=name, world_id=world_id)
     role_cls = get_role(role)
     role_inst = role_cls(**fields)

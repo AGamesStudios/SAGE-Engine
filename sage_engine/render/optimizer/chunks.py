@@ -19,6 +19,10 @@ class ChunkGrid:
         cx, cy = self._chunk_coord(bbox[0], bbox[1])
         self.chunks.setdefault((cx, cy), []).append((obj, bbox))
 
+    def clear(self) -> None:
+        """Remove all stored references for the next frame."""
+        self.chunks.clear()
+
     def active(self, viewport: Tuple[int, int, int, int]) -> List[Any]:
         """Return objects in chunks intersecting the viewport."""
         x0, y0, x1, y1 = viewport

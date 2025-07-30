@@ -208,6 +208,9 @@ class GraphicRuntime:
         render.present(buf, handle)
         if fsync is not None and hasattr(fsync, "sleep_until_next_frame"):
             fsync.sleep_until_next_frame()
+        # clear commands after presenting to avoid memory growth
+        self._commands.clear()
+        self._stack.clear()
 
     def shutdown(self) -> None:
         self.buffer = None
