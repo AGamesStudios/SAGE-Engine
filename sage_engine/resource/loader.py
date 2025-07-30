@@ -3,6 +3,7 @@ from pathlib import Path
 import yaml
 from pathlib import Path
 from ..logger import logger
+from ..compat import migrate_schema
 
 
 _PACK_INDEX = None
@@ -77,8 +78,10 @@ _ENGINE_ALLOWED = {
 def load_engine_cfg(path: str | Path) -> dict:
     """Load and validate ``engine.sagecfg``."""
     cfg = load_cfg(path)
+    version = int(cfg.get("schema_version", cfg.get("engine_version", 1)))
+    cfg = migrate_schema(cfg, version, 2, "engine_cfg")
     for key in list(cfg):
-        if key not in _ENGINE_ALLOWED:
+        if key not in _ENGINE_ALLOWED and key != "schema_version":
             logger.warn("[config] Unknown key in %s: %s", path, key)
             cfg.pop(key)
     return cfg

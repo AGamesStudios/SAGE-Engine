@@ -1,6 +1,6 @@
 # SAGE Engine Architecture
 
-This document describes the high level architecture for SAGE Engine based on the SAGE Feather 1.0v specification.
+This document describes the high level architecture for SAGE Engine based on the SAGE Feather specification.
 
 ## Modules
 
@@ -51,3 +51,10 @@ During each tick the engine executes phases in order:
 3. **flush** – final rendering and profiling.
 
 The world module commits any pending `SceneEdit` operations during update so all reads remain consistent.
+
+## Schema Independence
+
+All data files include a `schema_version` integer. When loading, modules call the
+compatibility helpers to upgrade older schemas transparently. This approach
+removes any strict engine versioning and allows the project to maintain backward
+compatibility indefinitely.

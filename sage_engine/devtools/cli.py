@@ -19,7 +19,7 @@ from ..world import CURRENT_SCHEMA_VERSION as SCENE_VERSION
 
 def blueprint_migrate(path: Path) -> None:
     data = json.loads(path.read_text(encoding="utf8"))
-    version = str(data.get("schema_version", BP_VERSION))
+    version = int(data.get("schema_version", 1))
     new_version, new_data = migrate("blueprint", version, BP_VERSION, data)
     if new_version != version:
         print(f"Migrated from {version} -> {new_version}")
@@ -30,7 +30,7 @@ def blueprint_migrate(path: Path) -> None:
 
 def compat_check(path: Path) -> None:
     data = json.loads(path.read_text(encoding="utf8"))
-    version = str(data.get("schema_version", data.get("engine_version", SCENE_VERSION)))
+    version = int(data.get("schema_version", data.get("engine_version", 1)))
     new_version, _ = migrate("scene", version, SCENE_VERSION, dict(data))
     if new_version != version:
         print(f"Needs migration: {version} -> {new_version}")

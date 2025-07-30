@@ -4,9 +4,9 @@
 
 | Схема | От | До | Изменения |
 |-------|----|----|-----------|
-| blueprint | 0.9 | 1.0 | поле `sprite` перенесено в `renderable.sprite` |
-| scene | 0.9 | 1.0 | `engine_version` → `schema_version`, `entities` → `objects` |
-| flowscript | 0.9 | 1.0 | переменная `hp` переименована в `health` |
+| blueprint | 1 | 2 | поле `sprite` перенесено в `renderable.sprite` |
+| scene | 1 | 2 | `engine_version` → `schema_version`, `entities` → `objects` |
+| flowscript | 1 | 2 | переменная `hp` переименована в `health` |
 
 ### Использование CLI
 
@@ -26,3 +26,16 @@ $ sage compat check scene.json
 - Нельзя удалять параметры или менять их смысл.
 - Новые параметры должны иметь значения по умолчанию.
 - Старые вызовы поддерживаются через адаптеры.
+
+## Пример миграции
+
+```python
+from sage_engine import compat
+
+def migrate_v1_to_v2(data: dict) -> dict:
+    if "old_name" in data:
+        data["new_name"] = data.pop("old_name")
+    return data
+
+compat.register("example", 1, 2, migrate_v1_to_v2)
+```

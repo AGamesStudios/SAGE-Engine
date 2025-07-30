@@ -9,9 +9,9 @@ import json
 
 from ..logger import logger
 
-from ..compat import migrate
+from ..compat import migrate_schema, register as _register
 
-CURRENT_SCHEMA_VERSION = "1.0"
+CURRENT_SCHEMA_VERSION = 2
 
 
 @dataclass
@@ -22,7 +22,7 @@ class BlueprintMeta:
 
 @dataclass
 class Blueprint:
-    schema_version: str
+    schema_version: int
     meta: BlueprintMeta
     objects: List[Mapping[str, Mapping[str, object]]]
 
@@ -30,11 +30,11 @@ class Blueprint:
 def load(path: Path) -> Blueprint:
     """Load and validate a blueprint from JSON."""
     data = json.loads(path.read_text(encoding="utf8"))
-    version = str(data.get("schema_version", CURRENT_SCHEMA_VERSION))
-    orig_version = version
-    version, data = migrate("blueprint", version, CURRENT_SCHEMA_VERSION, data)
-    if version != orig_version:
-        logger.info("Migrated from %s -> %s", orig_version, version)
+    version = int(data.get("schema_version", 1))
+    if "engine_version" in data:
+        version = int(data.pop("engine_version"))
+    data = migrate_schema(data, version, CURRENT_SCHEMA_VERSION, "blueprint")
+    version = data.get("schema_version", version)
     meta = data.get("meta", {})
     bp_meta = BlueprintMeta(
         origin=meta.get("origin"),
@@ -49,18 +49,17 @@ def load(path: Path) -> Blueprint:
 __all__ = ["Blueprint", "BlueprintMeta", "load"]
 
 
-def _migrate_0_9_to_1_0(data: dict) -> dict:
+def _migrate_v1_to_v2(data: dict) -> dict:
     new_data = dict(data)
     if "sprite" in new_data:
         new_data["renderable"] = {"sprite": new_data.pop("sprite")}
-    new_data["schema_version"] = "1.0"
+    new_data["schema_version"] = 2
     return new_data
 
 
-from ..compat import register as _register
 from .. import core
 
-_register("blueprint", "0.9", "1.0", _migrate_0_9_to_1_0)
+_register("blueprint", 1, 2, _migrate_v1_to_v2)
 
 core.expose(
     "blueprint",
