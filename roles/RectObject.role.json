@@ -1,4 +1,5 @@
 {
+  "schema_version": 1,
   "name": "RectObject",
   "description": "Простой объект-прямоугольник, отрисовываемый через Graphic.draw_rect",
   "fields": {

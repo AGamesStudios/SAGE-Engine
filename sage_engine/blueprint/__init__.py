@@ -30,9 +30,7 @@ class Blueprint:
 def load(path: Path) -> Blueprint:
     """Load and validate a blueprint from JSON."""
     data = json.loads(path.read_text(encoding="utf8"))
-    version = int(data.get("schema_version", 1))
-    if "engine_version" in data:
-        version = int(data.pop("engine_version"))
+    version = int(data.get("schema_version", 0))
     data = migrate_schema(data, version, CURRENT_SCHEMA_VERSION, "blueprint")
     version = data.get("schema_version", version)
     meta = data.get("meta", {})
@@ -57,9 +55,20 @@ def _migrate_v1_to_v2(data: dict) -> dict:
     return new_data
 
 
+def _bp_v0_to_v1(data: dict) -> dict:
+    new = dict(data)
+    if "engine_version" in new:
+        new.pop("engine_version")
+    new.setdefault("objects", [])
+    new.setdefault("meta", {})
+    new["schema_version"] = 1
+    return new
+
+
 from .. import core
 
-_register("blueprint", 1, 2, _migrate_v1_to_v2)
+_register("blueprint", _bp_v0_to_v1, 0, 1)
+_register("blueprint", _migrate_v1_to_v2, 1, 2)
 
 core.expose(
     "blueprint",

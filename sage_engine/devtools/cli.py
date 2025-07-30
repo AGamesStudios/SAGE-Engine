@@ -30,7 +30,7 @@ def blueprint_migrate(path: Path) -> None:
 
 def compat_check(path: Path) -> None:
     data = json.loads(path.read_text(encoding="utf8"))
-    version = int(data.get("schema_version", data.get("engine_version", 1)))
+    version = int(data.get("schema_version", 0))
     new_version, _ = migrate("scene", version, SCENE_VERSION, dict(data))
     if new_version != version:
         print(f"Needs migration: {version} -> {new_version}")

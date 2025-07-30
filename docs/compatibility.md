@@ -5,7 +5,7 @@
 | Схема | От | До | Изменения |
 |-------|----|----|-----------|
 | blueprint | 1 | 2 | поле `sprite` перенесено в `renderable.sprite` |
-| scene | 1 | 2 | `engine_version` → `schema_version`, `entities` → `objects` |
+| scene | 1 | 2 | `entities` → `objects` |
 | flowscript | 1 | 2 | переменная `hp` переименована в `health` |
 
 ### Использование CLI
@@ -37,5 +37,5 @@ def migrate_v1_to_v2(data: dict) -> dict:
         data["new_name"] = data.pop("old_name")
     return data
 
-compat.register("example", 1, 2, migrate_v1_to_v2)
+compat.register("example", migrate_v1_to_v2, 1, 2)
 ```

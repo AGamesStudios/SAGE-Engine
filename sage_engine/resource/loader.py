@@ -78,7 +78,7 @@ _ENGINE_ALLOWED = {
 def load_engine_cfg(path: str | Path) -> dict:
     """Load and validate ``engine.sagecfg``."""
     cfg = load_cfg(path)
-    version = int(cfg.get("schema_version", cfg.get("engine_version", 1)))
+    version = int(cfg.get("schema_version", 0))
     cfg = migrate_schema(cfg, version, 2, "engine_cfg")
     for key in list(cfg):
         if key not in _ENGINE_ALLOWED and key != "schema_version":

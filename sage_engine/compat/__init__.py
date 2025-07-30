@@ -8,11 +8,20 @@ from ..logger import logger
 
 
 _registry: DictType[str, DictType[int, Tuple[int, Callable[[dict], dict]]]] = {}
+_latest: Dict[str, int] = {}
 
 
-def register(schema_type: str, from_version: int, to_version: int, func: Callable[[dict], dict]) -> None:
-    """Register a migration *func* for *schema_type* from *from_version* to *to_version*."""
+def register(schema_type: str, func: Callable[[dict], dict], from_version: int | None = None, to_version: int | None = None) -> None:
+    """Register a migration function for *schema_type*.
+
+    If *from_version* and *to_version* are omitted, the migration will be
+    registered from the latest known version to ``latest + 1``.
+    """
+    if from_version is None or to_version is None:
+        from_version = _latest.get(schema_type, 0)
+        to_version = from_version + 1
     _registry.setdefault(schema_type, {})[from_version] = (to_version, func)
+    _latest[schema_type] = max(_latest.get(schema_type, 0), to_version)
 
 
 def migrate(schema_type: str, version: int, target: int, data: dict) -> tuple[int, dict]:
@@ -57,6 +66,15 @@ def _flow_v1_to_v2(data: dict) -> dict:
     return new
 
 
+def _scene_v0_to_v1(data: dict) -> dict:
+    new = dict(data)
+    if "engine_version" in new:
+        new.pop("engine_version")
+    new.setdefault("objects", new.pop("entities", []))
+    new["schema_version"] = 1
+    return new
+
+
 def _scene_v1_to_v2(data: dict) -> dict:
     new = dict(data)
     if "engine_version" in new:
@@ -66,8 +84,27 @@ def _scene_v1_to_v2(data: dict) -> dict:
     return new
 
 
-register("flowscript", 1, 2, _flow_v1_to_v2)
-register("scene", 1, 2, _scene_v1_to_v2)
+def _cfg_v0_to_v1(data: dict) -> dict:
+    new = dict(data)
+    if "engine_version" in new:
+        new.pop("engine_version")
+    new["schema_version"] = 1
+    return new
+
+
+def _bp_v0_to_v1(data: dict) -> dict:
+    new = dict(data)
+    if "engine_version" in new:
+        new.pop("engine_version")
+    new.setdefault("objects", [])
+    new.setdefault("meta", {})
+    new["schema_version"] = 1
+    return new
+
+
+register("scene", _scene_v0_to_v1, 0, 1)
+register("scene", _scene_v1_to_v2, 1, 2)
+register("flowscript", _flow_v1_to_v2, 1, 2)
 
 
 def _cfg_v1_to_v2(data: dict) -> dict:
@@ -77,4 +114,5 @@ def _cfg_v1_to_v2(data: dict) -> dict:
     new["schema_version"] = 2
     return new
 
-register("engine_cfg", 1, 2, _cfg_v1_to_v2)
+register("engine_cfg", _cfg_v0_to_v1, 0, 1)
+register("engine_cfg", _cfg_v1_to_v2, 1, 2)
