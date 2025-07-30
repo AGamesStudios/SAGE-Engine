@@ -99,3 +99,22 @@ window.shutdown()
 Для ограничения времени кадра используется `set_frame_budget(ms)`. Если время между `begin_frame()` и `present()` превышает бюджет, в журнале появляется предупреждение.
 
 Диаграмма конвейера отображена в файле `docs/diagrams/render_pipeline.svg`.
+
+## Оптимизации
+
+Дополнительные механизмы ускорения находятся в подмодуле `render.optimizer`:
+
+- **Chunk Rendering** (`optimizer.chunks`) делит экран на сетку и активирует
+  только те участки, которые попадают в поле зрения.
+- **Smart Culling** (`optimizer.culling`) быстро отбрасывает объекты вне
+  видимой области.
+- **Adaptive Batching** (`gfx.batch`) объединяет однотипные команды рисования,
+  уменьшая нагрузку на CPU.
+- **Frame Budget Controller** (`render.budget.FrameBudget`) позволяет
+  проверить, укладывается ли кадр в заданный бюджет (обычно 16.6мс).
+- **Predictive Scheduler** (`render.scheduler.PredictiveScheduler`) анализирует
+  предыдущие кадры и может откладывать второстепённые эффекты, если грядёт
+  перегрузка.
+
+Все оптимизации можно включать и отключать через функции `enable_chunking()`,
+`enable_culling()`, `enable_batching()` и `set_frame_budget()` соответственно.

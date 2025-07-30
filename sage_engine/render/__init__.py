@@ -21,6 +21,9 @@ _raster_cache = False
 _adaptive_repaint = False
 _frame_budget_ms: int | None = None
 _frame_start = 0.0
+_chunking = False
+_culling = False
+_batching = False
 
 
 def _select_backend() -> str:
@@ -61,6 +64,21 @@ def set_frame_budget(ms: int | None) -> None:
     """Set the maximum frame time in milliseconds."""
     global _frame_budget_ms
     _frame_budget_ms = ms
+
+
+def enable_chunking(enabled: bool = True) -> None:
+    global _chunking
+    _chunking = enabled
+
+
+def enable_culling(enabled: bool = True) -> None:
+    global _culling
+    _culling = enabled
+
+
+def enable_batching(enabled: bool = True) -> None:
+    global _batching
+    _batching = enabled
 
 
 def init(output_target: Any = None) -> None:
@@ -173,6 +191,9 @@ core.expose(
         enable_raster_cache=enable_raster_cache,
         enable_adaptive_repaint=enable_adaptive_repaint,
         set_frame_budget=set_frame_budget,
+        enable_chunking=enable_chunking,
+        enable_culling=enable_culling,
+        enable_batching=enable_batching,
         shutdown=shutdown,
     ),
 )
