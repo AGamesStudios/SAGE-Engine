@@ -37,10 +37,10 @@ SAGE-Engine/
 │   └── examples/
 │       ├── basic_scene.md
 │       ├── custom_role.md
-│       └── flow_test_game.md
+│       └── demo_game.md
 ├── engine.json
 ├── examples/
-│   └── flow_test_game/
+│   └── demo_game/
 │       ├── main.py
 │       ├── logic.flow
 │       ├── game.sagecfg

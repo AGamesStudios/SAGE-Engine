@@ -1,7 +1,0 @@
-переменная player_x = 320
-при обновление сделай
-    если Input.is_pressed("LEFT") тогда
-        player_x -= 5
-    если Input.is_pressed("RIGHT") тогда
-        player_x += 5
-конец

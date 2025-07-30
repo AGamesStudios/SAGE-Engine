@@ -12,21 +12,30 @@ from ..logger import logger
 class _FlowInputProxy:
     """Proxy around Input that logs errors with [flow] prefix."""
 
+    def _validate(self, key: str) -> str | None:
+        if Input.is_action_bound(key) or key.upper() in KEY_MAP:
+            return None
+        import difflib
+        candidates = list(KEY_MAP.keys()) + list(Input._actions.keys())  # type: ignore[attr-defined]
+        match = difflib.get_close_matches(key.upper(), candidates, n=1)
+        hint = match[0] if match else None
+        logger.error("[flow] Неизвестная клавиша или действие: '%s'", key)
+        if hint:
+            logger.info("[HINT] [flow] Возможно вы имели в виду '%s'", hint)
+        return hint
+
     def is_pressed(self, key: str) -> bool:
-        if not Input.is_action_bound(key) and key.upper() not in KEY_MAP:
-            logger.error("[flow] Invalid key name or unbound action: %s", key)
+        if self._validate(key):
             return False
         return Input.is_pressed(key)
 
     def is_down(self, key: str) -> bool:
-        if not Input.is_action_bound(key) and key.upper() not in KEY_MAP:
-            logger.error("[flow] Invalid key name or unbound action: %s", key)
+        if self._validate(key):
             return False
         return Input.is_down(key)
 
     def is_up(self, key: str) -> bool:
-        if not Input.is_action_bound(key) and key.upper() not in KEY_MAP:
-            logger.error("[flow] Invalid key name or unbound action: %s", key)
+        if self._validate(key):
             return False
         return Input.is_up(key)
 

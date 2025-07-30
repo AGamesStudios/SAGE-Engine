@@ -1,7 +1,0 @@
-название = "FlowScript Demo"
-ширина = 640
-высота = 360
-скрипт = "logic.flow"
-объекты = [
-    "roles/Player.role.json"
-]

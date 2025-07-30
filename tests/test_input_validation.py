@@ -18,7 +18,7 @@ def test_flowscript_invalid_key_does_not_move():
 переменная pos = 0
 при обновление сделай
     global pos
-    если нажата_клавиша("LFT") тогда
+    если нажата "LFT" тогда
         прибавить pos на 1
 конец
 """
@@ -35,7 +35,7 @@ def test_flowscript_valid_key_moves():
 переменная pos = 0
 при обновление сделай
     global pos
-    если нажата_клавиша("LEFT") тогда
+    если нажата "LEFT" тогда
         прибавить pos на 1
 конец
 """

@@ -1,9 +1,0 @@
-world:
-  name: level1
-  objects:
-    - type: Player
-      position: [320, 300]
-    - type: Enemy
-      position: [320, 50]
-  on_start:
-    - scripts/start.sageflow

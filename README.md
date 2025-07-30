@@ -37,7 +37,7 @@
 - [Редактор](docs/editor.md)
 - [Руководство разработчика](docs/dev_guidelines.md)
 - [Правила проектирования](docs/design_rules.md)
-- [FlowScript Test Game](examples/flow_test_game/main.py)
+- [FlowScript Test Game](examples/demo_game/main.py)
 - [Интеграция рендера](docs/examples/render_integration.md)
 - [Совместимость](docs/compatibility.md)
 - [Руководство по стилю](docs/style_guide.md)
@@ -47,8 +47,8 @@
 Тестирование запускается командой `sage-test`.
 
 Примеры находятся в [docs/examples](docs/examples/).
-The demo game in `examples/flow_test_game` illustrates basic usage. On Windows use
-Python 3.10–3.12 and run `python demo.py`. Set `SAGE_LOGLEVEL=DEBUG` for verbose
+The demo game in `examples/demo_game` illustrates basic usage. On Windows use
+Python 3.10–3.12 and run `python examples/demo_game/main.py`. Set `SAGE_LOGLEVEL=DEBUG` for verbose
 logs.
 Use `sage-pack` to build compressed resource archives.
 To validate the Win32 backend, run the demo and resize or move the window.

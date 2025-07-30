@@ -3,26 +3,34 @@ from sage_engine.runtime import FrameSync
 from sage_engine.input import Input
 from sage_engine.flow.runtime import run_flow_script
 from sage_engine.resource.loader import load_cfg
+from sage_engine.logger import logger
+
+
+def load_config(path: str = "game.sagecfg"):
+    data = load_cfg(path)
+    allowed = {"игра", "скрипт", "язык", "разрешение"}
+    for key in list(data.keys()):
+        if key not in allowed:
+            logger.error("[config] Неизвестное поле в конфиге: \"%s\"", key)
+    name = data.get("игра", "FlowScript Demo")
+    script = data.get("скрипт", "logic.flow")
+    lang = data.get("язык", "ru")
+    res = data.get("разрешение", [640, 360])
+    width = int(res[0])
+    height = int(res[1]) if len(res) > 1 else width
+    return name, script, lang, width, height
 
 
 def main() -> None:
-    cfg = load_cfg("game.sagecfg")
-    name = cfg.get("название", "SAGE Game")
-    width = int(cfg.get("ширина", 640))
-    height = int(cfg.get("высота", 360))
-    script = cfg.get("скрипт", "logic.flow")
+    name, script, lang, width, height = load_config()
 
     window.init(name, width, height)
     render.init(window.get_window_handle())
     gfx.init(width, height)
     Input.init(window.get_window_handle())
 
-    Input.map_action("left", "LEFT")
-    Input.map_action("right", "RIGHT")
-    Input.map_action("shoot", "SPACE")
-
     fsync = FrameSync(target_fps=60)
-    run_flow_script(script, Input, lang="ru")
+    run_flow_script(script, Input, lang=lang)
 
     running = True
     while running:
@@ -32,7 +40,7 @@ def main() -> None:
         fsync.start_frame()
         gfx.begin_frame((0, 0, 0, 255))
 
-        state = run_flow_script(script, Input, lang="ru")
+        state = run_flow_script(script, Input, lang=lang)
         x = int(state.get("player_x", width // 2))
         gfx.draw_rect(x, height - 40, 20, 10, (0, 255, 255, 255))
 

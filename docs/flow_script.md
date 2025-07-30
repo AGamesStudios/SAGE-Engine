@@ -19,6 +19,9 @@ FlowScript is a tiny scripting language for SAGE Engine. It is designed to look 
 | `уменьшить`             | `subtract`         | Subtraction                 |
 | `умножить`              | `multiply`         | Multiplication              |
 | `разделить`             | `divide`           | Division                    |
+| `нажата`, `клавиша_нажата`, `нажата_клавиша` | `pressed`, `key_pressed`, `pressed_key` | Key pressed (is_down) |
+| `зажата` | `held` | Key held (is_pressed) |
+| `отпущена` | `released` | Key released (is_up) |
 
 ## Grammar
 
@@ -60,7 +63,7 @@ end
 
 ```flow
 при обновление сделай
-    если нажата_клавиша("LEFT") тогда
+    если зажата "LEFT" тогда
         move(player, -5, 0)
 конец
 ```
@@ -68,7 +71,8 @@ end
 If a wrong key name is used, an error is logged:
 
 ```
-[ERROR] [flow] Invalid key name or unbound action: LFT
+[ERROR] [flow] Неизвестная клавиша или действие: 'LFT'
+[HINT] [flow] Возможно вы имели в виду 'LEFT'
 ```
 
 ## Bytecode
