@@ -21,6 +21,7 @@ __all__ = [
     "runtime",
     "cursor",
     "input",
+    "flow",
     "sprite",
     "animation",
     "plugins",

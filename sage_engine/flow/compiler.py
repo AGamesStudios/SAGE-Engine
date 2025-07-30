@@ -1,10 +1,14 @@
 from __future__ import annotations
 
-from typing import List
+from typing import Any
+from .grammar import parser
+from .bytecode import encoder
 
-__all__ = ["compile_ast"]
+__all__ = ["compile_source"]
 
 
-def compile_ast(ast: List[str]) -> str:
-    """Very naive compiler converting token list back to Python code."""
-    return " ".join(ast)
+def compile_source(script: str, *, lang: str = "ru") -> Any:
+    """Compile FlowScript text to a Python code object."""
+    source = parser.parse(script, lang=lang)
+    code = encoder.encode(source)
+    return code

@@ -1,6 +1,6 @@
 # 📘 FlowScript
 
-💡 Модуль `flow` позволяет выполнять простые скрипты для управления сценой.
+💡 Модуль `flow` позволяет выполнять простые скрипты для управления сценой. FlowScript выглядит как естественный текст и компилируется в лёгкий байткод.
 
 ## 🔹 `run`
 
@@ -26,3 +26,21 @@ asyncio.run(run_flow("ctx['done'] = True", {'ctx': {}}))
 
 FlowScript consists of a tiny interpreter located in `sage_engine.flow`. The runtime can execute Python style code or parse the experimental FlowScript syntax via the parsers and compilers found under `flow/`.
 The entry point is `FlowRuntime.run(script, context, dialect='python')`.
+
+## Example script
+
+```flow
+переменная здоровье = 5
+если здоровье > 0 тогда
+    вызвать heal()
+```
+
+English variant:
+
+```flow
+variable health = 5
+if health > 0 then
+    call heal()
+```
+
+Use `dialect="ru"` or `dialect="en"` with `FlowRuntime.run` to execute such scripts.

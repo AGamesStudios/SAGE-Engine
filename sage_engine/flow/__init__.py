@@ -4,11 +4,12 @@ from importlib import import_module
 
 __all__ = [
     "runtime",
-    "parser",
     "compiler",
     "types",
     "bindings",
     "dialects",
+    "grammar",
+    "bytecode",
 ]
 
 

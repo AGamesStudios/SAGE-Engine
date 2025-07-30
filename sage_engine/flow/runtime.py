@@ -1,36 +1,36 @@
 from __future__ import annotations
 
-from types import SimpleNamespace
 from typing import Any
+
 from .bindings import get_builtins
+from .compiler import compile_source
+from .bytecode.vm import run as run_code
 
 __all__ = ["FlowRuntime", "run"]
 
+
 class FlowRuntime:
-    """Minimal FlowScript interpreter supporting Python-like snippets."""
+    """Simple FlowScript interpreter supporting basic Flow language."""
 
     def __init__(self) -> None:
-        self.globals: dict[str, Any] = {}
-        self.globals.update(get_builtins())
+        self.globals: dict[str, Any] = get_builtins()
 
-    async def run(self, script: str, context: dict[str, Any] | None = None, *, dialect: str = "python") -> None:
-        """Execute a script in the provided context."""
+    async def run(
+        self, script: str, context: dict[str, Any] | None = None, *, dialect: str = "python"
+    ) -> None:
+        """Execute a script using the given dialect."""
         ctx = {} if context is None else context
-        # merge builtins
-        ctx = {**self.globals, **ctx}
+        exec_ctx = {**self.globals, **ctx}
         if dialect == "python":
-            exec(script, ctx)
-        elif dialect == "flow":
-            from .compiler import compile_ast
-            from .parser import parse
-            ast = parse(script)
-            code = compile_ast(ast)
-            exec(code, ctx)
+            code = compile(script, "<python>", "exec")
+        elif dialect in {"flow", "ru", "en"}:
+            code = compile_source(script, lang="ru" if dialect == "flow" else dialect)
         else:
             raise ValueError(f"Unknown dialect: {dialect}")
+        run_code(code, exec_ctx)
+        ctx.update({k: v for k, v in exec_ctx.items() if k not in self.globals})
 
 
 def run(script: str, context: dict[str, Any]) -> Any:
-    """Compatibility helper used by tests."""
     rt = FlowRuntime()
     return rt.run(script, context)
