@@ -7,6 +7,8 @@ from ..graphic import fx
 from ..graphic.state import GraphicState
 from ..logger import logger
 
+BYTES_PER_PIXEL = 4
+
 
 
 
@@ -33,16 +35,18 @@ class GraphicRuntime:
         # framebuffer will be resized on demand in flush_frame
         self.width = width
         self.height = height
-        self.pitch = self.width * 4
+        self.pitch = self.width * BYTES_PER_PIXEL
         self.buffer = bytearray(self.height * self.pitch)
 
     def realloc_buffer(self, width: int, height: int) -> None:
         """Reallocate the internal framebuffer to the given size."""
         if width <= 0 or height <= 0:
             return
+        if width == self.width and height == self.height:
+            return
         self.width = width
         self.height = height
-        self.pitch = self.width * 4
+        self.pitch = self.width * BYTES_PER_PIXEL
         self.buffer = bytearray(self.height * self.pitch)
 
 
@@ -176,8 +180,18 @@ class GraphicRuntime:
         """Finish drawing and present the buffer via :mod:`render`."""
         from .. import render
 
+        from .. import window
+
         self._check_window_size(handle)
         buf = self.end_frame()
+        win_w, win_h = window.get_size(handle)
+        expected_size = win_w * win_h * BYTES_PER_PIXEL
+        actual_size = len(buf)
+        if actual_size != expected_size:
+            self.realloc_buffer(win_w, win_h)
+            logger.info("[gfx] Framebuffer reallocated to %dx%d", win_w, win_h)
+            self.begin_frame()
+            buf = self.end_frame()
         self._frame_counter += 1
         backend = render._get_backend()
         ctx = None
@@ -275,9 +289,9 @@ class GraphicRuntime:
                         self._blend_pixel(px, py, r, g, b, a)
 
     def _blend_pixel(self, x: int, y: int, r: int, g: int, b: int, a: int) -> None:
-        off = y * self.pitch + x * 4
+        off = y * self.pitch + x * BYTES_PER_PIXEL
         if a == 255:
-            self.buffer[off:off+4] = bytes((b, g, r, 255))
+            self.buffer[off:off+BYTES_PER_PIXEL] = bytes((b, g, r, 255))
         elif a == 0:
             return
         else:
@@ -290,4 +304,4 @@ class GraphicRuntime:
             ng = g + (dg * inv // 255)
             nr = r + (dr * inv // 255)
             na = a + (da * inv // 255)
-            self.buffer[off:off+4] = bytes((nb, ng, nr, na))
+            self.buffer[off:off+BYTES_PER_PIXEL] = bytes((nb, ng, nr, na))

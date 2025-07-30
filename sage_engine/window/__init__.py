@@ -243,6 +243,8 @@ def set_fullscreen(enabled: bool) -> None:
 def set_resolution(width: int, height: int) -> None:
     """Change resolution of the main window."""
     if _window is not None:
+        if getattr(_window, "width", None) == width and getattr(_window, "height", None) == height:
+            return
         _fs_res(_window, width, height)
         _event_queue.append((WIN_RESIZE, (width, height)))
         emit(WINDOW_RESIZED, width, height)

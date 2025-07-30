@@ -158,8 +158,28 @@ class Win32Window:
                 y = (lparam >> 16) & 0xFFFF
                 self._on_mouse("move", x, y, 0)
             elif msg == 0x0084:  # WM_NCHITTEST
-                y_pos = (lparam >> 16) & 0xFFFF
-                if y_pos < 30:
+                pt_x = ctypes.c_short(lparam & 0xFFFF).value
+                pt_y = ctypes.c_short((lparam >> 16) & 0xFFFF).value
+                pt = wintypes.POINT(pt_x, pt_y)
+                user32.ScreenToClient(hwnd, ctypes.byref(pt))
+                edge = 5
+                if pt.y < edge:
+                    if pt.x < edge:
+                        return 13  # HTTOPLEFT
+                    if pt.x >= self.width - edge:
+                        return 14  # HTTOPRIGHT
+                    return 12  # HTTOP
+                if pt.y >= self.height - edge:
+                    if pt.x < edge:
+                        return 16  # HTBOTTOMLEFT
+                    if pt.x >= self.width - edge:
+                        return 17  # HTBOTTOMRIGHT
+                    return 15  # HTBOTTOM
+                if pt.x < edge:
+                    return 10  # HTLEFT
+                if pt.x >= self.width - edge:
+                    return 11  # HTRIGHT
+                if pt.y < 30:
                     return 2  # HTCAPTION
             try:
                 result = user32.DefWindowProcW(
@@ -197,13 +217,16 @@ class Win32Window:
         WS_THICKFRAME = 0x00040000
         WS_MINIMIZEBOX = 0x00020000
         WS_MAXIMIZEBOX = 0x00010000
+        WS_SIZEBOX = 0x00040000
         WS_POPUP = 0x80000000
 
-        style = WS_OVERLAPPEDWINDOW
+        style = WS_OVERLAPPEDWINDOW | 0x01000000  # WS_VISIBLE
         if not self.resizable:
             style &= ~(WS_THICKFRAME | WS_MAXIMIZEBOX)
         if self.borderless:
             style &= ~(WS_CAPTION | WS_SYSMENU | WS_THICKFRAME)
+        style &= ~WS_THICKFRAME
+        style |= WS_SIZEBOX
         exstyle = 0
         if self.fullscreen:
             style = WS_POPUP

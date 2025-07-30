@@ -6,6 +6,7 @@ from importlib import import_module
 from typing import Any
 
 from ..settings import settings
+from ..events import on
 
 _backend = None
 _context = None
@@ -102,4 +103,7 @@ def _get_backend():
 
 def _get_context():
     return _context
+
+
+on("window_resized", lambda w, h: resize(w, h))
 
