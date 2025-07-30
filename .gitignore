@@ -1,5 +1,7 @@
 __pycache__/
 .hypothesis/
+logs/
 *.sage*
+!examples/demo_game/game.sagecfg
 *.assets
 *.compiled

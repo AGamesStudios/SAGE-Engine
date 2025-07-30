@@ -11,6 +11,16 @@
 ### 🔧 Фазы
 update
 
+## 🔹 enemy
+
+### 📦 Категории
+- **transform**: x, y, angle
+- **sprite**: tex_id, layer, color
+- **enemy**: hp, speed
+
+### 🔧 Фазы
+update, draw
+
 ## 🔹 player
 
 Управляемый игроком персонаж.
