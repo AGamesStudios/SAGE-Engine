@@ -21,6 +21,13 @@ def to_rgba(color) -> Tuple[int, int, int, int]:
     """Convert a color specification to RGBA tuple."""
     if isinstance(color, Color):
         return color.as_tuple()
+    if isinstance(color, list):
+        if len(color) == 3:
+            color = tuple(color) + (255,)
+        elif len(color) == 4:
+            color = tuple(color)
+        else:
+            raise ValueError("Invalid color list length")
     if isinstance(color, tuple):
         if len(color) == 3:
             r, g, b = color
