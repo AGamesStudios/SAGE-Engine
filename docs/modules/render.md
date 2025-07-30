@@ -91,3 +91,11 @@ window.shutdown()
 Рекомендуется вызывать `gfx.flush_frame()` вместо прямого `render.present`,
 чтобы буфер автоматически пересоздавался при изменении размеров окна.
 
+
+## Расширенные возможности
+
+`render` поддерживает набор оптимизаций: Predictive Micro-Culling, Delta-Render и Raster Cache Manager. Они включаются через функции `enable_micro_culling()`, `enable_delta_render()` и `enable_raster_cache()`. Адаптивный планировщик перерисовки (`enable_adaptive_repaint()`) снижает нагрузку, когда кадры выходят за заданный бюджет.
+
+Для ограничения времени кадра используется `set_frame_budget(ms)`. Если время между `begin_frame()` и `present()` превышает бюджет, в журнале появляется предупреждение.
+
+Диаграмма конвейера отображена в файле `docs/diagrams/render_pipeline.svg`.

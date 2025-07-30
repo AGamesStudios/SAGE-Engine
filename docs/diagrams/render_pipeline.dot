@@ -1,0 +1,6 @@
+digraph render_pipeline {
+    rankdir=LR;
+    gfx -> render;
+    render -> window;
+    window -> screen;
+}

@@ -40,6 +40,8 @@ All modifications to scene objects happen via a `SceneEdit` transaction that is 
 
 The design tries to minimize allocations during the update/draw loop and favors a Struct-of-Arrays layout for cache efficiency.
 
+![Render pipeline](diagrams/render_pipeline.svg)
+
 ### Frame cycle
 
 During each tick the engine executes phases in order:
