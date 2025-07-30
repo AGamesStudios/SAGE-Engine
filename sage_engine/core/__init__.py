@@ -12,7 +12,6 @@ from ..format.loader import load_sage_file
 from importlib import import_module
 
 from ..settings import settings
-from ..logger import logger
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
@@ -24,6 +23,7 @@ class _Phase:
 
 _registry: Dict[str, List[_Phase]] = defaultdict(list)
 _booted = False
+_interfaces: Dict[str, object] = {}
 
 
 def _load_modules_from_config() -> None:
@@ -50,6 +50,8 @@ def _load_modules_from_config() -> None:
 def register(phase: str, func: Callable, *, parallelizable: bool = False) -> None:
     """Register a callable for execution in a given phase."""
     _registry[phase].append(_Phase(func, parallelizable))
+
+from ..logger import logger
 
 
 def core_boot(config: dict | None = None) -> None:
@@ -114,3 +116,13 @@ def core_shutdown() -> None:
         phase.func()
     _booted = False
     _registry.clear()
+
+
+def expose(name: str, api: object) -> None:
+    """Expose a module interface under the given name."""
+    _interfaces[name] = api
+
+
+def get(name: str) -> object | None:
+    """Retrieve an exposed interface."""
+    return _interfaces.get(name)

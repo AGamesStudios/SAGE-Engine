@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Tuple, List, Any, Iterable
 
+from .. import core
+
 from ..graphic.color import to_premul_rgba, to_bgra8_premul
 from ..graphic import fx
 from ..graphic.state import GraphicState
@@ -34,11 +36,15 @@ class GraphicRuntime:
         """Initialize a framebuffer of the given size."""
         # framebuffer will be resized on demand in flush_frame
         from ..events import on
-        on("window_resized", self.realloc_buffer)
+        on("window_resized", lambda w, h: self.set_dimensions(w, h))
         self.width = width
         self.height = height
         self.pitch = self.width * BYTES_PER_PIXEL
         self.buffer = bytearray(self.height * self.pitch)
+
+    def set_dimensions(self, width: int, height: int) -> None:
+        """Update dimensions and reallocate the buffer."""
+        self.realloc_buffer(width, height)
 
     def realloc_buffer(self, width: int, height: int) -> None:
         """Reallocate the internal framebuffer to the given size."""
@@ -171,8 +177,9 @@ class GraphicRuntime:
 
     def flush_frame(self, handle: Any | None = None, fsync: Any | None = None) -> None:
         """Finish drawing and present the buffer via :mod:`render`."""
-        from .. import render
-
+        render = core.get("render")
+        if render is None:
+            return
         self._ensure_buffer_size()
         buf = self.end_frame()
         expected_size = self.width * self.height * BYTES_PER_PIXEL

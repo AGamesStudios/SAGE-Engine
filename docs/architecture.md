@@ -18,6 +18,8 @@ This document describes the high level architecture for SAGE Engine based on the
 - **window** – platform window management.
 - **settings** – engine configuration including thread limits.
 
+Modules expose their public API via ``core.expose()`` and access others using ``core.get()`` or event subscriptions. Direct imports between modules are discouraged to keep coupling low.
+
 The engine executes in well defined phases ordered as a DAG. Each module registers its callbacks for update or draw phases.
 
 ```

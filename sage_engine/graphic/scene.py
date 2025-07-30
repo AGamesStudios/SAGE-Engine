@@ -54,15 +54,17 @@ class Scene:
         return g
 
     def render(self) -> None:
-        from .. import gfx
+        from .. import core
+        gfx = core.get("gfx")
+        if gfx is None:
+            return
         for layer in sorted(self.layers, key=lambda l: l.z):
             gfx.state.z = layer.z
             for item in sorted(layer.items, key=lambda it: getattr(it, "timestamp", 0)):
-                self._render_item(item)
+                self._render_item(item, gfx)
         gfx.state.z = 0
 
-    def _render_item(self, item: Any) -> None:
-        from .. import gfx
+    def _render_item(self, item: Any, gfx) -> None:
         if isinstance(item, Rect):
             gfx.draw_rect(item.x, item.y, item.w, item.h, item.color)
         elif isinstance(item, Group):
@@ -70,6 +72,6 @@ class Scene:
                 gfx.push_state()
                 gfx.state.restore(item.state)
             for sub in sorted(item.items, key=lambda it: getattr(it, "timestamp", 0)):
-                self._render_item(sub)
+                self._render_item(sub, gfx)
             if item.state is not None:
                 gfx.pop_state()

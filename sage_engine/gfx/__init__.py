@@ -27,4 +27,26 @@ pop_state = _runtime.pop_state
 from ..graphic.scene import Scene, Layer, Rect, Group
 from ..graphic.color import Color, to_rgba
 from ..graphic import fx
+from .. import core
+from types import SimpleNamespace
+
+core.expose(
+    "gfx",
+    SimpleNamespace(
+        init=init,
+        begin_frame=begin_frame,
+        end_frame=end_frame,
+        flush_frame=flush_frame,
+        draw_rect=draw_rect,
+        draw_circle=draw_circle,
+        draw_line=draw_line,
+        draw_polygon=draw_polygon,
+        draw_rounded_rect=draw_rounded_rect,
+        draw_text=draw_text,
+        shutdown=shutdown,
+        state=state,
+        push_state=push_state,
+        pop_state=pop_state,
+    ),
+)
 

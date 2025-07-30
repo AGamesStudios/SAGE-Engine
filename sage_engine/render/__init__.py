@@ -7,6 +7,8 @@ from typing import Any
 
 from ..settings import settings
 from ..events import on
+from .. import core
+from types import SimpleNamespace
 
 _backend = None
 _context = None
@@ -106,4 +108,19 @@ def _get_context():
 
 
 on("window_resized", lambda w, h: resize(w, h))
+
+core.expose(
+    "render",
+    SimpleNamespace(
+        init=init,
+        begin_frame=begin_frame,
+        end_frame=end_frame,
+        present=present,
+        create_context=create_context,
+        resize=resize,
+        _get_backend=_get_backend,
+        _get_context=_get_context,
+        shutdown=shutdown,
+    ),
+)
 
