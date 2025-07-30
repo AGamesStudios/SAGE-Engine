@@ -1,6 +1,17 @@
 from __future__ import annotations
 
+import sys
+
 from .state import InputState
+
+if sys.platform.startswith("win"):
+    from .impl import win32 as _impl
+elif sys.platform == "darwin":
+    from .impl import cocoa as _impl
+else:
+    from .impl import x11 as _impl
+
+from ..logger import logger
 
 class InputCore:
     """Basic keyboard and mouse input handler."""
@@ -8,6 +19,11 @@ class InputCore:
     def __init__(self) -> None:
         self._state = InputState()
         self._actions: dict[str, str] = {}
+        try:
+            if hasattr(_impl, "init_input"):
+                _impl.init_input()
+        except Exception as exc:  # pragma: no cover - platform errors
+            logger.warning("[input] platform init failed: %s", exc)
 
     # internal event hooks
     def _handle_key(self, key: str, down: bool) -> None:
@@ -31,6 +47,10 @@ class InputCore:
         self._state.key_up.clear()
         self._state.prev_x = self._state.mouse_x
         self._state.prev_y = self._state.mouse_y
+        try:
+            _impl.poll_events()
+        except Exception as exc:  # pragma: no cover - platform errors
+            logger.warning("[input] poll_events failed: %s", exc)
 
     def _resolve_key(self, name: str) -> str | None:
         """Return normalized key name for a bound action or direct key."""
@@ -84,6 +104,14 @@ class InputCore:
 
     def get_mouse_delta(self) -> tuple[int, int]:
         return self._state.mouse_x - self._state.prev_x, self._state.mouse_y - self._state.prev_y
+
+    def get_key_state(self, key: str) -> bool:
+        """Query the underlying platform for the current key state."""
+        try:
+            return bool(_impl.get_key_state(key))
+        except Exception as exc:  # pragma: no cover - platform errors
+            logger.warning("[input] get_key_state failed: %s", exc)
+            return False
 
     def map_action(self, action: str, key: str | None = None, gamepad_button: str | None = None) -> None:
         from .state import KEY_MAP
