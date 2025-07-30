@@ -142,7 +142,7 @@ Backend выбирается автоматически из каталога `w
 
 ### Проверка Win32 окна
 
-1. Запустите `examples/demo_game/main.py` на Windows.
+1. Запустите `examples/render_test/main.py` на Windows.
 2. Измените размеры и перемещайте окно – в консоль будут печататься события
    `WIN_RESIZE` и `WIN_MOUSE`.
 3. Проверьте флаги `resizable`, `borderless` и `fullscreen` при инициализации.

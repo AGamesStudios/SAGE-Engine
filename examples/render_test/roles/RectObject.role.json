@@ -1,0 +1,15 @@
+{
+  "name": "RectObject",
+  "categories": {
+    "transform": {
+      "x": "float",
+      "y": "float"
+    },
+    "rect": {
+      "width": "float",
+      "height": "float",
+      "color": "vec4"
+    }
+  },
+  "phases": ["draw"]
+}

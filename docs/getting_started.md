@@ -47,6 +47,6 @@
    window.shutdown()
    ```
 
-5. Изучите примеры в каталоге `docs/examples/`.
+5. Ознакомьтесь с примером `render_test` в `docs/examples/render_test.md`.
 
 Теперь вы готовы экспериментировать с ролями и фазами.

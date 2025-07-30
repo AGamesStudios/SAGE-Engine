@@ -40,10 +40,10 @@ SAGE-Engine/
 │   └── examples/
 │       ├── basic_scene.md
 │       ├── custom_role.md
-│       └── demo_game.md
+│       └── render_test.md
 ├── engine.sagecfg
 ├── examples/
-│   └── demo_game/
+│   └── render_test/
 │       ├── main.py
 │       ├── logic.flow
 │       ├── game.sagecfg
