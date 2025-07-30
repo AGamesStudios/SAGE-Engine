@@ -207,6 +207,19 @@ from .runtime import WorldRuntime
 
 runtime = WorldRuntime()
 
+from .. import core
+from types import SimpleNamespace
+
+core.expose(
+    "world",
+    SimpleNamespace(
+        runtime=runtime,
+        load_scene=runtime.load_scene,
+        set_scene=runtime.set_scene,
+        switch_layer=runtime.switch_layer,
+    ),
+)
+
 __all__ = [
     'Scene', 'SceneEdit', 'scene', 'runtime', 'WorldRuntime',
     'load'

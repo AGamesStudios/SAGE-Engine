@@ -189,8 +189,29 @@ def roles_with(interface: str) -> List[str]:
     return result
 
 
+def validate(role: str, fields: Mapping[str, object]) -> None:
+    """Validate *fields* against the schema of *role*."""
+    schema = get_role(role).schema
+    validate_fields(schema, fields)
+
+
 from .interfaces import INTERFACES
 
 # load roles from JSON definitions at import time if available
 load_json_roles(docs_path=Path(__file__).resolve().parents[2] / "docs" / "roles.md")
+
+from .. import core
+from types import SimpleNamespace
+
+core.expose(
+    "roles",
+    SimpleNamespace(
+        get_role=get_role,
+        register_role=register_role,
+        registered_roles=registered_roles,
+        validate=validate,
+        roles_with=roles_with,
+    ),
+)
+
 

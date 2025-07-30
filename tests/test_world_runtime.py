@@ -20,8 +20,15 @@ def test_runtime_load(tmp_path):
         encoding="utf8",
     )
     rt = WorldRuntime()
-    rt.load(cfg_path)
+    rt.load_scene("lvl", cfg_path)
+    rt.set_scene("lvl")
     assert len(rt.objects) == 1
     obj = rt.objects[0]
     assert obj.position.x == 1
     assert obj.position.y == 2
+
+
+def test_switch_layer():
+    rt = WorldRuntime()
+    rt.switch_layer("ui")
+    assert rt.active_layer == "ui"
