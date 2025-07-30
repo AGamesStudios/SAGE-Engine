@@ -1,6 +1,7 @@
 # FlowScript Test Game
 
 This example demonstrates a minimal game using FlowScript for input-driven logic.
+All window parameters and the script path come from ``game.sagecfg``.
 Run it with:
 
 ```bash

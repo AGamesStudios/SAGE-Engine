@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+import yaml
 
 _PACK_INDEX = None
 _PACK_FILE = None
@@ -28,3 +29,33 @@ def load_from_pack(key: str, pack_path: Path) -> bytes:
 def load_file(path: Path) -> bytes:
     with path.open('rb') as fh:
         return fh.read()
+
+
+def load_cfg(path: str | Path) -> dict:
+    """Load a `.sagecfg` configuration file.
+
+    Supports both YAML syntax and simple ``key = value`` lines.
+    """
+    p = Path(path)
+    text = p.read_text(encoding="utf8")
+    try:
+        loaded = yaml.safe_load(text)
+        if isinstance(loaded, dict):
+            return loaded
+    except Exception:
+        pass
+    data: dict[str, object] = {}
+    for line in text.splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "=" not in line:
+            continue
+        key, val = line.split("=", 1)
+        key = key.strip()
+        val = val.strip()
+        try:
+            data[key] = yaml.safe_load(val)
+        except Exception:
+            data[key] = val.strip('"\'')
+    return data

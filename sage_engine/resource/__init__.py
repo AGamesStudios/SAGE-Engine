@@ -3,6 +3,7 @@
 import asyncio
 from .manager import load, get, preload
 from .packer import pack
+from .loader import load_cfg
 from .sage_pack import main as pack_cli
 
 __all__ = [
@@ -12,6 +13,7 @@ __all__ = [
     "pack",
     "load_async",
     "pack_cli",
+    "load_cfg",
 ]
 
 
