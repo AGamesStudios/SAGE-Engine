@@ -1,10 +1,12 @@
 """Entry point for SAGE Studio GUI editor."""
 
 import sys
+import os
 import tkinter as tk
 from pathlib import Path
 
 from sage_editor.ui.main_window import build as build_main_window
+from . import gui_main
 from sage_editor.core import state
 
 if "sage_editor" not in sys.modules and __name__ == "__main__":
@@ -12,6 +14,10 @@ if "sage_editor" not in sys.modules and __name__ == "__main__":
 
 
 def main() -> None:
+    if os.environ.get("SAGE_GUI_EXPERIMENTAL") == "1":
+        gui_main.main()
+        return
+
     root = tk.Tk()
     root.title("SAGE Studio")
     root.geometry("1280x720")
