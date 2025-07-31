@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import os
 
+from .logger import logger
+from . import core
+
 
 def run() -> None:
     """Run a preview of the current scene if supported.
@@ -15,6 +18,10 @@ def run() -> None:
     loop will exit after the given number of frames which allows automated
     tests to run this function in headless mode.
     """
+
+    if not core.get("gfx_native"):
+        logger.warn("Preview unavailable: native renderer not ready")
+        return
 
     from . import window, render, gfx, world, objects
     from .runtime.fsync import FrameSync

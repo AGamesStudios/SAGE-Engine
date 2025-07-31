@@ -2,9 +2,11 @@
 
 from ctypes import cdll, c_int, c_float, c_uint, c_size_t, c_void_p, POINTER
 from ctypes.util import find_library
+from pathlib import Path
 import os
 import sys
 import glob
+import subprocess
 
 from ..logger import logger
 
@@ -37,8 +39,39 @@ def _find_libsagegfx() -> str | None:
     return candidates[0] if candidates else None
 
 
+def _auto_build() -> str | None:
+    """Attempt to build ``libsagegfx`` using Make or Cargo."""
+    root = Path(__file__).resolve().parents[2]
+    print("[SAGE] Native backend not found. Attempting auto-build...")
+    try:
+        subprocess.run(["make", "build-rust"], cwd=root, check=True)
+    except FileNotFoundError:
+        try:
+            subprocess.run(
+                [
+                    "cargo",
+                    "build",
+                    "--manifest-path",
+                    str(root / "rust" / "Cargo.toml"),
+                    "--release",
+                ],
+                cwd=root,
+                check=True,
+            )
+        except Exception as e:  # pragma: no cover - external tool
+            logger.error("Auto-build failed: %s", e)
+            return None
+    except Exception as e:  # pragma: no cover - external tool
+        logger.error("Auto-build failed: %s", e)
+        return None
+    return _find_libsagegfx()
+
+
 def _load_lib():
+
     path = _find_libsagegfx()
+    if not path:
+        path = _auto_build()
     if not path:
         os.environ["SAGE_RENDER_BACKEND"] = "software"
         logger.error("Native backend not found, using fallback software renderer")
@@ -56,8 +89,28 @@ try:
 except Exception:
     lib = None
 
+if lib is None:
+    from types import SimpleNamespace
+
+    def _noop(*_a, **_kw):
+        return 0
+
+    lib = SimpleNamespace(
+        sage_q8_mul=_noop,
+        sage_q8_lerp=_noop,
+        sage_blend_rgba_pm=_noop,
+        sage_is_visible=lambda *a, **kw: 0,
+        sage_cull=lambda *a, **kw: 0,
+        sage_sched_new=lambda *a, **kw: 0,
+        sage_sched_drop=_noop,
+        sage_sched_record=_noop,
+        sage_sched_should_defer=lambda *a, **kw: 0,
+        sage_clear=_noop,
+        sage_draw_rect=_noop,
+    )
+
 # mathops
-if lib:
+if getattr(lib, "handle", None):
     lib.sage_q8_mul.argtypes = [c_int, c_int]
     lib.sage_q8_mul.restype = c_int
 
@@ -93,3 +146,20 @@ if lib:
 
     lib.sage_draw_rect.argtypes = [c_void_p, c_int, c_int, c_int, c_int, c_int, c_int, c_int, c_uint]
     lib.sage_draw_rect.restype = None
+
+from .. import core
+
+if not getattr(lib, "handle", None):
+    class DummyNativeRenderer:
+        def draw_rect(self, *a, **kw) -> None:  # pragma: no cover - simple stub
+            pass
+
+        def flush(self, *a, **kw) -> None:  # pragma: no cover - simple stub
+            pass
+
+        def present(self, *a, **kw) -> None:  # pragma: no cover - simple stub
+            pass
+
+    core.expose("gfx_native", DummyNativeRenderer())
+else:
+    core.expose("gfx_native", lib)
