@@ -26,14 +26,30 @@ typedef struct gf_cfg_s {
     uint32_t ring_capacity;
 } gf_cfg_t;
 
-typedef struct gf_ctx_s gf_ctx_t;
-
 typedef struct {
     int32_t  code;
     uint32_t detail;
     uint32_t line;
     char     where[24];
 } gf_error_info_t;
+
+typedef struct gf_ctx_s {
+    gf_cfg_t cfg;
+    uint32_t head, count, cap;
+    uint16_t *ft_q8_8;
+    uint16_t *lat_q8_8;
+    uint16_t *dt_q8_8;
+    uint16_t *scratch;
+    uint16_t drop_thresh_q8_8;
+    uint32_t drops_ema_q16_16;
+    uint16_t last_ft;
+    gf_error_info_t last_err;
+} gf_ctx_t;
+
+#define GF_FLAG_MICROSTUTTER 0x01
+#define GF_FLAG_PACING       0x02
+#define GF_FLAG_INPUT_LAG    0x04
+
 
 GF_API int  gf_init(gf_ctx_t** ctx, const gf_cfg_t* cfg);
 GF_API void gf_shutdown(gf_ctx_t* ctx);
