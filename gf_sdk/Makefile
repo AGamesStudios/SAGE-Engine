@@ -2,7 +2,7 @@ CC?=gcc
 CFLAGS?=-std=c99 -O2 -fPIC
 AR?=ar
 
-SRC=src/core/gf_core.c
+SRC=src/core/gf_core.c src/formula/gf_formula.c src/formats/gf_export.c
 OBJ=$(SRC:.c=.o)
 INCLUDES=-Iinclude
 

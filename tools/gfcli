@@ -1,0 +1,29 @@
+#!/usr/bin/env python3
+import argparse
+from sage_engine import resource
+from sage_engine import window, gfx, runtime
+from sage_engine.gfx import runtime as gfx_rt
+from sage_engine.window import init, get_window_handle, poll_events, should_close, shutdown
+from sage_engine.runtime.fsync import FrameSync
+from sage_engine.input import Input
+
+from sage_engine import core
+
+def cmd_record(args):
+    window.init("GF Record", 640, 360)
+    gfx_rt.begin_frame()
+    window.poll_events()
+    gfx_rt.flush_frame(window.get_window_handle())
+    window.shutdown()
+
+def cmd_analyze(args):
+    print("Analyze not implemented")
+
+parser = argparse.ArgumentParser()
+sub=parser.add_subparsers(dest='cmd')
+rec=sub.add_parser('record'); rec.add_argument('--out')
+rec.set_defaults(func=cmd_record)
+ana=sub.add_parser('analyze'); ana.add_argument('gf'); ana.add_argument('--formula'); ana.add_argument('--out')
+ana.set_defaults(func=cmd_analyze)
+args=parser.parse_args()
+if hasattr(args,'func'): args.func(args)
