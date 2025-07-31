@@ -28,6 +28,13 @@ typedef struct gf_cfg_s {
 
 typedef struct gf_ctx_s gf_ctx_t;
 
+typedef struct {
+    int32_t  code;
+    uint32_t detail;
+    uint32_t line;
+    char     where[24];
+} gf_error_info_t;
+
 GF_API int  gf_init(gf_ctx_t** ctx, const gf_cfg_t* cfg);
 GF_API void gf_shutdown(gf_ctx_t* ctx);
 GF_API int  gf_update(gf_ctx_t* ctx,
@@ -50,6 +57,8 @@ typedef struct {
 GF_API int  gf_metrics(gf_ctx_t* ctx, gf_metrics_t* out);
 GF_API const char* gf_hint(gf_ctx_t* ctx);
 GF_API const char* gf_strerror(int code);
+GF_API const char* gf_error_name(int code);
+GF_API int  gf_last_error(gf_ctx_t* ctx, gf_error_info_t* out);
 
 #ifdef __cplusplus
 }
