@@ -10,6 +10,9 @@
 - [Роли](docs/roles.md)
 - [Сцена](docs/scene.md)
 - [События](docs/events.md)
+
+Для запуска тестов выполните `pip install -r requirements-dev.txt` и
+запустите `python tools/run_tests.py`.
 - [Blueprint](docs/blueprint.md)
 - [FlowScript](docs/flow_script.md)
 - [Таймеры](docs/timers.md)
