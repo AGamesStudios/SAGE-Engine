@@ -72,6 +72,29 @@ export SAGE_RENDER_BACKEND=rust
 
 Вы можете вручную собрать библиотеку командой `make build-rust`, она сама положит файл в нужное место.
 
+### ❓ Что делать, если автосборка не работает?
+
+Проверьте, что установлены:
+
+- `cargo` и `rustc`
+- утилита `make` (на Windows может потребоваться `mingw32-make`)
+- права записи в папку `sage_engine/native/`
+
+Для ручной сборки выполните:
+
+```bash
+cd rust
+cargo build --release
+# Windows
+copy target\release\libsagegfx.dll ..\sage_engine\native\
+# Linux
+cp target/release/libsagegfx.so ../sage_engine/native/
+# macOS
+cp target/release/libsagegfx.dylib ../sage_engine/native/
+```
+
+После копирования библиотека будет загружена автоматически при следующем запуске.
+
 Теперь вы готовы экспериментировать с ролями и фазами.
 
 ### FPS режимы

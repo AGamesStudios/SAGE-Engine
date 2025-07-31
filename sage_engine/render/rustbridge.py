@@ -15,7 +15,7 @@ def _expected_path() -> Path:
     return Path(__file__).resolve().parent.parent / "native" / f"libsagegfx.{ext}"
 
 
-def _auto_build(path: Path) -> None:
+def _auto_build(path: Path) -> bool:
     """Attempt to build the native library."""
     root = Path(__file__).resolve().parents[2]
     print("[SAGE] Native backend not found. Attempting auto-build...")
@@ -23,28 +23,45 @@ def _auto_build(path: Path) -> None:
         subprocess.run(["make", "build-rust"], cwd=root, check=True)
     except Exception as e:  # pragma: no cover - external tool
         logger.error("Auto-build failed: %s", e)
+        return False
+    return path.exists()
 
 
 def _load_lib():
     path = _expected_path()
     if not path.exists():
         logger.warn(f"Native renderer not found at expected path: {path}")
-        _auto_build(path)
+        if not _auto_build(path):
+            os.environ["SAGE_RENDER_BACKEND"] = "software"
+            logger.error(
+                "Native renderer missing! Manual build required or check your Rust toolchain."
+            )
+            logger.error(
+                "To build manually:\n  cd rust\n  cargo build --release\n  copy the libsagegfx library to sage_engine/native/"
+            )
+            return None
 
     if not path.exists():
         os.environ["SAGE_RENDER_BACKEND"] = "software"
-        logger.error("Native backend not found, using fallback software renderer")
-        raise FileNotFoundError(f"Missing native library: {path}")
+        logger.error(
+            "Native renderer missing! Manual build required or check your Rust toolchain."
+        )
+        logger.error(
+            "To build manually:\n  cd rust\n  cargo build --release\n  copy the libsagegfx library to sage_engine/native/"
+        )
+        return None
 
     os.environ["SAGE_RENDER_BACKEND"] = "rust"
     logger.info(f"[SAGE] Using native backend: {path.name}")
-    return cdll.LoadLibrary(str(path))
+    try:
+        return cdll.LoadLibrary(str(path))
+    except OSError as e:
+        logger.error("Failed to load native library: %s", e)
+        os.environ["SAGE_RENDER_BACKEND"] = "software"
+        return None
 
 
-try:
-    lib = _load_lib()
-except Exception:
-    lib = None
+lib = _load_lib()
 
 if lib is None:
     from types import SimpleNamespace
