@@ -57,6 +57,16 @@ Use `sage-pack` to build compressed resource archives.
 To validate the Win32 backend, run the demo and resize or move the window.
 Events will be printed in the console when `SAGE_LOGLEVEL=DEBUG`.
 
+### Optional Rust backend
+
+To build the experimental Rust renderer run:
+
+```bash
+make build-rust
+```
+
+Set `SAGE_RENDER_BACKEND=rust` to enable it. If the shared library is missing, the Python implementation is used.
+
 - [Отчёт аудита](audit_report.md)
 - [Сводка находок](audit_findings.md)
 - [План исправлений](fix_roadmap.md)

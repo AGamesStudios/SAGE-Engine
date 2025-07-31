@@ -41,6 +41,7 @@ SAGE-Engine/
 │       ├── basic_scene.md
 │       ├── custom_role.md
 │       └── render_test.md
+├── rust/                 # исходный код Rust-библиотеки `libsagegfx`
 ├── engine.sagecfg
 ├── examples/
 │   └── render_test/

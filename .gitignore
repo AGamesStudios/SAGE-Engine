@@ -5,3 +5,5 @@ logs/
 !examples/render_test/game.sagecfg
 *.assets
 *.compiled
+sage_engine/native/
+rust/target/
