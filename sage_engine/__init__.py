@@ -26,6 +26,7 @@ __all__ = [
     "animation",
     "plugins",
     "settings",
+    "preview",
     "api",
 ]
 

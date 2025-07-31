@@ -28,7 +28,10 @@ def set_object_param(obj_id: int, category: str, param: str, value: Any) -> None
 def run_preview() -> None:
     """Invoke preview mode in the engine."""
     from sage_engine import api as sage
-    sage.compat.run_preview()
+    try:
+        sage.preview.run()
+    except Exception:
+        print("Preview not available")
 
 
 def create_object(role: str = "player", name: str | None = None, **fields: Any) -> int:

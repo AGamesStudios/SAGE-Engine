@@ -2,7 +2,7 @@ import tkinter as tk
 
 from ..style import theme
 from ..core import api_bridge as engine_api
-from ..core import state
+from ..core.state import state
 from .context_menu import ContextMenu
 
 
@@ -40,8 +40,20 @@ def build(parent: tk.Widget) -> tk.Frame:
     def _create_object() -> None:
         obj_id = engine_api.create_object()
         _select(obj_id)
+        refresh()
+        if hasattr(frame, "on_change"):
+            frame.on_change()
 
-    menu.add_command(label="Create Object", command=_create_object)
+    def _delete_selected() -> None:
+        if state.selected_object is not None:
+            engine_api.delete_object(state.selected_object)
+            state.selected_object = None
+            refresh()
+            if hasattr(frame, "on_change"):
+                frame.on_change()
+
+    menu.add_command(label="Add Object", command=_create_object)
+    menu.add_command(label="Delete Selected", command=_delete_selected)
     menu.add_separator()
     menu.add_command(label="Run Preview", command=engine_api.run_preview)
 

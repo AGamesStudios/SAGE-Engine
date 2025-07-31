@@ -1,7 +1,7 @@
 import tkinter as tk
 
 from ..style import theme
-from ..core import state
+from ..core.state import state
 from .top_bar import build as build_top_bar
 from .main_menu import build as build_main_menu
 from .world_panel import build as build_world_panel
@@ -112,6 +112,18 @@ def build(parent: tk.Tk) -> tk.Frame:
 
     root.after(100, _apply_positions)
     root.get_split_positions = _get_positions
+
+    # connect selection callbacks
+    view.on_select = obj.load_object
+    world.on_select = obj.load_object
+
+    def _refresh_all() -> None:
+        world.refresh()
+        view.refresh()
+
+    view.on_change = _refresh_all
+    world.on_change = _refresh_all
+    obj.on_change = _refresh_all
 
     view.refresh()
     world.refresh()

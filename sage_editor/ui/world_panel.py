@@ -2,7 +2,7 @@ import tkinter as tk
 
 from ..style import theme
 from ..core import api_bridge as engine_api
-from ..core import state
+from ..core.state import state
 from .context_menu import ContextMenu
 
 
@@ -51,6 +51,10 @@ def build(parent: tk.Widget) -> tk.Frame:
         obj_id = engine_api.create_object()
         state.selected_object = obj_id
         refresh()
+        if hasattr(frame, "on_select"):
+            frame.on_select(obj_id)
+        if hasattr(frame, "on_change"):
+            frame.on_change()
 
     def _delete() -> None:
         if not box.curselection():
@@ -58,6 +62,8 @@ def build(parent: tk.Widget) -> tk.Frame:
         idx = int(box.get(box.curselection()[0]).split(":", 1)[0])
         engine_api.delete_object(idx)
         refresh()
+        if hasattr(frame, "on_change"):
+            frame.on_change()
 
     menu.add_command(label="Add Empty Object", command=_create)
     menu.add_command(label="Delete Selected", command=_delete)

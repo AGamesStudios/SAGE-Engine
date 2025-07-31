@@ -2,7 +2,7 @@ import tkinter as tk
 
 from ..style import theme
 from ..core import api_bridge as engine_api
-from ..core import state
+from ..core.state import state
 
 
 def build(parent: tk.Widget) -> tk.Frame:
@@ -43,6 +43,8 @@ def build(parent: tk.Widget) -> tk.Frame:
             return
         engine_api.set_object_param(obj, "transform", "x", float(x_var.get()))
         engine_api.set_object_param(obj, "transform", "y", float(y_var.get()))
+        if hasattr(frame, "on_change"):
+            frame.on_change()
 
     def delete() -> None:
         obj = getattr(frame, "current_object", None)
@@ -51,6 +53,8 @@ def build(parent: tk.Widget) -> tk.Frame:
         engine_api.delete_object(obj)
         frame.current_object = None
         state.selected_object = None
+        if hasattr(frame, "on_change"):
+            frame.on_change()
 
     btn_frame = tk.Frame(frame, bg=theme.PANEL_BG)
     btn_frame.pack(anchor="e", pady=(4, 0))

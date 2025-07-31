@@ -27,4 +27,7 @@ def set_object_param(obj_id: int, category: str, param: str, value: Any) -> None
 def run_preview() -> None:
     """Run the current scene in preview mode."""
     from sage_engine import api as sage
-    sage.compat.run_preview()
+    try:
+        sage.preview.run()
+    except Exception:
+        print("Preview not available")
