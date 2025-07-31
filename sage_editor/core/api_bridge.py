@@ -1,23 +1,24 @@
-"""Wrappers around SAGE engine functions used by the editor."""
+"""Bridge helpers to the SAGE engine API for the editor."""
+from __future__ import annotations
 
-from typing import Any
 from pathlib import Path
+from typing import Any
 
 
 def load_scene(path: str) -> Any:
-    """Load a scene into the engine."""
-    from sage_engine import api as sage  # local import avoids heavy deps
+    """Load a scene using the engine API."""
+    from sage_engine import api as sage  # imported lazily
     return sage.scene.load(Path(path))
 
 
 def list_objects() -> list[str]:
-    """Return a list of object identifiers in the current scene."""
+    """Return names of objects in the loaded scene."""
     from sage_engine import api as sage
     return [n for n in sage.scene.names if n]
 
 
 def set_object_param(obj_id: int, category: str, param: str, value: Any) -> None:
-    """Set parameter on an object through the engine."""
+    """Set an object parameter through the engine."""
     from sage_engine import api as sage
     edit = sage.scene.begin_edit()
     edit.set(category, obj_id, param, value)
@@ -25,6 +26,6 @@ def set_object_param(obj_id: int, category: str, param: str, value: Any) -> None
 
 
 def run_preview() -> None:
-    """Run the current scene in preview mode."""
+    """Invoke preview mode in the engine."""
     from sage_engine import api as sage
     sage.compat.run_preview()

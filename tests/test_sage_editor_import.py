@@ -8,6 +8,7 @@ def test_editor_import():
     ui = import_module("sage_editor.ui.main_window")
     assert hasattr(ui, "build")
 
+    import_module("sage_editor.ui.main_menu")
     import_module("sage_editor.ui.top_bar")
     import_module("sage_editor.ui.world_panel")
     import_module("sage_editor.ui.world_view")
@@ -15,3 +16,6 @@ def test_editor_import():
     import_module("sage_editor.ui.role_editor")
     import_module("sage_editor.ui.blueprint_designer")
     import_module("sage_editor.ui.resource_manager")
+
+    import_module("sage_editor.core.api_bridge")
+    import_module("sage_editor.core.state")

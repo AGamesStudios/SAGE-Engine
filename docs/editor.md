@@ -30,6 +30,8 @@ $ python sage_editor/main.py
 - **World View** — центральная область предварительного просмотра.
 - **Object View** и **Role Editor** — правая колонка свойств и ролей.
 - **Blueprint Designer** и **Resource Manager** — нижняя панель.
+- **Main Menu** — пункты File/Edit/View/Tools/Help.
+  В разделе **View** можно скрывать или отображать панели.
 
 ### ▶ Как запустить редактор
 
