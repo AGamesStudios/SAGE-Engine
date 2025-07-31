@@ -1,15 +1,16 @@
 from sage_engine import core
-from sage_engine.logger import logger
 
-native = core.get("gfx_native")
-if native is None:
-    logger.warn("Native renderer fallback", tag="env")
-    print("⚠ fallback")
-else:
+
+def check_native_backend() -> None:
+    """Verify that the native renderer is available."""
     try:
-        if hasattr(native, "draw_rect"):
-            native.draw_rect(0, 0, 0, 0, 0, 0, 0, 0)
-        print("✅ Native Render OK")
+        gfx = core.get("gfx_native")
+        gfx.draw_rect(10, 10, 100, 100)
+        print("✅ Native backend active")
     except Exception as e:
-        print(f"Native Render ERROR: {e}")
+        print("❌ Native backend unavailable:", e)
+
+
+if __name__ == "__main__":
+    check_native_backend()
 

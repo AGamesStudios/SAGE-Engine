@@ -1,87 +1,44 @@
 """Bindings to the native ``libsagegfx`` library."""
 
 from ctypes import cdll, c_int, c_float, c_uint, c_size_t, c_void_p, POINTER
-from ctypes.util import find_library
 from pathlib import Path
 import os
 import sys
-import glob
 import subprocess
 
 from ..logger import logger
 
 
-def _find_libsagegfx() -> str | None:
-    """Search for ``libsagegfx`` library in common locations."""
-    candidates: list[str] = []
-
-    lib = find_library("sagegfx")
-    if lib:
-        candidates.append(lib)
-
-    root_dirs = [
-        "sage_engine/native",
-        "sage_engine/lib",
-        ".",
-        "bin",
-        "build",
-        "out",
-        "dist",
-    ]
-    extensions = [".dll", ".so", ".dylib"]
-
-    for root in root_dirs:
-        for dirpath, _dirnames, _files in os.walk(root):
-            for ext in extensions:
-                pattern = os.path.join(dirpath, f"*sagegfx*{ext}")
-                candidates.extend(glob.glob(pattern))
-
-    return candidates[0] if candidates else None
+def _expected_path() -> Path:
+    """Return the expected path of ``libsagegfx``."""
+    ext = {"win32": "dll", "darwin": "dylib"}.get(sys.platform, "so")
+    return Path(__file__).resolve().parent.parent / "native" / f"libsagegfx.{ext}"
 
 
-def _auto_build() -> str | None:
-    """Attempt to build ``libsagegfx`` using Make or Cargo."""
+def _auto_build(path: Path) -> None:
+    """Attempt to build the native library."""
     root = Path(__file__).resolve().parents[2]
     print("[SAGE] Native backend not found. Attempting auto-build...")
     try:
         subprocess.run(["make", "build-rust"], cwd=root, check=True)
-    except FileNotFoundError:
-        try:
-            subprocess.run(
-                [
-                    "cargo",
-                    "build",
-                    "--manifest-path",
-                    str(root / "rust" / "Cargo.toml"),
-                    "--release",
-                ],
-                cwd=root,
-                check=True,
-            )
-        except Exception as e:  # pragma: no cover - external tool
-            logger.error("Auto-build failed: %s", e)
-            return None
     except Exception as e:  # pragma: no cover - external tool
         logger.error("Auto-build failed: %s", e)
-        return None
-    return _find_libsagegfx()
 
 
 def _load_lib():
+    path = _expected_path()
+    if not path.exists():
+        logger.warn(f"Native renderer not found at expected path: {path}")
+        _auto_build(path)
 
-    path = _find_libsagegfx()
-    if not path:
-        path = _auto_build()
-    if not path:
+    if not path.exists():
         os.environ["SAGE_RENDER_BACKEND"] = "software"
         logger.error("Native backend not found, using fallback software renderer")
-        raise FileNotFoundError(
-            "libsagegfx library not found. Please run `make build-rust` or place the .dll/.so in sage_engine/native"
-        )
+        raise FileNotFoundError(f"Missing native library: {path}")
 
     os.environ["SAGE_RENDER_BACKEND"] = "rust"
-    logger.info(f"[SAGE] Using native backend: {os.path.basename(path)}")
-    return cdll.LoadLibrary(os.path.abspath(path))
+    logger.info(f"[SAGE] Using native backend: {path.name}")
+    return cdll.LoadLibrary(str(path))
 
 
 try:

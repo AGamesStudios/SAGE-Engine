@@ -12,7 +12,9 @@ pub extern "C" fn sage_sched_new(history: usize) -> *mut Scheduler {
 
 #[no_mangle]
 pub extern "C" fn sage_sched_drop(ptr: *mut Scheduler) {
-    if !ptr.is_null() { unsafe { Box::from_raw(ptr); } }
+    if !ptr.is_null() {
+        unsafe { drop(Box::from_raw(ptr)); }
+    }
 }
 
 #[no_mangle]
