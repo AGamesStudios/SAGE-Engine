@@ -5,11 +5,10 @@ def test_editor_import():
     module = import_module("sage_editor.main")
     assert hasattr(module, "main")
 
-    ui = import_module("sage_editor.ui.game_viewport")
-    assert hasattr(ui, "GameViewport")
+    layout = import_module("sage_editor.layout.main_view")
+    assert hasattr(layout, "build")
 
-    import_module("sage_editor.ui.top_bar")
-    import_module("sage_editor.ui.left_bar")
-    import_module("sage_editor.ui.world_panel")
-    import_module("sage_editor.ui.logic_panel")
-    import_module("sage_editor.ui.bottom_log")
+    import_module("sage_editor.layout.top_bar")
+    import_module("sage_editor.layout.left_bar")
+    import_module("sage_editor.layout.right_bar")
+    import_module("sage_editor.layout.bottom_bar")
