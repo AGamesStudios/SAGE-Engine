@@ -85,7 +85,7 @@ cargo build --release
 cd rust
 cargo build --release
 # Windows
-copy target\release\libsagegfx.dll ..\sage_engine\native\
+copy target\release\sagegfx.dll ..\sage_engine\native\libsagegfx.dll
 # Linux
 cp target/release/libsagegfx.so ../sage_engine/native/
 # macOS
@@ -93,6 +93,17 @@ cp target/release/libsagegfx.dylib ../sage_engine/native/
 ```
 
 После копирования библиотека будет загружена автоматически при следующем запуске.
+
+### 🔧 Быстрый запуск редактора
+
+Для проверки окружения и запуска SAGE Studio используйте скрипты:
+
+```bash
+python tools/dev_check.py
+python dev_run.py
+```
+
+Они автоматически загрузят движок и откроют тестовое окно.
 
 Теперь вы готовы экспериментировать с ролями и фазами.
 

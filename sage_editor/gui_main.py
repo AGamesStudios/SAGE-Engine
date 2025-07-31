@@ -2,9 +2,14 @@
 
 from sage_gui import GUIContext, Label, Button, VBox
 from sage_gui.core.event import Event, EventType
+from sage_engine.core import core
 
 
 def main() -> None:
+    gfx = core.get("gfx")
+    if not gfx:
+        raise RuntimeError("SAGE Graphic не инициализирован")
+
     ctx = GUIContext()
     root = VBox()
     root.width = 200
@@ -14,7 +19,10 @@ def main() -> None:
     label.height = 16
 
     def _on_click() -> None:
-        print("Preview not yet implemented")
+        gfx.begin_frame()
+        gfx.draw_rect(10, 10, 50, 50, (255, 0, 0, 255))
+        gfx.end_frame()
+        gfx.flush_frame(None)
 
     btn = Button(text="Run", on_click=_on_click)
     btn.width = 80

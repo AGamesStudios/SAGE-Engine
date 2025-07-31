@@ -30,7 +30,10 @@ def _build_rust(path: Path) -> bool:
         return False
 
     ext = {"win32": "dll", "darwin": "dylib"}.get(sys.platform, "so")
-    built = project_root / "rust" / "target" / "release" / f"libsagegfx.{ext}"
+    if sys.platform == "win32":
+        built = project_root / "rust" / "target" / "release" / "sagegfx.dll"
+    else:
+        built = project_root / "rust" / "target" / "release" / f"libsagegfx.{ext}"
     if not built.exists():
         logger.error("Compiled library not found at %s", built)
         return False
@@ -55,7 +58,7 @@ def _load_lib():
                 "Native renderer missing! Manual build required or check your Rust toolchain."
             )
             logger.error(
-                "To build manually:\n  cd rust\n  cargo build --release\n  copy the libsagegfx library to sage_engine/native/"
+                "To build manually:\n  cd rust\n  cargo build --release\n  copy the sagegfx library to sage_engine/native/"
             )
             return None
 
