@@ -49,6 +49,7 @@ typedef struct {
 
 GF_API int  gf_metrics(gf_ctx_t* ctx, gf_metrics_t* out);
 GF_API const char* gf_hint(gf_ctx_t* ctx);
+GF_API const char* gf_strerror(int code);
 
 #ifdef __cplusplus
 }

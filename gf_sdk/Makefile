@@ -9,8 +9,11 @@ INCLUDES=-Iinclude
 libgf_sdk.a: $(OBJ)
 	$(AR) rcs $@ $^
 
+libgf_sdk.so: $(OBJ)
+	$(CC) -shared -o $@ $^
+
 %.o: %.c
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 clean:
-	rm -f $(OBJ) libgf_sdk.a
+	 rm -f $(OBJ) libgf_sdk.a libgf_sdk.so

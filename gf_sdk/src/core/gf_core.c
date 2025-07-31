@@ -47,3 +47,17 @@ int gf_metrics(gf_ctx_t* ctx, gf_metrics_t* out){
 const char* gf_hint(gf_ctx_t* ctx){
     (void)ctx; return NULL;
 }
+
+const char* gf_strerror(int code){
+    switch(code){
+        case GF_OK: return "OK";
+        case GF_EINVAL: return "invalid argument";
+        case GF_ENOMEM: return "out of memory";
+        case GF_EIO: return "io error";
+        case GF_ESTATE: return "invalid state";
+        case GF_EFORMULA: return "formula error";
+        case GF_ESTREAM: return "stream error";
+        case GF_ECAP: return "unsupported capability";
+        default: return "unknown";
+    }
+}
