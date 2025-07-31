@@ -8,3 +8,14 @@ def test_create_and_delete_object():
     obj_id = objs[-1]["id"]
     api_bridge.delete_object(obj_id)
 
+
+def test_run_preview_shim(monkeypatch):
+    calls = {}
+
+    def fake_run():
+        calls["run"] = True
+
+    monkeypatch.setattr("sage_engine.preview.run", fake_run)
+    api_bridge.run_preview()
+    assert calls.get("run")
+
