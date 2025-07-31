@@ -116,3 +116,13 @@ def _cfg_v1_to_v2(data: dict) -> dict:
 
 register("engine_cfg", _cfg_v0_to_v1, 0, 1)
 register("engine_cfg", _cfg_v1_to_v2, 1, 2)
+
+
+def run_preview() -> None:
+    """Compatibility shim around :mod:`sage_engine.preview`."""
+    from .. import preview
+
+    preview.run()
+
+
+__all__ += ["run_preview"]
