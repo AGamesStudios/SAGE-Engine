@@ -2,9 +2,19 @@
 from __future__ import annotations
 
 from ctypes import cdll, c_uint
+import os
+import sys
 from ..api import RenderBackend
 
-lib = cdll.LoadLibrary("libsagegfx.so")
+def _load_lib():
+    ext = {
+        'win32': 'dll',
+        'darwin': 'dylib',
+    }.get(sys.platform, 'so')
+    path = os.path.join(os.path.dirname(__file__), '..', '..', 'native', f"libsagegfx.{ext}")
+    return cdll.LoadLibrary(os.path.abspath(path))
+
+lib = _load_lib()
 
 class RustContext(RenderBackend):
     def __init__(self, handle: int | None) -> None:
