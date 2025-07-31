@@ -1,7 +1,9 @@
 import tkinter as tk
 
 from ..style import theme
-from ..runtime import engine_api
+from ..core import api_bridge as engine_api
+from ..core import state
+from .context_menu import ContextMenu
 
 
 def build(parent: tk.Widget) -> tk.Frame:
@@ -10,7 +12,6 @@ def build(parent: tk.Widget) -> tk.Frame:
     frame = tk.Frame(parent, bg=theme.BACKGROUND, bd=0)
     canvas = tk.Canvas(frame, bg=theme.BACKGROUND, highlightthickness=0, bd=0)
     canvas.pack(expand=True, fill="both")
-    canvas.create_rectangle(100, 100, 200, 200, fill=theme.ACCENT)
 
     canvas.scale_factor = 1.0
 
@@ -29,12 +30,38 @@ def build(parent: tk.Widget) -> tk.Frame:
     canvas.bind("<ButtonPress-1>", _start_pan)
     canvas.bind("<B1-Motion>", _pan)
 
+    def _select(obj_id: int) -> None:
+        state.selected_object = obj_id
+        if hasattr(frame, "on_select"):
+            frame.on_select(obj_id)
+
+    menu = ContextMenu(canvas)
+
+    def _create_object() -> None:
+        obj_id = engine_api.create_object()
+        _select(obj_id)
+
+    menu.add_command(label="Create Object", command=_create_object)
+    menu.add_separator()
+    menu.add_command(label="Run Preview", command=engine_api.run_preview)
+
+    def _show_menu(event: tk.Event) -> None:
+        menu.tk_popup(event.x_root, event.y_root)
+
+    canvas.bind("<Button-3>", _show_menu)
+
     def refresh() -> None:
-        """Temporary redraw using engine preview."""
+        """Redraw using object data from the engine."""
         canvas.delete("all")
-        # placeholder: ask engine for preview frame; here we just draw a rect
-        engine_api.run_preview()
-        canvas.create_rectangle(100, 100, 200, 200, fill=theme.ACCENT)
+        for obj in engine_api.get_objects():
+            x = int(obj.get("x", 0))
+            y = int(obj.get("y", 0))
+            w = int(obj.get("width", 20))
+            h = int(obj.get("height", 20))
+            oid = obj["id"]
+            fill = theme.ACCENT if state.selected_object == oid else "#444444"
+            item = canvas.create_rectangle(x, y, x + w, y + h, fill=fill, outline="")
+            canvas.tag_bind(item, "<Button-1>", lambda e, i=oid: _select(i))
         canvas.after(33, refresh)
 
     frame.canvas = canvas
