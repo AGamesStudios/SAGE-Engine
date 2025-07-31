@@ -1,4 +1,6 @@
-BACKGROUND = "#1f1f1f"
-PANEL_BG = "#2a2a2a"
-ACCENT = "#f4a261"
-TEXT = "#f5e8c7"
+"""Centralised color scheme for SAGE Studio."""
+
+BACKGROUND = "#1b1b1b"
+PANEL_BG = "#222222"
+ACCENT = "#ffaa00"
+TEXT = "#eaeaea"

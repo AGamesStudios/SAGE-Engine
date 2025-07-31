@@ -1,5 +1,7 @@
 import tkinter as tk
 
+from ..style import theme
+
 
 def build(
     parent: tk.Widget,
@@ -9,21 +11,23 @@ def build(
 ) -> tk.Frame:
     """Build the top bar with a few action buttons."""
 
-    frame = tk.Frame(parent, height=30, bg="#2c2c2c", padx=4, pady=2)
+    frame = tk.Frame(parent, height=30, bg=theme.PANEL_BG, bd=0, padx=4, pady=2)
 
     tk.Label(
         frame,
         text="SAGE Studio",
-        bg="#2c2c2c",
-        fg="white",
+        bg=theme.PANEL_BG,
+        fg=theme.TEXT,
         font=("Segoe UI", 10, "bold"),
     ).pack(side="left", padx=(0, 8))
 
     style = {
-        "bg": "#2a2a2a",
-        "fg": "#f4a261",
-        "activebackground": "#3a3a3a",
+        "bg": theme.PANEL_BG,
+        "fg": theme.TEXT,
+        "activebackground": theme.ACCENT,
+        "activeforeground": theme.TEXT,
         "relief": tk.FLAT,
+        "bd": 0,
         "font": ("Segoe UI", 10),
     }
 
