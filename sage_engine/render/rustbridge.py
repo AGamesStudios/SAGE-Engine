@@ -5,6 +5,7 @@ from pathlib import Path
 import os
 import sys
 import subprocess
+import shutil
 
 from ..logger import logger
 
@@ -15,14 +16,31 @@ def _expected_path() -> Path:
     return Path(__file__).resolve().parent.parent / "native" / f"libsagegfx.{ext}"
 
 
-def _auto_build(path: Path) -> bool:
-    """Attempt to build the native library."""
-    root = Path(__file__).resolve().parents[2]
-    print("[SAGE] Native backend not found. Attempting auto-build...")
+def _build_rust(path: Path) -> bool:
+    """Attempt to build the native library using ``cargo``."""
+    project_root = Path(__file__).resolve().parents[2]
+    logger.info("[SAGE] Native backend not found. Building with cargo...")
     try:
-        subprocess.run(["make", "build-rust"], cwd=root, check=True)
-    except Exception as e:  # pragma: no cover - external tool
-        logger.error("Auto-build failed: %s", e)
+        subprocess.run(["cargo", "build", "--release"], cwd=project_root / "rust", check=True)
+    except FileNotFoundError:
+        logger.error("Rust toolchain not found. Install from https://rust-lang.org/")
+        return False
+    except subprocess.CalledProcessError as e:  # pragma: no cover - external tool
+        logger.error("Rust build failed: %s", e)
+        return False
+
+    ext = {"win32": "dll", "darwin": "dylib"}.get(sys.platform, "so")
+    built = project_root / "rust" / "target" / "release" / f"libsagegfx.{ext}"
+    if not built.exists():
+        logger.error("Compiled library not found at %s", built)
+        return False
+
+    os.makedirs(path.parent, exist_ok=True)
+    try:
+        shutil.copyfile(built, path)
+        logger.info("[SAGE] Native library copied to %s", path)
+    except OSError as e:
+        logger.error("Failed to copy library: %s", e)
         return False
     return path.exists()
 
@@ -30,8 +48,8 @@ def _auto_build(path: Path) -> bool:
 def _load_lib():
     path = _expected_path()
     if not path.exists():
-        logger.warn(f"Native renderer not found at expected path: {path}")
-        if not _auto_build(path):
+        logger.warning("Native renderer not found at %s", path)
+        if not _build_rust(path):
             os.environ["SAGE_RENDER_BACKEND"] = "software"
             logger.error(
                 "Native renderer missing! Manual build required or check your Rust toolchain."
@@ -45,9 +63,6 @@ def _load_lib():
         os.environ["SAGE_RENDER_BACKEND"] = "software"
         logger.error(
             "Native renderer missing! Manual build required or check your Rust toolchain."
-        )
-        logger.error(
-            "To build manually:\n  cd rust\n  cargo build --release\n  copy the libsagegfx library to sage_engine/native/"
         )
         return None
 
