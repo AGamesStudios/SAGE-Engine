@@ -10,3 +10,4 @@ class RoleEditor(ctk.CTkFrame):
         super().__init__(master)
         self.label = ctk.CTkLabel(self, text="Role Editor")
         self.label.pack(fill="x")
+

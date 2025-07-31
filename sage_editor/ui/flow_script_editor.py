@@ -10,3 +10,4 @@ class FlowScriptEditor(ctk.CTkFrame):
         super().__init__(master)
         self.text = ctk.CTkTextbox(self, height=150)
         self.text.pack(fill="both", expand=True)
+

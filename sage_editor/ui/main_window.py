@@ -2,14 +2,18 @@
 
 import customtkinter as ctk
 
-from .scene_view import SceneView
-from .object_inspector import ObjectInspector
-from .blueprint_viewer import BlueprintViewer
+from .toolbar import Toolbar
+from .world_manager import WorldManager
+from .game_viewport import GameViewport
+from .role_editor import RoleEditor
+from .blueprint_designer import BlueprintDesigner
 from .flow_script_editor import FlowScriptEditor
+from .resource_manager import ResourceManager
+from .object_view import ObjectView
 
 
 class MainWindow(ctk.CTk):
-    """Central application window."""
+    """Central application window arranging all panels."""
 
     def __init__(self) -> None:
         super().__init__()
@@ -18,20 +22,36 @@ class MainWindow(ctk.CTk):
         self._create_widgets()
 
     def _create_widgets(self) -> None:
-        self.scene_view = SceneView(self)
-        self.scene_view.pack(side="left", fill="both", expand=True)
+        self.toolbar = Toolbar(self)
+        self.toolbar.pack(side="top", fill="x")
 
-        right_panel = ctk.CTkFrame(self)
-        right_panel.pack(side="right", fill="y")
+        top_frame = ctk.CTkFrame(self)
+        top_frame.pack(side="top", fill="both", expand=True)
 
-        self.object_inspector = ObjectInspector(right_panel)
-        self.object_inspector.pack(fill="y")
+        self.world_manager = WorldManager(top_frame)
+        self.world_manager.pack(side="left", fill="y")
 
-        bottom_panel = ctk.CTkFrame(self)
-        bottom_panel.pack(side="bottom", fill="x")
+        self.game_viewport = GameViewport(top_frame)
+        self.game_viewport.pack(side="left", fill="both", expand=True)
 
-        self.blueprint_viewer = BlueprintViewer(bottom_panel)
-        self.blueprint_viewer.pack(side="left", fill="x", expand=True)
+        right_frame = ctk.CTkFrame(top_frame)
+        right_frame.pack(side="left", fill="y")
 
-        self.flow_script_editor = FlowScriptEditor(bottom_panel)
-        self.flow_script_editor.pack(side="right", fill="x", expand=True)
+        self.object_view = ObjectView(right_frame)
+        self.object_view.pack(fill="x")
+
+        self.role_editor = RoleEditor(right_frame)
+        self.role_editor.pack(fill="both", expand=True)
+
+        mid_frame = ctk.CTkFrame(self)
+        mid_frame.pack(side="top", fill="x")
+
+        self.blueprint_designer = BlueprintDesigner(mid_frame)
+        self.blueprint_designer.pack(side="left", fill="both", expand=True)
+
+        self.flow_script_editor = FlowScriptEditor(mid_frame)
+        self.flow_script_editor.pack(side="left", fill="both", expand=True)
+
+        self.resource_manager = ResourceManager(self)
+        self.resource_manager.pack(side="bottom", fill="x")
+
