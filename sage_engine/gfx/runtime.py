@@ -7,6 +7,9 @@ from .. import core
 from ..graphic.color import to_premul_rgba, to_bgra8_premul
 from ..graphic import fx
 from ..graphic.state import GraphicState
+from ..render import rustbridge as rust
+from ctypes import c_void_p, c_int, c_uint
+import ctypes
 from ..logger import logger
 
 BYTES_PER_PIXEL = 4
@@ -67,9 +70,13 @@ class GraphicRuntime:
         if color is not None:
             self.clear_color = to_bgra8_premul(color)
         if self.buffer is not None:
-            view = memoryview(self.buffer).cast("I")
-            for i in range(len(view)):
-                view[i] = self.clear_color
+            addr = ctypes.addressof(ctypes.c_char.from_buffer(self.buffer))
+            rust.lib.sage_clear(
+                c_void_p(addr),
+                c_int(self.width),
+                c_int(self.height),
+                c_uint(self.clear_color),
+            )
         logger.debug("begin_frame clear=%s", self.clear_color, tag="gfx")
         self._commands.clear()
         self._stack.clear()
@@ -217,10 +224,21 @@ class GraphicRuntime:
 
     # internal drawing helpers
     def _blit_rect(self, x: int, y: int, w: int, h: int, color: Tuple[int, int, int, int]) -> None:
-        r, g, b, a = color
-        for yy in range(max(0, y), min(self.height, y + h)):
-            for xx in range(max(0, x), min(self.width, x + w)):
-                self._blend_pixel(xx, yy, r, g, b, a)
+        if self.buffer is None:
+            return
+        c = (color[0] << 16) | (color[1] << 8) | color[2] | (color[3] << 24)
+        addr = c_void_p(ctypes.addressof(ctypes.c_char.from_buffer(self.buffer)))
+        rust.lib.sage_draw_rect(
+            addr,
+            c_int(self.width),
+            c_int(self.height),
+            c_int(self.pitch),
+            c_int(x),
+            c_int(y),
+            c_int(w),
+            c_int(h),
+            c_uint(c),
+        )
 
     def _blit_circle(self, x: int, y: int, radius: int, color: Tuple[int, int, int, int]) -> None:
         r, g, b, a = color
