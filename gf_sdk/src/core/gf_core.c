@@ -24,15 +24,21 @@ static const uint16_t logistic_lut[256] = {
 65495,65497,65499,65501,65503,65505,65507,65509,65510,65512,65513,65514,65516,65517,65518,65519
 };
 
+static uint32_t logistic_q16(uint32_t x_q16){
+    if(x_q16 <= 0) return logistic_lut[0] << 0; /* Q16.16 */
+    if(x_q16 >= (2u<<16)) return logistic_lut[255] << 0;
+    uint32_t pos = (uint64_t)x_q16 * 255u / (2u<<16); /* Q16.16 */
+    uint32_t idx = pos >> 16;
+    uint32_t frac = pos & 0xFFFFu;
+    uint32_t y1 = logistic_lut[idx];
+    uint32_t y2 = logistic_lut[idx+1];
+    return y1 + ((y2 - y1) * frac >> 16); /* Q16.16 */
+}
+
 static float logistic_approx(float x){
-    if(x<=0.0f) return logistic_lut[0]/65536.0f;
-    if(x>=2.0f) return logistic_lut[255]/65536.0f;
-    float pos = x*(255.0f/2.0f);
-    int idx = (int)pos;
-    float frac = pos - idx;
-    float y1 = logistic_lut[idx];
-    float y2 = logistic_lut[idx+1];
-    return ((1.0f-frac)*y1 + frac*y2)/65536.0f;
+    uint32_t q = (uint32_t)(x * 65536.0f + 0.5f); /* Q16.16 */
+    uint32_t res_q16 = logistic_q16(q);
+    return (float)res_q16 / 65536.0f;
 }
 #define TO_Q8_8(ms) ((uint16_t)((ms)*256.0f+0.5f))
 #define FROM_Q8_8(q) ((float)(q)/256.0f)
