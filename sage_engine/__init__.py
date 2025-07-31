@@ -32,6 +32,20 @@ __all__ = [
 
 from importlib import import_module
 
+from .logger import logger
+
+
+def auto_setup() -> None:
+    """Initialize native libraries if available."""
+    try:
+        from .render import rustbridge
+        rustbridge._load_lib()
+    except Exception as e:
+        logger.warning(f"SAGE Engine fallback to software renderer: {e}")
+
+
+auto_setup()
+
 
 def __getattr__(name):
     if name in __all__:

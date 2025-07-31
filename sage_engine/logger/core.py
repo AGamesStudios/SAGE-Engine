@@ -57,6 +57,10 @@ class Logger:
     def warn(self, msg: str, *args, tag: str = "core", extra: dict | None = None) -> None:
         self._log(WARN, msg, tag, extra, False, *args)
 
+    # Compatibility alias
+    def warning(self, msg: str, *args, tag: str = "core", extra: dict | None = None) -> None:  # pragma: no cover - shim
+        self.warn(msg, *args, tag=tag, extra=extra)
+
     def error(self, msg: str, *args, tag: str = "core", extra: dict | None = None, exc_info: bool = False) -> None:
         self._log(ERROR, msg, tag, extra, exc_info, *args)
 
