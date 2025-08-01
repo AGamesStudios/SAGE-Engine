@@ -19,7 +19,14 @@ class Texture:
         if not path.endswith(".sageimg"):
             logger.error("[texture] external image formats are not supported: %s", path)
             return
-        data = resource.load(path)
+        try:
+            data = resource.load(path)
+        except Exception as exc:
+            logger.warning("[texture] failed to load %s: %s", path, exc)
+            self.width = 0
+            self.height = 0
+            self.pixels = None
+            return
         self.width, self.height, self.pixels = sageimg.decode(data)
         from .cache import TextureCache
         render_stats.stats["texture_memory_kb"] = TextureCache.memory_usage() // 1024

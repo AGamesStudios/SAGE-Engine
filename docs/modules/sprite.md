@@ -33,3 +33,7 @@ from sage_engine.sprite import text
 font = text.load_font("sage_engine/resources/fonts/default.ttf", 14)
 text.draw_text("Hello", 40, 20, font)
 ```
+
+Функции `sprite.draw` и `sprite.text.draw_text` можно вызывать в одном кадре,
+объединяя спрайты и текст. Все используемые текстуры поступают из
+`TextureCache`, включая глифы шрифта по умолчанию `default.ttf`.

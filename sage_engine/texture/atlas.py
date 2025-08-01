@@ -16,7 +16,12 @@ class TextureAtlas:
     regions: dict[str, tuple[int, int, int, int]] = field(default_factory=dict)
 
     def load(self, path: str) -> None:
-        self.texture.load(path)
+        try:
+            self.texture.load(path)
+        except Exception as exc:
+            logger.warning("[texture] atlas texture missing: %s", path)
+            self.regions = {}
+            return
         meta_path = f"{path}.meta"
         try:
             meta_data = json.loads(resource.load(meta_path).decode("utf-8"))

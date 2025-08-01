@@ -16,3 +16,20 @@ stats = {
     "atlas_misses": 0,
     "texture_memory_kb": 0,
 }
+
+
+def reset_frame() -> None:
+    """Reset per-frame statistics."""
+    stats["sprites_drawn"] = 0
+    stats["text_glyphs_rendered"] = 0
+    stats["textures_bound"] = 0
+    stats["textures_loaded"] = 0
+    stats["atlas_hits"] = 0
+    stats["atlas_misses"] = 0
+    try:  # avoid circular import at module load
+        from ..texture.cache import TextureCache
+
+        stats["texture_memory_kb"] = TextureCache.memory_usage() // 1024
+    except Exception:
+        stats["texture_memory_kb"] = 0
+

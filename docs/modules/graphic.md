@@ -51,10 +51,15 @@ cfg = state.export_state()
 `gfx` поддерживает функции `draw_rect`, `draw_circle`, `draw_line`,
 `draw_polygon`, `draw_rounded_rect` и заглушку `draw_text`.
 
-По умолчанию текст выводится шрифтом `sage_engine/resources/fonts/default.ttf`. Это
-файл **Public Sans** под Apache 2.0. При загрузке через `sprite.text.load_font()`
-глифы помещаются в текстуру и кэшируются. Вызов `draw_text` использует эту
-текстуру без обращения к файлу `.ttf`.
+По умолчанию текст выводится шрифтом `sage_engine/resources/fonts/default.ttf`.
+Это файл **Public Sans** под Apache 2.0. При загрузке через
+`sprite.text.load_font()` глифы помещаются в текстуру и кэшируются. Вызов
+`draw_text` использует эту текстуру без обращения к файлу `.ttf`.
+
+Статистика отрисовки доступна через `render.stats`. На каждый кадр обнуляются
+`sprites_drawn`, `text_glyphs_rendered`, `textures_loaded`, `atlas_hits`,
+`atlas_misses` и `textures_bound`. Поле `texture_memory_kb` показывает текущий
+объём памяти текстур.
 
 ## ✨ Эффекты
 

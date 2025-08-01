@@ -51,15 +51,38 @@ def test_texture_cache_usage(tmp_path: Path):
 def test_render_stats(tmp_path: Path):
     p = tmp_path / "img.sageimg"
     p.write_bytes(sageimg.encode(b"\x00\x00\x00\xff", 1, 1))
-    s = sprite.load(str(p))
     gfx.init(1, 1)
     render.init(None)
     gfx.begin_frame()
+    s = sprite.load(str(p))
     draw.sprite(s, 0, 0)
     draw.flush()
     assert render.stats.stats["sprites_drawn"] >= 1
     assert render.stats.stats["textures_bound"] == 1
     assert render.stats.stats["textures_loaded"] >= 1
+    gfx.shutdown()
+    render.shutdown()
+
+
+def test_missing_texture_warning(monkeypatch):
+    from sage_engine.texture import Texture
+    from sage_engine.logger import logger
+
+    msgs = []
+    monkeypatch.setattr(logger, "warning", lambda m, *a, **k: msgs.append(m))
+    tex = Texture()
+    tex.load("no_file.sageimg")
+    assert any("failed to load" in m for m in msgs)
+
+
+def test_stats_reset(monkeypatch):
+    gfx.init(1, 1)
+    render.init(None)
+    render.stats.stats["sprites_drawn"] = 5
+    render.stats.stats["atlas_hits"] = 2
+    gfx.begin_frame()
+    assert render.stats.stats["sprites_drawn"] == 0
+    assert render.stats.stats["atlas_hits"] == 0
     gfx.shutdown()
     render.shutdown()
 

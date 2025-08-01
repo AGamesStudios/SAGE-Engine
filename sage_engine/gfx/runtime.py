@@ -75,6 +75,7 @@ class GraphicRuntime:
         if self.buffer is None:
             self.init(w, h)
             logger.debug("[gfx] Framebuffer allocated %dx%d", w, h)
+        render_stats.reset_frame()
         if color is not None:
             self.clear_color = to_bgra8_premul(color)
         if self.buffer is not None:
