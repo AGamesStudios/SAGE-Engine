@@ -19,3 +19,10 @@ def test_compat_check(tmp_path, capsys):
     cli.compat_check(sc)
     out = capsys.readouterr().out
     assert "Needs migration" in out
+
+
+def test_debug_stats(capsys):
+    cli.debug_stats()
+    out = capsys.readouterr().out
+    data = json.loads(out)
+    assert "sprites_drawn" in data

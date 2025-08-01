@@ -68,6 +68,12 @@ def pack_dir(src: Path, dst: Path) -> None:
     pack_directory(src, dst)
 
 
+def debug_stats() -> None:
+    """Print live render statistics."""
+    from ..render import stats as render_stats
+    print(json.dumps(render_stats.stats, indent=2))
+
+
 def build_assets_call(path: Path) -> None:
     """Run the build_assets.py helper script."""
     script = Path(__file__).resolve().parents[2] / "tools" / "build_assets.py"
@@ -109,6 +115,10 @@ def main() -> None:
     pack.add_argument("src")
     pack.add_argument("dst")
 
+    debug = sub.add_parser("debug")
+    debug_sub = debug.add_subparsers(dest="cmd")
+    debug_sub.add_parser("stats")
+
     build = sub.add_parser("build-assets")
     build.add_argument("path", nargs="?", default=".")
 
@@ -127,6 +137,8 @@ def main() -> None:
         validate_file(Path(args.path), Path(args.schema))
     elif args.topic == "pack":
         pack_dir(Path(args.src), Path(args.dst))
+    elif args.topic == "debug" and args.cmd == "stats":
+        debug_stats()
     elif args.topic == "build-assets":
         build_assets_call(Path(args.path))
     else:

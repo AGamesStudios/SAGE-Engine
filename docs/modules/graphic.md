@@ -61,6 +61,7 @@ cfg = state.export_state()
 `atlas_misses` и `textures_bound`. Поле `texture_memory_kb` показывает текущий
 объём памяти текстур, `memory_peak` фиксирует максимум за сессию, а
 `time_spent_ms` — длительность последнего кадра.
+В любой момент данные можно вывести через `sage debug stats`.
 
 ## ✨ Эффекты
 
