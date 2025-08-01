@@ -12,3 +12,6 @@ tex = TextureCache.load("resources/textures/ui.sageimg")
 s = sprite.Sprite(tex, (0, 0, 32, 32))
 s.draw(10, 10)
 ```
+
+Текстуры могут быть объединены в атласы. Для доступа к подспрайтам используйте
+`TextureAtlas` и функцию `draw.sprite_from_atlas`.

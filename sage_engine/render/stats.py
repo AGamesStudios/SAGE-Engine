@@ -10,5 +10,7 @@ stats = {
     "draw_calls": 0,
     "sprites_drawn": 0,
     "textures_bound": 0,
-    "texture_mem_usage": 0,
+    "atlas_hits": 0,
+    "atlas_misses": 0,
+    "texture_memory_used_kb": 0,
 }

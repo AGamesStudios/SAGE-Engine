@@ -3,6 +3,7 @@ from __future__ import annotations
 from .. import gfx
 from .sprite import Sprite
 from .sprite_batch import SpriteBatch
+from .atlas import get as get_from_atlas
 
 _commands: list[tuple[Sprite, int, int, int, int]] = []
 
@@ -46,3 +47,9 @@ def flush() -> memoryview:
     buf = gfx.end_frame()
     gfx.flush_frame()
     return buf
+
+
+def sprite_from_atlas(name: str, x: int, y: int, scale: float = 1.0) -> None:
+    spr = get_from_atlas(name)
+    if spr is not None:
+        sprite(spr, x, y, scale)

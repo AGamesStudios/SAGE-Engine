@@ -10,3 +10,12 @@ w, h = tex.get_size()
 ```
 
 `TextureCache.load()` возвращает уже загруженный экземпляр, предотвращая повторное чтение с диска. Методы `unload()` и `clear()` освобождают память.
+
+Для группирования изображений используйте `TextureAtlas`:
+
+```python
+from sage_engine.texture import TextureCache
+
+atlas = TextureCache.load_atlas("sprites/ui.sageimg")
+button_rect = atlas.get_region("button")
+```
