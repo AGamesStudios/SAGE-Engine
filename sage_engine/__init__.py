@@ -27,6 +27,7 @@ __all__ = [
     "plugins",
     "settings",
     "preview",
+    "introspection",
     "api",
 ]
 
