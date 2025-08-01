@@ -1,18 +1,11 @@
-from pathlib import Path
-import sys
-from sage_engine import core
-from sage_engine.render import rustbridge
+from sage_engine import core, gfx
 
 
-def check_native_backend() -> None:
-    """Verify that the native renderer is functional."""
-    ext = {"win32": "dll", "darwin": "dylib"}.get(sys.platform, "so")
-    lib_file = Path("sage_engine/native") / f"libsagegfx.{ext}"
-    print("Library present:", lib_file.exists(), lib_file)
-
+def check_environment() -> None:
+    """Verify that the software renderer is available."""
     gfx = core.get("gfx")
     if gfx is None:
-        print("❌ core.get('gfx') returned None")
+        print("❌ gfx subsystem unavailable")
         return
 
     try:
@@ -21,13 +14,7 @@ def check_native_backend() -> None:
     except Exception as e:
         print("❌ draw_rect failed:", e)
 
-    native = core.get("gfx_native")
-    if native and getattr(native, "handle", None):
-        print("✅ Native backend active")
-    else:
-        print("⚠️ Using fallback renderer")
-
 
 if __name__ == "__main__":
-    check_native_backend()
+    check_environment()
 

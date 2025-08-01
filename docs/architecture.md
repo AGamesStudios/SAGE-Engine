@@ -40,7 +40,7 @@ All modifications to scene objects happen via a `SceneEdit` transaction that is 
 
 The design tries to minimize allocations during the update/draw loop and favors a Struct-of-Arrays layout for cache efficiency.
 
-Rendering может использовать как чисто Python-бэкенд, так и библиотеку `libsagegfx`, написанную на Rust. Последний вариант подключается через `ctypes` и обеспечивает более высокую скорость при неизменном API.
+Rendering использует программный бэкенд на Python.
 
 ![Render pipeline](diagrams/render_pipeline.svg)
 

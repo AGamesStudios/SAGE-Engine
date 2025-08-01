@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from ..runtime import GraphicRuntime
-from ...render import rustbridge
 from ...logger import logger
 
 
@@ -17,8 +16,6 @@ class MockGraphicRuntime:
         return lambda *a, **kw: None
 
 
-def get_backend() -> GraphicRuntime | MockGraphicRuntime:
-    if getattr(rustbridge.lib, "handle", None):
-        return GraphicRuntime()
-    logger.warning("Using fallback mock renderer.")
-    return MockGraphicRuntime()
+def get_backend() -> GraphicRuntime:
+    """Return the default software renderer."""
+    return GraphicRuntime()

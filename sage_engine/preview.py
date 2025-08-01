@@ -19,9 +19,6 @@ def run() -> None:
     tests to run this function in headless mode.
     """
 
-    if not core.get("gfx_native"):
-        logger.warn("Preview unavailable: native renderer not ready")
-        return
 
     from . import window, render, gfx, world, objects
     from .runtime.fsync import FrameSync

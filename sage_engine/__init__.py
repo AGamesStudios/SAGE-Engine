@@ -37,11 +37,8 @@ from .logger import logger
 
 
 def auto_setup() -> None:
-    """Initialize native libraries if available."""
-    from .render import rustbridge
-    lib = rustbridge._load_lib()
-    if lib is None:
-        logger.warning("SAGE Engine fallback to software renderer")
+    """Initialize engine subsystems (placeholder)."""
+    pass
 
 
 auto_setup()
