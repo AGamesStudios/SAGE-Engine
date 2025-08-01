@@ -196,6 +196,13 @@ SAGE-Engine/
 │   ├── world/
 │   │   ├── __init__.py
 │   │   └── view.py
+│   ├── raycast/
+│   │   ├── __init__.py
+│   │   ├── core.py
+│   │   ├── shape.py
+│   │   ├── query.py
+│   │   ├── filters.py
+│   │   └── results.py
 │   └── settings.py
 ├── sage_engine/
 │   └── testing/
