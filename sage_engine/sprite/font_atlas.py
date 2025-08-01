@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Dict
 
+import os
+
 from ..gfx import load_font
 from ..logger import logger
 from ..render import stats as render_stats
@@ -13,13 +15,22 @@ class FontTextureAtlas:
     path: str
     size: int
     atlas: TextureAtlas = field(init=False)
+    font: object | None = None
 
     def __post_init__(self) -> None:
-        self.atlas = TextureCache.load_atlas(self.path)
-        self.font = load_font(self.path, self.size)
+        atlas_path = self.path
+        font_path = self.path
+        if self.path.endswith(".sageimg"):
+            font_path = self.path.replace(".sageimg", ".ttf")
+        else:
+            atlas_path = self.path.replace(".ttf", ".sageimg")
+        if os.path.exists(atlas_path):
+            self.atlas = TextureCache.load_atlas(atlas_path)
+        else:
+            self.atlas = TextureAtlas()
+        self.font = load_font(font_path, self.size)
         if self.font is None:
-            logger.warning("Font not found: %s", self.path)
+            logger.warning("Font not found: %s", font_path)
 
     def draw_text(self, text: str, x: int, y: int) -> None:
-        # Placeholder: real rendering would map characters via atlas
-        render_stats.stats["sprites_drawn"] += len(text)
+        render_stats.stats["text_glyphs_rendered"] += len(text)

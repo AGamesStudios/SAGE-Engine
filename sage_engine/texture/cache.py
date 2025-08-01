@@ -14,6 +14,7 @@ class TextureCache:
         if tex is None:
             tex = Texture()
             tex.load(path)
+            render_stats.stats["textures_loaded"] += 1
             cls._cache[path] = tex
         return tex
 
@@ -25,6 +26,7 @@ class TextureCache:
 
             atlas = TextureAtlas()
             atlas.load(path)
+            render_stats.stats["textures_loaded"] += 1
             cls._atlas_cache[path] = atlas
         return atlas
 
@@ -41,4 +43,4 @@ class TextureCache:
     def clear(cls) -> None:
         cls._cache.clear()
         cls._atlas_cache.clear()
-        render_stats.stats["texture_memory_used_kb"] = 0
+        render_stats.stats["texture_memory_kb"] = 0

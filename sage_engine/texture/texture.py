@@ -22,7 +22,7 @@ class Texture:
         data = resource.load(path)
         self.width, self.height, self.pixels = sageimg.decode(data)
         from .cache import TextureCache
-        render_stats.stats["texture_memory_used_kb"] = TextureCache.memory_usage() // 1024
+        render_stats.stats["texture_memory_kb"] = TextureCache.memory_usage() // 1024
 
     def get_size(self) -> tuple[int, int]:
         return self.width, self.height
@@ -42,4 +42,4 @@ class Texture:
         self.height = 0
         self.pixels = None
         from .cache import TextureCache
-        render_stats.stats["texture_memory_used_kb"] = TextureCache.memory_usage() // 1024
+        render_stats.stats["texture_memory_kb"] = TextureCache.memory_usage() // 1024

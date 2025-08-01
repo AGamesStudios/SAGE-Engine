@@ -52,9 +52,9 @@ cfg = state.export_state()
 `draw_polygon`, `draw_rounded_rect` и заглушку `draw_text`.
 
 По умолчанию текст выводится шрифтом `sage_engine/resources/fonts/default.ttf`. Это
-IBM Plex Sans под Apache 2.0. Дополнительные шрифты можно загрузить
-через `gfx.load_font(path, size)` и передать полученный объект в
-`draw_text`.
+файл **Public Sans** под Apache 2.0. При загрузке через `sprite.text.load_font()`
+глифы помещаются в текстуру и кэшируются. Вызов `draw_text` использует эту
+текстуру без обращения к файлу `.ttf`.
 
 ## ✨ Эффекты
 

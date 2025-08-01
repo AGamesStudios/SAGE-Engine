@@ -56,6 +56,7 @@ SAGE-Engine/
 ├── sage_engine/
 │   ├── resources/
 │   │   ├── fonts/
+│   │   │   └── default.ttf
 │   │   ├── themes/
 │   │   ├── effects/
 │   │   └── system/

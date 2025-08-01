@@ -59,6 +59,7 @@ def test_render_stats(tmp_path: Path):
     draw.flush()
     assert render.stats.stats["sprites_drawn"] >= 1
     assert render.stats.stats["textures_bound"] == 1
+    assert render.stats.stats["textures_loaded"] >= 1
     gfx.shutdown()
     render.shutdown()
 
