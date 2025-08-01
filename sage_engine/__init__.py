@@ -34,11 +34,15 @@ __all__ = [
 from importlib import import_module
 
 from .logger import logger
+from .scheduler import time as _time
 
 
 def auto_setup() -> None:
-    """Initialize engine subsystems (placeholder)."""
-    pass
+    """Initialize engine subsystems."""
+    try:
+        _time.init()
+    except Exception as e:  # pragma: no cover - init should not fail
+        logger.warning("time init failed: %s", e)
 
 
 auto_setup()

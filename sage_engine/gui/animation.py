@@ -4,5 +4,8 @@ from __future__ import annotations
 from ..graphic import animation as g_animation
 
 
-def animate(widget, prop: str, start: float, end: float, duration: int, easing: str = "linear") -> None:
-    g_animation.animate(widget, prop, start, end, duration, easing)
+def animate(
+    widget, prop: str, start: float, end: float, duration: int, easing: str = "linear", on_finish=None
+) -> callable:
+    """Animate a widget property and return a cancel callable."""
+    return g_animation.animate(widget, prop, start, end, duration, easing, on_finish)

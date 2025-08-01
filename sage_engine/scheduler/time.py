@@ -15,9 +15,17 @@ class TimeState:
     scale: float = 1.0
 
 
-def boot(_config: dict) -> None:
+state: TimeState | None = None
+
+
+def init() -> None:
+    """Initialize the time state."""
     global state
     state = TimeState()
+
+
+def boot(_config: dict) -> None:
+    init()
 
 
 def update() -> None:
@@ -35,4 +43,8 @@ def reset() -> None:
 
 
 def get_time() -> TimeState:
+    if state is None:
+        raise RuntimeError(
+            "Time state is not initialized. Did you forget to call time.init()?"
+        )
     return state

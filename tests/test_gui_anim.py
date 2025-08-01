@@ -6,7 +6,7 @@ class Dummy:
     opacity = 0.0
 
 def test_animation():
-    time.boot({})
+    time.init()
     obj = Dummy()
     animation.animate(obj, "x", 0, 10, 32)
     animation.animate(obj, "opacity", 0.0, 1.0, 32)
