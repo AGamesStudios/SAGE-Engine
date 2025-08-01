@@ -5,6 +5,14 @@ import os
 from dataclasses import dataclass
 from typing import Dict, Any
 
+DEFAULT_THEME_NAME = "default"
+DEFAULT_THEME = {
+    "font": "resources/default.ttf",
+    "font_size": 12,
+    "fg_color": [255, 255, 255, 255],
+    "bg_color": [40, 40, 40, 255],
+}
+
 
 @dataclass
 class WidgetStyle:
@@ -14,6 +22,8 @@ class WidgetStyle:
     border_color: tuple[int, int, int, int] = (0, 0, 0, 255)
     border_width: int = 0
     radius: int = 0
+    font: str = "resources/default.ttf"
+    font_size: int = 12
     hover_style: "WidgetStyle | None" = None
     focus_style: "WidgetStyle | None" = None
 
@@ -67,6 +77,10 @@ def apply_theme(style: WidgetStyle, theme: str) -> None:
         style.border_width = defs["border_width"]
     if "radius" in defs:
         style.radius = defs["radius"]
+    if "font" in defs:
+        style.font = defs["font"]
+    if "font_size" in defs:
+        style.font_size = defs["font_size"]
     if "hover_style" in defs:
         style.hover_style = WidgetStyle()
         sub = defs["hover_style"]
@@ -77,3 +91,6 @@ def apply_theme(style: WidgetStyle, theme: str) -> None:
         sub = defs["focus_style"]
         for k, v in sub.items():
             setattr(style.focus_style, k, v)
+
+
+load_theme(DEFAULT_THEME_NAME, DEFAULT_THEME)

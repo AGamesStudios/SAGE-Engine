@@ -32,6 +32,10 @@ class Widget:
     _bind_attr: str | None = field(default=None, init=False, repr=False)
     _bind_widget_field: str | None = field(default=None, init=False, repr=False)
 
+    def __post_init__(self) -> None:
+        from . import style
+        style.apply_theme(self.style, style.DEFAULT_THEME_NAME)
+
     def validate(self) -> bool:
         from ..logger import logger
         valid = True
@@ -54,6 +58,8 @@ class Widget:
 
     def add_child(self, w: "Widget") -> None:
         w.parent = self
+        from . import style
+        style.apply_theme(w.style, style.DEFAULT_THEME_NAME)
         self.children.append(w)
 
     def bind(self, field: str, obj: Any) -> None:
