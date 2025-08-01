@@ -64,6 +64,9 @@ class Scene:
                 self._render_item(item, gfx)
         gfx.state.z = 0
 
+    def draw_gui(self, manager) -> None:
+        manager.draw()
+
     def _render_item(self, item: Any, gfx) -> None:
         if isinstance(item, Rect):
             gfx.draw_rect(item.x, item.y, item.w, item.h, item.color)

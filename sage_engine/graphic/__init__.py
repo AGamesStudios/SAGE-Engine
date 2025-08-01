@@ -20,7 +20,7 @@ __all__ = [
 
 
 def __getattr__(name):
-    if name in {"api", "style", "backend", "layout"}:
+    if name in {"api", "style", "backend", "layout", "widget", "event", "manager"}:
         from importlib import import_module
         return import_module(f"sage_engine.graphic.{name}")
     raise AttributeError(name)

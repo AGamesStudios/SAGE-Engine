@@ -15,3 +15,12 @@ def safe_viewport(win_w: int, win_h: int, base_w: int, base_h: int,
                   mode: str = "fit", preserve_aspect: bool = True) -> Viewport:
     return calculate_viewport(win_w, win_h, base_w, base_h, mode, preserve_aspect)
 
+
+def vstack(container, spacing: int = 0) -> None:
+    """Layout children of ``container`` vertically with optional spacing."""
+    y = container.y
+    for child in container.children:
+        child.y = y
+        child.x = container.x
+        y += child.height + spacing
+

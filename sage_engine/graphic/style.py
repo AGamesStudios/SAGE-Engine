@@ -1,12 +1,24 @@
 """Post-processing styles for the software renderer."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Callable
 
 StyleFunc = Callable[[bytearray, int, int], None]
 
 
 _styles: dict[str, StyleFunc] = {}
+
+
+@dataclass(slots=True)
+class WidgetStyle:
+    """Basic style for GUI widgets."""
+
+    bg_color: tuple[int, int, int, int] = (40, 40, 40, 255)
+    fg_color: tuple[int, int, int, int] = (255, 255, 255, 255)
+    padding: int = 4
+    border_color: tuple[int, int, int, int] = (0, 0, 0, 255)
+    border_width: int = 0
 
 
 def register(name: str, func: StyleFunc) -> None:
