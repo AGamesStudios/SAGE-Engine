@@ -5,6 +5,7 @@ from typing import Tuple, List, Any, Iterable
 from .. import core
 
 from ..graphic.color import to_premul_rgba, to_bgra8_premul
+from ..render.mathops import blend_rgba_pm
 from ..graphic import fx
 from ..graphic.state import GraphicState
 from ..logger import logger
@@ -302,18 +303,7 @@ class GraphicRuntime:
 
     def _blend_pixel(self, x: int, y: int, r: int, g: int, b: int, a: int) -> None:
         off = y * self.pitch + x * BYTES_PER_PIXEL
-        if a == 255:
-            self.buffer[off:off+BYTES_PER_PIXEL] = bytes((b, g, r, 255))
-        elif a == 0:
-            return
-        else:
-            db = self.buffer[off]
-            dg = self.buffer[off + 1]
-            dr = self.buffer[off + 2]
-            da = self.buffer[off + 3]
-            inv = 255 - a
-            nb = b + (db * inv // 255)
-            ng = g + (dg * inv // 255)
-            nr = r + (dr * inv // 255)
-            na = a + (da * inv // 255)
-            self.buffer[off:off+BYTES_PER_PIXEL] = bytes((nb, ng, nr, na))
+        src = (b & 0xFF) | ((g & 0xFF) << 8) | ((r & 0xFF) << 16) | ((a & 0xFF) << 24)
+        dst = int.from_bytes(self.buffer[off:off+BYTES_PER_PIXEL], "little")
+        blended = blend_rgba_pm(dst, src)
+        self.buffer[off:off+BYTES_PER_PIXEL] = blended.to_bytes(4, "little")

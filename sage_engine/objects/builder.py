@@ -13,7 +13,7 @@ from .roles import get as get_role
 from .store import ObjectStore
 
 
-@dataclass
+@dataclass(slots=True)
 class Blueprint:
     name: str
     roles: list[str] = field(default_factory=list)
@@ -85,7 +85,7 @@ def _dict_to_blueprint(data: Mapping[str, object]) -> Blueprint:
     return bp
 
 
-@dataclass
+@dataclass(slots=True)
 class ObjectBuilder:
     store: ObjectStore
     blueprints: BlueprintSystem

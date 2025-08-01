@@ -8,13 +8,13 @@ from typing import Dict, Optional, Any
 from .roles.interfaces import Role
 
 
-@dataclass
+@dataclass(slots=True)
 class Vector2:
     x: float = 0.0
     y: float = 0.0
 
 
-@dataclass
+@dataclass(slots=True)
 class Object:
     id: str
     name: str | None = None

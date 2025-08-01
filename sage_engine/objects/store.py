@@ -8,7 +8,7 @@ from typing import Dict, Iterable, List, Optional
 from .object import Object
 
 
-@dataclass
+@dataclass(slots=True)
 class ObjectStore:
     """Global registry for all objects in active worlds."""
 

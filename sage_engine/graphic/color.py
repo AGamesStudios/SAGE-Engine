@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import lru_cache
 from typing import Tuple
 
 def _premul(v: int, a: int) -> int:
@@ -15,6 +16,25 @@ class Color:
 
     def as_tuple(self) -> Tuple[int, int, int, int]:
         return (self.r, self.g, self.b, self.a)
+
+
+@lru_cache(maxsize=512)
+def parse_color(value: str) -> Tuple[int, int, int, int]:
+    """Parse a ``#RRGGBB`` or ``#RRGGBBAA`` color string."""
+    hexv = value[1:]
+    if len(hexv) == 6:
+        r = int(hexv[0:2], 16)
+        g = int(hexv[2:4], 16)
+        b = int(hexv[4:6], 16)
+        a = 255
+    elif len(hexv) == 8:
+        r = int(hexv[0:2], 16)
+        g = int(hexv[2:4], 16)
+        b = int(hexv[4:6], 16)
+        a = int(hexv[6:8], 16)
+    else:
+        raise ValueError("Invalid hex color length")
+    return r, g, b, a
 
 
 def to_rgba(color) -> Tuple[int, int, int, int]:
@@ -38,20 +58,7 @@ def to_rgba(color) -> Tuple[int, int, int, int]:
             raise ValueError("Invalid color tuple length")
         return (int(r), int(g), int(b), int(a))
     if isinstance(color, str) and color.startswith("#"):
-        hexv = color[1:]
-        if len(hexv) == 6:
-            r = int(hexv[0:2], 16)
-            g = int(hexv[2:4], 16)
-            b = int(hexv[4:6], 16)
-            a = 255
-        elif len(hexv) == 8:
-            r = int(hexv[0:2], 16)
-            g = int(hexv[2:4], 16)
-            b = int(hexv[4:6], 16)
-            a = int(hexv[6:8], 16)
-        else:
-            raise ValueError("Invalid hex color length")
-        return (r, g, b, a)
+        return parse_color(color)
     raise TypeError(f"Unsupported color format: {color!r}")
 
 

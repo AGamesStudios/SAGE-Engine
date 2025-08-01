@@ -2,8 +2,26 @@ from __future__ import annotations
 
 from ..graphic import api as graphic
 from .sprite import Sprite
+from .sprite_batch import SpriteBatch
 
 _commands: list[tuple[Sprite, int, int, int, int]] = []
+
+
+def draw_batch(batch: SpriteBatch) -> memoryview:
+    """Render all sprites from *batch* and return the framebuffer."""
+    for i in range(batch.count):
+        color = (
+            batch.r[i],
+            batch.g[i],
+            batch.b[i],
+            batch.a[i],
+        )
+        spr = batch.sprite[i]
+        if spr is None:
+            continue
+        graphic.draw_sprite({"size": (int(batch.w[i]), int(batch.h[i])), "color": color}, int(batch.x[i]), int(batch.y[i]))
+    batch.clear()
+    return graphic.flush()
 
 
 def sprite(spr: Sprite, x: int, y: int, scale: float = 1.0, rotation: float = 0.0) -> None:
