@@ -7,7 +7,7 @@
    ```
 2. Запустите тесты и убедитесь, что всё работает:
    ```bash
-   python tools/run_tests.py
+   python test_runner.py
    ```
 3. Подготовьте конфигурацию `game.sagecfg`:
    ```cfg

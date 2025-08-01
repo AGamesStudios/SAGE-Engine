@@ -11,3 +11,16 @@ def test_texture_atlas_region(tmp_path: Path):
     atlas = TextureCache.load_atlas(str(img_path))
     region = atlas.get_region("icon")
     assert region == (0, 0, 1, 1)
+
+
+def test_missing_atlas_warning(monkeypatch):
+    from sage_engine.logger import logger
+
+    msgs = []
+    monkeypatch.setattr(logger, "warning", lambda m, *a, **k: msgs.append(m))
+    atlas = TextureCache.load_atlas("no_file.sageimg")
+    assert atlas.texture.width == 0
+    assert any(
+        "atlas texture missing" in m or "atlas metadata not found" in m
+        for m in msgs
+    )
