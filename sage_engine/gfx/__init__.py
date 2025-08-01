@@ -16,6 +16,7 @@ draw_text = _runtime.draw_text
 end_frame = _runtime.end_frame
 flush_frame = _runtime.flush_frame
 shutdown = _runtime.shutdown
+load_font = _runtime.load_font
 
 add_effect = _runtime.add_effect
 clear_effects = _runtime.clear_effects
@@ -43,6 +44,7 @@ core.expose(
         draw_polygon=draw_polygon,
         draw_rounded_rect=draw_rounded_rect,
         draw_text=draw_text,
+        load_font=load_font,
         shutdown=shutdown,
         state=state,
         push_state=push_state,

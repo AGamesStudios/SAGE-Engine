@@ -1,6 +1,12 @@
 from __future__ import annotations
 
 from typing import Tuple, List, Any, Iterable
+import os
+
+try:
+    from PIL import ImageFont  # type: ignore
+except Exception:  # pragma: no cover - optional dependency
+    ImageFont = None
 
 from .. import core
 
@@ -31,6 +37,7 @@ class GraphicRuntime:
         self._last_error_key: str | None = None
         self._last_error_frame: int = -1
         self._error_interval = 60
+        self._fonts: dict[tuple[str, int], Any] = {}
 
 
     def init(self, width: int, height: int) -> None:
@@ -154,8 +161,27 @@ class GraphicRuntime:
         self._commands.append((z, self._seq_counter, "rounded_rect", x, y, w, h, radius, to_premul_rgba(color)))
         self._seq_counter += 1
 
-    def draw_text(self, *args, **kwargs) -> None:
-        pass
+    def load_font(self, path: str, size: int):
+        """Load a TrueType font. Returns a font handle or ``None``."""
+        if not os.path.exists(path):
+            logger.warning("Font file not found: %s", path)
+            return None
+        if ImageFont is not None:
+            try:
+                font = ImageFont.truetype(path, size)
+            except Exception as exc:  # pragma: no cover - loading can fail
+                logger.warning("Font file not found: %s", path)
+                return None
+        else:  # pragma: no cover - pillow optional
+            font = (path, size)
+        self._fonts[(path, size)] = font
+        return font
+
+    def draw_text(self, x: int, y: int, text: str, font=None, color=None, z: int | None = None) -> None:
+        color = color if color is not None else self.state.color
+        z = self.state.z if z is None else z
+        self._commands.append((z, self._seq_counter, "text", x, y, text, font, to_premul_rgba(color)))
+        self._seq_counter += 1
 
     def add_effect(self, name: str) -> None:
         self.state.add_effect(name)
@@ -177,6 +203,9 @@ class GraphicRuntime:
                 self._blit_polygon(args[0], args[1])
             elif cmd == "rounded_rect":
                 self._blit_rounded_rect(*args)
+            elif cmd == "text":
+                # text rendering is not implemented in the software backend
+                pass
         for name in self.state.effects:
             fx.apply(name, self.buffer, self.width, self.height)
         logger.debug("end_frame %d commands", len(self._commands), tag="gfx")

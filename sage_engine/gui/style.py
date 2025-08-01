@@ -2,15 +2,29 @@ from __future__ import annotations
 
 import json
 import os
+from pathlib import Path
 from dataclasses import dataclass
 from typing import Dict, Any
 
 DEFAULT_THEME_NAME = "default"
+_base_path = Path(__file__).resolve().parent.parent.parent
+_default_theme_path = _base_path / "resources" / "default_theme.json"
+if _default_theme_path.exists():
+    with open(_default_theme_path, "r", encoding="utf8") as f:
+        _raw_theme = json.load(f)
+else:
+    _raw_theme = {
+        "font": "fonts/default.ttf",
+        "font_size": 14,
+        "color": [255, 255, 255, 255],
+        "background": [0, 0, 0, 0],
+    }
+
 DEFAULT_THEME = {
-    "font": "resources/default.ttf",
-    "font_size": 12,
-    "fg_color": [255, 255, 255, 255],
-    "bg_color": [40, 40, 40, 255],
+    "font": os.path.join("resources", _raw_theme.get("font", "fonts/default.ttf")),
+    "font_size": _raw_theme.get("font_size", 14),
+    "fg_color": _raw_theme.get("color", [255, 255, 255, 255]),
+    "bg_color": _raw_theme.get("background", [0, 0, 0, 0]),
 }
 
 
@@ -22,8 +36,8 @@ class WidgetStyle:
     border_color: tuple[int, int, int, int] = (0, 0, 0, 255)
     border_width: int = 0
     radius: int = 0
-    font: str = "resources/default.ttf"
-    font_size: int = 12
+    font: str = "resources/fonts/default.ttf"
+    font_size: int = 14
     hover_style: "WidgetStyle | None" = None
     focus_style: "WidgetStyle | None" = None
 

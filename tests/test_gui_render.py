@@ -17,4 +17,4 @@ def test_label_button_draw(monkeypatch):
 def test_default_style():
     w = widgets.Label()
     assert w.style.fg_color == (255, 255, 255, 255)
-    assert w.style.bg_color == (40, 40, 40, 255)
+    assert w.style.bg_color == (0, 0, 0, 0)

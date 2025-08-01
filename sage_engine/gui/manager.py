@@ -4,6 +4,7 @@ from .base import Widget
 from .widgets.button import Button
 from . import style
 from ..logger import logger
+from .. import gfx
 
 
 class GUIManager:
@@ -15,6 +16,7 @@ class GUIManager:
         self.debug: bool = False
         self.theme = style.DEFAULT_THEME_NAME
         style.load_theme(style.DEFAULT_THEME_NAME, style.DEFAULT_THEME)
+        self._default_font = gfx.load_font(style.DEFAULT_THEME["font"], style.DEFAULT_THEME["font_size"])
 
     def draw(self) -> None:
         self.root.draw()
