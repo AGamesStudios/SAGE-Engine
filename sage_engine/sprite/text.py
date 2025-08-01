@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from __future__ import annotations
-
 from pathlib import Path
 
 from .font_atlas import FontTextureAtlas
