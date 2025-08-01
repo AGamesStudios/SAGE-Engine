@@ -75,6 +75,18 @@ If a wrong key name is used, an error is logged:
 [HINT] [flow] Возможно вы имели в виду 'LEFT'
 ```
 
+## \U0001F465 Group commands
+
+FlowScript can manipulate object groups using commands like:
+
+```flow
+группа.создать("враги")
+группа.добавить(объект)
+группа.отключить_логику("враги")
+```
+
+These map to :mod:`objects.groups` API and allow batch logic operations.
+
 ## Bytecode
 
 `compile_source()` converts FlowScript to Python source which is compiled to a code object. `compile_to_bytes()` serializes that code object so it can be stored in a `.sageflow` file. `FlowRuntime` can execute either plain source or the serialized bytecode using `run_bytecode()`.

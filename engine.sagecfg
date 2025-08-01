@@ -7,6 +7,7 @@
 # 3. PhysicsAgent
 # 4. RenderAgent
 # 5. ResourceAgent
+# 6. ObjectGroupAgent
 
 # Set render backend: software or vulkan
 # render_backend = "software"

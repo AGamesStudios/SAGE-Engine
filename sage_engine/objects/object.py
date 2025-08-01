@@ -43,10 +43,14 @@ class Object:
 
     # --- dispatch --------------------------------------------------------
     def update(self, delta: float) -> None:
+        if self.data.get("_logic_disabled"):
+            return
         for role in list(self.roles.values()):
             role.on_update(delta)
 
     def render(self, ctx) -> None:
+        if self.data.get("_hidden"):
+            return
         for role in list(self.roles.values()):
             role.on_render(ctx)
 

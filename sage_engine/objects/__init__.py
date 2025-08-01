@@ -6,6 +6,7 @@ from .runtime import runtime, ObjectRuntime
 from .store import ObjectStore
 from .builder import ObjectBuilder, BlueprintSystem, Blueprint
 from .roles import get as get_role
+from . import groups
 from dataclasses import replace
 from .. import core
 
@@ -27,6 +28,7 @@ __all__ = [
     "delete",
     "clone",
     "serialize",
+    "groups",
 ]
 
 
@@ -98,5 +100,6 @@ core.expose(
         "clone": clone,
         "serialize": serialize,
         "runtime": runtime,
+        "groups": groups,
     },
 )
