@@ -1,0 +1,11 @@
+# Example engine configuration
+# Order of agent registration matters for correct phase execution.
+# Agents are initialized sequentially:
+# 1. InputAgent
+# 2. AIProcessingAgent
+# 3. PhysicsAgent
+# 4. RenderAgent
+# 5. ResourceAgent
+
+# Actual modules can be listed in the "modules" key if needed.
+# modules = ["input", "render", "resource"]
