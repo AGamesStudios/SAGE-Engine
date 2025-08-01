@@ -15,6 +15,7 @@ from ..render.mathops import blend_rgba_pm
 from ..graphic import fx
 from ..graphic.state import GraphicState
 from ..logger import logger
+from ..render import stats as render_stats
 
 BYTES_PER_PIXEL = 4
 
@@ -38,6 +39,8 @@ class GraphicRuntime:
         self._last_error_frame: int = -1
         self._error_interval = 60
         self._fonts: dict[tuple[str, int], Any] = {}
+        self._frame_textures: set[int] = set()
+        self._sprites_drawn = 0
 
 
     def init(self, width: int, height: int) -> None:
@@ -88,6 +91,8 @@ class GraphicRuntime:
         self._commands.clear()
         self._stack.clear()
         self._seq_counter = 0
+        self._frame_textures.clear()
+        self._sprites_drawn = 0
 
     def _ensure_buffer_size(self) -> None:
         """Ensure the framebuffer matches ``self.width`` and ``self.height``."""
@@ -135,6 +140,12 @@ class GraphicRuntime:
         color = color if color is not None else self.state.color
         z = self.state.z if z is None else z
         self._commands.append((z, self._seq_counter, "rect", x, y, w, h, to_premul_rgba(color)))
+        self._seq_counter += 1
+
+    def draw_sprite(self, sprite: Any, x: int, y: int, z: int | None = None) -> None:
+        z = self.state.z if z is None else z
+        self._frame_textures.add(id(sprite.texture))
+        self._commands.append((z, self._seq_counter, "sprite", sprite, x, y))
         self._seq_counter += 1
 
     def draw_circle(self, x: int, y: int, radius: int, color=None, z: int | None = None) -> None:
@@ -206,8 +217,12 @@ class GraphicRuntime:
             elif cmd == "text":
                 # text rendering is not implemented in the software backend
                 pass
+            elif cmd == "sprite":
+                self._blit_sprite(*args)
         for name in self.state.effects:
             fx.apply(name, self.buffer, self.width, self.height)
+        render_stats.stats["sprites_drawn"] = self._sprites_drawn
+        render_stats.stats["textures_bound"] = len(self._frame_textures)
         logger.debug("end_frame %d commands", len(self._commands), tag="gfx")
         return memoryview(self.buffer)
 
@@ -335,6 +350,27 @@ class GraphicRuntime:
                     py = y + yy
                     if 0 <= px < self.width and 0 <= py < self.height:
                         self._blend_pixel(px, py, r, g, b, a)
+
+    def _blit_sprite(self, sprite: Any, x: int, y: int) -> None:
+        tex = sprite.texture
+        if tex.pixels is None:
+            return
+        fx, fy, fw, fh = sprite.frame_rect
+        for yy in range(fh):
+            sy = fy + yy
+            if sy >= tex.height:
+                break
+            for xx in range(fw):
+                sx = fx + xx
+                if sx >= tex.width:
+                    break
+                off = (sy * tex.width + sx) * BYTES_PER_PIXEL
+                b = tex.pixels[off]
+                g = tex.pixels[off + 1]
+                r = tex.pixels[off + 2]
+                a = tex.pixels[off + 3]
+                self._blend_pixel(x + xx - sprite.origin[0], y + yy - sprite.origin[1], r, g, b, a)
+        self._sprites_drawn += 1
 
     def _blend_pixel(self, x: int, y: int, r: int, g: int, b: int, a: int) -> None:
         off = y * self.pitch + x * BYTES_PER_PIXEL

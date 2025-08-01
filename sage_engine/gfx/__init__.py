@@ -13,6 +13,7 @@ draw_line = _runtime.draw_line
 draw_polygon = _runtime.draw_polygon
 draw_rounded_rect = _runtime.draw_rounded_rect
 draw_text = _runtime.draw_text
+draw_sprite = _runtime.draw_sprite
 end_frame = _runtime.end_frame
 flush_frame = _runtime.flush_frame
 shutdown = _runtime.shutdown
@@ -44,6 +45,7 @@ core.expose(
         draw_polygon=draw_polygon,
         draw_rounded_rect=draw_rounded_rect,
         draw_text=draw_text,
+        draw_sprite=draw_sprite,
         load_font=load_font,
         shutdown=shutdown,
         state=state,

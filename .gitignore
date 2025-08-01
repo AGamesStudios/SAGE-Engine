@@ -7,3 +7,4 @@ logs/
 *.compiled
 sage_engine/native/
 rust/target/
+poetry.lock

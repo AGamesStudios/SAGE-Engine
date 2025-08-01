@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from ..graphic import api as graphic
+from .. import gfx
 from .sprite import Sprite
 from .sprite_batch import SpriteBatch
 
@@ -10,23 +10,20 @@ _commands: list[tuple[Sprite, int, int, int, int]] = []
 def draw_batch(batch: SpriteBatch) -> memoryview:
     """Render all sprites from *batch* and return the framebuffer."""
     for i in range(batch.count):
-        color = (
-            batch.r[i],
-            batch.g[i],
-            batch.b[i],
-            batch.a[i],
-        )
         spr = batch.sprite[i]
         if spr is None:
             continue
-        graphic.draw_sprite({"size": (int(batch.w[i]), int(batch.h[i])), "color": color}, int(batch.x[i]), int(batch.y[i]))
+        spr.frame_rect = (spr.frame_rect[0], spr.frame_rect[1], int(batch.w[i]), int(batch.h[i]))
+        gfx.draw_sprite(spr, int(batch.x[i]), int(batch.y[i]))
     batch.clear()
-    return graphic.flush()
+    buf = gfx.end_frame()
+    gfx.flush_frame()
+    return buf
 
 
 def sprite(spr: Sprite, x: int, y: int, scale: float = 1.0, rotation: float = 0.0) -> None:
-    w = int(spr.width * scale)
-    h = int(spr.height * scale)
+    w = int(spr.frame_rect[2] * scale)
+    h = int(spr.frame_rect[3] * scale)
     _commands.append((spr, x, y, w, h))
 
 
@@ -43,6 +40,9 @@ def textured_rect(tex: Sprite, x: int, y: int, w: int, h: int) -> None:
 
 def flush() -> memoryview:
     for spr, x, y, w, h in _commands:
-        graphic.draw_sprite({"size": (w, h)}, x, y)
+        spr.frame_rect = (spr.frame_rect[0], spr.frame_rect[1], w, h)
+        gfx.draw_sprite(spr, x, y)
     _commands.clear()
-    return graphic.flush()
+    buf = gfx.end_frame()
+    gfx.flush_frame()
+    return buf

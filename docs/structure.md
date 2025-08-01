@@ -135,6 +135,8 @@ SAGE-Engine/
 │   │   ├── sprite.py
 │   │   ├── atlas.py
 │   │   └── cache.py
+│   ├── texture/
+│   │   └── __init__.py
 │   ├── animation/
 │   │   ├── __init__.py
 │   │   ├── runtime.py
