@@ -2,6 +2,7 @@
 
 Документация проекта расположена в каталоге [docs](docs/). Полезные разделы:
 
+- [ABOUT](docs/ABOUT.md)
 - [Введение](docs/intro.md)
 - [Быстрый старт](docs/getting_started.md)
 - [Архитектура](docs/architecture.md)
