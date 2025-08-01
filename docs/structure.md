@@ -7,7 +7,15 @@
 ```text
 SAGE-Engine/
 ├── README.md
-├── audit_report.md
+├── meta/
+│   ├── audit_report.md
+│   ├── audit_findings.md
+│   ├── improvement_plan.md
+│   ├── fix_roadmap.md
+│   ├── benchmark.md
+│   ├── test_plan.md
+│   ├── issues_matrix.csv
+│   └── engine.sagecfg
 ├── docs/
 │   ├── architecture.md
 │   ├── blueprint.md
@@ -38,16 +46,8 @@ SAGE-Engine/
 │       └── phase_flow.svg
 │   └── examples/
 │       ├── basic_scene.md
-│       ├── custom_role.md
-│       └── render_test.md
-├── engine.sagecfg
+│       └── custom_role.md
 ├── examples/
-│   └── render_test/
-│       ├── main.py
-│       ├── logic.flow
-│       ├── game.sagecfg
-│       ├── assets/
-│       └── roles/
 ├── pyproject.toml
 ├── roles/
 │   ├── Camera.role.json
