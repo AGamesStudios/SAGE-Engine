@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from .manager import GUIManager
 from .base import Widget
-from . import widgets
+from . import widgets, registry
 from .widgets.button import Button
 from .widgets.label import Label
 from .widgets.textinput import TextInput
@@ -34,4 +34,5 @@ __all__ = [
     "i18n",
     "load_theme",
     "apply_theme",
+    "registry",
 ]

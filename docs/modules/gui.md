@@ -56,3 +56,36 @@ btn = widgets.Button(text="@main_menu.play_button")
 ```
 
 \n### Visual Effects and Advanced Styling\nWidgets may use gradient backgrounds and effects. Use `gui.animation.animate` for animated properties and `gui.drag` for drag and drop events.
+
+## Пользовательские виджеты
+Вы можете определить собственный класс, наследуясь от `Widget`, и зарегистрировать его через `gui.registry`:
+```python
+from sage_engine.gui import base, registry
+
+class MyBar(base.Widget):
+    value: float = 0.0
+    def on_draw(self, gfx):
+        gfx.draw_rect(self.x, self.y, int(self.width*self.value), self.height, (0,255,0,255))
+
+registry.register_widget("MyBar", MyBar)
+```
+
+## Привязка данных (bind)
+Большинство интерактивных виджетов поддерживают `bind` для связи с объектом:
+```python
+slider = widgets.Slider()
+slider.bind("value", settings)
+```
+Изменения переменной отражаются в UI и наоборот.
+
+## Стили и переменные
+Темы могут использовать переменные и условные стили:
+```json
+{
+  "$primary": "#4444AA",
+  "Button": {
+    "bg_color": "$primary",
+    "hover_style": {"bg_color": "#6666CC"}
+  }
+}
+```
