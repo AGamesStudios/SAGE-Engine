@@ -10,7 +10,7 @@ from .. import gfx
 class GUIManager:
     """Root container and dispatcher for GUI widgets."""
 
-    def __init__(self) -> None:
+    def __init__(self, fallback_fonts: list[str] | None = None) -> None:
         self.root = Widget(0, 0, 0, 0)
         self._focus: Widget | None = None
         self.debug: bool = False
@@ -20,7 +20,13 @@ class GUIManager:
             style.DEFAULT_THEME["font"], style.DEFAULT_THEME["font_size"]
         )
         if self._default_font is None:
-            logger.warning("[gui] default.ttf missing; fallback font active")
+            fonts = fallback_fonts or ["resources/fonts/default.ttf"]
+            for f in fonts:
+                self._default_font = gfx.load_font(f, style.DEFAULT_THEME["font_size"])
+                if self._default_font:
+                    break
+            if self._default_font is None:
+                logger.warning("[gui] default.ttf missing; fallback font active")
 
     def draw(self) -> None:
         self.root.draw()

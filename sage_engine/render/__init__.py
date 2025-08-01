@@ -121,8 +121,9 @@ def present(buffer: memoryview, handle: Any = None) -> None:
         ctx = _backend.create_context(handle) if _backend else None
     if ctx:
         ctx.present(buffer)
+    elapsed = (time.perf_counter() - _frame_start) * 1000.0
+    stats.stats["time_spent_ms"] = elapsed
     if _frame_budget_ms is not None:
-        elapsed = (time.perf_counter() - _frame_start) * 1000.0
         if elapsed > _frame_budget_ms:
             logger.warn(
                 "[render] Frame budget exceeded: %.2fms > %dms",

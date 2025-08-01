@@ -8,5 +8,8 @@
 # 4. RenderAgent
 # 5. ResourceAgent
 
+# Set render backend: software or vulkan
+# render_backend = "software"
+
 # Actual modules can be listed in the "modules" key if needed.
 # modules = ["input", "render", "resource"]

@@ -15,6 +15,8 @@ stats = {
     "atlas_hits": 0,
     "atlas_misses": 0,
     "texture_memory_kb": 0,
+    "memory_peak": 0,
+    "time_spent_ms": 0.0,
 }
 
 
@@ -30,6 +32,8 @@ def reset_frame() -> None:
         from ..texture.cache import TextureCache
 
         stats["texture_memory_kb"] = TextureCache.memory_usage() // 1024
+        if stats["texture_memory_kb"] > stats["memory_peak"]:
+            stats["memory_peak"] = stats["texture_memory_kb"]
     except Exception:
         stats["texture_memory_kb"] = 0
 

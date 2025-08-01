@@ -11,19 +11,28 @@ class VulkanBackend(RenderBackend):
     def init(self, output_target: Any) -> None:
         pass  # pragma: no cover - future work
 
-    def begin_frame(self) -> None:
+    def begin_frame(self, handle: Any | None = None) -> None:
         pass  # pragma: no cover
 
-    def draw_sprite(self, image: Any, x: int, y: int, w: int, h: int, rotation: float = 0.0) -> None:
+    def draw_sprite(self, image: Any, x: int, y: int, w: int, h: int, rotation: float = 0.0, handle: Any | None = None) -> None:
         pass  # pragma: no cover
 
-    def draw_rect(self, x: int, y: int, w: int, h: int, color: Any) -> None:
+    def draw_rect(self, x: int, y: int, w: int, h: int, color: Any, handle: Any | None = None) -> None:
         pass  # pragma: no cover
 
-    def end_frame(self) -> None:
+    def end_frame(self, handle: Any | None = None) -> None:
         pass  # pragma: no cover
 
-    def shutdown(self) -> None:
+    def present(self, buffer: memoryview, handle: Any | None = None) -> None:
+        pass  # pragma: no cover
+
+    def resize(self, width: int, height: int, handle: Any | None = None) -> None:
+        pass  # pragma: no cover
+
+    def set_viewport(self, x: int, y: int, w: int, h: int, handle: Any | None = None) -> None:
+        pass  # pragma: no cover
+
+    def shutdown(self, handle: Any | None = None) -> None:
         pass  # pragma: no cover
 
     def create_context(self, output_target: Any) -> RenderContext:

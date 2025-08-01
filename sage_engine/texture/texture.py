@@ -14,8 +14,9 @@ class Texture:
     width: int = 0
     height: int = 0
     pixels: bytes | None = None
+    mipmaps: list[bytes] | None = None
 
-    def load(self, path: str) -> None:
+    def load(self, path: str, generate_mipmap: bool = False) -> None:
         if not path.endswith(".sageimg"):
             logger.error("[texture] external image formats are not supported: %s", path)
             return
@@ -28,6 +29,8 @@ class Texture:
             self.pixels = None
             return
         self.width, self.height, self.pixels = sageimg.decode(data)
+        if generate_mipmap:
+            self.mipmaps = [self.pixels]
         from .cache import TextureCache
         render_stats.stats["texture_memory_kb"] = TextureCache.memory_usage() // 1024
 

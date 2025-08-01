@@ -20,6 +20,9 @@ atlas = TextureCache.load_atlas("sprites/ui.sageimg")
 button_rect = atlas.get_region("button")
 ```
 
+`TextureCache.load(path, generate_mipmap=True)` создаёт дополнительный уровень
+мелких копий для уменьшения артефактов при масштабировании.
+
 Все шрифты также загружаются через `TextureCache`. При первом вызове
 `load_font()` внутри `sprite.text` формируется текстура глифов и
 увеличивается счётчик `textures_loaded`.

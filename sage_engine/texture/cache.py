@@ -9,11 +9,11 @@ class TextureCache:
     _atlas_cache: dict[str, "TextureAtlas"] = {}
 
     @classmethod
-    def load(cls, path: str) -> Texture:
+    def load(cls, path: str, *, generate_mipmap: bool = False) -> Texture:
         tex = cls._cache.get(path)
         if tex is None:
             tex = Texture()
-            tex.load(path)
+            tex.load(path, generate_mipmap=generate_mipmap)
             render_stats.stats["textures_loaded"] += 1
             cls._cache[path] = tex
         return tex

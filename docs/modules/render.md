@@ -28,7 +28,7 @@ render.set_viewport(1280, 720, preserve_aspect=True)
 
 ## 🔹 Выбор backend
 
-Backend выбирается через `settings.render_backend` или переменную окружения `SAGE_RENDER_BACKEND`. По умолчанию используется `software`.
+Backend выбирается через `settings.render_backend`, ключ `render_backend` в `engine.sagecfg` или переменную окружения `SAGE_RENDER_BACKEND`. По умолчанию используется `software`.
 
 Доступные реализации находятся в каталоге `render/backends`:
 

@@ -48,3 +48,12 @@ def test_load_from_pack(tmp_path):
     loader._PACK_FILE = None
     data = loader.load_from_pack("c.txt", pack)
     assert data == b"zzz"
+
+
+def test_pack_compress(tmp_path):
+    src = tmp_path / "src4"
+    src.mkdir()
+    (src / "d.txt").write_text("hello")
+    pack = tmp_path / "c.sagepack"
+    packer.pack(str(src), str(pack), compress=True)
+    assert pack.exists()

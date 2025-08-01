@@ -10,37 +10,36 @@ status: "✅ stable"
 problems:
   - lacks hardware acceleration
 recommendations:
-  - integrate Vulkan backend
+  - integrate Vulkan backend (partial stub added)
 ---
 subsystem: graphic
 status: "✅ stable"
 problems:
   - sprite group batching not implemented
 recommendations:
-  - add sprite group support
+  - add sprite group support (prototype available)
 ---
 subsystem: sprite
 status: "✅ stable"
 problems:
-  - no group batching
   - no scalable text rendering
 recommendations:
-  - implement sprite groups
-  - support scalable fonts
+  - implement sprite groups (done)
+  - support scalable fonts (partial)
 ---
 subsystem: texture
 status: "✅ stable"
 problems:
   - no mipmap generation
 recommendations:
-  - add optional mipmap step
+  - add optional mipmap step (flag added)
 ---
 subsystem: gui
 status: "✅ stable"
 problems:
   - fallback font limited to Latin characters
 recommendations:
-  - allow custom fallback sets
+  - allow custom fallback sets (implemented)
 ---
 subsystem: input
 status: "✅ stable"
@@ -89,25 +88,25 @@ status: "✅ stable"
 problems:
   - timers lack persistence
 recommendations:
-  - allow save/load
+  - allow save/load (added)
 ---
 subsystem: resource
 status: "✅ stable"
 problems:
   - no compression on packs
 recommendations:
-  - implement optional compression
+  - implement optional compression (zlib)
 ---
 subsystem: cursor
 status: "✅ stable"
 problems:
   - custom cursor images not hot-swappable
 recommendations:
-  - expose runtime update API
+  - expose runtime update API (set_style added)
 ---
 subsystem: framesync
 status: "🟡 partial"
 problems:
   - simple busy-wait strategy
 recommendations:
-  - implement adaptive sync
+  - implement adaptive sync (basic sleep added)

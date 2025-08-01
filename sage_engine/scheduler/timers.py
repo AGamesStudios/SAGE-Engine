@@ -67,3 +67,14 @@ def update() -> None:
 def reset() -> None:
     manager._heap.clear()
     profile.timers_dropped = 0
+
+
+def save() -> list[tuple[float, bool, float]]:
+    """Serialize current timers."""
+    return [(t.trigger, t.repeat, t.interval) for t in manager._heap]
+
+
+def load(data: list[tuple[float, bool, float]], callback: Callable) -> None:
+    """Restore timers with *callback* for each entry."""
+    manager._heap = [_Timer(trig, callback, rep, inter) for trig, rep, inter in data]
+    heapq.heapify(manager._heap)

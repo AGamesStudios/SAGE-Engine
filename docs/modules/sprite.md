@@ -23,6 +23,18 @@ batch.add(spr, 10, 20, 32, 32)
 frame = draw.draw_batch(batch)
 ```
 
+Для совместного управления несколькими спрайтами используйте `SpriteGroup`:
+
+```python
+from sage_engine.sprite import group, sprite_batch, draw
+
+grp = group.SpriteGroup(x=100, y=100, scale=1.5)
+grp.add(spr)
+batch = sprite_batch.SpriteBatch()
+grp.draw(batch)
+draw.draw_batch(batch)
+```
+
 Спрайты из атласа доступны через `atlas.load_from_texture_atlas()` и
 `draw.sprite_from_atlas(name, x, y)`.
 

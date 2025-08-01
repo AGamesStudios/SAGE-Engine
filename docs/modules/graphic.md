@@ -59,7 +59,8 @@ cfg = state.export_state()
 Статистика отрисовки доступна через `render.stats`. На каждый кадр обнуляются
 `sprites_drawn`, `text_glyphs_rendered`, `textures_loaded`, `atlas_hits`,
 `atlas_misses` и `textures_bound`. Поле `texture_memory_kb` показывает текущий
-объём памяти текстур.
+объём памяти текстур, `memory_peak` фиксирует максимум за сессию, а
+`time_spent_ms` — длительность последнего кадра.
 
 ## ✨ Эффекты
 

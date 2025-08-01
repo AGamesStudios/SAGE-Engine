@@ -1,7 +1,7 @@
 import json
+import zlib
 from pathlib import Path
 import yaml
-from pathlib import Path
 from ..logger import logger
 from ..compat import migrate_schema
 
@@ -15,8 +15,17 @@ def _load_pack(path: Path):
     with path.open('rb') as fh:
         header_len = int.from_bytes(fh.read(4), 'little')
         header = fh.read(header_len)
-        _PACK_INDEX = json.loads(header.decode('utf8'))
-        _PACK_FILE = fh.read()
+        meta = json.loads(header.decode('utf8'))
+        if isinstance(meta, dict) and "index" in meta:
+            _PACK_INDEX = meta["index"]
+            compressed = meta.get("compressed", False)
+        else:
+            _PACK_INDEX = meta
+            compressed = False
+        data = fh.read()
+        if compressed:
+            data = zlib.decompress(data)
+        _PACK_FILE = data
 
 
 def load_from_pack(key: str, pack_path: Path) -> bytes:
@@ -71,6 +80,7 @@ _ENGINE_ALLOWED = {
     "width",
     "height",
     "fullscreen",
+    "render_backend",
     "language",
 }
 

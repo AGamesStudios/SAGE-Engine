@@ -1,9 +1,10 @@
 import json
 import os
+import zlib
 from pathlib import Path
 
 
-def pack(source: str, output: str, compression: str = "lz4", limit_size_mb: int = 10):
+def pack(source: str, output: str, *, compress: bool = False, limit_size_mb: int = 10):
     source_path = Path(source)
     index = {}
     contents = []
@@ -30,10 +31,12 @@ def pack(source: str, output: str, compression: str = "lz4", limit_size_mb: int 
     if total > limit_size_mb * 1024 * 1024:
         raise ValueError("resource pack too big")
     out_path = Path(output)
-    header = json.dumps(index).encode("utf8")
+    header = json.dumps({"index": index, "compressed": compress}).encode("utf8")
     with out_path.open("wb") as out:
         out.write(len(header).to_bytes(4, "little"))
         out.write(header)
         for data in contents:
+            if compress:
+                data = zlib.compress(data)
             out.write(data)
     return index

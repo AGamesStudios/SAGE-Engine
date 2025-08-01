@@ -124,4 +124,5 @@
 
 Дополнительные модули, такие как `tasks`, `flow` и `devtools`, помогают автоматизации и асинхронной работе.
 - Все визуальные подсистемы используют общий `TextureCache` и шрифт `default.ttf` (Public Sans) из `resources/fonts/` в качестве fallback.
+- Ключ `render_backend` в `engine.sagecfg` позволяет выбирать между `software` и `vulkan` реализациями.
 - [Модуль gui](modules/gui.md)
