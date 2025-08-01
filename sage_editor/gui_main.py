@@ -2,7 +2,7 @@
 
 from sage_gui import GUIContext, Label, Button, VBox
 from sage_gui.core.event import Event, EventType
-from sage_engine.core import core
+from sage_engine import core
 
 
 def main() -> None:

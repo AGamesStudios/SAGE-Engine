@@ -9,6 +9,7 @@ from typing import Callable, Dict, List
 from .extensible import IExtensible
 
 from ..format.loader import load_sage_file
+import sys
 from importlib import import_module
 
 from ..settings import settings
@@ -126,3 +127,13 @@ def expose(name: str, api: object) -> None:
 def get(name: str) -> object | None:
     """Retrieve an exposed interface."""
     return _interfaces.get(name)
+
+
+def auto_setup() -> None:  # pragma: no cover - simple proxy
+    """Initialize native libraries via ``sage_engine.auto_setup``."""
+    from .. import auto_setup as _auto
+    _auto()
+
+
+# Provide module-level alias so ``from sage_engine.core import core`` works
+core = sys.modules[__name__]
