@@ -11,6 +11,7 @@ from .widgets.checkbox import Checkbox
 from .widgets.slider import Slider
 from .widgets.dropdown import Dropdown
 from .style import load_theme, apply_theme
+from . import drag, animation
 from .. import core
 
 manager = GUIManager()
@@ -26,6 +27,8 @@ __all__ = [
     "Checkbox",
     "Slider",
     "Dropdown",
+    "drag",
+    "animation",
     "load_theme",
     "apply_theme",
 ]

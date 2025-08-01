@@ -85,3 +85,4 @@ out.a   = src.a   + dst.a   * (1 - src.a)
 ## 🔹 GUI
 Модуль содержит базовые виджеты и менеджер интерфейса для простых GUI.
 Подробнее см. [gui.md](gui.md).
+\n## Visual Effects and Advanced Styling\nUse `graphic.effects` and `graphic.gradient` to apply gradients and post effects. `graphic.animation` provides property animations for widgets.

@@ -40,3 +40,4 @@ style.apply_theme(button.style, "dark")
 ## Темы
 В папке `theme` находятся базовые темы: `light`, `dark`, `retro`. Вы можете подключить собственную тему через `style.load_theme()`.
 
+\n### Visual Effects and Advanced Styling\nWidgets may use gradient backgrounds and effects. Use `gui.animation.animate` for animated properties and `gui.drag` for drag and drop events.

@@ -22,6 +22,10 @@ class Widget:
     on_focus: Event = field(default_factory=Event, init=False)
     on_change: Event = field(default_factory=Event, init=False)
     on_keypress: Event = field(default_factory=Event, init=False)
+    on_drag_start: Event = field(default_factory=Event, init=False)
+    on_drag_move: Event = field(default_factory=Event, init=False)
+    on_drag_end: Event = field(default_factory=Event, init=False)
+    on_drop: Event = field(default_factory=Event, init=False)
 
     def add_child(self, w: "Widget") -> None:
         w.parent = self
