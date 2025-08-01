@@ -31,5 +31,5 @@ $ sage format compile object.yaml object.sageobj
 $ sage format decompile object.sageobj
 $ sage convert old.json new.sageobj
 $ sage validate new.sageobj --schema schema.yaml
-$ sage-pack build assets/ game.sagepack
+$ sage-pack build resources/ game.sagepack
 ```

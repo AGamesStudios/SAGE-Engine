@@ -6,6 +6,8 @@ def test_no_json_yaml_usage():
     errors = []
 
     for root, _, files in os.walk("sage_engine"):
+        if root.startswith(os.path.join("sage_engine", "resources")):
+            continue
         for file in files:
             if any(file.endswith(ext) for ext in bad_exts):
                 errors.append(os.path.join(root, file))

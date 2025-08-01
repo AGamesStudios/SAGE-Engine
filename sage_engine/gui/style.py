@@ -7,8 +7,9 @@ from dataclasses import dataclass
 from typing import Dict, Any
 
 DEFAULT_THEME_NAME = "default"
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
-_default_theme_path = BASE_DIR / "resources" / "default_theme.json"
+PACKAGE_DIR = Path(__file__).resolve().parents[1]
+RESOURCES_DIR = PACKAGE_DIR / "resources"
+_default_theme_path = RESOURCES_DIR / "themes" / "default_theme.json"
 if _default_theme_path.exists():
     with open(_default_theme_path, "r", encoding="utf8") as f:
         _raw_theme = json.load(f)
@@ -21,7 +22,7 @@ else:
     }
 
 _font_rel = _raw_theme.get("font", "fonts/default.ttf")
-DEFAULT_FONT_PATH = str((BASE_DIR / "resources" / _font_rel).resolve())
+DEFAULT_FONT_PATH = str((RESOURCES_DIR / _font_rel).resolve())
 
 DEFAULT_THEME = {
     "font": DEFAULT_FONT_PATH,

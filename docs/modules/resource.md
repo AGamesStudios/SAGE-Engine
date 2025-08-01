@@ -16,7 +16,7 @@ img = resource.load("sprites/player.sageimg")
 CLI утилита `sage-pack` автоматизирует сборку:
 
 ```bash
-sage-pack build assets/ build/resources.sagepack --report pack.json
+sage-pack build resources/ build/resources.sagepack --report pack.json
 ```
 
 ## Ошибки и диагностика

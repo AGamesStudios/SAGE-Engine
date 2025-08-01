@@ -3,5 +3,5 @@
 Компилирует ресурсы и собирает их в `.sagepack`.
 
 ```bash
-sage-pack build assets/ build/game.sagepack --report pack.json
+sage-pack build resources/ build/game.sagepack --report pack.json
 ```

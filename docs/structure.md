@@ -54,6 +54,11 @@ SAGE-Engine/
 │   ├── Player.role.json
 │   └── Sprite.role.json
 ├── sage_engine/
+│   ├── resources/
+│   │   ├── fonts/
+│   │   ├── themes/
+│   │   ├── effects/
+│   │   └── system/
 │   ├── __init__.py
 │   ├── api.py
 │   ├── audio/

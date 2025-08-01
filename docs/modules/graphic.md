@@ -51,7 +51,7 @@ cfg = state.export_state()
 `gfx` поддерживает функции `draw_rect`, `draw_circle`, `draw_line`,
 `draw_polygon`, `draw_rounded_rect` и заглушку `draw_text`.
 
-По умолчанию текст выводится шрифтом `resources/fonts/default.ttf`. Это
+По умолчанию текст выводится шрифтом `sage_engine/resources/fonts/default.ttf`. Это
 IBM Plex Sans под Apache 2.0. Дополнительные шрифты можно загрузить
 через `gfx.load_font(path, size)` и передать полученный объект в
 `draw_text`.
