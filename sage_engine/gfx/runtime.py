@@ -188,6 +188,12 @@ class GraphicRuntime:
         if render is None:
             return
         self._ensure_buffer_size()
+        gui = core.get("gui")
+        if gui is not None:
+            try:
+                gui.draw()
+            except Exception as exc:  # pragma: no cover - safety
+                logger.error("[gui] draw failed: %s", exc)
         buf = self.end_frame()
         expected_size = self.width * self.height * BYTES_PER_PIXEL
         actual_size = len(buf)

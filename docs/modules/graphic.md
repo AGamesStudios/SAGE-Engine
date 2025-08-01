@@ -83,6 +83,6 @@ out.a   = src.a   + dst.a   * (1 - src.a)
 `a/255` при вычислении цветов.
 
 ## 🔹 GUI
-Модуль содержит базовые виджеты и менеджер интерфейса для простых GUI.
+Модуль содержит базовые виджеты, систему раскладок и менеджер интерфейса для GUI.
 Подробнее см. [gui.md](gui.md).
 \n## Visual Effects and Advanced Styling\nUse `graphic.effects` and `graphic.gradient` to apply gradients and post effects. `graphic.animation` provides property animations for widgets.

@@ -13,3 +13,12 @@ def test_drag_events():
     d.move(1, 1)
     d.end(2, 2)
     assert events == ["start", "move", "end"]
+
+
+def test_drop_event():
+    target = widgets.Button()
+    src = widgets.Button()
+    events = []
+    target.on_drop.connect(lambda s: events.append(s))
+    drag.drop(target, src)
+    assert events == [src]

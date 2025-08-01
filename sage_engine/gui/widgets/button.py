@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from ..base import Widget
+from ..i18n import translate
 
 
 @dataclass
@@ -15,7 +16,7 @@ class Button(Widget):
         gfx.draw_text(
             self.x + self.style.padding,
             self.y + self.style.padding,
-            self.text,
+            translate(self.text),
             None,
             self.style.fg_color,
         )

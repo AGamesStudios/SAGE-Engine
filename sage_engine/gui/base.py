@@ -27,11 +27,27 @@ class Widget:
     on_drag_end: Event = field(default_factory=Event, init=False)
     on_drop: Event = field(default_factory=Event, init=False)
 
+    def validate(self) -> bool:
+        from ..logger import logger
+        valid = True
+        if self.width is None or self.height is None:
+            logger.error("[gui] Invalid size on %s", type(self).__name__)
+            valid = False
+        elif self.width < 0 or self.height < 0:
+            logger.error("[gui] Negative size on %s", type(self).__name__)
+            valid = False
+        if self.x is None or self.y is None:
+            logger.error("[gui] Invalid position on %s", type(self).__name__)
+            valid = False
+        return valid
+
     def add_child(self, w: "Widget") -> None:
         w.parent = self
         self.children.append(w)
 
     def draw(self) -> None:
+        if not self.validate():
+            return
         from .. import gfx
         gfx.draw_rect(self.x, self.y, self.width, self.height, self.style.bg_color)
         for child in self.children:

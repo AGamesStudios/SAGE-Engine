@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from typing import List
 
 from ..base import Widget
+from ..i18n import translate
 
 
 @dataclass
@@ -18,7 +19,7 @@ class Dropdown(Widget):
             gfx.draw_text(
                 self.x + self.style.padding,
                 self.y + self.style.padding,
-                self.options[self.selected],
+                translate(self.options[self.selected]),
                 None,
                 self.style.fg_color,
             )

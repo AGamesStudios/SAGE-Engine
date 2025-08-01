@@ -12,6 +12,25 @@ def test_gui_basic():
     manager.dispatch_click(5, 5)
     assert called
 
+def test_focus_event():
+    from sage_engine.gui import manager, widgets
+
+    w = widgets.Button()
+    events = []
+    w.on_focus.connect(lambda f: events.append(f))
+    manager.set_focus(w)
+    assert events == [True]
+
+
+def test_hover_event():
+    from sage_engine.gui import widgets
+
+    w = widgets.Button()
+    events = []
+    w.on_hover.connect(lambda: events.append(True))
+    w.on_hover.emit()
+    assert events == [True]
+
 
 def test_layout_linear():
     from sage_engine.gui import manager, widgets, layout
