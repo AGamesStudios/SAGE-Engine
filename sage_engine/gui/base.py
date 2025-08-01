@@ -13,6 +13,8 @@ class Widget:
     y: int = 0
     width: int = 10
     height: int = 10
+    visible: bool = True
+    focusable: bool = False
     style: WidgetStyle = field(default_factory=WidgetStyle)
     children: List["Widget"] = field(default_factory=list)
     parent: "Widget" | None = field(default=None, repr=False)
@@ -44,6 +46,12 @@ class Widget:
             valid = False
         return valid
 
+    def contains_point(self, x: int, y: int) -> bool:
+        return (
+            self.x <= x < self.x + self.width and
+            self.y <= y < self.y + self.height
+        )
+
     def add_child(self, w: "Widget") -> None:
         w.parent = self
         self.children.append(w)
@@ -74,6 +82,8 @@ class Widget:
                 setattr(self, getattr(self, "_bind_widget_field", self._bind_attr), val)
 
     def draw(self) -> None:
+        if not self.visible:
+            return
         if not self.validate():
             return
         from .. import gfx

@@ -10,6 +10,13 @@ from .widgets.textinput import TextInput
 from .widgets.checkbox import Checkbox
 from .widgets.slider import Slider
 from .widgets.dropdown import Dropdown
+from .widgets.window import Window
+from .widgets.panel import Panel
+from .widgets.popup import Popup
+from .widgets.dockpanel import DockPanel
+from .widgets.scrollview import ScrollView
+from .widgets.inspector import InspectorPanel
+from . import tool
 from .style import load_theme, apply_theme
 from . import i18n
 from . import drag, animation, layout
@@ -28,7 +35,14 @@ __all__ = [
     "Checkbox",
     "Slider",
     "Dropdown",
+    "Window",
+    "Panel",
+    "Popup",
+    "DockPanel",
+    "ScrollView",
+    "InspectorPanel",
     "drag",
+    "tool",
     "animation",
     "layout",
     "i18n",

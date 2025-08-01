@@ -89,3 +89,18 @@ slider.bind("value", settings)
   }
 }
 ```
+
+## Окна и панели
+`Window`, `Panel` и `Popup` позволяют создавать отдельные окна и всплывающие панели. Окно можно перемещать мышью за заголовок, а popup автоматически закрывается при клике вне его области:
+```python
+from sage_engine.gui import widgets, manager
+
+win = widgets.Window(title="Settings", width=120, height=80)
+manager.root.add_child(win)
+```
+
+## ScrollView и инспектор
+`ScrollView` отображает дочерние элементы в прокручиваемой области. `InspectorPanel` автоматически создаёт форму по атрибутам объекта и использует `bind` для изменения значений.
+
+## Анимация свойств
+Используйте `gui.animation.animate(widget, "opacity", 0, 1, 200, "ease-in")` чтобы плавно изменять параметры виджетов.
