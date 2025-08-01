@@ -7,8 +7,8 @@ from dataclasses import dataclass
 from typing import Dict, Any
 
 DEFAULT_THEME_NAME = "default"
-_base_path = Path(__file__).resolve().parent.parent.parent
-_default_theme_path = _base_path / "resources" / "default_theme.json"
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+_default_theme_path = BASE_DIR / "resources" / "default_theme.json"
 if _default_theme_path.exists():
     with open(_default_theme_path, "r", encoding="utf8") as f:
         _raw_theme = json.load(f)
@@ -20,8 +20,11 @@ else:
         "background": [0, 0, 0, 0],
     }
 
+_font_rel = _raw_theme.get("font", "fonts/default.ttf")
+DEFAULT_FONT_PATH = str((BASE_DIR / "resources" / _font_rel).resolve())
+
 DEFAULT_THEME = {
-    "font": os.path.join("resources", _raw_theme.get("font", "fonts/default.ttf")),
+    "font": DEFAULT_FONT_PATH,
     "font_size": _raw_theme.get("font_size", 14),
     "fg_color": _raw_theme.get("color", [255, 255, 255, 255]),
     "bg_color": _raw_theme.get("background", [0, 0, 0, 0]),
@@ -36,7 +39,7 @@ class WidgetStyle:
     border_color: tuple[int, int, int, int] = (0, 0, 0, 255)
     border_width: int = 0
     radius: int = 0
-    font: str = "resources/fonts/default.ttf"
+    font: str = DEFAULT_FONT_PATH
     font_size: int = 14
     hover_style: "WidgetStyle | None" = None
     focus_style: "WidgetStyle | None" = None
