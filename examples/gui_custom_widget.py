@@ -1,4 +1,5 @@
 from sage_engine.gui import base, manager, registry
+manager.debug = True
 
 class ProgressBar(base.Widget):
     value: float = 0.0

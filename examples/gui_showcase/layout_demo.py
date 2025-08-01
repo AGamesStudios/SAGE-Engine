@@ -1,4 +1,5 @@
 from sage_engine.gui import widgets, layout, manager
+manager.debug = True
 
 c = widgets.Button()
 c.add_child(widgets.Button(width=50, height=20, text="A"))

@@ -1,4 +1,5 @@
 from sage_engine.gui import widgets, manager
+manager.debug = True
 
 class Config:
     volume = 0.5

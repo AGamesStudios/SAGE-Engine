@@ -132,6 +132,9 @@ SAGE Render использует фиксированную точку Q8.8 дл
 `render.soa` — это массивы значений без аллокаций в кадре. При выводе
 кадр разбивается на тайлы, вычисляется маска покрытий и изменившаяся
 область. `render.stats` хранит счётчики тайлов и времени кадра.
+Дополнительно фиксируются `sprites_drawn`, `text_glyphs_rendered`,
+`textures_loaded`, `atlas_hits`, `atlas_misses` и `texture_memory_kb`.
+Сброс этих значений происходит при вызове `gfx.begin_frame()`.
 
 ### WorldView API
 

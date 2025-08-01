@@ -1,4 +1,5 @@
 from sage_engine.gui import widgets, style, manager
+manager.debug = True
 
 btn = widgets.Button(text="Switch")
 manager.root.add_child(btn)

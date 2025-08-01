@@ -16,7 +16,11 @@ class GUIManager:
         self.debug: bool = False
         self.theme = style.DEFAULT_THEME_NAME
         style.load_theme(style.DEFAULT_THEME_NAME, style.DEFAULT_THEME)
-        self._default_font = gfx.load_font(style.DEFAULT_THEME["font"], style.DEFAULT_THEME["font_size"])
+        self._default_font = gfx.load_font(
+            style.DEFAULT_THEME["font"], style.DEFAULT_THEME["font_size"]
+        )
+        if self._default_font is None:
+            logger.warning("[gui] default.ttf missing; fallback font active")
 
     def draw(self) -> None:
         self.root.draw()

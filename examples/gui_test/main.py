@@ -9,6 +9,7 @@ def main() -> None:
     gfx.init(320, 200)
 
     manager = GUIManager()
+    manager.debug = True
     label = Label(text="Hello", width=80, height=20)
     button = Button(text="Click", y=30, width=80, height=20)
 

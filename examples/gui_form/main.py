@@ -1,5 +1,6 @@
 from sage_engine import window, render, gfx
 from sage_engine.gui import manager, widgets, layout, style
+manager.debug = True
 
 
 def main() -> None:

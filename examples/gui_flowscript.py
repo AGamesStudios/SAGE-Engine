@@ -1,4 +1,5 @@
 from sage_engine.gui import widgets, manager
+manager.debug = True
 
 btn = widgets.Button(text='Save')
 btn.on_click.connect("run_script('save_game')")

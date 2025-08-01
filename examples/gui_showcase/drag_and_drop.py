@@ -1,4 +1,5 @@
 from sage_engine.gui import widgets, drag, manager
+manager.debug = True
 
 btn1 = widgets.Button(text="Drag")
 btn2 = widgets.Button(text="Drop")

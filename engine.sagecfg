@@ -1,6 +1,7 @@
 # Example engine configuration
 # Order of agent registration matters for correct phase execution.
-# Agents are initialized sequentially:
+# Agents are initialized sequentially in boot phase and then participate in
+# update → draw → flush → shutdown cycles. Recommended order:
 # 1. InputAgent
 # 2. AIProcessingAgent
 # 3. PhysicsAgent

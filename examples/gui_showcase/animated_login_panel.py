@@ -1,4 +1,5 @@
 from sage_engine.gui import widgets, animation, layout, manager
+manager.debug = True
 
 panel = widgets.Panel()
 panel.opacity = 0.0
