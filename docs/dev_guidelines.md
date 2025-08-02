@@ -12,3 +12,15 @@ def update(scene, dt):
     # ваша логика
     pass
 ```
+
+## SAGE CLI
+
+Для создания нового проекта и управления конфигурацией используйте команду `sage`.
+
+Примеры:
+
+```bash
+sage new MyGame --template blank-2d
+sage run
+sage test
+```

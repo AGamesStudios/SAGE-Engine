@@ -26,6 +26,7 @@
 | logger | реализовано |
 | roles | реализовано |
 | objects | реализовано |
+| [objects_groups](modules/objects_groups.md) | реализовано |
 | raycast | реализовано |
 | gui | реализовано |
 | texture | реализовано |

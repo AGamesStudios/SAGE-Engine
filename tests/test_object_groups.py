@@ -1,4 +1,5 @@
 from sage_engine.objects import groups, runtime, Object
+from sage_engine.objects.groups import registry
 from sage_engine.objects.roles.interfaces import Role
 
 
@@ -16,7 +17,7 @@ class DummyRole(Role):
 
 def setup_module() -> None:
     runtime.store.objects.clear()
-    groups.groups.clear()
+    registry.GROUPS.clear()
 
 
 def test_group_basic_lifecycle() -> None:
@@ -34,15 +35,27 @@ def test_group_basic_lifecycle() -> None:
     obj.update(0.1)
     assert obj.roles["DummyRole"].updated == 1
 
-    groups.hide_group(gid)
+    groups.disable_render(gid)
     obj.render(None)
     assert obj.roles["DummyRole"].rendered == 0
 
-    groups.show_group(gid)
+    groups.enable_render(gid)
     obj.render(None)
     assert obj.roles["DummyRole"].rendered == 1
 
     groups.remove(gid, obj.id)
-    assert obj.id not in groups.groups[gid].members
+    assert obj.id not in registry.GROUPS[gid].members
     groups.destroy(gid)
+
+
+def test_dynamic_group_query() -> None:
+    obj = Object(id="e1", world_id="Level1")
+    obj.data["tags"] = ["enemy"]
+    obj.add_role("DummyRole", DummyRole())
+    runtime.store.add_object(obj)
+    groups.register_object(obj)
+
+    groups.add_dynamic("enemies", role="DummyRole", scene="Level1")
+    registry.update_dynamic()
+    assert obj.id in registry.GROUPS["enemies"].members
 

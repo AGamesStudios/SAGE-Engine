@@ -57,12 +57,22 @@ def spawn(role: str, *, name: str | None = None, world_id: str = "default", **fi
     role_inst = role_cls(**fields)
     obj.add_role(role, role_inst)
     runtime.store.add_object(obj)
+    try:
+        groups.register_object(obj)
+    except Exception:
+        pass
     return obj
 
 
 def delete(obj: Object | str) -> None:
     """Remove *obj* from the global store."""
     obj_id = obj if isinstance(obj, str) else obj.id
+    o = runtime.store.get_object_by_id(obj_id)
+    if o is not None:
+        try:
+            groups.unregister_object(o)
+        except Exception:
+            pass
     runtime.store.remove_object(obj_id)
 
 
