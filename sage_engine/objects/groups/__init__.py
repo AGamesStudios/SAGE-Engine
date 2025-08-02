@@ -18,7 +18,7 @@ from .ops import (
     set_property,
     emit,
 )
-from .agent import ObjectGroupAgent
+from .system import ObjectGroupSystem
 
 __all__ = [
     "create",
@@ -35,5 +35,5 @@ __all__ = [
     "members",
     "register_object",
     "unregister_object",
-    "ObjectGroupAgent",
+    "ObjectGroupSystem",
 ]

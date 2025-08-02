@@ -1,12 +1,14 @@
-"""ObjectGroupAgent for engine phases."""
+"""Object group callbacks for engine phases."""
 from __future__ import annotations
 
 from ... import core
 from . import registry
 
 
-class ObjectGroupAgent:
-    name = "ObjectGroupAgent"
+class ObjectGroupSystem:
+    """Register object group callbacks for engine phases."""
+
+    name = "ObjectGroupSystem"
 
     def boot(self, config: dict) -> None:
         groups = config.get("groups", {}).get("create", [])
@@ -27,7 +29,7 @@ class ObjectGroupAgent:
         registry.LAYER_INDEX.clear()
 
 
-_agent = ObjectGroupAgent()
-core.register("boot", _agent.boot)
-core.register("update", _agent.update)
-core.register("shutdown", _agent.shutdown)
+_system = ObjectGroupSystem()
+core.register("boot", _system.boot)
+core.register("update", _system.update)
+core.register("shutdown", _system.shutdown)

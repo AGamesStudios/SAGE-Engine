@@ -1,7 +1,7 @@
 # 📘 Object Groups
 
 `objects.groups` allows batching operations on many objects via explicit or dynamic groups.
-Groups are registered through `ObjectGroupAgent` and evaluated each frame.
+Groups register their callbacks in the engine loop and are evaluated each frame.
 
 ## Creating groups
 

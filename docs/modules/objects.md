@@ -80,5 +80,5 @@ Operations include:
 - `groups.set_property(group_id, prop, value)` — change attribute for all members
 - `groups.emit(group_id, event)` — broadcast event
 
-Groups participate in the engine cycle via the **ObjectGroupAgent** (boot → update → shutdown) and do not create any files on disk.
+Groups participate in the engine cycle through registered callbacks (boot → update → shutdown) and do not create any files on disk.
 

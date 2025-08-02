@@ -1,13 +1,13 @@
 # Example engine configuration
-# Order of agent registration matters for correct phase execution.
-# Agents are initialized sequentially in boot phase and then participate in
+# Order of subsystem registration matters for correct phase execution.
+# Modules are initialized sequentially in boot phase and then participate in
 # update → draw → flush → shutdown cycles. Recommended order:
-# 1. InputAgent
-# 2. AIProcessingAgent
-# 3. PhysicsAgent
-# 4. RenderAgent
-# 5. ResourceAgent
-# 6. ObjectGroupAgent
+# 1. input
+# 2. ai_processing
+# 3. physics
+# 4. render
+# 5. resource
+# 6. object_groups
 
 # Set render backend: software or vulkan
 # render_backend = "software"
