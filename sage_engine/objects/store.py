@@ -35,7 +35,7 @@ class ObjectStore:
 
     def find_by_role(self, role_name: str) -> List[Object]:
         ids = self.by_role.get(role_name, set())
-        return [self.objects[i] for i in ids]
+        return [self.objects[i] for i in ids if i in self.objects]
 
     def update(self, delta: float, world_id: str | None = None) -> None:
         objs: Iterable[Object]

@@ -7,6 +7,7 @@ import subprocess
 import sys
 import shutil
 import importlib.resources as pkg_resources
+from .. import core
 
 from ..format import (
     SAGECompiler,
@@ -60,6 +61,23 @@ def transform_info() -> None:
 
     print(json.dumps(tstats.stats, indent=2))
 
+
+def render_info() -> None:
+    """Print render statistics."""
+    rnd = core.get("render")
+    if rnd is None:
+        print("render: unavailable")
+        return
+    print(json.dumps(rnd.stats, indent=2))
+
+
+def world_info() -> None:
+    """Print world object statistics."""
+    w = core.get("world")
+    if w is None:
+        print("world: unavailable")
+        return
+    print(f"objects: {len(w.runtime.objects)}")
 
 def runner_info() -> None:
     """Display information about the SAGE Runner example."""
@@ -229,6 +247,8 @@ def main(argv: Optional[list[str]] = None) -> None:
     info_sub = info.add_subparsers(dest="cmd")
     info_sub.add_parser("transform")
     info_sub.add_parser("runner")
+    info_sub.add_parser("render")
+    info_sub.add_parser("world")
 
     build = sub.add_parser("build-assets")
     build.add_argument("path", nargs="?", default=".")
@@ -316,6 +336,10 @@ def main(argv: Optional[list[str]] = None) -> None:
         transform_info()
     elif args.topic == "info" and args.cmd == "runner":
         runner_info()
+    elif args.topic == "info" and args.cmd == "render":
+        render_info()
+    elif args.topic == "info" and args.cmd == "world":
+        world_info()
     elif args.topic == "info":
         info_general()
     elif args.topic == "build-assets":
