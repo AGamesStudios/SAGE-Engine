@@ -9,6 +9,7 @@ import time
 
 from sage_engine import core, world, gui, window
 from sage_engine.logger import logger
+from sage_engine.objects import create_object
 
 ROOT = Path(__file__).resolve().parent
 
@@ -20,6 +21,8 @@ def boot(cfg):
     print("Загружаем мир level1.sageworld...")
     world.load(ROOT / "world" / "level1.sageworld")
     print("World loaded.")
+    create_object({"name": "debug", "transform": {"x": 0, "y": 0}, "sprite": {"image": "assets/sprite.png"}})
+    print("Debug sprite spawned.")
     gui.manager.debug = True
     print("GUI overlay enabled.")
     print("Boot completed.")

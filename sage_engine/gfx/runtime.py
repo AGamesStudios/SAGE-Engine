@@ -147,7 +147,20 @@ class GraphicRuntime:
 
     def draw_sprite(self, sprite: Any, x: int, y: int, z: int | None = None) -> None:
         z = self.state.z if z is None else z
-        self._frame_textures.add(id(sprite.texture))
+        tex = getattr(sprite, "texture", None)
+        if tex is None or getattr(tex, "pixels", None) is None:
+            logger.warning(
+                "[gfx] draw_sprite missing texture for %s at %d,%d",
+                getattr(sprite, "name", "<sprite>"),
+                x,
+                y,
+            )
+            self.draw_rect(x, y, sprite.frame_rect[2], sprite.frame_rect[3], (255, 0, 255, 255), z)
+            return
+        logger.debug(
+            "draw_sprite tex=%s pos=%d,%d", id(tex), x, y, tag="gfx"
+        )
+        self._frame_textures.add(id(tex))
         self._commands.append((z, self._seq_counter, "sprite", sprite, x, y))
         self._seq_counter += 1
 

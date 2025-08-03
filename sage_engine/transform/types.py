@@ -126,8 +126,13 @@ class BaseTransform:
     def is_visible(self, camera: "Camera2D") -> bool:
         """Return ``True`` if this transform is visible in *camera*."""
         from .core import intersects_screen
+        from ..logger import logger
 
-        return intersects_screen(self, camera)
+        visible = intersects_screen(self, camera)
+        logger.debug(
+            "is_visible %s -> %s", getattr(self, "name", id(self)), visible, tag="transform"
+        )
+        return visible
 
 
 @dataclass

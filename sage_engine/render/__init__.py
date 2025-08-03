@@ -101,7 +101,18 @@ def begin_frame() -> None:
 
 def draw_sprite(image: Any, x: int, y: int, w: int, h: int, rotation: float = 0.0) -> None:
     if _context:
+        logger.debug(
+            "draw_sprite tex=%s pos=%d,%d size=%dx%d",
+            getattr(image, "id", id(image)),
+            x,
+            y,
+            w,
+            h,
+            tag="render",
+        )
         _context.draw_sprite(image, x, y, w, h, rotation)
+    else:
+        logger.debug("draw_sprite skipped; no context", tag="render")
 
 
 def draw_rect(x: int, y: int, w: int, h: int, color: Any) -> None:
