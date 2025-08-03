@@ -14,3 +14,9 @@ def test_transform_info(capsys):
     out = capsys.readouterr().out
     data = json.loads(out)
     assert "nodes_updated" in data
+
+
+def test_info_versionless(capsys):
+    cli.main(["info"])
+    out = capsys.readouterr().out.lower()
+    assert "versionless" in out

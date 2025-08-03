@@ -61,6 +61,16 @@ def transform_info() -> None:
     print(json.dumps(tstats.stats, indent=2))
 
 
+def info_general() -> None:
+    """Print general engine information."""
+    from ..format import REVISION
+    from ..compat import migrated_count
+
+    print("SAGE Engine is versionless")
+    print(f"format revision: {REVISION}")
+    print(f"migrated files: {migrated_count}")
+
+
 def build_assets_call(path: Path) -> None:
     """Run the build_assets.py helper script."""
     script = Path(__file__).resolve().parents[2] / "tools" / "build_assets.py"
@@ -233,6 +243,8 @@ def main(argv: Optional[list[str]] = None) -> None:
         debug_stats()
     elif args.topic == "info" and args.cmd == "transform":
         transform_info()
+    elif args.topic == "info":
+        info_general()
     elif args.topic == "build-assets":
         build_assets_call(Path(args.path))
     else:

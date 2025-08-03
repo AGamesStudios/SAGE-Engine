@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Dict, Iterator, List, Mapping
 
 from ..logger import logger
+from .. import compat
 
 from .view import SceneView
 
@@ -17,6 +18,7 @@ from pathlib import Path
 def load(path: Path) -> List[Mapping[str, Mapping[str, object]]]:
     """Load scene objects from JSON."""
     data = json.loads(path.read_text(encoding="utf8"))
+    compat.migrate(data, "world")
     return data.get("objects", [])
 
 

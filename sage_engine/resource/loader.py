@@ -3,6 +3,7 @@ import zlib
 from pathlib import Path
 import yaml
 from ..logger import logger
+from .. import compat
 
 
 _PACK_INDEX = None
@@ -70,7 +71,7 @@ def load_cfg(path: str | Path) -> dict:
             data[key] = yaml.safe_load(val)
         except Exception:
             data[key] = val.strip('"\'')
-    return data
+    return compat.migrate(data, "config")
 
 
 _ENGINE_ALLOWED = {

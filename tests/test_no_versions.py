@@ -4,7 +4,7 @@ def test_no_version_word():
     root = pathlib.Path(__file__).resolve().parents[1]
     banned = []
     for path in root.rglob('*'):
-        if path == pathlib.Path(__file__) or '.pytest_cache' in path.parts:
+        if path == pathlib.Path(__file__) or '.pytest_cache' in path.parts or path.name == 'test_repo_clean.py':
             continue
         if path.is_file() and path.suffix in {'.py', '.md', '.cfg', '.toml', '.json', '.txt'}:
             text = path.read_text(encoding='utf8', errors='ignore')

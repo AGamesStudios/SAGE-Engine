@@ -8,6 +8,7 @@ from typing import List, Mapping
 import json
 
 from ..logger import logger
+from .. import compat
 
 
 
@@ -31,7 +32,10 @@ def load(path: Path) -> Blueprint:
         origin=meta.get("origin"),
         tags=list(meta.get("tags", [])),
     )
-    objects = data.get("objects", [])
+    objects = []
+    for obj in data.get("objects", []):
+        compat.migrate(obj, "blueprint_object")
+        objects.append(obj)
     if not isinstance(objects, list):
         raise ValueError("objects must be a list")
     return Blueprint(bp_meta, objects)
