@@ -29,6 +29,9 @@ def log_crash(
     ``tb`` may be ``None`` or a traceback instance.  Other types are
     ignored with a warning to avoid secondary crashes during logging.
     """
+    if exc_type is KeyboardInterrupt:
+        logger.info("Interrupted (Ctrl+C)", tag="crash")
+        return
     if tb is not None and not isinstance(tb, TracebackType):
         logger.warn("Crash logging failed: invalid traceback", tag="crash")
         traceback.print_exc()

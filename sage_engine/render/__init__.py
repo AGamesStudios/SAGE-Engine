@@ -23,7 +23,7 @@ _delta_render = False
 _raster_cache = False
 _adaptive_repaint = False
 _frame_budget_ms: int | None = None
-_frame_start = 0.0
+_frame_start_ns = 0
 _chunking = False
 _culling = False
 _batching = False
@@ -101,8 +101,9 @@ def init(output_target: Any = None) -> None:
 
 
 def begin_frame() -> None:
-    global _frame_start
-    _frame_start = time.perf_counter()
+    global _frame_start_ns
+    _frame_start_ns = time.perf_counter_ns()
+    stats.stats["frame_id"] += 1
     stats.reset_frame()
     tr = core.get("transform_runtime")
     if _camera is None:
@@ -150,11 +151,12 @@ def present(buffer: memoryview, handle: Any = None) -> None:
         ctx = _backend.create_context(handle) if _backend else None
     if ctx:
         ctx.present(buffer)
-    elapsed = (time.perf_counter() - _frame_start) * 1000.0
-    stats.stats["time_spent_ms"] = elapsed
+    elapsed = (time.perf_counter_ns() - _frame_start_ns) / 1_000_000.0
     stats.stats["frame_ms"] = elapsed
-    stats.stats["frame_id"] += 1
-    stats.stats["fps"] = 1000.0 / elapsed if elapsed > 0 else 0.0
+    if stats.stats["fps"] == 0.0 and elapsed > 0:
+        stats.stats["fps"] = 1000.0 / elapsed
+    elif elapsed > 0:
+        stats.stats["fps"] = stats.stats["fps"] * 0.9 + (1000.0 / elapsed) * 0.1
     if _frame_budget_ms is not None:
         if elapsed > _frame_budget_ms:
             logger.warn(

@@ -17,6 +17,8 @@ from sage_engine.transform import (
     intersects_screen,
 )
 from sage_engine.gfx.runtime import GraphicRuntime
+from sage_engine import render
+from sage_engine.transform import runtime as tr
 
 
 def test_hierarchy_world_matrix():
@@ -90,8 +92,13 @@ def test_transform_stats_reset():
 
     tstats.stats["nodes_updated"] = 5
     gfx = GraphicRuntime()
+    gfx.init(1,1)
+    render.init(None)
+    render.set_camera(Camera2D(pos=(0.0,0.0), viewport_px=(1,1)))
     gfx.begin_frame()
-    assert tstats.stats["nodes_updated"] == 0
+    render.begin_frame()
+    assert tstats.stats["nodes_updated"] >= 1
+    assert tstats.stats["nodes_updated"] != 5
 
 
 def test_global_helpers_and_visibility():

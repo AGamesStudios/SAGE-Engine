@@ -70,6 +70,7 @@ def test_stats_reset(monkeypatch):
     render.stats.stats["sprites_drawn"] = 5
     render.stats.stats["atlas_hits"] = 2
     gfx.begin_frame()
+    render.begin_frame()
     assert render.stats.stats["sprites_drawn"] == 0
     assert render.stats.stats["atlas_hits"] == 0
     gfx.shutdown()

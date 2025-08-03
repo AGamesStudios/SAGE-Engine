@@ -42,6 +42,9 @@ class GraphicRuntime:
         self._fonts: dict[tuple[str, int], Any] = {}
         self._frame_textures: set[int] = set()
         self._sprites_drawn = 0
+        self._clear_frame: bytearray | None = None
+        self._clear_cache_color: int | None = None
+        self._clear_cache_size: tuple[int, int] = (0, 0)
 
 
     def init(self, width: int, height: int) -> None:
@@ -76,20 +79,22 @@ class GraphicRuntime:
         if self.buffer is None:
             self.init(w, h)
             logger.debug("[gfx] Framebuffer allocated %dx%d", w, h)
-        transform_stats.reset_frame()
-        render_stats.reset_frame()
         if color is not None:
             self.clear_color = to_bgra8_premul(color)
         if self.buffer is not None:
-            b = self.clear_color & 0xFF
-            g = (self.clear_color >> 8) & 0xFF
-            r = (self.clear_color >> 16) & 0xFF
-            a = (self.clear_color >> 24) & 0xFF
-            for i in range(0, len(self.buffer), BYTES_PER_PIXEL):
-                self.buffer[i] = b
-                self.buffer[i + 1] = g
-                self.buffer[i + 2] = r
-                self.buffer[i + 3] = a
+            if (
+                self._clear_frame is None
+                or self._clear_cache_color != self.clear_color
+                or self._clear_cache_size != (w, h)
+            ):
+                b = self.clear_color & 0xFF
+                g = (self.clear_color >> 8) & 0xFF
+                r = (self.clear_color >> 16) & 0xFF
+                a = (self.clear_color >> 24) & 0xFF
+                self._clear_frame = bytearray([b, g, r, a]) * (w * h)
+                self._clear_cache_color = self.clear_color
+                self._clear_cache_size = (w, h)
+            self.buffer[:] = self._clear_frame
         logger.debug("begin_frame clear=%s", self.clear_color, tag="gfx")
         self._commands.clear()
         self._stack.clear()
@@ -160,9 +165,7 @@ class GraphicRuntime:
         logger.debug(
             "draw_sprite tex=%s pos=%d,%d", id(tex), x, y, tag="gfx"
         )
-        self._frame_textures.add(id(tex))
         self._commands.append((z, self._seq_counter, "sprite", sprite, x, y))
-        render_stats.stats["draw_calls"] += 1
         self._seq_counter += 1
 
     def draw_circle(self, x: int, y: int, radius: int, color=None, z: int | None = None) -> None:
@@ -372,6 +375,8 @@ class GraphicRuntime:
         tex = sprite.texture
         if tex.pixels is None:
             return
+        self._frame_textures.add(id(tex))
+        render_stats.stats["draw_calls"] += 1
         fx, fy, fw, fh = sprite.frame_rect
         for yy in range(fh):
             sy = fy + yy
