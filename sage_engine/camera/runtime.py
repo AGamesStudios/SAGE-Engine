@@ -12,10 +12,19 @@ def set_active_camera(camera: Camera3D | None) -> None:
     _active = camera
     if camera is not None:
         logger.info("[camera] Active camera set successfully", tag="camera")
+    else:
+        logger.warn("[camera] Active camera cleared", tag="camera")
 
 def get_active_camera() -> Camera3D | None:
     """Return currently active 3D camera or ``None``."""
-    return _active
+    cam = _active
+    if cam is None:
+        logger.debug("[camera] get_active_camera -> None", tag="camera")
+    else:
+        logger.debug(
+            "[camera] get_active_camera -> pos=%s look=%s", cam.position, cam.look_at, tag="camera"
+        )
+    return cam
 
 expose("camera3d", {
     "set_active_camera": set_active_camera,

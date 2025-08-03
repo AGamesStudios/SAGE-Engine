@@ -5,7 +5,8 @@ import time
 
 import sage_engine.gfx as gfx
 from sage_engine.graphics import Mesh3D, Vector3, Matrix4, Camera3D
-from sage_engine.render import draw_mesh, set_camera3d
+from sage_engine.render import draw_mesh
+from sage_engine.camera import runtime as cam_runtime
 from sage_engine.window import init as win_init, is_open, get_window_handle
 
 # initialize window and graphics
@@ -14,7 +15,7 @@ gfx.init(800, 600)
 
 # configure camera
 camera = Camera3D(position=Vector3(0, 0, -5), look_at=Vector3(0, 0, 0))
-set_camera3d(camera)
+cam_runtime.set_active_camera(camera)
 
 # cube geometry
 verts = [

@@ -401,6 +401,18 @@ class GraphicRuntime:
         self._sprites_drawn += 1
 
     def _blend_pixel(self, x: int, y: int, r: int, g: int, b: int, a: int) -> None:
+        if x < 0 or y < 0 or x >= self.width or y >= self.height:
+            key = f"{x},{y}"
+            if (
+                self._last_error_key != key
+                or self._frame_counter - self._last_error_frame >= self._error_interval
+            ):
+                logger.warn(
+                    "[gfx] Pixel out of bounds: x=%d y=%d", x, y, tag="gfx"
+                )
+                self._last_error_key = key
+                self._last_error_frame = self._frame_counter
+            return
         off = y * self.pitch + x * BYTES_PER_PIXEL
         src = (b & 0xFF) | ((g & 0xFF) << 8) | ((r & 0xFF) << 16) | ((a & 0xFF) << 24)
         dst = int.from_bytes(self.buffer[off:off+BYTES_PER_PIXEL], "little")

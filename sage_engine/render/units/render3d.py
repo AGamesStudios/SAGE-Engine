@@ -4,9 +4,10 @@ from __future__ import annotations
 import time
 from typing import Tuple
 
+import math
 from ...graphics.math3d import Vector3, Matrix4
 from ...graphics.mesh3d import Mesh3D
-from ...core import get as core_get
+from ...camera import runtime as cam_runtime
 from ..zbuffer import ZBuffer
 from .. import stats as render_stats
 from ...logger import logger
@@ -29,15 +30,18 @@ class Render3DUnit:
         if tri_count > 50_000:
             logger.warn("[render] Mesh overflow: %d triangles", tri_count, tag="render")
             return False
-        cam_api = core_get("camera3d")
-        if cam_api is None:
-            from ...camera import runtime as _cam_rt  # noqa: F401
-            cam_api = core_get("camera3d")
-        camera = cam_api.get("get_active_camera")() if cam_api else None  # type: ignore[assignment]
+        camera = cam_runtime.get_active_camera()
         if camera is None:
             logger.error("[core][render] No active camera found for frame render.")
             render_stats.stats["camera_missing_count"] += 1
             return False
+        logger.debug(
+            "[render] Using camera: pos=%s look=%s fov=%s",
+            camera.position,
+            camera.look_at,
+            getattr(camera, "fov", None),
+            tag="render",
+        )
         start = time.perf_counter()
         aspect = self.runtime.width / self.runtime.height if self.runtime.height else 1.0
         mvp = camera.get_projection_matrix(aspect) @ camera.get_view_matrix() @ model
@@ -49,9 +53,15 @@ class Render3DUnit:
             v2 = mvp.transform(mesh.vertices[tri[2]])
             pts = []
             for v in (v0, v1, v2):
+                if not all(math.isfinite(c) for c in (v.x, v.y, v.z)):
+                    logger.warn("[render] Invalid vertex after transform: %s", v, tag="render")
+                    pts = []
+                    break
                 x = int((v.x * 0.5 + 0.5) * w)
                 y = int((1.0 - (v.y * 0.5 + 0.5)) * h)
                 pts.append((x, y, v.z))
+            if len(pts) != 3:
+                continue
             # wireframe overlay
             self.runtime.draw_line(pts[0][0], pts[0][1], pts[1][0], pts[1][1], line_col)
             self.runtime.draw_line(pts[1][0], pts[1][1], pts[2][0], pts[2][1], line_col)
@@ -65,6 +75,11 @@ class Render3DUnit:
         x0, y0, z0 = v0
         x1, y1, z1 = v1
         x2, y2, z2 = v2
+        if not all(
+            math.isfinite(c)
+            for c in (x0, y0, z0, x1, y1, z1, x2, y2, z2)
+        ):
+            return
         min_x = max(min(x0, x1, x2), 0)
         max_x = min(max(x0, x1, x2), self.runtime.width - 1)
         min_y = max(min(y0, y1, y2), 0)
