@@ -16,6 +16,7 @@ from ..settings import settings
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from time import perf_counter_ns
+from ..runtime.fsync import FrameSync
 
 @dataclass
 class _Phase:
@@ -26,6 +27,7 @@ class _Phase:
 _registry: Dict[str, List[_Phase]] = defaultdict(list)
 _booted = False
 _interfaces: Dict[str, object] = {}
+_fsync: FrameSync | None = None
 
 
 def _load_modules_from_config() -> None:
@@ -55,6 +57,13 @@ def _load_modules_from_config() -> None:
         settings.target_fps = int(render_cfg["target_fps"])
     if "frame_sync" in render_cfg:
         settings.frame_sync = str(render_cfg["frame_sync"])
+    if render_cfg.get("culling", "off") == "on":
+        try:
+            from ..render import enable_culling
+
+            enable_culling(True)
+        except Exception:
+            pass
     for mod in data.get("boot_modules", []):
         try:
             import_module(f"sage_engine.{mod}")
@@ -76,6 +85,8 @@ def core_boot(config: dict | None = None) -> None:
         return
     _booted = True
     _load_modules_from_config()
+    global _fsync
+    _fsync = FrameSync(target_fps=settings.target_fps, mode=settings.frame_sync)
     logger.phase_func = lambda: "boot"
     # load role definitions before booting modules
     from .. import roles
@@ -105,6 +116,9 @@ def core_tick() -> None:
     if not _booted:
         raise RuntimeError("Engine not booted")
     from ..render import stats as render_stats
+    render_stats.reset_frame()
+    if _fsync is not None:
+        _fsync.start_frame()
     frame_start = perf_counter_ns()
     for phase_name in ("update", "draw", "flush"):
         ph_start = perf_counter_ns()
@@ -122,6 +136,8 @@ def core_tick() -> None:
         render_stats.stats[f"ms_{phase_name}"] = (perf_counter_ns() - ph_start) / 1_000_000.0
     render_stats.stats["ms_frame"] = (perf_counter_ns() - frame_start) / 1_000_000.0
     render_stats.stats["frame_ms"] = render_stats.stats["ms_frame"]
+    if _fsync is not None:
+        _fsync.end_frame()
 
 
 def core_reset() -> None:

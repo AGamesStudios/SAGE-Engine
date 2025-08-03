@@ -104,7 +104,6 @@ def begin_frame() -> None:
     global _frame_start_ns
     _frame_start_ns = time.perf_counter_ns()
     stats.stats["frame_id"] += 1
-    stats.reset_frame()
     tr = core.get("transform_runtime")
     if _camera is None:
         logger.error("[render] No active camera found for frame render.")

@@ -5,7 +5,6 @@ implemented manually to avoid window freeze and to keep the example explicit.
 """
 
 from pathlib import Path
-import time
 
 from sage_engine import core, world, gfx, gui, window, render, objects, transform
 from sage_engine.logger import logger
@@ -75,6 +74,5 @@ if __name__ == "__main__":  # pragma: no cover - manual example run
         while not window.should_close():
             window.poll_events()
             core.core_tick()
-            time.sleep(1 / 60)
     finally:
         core.core_shutdown()
