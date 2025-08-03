@@ -15,4 +15,6 @@ def test_stats_have_phase_times():
     s = render_stats.stats
     assert s["ms_update"] >= 0
     assert s["ms_frame"] >= s["ms_update"]
+    assert s["sleep_time"] >= 0
+    assert s["fps_jitter"] >= 0
     core.core_shutdown()

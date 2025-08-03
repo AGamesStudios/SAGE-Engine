@@ -35,6 +35,9 @@ stats = {
     "transform_visible_objects": 0,
     "transform_culled_objects": 0,
     "transform_max_depth": 0,
+    "fps_jitter": 0.0,
+    "frame_stability_score": 0.0,
+    "sleep_time": 0.0,
 }
 
 _history: deque[float] = deque(maxlen=120)
@@ -50,9 +53,25 @@ def update_fps(frame_ms: float) -> None:
     stats["fps_avg"] = sum(_history) / len(_history)
     stats["fps_min"] = min(_history)
     stats["fps_max"] = max(_history)
+    stats["fps_jitter"] = abs(fps - stats["fps_avg"])
+    if stats["fps_max"] > 0:
+        stats["frame_stability_score"] = stats["fps_min"] / stats["fps_max"] * 100.0
     sorted_hist = sorted(_history)
     idx = max(0, int(len(sorted_hist) * 0.01) - 1)
     stats["fps_1pct_low"] = sorted_hist[idx]
+    try:
+        from ..logger import logger
+
+        avg = stats["fps_avg"]
+        if avg and abs(fps - avg) / avg > 0.3:
+            logger.warn(
+                "[render][fps] Spike detected: current %.1f avg %.1f",
+                fps,
+                avg,
+                tag="render",
+            )
+    except Exception:
+        pass
 
 
 def reset_frame() -> None:
@@ -78,6 +97,7 @@ def reset_frame() -> None:
     stats["ms_flush"] = 0.0
     stats["ms_frame"] = 0.0
     stats["frame_ms"] = 0.0
+    stats["sleep_time"] = 0.0
     try:  # avoid circular import at module load
         from ..texture.cache import TextureCache
 

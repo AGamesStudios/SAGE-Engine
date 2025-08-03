@@ -142,7 +142,8 @@ def core_tick() -> None:
     render_stats.stats["ms_frame"] = (perf_counter_ns() - frame_start) / 1_000_000.0
     render_stats.stats["frame_ms"] = render_stats.stats["ms_frame"]
     if _fsync is not None:
-        _fsync.end_frame()
+        sleep_time = _fsync.end_frame()
+        render_stats.stats["sleep_time"] = sleep_time * 1000.0  # store ms
 
 
 def core_reset() -> None:

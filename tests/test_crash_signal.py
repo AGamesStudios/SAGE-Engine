@@ -9,4 +9,4 @@ def test_signal_handler_keyboard_interrupt(tmp_path, capsys, monkeypatch):
     hooks._handle_signal(signal.SIGINT, None)
     out = capsys.readouterr().out
     assert "invalid traceback" not in out
-    assert "Application interrupted by user" in out
+    assert "Terminated by user" in out

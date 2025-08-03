@@ -143,6 +143,12 @@ class TransformCuller:
             render_stats.stats["transform_max_depth"] = max_depth
         except Exception:
             pass
+        logger.info(
+            "TransformCuller active: %d culled / %d total",
+            transform_stats.stats["culled_objects"],
+            total,
+            tag="transform",
+        )
         return visible
 
 
