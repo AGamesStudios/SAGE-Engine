@@ -7,3 +7,10 @@ def test_debug_stats(capsys):
     out = capsys.readouterr().out
     data = json.loads(out)
     assert "sprites_drawn" in data
+
+
+def test_transform_info(capsys):
+    cli.transform_info()
+    out = capsys.readouterr().out
+    data = json.loads(out)
+    assert "nodes_updated" in data

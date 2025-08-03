@@ -11,8 +11,12 @@ from sage_engine.transform import (
     serialize_transform,
     apply_transform,
     pixel_snap,
+    snap_rect,
     screen_rect_to_world,
+    get_screen_bounds,
+    intersects_screen,
 )
+from sage_engine.gfx.runtime import GraphicRuntime
 
 
 def test_hierarchy_world_matrix():
@@ -49,12 +53,25 @@ def test_world_aabb_and_culling():
     assert root in visible and child not in visible
 
 
+def test_screen_bounds_and_intersects():
+    root = NodeTransform(local_rect=Rect(0, 0, 10, 10))
+    cam = Camera2D(pos=(0, 0), zoom=1.0, viewport_px=(20, 20))
+    prepare_world_all(root)
+    sb = get_screen_bounds(root, cam)
+    assert math.isclose(sb.w, 10)
+    assert intersects_screen(root, cam)
+    cam.pos = (100, 100)
+    assert not intersects_screen(root, cam)
+
+
 def test_pixel_snap_and_screen_rect():
     cam = Camera2D(pos=(0, 0), zoom=1.0, viewport_px=(100, 100))
     rect = screen_rect_to_world(cam, Rect(0, 0, 100, 100, Space.SCREEN))
     assert math.isclose(rect.w, 100) and math.isclose(rect.h, 100)
-    snapped = pixel_snap(Coord(10.3, 9.7, Space.SCREEN))
-    assert snapped.x == 10 and snapped.y == 10
+    snapped = pixel_snap(Coord(0.25, 0.25, Space.WORLD), zoom=2.0)
+    assert math.isclose(snapped.x, 0.5) and math.isclose(snapped.y, 0.5)
+    rect2 = snap_rect(Rect(0.25, 0.25, 0.5, 0.5, Space.WORLD), zoom=2.0)
+    assert math.isclose(rect2.x, 0.5) and math.isclose(rect2.w, 0.5)
 
 
 def test_serialize_roundtrip():
@@ -66,3 +83,12 @@ def test_serialize_roundtrip():
     apply_transform(other, data)
     prepare_world_all(other)
     assert other.transform._m_world == node.transform._m_world
+
+
+def test_transform_stats_reset():
+    from sage_engine.transform import stats as tstats
+
+    tstats.stats["nodes_updated"] = 5
+    gfx = GraphicRuntime()
+    gfx.begin_frame()
+    assert tstats.stats["nodes_updated"] == 0

@@ -54,6 +54,13 @@ def debug_stats() -> None:
     print(json.dumps(render_stats.stats, indent=2))
 
 
+def transform_info() -> None:
+    """Print transform statistics."""
+    from ..transform import stats as tstats
+
+    print(json.dumps(tstats.stats, indent=2))
+
+
 def build_assets_call(path: Path) -> None:
     """Run the build_assets.py helper script."""
     script = Path(__file__).resolve().parents[2] / "tools" / "build_assets.py"
@@ -160,6 +167,10 @@ def main(argv: Optional[list[str]] = None) -> None:
     debug_sub = debug.add_subparsers(dest="cmd")
     debug_sub.add_parser("stats")
 
+    info = sub.add_parser("info")
+    info_sub = info.add_subparsers(dest="cmd")
+    info_sub.add_parser("transform")
+
     build = sub.add_parser("build-assets")
     build.add_argument("path", nargs="?", default=".")
 
@@ -220,6 +231,8 @@ def main(argv: Optional[list[str]] = None) -> None:
         pack_dir(Path(args.src), Path(args.dst))
     elif args.topic == "debug" and args.cmd == "stats":
         debug_stats()
+    elif args.topic == "info" and args.cmd == "transform":
+        transform_info()
     elif args.topic == "build-assets":
         build_assets_call(Path(args.path))
     else:

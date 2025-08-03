@@ -4,6 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Tuple
 
+import math
 from .math2d import apply_to_point
 from .types import Coord, Rect, Space, Transform2D
 
@@ -52,7 +53,21 @@ def screen_rect_to_world(camera: Camera2D, rect: Rect) -> Rect:
     )
 
 
-def pixel_snap(coord: Coord) -> Coord:
-    """Round the coordinate to the nearest pixel in its space."""
+def pixel_snap(coord: Coord, zoom: float = 1.0) -> Coord:
+    """Round the coordinate to the nearest pixel taking camera *zoom* into account."""
 
+    if coord.space is Space.WORLD:
+        x = math.floor(coord.x * zoom + 0.5) / zoom
+        y = math.floor(coord.y * zoom + 0.5) / zoom
+        return Coord(x, y, coord.space)
     return Coord(round(coord.x), round(coord.y), coord.space)
+
+
+def snap_rect(rect: Rect, zoom: float = 1.0) -> Rect:
+    """Snap a rectangle to the pixel grid using *zoom* scaling."""
+
+    tl = pixel_snap(Coord(rect.x, rect.y, rect.space), zoom)
+    br = pixel_snap(Coord(rect.x + rect.w, rect.y + rect.h, rect.space), zoom)
+    x1, x2 = sorted([tl.x, br.x])
+    y1, y2 = sorted([tl.y, br.y])
+    return Rect(x1, y1, x2 - x1, y2 - y1, rect.space)

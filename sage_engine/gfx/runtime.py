@@ -16,6 +16,7 @@ from ..graphic import fx
 from ..graphic.state import GraphicState
 from ..logger import logger
 from ..render import stats as render_stats
+from ..transform import stats as transform_stats
 
 BYTES_PER_PIXEL = 4
 
@@ -75,6 +76,7 @@ class GraphicRuntime:
         if self.buffer is None:
             self.init(w, h)
             logger.debug("[gfx] Framebuffer allocated %dx%d", w, h)
+        transform_stats.reset_frame()
         render_stats.reset_frame()
         if color is not None:
             self.clear_color = to_bgra8_premul(color)

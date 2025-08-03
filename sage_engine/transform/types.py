@@ -88,9 +88,9 @@ class Transform2D:
             else:
                 self._m_world = math2d.multiply(parent_world, local)
                 try:
-                    from ..render import stats as render_stats
+                    from . import stats as transform_stats
 
-                    render_stats.stats["transform_mul_count"] += 1
+                    transform_stats.stats["mul_count"] += 1
                 except Exception:
                     pass
             self._dirty_world = False
@@ -98,20 +98,40 @@ class Transform2D:
 
 
 @dataclass
-class NodeTransform:
+class BaseTransform:
+    """Common interface for transformable objects."""
+
     transform: Transform2D = field(default_factory=Transform2D)
+    local_rect: Rect = field(default_factory=lambda: Rect(0.0, 0.0, 0.0, 0.0))
+
+    def world_matrix(self, parent_world: Optional[List[float]] = None) -> List[float]:
+        return self.transform.compute_world(parent_world)
+
+    def world_aabb(self, parent_world: Optional[List[float]] = None) -> Rect:
+        m = self.world_matrix(parent_world)
+        return math2d.apply_to_rect(m, self.local_rect)
+
+
+@dataclass
+class RectangleTransform(BaseTransform):
+    """Transform for standalone rectangles."""
+
+
+@dataclass
+class NodeTransform(BaseTransform):
     parent: Optional["NodeTransform"] = None
     children: List["NodeTransform"] = field(default_factory=list)
-    local_rect: Rect = field(default_factory=lambda: Rect(0.0, 0.0, 0.0, 0.0))
 
     def add_child(self, child: "NodeTransform") -> None:
         child.parent = self
         self.children.append(child)
 
-    def world_matrix(self) -> List[float]:
-        parent_world = self.parent.world_matrix() if self.parent else None
-        return self.transform.compute_world(parent_world)
+    def world_matrix(self, parent_world: Optional[List[float]] = None) -> List[float]:
+        if parent_world is None and self.parent:
+            parent_world = self.parent.world_matrix()
+        return super().world_matrix(parent_world)
 
-    def world_aabb(self) -> Rect:
-        m = self.world_matrix()
-        return math2d.apply_to_rect(m, self.local_rect)
+    def world_aabb(self, parent_world: Optional[List[float]] = None) -> Rect:
+        if parent_world is None and self.parent:
+            parent_world = self.parent.world_matrix()
+        return super().world_aabb(parent_world)
