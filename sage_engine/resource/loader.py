@@ -66,7 +66,7 @@ def _parse_cfg_text(text: str) -> dict:
             data[key] = yaml.safe_load(val)
         except Exception:
             data[key] = val.strip('"\'')
-    return compat.migrate(data, "config")
+    return compat.migrate(data)
 
 
 def load_cfg(path: str | Path) -> dict:
@@ -82,11 +82,15 @@ def load_cfg(path: str | Path) -> dict:
 _ENGINE_ALLOWED = {
     "name",
     "script",
-    "width",
-    "height",
+    "window_title",
+    "screen_width",
+    "screen_height",
     "fullscreen",
     "render_backend",
     "language",
+    "boot_modules",
+    "features",
+    "settings",
 }
 
 
@@ -104,6 +108,10 @@ def load_engine_cfg(path: str | Path) -> dict:
     cfg = _parse_cfg_text("\n".join(lines[1:]))
     for key in list(cfg):
         if key not in _ENGINE_ALLOWED:
-            logger.warn("[config] Unknown key in %s: %s", path, key)
+            logger.warn(
+                "[config] Unknown key in %s: %s | Tip: See docs/engine_config.md or run 'sage check-config' or 'sage init-project'",
+                path,
+                key,
+            )
             cfg.pop(key)
     return cfg

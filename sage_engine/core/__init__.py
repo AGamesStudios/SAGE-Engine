@@ -49,7 +49,7 @@ def _load_modules_from_config() -> None:
     for k, v in settings_dict.items():
         if hasattr(settings, k):
             setattr(settings, k, v)
-    for mod in data.get("modules", []):
+    for mod in data.get("boot_modules", []):
         try:
             import_module(f"sage_engine.{mod}")
         except ModuleNotFoundError:

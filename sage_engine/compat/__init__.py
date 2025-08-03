@@ -59,8 +59,9 @@ MIGRATIONS: Dict[str, List[Callable[[dict], bool]]] = {
         migrate_field("entities", "objects"),
     ],
     "config": [
-        migrate_field("screen_width", "width"),
-        migrate_field("screen_height", "height"),
+        migrate_field("width", "screen_width"),
+        migrate_field("height", "screen_height"),
+        migrate_field("modules", "boot_modules"),
         set_default("fullscreen", False),
     ],
 }

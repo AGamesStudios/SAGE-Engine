@@ -5,19 +5,20 @@
 
 | Ключ        | Значение                        |
 |-------------|---------------------------------|
-| `name`      | Название окна                   |
-| `script`    | Путь к основному FlowScript     |
-| `width`     | Ширина окна в пикселях          |
-| `height`    | Высота окна в пикселях          |
-| `fullscreen`| `true` или `false`              |
-| `language`  | Язык FlowScript (`ru`, `en`)    |
+| `window_title` | Название окна                   |
+| `screen_width` | Ширина окна в пикселях          |
+| `screen_height`| Высота окна в пикселях          |
+| `render_backend`| Рендер-бэкенд (`software`, `vulkan`) |
+| `boot_modules` | Список подключаемых модулей     |
 
-Неизвестные поля игнорируются с предупреждением в логе. Пример:
+Неизвестные поля игнорируются с предупреждением в логе. См. также `docs/engine_config.md`. Пример:
 
 ```cfg
 [SAGECFG]
-name = "Demo Game"
-script = "logic.flow"
+window_title = "Demo Game"
+screen_width = 320
+screen_height = 240
+boot_modules = ["input", "render"]
 width = 640
 height = 360
 fullscreen = false

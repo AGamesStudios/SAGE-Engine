@@ -4,14 +4,13 @@ from sage_engine.resource.loader import load_engine_cfg
 def test_load_engine_cfg_valid(tmp_path):
     cfg = tmp_path / "engine.sagecfg"
     cfg.write_text(
-        "[SAGECFG]\nname=Demo\nscreen_width=320\nscreen_height=240\nrender_backend=vulkan\nunknown=42",
+        "[SAGECFG]\nwindow_title=Demo\nscreen_width=320\nscreen_height=240\nrender_backend=vulkan",
         encoding="utf8",
     )
     data = load_engine_cfg(cfg)
-    assert data["name"] == "Demo"
-    assert data["width"] == 320
-    assert data["height"] == 240
-    assert "screen_width" not in data
+    assert data["window_title"] == "Demo"
+    assert data["screen_width"] == 320
+    assert data["screen_height"] == 240
     assert "unknown" not in data
     assert data["render_backend"] == "vulkan"
 
@@ -27,6 +26,14 @@ def test_load_engine_cfg_invalid_header(tmp_path):
     cfg.write_text("name=Demo", encoding="utf8")
     with pytest.raises(ValueError):
         load_engine_cfg(cfg)
+
+
+def test_load_engine_cfg_migration_and_unknown(tmp_path):
+    cfg = tmp_path / "engine.sagecfg"
+    cfg.write_text("[SAGECFG]\nmodules=['core']\nrender_backend=software\nfoo=1", encoding="utf8")
+    data = load_engine_cfg(cfg)
+    assert data["boot_modules"] == ['core']
+    assert "foo" not in data
 
 
 def test_core_boot_ignores_bad_cfg(tmp_path, monkeypatch):

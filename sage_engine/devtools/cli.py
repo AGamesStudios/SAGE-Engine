@@ -142,6 +142,9 @@ def main(argv: Optional[list[str]] = None) -> None:
 
     testr = sub.add_parser("test")
 
+    chkcfg = sub.add_parser("check-config")
+    chkcfg.add_argument("--file", default="engine.sagecfg")
+
     tpl = sub.add_parser("template")
     tpl.add_argument("cmd", choices=["list"])
 
@@ -211,6 +214,26 @@ def main(argv: Optional[list[str]] = None) -> None:
         check_env()
     elif args.topic == "test":
         run_tests()
+    elif args.topic == "check-config":
+        from ..resource.loader import _parse_cfg_text, _ENGINE_ALLOWED
+        p = Path(args.file)
+        text = p.read_text(encoding="utf8")
+        lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+        if not lines or lines[0] != "[SAGECFG]":
+            print("❌ invalid header")
+            return
+        cfg = _parse_cfg_text("\n".join(lines[1:]))
+        supported = [k for k in cfg if k in _ENGINE_ALLOWED]
+        unknown = [k for k in cfg if k not in _ENGINE_ALLOWED]
+        print("✅ Supported keys:")
+        for k in supported:
+            print(f" - {k}")
+        if unknown:
+            print("⚠️ Unknown keys:")
+            for k in unknown:
+                print(f" - {k}")
+        else:
+            print("No unknown keys")
     elif args.topic == "template" and args.cmd == "list":
         tpl_root = pkg_resources.files("sage_engine.resources.templates")
         for d in tpl_root.iterdir():
