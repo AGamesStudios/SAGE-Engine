@@ -36,7 +36,14 @@ def _handle_asyncio(loop: asyncio.AbstractEventLoop, context):
 
 def _handle_signal(signum, frame: FrameType | None):
     code = f"SAGE_ERR_FATAL_SIGNAL_SIG{signal.Signals(signum).name}"
-    log_crash(RuntimeError, RuntimeError(code), frame, code=code)
+    if signum == signal.SIGINT:
+        # Ctrl+C should report a clean interruption without attempting to
+        # format the current frame as a traceback.
+        log_crash(KeyboardInterrupt, KeyboardInterrupt(), None, code=code)
+    else:
+        # Other signals are logged as runtime errors; we avoid passing the
+        # ``frame`` object to ``log_crash`` because it expects a traceback.
+        log_crash(RuntimeError, RuntimeError(code), None, code=code)
     if signum in _prev_signal_hooks and _prev_signal_hooks[signum]:
         _prev_signal_hooks[signum](signum, frame)
 
