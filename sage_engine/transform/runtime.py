@@ -8,6 +8,7 @@ from .types import NodeTransform
 from .core import prepare_world_all, collect_visible
 from . import stats as transform_stats
 from .. import core
+from ..logger import logger
 
 _root = NodeTransform()
 _nodes: Dict[str, NodeTransform] = {}
@@ -15,11 +16,22 @@ _nodes: Dict[str, NodeTransform] = {}
 
 def register(obj) -> None:
     """Register *obj* with the transform hierarchy."""
-    node = NodeTransform()
+    node = _nodes.get(obj.id)
+    if node is None:
+        node = NodeTransform()
+        _root.add_child(node)
+        _nodes[obj.id] = node
     node.transform.set_pos(obj.position.x, obj.position.y)
     node.name = getattr(obj, "id", None)
-    _root.add_child(node)
-    _nodes[obj.id] = node
+
+
+def register_all(objs: Iterable) -> None:
+    """Register multiple objects in one pass and log the count."""
+    count = 0
+    for obj in objs:
+        register(obj)
+        count += 1
+    logger.debug("[transform] Registered %d objects", count)
 
 
 def unregister(obj) -> None:
@@ -57,6 +69,7 @@ core.expose(
     "transform_runtime",
     {
         "register": register,
+        "register_all": register_all,
         "unregister": unregister,
         "update": update_object,
         "prepare": prepare,

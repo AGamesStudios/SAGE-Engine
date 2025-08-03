@@ -11,6 +11,7 @@ from sage_engine import core, world, gfx, gui, window, render, objects, transfor
 from sage_engine.logger import logger
 from sage_engine.texture.texture import Texture
 from sage_engine.sprite.sprite import Sprite
+from sage_engine.transform import runtime as transform_runtime
 
 ROOT = Path(__file__).resolve().parent
 
@@ -34,8 +35,9 @@ def boot(cfg):
         t = entry.get("transform", {})
         obj.position.x = t.get("x", 0)
         obj.position.y = t.get("y", 0)
-    print("World loaded.")
     objs = list(objects.runtime.store.objects.values())
+    transform_runtime.register_all(objs)
+    print("World loaded.")
     print("Objects in world:", len(objs))
     for obj in objs:
         print("-", obj.name or obj.id, "at", obj.position.x, obj.position.y)
@@ -47,13 +49,17 @@ def boot(cfg):
 def draw():
     logger.debug("phase draw")
     gfx.begin_frame()
+    render.begin_frame()
     for obj in objects.runtime.store.objects.values():
+        logger.debug(f"Transforming {obj.id}")
         gfx.draw_sprite(_debug_sprite, int(obj.position.x), int(obj.position.y))
-        logger.debug(f"Object submitted for draw: {obj.id}")
+        logger.debug(f"Submitted to render: {obj.id}")
     gfx.draw_rect(0, 0, 8, 8, (0, 255, 0, 255))
     gfx.end_frame()
     gfx.flush_frame()
-    print("render stats:", core.get("render").stats)
+    render.end_frame()
+    stats = core.get("render").stats
+    print("render stats:", stats)
 
 
 core.register("boot", boot)

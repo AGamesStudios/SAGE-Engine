@@ -13,6 +13,9 @@ def test_runner_draws_sprite(monkeypatch):
     core.core_tick()
     stats = core.get("render").stats
     assert stats["sprites_drawn"] > 0
+    assert stats["draw_calls"] > 0
+    assert stats["transform_total_objects"] >= 4
+    assert stats["transform_visible_objects"] >= 1
     assert window.get_framebuffer_size() == (640, 360)
     core.core_shutdown()
 

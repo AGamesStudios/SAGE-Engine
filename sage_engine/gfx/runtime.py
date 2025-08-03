@@ -162,6 +162,7 @@ class GraphicRuntime:
         )
         self._frame_textures.add(id(tex))
         self._commands.append((z, self._seq_counter, "sprite", sprite, x, y))
+        render_stats.stats["draw_calls"] += 1
         self._seq_counter += 1
 
     def draw_circle(self, x: int, y: int, radius: int, color=None, z: int | None = None) -> None:

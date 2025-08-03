@@ -152,6 +152,9 @@ def present(buffer: memoryview, handle: Any = None) -> None:
         ctx.present(buffer)
     elapsed = (time.perf_counter() - _frame_start) * 1000.0
     stats.stats["time_spent_ms"] = elapsed
+    stats.stats["frame_ms"] = elapsed
+    stats.stats["frame_id"] += 1
+    stats.stats["fps"] = 1000.0 / elapsed if elapsed > 0 else 0.0
     if _frame_budget_ms is not None:
         if elapsed > _frame_budget_ms:
             logger.warn(
