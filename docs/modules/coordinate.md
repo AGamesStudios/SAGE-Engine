@@ -9,3 +9,6 @@ helpers like :func:`~sage_engine.transform.screen_rect_to_world` convert
 selection rectangles, while :func:`~sage_engine.transform.pixel_snap` rounds
 coordinates to the nearest integer pixel which is useful for pixel perfect
 rendering.
+Matrix data is prepared each frame via
+``transform.prepare_world_all`` so conversions stay in sync with the
+rendered scene.

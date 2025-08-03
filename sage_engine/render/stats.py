@@ -1,8 +1,18 @@
 """Rendering statistics collector."""
 
+from collections import deque
+
 stats = {
     "frame_id": 0,
     "fps": 0.0,
+    "fps_avg": 0.0,
+    "fps_min": 0.0,
+    "fps_max": 0.0,
+    "fps_1pct_low": 0.0,
+    "ms_update": 0.0,
+    "ms_draw": 0.0,
+    "ms_flush": 0.0,
+    "ms_frame": 0.0,
     "frame_ms": 0.0,
     "dirty_tiles": 0,
     "total_tiles": 0,
@@ -27,6 +37,23 @@ stats = {
     "transform_max_depth": 0,
 }
 
+_history: deque[float] = deque(maxlen=120)
+
+
+def update_fps(frame_ms: float) -> None:
+    """Update FPS statistics from ``frame_ms``."""
+    if frame_ms <= 0:
+        return
+    fps = 1000.0 / frame_ms
+    _history.append(fps)
+    stats["fps"] = fps
+    stats["fps_avg"] = sum(_history) / len(_history)
+    stats["fps_min"] = min(_history)
+    stats["fps_max"] = max(_history)
+    sorted_hist = sorted(_history)
+    idx = max(0, int(len(sorted_hist) * 0.01) - 1)
+    stats["fps_1pct_low"] = sorted_hist[idx]
+
 
 def reset_frame() -> None:
     """Reset per-frame statistics."""
@@ -46,6 +73,11 @@ def reset_frame() -> None:
     stats["transform_visible_objects"] = 0
     stats["transform_culled_objects"] = 0
     stats["transform_max_depth"] = 0
+    stats["ms_update"] = 0.0
+    stats["ms_draw"] = 0.0
+    stats["ms_flush"] = 0.0
+    stats["ms_frame"] = 0.0
+    stats["frame_ms"] = 0.0
     try:  # avoid circular import at module load
         from ..texture.cache import TextureCache
 

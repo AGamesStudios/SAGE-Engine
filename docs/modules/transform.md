@@ -17,6 +17,10 @@ Matrices are cached and recomputed only when inputs change.
 
 Before rendering a frame the helper :func:`~sage_engine.transform.prepare_world_all`
 can be used to update a whole tree of transforms.
+It also populates per-frame counters stored in
+:mod:`sage_engine.transform.stats` and mirrored to
+:mod:`sage_engine.render.stats` such as ``transform_nodes_updated`` and
+``transform_visible_objects``.
 
 ## Spaces
 

@@ -7,14 +7,14 @@ from time import perf_counter_ns
 
 
 class FrameSync:
-    """Precise frame synchronization using sleep and micro-wait."""
+    """Software frame pacing with optional limits."""
 
-    def __init__(self, target_fps: int = 60, *, mode: str = "precise", tolerance: float = 0.2, enabled: bool = True) -> None:
+    def __init__(self, target_fps: int = 60, *, mode: str = "capped", tolerance: float = 0.2, enabled: bool = True) -> None:
         self.enabled = enabled
         self.mode = mode
         self.tolerance = tolerance
         self.target_fps = target_fps
-        self.target_dt = 1.0 / target_fps
+        self.target_dt = 1.0 / target_fps if target_fps > 0 else 0.0
         self._start_ns = 0
         self._next_frame_ns: int | None = None
 
@@ -30,20 +30,15 @@ class FrameSync:
             self._next_frame_ns = now + int(self.target_dt * 1e9)
 
     def end_frame(self) -> None:
-        if not self.enabled:
+        if not self.enabled or self.mode == "unlimited":
             return
         now = perf_counter_ns()
         elapsed_ns = now - self._start_ns
         target_dt_ns = int(self.target_dt * 1e9)
-
-        if self.mode == "adaptive" and elapsed_ns > target_dt_ns:
+        if self.mode == "adaptive" and elapsed_ns > target_dt_ns and target_dt_ns > 0:
             mult = int(elapsed_ns / target_dt_ns) + 1
-            self.target_fps = int(self.target_fps / mult)
+            self.target_fps = max(1, int(self.target_fps / mult))
             self.target_dt = 1.0 / self.target_fps
-            target_dt_ns = int(self.target_dt * 1e9)
-        elif self.mode == "smooth":
-            self.target_dt = self.target_dt * 0.8 + (elapsed_ns / 1e9) * 0.2
-            self.target_fps = int(1.0 / self.target_dt)
             target_dt_ns = int(self.target_dt * 1e9)
 
         target_end = self._start_ns + target_dt_ns

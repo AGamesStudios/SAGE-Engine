@@ -16,6 +16,10 @@ class TextureCache:
             tex.load(path, generate_mipmap=generate_mipmap)
             render_stats.stats["textures_loaded"] += 1
             cls._cache[path] = tex
+            usage = cls.memory_usage() // 1024
+            render_stats.stats["texture_memory_kb"] = usage
+            if usage > render_stats.stats["memory_peak"]:
+                render_stats.stats["memory_peak"] = usage
         return tex
 
     @classmethod
@@ -28,6 +32,10 @@ class TextureCache:
             atlas.load(path)
             render_stats.stats["textures_loaded"] += 1
             cls._atlas_cache[path] = atlas
+            usage = cls.memory_usage() // 1024
+            render_stats.stats["texture_memory_kb"] = usage
+            if usage > render_stats.stats["memory_peak"]:
+                render_stats.stats["memory_peak"] = usage
         return atlas
 
     @classmethod

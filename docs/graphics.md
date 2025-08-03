@@ -19,6 +19,11 @@ s.draw(10, 10)
 Для профилирования рендера доступны счётчики `render.stats`. Они
 обнуляются при каждом вызове `gfx.begin_frame()` через функцию
 `render.stats.reset_frame()`.
-Текущие значения можно вывести командой `sage debug stats`.
+Текущие значения можно вывести командой `sage debug stats`. Помимо
+`sprites_drawn` и `textures_loaded`, коллекция содержит фазовые тайминги
+`ms_update`, `ms_draw`, `ms_flush` и усреднённый FPS.  Система
+`FrameSync` позволяет ограничить частоту кадров.  Режимы
+"capped", "adaptive" и "unlimited" выбираются через `settings` или
+`engine.sagecfg` (`render.frame_sync`).
 Конверсию координат между мировым и экранным пространством выполняет
 модуль `transform`.

@@ -87,6 +87,7 @@ _ENGINE_ALLOWED = {
     "screen_height",
     "fullscreen",
     "render_backend",
+    "render",
     "language",
     "boot_modules",
     "features",

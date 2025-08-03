@@ -15,6 +15,7 @@ from importlib import import_module
 from ..settings import settings
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
+from time import perf_counter_ns
 
 @dataclass
 class _Phase:
@@ -49,6 +50,11 @@ def _load_modules_from_config() -> None:
     for k, v in settings_dict.items():
         if hasattr(settings, k):
             setattr(settings, k, v)
+    render_cfg = data.get("render", {})
+    if "target_fps" in render_cfg:
+        settings.target_fps = int(render_cfg["target_fps"])
+    if "frame_sync" in render_cfg:
+        settings.frame_sync = str(render_cfg["frame_sync"])
     for mod in data.get("boot_modules", []):
         try:
             import_module(f"sage_engine.{mod}")
@@ -98,7 +104,10 @@ def core_tick() -> None:
     """Execute a single frame by running all phases in order."""
     if not _booted:
         raise RuntimeError("Engine not booted")
+    from ..render import stats as render_stats
+    frame_start = perf_counter_ns()
     for phase_name in ("update", "draw", "flush"):
+        ph_start = perf_counter_ns()
         logger.phase_func = lambda pn=phase_name: pn
         phases = _registry.get(phase_name, [])
         serial = [p for p in phases if not p.parallelizable or not settings.enable_multithread]
@@ -110,6 +119,9 @@ def core_tick() -> None:
         if parallel:
             with ThreadPoolExecutor(max_workers=settings.cpu_threads) as ex:
                 list(ex.map(lambda ph: ph.func(), parallel))
+        render_stats.stats[f"ms_{phase_name}"] = (perf_counter_ns() - ph_start) / 1_000_000.0
+    render_stats.stats["ms_frame"] = (perf_counter_ns() - frame_start) / 1_000_000.0
+    render_stats.stats["frame_ms"] = render_stats.stats["ms_frame"]
 
 
 def core_reset() -> None:
