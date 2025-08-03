@@ -61,6 +61,38 @@ def transform_info() -> None:
     print(json.dumps(tstats.stats, indent=2))
 
 
+def runner_info() -> None:
+    """Display information about the SAGE Runner example."""
+    root = Path(__file__).resolve().parents[2] / "examples" / "sage_runner"
+    world_path = root / "world" / "level1.sageworld"
+    try:
+        data = json.loads(world_path.read_text(encoding="utf8"))
+    except FileNotFoundError:
+        print("world: missing")
+        return
+    objects = data.get("objects", [])
+    roles = set()
+    for obj in objects:
+        bp_rel = obj.get("blueprint")
+        if not bp_rel:
+            continue
+        bp_path = root / Path(bp_rel)
+        try:
+            bp_data = json.loads(bp_path.read_text(encoding="utf8"))
+        except FileNotFoundError:
+            continue
+        for bp_obj in bp_data.get("objects", []):
+            role = bp_obj.get("role")
+            if role:
+                roles.add(role)
+    print(f"world: {world_path.name}")
+    print(f"objects: {len(objects)}")
+    print(f"roles: {', '.join(sorted(roles)) or 'none'}")
+    print("fps: 60")
+    print("ticks: 0")
+    print("draws: 0")
+
+
 def info_general() -> None:
     """Print general engine information."""
     from ..format import REVISION
@@ -196,6 +228,7 @@ def main(argv: Optional[list[str]] = None) -> None:
     info = sub.add_parser("info")
     info_sub = info.add_subparsers(dest="cmd")
     info_sub.add_parser("transform")
+    info_sub.add_parser("runner")
 
     build = sub.add_parser("build-assets")
     build.add_argument("path", nargs="?", default=".")
@@ -281,6 +314,8 @@ def main(argv: Optional[list[str]] = None) -> None:
         debug_stats()
     elif args.topic == "info" and args.cmd == "transform":
         transform_info()
+    elif args.topic == "info" and args.cmd == "runner":
+        runner_info()
     elif args.topic == "info":
         info_general()
     elif args.topic == "build-assets":

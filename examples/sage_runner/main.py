@@ -1,6 +1,13 @@
-from pathlib import Path
+"""Entry point for the SAGE Runner example.
 
-from sage_engine import core, world, gui, window, render, gfx
+This example purposely uses only placeholder resources.  The game loop is
+implemented manually to avoid window freeze and to keep the example explicit.
+"""
+
+from pathlib import Path
+import time
+
+from sage_engine import core, world, gui, window
 
 ROOT = Path(__file__).resolve().parent
 
@@ -19,15 +26,10 @@ core.register("boot", boot)
 
 
 if __name__ == "__main__":  # pragma: no cover - manual example run
-    window.init("SAGE Runner", 640, 360)
-    render.init(window.get_window_handle())
-    gfx.init(640, 360)
-
     core.core_boot()
-    while not window.should_close():
-        core.core_tick()
-
-    gfx.shutdown()
-    render.shutdown()
-    window.shutdown()
-    core.core_shutdown()
+    try:
+        while not window.should_close():
+            core.core_tick()
+            time.sleep(1 / 60)
+    finally:
+        core.core_shutdown()
