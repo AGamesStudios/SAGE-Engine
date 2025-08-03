@@ -161,6 +161,11 @@ def should_close() -> bool:
     return _window.should_close() if _window else False
 
 
+def is_open() -> bool:
+    """Return ``True`` if the main window exists and is not closing."""
+    return _window is not None and not _window.should_close()
+
+
 def shutdown() -> None:
     global _window
     if _window is not None:
@@ -260,6 +265,7 @@ __all__ = [
     "get_size",
     "get_framebuffer_size",
     "should_close",
+    "is_open",
     "shutdown",
     "get_window_handle",
     "get_framebuffer",
