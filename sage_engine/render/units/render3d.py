@@ -9,6 +9,7 @@ from ...graphics.mesh3d import Mesh3D
 from ...graphics.camera3d import Camera3D
 from ..zbuffer import ZBuffer
 from .. import stats as render_stats
+from ...logger import logger
 
 
 class Render3DUnit:
@@ -27,9 +28,15 @@ class Render3DUnit:
             self.zbuffer = ZBuffer(width, height)
 
     def draw_mesh(self, mesh: Mesh3D, model: Matrix4, color: Tuple[int, int, int] = (255, 255, 255)) -> None:
+        tri_count = len(mesh.triangles)
+        logger.info("[render] Drawing mesh with %d triangles", tri_count, tag="render")
+        if tri_count > 50_000:
+            logger.warn("[render] Mesh overflow: %d triangles", tri_count, tag="render")
+            return
         start = time.perf_counter()
         mvp = self.camera.projection_matrix() @ self.camera.view_matrix() @ model
         w, h = self.runtime.width, self.runtime.height
+        line_col = (*color, 255)
         for tri in mesh.triangles:
             v0 = mvp.transform(mesh.vertices[tri[0]])
             v1 = mvp.transform(mesh.vertices[tri[1]])
@@ -39,6 +46,10 @@ class Render3DUnit:
                 x = int((v.x * 0.5 + 0.5) * w)
                 y = int((1.0 - (v.y * 0.5 + 0.5)) * h)
                 pts.append((x, y, v.z))
+            # wireframe overlay
+            self.runtime.draw_line(pts[0][0], pts[0][1], pts[1][0], pts[1][1], line_col)
+            self.runtime.draw_line(pts[1][0], pts[1][1], pts[2][0], pts[2][1], line_col)
+            self.runtime.draw_line(pts[2][0], pts[2][1], pts[0][0], pts[0][1], line_col)
             self._rasterize_triangle(pts[0], pts[1], pts[2], color)
             render_stats.stats["triangles_drawn"] += 1
         render_stats.stats["frame3d_time"] += (time.perf_counter() - start) * 1000.0

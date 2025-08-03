@@ -14,6 +14,8 @@ stats = {
     "ms_flush": 0.0,
     "ms_frame": 0.0,
     "frame_ms": 0.0,
+    "frame_time": 0.0,
+    "frame_time_avg": 0.0,
     "dirty_tiles": 0,
     "total_tiles": 0,
     "dirty_ratio": 0.0,
@@ -100,6 +102,7 @@ def reset_frame() -> None:
     stats["ms_flush"] = 0.0
     stats["ms_frame"] = 0.0
     stats["frame_ms"] = 0.0
+    stats["frame_time"] = 0.0
     stats["sleep_time"] = 0.0
     stats["triangles_drawn"] = 0
     stats["zbuffer_hits"] = 0

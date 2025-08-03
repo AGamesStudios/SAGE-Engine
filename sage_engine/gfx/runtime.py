@@ -75,6 +75,9 @@ class GraphicRuntime:
 
     def begin_frame(self, color=None) -> None:
         """Start drawing a new frame."""
+        render = core.get("render")
+        if render is not None:
+            render.begin_frame()
         w, h = self.width or 1, self.height or 1
         if self.buffer is None:
             self.init(w, h)
@@ -284,6 +287,7 @@ class GraphicRuntime:
                 return
         logger.debug("[gfx] Framebuffer size: %d bytes", len(buf))
         logger.debug("[gfx] Sending to render: handle=%s", handle)
+        render.end_frame()
         render.present(buf, handle)
         if fsync is not None and hasattr(fsync, "sleep_until_next_frame"):
             fsync.sleep_until_next_frame()

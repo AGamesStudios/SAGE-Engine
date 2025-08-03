@@ -132,6 +132,7 @@ def begin_frame() -> None:
     global _frame_start_ns
     _frame_start_ns = time.perf_counter_ns()
     stats.stats["frame_id"] += 1
+    logger.debug("[render] Starting frame...", tag="render")
     tr = core.get("transform_runtime")
     if _camera is None:
         logger.error("[render] No active camera found for frame render.")
@@ -181,6 +182,9 @@ def present(buffer: memoryview, handle: Any = None) -> None:
     elapsed = (time.perf_counter_ns() - _frame_start_ns) / 1_000_000.0
     stats.stats["frame_ms"] = elapsed
     stats.stats["ms_frame"] = elapsed
+    stats.stats["frame_time"] = elapsed
+    prev_avg = stats.stats.get("frame_time_avg", 0.0)
+    stats.stats["frame_time_avg"] = prev_avg * 0.9 + elapsed * 0.1 if prev_avg else elapsed
     stats.update_fps(elapsed)
     avg = stats.stats.get("fps_avg", 0.0)
     if avg > 0:
@@ -192,7 +196,9 @@ def present(buffer: memoryview, handle: Any = None) -> None:
                 avg_ms,
                 tag="render",
             )
-    if elapsed > 5.0:
+    if elapsed > 5000.0:
+        logger.error("[render] runaway frame detected: %.2fms", elapsed, tag="render")
+    elif elapsed > 5.0:
         logger.warn("[render] Slow frame: %.2fms", elapsed, tag="render")
     if _frame_budget_ms is not None:
         if elapsed > _frame_budget_ms:

@@ -93,6 +93,7 @@ def create_window(
     borderless: bool = False,
 ) -> object:
     """Create and return a window instance without assigning it globally."""
+    logger.info("[window] Creating window...", tag="window")
     headless = os.environ.get("SAGE_HEADLESS") == "1" or NativeWindow is None
     logger.info("Initializing window headless=%s", headless)
     if headless:
@@ -100,6 +101,19 @@ def create_window(
     else:
         win = NativeWindow(title, width, height, fullscreen, resizable, borderless)
     _windows.append(win)
+    handle = getattr(win, "get_handle", lambda: None)()
+    if headless:
+        logger.info("[window] Window created with size=%dx%d (headless)", width, height, tag="window")
+    elif not handle:
+        logger.error("[ERROR] Window handle is invalid or not displayed", tag="window")
+    else:
+        logger.info(
+            "[window] Window created with size=%dx%d handle=%s",
+            width,
+            height,
+            handle,
+            tag="window",
+        )
     return win
 
 def init(
