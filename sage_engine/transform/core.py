@@ -100,6 +100,12 @@ class TransformCuller:
 
     def _visible(self, node: NodeTransform) -> bool:
         transform_stats.stats["culling_tested"] += 1
+        logger.debug(
+            "Testing visibility: %s pos=%s",
+            getattr(node, "name", id(node)),
+            node.transform.pos,
+            tag="transform",
+        )
         if _intersects(get_world_aabb(node), self.view):
             transform_stats.stats["culling_drawn"] += 1
             return True

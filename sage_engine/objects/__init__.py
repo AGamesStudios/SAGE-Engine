@@ -61,6 +61,12 @@ def spawn(role: str, *, name: str | None = None, world_id: str = "default", **fi
         groups.register_object(obj)
     except Exception:
         pass
+    try:
+        tr = core.get("transform_runtime")
+        if tr and "register" in tr:
+            tr["register"](obj)
+    except Exception:
+        pass
     return obj
 
 

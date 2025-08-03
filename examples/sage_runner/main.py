@@ -7,7 +7,7 @@ implemented manually to avoid window freeze and to keep the example explicit.
 from pathlib import Path
 import time
 
-from sage_engine import core, world, gfx, gui, window, render, objects
+from sage_engine import core, world, gfx, gui, window, render, objects, transform
 from sage_engine.logger import logger
 from sage_engine.texture.texture import Texture
 from sage_engine.sprite.sprite import Sprite
@@ -25,6 +25,8 @@ def boot(cfg):
     render.init(window.get_window_handle())
     w, h = window.get_framebuffer_size()
     gfx.init(w, h)
+    cam = transform.Camera2D(pos=(0.0, 0.0), viewport_px=(w, h), zoom=1.0)
+    render.set_camera(cam)
     print("Загружаем мир level1.sageworld...")
     data = world.load(ROOT / "world" / "level1.sageworld")
     for entry in data:
@@ -47,6 +49,7 @@ def draw():
     gfx.begin_frame()
     for obj in objects.runtime.store.objects.values():
         gfx.draw_sprite(_debug_sprite, int(obj.position.x), int(obj.position.y))
+        logger.debug(f"Object submitted for draw: {obj.id}")
     gfx.draw_rect(0, 0, 8, 8, (0, 255, 0, 255))
     gfx.end_frame()
     gfx.flush_frame()

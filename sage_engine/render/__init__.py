@@ -11,11 +11,13 @@ from ..events import on
 from ..logger import logger
 from .. import core
 from . import stats
+from ..transform import Camera2D
 from types import SimpleNamespace
 
 _backend = None
 _context = None
 _viewport = None
+_camera: Camera2D | None = None
 _micro_culling = False
 _delta_render = False
 _raster_cache = False
@@ -82,6 +84,12 @@ def enable_batching(enabled: bool = True) -> None:
     _batching = enabled
 
 
+def set_camera(camera: Camera2D) -> None:
+    """Set the active camera used for visibility checks."""
+    global _camera
+    _camera = camera
+
+
 def init(output_target: Any = None) -> None:
     """Initialize the rendering system with selected backend."""
     global _backend, _context
@@ -95,6 +103,16 @@ def init(output_target: Any = None) -> None:
 def begin_frame() -> None:
     global _frame_start
     _frame_start = time.perf_counter()
+    stats.reset_frame()
+    tr = core.get("transform_runtime")
+    if _camera is None:
+        logger.error("[render] No active camera found for frame render.")
+    elif tr and "prepare" in tr and "visible" in tr:
+        try:
+            tr["prepare"]()
+            tr["visible"](_camera)
+        except Exception:
+            pass
     if _context:
         _context.begin_frame()
 
