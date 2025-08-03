@@ -154,6 +154,18 @@ def present(buffer: memoryview, handle: Any = None) -> None:
     stats.stats["frame_ms"] = elapsed
     stats.stats["ms_frame"] = elapsed
     stats.update_fps(elapsed)
+    avg = stats.stats.get("fps_avg", 0.0)
+    if avg > 0:
+        avg_ms = 1000.0 / avg
+        if elapsed > avg_ms * 2:
+            logger.warn(
+                "[render] Frame time spike: %.2fms (avg %.2fms)",
+                elapsed,
+                avg_ms,
+                tag="render",
+            )
+    if elapsed > 5.0:
+        logger.warn("[render] Slow frame: %.2fms", elapsed, tag="render")
     if _frame_budget_ms is not None:
         if elapsed > _frame_budget_ms:
             logger.warn(

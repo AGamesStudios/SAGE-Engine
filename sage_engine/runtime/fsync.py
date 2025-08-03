@@ -5,6 +5,8 @@ from __future__ import annotations
 import time
 from time import perf_counter_ns
 
+from ..logger import logger
+
 
 class FrameSync:
     """Software frame pacing with optional limits."""
@@ -44,10 +46,13 @@ class FrameSync:
         target_end = self._start_ns + target_dt_ns
         if now < target_end:
             sleep_time = (target_end - now) / 1e9
-            if sleep_time > 0.0003:
-                time.sleep(sleep_time - 0.0003)
-            while perf_counter_ns() < target_end:
-                pass
+            if sleep_time <= 0:
+                logger.warn("[fsync] negative sleep time %.6f", sleep_time)
+            else:
+                if sleep_time > 0.0003:
+                    time.sleep(sleep_time - 0.0003)
+                while perf_counter_ns() < target_end:
+                    pass
         self._next_frame_ns = target_end
 
     def sleep_until_next_frame(self) -> None:
@@ -57,9 +62,12 @@ class FrameSync:
         now = perf_counter_ns()
         if now < self._next_frame_ns:
             sleep_time = (self._next_frame_ns - now) / 1e9
-            if sleep_time > 0.0003:
-                time.sleep(sleep_time - 0.0003)
-            while perf_counter_ns() < self._next_frame_ns:
-                pass
+            if sleep_time <= 0:
+                logger.warn("[fsync] negative sleep time %.6f", sleep_time)
+            else:
+                if sleep_time > 0.0003:
+                    time.sleep(sleep_time - 0.0003)
+                while perf_counter_ns() < self._next_frame_ns:
+                    pass
         self._next_frame_ns += int(self.target_dt * 1e9)
 
