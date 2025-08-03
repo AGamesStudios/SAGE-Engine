@@ -116,10 +116,10 @@ def core_tick() -> None:
     if not _booted:
         raise RuntimeError("Engine not booted")
     from ..render import stats as render_stats
-    render_stats.reset_frame()
     if _fsync is not None:
         _fsync.start_frame()
     frame_start = perf_counter_ns()
+    update_ms = 0.0
     for phase_name in ("update", "draw", "flush"):
         ph_start = perf_counter_ns()
         logger.phase_func = lambda pn=phase_name: pn
@@ -133,7 +133,12 @@ def core_tick() -> None:
         if parallel:
             with ThreadPoolExecutor(max_workers=settings.cpu_threads) as ex:
                 list(ex.map(lambda ph: ph.func(), parallel))
-        render_stats.stats[f"ms_{phase_name}"] = (perf_counter_ns() - ph_start) / 1_000_000.0
+        phase_ms = (perf_counter_ns() - ph_start) / 1_000_000.0
+        if phase_name == "update":
+            update_ms = phase_ms
+        else:
+            render_stats.stats[f"ms_{phase_name}"] = phase_ms
+    render_stats.stats["ms_update"] = update_ms
     render_stats.stats["ms_frame"] = (perf_counter_ns() - frame_start) / 1_000_000.0
     render_stats.stats["frame_ms"] = render_stats.stats["ms_frame"]
     if _fsync is not None:

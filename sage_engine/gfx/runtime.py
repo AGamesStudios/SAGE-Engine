@@ -102,11 +102,7 @@ class GraphicRuntime:
         self._frame_textures.clear()
         self._sprites_drawn = 0
         from ..render import stats as render_stats
-        render_stats.stats["sprites_drawn"] = 0
-        render_stats.stats["textures_bound"] = 0
-        render_stats.stats["draw_calls"] = 0
-        render_stats.stats["atlas_hits"] = 0
-        render_stats.stats["atlas_misses"] = 0
+        render_stats.reset_frame()
 
     def _ensure_buffer_size(self) -> None:
         """Ensure the framebuffer matches ``self.width`` and ``self.height``."""
