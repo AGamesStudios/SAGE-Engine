@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from ..base import Widget
+from sage_engine.gui.base import Widget
+import sage_engine.gfx as gfx
 
 
 @dataclass
@@ -17,7 +18,6 @@ class ScrollView(Widget):
     def draw(self) -> None:
         if not self.visible:
             return
-        from ... import gfx
         gfx.draw_rect(self.x, self.y, self.width, self.height, self.style.bg_color)
         for child in self.content.children:
             ox, oy = child.x, child.y

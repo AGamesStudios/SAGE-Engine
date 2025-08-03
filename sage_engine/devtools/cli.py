@@ -68,7 +68,11 @@ def render_info() -> None:
     if rnd is None:
         print("render: unavailable")
         return
-    print(json.dumps(rnd.stats, indent=2))
+    from sage_engine import window
+    info = dict(rnd.stats)
+    info["window_size"] = window.get_size()
+    info["framebuffer_size"] = window.get_framebuffer_size()
+    print(json.dumps(info, indent=2))
 
 
 def world_info() -> None:

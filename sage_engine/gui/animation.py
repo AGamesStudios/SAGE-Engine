@@ -1,7 +1,7 @@
 """GUI animation helpers using the graphic animation module."""
 from __future__ import annotations
 
-from ..graphic import animation as g_animation
+from sage_engine.graphic import animation as g_animation
 
 
 def animate(

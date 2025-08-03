@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from ..base import Widget
+from sage_engine.gui.base import Widget
+import sage_engine.gfx as gfx
 
 
 @dataclass
@@ -13,7 +14,6 @@ class Slider(Widget):
 
     def draw(self) -> None:
         super().draw()
-        from ... import gfx
         pct = (self.value - self.min_value) / (self.max_value - self.min_value)
         bar_w = int(self.width * pct)
         gfx.draw_rect(self.x, self.y, bar_w, self.height, self.style.fg_color)

@@ -1,7 +1,7 @@
 """Simple drag and drop utilities for widgets."""
 from __future__ import annotations
 
-from .events import Event
+from sage_engine.gui.events import Event
 
 
 class DragController:

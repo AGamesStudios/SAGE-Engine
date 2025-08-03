@@ -3,8 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import List, Any
 
-from .events import Event
-from .style import WidgetStyle
+from sage_engine.gui.events import Event
+from sage_engine.gui.style import WidgetStyle
+from sage_engine.gui import style
+import sage_engine.gfx as gfx
+from sage_engine.logger import logger
 
 
 @dataclass
@@ -33,11 +36,9 @@ class Widget:
     _bind_widget_field: str | None = field(default=None, init=False, repr=False)
 
     def __post_init__(self) -> None:
-        from . import style
         style.apply_theme(self.style, style.DEFAULT_THEME_NAME)
 
     def validate(self) -> bool:
-        from ..logger import logger
         valid = True
         if self.width is None or self.height is None:
             logger.error("[gui] Invalid size on %s", type(self).__name__)
@@ -58,12 +59,10 @@ class Widget:
 
     def add_child(self, w: "Widget") -> None:
         w.parent = self
-        from . import style
         style.apply_theme(w.style, style.DEFAULT_THEME_NAME)
         self.children.append(w)
 
     def bind(self, field: str, obj: Any) -> None:
-        from ..logger import logger
         self._bind_attr = field
         self._bind_target = obj
         if not hasattr(obj, field):
@@ -92,7 +91,6 @@ class Widget:
             return
         if not self.validate():
             return
-        from .. import gfx
         gfx.draw_rect(self.x, self.y, self.width, self.height, self.style.bg_color)
         for child in self.children:
             child.draw()

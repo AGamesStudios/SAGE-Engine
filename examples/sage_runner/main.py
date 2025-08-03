@@ -7,7 +7,7 @@ implemented manually to avoid window freeze and to keep the example explicit.
 from pathlib import Path
 import time
 
-from sage_engine import core, world, gui, window, gfx, render, objects
+from sage_engine import core, world, gfx, gui, window, render, objects
 from sage_engine.logger import logger
 from sage_engine.texture.texture import Texture
 from sage_engine.sprite.sprite import Sprite
@@ -23,6 +23,8 @@ def boot(cfg):
     logger.debug("phase boot")
     window.init(title="SAGE Runner", width=640, height=360)
     render.init(window.get_window_handle())
+    w, h = window.get_framebuffer_size()
+    gfx.init(w, h)
     print("Загружаем мир level1.sageworld...")
     data = world.load(ROOT / "world" / "level1.sageworld")
     for entry in data:

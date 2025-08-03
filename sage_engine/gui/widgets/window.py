@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from ..base import Widget
-from ..events import Event
+from sage_engine.gui.base import Widget
+from sage_engine.gui.events import Event
+import sage_engine.gfx as gfx
 
 
 @dataclass
@@ -39,6 +40,5 @@ class Window(Widget):
         if not self.visible:
             return
         super().draw()
-        from ... import gfx
         gfx.draw_rect(self.x, self.y, self.width, self.header_height, self.style.fg_color)
         gfx.draw_text(self.x + 4, self.y + 4, self.title, None, self.style.bg_color)

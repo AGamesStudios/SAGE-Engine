@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from ..base import Widget
+from sage_engine.gui.base import Widget
+import sage_engine.gfx as gfx
 
 
 @dataclass
@@ -12,7 +13,6 @@ class TextInput(Widget):
 
     def draw(self) -> None:
         super().draw()
-        from ... import gfx
         gfx.draw_text(
             self.x + self.style.padding,
             self.y + self.style.padding,

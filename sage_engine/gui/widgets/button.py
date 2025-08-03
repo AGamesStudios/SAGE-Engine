@@ -3,8 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 import os
 
-from ..base import Widget
-from ..i18n import translate
+from sage_engine.gui.base import Widget
+from sage_engine.gui.i18n import translate
+import sage_engine.gfx as gfx
+from sage_engine.logger import logger
 
 
 @dataclass
@@ -13,8 +15,6 @@ class Button(Widget):
 
     def draw(self) -> None:
         super().draw()
-        from ... import gfx
-        from ...logger import logger
         font = self.style.font
         if font and not os.path.exists(font):
             logger.warning("Font not found: %s", font)

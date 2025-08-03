@@ -3,8 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import List
 
-from ..base import Widget
-from ..i18n import translate
+from sage_engine.gui.base import Widget
+from sage_engine.gui.i18n import translate
+import sage_engine.gfx as gfx
 
 
 @dataclass
@@ -15,7 +16,6 @@ class Dropdown(Widget):
     def draw(self) -> None:
         super().draw()
         if self.options:
-            from ... import gfx
             gfx.draw_text(
                 self.x + self.style.padding,
                 self.y + self.style.padding,

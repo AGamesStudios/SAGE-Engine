@@ -1,15 +1,15 @@
-from .button import Button
-from .label import Label
-from .textinput import TextInput
-from .checkbox import Checkbox
-from .slider import Slider
-from .dropdown import Dropdown
-from .window import Window
-from .panel import Panel
-from .popup import Popup
-from .dockpanel import DockPanel
-from .scrollview import ScrollView
-from .inspector import InspectorPanel
+from sage_engine.gui.widgets.button import Button
+from sage_engine.gui.widgets.label import Label
+from sage_engine.gui.widgets.textinput import TextInput
+from sage_engine.gui.widgets.checkbox import Checkbox
+from sage_engine.gui.widgets.slider import Slider
+from sage_engine.gui.widgets.dropdown import Dropdown
+from sage_engine.gui.widgets.window import Window
+from sage_engine.gui.widgets.panel import Panel
+from sage_engine.gui.widgets.popup import Popup
+from sage_engine.gui.widgets.dockpanel import DockPanel
+from sage_engine.gui.widgets.scrollview import ScrollView
+from sage_engine.gui.widgets.inspector import InspectorPanel
 
 __all__ = [
     "Button",

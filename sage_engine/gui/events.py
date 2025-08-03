@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Callable, List
 
+from sage_engine import events
+
 
 class Event:
     def __init__(self) -> None:
@@ -9,7 +11,6 @@ class Event:
 
     def connect(self, handler: Callable[..., None] | str) -> None:
         if isinstance(handler, str):
-            from .. import events
             script = handler
 
             def _call(*a, **k):

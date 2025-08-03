@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from .base import Widget
-from .widgets.button import Button
-from . import style
-from ..logger import logger
-from .. import gfx
+from sage_engine.gui.base import Widget
+from sage_engine.gui.widgets.button import Button
+from sage_engine.gui import style
+from sage_engine.logger import logger
+import sage_engine.gfx as gfx
 
 
 class GUIManager:
@@ -22,7 +22,9 @@ class GUIManager:
         if self._default_font is None:
             fonts = fallback_fonts or ["resources/fonts/default.ttf"]
             for f in fonts:
-                self._default_font = gfx.load_font(f, style.DEFAULT_THEME["font_size"])
+                self._default_font = gfx.load_font(
+                    f, style.DEFAULT_THEME["font_size"]
+                )
                 if self._default_font:
                     break
             if self._default_font is None:
@@ -63,7 +65,6 @@ class GUIManager:
         return self._focus
 
     def _draw_debug(self, widget: Widget) -> None:
-        from ... import gfx
         gfx.draw_rect(widget.x, widget.y, widget.width, widget.height, (255, 0, 0, 128))
         if hasattr(widget, "text"):
             logger.debug("[gui] text=%s", getattr(widget, "text"))
