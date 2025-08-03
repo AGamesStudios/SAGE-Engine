@@ -6,6 +6,10 @@ stats = {
     "culling_tested": 0,
     "culling_rejected": 0,
     "culling_drawn": 0,
+    "total_objects": 0,
+    "visible_objects": 0,
+    "culled_objects": 0,
+    "max_depth": 0,
 }
 
 
@@ -16,3 +20,7 @@ def reset_frame() -> None:
     stats["culling_tested"] = 0
     stats["culling_rejected"] = 0
     stats["culling_drawn"] = 0
+    stats["total_objects"] = 0
+    stats["visible_objects"] = 0
+    stats["culled_objects"] = 0
+    stats["max_depth"] = 0

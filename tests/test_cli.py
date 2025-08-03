@@ -13,7 +13,7 @@ def test_transform_info(capsys):
     cli.transform_info()
     out = capsys.readouterr().out
     data = json.loads(out)
-    assert "nodes_updated" in data
+    assert "total_objects" in data and "visible_objects" in data
 
 
 def test_info_versionless(capsys):

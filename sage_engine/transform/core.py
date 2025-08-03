@@ -5,7 +5,7 @@ from typing import Iterable, List
 
 from time import perf_counter
 
-from .types import NodeTransform, Rect, Transform2D, Coord, Space
+from .types import BaseTransform, NodeTransform, Rect, Transform2D, Coord, Space
 from .convert import Camera2D, world_to_screen
 from . import stats as transform_stats
 from ..logger import logger
@@ -36,13 +36,13 @@ def prepare_world_all(root: NodeTransform) -> None:
         tag="transform",
     )
 
-def get_local_aabb(node: NodeTransform) -> Rect:
+def get_local_aabb(node: BaseTransform) -> Rect:
     """Return the local axis aligned bounds of *node*."""
 
     return node.local_rect
 
 
-def get_world_aabb(node: NodeTransform) -> Rect:
+def get_world_aabb(node: BaseTransform) -> Rect:
     """Return the world axis aligned bounds of *node*."""
 
     return node.world_aabb()
@@ -65,7 +65,7 @@ def collect_visible(root: NodeTransform, camera: Camera2D) -> List[NodeTransform
     return visible
 
 
-def get_screen_bounds(node: NodeTransform, camera: Camera2D) -> Rect:
+def get_screen_bounds(node: BaseTransform, camera: Camera2D) -> Rect:
     """Return screen-space bounds of *node*."""
 
     aabb = get_world_aabb(node)
@@ -76,7 +76,7 @@ def get_screen_bounds(node: NodeTransform, camera: Camera2D) -> Rect:
     return Rect(x1, y1, x2 - x1, y2 - y1, Space.SCREEN)
 
 
-def intersects_screen(node: NodeTransform, camera: Camera2D) -> bool:
+def intersects_screen(node: BaseTransform, camera: Camera2D) -> bool:
     """Return ``True`` if *node* is within the camera viewport."""
 
     sb = get_screen_bounds(node, camera)
@@ -108,16 +108,35 @@ class TransformCuller:
 
     def collect(self, root: NodeTransform) -> List[NodeTransform]:
         visible: List[NodeTransform] = []
-        stack = [root]
+        stack: list[tuple[NodeTransform, int]] = [(root, 0)]
+        total = 0
+        max_depth = 0
         while stack:
-            node = stack.pop()
+            node, depth = stack.pop()
+            total += 1
+            if depth > max_depth:
+                max_depth = depth
             if self._visible(node):
                 visible.append(node)
-                stack.extend(node.children)
+            for child in node.children:
+                stack.append((child, depth + 1))
         cx, cy = self.camera.pos
         visible.sort(
             key=lambda n: (n.transform.pos[0] - cx) ** 2 + (n.transform.pos[1] - cy) ** 2
         )
+        transform_stats.stats["total_objects"] = total
+        transform_stats.stats["visible_objects"] = len(visible)
+        transform_stats.stats["culled_objects"] = total - len(visible)
+        transform_stats.stats["max_depth"] = max_depth
+        try:
+            from ..render import stats as render_stats
+
+            render_stats.stats["transform_total_objects"] = total
+            render_stats.stats["transform_visible_objects"] = len(visible)
+            render_stats.stats["transform_culled_objects"] = total - len(visible)
+            render_stats.stats["transform_max_depth"] = max_depth
+        except Exception:
+            pass
         return visible
 
 

@@ -35,10 +35,13 @@ in local, world or screen space via :func:`~sage_engine.transform.get_local_aabb
 :func:`~sage_engine.transform.get_world_aabb` and
 :func:`~sage_engine.transform.get_screen_bounds`.  Visibility checks are handled
 by :class:`~sage_engine.transform.TransformCuller` and
-:func:`~sage_engine.transform.intersects_screen`.
+:func:`~sage_engine.transform.intersects_screen`.  Every transform exposes
+``global_position`` and ``global_scale`` helpers as well as an
+``is_visible(camera)`` convenience wrapper.
 
 Per-frame counters live in :mod:`sage_engine.transform.stats` and can be
-inspected with ``sage info transform``.
+inspected with ``sage info transform`` which now reports total, visible and
+culled objects along with the traversal depth.
 
 Transforms can be serialized with
 :func:`~sage_engine.transform.serialize_transform` and later restored with

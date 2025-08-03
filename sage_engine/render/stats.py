@@ -22,6 +22,10 @@ stats = {
     "culling_tested": 0,
     "culling_rejected": 0,
     "culling_drawn": 0,
+    "transform_total_objects": 0,
+    "transform_visible_objects": 0,
+    "transform_culled_objects": 0,
+    "transform_max_depth": 0,
 }
 
 
@@ -38,6 +42,10 @@ def reset_frame() -> None:
     stats["culling_tested"] = 0
     stats["culling_rejected"] = 0
     stats["culling_drawn"] = 0
+    stats["transform_total_objects"] = 0
+    stats["transform_visible_objects"] = 0
+    stats["transform_culled_objects"] = 0
+    stats["transform_max_depth"] = 0
     try:  # avoid circular import at module load
         from ..texture.cache import TextureCache
 

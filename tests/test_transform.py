@@ -92,3 +92,18 @@ def test_transform_stats_reset():
     gfx = GraphicRuntime()
     gfx.begin_frame()
     assert tstats.stats["nodes_updated"] == 0
+
+
+def test_global_helpers_and_visibility():
+    root = NodeTransform(local_rect=Rect(0, 0, 10, 10))
+    root.transform.set_pos(10, 0)
+    child = NodeTransform(local_rect=Rect(0, 0, 5, 5))
+    child.transform.set_pos(5, 0)
+    root.add_child(child)
+    child.transform.set_scale(2, 3)
+    prepare_world_all(root)
+    assert child.global_position() == (15, 0)
+    sx, sy = child.global_scale()
+    assert math.isclose(sx, 2.0) and math.isclose(sy, 3.0)
+    cam = Camera2D(pos=(0, 0), zoom=1.0, viewport_px=(50, 50))
+    assert child.is_visible(cam)

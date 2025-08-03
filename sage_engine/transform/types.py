@@ -111,6 +111,24 @@ class BaseTransform:
         m = self.world_matrix(parent_world)
         return math2d.apply_to_rect(m, self.local_rect)
 
+    def global_position(self, parent_world: Optional[List[float]] = None) -> tuple[float, float]:
+        """Return the world position of this transform."""
+        m = self.world_matrix(parent_world)
+        return m[2], m[5]
+
+    def global_scale(self, parent_world: Optional[List[float]] = None) -> tuple[float, float]:
+        """Return the absolute world scale of this transform."""
+        m = self.world_matrix(parent_world)
+        sx = (m[0] ** 2 + m[3] ** 2) ** 0.5
+        sy = (m[1] ** 2 + m[4] ** 2) ** 0.5
+        return sx, sy
+
+    def is_visible(self, camera: "Camera2D") -> bool:
+        """Return ``True`` if this transform is visible in *camera*."""
+        from .core import intersects_screen
+
+        return intersects_screen(self, camera)
+
 
 @dataclass
 class RectangleTransform(BaseTransform):
