@@ -1,0 +1,70 @@
+"""Software 3D rendering unit."""
+from __future__ import annotations
+
+import time
+from typing import Tuple
+
+from ...graphics.math3d import Vector3, Matrix4
+from ...graphics.mesh3d import Mesh3D
+from ...graphics.camera3d import Camera3D
+from ..zbuffer import ZBuffer
+from .. import stats as render_stats
+
+
+class Render3DUnit:
+    """Minimal CPU rasterizer for triangle meshes."""
+
+    def __init__(self, runtime, camera: Camera3D, zbuffer: ZBuffer | None = None) -> None:
+        self.runtime = runtime
+        self.camera = camera
+        self.zbuffer = zbuffer or ZBuffer(runtime.width, runtime.height)
+
+    def set_camera(self, camera: Camera3D) -> None:
+        self.camera = camera
+
+    def resize(self, width: int, height: int) -> None:
+        if width != self.zbuffer.width or height != self.zbuffer.height:
+            self.zbuffer = ZBuffer(width, height)
+
+    def draw_mesh(self, mesh: Mesh3D, model: Matrix4, color: Tuple[int, int, int] = (255, 255, 255)) -> None:
+        start = time.perf_counter()
+        mvp = self.camera.projection_matrix() @ self.camera.view_matrix() @ model
+        w, h = self.runtime.width, self.runtime.height
+        for tri in mesh.triangles:
+            v0 = mvp.transform(mesh.vertices[tri[0]])
+            v1 = mvp.transform(mesh.vertices[tri[1]])
+            v2 = mvp.transform(mesh.vertices[tri[2]])
+            pts = []
+            for v in (v0, v1, v2):
+                x = int((v.x * 0.5 + 0.5) * w)
+                y = int((1.0 - (v.y * 0.5 + 0.5)) * h)
+                pts.append((x, y, v.z))
+            self._rasterize_triangle(pts[0], pts[1], pts[2], color)
+            render_stats.stats["triangles_drawn"] += 1
+        render_stats.stats["frame3d_time"] += (time.perf_counter() - start) * 1000.0
+
+    def _rasterize_triangle(self, v0, v1, v2, color) -> None:
+        x0, y0, z0 = v0
+        x1, y1, z1 = v1
+        x2, y2, z2 = v2
+        min_x = max(min(x0, x1, x2), 0)
+        max_x = min(max(x0, x1, x2), self.runtime.width - 1)
+        min_y = max(min(y0, y1, y2), 0)
+        max_y = min(max(y0, y1, y2), self.runtime.height - 1)
+        denom = (y1 - y2) * (x0 - x2) + (x2 - x1) * (y0 - y2)
+        if denom == 0:
+            return
+        r, g, b = color
+        for y in range(min_y, max_y + 1):
+            for x in range(min_x, max_x + 1):
+                w0 = (y1 - y2) * (x - x2) + (x2 - x1) * (y - y2)
+                w1 = (y2 - y0) * (x - x2) + (x0 - x2) * (y - y2)
+                w2 = denom - w0 - w1
+                if w0 >= 0 and w1 >= 0 and w2 >= 0:
+                    w0 /= denom
+                    w1 /= denom
+                    w2 /= denom
+                    depth = z0 * w0 + z1 * w1 + z2 * w2
+                    if self.zbuffer.test_and_set(x, y, depth):
+                        self.runtime._blend_pixel(x, y, r, g, b, 255)
+                        render_stats.stats["zbuffer_hits"] += 1

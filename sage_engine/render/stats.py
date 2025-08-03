@@ -38,6 +38,9 @@ stats = {
     "fps_jitter": 0.0,
     "frame_stability_score": 0.0,
     "sleep_time": 0.0,
+    "triangles_drawn": 0,
+    "zbuffer_hits": 0,
+    "frame3d_time": 0.0,
 }
 
 _history: deque[float] = deque(maxlen=120)
@@ -98,6 +101,9 @@ def reset_frame() -> None:
     stats["ms_frame"] = 0.0
     stats["frame_ms"] = 0.0
     stats["sleep_time"] = 0.0
+    stats["triangles_drawn"] = 0
+    stats["zbuffer_hits"] = 0
+    stats["frame3d_time"] = 0.0
     try:  # avoid circular import at module load
         from ..texture.cache import TextureCache
 

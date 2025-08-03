@@ -66,6 +66,11 @@ SAGE-Engine/
 │   │   └── system/
 │   ├── transform/
 │   │   └── __init__.py
+│   ├── graphics/
+│   │   ├── __init__.py
+│   │   ├── camera3d.py
+│   │   ├── mesh3d.py
+│   │   └── math3d.py
 ```
 
 Каталог `resources/fonts/` содержит встроенный шрифт `default.ttf` (Public Sans). Он применяется по умолчанию всеми подсистемами и может быть заменён. Текстуры и шейдеры размещаются соответственно в `resources/textures/` и `resources/shaders/`.

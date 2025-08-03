@@ -12,6 +12,9 @@ from ..logger import logger
 from .. import core
 from . import stats
 from ..transform import Camera2D
+from ..graphics.camera3d import Camera3D
+from ..graphics.math3d import Matrix4, Vector3
+from .units.render3d import Render3DUnit
 from types import SimpleNamespace
 
 _backend = None
@@ -27,6 +30,8 @@ _frame_start_ns = 0
 _chunking = False
 _culling = False
 _batching = False
+_render3d: Render3DUnit | None = None
+_camera3d: Camera3D | None = None
 
 
 def _select_backend() -> str:
@@ -82,6 +87,29 @@ def enable_culling(enabled: bool = True) -> None:
 def enable_batching(enabled: bool = True) -> None:
     global _batching
     _batching = enabled
+
+
+def set_camera3d(camera: Camera3D) -> None:
+    """Set active 3D camera for mesh drawing."""
+    global _camera3d, _render3d
+    _camera3d = camera
+    if _render3d:
+        _render3d.set_camera(camera)
+
+
+def _ensure_render3d() -> Render3DUnit:
+    global _render3d
+    if _render3d is None:
+        from ..gfx import _runtime as gfx_runtime  # type: ignore
+
+        cam = _camera3d or Camera3D(position=Vector3(0, 0, -5), target=Vector3(0, 0, 0))
+        _render3d = Render3DUnit(gfx_runtime, cam)
+    return _render3d
+
+
+def draw_mesh(mesh, model: Matrix4 | None = None, color=(255, 255, 255)) -> None:
+    unit = _ensure_render3d()
+    unit.draw_mesh(mesh, model or Matrix4.identity(), color)
 
 
 def set_camera(camera: Camera2D) -> None:
@@ -239,6 +267,8 @@ core.expose(
         enable_chunking=enable_chunking,
         enable_culling=enable_culling,
         enable_batching=enable_batching,
+        set_camera3d=set_camera3d,
+        draw_mesh=draw_mesh,
         shutdown=shutdown,
         stats=stats.stats,
     ),

@@ -27,3 +27,10 @@ s.draw(10, 10)
 `engine.sagecfg` (`render.frame_sync`).
 Конверсию координат между мировым и экранным пространством выполняет
 модуль `transform`.
+
+## 3D rendering
+
+Простые 3D‑сцены можно отрисовывать без внешних библиотек. Используйте
+классы `Mesh3D` и `Camera3D` из `sage_engine.graphics` и передавайте их в
+`Render3DUnit` для растеризации на CPU. Статистика 3D‑отрисовки доступна в
+поля `triangles_drawn`, `zbuffer_hits` и `frame3d_time` в `render.stats`.
