@@ -66,9 +66,9 @@ def info_general() -> None:
     from ..format import REVISION
     from ..compat import migrated_count
 
-    print("SAGE Engine is versionless")
-    print(f"format revision: {REVISION}")
-    print(f"migrated files: {migrated_count}")
+    print("versionless: true")
+    print(f"format_revision: {REVISION}")
+    print(f"migrated_files: {migrated_count}")
 
 
 def build_assets_call(path: Path) -> None:

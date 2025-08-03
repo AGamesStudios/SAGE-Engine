@@ -19,4 +19,6 @@ def test_transform_info(capsys):
 def test_info_versionless(capsys):
     cli.main(["info"])
     out = capsys.readouterr().out.lower()
-    assert "versionless" in out
+    assert "versionless: true" in out
+    assert "migrated_files:" in out
+    assert "format_revision:" in out

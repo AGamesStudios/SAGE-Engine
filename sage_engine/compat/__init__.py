@@ -7,7 +7,7 @@ from typing import Callable, Dict, List
 
 # simple rule creators ------------------------------------------------------
 
-def rename(old: str, new: str) -> Callable[[dict], bool]:
+def migrate_field(old: str, new: str) -> Callable[[dict], bool]:
     """Return a rule renaming *old* key to *new* in a mapping."""
     def apply(data: dict) -> bool:
         if old in data:
@@ -17,10 +17,20 @@ def rename(old: str, new: str) -> Callable[[dict], bool]:
     return apply
 
 
-def remove(key: str) -> Callable[[dict], bool]:
+def remove_field(key: str) -> Callable[[dict], bool]:
     """Return a rule removing *key* from a mapping if present."""
     def apply(data: dict) -> bool:
         return data.pop(key, None) is not None
+    return apply
+
+
+def set_default(key: str, value: object) -> Callable[[dict], bool]:
+    """Return a rule setting *key* to *value* if missing."""
+    def apply(data: dict) -> bool:
+        if key not in data:
+            data[key] = value
+            return True
+        return False
     return apply
 
 
@@ -42,15 +52,16 @@ def wrap(key: str, *, inside: str) -> Callable[[dict], bool]:
 
 MIGRATIONS: Dict[str, List[Callable[[dict], bool]]] = {
     "blueprint_object": [
-        rename("objectName", "name"),
-        remove("deprecatedField"),
+        migrate_field("objectName", "name"),
+        remove_field("deprecatedField"),
     ],
     "world": [
-        rename("entities", "objects"),
+        migrate_field("entities", "objects"),
     ],
     "config": [
-        rename("screen_width", "width"),
-        rename("screen_height", "height"),
+        migrate_field("screen_width", "width"),
+        migrate_field("screen_height", "height"),
+        set_default("fullscreen", False),
     ],
 }
 
@@ -79,8 +90,9 @@ def migrate(data: dict, kind: str | None = None) -> dict:
 
 __all__ = [
     "migrate",
-    "rename",
-    "remove",
+    "migrate_field",
+    "remove_field",
+    "set_default",
     "wrap",
     "MIGRATIONS",
     "migrated_count",

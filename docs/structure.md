@@ -313,4 +313,15 @@ SAGE-Engine/
 
 SAGE Engine не использует номера версий ни в каких данных. Все изменения
 обрабатываются автоматически при загрузке через модуль `compat`, обеспечивая
-вечную совместимость.
+вечную совместимость. Миграции описываются набором правил в ``compat.MIGRATIONS``
+и выполняются на лету. Пример пользовательской миграции:
+
+```python
+from sage_engine import compat
+
+compat.MIGRATIONS["config"] = [
+    compat.migrate_field("oldKey", "newKey"),
+    compat.remove_field("deprecated"),
+    compat.set_default("fullscreen", False),
+]
+```
