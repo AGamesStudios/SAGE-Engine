@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parent
 
 def boot(cfg):
     """Load the example world and enable GUI debugging."""
-    window.init("SAGE Runner", 640, 360)
+    window.init(title="SAGE Runner", width=640, height=360)
     print("Загружаем мир level1.sageworld...")
     world.load(ROOT / "world" / "level1.sageworld")
     print("World loaded.")
