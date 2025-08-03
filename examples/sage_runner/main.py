@@ -22,7 +22,7 @@ def boot(cfg):
     """Load the example world and enable GUI debugging."""
     logger.debug("phase boot")
     window.init(title="SAGE Runner", width=640, height=360)
-    render.init(window.get_handle())
+    render.init(window.get_window_handle())
     print("Загружаем мир level1.sageworld...")
     data = world.load(ROOT / "world" / "level1.sageworld")
     for entry in data:
