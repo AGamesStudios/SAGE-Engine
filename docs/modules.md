@@ -34,6 +34,8 @@
 | audio | реализовано |
 | shaders | реализовано |
 | game_state | реализовано |
+| [transform](modules/transform.md) | реализовано |
+| [coordinate](modules/coordinate.md) | реализовано |
 
 
 ## 🔹 core
