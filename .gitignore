@@ -3,6 +3,9 @@ __pycache__/
 logs/
 *.sage*
 !examples/render_test/game.sagecfg
+!examples/sage_runner/game.sagecfg
+!examples/sage_runner/world/*.sageworld
+!examples/sage_runner/blueprints/*.sagebp
 *.assets
 *.compiled
 sage_engine/native/

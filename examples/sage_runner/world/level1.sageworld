@@ -1,0 +1,7 @@
+{
+  "objects": [
+    {"blueprint": "../blueprints/player.sagebp", "transform": {"x": 0, "y": 0}},
+    {"blueprint": "../blueprints/platform.sagebp", "transform": {"x": 0, "y": -5}},
+    {"blueprint": "../blueprints/enemy.sagebp", "transform": {"x": 50, "y": 0}}
+  ]
+}

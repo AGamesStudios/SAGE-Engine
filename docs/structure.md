@@ -49,6 +49,7 @@ SAGE-Engine/
 │       ├── basic_scene.md
 │       └── custom_role.md
 ├── examples/
+│   └── sage_runner/        # демонстрационный раннер без реальных ассетов
 ├── pyproject.toml
 ├── roles/
 │   ├── Camera.role.json

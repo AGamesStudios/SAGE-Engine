@@ -1,0 +1,11 @@
+{
+  "meta": {"origin": "sage_runner"},
+  "objects": [
+    {
+      "name": "platform",
+      "role": "runner",
+      "transform": {"x": 0, "y": 0},
+      "sprite": {"image": "assets/platform.sageimg"}
+    }
+  ]
+}

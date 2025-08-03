@@ -56,6 +56,8 @@ SAGE Engine развивается без версий: обновления п�
 The demo game in `examples/render_test` illustrates basic usage. On Windows use
 Python 3.10–3.12 and run `python examples/render_test/main.py`. Set `SAGE_LOGLEVEL=DEBUG` for verbose
 logs.
+The `examples/sage_runner` project showcases a small runner game using worlds,
+blueprints and FlowScript while relying only on placeholder assets.
 Use `sage-pack` to build compressed resource archives.
 To validate the Win32 backend, run the demo and resize or move the window.
 Events will be printed in the console when `SAGE_LOGLEVEL=DEBUG`.

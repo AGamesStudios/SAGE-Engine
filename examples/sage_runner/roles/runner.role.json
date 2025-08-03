@@ -1,0 +1,14 @@
+{
+  "name": "Runner",
+  "doc": "Role for runner game entities.",
+  "categories": {
+    "transform": {
+      "x": "float",
+      "y": "float"
+    },
+    "sprite": {
+      "tex_id": "int"
+    }
+  },
+  "phases": ["update", "draw"]
+}
