@@ -1,6 +1,18 @@
 import math
 
-from sage_engine.transform import NodeTransform, Transform2D, prepare_world_all
+from sage_engine.transform import (
+    NodeTransform,
+    Rect,
+    Coord,
+    Space,
+    Camera2D,
+    prepare_world_all,
+    collect_visible,
+    serialize_transform,
+    apply_transform,
+    pixel_snap,
+    screen_rect_to_world,
+)
 
 
 def test_hierarchy_world_matrix():
@@ -24,3 +36,33 @@ def test_dirty_flag_recomputes_once():
     prepare_world_all(node)
     second = node.transform._m_world
     assert first != second
+
+
+def test_world_aabb_and_culling():
+    root = NodeTransform(local_rect=Rect(0, 0, 10, 10))
+    child = NodeTransform(local_rect=Rect(0, 0, 10, 10))
+    child.transform.set_pos(100, 0)
+    root.add_child(child)
+    cam = Camera2D(pos=(0, 0), zoom=1.0, viewport_px=(50, 50))
+    prepare_world_all(root)
+    visible = collect_visible(root, cam)
+    assert root in visible and child not in visible
+
+
+def test_pixel_snap_and_screen_rect():
+    cam = Camera2D(pos=(0, 0), zoom=1.0, viewport_px=(100, 100))
+    rect = screen_rect_to_world(cam, Rect(0, 0, 100, 100, Space.SCREEN))
+    assert math.isclose(rect.w, 100) and math.isclose(rect.h, 100)
+    snapped = pixel_snap(Coord(10.3, 9.7, Space.SCREEN))
+    assert snapped.x == 10 and snapped.y == 10
+
+
+def test_serialize_roundtrip():
+    node = NodeTransform()
+    node.transform.set_pos(3, 4)
+    prepare_world_all(node)
+    data = serialize_transform(node)
+    other = NodeTransform()
+    apply_transform(other, data)
+    prepare_world_all(other)
+    assert other.transform._m_world == node.transform._m_world

@@ -46,22 +46,30 @@ class Transform2D:
     _m_world: List[float] = field(default_factory=math2d.identity)
     _dirty_local: bool = True
     _dirty_world: bool = True
+    _dirty_bits: int = 0x1F  # pos|rot|scale|shear|origin
 
-    def mark_dirty(self) -> None:
+    DIRTY_POS = 1
+    DIRTY_ROT = 2
+    DIRTY_SCALE = 4
+    DIRTY_SHEAR = 8
+    DIRTY_ORIGIN = 16
+
+    def _mark(self, bit: int) -> None:
         self._dirty_local = True
         self._dirty_world = True
+        self._dirty_bits |= bit
 
     def set_pos(self, x: float, y: float) -> None:
         self.pos = (x, y)
-        self.mark_dirty()
+        self._mark(self.DIRTY_POS)
 
     def set_rot(self, rad: float) -> None:
         self.rot = rad
-        self.mark_dirty()
+        self._mark(self.DIRTY_ROT)
 
     def set_scale(self, sx: float, sy: float) -> None:
         self.scale = (sx, sy)
-        self.mark_dirty()
+        self._mark(self.DIRTY_SCALE)
 
     def compute_local(self) -> List[float]:
         if self._dirty_local:
@@ -69,6 +77,7 @@ class Transform2D:
                 self.pos, self.rot, self.scale, self.shear, self.origin
             )
             self._dirty_local = False
+            self._dirty_bits = 0
         return self._m_local
 
     def compute_world(self, parent_world: Optional[List[float]] = None) -> List[float]:
@@ -78,6 +87,12 @@ class Transform2D:
                 self._m_world = local[:]
             else:
                 self._m_world = math2d.multiply(parent_world, local)
+                try:
+                    from ..render import stats as render_stats
+
+                    render_stats.stats["transform_mul_count"] += 1
+                except Exception:
+                    pass
             self._dirty_world = False
         return self._m_world
 
@@ -87,6 +102,7 @@ class NodeTransform:
     transform: Transform2D = field(default_factory=Transform2D)
     parent: Optional["NodeTransform"] = None
     children: List["NodeTransform"] = field(default_factory=list)
+    local_rect: Rect = field(default_factory=lambda: Rect(0.0, 0.0, 0.0, 0.0))
 
     def add_child(self, child: "NodeTransform") -> None:
         child.parent = self
@@ -95,3 +111,7 @@ class NodeTransform:
     def world_matrix(self) -> List[float]:
         parent_world = self.parent.world_matrix() if self.parent else None
         return self.transform.compute_world(parent_world)
+
+    def world_aabb(self) -> Rect:
+        m = self.world_matrix()
+        return math2d.apply_to_rect(m, self.local_rect)

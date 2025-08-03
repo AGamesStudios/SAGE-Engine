@@ -32,6 +32,29 @@ def apply_to_point(m: Matrix, x: float, y: float) -> Tuple[float, float]:
     )
 
 
+def apply_to_rect(m: Matrix, rect: "Rect") -> "Rect":
+    """Transform *rect* and return the axis aligned bounding box.
+
+    The function computes all four corners and returns the minimal bounding
+    rectangle that contains the transformed points.  It does not allocate any
+    intermediate lists which keeps the hot path free of garbage creation.
+    """
+
+    x0, y0 = apply_to_point(m, rect.x, rect.y)
+    x1, y1 = apply_to_point(m, rect.x + rect.w, rect.y)
+    x2, y2 = apply_to_point(m, rect.x, rect.y + rect.h)
+    x3, y3 = apply_to_point(m, rect.x + rect.w, rect.y + rect.h)
+
+    min_x = min(x0, x1, x2, x3)
+    max_x = max(x0, x1, x2, x3)
+    min_y = min(y0, y1, y2, y3)
+    max_y = max(y0, y1, y2, y3)
+
+    from .types import Rect  # local import to avoid a circular dependency
+
+    return Rect(min_x, min_y, max_x - min_x, max_y - min_y)
+
+
 def from_transform(
     pos: Tuple[float, float],
     rot: float,

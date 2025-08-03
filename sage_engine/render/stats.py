@@ -17,6 +17,11 @@ stats = {
     "texture_memory_kb": 0,
     "memory_peak": 0,
     "time_spent_ms": 0.0,
+    "transform_nodes_updated": 0,
+    "transform_mul_count": 0,
+    "culling_tested": 0,
+    "culling_rejected": 0,
+    "culling_drawn": 0,
 }
 
 
@@ -28,6 +33,11 @@ def reset_frame() -> None:
     stats["textures_loaded"] = 0
     stats["atlas_hits"] = 0
     stats["atlas_misses"] = 0
+    stats["transform_nodes_updated"] = 0
+    stats["transform_mul_count"] = 0
+    stats["culling_tested"] = 0
+    stats["culling_rejected"] = 0
+    stats["culling_drawn"] = 0
     try:  # avoid circular import at module load
         from ..texture.cache import TextureCache
 
