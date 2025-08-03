@@ -43,6 +43,7 @@ stats = {
     "triangles_drawn": 0,
     "zbuffer_hits": 0,
     "frame3d_time": 0.0,
+    "camera_missing_count": 0,
 }
 
 _history: deque[float] = deque(maxlen=120)
@@ -107,6 +108,7 @@ def reset_frame() -> None:
     stats["triangles_drawn"] = 0
     stats["zbuffer_hits"] = 0
     stats["frame3d_time"] = 0.0
+    stats["camera_missing_count"] = 0
     try:  # avoid circular import at module load
         from ..texture.cache import TextureCache
 

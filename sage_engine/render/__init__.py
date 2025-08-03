@@ -31,7 +31,6 @@ _chunking = False
 _culling = False
 _batching = False
 _render3d: Render3DUnit | None = None
-_camera3d: Camera3D | None = None
 
 
 def _select_backend() -> str:
@@ -90,20 +89,20 @@ def enable_batching(enabled: bool = True) -> None:
 
 
 def set_camera3d(camera: Camera3D) -> None:
-    """Set active 3D camera for mesh drawing."""
-    global _camera3d, _render3d
-    _camera3d = camera
-    if _render3d:
-        _render3d.set_camera(camera)
+    """Set the active 3D camera used for mesh drawing."""
+    cam_api = core.get("camera3d")
+    if cam_api is None:
+        from ..camera import runtime as _cam_rt  # noqa: F401
+        cam_api = core.get("camera3d")
+    if cam_api and "set_active_camera" in cam_api:
+        cam_api["set_active_camera"](camera)
 
 
 def _ensure_render3d() -> Render3DUnit:
     global _render3d
     if _render3d is None:
         from ..gfx import _runtime as gfx_runtime  # type: ignore
-
-        cam = _camera3d or Camera3D(position=Vector3(0, 0, -5), target=Vector3(0, 0, 0))
-        _render3d = Render3DUnit(gfx_runtime, cam)
+        _render3d = Render3DUnit(gfx_runtime)
     return _render3d
 
 

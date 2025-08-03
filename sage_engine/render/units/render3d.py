@@ -6,7 +6,7 @@ from typing import Tuple
 
 from ...graphics.math3d import Vector3, Matrix4
 from ...graphics.mesh3d import Mesh3D
-from ...graphics.camera3d import Camera3D
+from ...core import get as core_get
 from ..zbuffer import ZBuffer
 from .. import stats as render_stats
 from ...logger import logger
@@ -15,13 +15,9 @@ from ...logger import logger
 class Render3DUnit:
     """Minimal CPU rasterizer for triangle meshes."""
 
-    def __init__(self, runtime, camera: Camera3D, zbuffer: ZBuffer | None = None) -> None:
+    def __init__(self, runtime, zbuffer: ZBuffer | None = None) -> None:
         self.runtime = runtime
-        self.camera = camera
         self.zbuffer = zbuffer or ZBuffer(runtime.width, runtime.height)
-
-    def set_camera(self, camera: Camera3D) -> None:
-        self.camera = camera
 
     def resize(self, width: int, height: int) -> None:
         if width != self.zbuffer.width or height != self.zbuffer.height:
@@ -32,9 +28,19 @@ class Render3DUnit:
         logger.info("[render] Drawing mesh with %d triangles", tri_count, tag="render")
         if tri_count > 50_000:
             logger.warn("[render] Mesh overflow: %d triangles", tri_count, tag="render")
-            return
+            return False
+        cam_api = core_get("camera3d")
+        if cam_api is None:
+            from ...camera import runtime as _cam_rt  # noqa: F401
+            cam_api = core_get("camera3d")
+        camera = cam_api.get("get_active_camera")() if cam_api else None  # type: ignore[assignment]
+        if camera is None:
+            logger.error("[core][render] No active camera found for frame render.")
+            render_stats.stats["camera_missing_count"] += 1
+            return False
         start = time.perf_counter()
-        mvp = self.camera.projection_matrix() @ self.camera.view_matrix() @ model
+        aspect = self.runtime.width / self.runtime.height if self.runtime.height else 1.0
+        mvp = camera.get_projection_matrix(aspect) @ camera.get_view_matrix() @ model
         w, h = self.runtime.width, self.runtime.height
         line_col = (*color, 255)
         for tri in mesh.triangles:
@@ -53,6 +59,7 @@ class Render3DUnit:
             self._rasterize_triangle(pts[0], pts[1], pts[2], color)
             render_stats.stats["triangles_drawn"] += 1
         render_stats.stats["frame3d_time"] += (time.perf_counter() - start) * 1000.0
+        return True
 
     def _rasterize_triangle(self, v0, v1, v2, color) -> None:
         x0, y0, z0 = v0

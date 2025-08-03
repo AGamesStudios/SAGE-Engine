@@ -86,8 +86,8 @@ else:
 
 def create_window(
     title: str,
-    width: int,
-    height: int,
+    width: int = 640,
+    height: int = 480,
     fullscreen: bool = False,
     resizable: bool = True,
     borderless: bool = False,
@@ -118,8 +118,8 @@ def create_window(
 
 def init(
     title: str,
-    width: int,
-    height: int,
+    width: int = 640,
+    height: int = 480,
     fullscreen: bool = False,
     resizable: bool = True,
     borderless: bool = False,
@@ -209,6 +209,13 @@ def get_dpi_scale() -> float:
         return _window.get_dpi_scale()
     return 1.0
 
+
+def get_aspect_ratio() -> float:
+    """Return aspect ratio (width/height) of the main window."""
+
+    w, h = get_size()
+    return w / h if h else 1.0
+
 # Internal helpers primarily for testing
 
 def _on_close(event=None) -> None:
@@ -284,6 +291,7 @@ __all__ = [
     "get_window_handle",
     "get_framebuffer",
     "get_dpi_scale",
+    "get_aspect_ratio",
     "set_fullscreen",
     "set_resolution",
     "WINDOW_RESIZED",
