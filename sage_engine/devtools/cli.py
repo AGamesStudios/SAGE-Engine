@@ -95,6 +95,16 @@ def init_project(path: Path, template: str) -> None:
             shutil.copy2(item, dst)
 
 
+def init_engine_cfg(path: Path) -> None:
+    """Generate a minimal project structure with ``engine.sagecfg``."""
+    path.mkdir(parents=True, exist_ok=True)
+    cfg = path / "engine.sagecfg"
+    if not cfg.exists():
+        cfg.write_text("[SAGECFG]\n", encoding="utf8")
+    for d in ("world", "blueprints", "assets", "gui"):
+        (path / d).mkdir(exist_ok=True)
+
+
 def run_project(path: Path) -> None:
     main_py = path / "main.py"
     subprocess.run([sys.executable, str(main_py)], check=True)
@@ -121,6 +131,9 @@ def main(argv: Optional[list[str]] = None) -> None:
     initp = sub.add_parser("init")
     initp.add_argument("--name")
     initp.add_argument("--template", default="blank-2d")
+
+    init_proj = sub.add_parser("init-project")
+    init_proj.add_argument("--path", default=".")
 
     run = sub.add_parser("run")
     run.add_argument("path", nargs="?", default=".")
@@ -190,6 +203,8 @@ def main(argv: Optional[list[str]] = None) -> None:
         new_project(args.name, args.template)
     elif args.topic == "init":
         init_project(Path.cwd(), args.template)
+    elif args.topic == "init-project":
+        init_engine_cfg(Path(args.path))
     elif args.topic == "run":
         run_project(Path(args.path))
     elif args.topic == "check":

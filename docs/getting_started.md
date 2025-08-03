@@ -4,6 +4,8 @@
    ```bash
    pip install sage-engine
    sage new MyGame
+   # или инициализация в существующей папке
+   sage init-project
    ```
 2. Подготовьте виртуальное окружение и установите зависимости для разработки:
    ```bash

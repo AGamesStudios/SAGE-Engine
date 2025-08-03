@@ -44,13 +44,8 @@ def load_file(path: Path) -> bytes:
         return fh.read()
 
 
-def load_cfg(path: str | Path) -> dict:
-    """Load a `.sagecfg` configuration file.
-
-    Supports both YAML syntax and simple ``key = value`` lines.
-    """
-    p = Path(path)
-    text = p.read_text(encoding="utf8")
+def _parse_cfg_text(text: str) -> dict:
+    """Parse configuration *text* into a dictionary."""
     try:
         loaded = yaml.safe_load(text)
         if isinstance(loaded, dict):
@@ -74,6 +69,16 @@ def load_cfg(path: str | Path) -> dict:
     return compat.migrate(data, "config")
 
 
+def load_cfg(path: str | Path) -> dict:
+    """Load a `.sagecfg` configuration file.
+
+    Supports both YAML syntax and simple ``key = value`` lines.
+    """
+    p = Path(path)
+    text = p.read_text(encoding="utf8")
+    return _parse_cfg_text(text)
+
+
 _ENGINE_ALLOWED = {
     "name",
     "script",
@@ -86,8 +91,17 @@ _ENGINE_ALLOWED = {
 
 
 def load_engine_cfg(path: str | Path) -> dict:
-    """Load and validate ``engine.sagecfg``."""
-    cfg = load_cfg(path)
+    """Load and validate ``engine.sagecfg``.
+
+    The first non-empty line must be ``[SAGECFG]``. Unknown keys are
+    discarded with a warning.
+    """
+    p = Path(path)
+    text = p.read_text(encoding="utf8")
+    lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+    if not lines or lines[0] != "[SAGECFG]":
+        raise ValueError("invalid header")
+    cfg = _parse_cfg_text("\n".join(lines[1:]))
     for key in list(cfg):
         if key not in _ENGINE_ALLOWED:
             logger.warn("[config] Unknown key in %s: %s", path, key)

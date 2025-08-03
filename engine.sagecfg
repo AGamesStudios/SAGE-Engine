@@ -1,16 +1,3 @@
-# Example engine configuration
-# Order of subsystem registration matters for correct phase execution.
-# Modules are initialized sequentially in boot phase and then participate in
-# update → draw → flush → shutdown cycles. Recommended order:
-# 1. input
-# 2. ai_processing
-# 3. physics
-# 4. render
-# 5. resource
-# 6. object_groups
-
-# Set render backend: software or vulkan
-# render_backend = "software"
-
-# Actual modules can be listed in the "modules" key if needed.
-# modules = ["input", "render", "resource"]
+[SAGECFG]
+render_backend = "software"
+modules = ["input", "render", "resource", "object_groups"]

@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Callable, Dict, List
 from .extensible import IExtensible
 
-from ..format.loader import load_sage_file
+import os
 import sys
 from importlib import import_module
 
@@ -28,13 +28,21 @@ _interfaces: Dict[str, object] = {}
 
 
 def _load_modules_from_config() -> None:
-    path = Path(__file__).resolve().parents[2] / "engine.sagecfg"
-    if not path.exists():
-        return
+    """Load engine configuration and import listed modules."""
+    cfg_path = os.environ.get(
+        "SAGE_ENGINE_CFG",
+        str(Path(__file__).resolve().parents[2] / "engine.sagecfg"),
+    )
+    path = Path(cfg_path)
+    from ..resource.loader import load_engine_cfg  # local import to avoid cycle
     try:
-        data = load_sage_file(path)
+        data = load_engine_cfg(path)
+    except FileNotFoundError:
+        logger.warn("engine.sagecfg missing; using defaults")
+        return
     except Exception as e:
         logger.error("failed to load engine.sagecfg: %s", e)
+        logger.info("run 'sage init-project' to create a template")
         return
     settings.features.update(data.get("features", {}))
     settings_dict = data.get("settings", {})
