@@ -17,18 +17,22 @@ class Texture:
     mipmaps: list[bytes] | None = None
 
     def load(self, path: str, generate_mipmap: bool = False) -> None:
-        if not path.endswith(".sageimg"):
-            logger.error("[texture] external image formats are not supported: %s", path)
-            return
         try:
             data = resource.load(path)
         except Exception as exc:
-            logger.warning("[texture] failed to load %s: %s", path, exc)
+            logger.warning("[texture] missing texture file: %s (%s)", path, exc)
             self.width = 0
             self.height = 0
             self.pixels = None
             return
-        self.width, self.height, self.pixels = sageimg.decode(data)
+        try:
+            self.width, self.height, self.pixels = sageimg.decode(data)
+        except Exception as exc:
+            logger.warning("[texture] failed to decode %s: %s", path, exc)
+            self.width = 0
+            self.height = 0
+            self.pixels = None
+            return
         if generate_mipmap:
             self.mipmaps = [self.pixels]
         from .cache import TextureCache

@@ -41,10 +41,10 @@ def test_store_update_render_query():
     store.objects.clear()
     ctx = []
     bps = runtime.blueprints
-    bps.register({"name": "sprite_only", "roles": ["Sprite"], "parameters": {"Sprite": {"image": "hero.png"}}})
+    bps.register({"name": "sprite_only", "roles": ["Sprite"], "parameters": {"Sprite": {"image": "sprite.png"}}})
     obj = runtime.builder().build("sprite_only", obj_id="s1")
     store.update(0.1)
     store.render(ctx)
-    assert "render:hero.png" in ctx
+    assert "render:sprite.png" in ctx
     found = store.find_by_role("Sprite")
     assert obj in found

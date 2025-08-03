@@ -14,7 +14,7 @@ def test_forbidden_keywords():
             or path.name in {"test_repo_clean.py", "test_no_versions.py"}
         ):
             continue
-        if path.is_file() and path.suffix not in {".png", ".ttf", ".lock", ".svg", ".pyc"}:
+        if path.is_file() and path.suffix not in {".ttf", ".lock", ".svg", ".pyc"}:
             text = path.read_text(encoding="utf8", errors="ignore")
             for word in FORBIDDEN:
                 assert not re.search(rf"\b{word}\b", text, re.IGNORECASE), f"{word} found in {path}"

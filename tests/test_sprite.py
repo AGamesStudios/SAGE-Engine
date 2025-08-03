@@ -27,18 +27,6 @@ def test_draw_and_flush(tmp_path: Path):
     render.shutdown()
 
 
-def test_png_rejected(tmp_path, monkeypatch):
-    p = tmp_path / "bad.png"
-    p.write_bytes(b"fake")
-    from sage_engine.texture import Texture
-    from sage_engine.logger import logger
-    msgs = []
-    monkeypatch.setattr(logger, "error", lambda m, *a, **k: msgs.append(m))
-    tex = Texture()
-    tex.load(str(p))
-    assert any("external image formats" in m for m in msgs)
-
-
 def test_texture_cache_usage(tmp_path: Path):
     p = tmp_path / "tex.sageimg"
     p.write_bytes(sageimg.encode(b"\x00\x00\x00\xff", 1, 1))
@@ -71,8 +59,9 @@ def test_missing_texture_warning(monkeypatch):
     msgs = []
     monkeypatch.setattr(logger, "warning", lambda m, *a, **k: msgs.append(m))
     tex = Texture()
-    tex.load("no_file.sageimg")
-    assert any("failed to load" in m for m in msgs)
+    tex.load("sprite.png")
+    assert tex.get_size() == (0, 0)
+    assert any("missing texture file" in m for m in msgs)
 
 
 def test_stats_reset(monkeypatch):
