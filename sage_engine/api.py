@@ -15,7 +15,6 @@ from .blueprint import Blueprint as _Blueprint, load as load_blueprint
 from .world import Scene as _Scene, scene
 from .roles import RoleSchema as _RoleSchema
 from .events import dispatcher as EventSystem
-from . import compat
 from . import preview
 
 Blueprint = stable_api(_Blueprint)
@@ -31,6 +30,5 @@ __all__ = [
     "scene",
     "RoleSchema",
     "EventSystem",
-    "compat",
     "preview",
 ]

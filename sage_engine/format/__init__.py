@@ -118,7 +118,7 @@ def _decode_value(data: bytes, off: int) -> Tuple[Any, int]:
 
 
 HEADER = b"SAGE"
-VERSION = 1
+REVISION = 1
 
 
 @dataclass
@@ -127,7 +127,7 @@ class SAGECompiler:
 
     def compile(self, src: Path, dst: Path) -> None:
         data = yaml.safe_load(src.read_text(encoding="utf8"))
-        encoded = HEADER + bytes([VERSION]) + _encode_value(data)
+        encoded = HEADER + bytes([REVISION]) + _encode_value(data)
         dst.write_bytes(encoded)
 
 
@@ -140,9 +140,9 @@ class SAGEDecompiler:
         if not buf.startswith(HEADER):
             raise ValueError("invalid header")
         _, off = HEADER, 4
-        version = buf[4]
-        if version != VERSION:
-            raise ValueError("unsupported version")
+        rev = buf[4]
+        if rev != REVISION:
+            raise ValueError("unsupported revision")
         value, _ = _decode_value(buf, 5)
         return value
 
@@ -174,7 +174,7 @@ __all__ = [
     "load_sage_file",
     "pack_directory",
     "HEADER",
-    "VERSION",
+    "REVISION",
     "sageimg",
     "sagesfx",
     "sagebp",

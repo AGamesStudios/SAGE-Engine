@@ -16,7 +16,6 @@ from .api import (
     Frame,
 )
 from . import builtin  # register built-ins
-from .compat import convert
 
 __all__ = [
     "register",
@@ -25,7 +24,6 @@ __all__ = [
     "set_backend",
     "get_backend",
     "apply_pipeline",
-    "convert",
     "set_scissor",
     "clear_scissor",
     "set_mask",

@@ -2,7 +2,7 @@
 
 `format` implements compact TLV based files used by the engine. Supported types
 are integers (8/16/32 bit), floats, strings, arrays, maps and flags. Files start
-with the header `SAGE` and a version byte.
+with the header `SAGE` and a revision byte.
 
 🚫 Использование JSON, YAML, TOML, XML строго запрещено.
 ✅ Допускается только использование `.sage*` форматов, генерируемых через `SAGECompiler`.

@@ -56,7 +56,6 @@ The world module commits any pending `SceneEdit` operations during update so all
 
 ## Schema Independence
 
-All data files include a `schema_version` integer. When loading, modules call the
-compatibility helpers to upgrade older schemas transparently. This approach
-removes any strict engine versioning and allows the project to maintain backward
-compatibility indefinitely.
+All data files load through migrate_* helpers that upgrade older schemas
+transparently. This approach removes any strict engine numbering and allows the
+project to maintain backward compatibility indefinitely.

@@ -10,18 +10,13 @@ from ..logger import logger
 from .view import SceneView
 
 from .. import roles
-from ..compat import migrate_schema
 import json
 from pathlib import Path
 
-CURRENT_SCHEMA_VERSION = 2
-
 
 def load(path: Path) -> List[Mapping[str, Mapping[str, object]]]:
-    """Load scene objects from JSON applying migrations."""
+    """Load scene objects from JSON."""
     data = json.loads(path.read_text(encoding="utf8"))
-    version = int(data.get("schema_version", 0))
-    data = migrate_schema(data, version, CURRENT_SCHEMA_VERSION, "scene")
     return data.get("objects", [])
 
 
