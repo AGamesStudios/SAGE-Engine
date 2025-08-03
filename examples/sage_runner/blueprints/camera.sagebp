@@ -1,0 +1,11 @@
+{
+  "meta": {"origin": "sage_runner"},
+  "objects": [
+    {
+      "name": "camera",
+      "role": "camera",
+      "transform": {"x": 0, "y": 0},
+      "camera": {"zoom": 1.0}
+    }
+  ]
+}

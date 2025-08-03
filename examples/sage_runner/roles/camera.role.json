@@ -1,0 +1,14 @@
+{
+  "name": "Camera",
+  "doc": "Simple camera role for the runner example.",
+  "categories": {
+    "transform": {
+      "x": "float",
+      "y": "float"
+    },
+    "camera": {
+      "zoom": "float"
+    }
+  },
+  "phases": ["update"]
+}
