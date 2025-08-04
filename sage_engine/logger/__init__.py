@@ -1,22 +1,16 @@
-"""SAGE Logger providing lightweight logging utilities."""
+"""Simple logging setup for SAGE Engine."""
 
-from .core import logger, boot
-from .levels import DEBUG, INFO, WARN, ERROR, FATAL, CRITICAL
-from .crash import log_crash
-from .hooks import install as _install_hooks
-from ..core import register as _register
+from __future__ import annotations
 
-_register("boot", boot)
-_register("boot", lambda _cfg: _install_hooks())
+import logging
 
-__all__ = [
-    "logger",
-    "boot",
-    "DEBUG",
-    "INFO",
-    "WARN",
-    "ERROR",
-    "FATAL",
-    "CRITICAL",
-    "log_crash",
-]
+
+def setup_logging(level: str = "info") -> None:
+    """Configure root logger with unified format."""
+    lvl = getattr(logging, level.upper(), logging.INFO)
+    logging.basicConfig(level=lvl, format="[%(levelname)s] [%(name)s] %(message)s")
+
+
+def get_logger(name: str) -> logging.Logger:
+    """Return logger with ``name``."""
+    return logging.getLogger(name)

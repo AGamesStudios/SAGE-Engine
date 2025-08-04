@@ -1,17 +1,31 @@
-from sage_engine import core, events
-from sage_engine.settings import settings
-from sage_engine.scheduler import time, timers
+from sage_engine.core import register, boot_engine, stop
 
 
-def setup_module():
-    core.register('boot', time.boot)
-    core.register('update', time.update)
-    core.register('update', timers.update)
-    core.register('flush', events.flush)
+def test_phase_order():
+    events: list[str] = []
 
+    def boot(cfg: dict | None = None) -> None:
+        events.append("boot")
 
-def test_core_cycle():
-    core.core_boot({})
-    core.core_tick()
-    assert isinstance(settings.features, dict)
-    core.core_shutdown()
+    def update() -> None:
+        events.append("update")
+        stop()
+
+    def draw() -> None:
+        events.append("draw")
+
+    def flush() -> None:
+        events.append("flush")
+
+    def shutdown() -> None:
+        events.append("shutdown")
+
+    register("boot", boot)
+    register("update", update)
+    register("draw", draw)
+    register("flush", flush)
+    register("shutdown", shutdown)
+
+    boot_engine()
+
+    assert events == ["boot", "update", "draw", "flush", "shutdown"]

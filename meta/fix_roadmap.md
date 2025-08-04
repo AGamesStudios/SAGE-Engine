@@ -7,3 +7,4 @@
 | P1 | Complete events.boot and timers.boot logic | Ensure queues are flushed |
 | P2 | Add screenshot diffing in sage_testing.visual | Enable regression tests |
 | P3 | Implement UI module or remove references | Simplify configuration |
+| P0 | Rebuild core phase loop and logging | Completed |

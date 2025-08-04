@@ -1,181 +1,39 @@
-"""Core module providing basic engine loop and dependency registry."""
+"""Minimal core loop for SAGE Engine."""
 
 from __future__ import annotations
 
-from collections import defaultdict
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Callable, Dict, List
-from .extensible import IExtensible
+import logging
+from .extensible import PhaseRegistry
 
-import os
-import sys
-from importlib import import_module
+registry = PhaseRegistry()
+register = registry.register
+expose = registry.expose
+get = registry.get
 
-from ..settings import settings
-import asyncio
-from concurrent.futures import ThreadPoolExecutor
-from time import perf_counter_ns
-from ..runtime.fsync import FrameSync
-
-@dataclass
-class _Phase:
-    func: Callable
-    parallelizable: bool = False
+_running = False
 
 
-_registry: Dict[str, List[_Phase]] = defaultdict(list)
-_booted = False
-_interfaces: Dict[str, object] = {}
-_fsync: FrameSync | None = None
+def stop() -> None:
+    """Stop the main loop after current iteration."""
+    global _running
+    _running = False
 
 
-def _load_modules_from_config() -> None:
-    """Load engine configuration and import listed modules."""
-    cfg_path = os.environ.get(
-        "SAGE_ENGINE_CFG",
-        str(Path(__file__).resolve().parents[2] / "engine.sagecfg"),
-    )
-    path = Path(cfg_path)
-    from ..resource.loader import load_engine_cfg  # local import to avoid cycle
+def boot_engine(config: dict | None = None) -> None:
+    """Boot engine and enter update loop until ``stop`` is called or
+    ``KeyboardInterrupt`` is received."""
+    logger = logging.getLogger("core")
+    registry.run("boot", config or {})
+    logger.info("Boot complete")
+    logger.info("Entering update loop...")
+    global _running
+    _running = True
     try:
-        data = load_engine_cfg(path)
-    except FileNotFoundError:
-        logger.warn("engine.sagecfg missing; using defaults")
-        return
-    except Exception as e:
-        logger.error("failed to load engine.sagecfg: %s", e)
-        logger.info("run 'sage init-project' to create a template")
-        return
-    settings.features.update(data.get("features", {}))
-    settings_dict = data.get("settings", {})
-    for k, v in settings_dict.items():
-        if hasattr(settings, k):
-            setattr(settings, k, v)
-    render_cfg = data.get("render", {})
-    if "target_fps" in render_cfg:
-        settings.target_fps = int(render_cfg["target_fps"])
-    if "frame_sync" in render_cfg:
-        settings.frame_sync = str(render_cfg["frame_sync"])
-    if render_cfg.get("culling", "off") == "on":
-        try:
-            from ..render import enable_culling
-
-            enable_culling(True)
-        except Exception:
-            pass
-    for mod in data.get("boot_modules", []):
-        try:
-            import_module(f"sage_engine.{mod}")
-        except ModuleNotFoundError:
-            continue
-
-
-def register(phase: str, func: Callable, *, parallelizable: bool = False) -> None:
-    """Register a callable for execution in a given phase."""
-    _registry[phase].append(_Phase(func, parallelizable))
-
-from ..logger import logger
-
-
-def core_boot(config: dict | None = None) -> None:
-    """Boot the engine core and all modules."""
-    global _booted
-    if _booted:
-        return
-    _booted = True
-    _load_modules_from_config()
-    global _fsync
-    _fsync = FrameSync(target_fps=settings.target_fps, mode=settings.frame_sync)
-    logger.phase_func = lambda: "boot"
-    # load role definitions before booting modules
-    from .. import roles
-    roles.load_json_roles(docs_path=Path(__file__).resolve().parents[2] / "docs" / "roles.md")
-    for phase in _registry.get("boot", []):
-        phase.func(config or {})
-
-
-async def core_boot_async(config: dict | None = None) -> None:
-    """Asynchronously boot the engine core."""
-    global _booted
-    if _booted:
-        return
-    _booted = True
-    _load_modules_from_config()
-    loop = asyncio.get_event_loop()
-    tasks = [
-        loop.run_in_executor(None, ph.func, config or {})
-        for ph in _registry.get("boot", [])
-    ]
-    if tasks:
-        await asyncio.gather(*tasks)
-
-
-def core_tick() -> None:
-    """Execute a single frame by running all phases in order."""
-    if not _booted:
-        raise RuntimeError("Engine not booted")
-    from ..render import stats as render_stats
-    if _fsync is not None:
-        _fsync.start_frame()
-    frame_start = perf_counter_ns()
-    update_ms = 0.0
-    for phase_name in ("update", "draw", "flush"):
-        ph_start = perf_counter_ns()
-        logger.phase_func = lambda pn=phase_name: pn
-        phases = _registry.get(phase_name, [])
-        serial = [p for p in phases if not p.parallelizable or not settings.enable_multithread]
-        parallel = [p for p in phases if p.parallelizable and settings.enable_multithread]
-
-        for p in serial:
-            p.func()
-
-        if parallel:
-            with ThreadPoolExecutor(max_workers=settings.cpu_threads) as ex:
-                list(ex.map(lambda ph: ph.func(), parallel))
-        phase_ms = (perf_counter_ns() - ph_start) / 1_000_000.0
-        if phase_name == "update":
-            update_ms = phase_ms
-        else:
-            render_stats.stats[f"ms_{phase_name}"] = phase_ms
-    render_stats.stats["ms_update"] = update_ms
-    render_stats.stats["ms_frame"] = (perf_counter_ns() - frame_start) / 1_000_000.0
-    render_stats.stats["frame_ms"] = render_stats.stats["ms_frame"]
-    if _fsync is not None:
-        sleep_time = _fsync.end_frame()
-        render_stats.stats["sleep_time"] = sleep_time * 1000.0  # store ms
-
-
-def core_reset() -> None:
-    """Reset engine state while keeping modules alive."""
-    for phase in _registry.get("reset", []):
-        phase.func()
-
-
-def core_shutdown() -> None:
-    """Shutdown the engine core."""
-    global _booted
-    for phase in _registry.get("shutdown", []):
-        phase.func()
-    _booted = False
-    _registry.clear()
-
-
-def expose(name: str, api: object) -> None:
-    """Expose a module interface under the given name."""
-    _interfaces[name] = api
-
-
-def get(name: str) -> object | None:
-    """Retrieve an exposed interface."""
-    return _interfaces.get(name)
-
-
-def auto_setup() -> None:  # pragma: no cover - simple proxy
-    """Initialize native libraries via ``sage_engine.auto_setup``."""
-    from .. import auto_setup as _auto
-    _auto()
-
-
-# Provide module-level alias so ``from sage_engine.core import core`` works
-core = sys.modules[__name__]
+        while _running:
+            registry.run("update")
+            registry.run("draw")
+            registry.run("flush")
+    except KeyboardInterrupt:
+        pass
+    finally:
+        registry.run("shutdown")

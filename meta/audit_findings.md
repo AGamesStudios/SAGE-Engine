@@ -7,4 +7,5 @@
 | F3 | Shaders   | S2       | `Effect.apply` placeholder, effects pipeline does nothing. | Run effects example. | Provide CPU implementation or disable in docs. |
 | F4 | Events    | S3       | `events.boot` and `events.update` are empty leading to queue never flushed automatically. | Emit events then call core.tick. | Implement these hooks or document manual flush. |
 | F5 | Visual Tests | S3 | `sage_testing.visual` lacks diff logic so graphical regressions aren't detected. | Run `sage-test`. | Implement screenshot comparison using Pillow. |
+| F6 | Core | S1 | Legacy phase system caused startup instability. | Run `python main.py` before cleanup. | Rebuilt minimal core with deterministic phase registry. |
 
