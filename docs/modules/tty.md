@@ -15,6 +15,17 @@ High level helpers such as `draw_text` and `draw_rect` modify the buffer.
 During the draw phase the buffer is written to the terminal using ANSI
 escape sequences.
 
+## ASCII UI
+
+When `[run] ascii_ui = true`, the `tty.ui_core` manager draws simple
+widgets such as boxes and lists. Themes are loaded from JSON files in
+`resources/themes`.
+
+## Color
+
+Colors are handled by the `sage_engine.color` subsystem and support
+24-bit RGB with alpha blending.
+
 ## Input
 
 `tty.input` maps key presses to actions. The state is refreshed every

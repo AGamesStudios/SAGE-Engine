@@ -2,28 +2,24 @@
 
 from __future__ import annotations
 
-COLORS = {
-    "black": 30,
-    "red": 31,
-    "green": 32,
-    "yellow": 33,
-    "blue": 34,
-    "magenta": 35,
-    "cyan": 36,
-    "white": 37,
-}
+from sage_engine.color import Color, parse_color
 
 RESET = "\033[0m"
 
 
-def fg(color: str) -> str:
-    code = COLORS.get(color, 37)
-    return f"\033[{code}m"
+def _to_rgb(value: Color | str) -> tuple[int, int, int]:
+    col = parse_color(value)
+    return col.r, col.g, col.b
 
 
-def bg(color: str) -> str:
-    code = COLORS.get(color, 30) + 10
-    return f"\033[{code}m"
+def fg(value: Color | str) -> str:
+    r, g, b = _to_rgb(value)
+    return f"\033[38;2;{r};{g};{b}m"
+
+
+def bg(value: Color | str) -> str:
+    r, g, b = _to_rgb(value)
+    return f"\033[48;2;{r};{g};{b}m"
 
 
 def style(bold: bool) -> str:

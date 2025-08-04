@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from .buffer import TTYBuffer
+from sage_engine.color import Color
 
 
 def draw_text(
@@ -8,8 +9,8 @@ def draw_text(
     x: int,
     y: int,
     text: str,
-    fg: str = "white",
-    bg: str = "black",
+    fg: Color | str = Color(255, 255, 255),
+    bg: Color | str = Color(0, 0, 0),
     bold: bool = False,
 ) -> None:
     for i, ch in enumerate(text):
@@ -23,8 +24,8 @@ def draw_rect(
     w: int,
     h: int,
     char: str = "#",
-    fg: str = "white",
-    bg: str = "black",
+    fg: Color | str = Color(255, 255, 255),
+    bg: Color | str = Color(0, 0, 0),
 ) -> None:
     for yy in range(y, y + h):
         for xx in range(x, x + w):

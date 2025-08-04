@@ -1,22 +1,19 @@
-from sage_engine.graphic.color import to_rgba
-from sage_engine import gfx, render, window, events
+from sage_engine.color import Color, parse_color, blend, Gradient
 
 
-def test_color_list_conversion():
-    assert to_rgba([255, 0, 0, 128]) == (255, 0, 0, 128)
+def test_parse_color_hex():
+    c = parse_color("#112233")
+    assert c.to_tuple() == (17, 34, 51, 255)
 
 
-def test_draw_rect_with_list_color():
-    import os
-    os.environ['SAGE_HEADLESS'] = '1'
-    events.reset()
-    window.init('c', 10, 10)
-    render.init(window.get_window_handle())
-    gfx.init(10, 10)
-    gfx.begin_frame()
-    gfx.draw_rect(0, 0, 5, 5, [10, 20, 30, 255])
-    gfx.flush_frame(window.get_window_handle())
-    gfx.shutdown()
-    render.shutdown()
-    window.shutdown()
+def test_blend():
+    bg = Color(0, 0, 0)
+    fg = Color(255, 0, 0, 128)
+    out = blend(bg, fg)
+    assert out.r > 0 and out.g == 0 and out.b == 0
 
+
+def test_gradient():
+    g = Gradient([(0.0, Color(0, 0, 0)), (1.0, Color(255, 255, 255))])
+    mid = g.at(0.5)
+    assert mid.r == 127 or mid.r == 128

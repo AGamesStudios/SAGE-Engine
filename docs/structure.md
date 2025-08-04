@@ -5,38 +5,51 @@
 ```text
 SAGE-Engine/
 ├── main.py
-├── README.md
+├── engine.sagecfg
+├── examples/
+│   └── tty_demo.py
 ├── meta/
-│   ├── audit_findings.md
-│   └── fix_roadmap.md
+│   ├── cleanup_summary.md
+│   └── terminal_support.md
 ├── docs/
-│   ├── getting_started.md
-│   └── structure.md
+│   ├── structure.md
+│   └── modules/
+│       ├── tty.md
+│       ├── color.md
+│       └── ui_ascii.md
+├── resources/
+│   └── themes/
+│       └── tty_dark.json
 ├── sage_engine/
 │   ├── core/
 │   │   ├── __init__.py
 │   │   └── extensible.py
-│   ├── logger/
-│   │   └── __init__.py
-│   ├── window/
+│   ├── color/
 │   │   ├── __init__.py
-│   │   └── impl/
-│   │       ├── __init__.py
-│   │       ├── stub.py
-│   │       └── win32.py
-│   ├── render/
+│   │   ├── model.py
+│   │   ├── parser.py
+│   │   ├── gradient.py
+│   │   ├── blend.py
+│   │   └── theme.py
+│   ├── tty/
 │   │   ├── __init__.py
-│   │   └── backends/
-│   │       ├── __init__.py
-│   │       └── software.py
-│   └── graphic/
-│       ├── __init__.py
-│       ├── api.py
-│       ├── color.py
-│       ├── fx.py
-│       └── style.py
+│   │   ├── buffer.py
+│   │   ├── color.py
+│   │   ├── core.py
+│   │   ├── draw.py
+│   │   ├── input.py
+│   │   ├── screen.py
+│   │   ├── ui_core.py
+│   │   ├── box.py
+│   │   ├── list.py
+│   │   ├── editor.py
+│   │   ├── widgets.py
+│   │   └── theme.py
 ├── tests/
-│   └── test_core.py
+│   ├── test_core.py
+│   ├── test_tty.py
+│   ├── test_color.py
+│   └── test_ui_ascii.py
 ```
 
 Каждый модуль подключается к циклу `boot → update → draw → flush → shutdown` через

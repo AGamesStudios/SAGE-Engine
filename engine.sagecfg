@@ -1,5 +1,7 @@
 [run]
 mode = tty
+ascii_ui = true
+theme = tty_dark
 
 [SAGECFG]
 render_backend = "software"

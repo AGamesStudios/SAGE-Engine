@@ -1,13 +1,15 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+
+from sage_engine.color import Color, parse_color
 
 
 @dataclass
 class TTYCell:
     char: str = " "
-    fg: str = "white"
-    bg: str = "black"
+    fg: Color = field(default_factory=lambda: Color(255, 255, 255))
+    bg: Color = field(default_factory=lambda: Color(0, 0, 0))
     bold: bool = False
 
 
@@ -25,8 +27,8 @@ class TTYBuffer:
         for row in self.cells:
             for cell in row:
                 cell.char = " "
-                cell.fg = "white"
-                cell.bg = "black"
+                cell.fg = Color(255, 255, 255)
+                cell.bg = Color(0, 0, 0)
                 cell.bold = False
 
     def set_cell(
@@ -34,13 +36,13 @@ class TTYBuffer:
         x: int,
         y: int,
         char: str,
-        fg: str = "white",
-        bg: str = "black",
+        fg: Color | str = Color(255, 255, 255),
+        bg: Color | str = Color(0, 0, 0),
         bold: bool = False,
     ) -> None:
         if 0 <= x < self.width and 0 <= y < self.height:
             cell = self.cells[y][x]
             cell.char = char
-            cell.fg = fg
-            cell.bg = bg
+            cell.fg = parse_color(fg)
+            cell.bg = parse_color(bg)
             cell.bold = bold
