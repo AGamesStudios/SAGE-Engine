@@ -11,3 +11,4 @@
 
 | F7 | Render | S2 | Only software renderer with no display output. | Run `python main.py` and note no window. | Implement real window backends and presentation. |
 | F8 | Render | S3 | Software renderer lacked unit tests leading to potential regressions. | N/A | Add unit tests verifying pixel output. |
+| F9 | TTY | S2 | No terminal mode for headless environments. | Run engine without window. | Implement TTY subsystem with buffer and input. |

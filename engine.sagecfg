@@ -1,3 +1,6 @@
+[run]
+mode = tty
+
 [SAGECFG]
 render_backend = "software"
 render = {"target_fps": 60, "frame_sync": "adaptive"}
