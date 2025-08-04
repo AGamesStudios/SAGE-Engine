@@ -1,25 +1,21 @@
-from .color import Color, to_rgba
-from .fx import register as fx_register, apply as fx_apply
-from .scene import Scene, Layer, Rect, Group
-from .state import GraphicState, config
+"""Minimal graphic module for SAGE Engine."""
 
-__all__ = [
-    "Color",
-    "to_rgba",
-    "fx_register",
-    "fx_apply",
-    "Scene",
-    "Layer",
-    "Rect",
-    "Group",
-    "GraphicState",
-    "config",
-]
+from __future__ import annotations
+
+import logging
+
+from sage_engine.core import register, get
+from . import api, color, fx, style  # noqa: F401
+
+log = logging.getLogger("graphic")
 
 
-def __getattr__(name):
-    if name in {"api", "style", "backend", "layout", "widget", "event", "manager", "effects", "smoothing", "gradient", "animation", "drawtools"}:
-        from importlib import import_module
-        return import_module(f"sage_engine.graphic.{name}")
-    raise AttributeError(name)
+def draw_welcome() -> None:
+    """Draw background and welcome text using the render system."""
+    window = get("window")
+    api.draw_rect(0, 0, window.width, window.height, color.BLACK)
+    api.draw_text(20, 20, "Welcome to SAGE!", color.WHITE)
+    log.info("Drawing welcome message.")
 
+
+register("draw", draw_welcome)

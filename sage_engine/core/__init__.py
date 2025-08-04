@@ -11,6 +11,7 @@ expose = registry.expose
 get = registry.get
 
 _running = False
+_logger = logging.getLogger("core")
 
 
 def stop() -> None:
@@ -19,13 +20,16 @@ def stop() -> None:
     _running = False
 
 
+def safe_shutdown() -> None:
+    """Public API for requesting engine shutdown."""
+    stop()
+
+
 def boot_engine(config: dict | None = None) -> None:
     """Boot engine and enter update loop until ``stop`` is called or
     ``KeyboardInterrupt`` is received."""
-    logger = logging.getLogger("core")
     registry.run("boot", config or {})
-    logger.info("Boot complete")
-    logger.info("Entering update loop...")
+    _logger.info("Engine boot complete.")
     global _running
     _running = True
     try:
@@ -33,6 +37,7 @@ def boot_engine(config: dict | None = None) -> None:
             registry.run("update")
             registry.run("draw")
             registry.run("flush")
+            _logger.info("Frame complete.")
     except KeyboardInterrupt:
         pass
     finally:

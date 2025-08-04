@@ -19,15 +19,22 @@ SAGE-Engine/
 │   ├── logger/
 │   │   └── __init__.py
 │   ├── window/
-│   │   └── __init__.py
+│   │   ├── __init__.py
+│   │   └── impl/
+│   │       ├── __init__.py
+│   │       ├── stub.py
+│   │       └── win32.py
 │   ├── render/
-│   │   └── __init__.py
-│   ├── input/
-│   │   └── __init__.py
-│   ├── world/
-│   │   └── __init__.py
-│   └── gfx/
-│       └── __init__.py
+│   │   ├── __init__.py
+│   │   └── backends/
+│   │       ├── __init__.py
+│   │       └── software.py
+│   └── graphic/
+│       ├── __init__.py
+│       ├── api.py
+│       ├── color.py
+│       ├── fx.py
+│       └── style.py
 ├── tests/
 │   └── test_core.py
 ```
