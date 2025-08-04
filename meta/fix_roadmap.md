@@ -9,3 +9,4 @@
 | P3 | Implement UI module or remove references | Simplify configuration |
 | P0 | Rebuild core phase loop and logging | Completed |
 | P0 | Add window, render, and graphic stubs | Completed |
+| P1 | Add unit tests for software renderer | Completed |

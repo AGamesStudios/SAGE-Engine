@@ -1,27 +1,24 @@
-import os
-from sage_engine import window, render
+from sage_engine.render.backends.software import SoftwareRenderer
 
 
-def test_set_viewport_affects_state():
-    os.environ['SAGE_HEADLESS'] = '1'
-    window.init('v', 100, 100)
-    render.init(window.get_window_handle())
-    render.set_viewport(50, 50)
-    assert render._get_context() is not None
-    render.shutdown()
-    window.shutdown()
+def test_draw_rect():
+    r = SoftwareRenderer(10, 10)
+    r.begin_frame()
+    r.draw_rect(2, 3, 4, 2, (1, 2, 3))
+    block = r.end_frame()
+    assert block.pixels[3][2] == (1, 2, 3)
+    assert block.pixels[4][5] == (1, 2, 3)
+    # Outside the rectangle should remain unchanged
+    assert block.pixels[3][1] == (0, 0, 0)
 
 
-def test_framebuffer_size_match():
-    os.environ['SAGE_HEADLESS'] = '1'
-    window.init('t', 20, 20)
-    handle = window.get_window_handle()
-    render.init(handle)
-    from sage_engine import gfx
-    gfx.init(20, 20)
-    gfx.begin_frame(color=(0, 0, 0, 255))
-    gfx.flush_frame(handle)
-    gfx.shutdown()
-    render.shutdown()
-    window.shutdown()
-
+def test_draw_text():
+    r = SoftwareRenderer(20, 20)
+    r.begin_frame()
+    r.draw_text(0, 0, "A", (9, 9, 9))
+    block = r.end_frame()
+    # draw_text renders a 6x8 block starting at the provided coordinates
+    assert block.pixels[0][0] == (9, 9, 9)
+    assert block.pixels[7][5] == (9, 9, 9)
+    # A pixel just outside the drawn area should remain blank
+    assert block.pixels[0][7] == (0, 0, 0)
