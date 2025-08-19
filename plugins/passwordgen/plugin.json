@@ -1,0 +1,12 @@
+{
+  "id": "passwordgen",
+  "name": "SAGE Password Generator",
+  "version": "0.1.0",
+  "description": "Secure password generation service and commands.",
+  "services": [
+    "password_generator"
+  ],
+  "commands": [
+    "password.generate"
+  ]
+}

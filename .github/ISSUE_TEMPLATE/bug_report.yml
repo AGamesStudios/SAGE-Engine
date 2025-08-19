@@ -1,0 +1,27 @@
+name: Bug report
+description: Сообщить об ошибке в SAGE Engine
+title: "[Bug]: "
+labels: ["bug"]
+assignees: []
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: Что произошло?
+      description: Опишите баг, ожидаемое поведение и фактический результат.
+      placeholder: ...
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Шаги воспроизведения
+      placeholder: 1) ... 2) ...
+  - type: input
+    id: version
+    attributes:
+      label: Версия/коммит
+  - type: textarea
+    id: logs
+    attributes:
+      label: Логи/скриншоты

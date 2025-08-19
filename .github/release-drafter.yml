@@ -1,0 +1,22 @@
+name: Release Drafter
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [closed]
+template: |
+  ## What's Changed
+  $CHANGES
+categories:
+  - title: 🚀 Features
+    labels:
+      - enhancement
+      - feature
+  - title: 🐛 Fixes
+    labels:
+      - bug
+  - title: 🧪 Tests
+    labels:
+      - test
+change-template: '- $TITLE $NUMBER by @$AUTHOR'

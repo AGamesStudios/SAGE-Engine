@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>SAGE Engine — Downloads</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 900px; margin: 40px auto; line-height: 1.6; }
+    .card { border: 1px solid #ddd; padding: 20px; margin: 12px 0; border-radius: 6px; }
+    .btn { background:#0366d6; color:#fff; padding:8px 12px; text-decoration:none; border-radius:4px; }
+    .muted { color:#666; font-size:0.9em }
+  </style>
+</head>
+<body>
+  <h1>SAGE Engine — Downloads</h1>
+  <p>Здесь будут ссылки на релизы ядра и официальные плагины. Этот список обновляется автоматически при релизах.</p>
+
+  <div class="card">
+    <h2>Latest Stable</h2>
+    <p class="muted">Сборка: <strong>v0.1.0 (placeholder)</strong></p>
+    <p>
+      <a class="btn" href="https://github.com/<OWNER>/<REPO>/releases/latest" target="_blank">Download ZIP (Latest)</a>
+      &nbsp;
+      <a class="btn" href="https://pypi.org/project/sage-engine-core/" target="_blank">pip install sage-engine-core</a>
+    </p>
+    <p class="muted">Если вы хотите портативную сборку с предустановленными плагинами — используйте ZIP.</p>
+  </div>
+
+  <div class="card">
+    <h2>Developer (via PyPI)</h2>
+    <p>Install core via pip and add plugins as needed:</p>
+    <pre>pip install sage-engine-core
+pip install sage-plugin-sage2d</pre>
+  </div>
+
+  <div class="card">
+    <h2>Plugin Registry</h2>
+    <p class="muted">Local registry (used by CLI installer): <code>docs/plugins/registry.json</code></p>
+    <p>Registry entries include id, name, description, version, pip (optional), url (zip) (optional).</p>
+  </div>
+
+  <hr>
+  <p class="muted">Документация: <a href="../README.html">Docs</a></p>
+</body>
+</html>

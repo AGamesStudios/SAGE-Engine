@@ -1,0 +1,13 @@
+{
+  "name": "SAGE Input Plugin",
+  "id": "sageinput",
+  "version": "1.0.0",
+  "module": "plugin",
+  "profiles": [
+    "all"
+  ],
+  "tags": [
+    "input",
+    "hotkeys"
+  ]
+}

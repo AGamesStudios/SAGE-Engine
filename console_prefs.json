@@ -1,0 +1,17 @@
+{
+  "theme": {
+    "bg": "#0f1115",
+    "text": "#dce3ec",
+    "prompt": "#7f8ea3",
+    "banner": "#74c7ec",
+    "info": "#a6e3a1",
+    "error": "#ff6b6b",
+    "cmd": "#e5c07b",
+    "input_bg": "#0b0d12",
+    "insert": "#e6edf3",
+    "font_family": "Consolas",
+    "font_size": 10
+  },
+  "history": [],
+  "presets": {}
+}

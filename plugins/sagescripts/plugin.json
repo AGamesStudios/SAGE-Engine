@@ -1,0 +1,13 @@
+{
+  "name": "SAGE Scripts Plugin",
+  "id": "sagescripts",
+  "version": "1.0.0",
+  "module": "plugin",
+  "profiles": [
+    "all"
+  ],
+  "tags": [
+    "scripts",
+    "python"
+  ]
+}

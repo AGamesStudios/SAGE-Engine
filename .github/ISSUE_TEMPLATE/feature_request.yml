@@ -1,0 +1,24 @@
+name: Feature request
+description: Предложить улучшение/функцию
+title: "[Feature]: "
+labels: ["enhancement"]
+assignees: []
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: Идея / мотивация
+      placeholder: ...
+      description: Что и зачем?
+      value: ""
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Детали/интерфейсы
+      placeholder: API, UX, CLI, совместимость, обратная связь...
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Альтернативы/компромиссы

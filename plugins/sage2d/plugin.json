@@ -1,0 +1,20 @@
+{
+  "name": "SAGE2D Plugin",
+  "id": "sage2d",
+  "version": "1.0.0",
+  "module": "plugin",
+  "profiles": [
+    "2d"
+  ],
+  "tags": [
+    "2d",
+    "render:2d",
+    "render:opengl"
+  ],
+  "requires": {
+    "core": ">=1.2.0",
+    "features": {
+      "render": ">=1.0"
+    }
+  }
+}
