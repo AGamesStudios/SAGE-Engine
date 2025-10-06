@@ -4,15 +4,24 @@
 
 **S**imple **A**dvanced **G**ame **E**ngine
 
-*Powerful and Simple 2D Game Engine in C++ with OpenGL*
+*Powerful and Simple 2D Game Engine in C++ ## 📋 System Requirements
 
-![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
+> **⚠️ Note**: These are preliminary requirements. Testing on various platforms ongoing.
+
+| Component | Minimum | Recommended |
+|-----------|---------|-------------|
+| **OS** | Windows 10 / Linux / macOS 10.14 | Windows 11 / Latest Linux / macOS 12+ |
+| **Compiler** | MSVC 2019 / GCC 9+ / Clang 10+ | MSVC 2022 / GCC 11+ / Clang 14+ |penGL*
+
+![Version](https://img.shields.io/badge/version-Early%20Alpha-orange.svg)
+![Status](https://img.shields.io/badge/status-In%20Development-yellow.svg)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](docs/markdown/LICENSE)
 [![C++](https://img.shields.io/badge/C++-20-blue.svg)](https://en.cppreference.com/w/cpp/20)
 [![OpenGL](https://img.shields.io/badge/OpenGL-3.3+-green.svg)](https://www.opengl.org/)
 [![CMake](https://img.shields.io/badge/CMake-3.20+-blue.svg)](https://cmake.org/)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)
-![Build](https://img.shields.io/badge/build-passing-brightgreen.svg)
+
+> ⚠️ **EARLY ALPHA WARNING**: This engine is in early alpha development stage. Expect bugs, missing features, and breaking changes. Please report any issues you encounter via [GitHub Issues](https://github.com/AGamesStudios/SAGE-Engine/issues).
 
 [Quick Start](#-quick-start) • [Documentation](#-documentation) • [Examples](#-examples) • [Features](#-features)
 
@@ -22,31 +31,33 @@
 
 ## 📋 About
 
-SAGE Engine is a modern, production-ready 2D game engine built with C++ and OpenGL. Designed for both learning game development and creating small to medium-sized 2D projects, SAGE provides a clean API, comprehensive features, and professional tooling.
+SAGE Engine is a modern 2D game engine built with C++ and OpenGL, currently in **early alpha development**. Designed for both learning game development and creating small to medium-sized 2D projects, SAGE provides a clean API and modular architecture.
 
-### ✨ Key Features
+> **⚠️ Alpha Status**: This project is under active development. APIs may change, features are incomplete, and you may encounter bugs. We welcome feedback and bug reports!
 
-- 🎨 **Advanced 2D Graphics** - OpenGL 3.3+ rendering pipeline
-- � **Entity-Component System** - Flexible GameObject architecture
-- ⚙️ **Physics Engine** - Collision detection, raycast, AABB/Circle colliders
-- 🎵 **Audio System** - Multi-channel sound with miniaudio backend
-- 🎭 **Particle Systems** - Customizable visual effects
-- � **Asset Management** - Async loading with caching and streaming
-- � **Profiler** - Performance monitoring with frame timing
-- ⌨️ **Input System** - Action/axis bindings, mouse, keyboard, gamepad support
-- 🎬 **Scene Management** - Stage system with transitions
-- 🖼️ **UI Framework** - Buttons, labels, panels, event system
-- 📐 **Math Library** - Vector2, Rect, Transform, collision utilities
-- 🔍 **Resource Manager** - Centralized asset registry and lifecycle
-- 📝 **Logging System** - Multi-level logging with file output
-- 🧪 **Test Suite** - 30+ unit tests covering all major systems
-- 🔧 **CMake Integration** - Modern build system with package config
+### ✨ Key Features (In Development)
 
----
+> **Note**: Features marked with 🚧 are in early development and may be incomplete or unstable.
+
+- 🎨 **2D Graphics** - OpenGL 3.3+ rendering pipeline 🚧
+- 📦 **GameObject System** - Flexible GameObject architecture 🚧
+- ⚙️ **Physics Engine** - Collision detection, AABB/Circle colliders 🚧
+- 🎵 **Audio System** - Basic sound playback 🚧
+- 🎭 **Particle Systems** - Customizable visual effects 🚧
+- 📁 **Asset Management** - Resource loading and caching 🚧
+- ⌨️ **Input System** - Keyboard, mouse, gamepad support 🚧
+- 🎬 **Scene Management** - Scene and stage system 🚧
+- 🖼️ **UI Framework** - Basic widgets (buttons, labels, panels) 🚧
+- 📐 **Math Library** - Vector2, Rect, Transform utilities ✅
+- 📝 **Logging System** - Multi-level logging ✅
+- 🧪 **Test Suite** - Growing test coverage 🚧
+- 🔧 **CMake Integration** - Cross-platform build system ✅
 
 ## 🚀 Quick Start
 
-### Installation (2 minutes)
+> **⚠️ Alpha Warning**: Installation process is functional but may have rough edges. Report issues on GitHub!
+
+### Installation (5-10 minutes)
 
 **Option 1: Automated Installation (Recommended)**
 
@@ -201,9 +212,9 @@ For detailed code samples, see [docs/guides/EXAMPLES.md](docs/guides/EXAMPLES.md
 
 ---
 
-## �🏗️ Project Structure
-
 ## 🏗️ Project Structure
+
+> **📦 Structure**: Core engine modularized for easy navigation and contribution
 
 ```
 SAGE-Engine/
@@ -240,11 +251,13 @@ SAGE-Engine/
 │   │   ├── SETUP.md
 │   │   ├── INSTALL.md
 │   │   └── EXAMPLES.md
-│   └── project/           # Project documentation
-│       ├── ROADMAP.md
-│       └── PROJECT_STATUS.md
+│   └── markdown/          # Project documentation
+│       ├── CHANGELOG.md
+│       ├── CONTRIBUTING.md
+│       ├── LICENSE
+│       └── STRUCTURE.md
 │
-├── 📂 scripts/            # Build and utility scripts
+├── 📂 tools/              # Build and utility scripts
 │   ├── install.bat        # Windows installer
 │   └── install.sh         # Linux/macOS installer
 │
@@ -253,9 +266,6 @@ SAGE-Engine/
 ├── 📂 .vscode/            # VS Code settings
 │
 ├── 📄 CMakeLists.txt      # Main CMake configuration
-├── 📄 CHANGELOG.md        # Version history
-├── 📄 CONTRIBUTING.md     # Contribution guidelines
-├── 📄 LICENSE             # MIT License
 └── 📄 README.md           # This file
 ```
 
@@ -263,21 +273,23 @@ SAGE-Engine/
 
 ## 🗺️ Roadmap
 
-See [docs/project/ROADMAP.md](docs/project/ROADMAP.md) for detailed future plans.
+> **🚧 Alpha Phase**: Currently focused on stabilizing core features before adding new systems
 
-### ✅ Version 0.1.0 (Current)
-- Core systems (Application, Window, Logger, Profiler)
-- 2D Graphics (Renderer, Shader, Texture, Sprite, Particles)
-- Physics (Collision, Raycast, Forces)
-- Audio (Multi-channel, Streaming)
-- Input (Keyboard, Mouse, Gamepad, Bindings)
-- Resources (Asset Manager, Async loading)
-- UI (Button, Label, Panel)
-- Memory (Vault allocator)
-- Math (Vector2, Rect, Transform)
-- 30+ unit tests
+See [docs/markdown/STRUCTURE.md](docs/markdown/STRUCTURE.md) for detailed architecture.
 
-### � Version 0.2.0 (Planned)
+### 🏗️ Alpha Stage (Current Focus)
+- Stabilizing core systems (Application, Window, Logger, Profiler)
+- Debugging 2D Graphics (Renderer, Shader, Texture, Sprite, Particles)
+- Testing Physics (Collision, Raycast, Forces)
+- Refining Audio (Multi-channel, Streaming)
+- Improving Input (Keyboard, Mouse, Gamepad, Bindings)
+- Optimizing Resources (Asset Manager, Async loading)
+- Polishing UI (Button, Label, Panel)
+- Validating Memory (Vault allocator)
+- Verifying Math (Vector2, Rect, Transform)
+- Expanding test coverage (30+ unit tests → more coverage)
+
+### 📋 Beta Goals (Future)
 - Tilemap system
 - Sprite animation
 - Scene serialization (JSON/Binary)
@@ -285,8 +297,8 @@ See [docs/project/ROADMAP.md](docs/project/ROADMAP.md) for detailed future plans
 - Improved particle effects
 - Scene editor tools
 
-### 📅 Future Versions
-- ECS architecture
+### 🎯 v1.0 Release Goals (Long-term)
+- Full ECS architecture
 - Advanced physics (joints, constraints)
 - Networking support
 - Scripting integration (Lua/Python)
@@ -300,9 +312,13 @@ See [docs/project/ROADMAP.md](docs/project/ROADMAP.md) for detailed future plans
 - `SAGE_BUILD_EXAMPLES` (default `ON`) — Build example projects
 - `SAGE_ENABLE_SANITIZERS` — Enable AddressSanitizer for Clang/GCC
 
+---
+
 ## 🤝 Contributing
 
-We welcome contributions! Please read our [Contributing Guidelines](CONTRIBUTING.md) before submitting pull requests.
+> **⚠️ Alpha Contributions**: Engine is unstable, expect breaking changes. Coordinate with maintainers before large PRs!
+
+We welcome contributions! Please read our [Contributing Guidelines](docs/markdown/CONTRIBUTING.md) before submitting pull requests.
 
 ### Development Setup
 1. Fork the repository
@@ -311,11 +327,13 @@ We welcome contributions! Please read our [Contributing Guidelines](CONTRIBUTING
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
+**Note**: Please include tests for new features and ensure all existing tests pass.
+
 ---
 
 ## 📄 License
 
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **MIT License** - see the [docs/markdown/LICENSE](docs/markdown/LICENSE) file for details.
 
 ```
 MIT License
@@ -324,7 +342,7 @@ Copyright (c) 2025 A Games Studios
 
 ---
 
-## � Acknowledgments
+## 🙏 Acknowledgments
 
 - [GLFW](https://www.glfw.org/) - Window and input handling
 - [GLAD](https://glad.dav1d.de/) - OpenGL loader
@@ -333,12 +351,21 @@ Copyright (c) 2025 A Games Studios
 
 ---
 
-## 📞 Contact
+## 📞 Contact & Support
 
-- 🌐 **GitHub:** [AGamesStudios/SAGE-Engine](https://github.com/AGamesStudios/SAGE-Engine)
-- 📧 **Email:** support@agamesstudios.com
+- 🐛 **Bug Reports:** [GitHub Issues](https://github.com/AGamesStudios/SAGE-Engine/issues)
+- 💬 **Discussions:** [GitHub Discussions](https://github.com/AGamesStudios/SAGE-Engine/discussions)
+- 🌐 **Repository:** [AGamesStudios/SAGE-Engine](https://github.com/AGamesStudios/SAGE-Engine)
 
 ---
+
+<div align="center">
+
+**⚠️ SAGE Engine is in early alpha - expect bugs, breaking changes, and incomplete features!**
+
+Made with ❤️ by A Games Studios
+
+</div>
 
 <div align="center">
 
