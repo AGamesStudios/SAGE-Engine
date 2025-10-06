@@ -1,0 +1,12 @@
+{
+  "name": "Night",
+  "images": {
+    "player": "player_night.png"
+  },
+  "sounds": {
+    "footstep": "footstep_night.wav"
+  },
+  "animations": {
+    "player_walk": "walk.anim"
+  }
+}

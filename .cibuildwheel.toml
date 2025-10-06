@@ -1,3 +1,0 @@
-# cibuildwheel configuration (simple)
-[tool.cibuildwheel]
-output-directory = "wheelhouse"

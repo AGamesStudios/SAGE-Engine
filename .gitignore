@@ -1,0 +1,185 @@
+# ====================================
+# SAGE Engine .gitignore
+# ====================================
+
+# Build Directories
+build/
+!build/.gitkeep
+out/
+bin/
+lib/
+install/
+*.dir/
+build/temp/
+
+# IDE and Editor Files
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.sln.docstates
+*.vcxproj.filters
+*.vcxproj.user
+
+# Visual Studio Code
+# .vscode/ - Keep settings for consistency
+.vscode/*.log
+.vscode/tasks.json.bak
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.iws
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# Compiled Object Files
+*.o
+*.obj
+*.ko
+*.elf
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic Libraries
+*.so
+*.so.*
+*.dylib
+*.dll
+
+# Compiled Static Libraries
+*.a
+*.lib
+*.lai
+*.la
+*.lo
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+!CMakeLists.txt
+!*Config.cmake.in
+CTestTestfile.cmake
+_deps/
+
+# Testing
+Testing/
+CTestCostData.txt
+
+# Logs and Temporary Files
+*.log
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+env/
+
+# OS Files
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Linux
+*~
+.directory
+
+# Package Files
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Generated Assets (Demo/Test Assets)
+Demo/assets/audio/
+Assets/generated/
+**/generated/
+
+# Third-Party Build Artifacts
+ThirdParty/build/
+ThirdParty/*/build/
+ThirdParty/**/CMakeFiles/
+
+# Documentation Build
+docs/_build/
+docs/.doctrees/
+
+# Profiling and Debug Data
+*.profdata
+*.gcda
+*.gcno
+*.gcov
+
+# Backup Files
+*.orig
+*.rej
+
+# Temporary Test Files
+temp*.cpp
+temp*.h
+_test_*.cpp
+_test_*.h
+
+# Python Scripts (Utility Scripts Can Be Kept)
+# Uncomment if you want to ignore all Python files
+# *.py
+
+# Lock Files
+*.lock
+
+# Node modules (if any web tools are added)
+node_modules/
+
+# Cache Directories
+.cache/
+*.cache
+
+# End of .gitignore
+

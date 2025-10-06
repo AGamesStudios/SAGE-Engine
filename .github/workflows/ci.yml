@@ -1,0 +1,66 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-msvc:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Configure
+        run: >-
+          cmake -S . -B build -G "Visual Studio 17 2022" -A x64
+          -DSAGE_BUILD_TESTS=ON -DSAGE_BUILD_DEMO=ON
+      - name: Build
+        run: cmake --build build --config RelWithDebInfo --target ALL_BUILD
+      - name: Run tests
+        run: ctest --test-dir build -C RelWithDebInfo --output-on-failure
+      - name: Upload Windows artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-relwithdebinfo-binaries
+          retention-days: 7
+          path: |
+            build/Demo/RelWithDebInfo/SAGE_Demo.exe
+            build/Tests/RelWithDebInfo/SAGE_Tests.exe
+
+  linux-asan:
+    runs-on: ubuntu-latest
+    env:
+      CC: clang
+      CXX: clang++
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build clang xvfb
+          sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev xorg-dev \
+            libxrandr-dev libxi-dev libxinerama-dev libxcursor-dev libasound2-dev
+      - name: Configure
+        run: >-
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo
+          -DSAGE_BUILD_TESTS=ON -DSAGE_BUILD_DEMO=ON -DSAGE_ENABLE_SANITIZERS=ON
+      - name: Build
+        run: cmake --build build
+      - name: Run tests (with XVFB)
+        run: xvfb-run --auto-servernum ctest --test-dir build -C RelWithDebInfo --output-on-failure
+      - name: Upload Linux artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-relwithdebinfo-binaries
+          retention-days: 7
+          path: |
+            build/Demo/SAGE_Demo
+            build/Tests/SAGE_Tests
