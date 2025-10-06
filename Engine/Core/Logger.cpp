@@ -2,10 +2,21 @@
 
 #include <cctype>
 #include <iostream>
+#include <cstdarg>
+#include <cstdio>
+#include <vector>
+
+#ifdef _WIN32
+    #include <windows.h>
+#endif
 
 namespace SAGE {
 
     void Logger::Init() {
+#ifdef _WIN32
+        // Enable UTF-8 output on Windows
+        SetConsoleOutputCP(CP_UTF8);
+#endif
         std::cout << "[LOGGER] SAGE Engine logger initialized" << std::endl;
     }
 
@@ -32,6 +43,50 @@ namespace SAGE {
 
         for (size_t i = 0; i < format.size(); ++i) {
             char c = format[i];
+            
+            // Support printf-style formatting (%d, %f, %s, etc.)
+            if (c == '%' && i + 1 < format.size()) {
+                char next = format[i + 1];
+                if (next == '%') {
+                    result += '%';
+                    ++i;
+                    continue;
+                }
+                
+                // Check for format specifiers
+                if (next == 'd' || next == 'i' || next == 'f' || next == 's' || 
+                    next == 'u' || next == 'x' || next == 'X' || next == 'c') {
+                    if (sequentialIndex < args.size()) {
+                        result += args[sequentialIndex++];
+                    } else {
+                        result += '%';
+                        result += next;
+                    }
+                    ++i;
+                    continue;
+                }
+                
+                // Support format with width/precision like %.1f, %3d
+                size_t j = i + 1;
+                while (j < format.size() && (std::isdigit(static_cast<unsigned char>(format[j])) || format[j] == '.')) {
+                    ++j;
+                }
+                if (j < format.size()) {
+                    char specifier = format[j];
+                    if (specifier == 'd' || specifier == 'i' || specifier == 'f' || specifier == 's' || 
+                        specifier == 'u' || specifier == 'x' || specifier == 'X' || specifier == 'c') {
+                        if (sequentialIndex < args.size()) {
+                            result += args[sequentialIndex++];
+                        } else {
+                            result.append(format, i, j - i + 1);
+                        }
+                        i = j;
+                        continue;
+                    }
+                }
+            }
+            
+            // Support C++20-style formatting {0}, {1}, {}
             if (c == '{') {
                 size_t j = i + 1;
                 bool hasIndex = false;

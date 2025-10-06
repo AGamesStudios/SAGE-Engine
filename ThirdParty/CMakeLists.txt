@@ -6,8 +6,11 @@ set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
 
 add_subdirectory(glfw)
 
+# No MSVC-specific runtime setting - controlled by root CMakeLists.txt via CMAKE_MSVC_RUNTIME_LIBRARY
+
+# Suppress legacy CRT warnings in GLFW (strncpy, strtok, etc.)
 if(MSVC)
-	set_property(TARGET glfw PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+    target_compile_definitions(glfw PRIVATE _CRT_SECURE_NO_WARNINGS)
 endif()
 
 # GLAD
@@ -18,9 +21,7 @@ target_include_directories(glad
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-if(MSVC)
-	set_property(TARGET glad PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
-endif()
+# No MSVC-specific runtime setting - controlled by root CMakeLists.txt via CMAKE_MSVC_RUNTIME_LIBRARY
 
 # Header-only dependencies (stb_image, stb_truetype, miniaudio)
 set(THIRDPARTY_GENERATED_DIR ${CMAKE_BINARY_DIR}/thirdparty)

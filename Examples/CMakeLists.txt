@@ -6,6 +6,9 @@ cmake_minimum_required(VERSION 3.20)
 # Simple Game - Demonstrates basic game structure, physics, input, and rendering
 add_subdirectory(SimpleGame)
 
+# Pong Test - Tests core engine features: rendering, input, collision, game loop
+add_subdirectory(PongTest)
+
 # Future examples:
 # add_subdirectory(PhysicsDemo)
 # add_subdirectory(UIExample)

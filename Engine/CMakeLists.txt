@@ -88,9 +88,7 @@ set(SAGE_ENGINE_SOURCES
 
 add_library(SAGE_Engine STATIC ${SAGE_ENGINE_SOURCES} ${SAGE_ENGINE_HEADERS})
 
-if(MSVC)
-    set_property(TARGET SAGE_Engine PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
-endif()
+# No MSVC-specific runtime setting here - controlled by root CMakeLists.txt via CMAKE_MSVC_RUNTIME_LIBRARY
 
 # Use generator expressions for build vs install include directories
 target_include_directories(SAGE_Engine

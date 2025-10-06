@@ -18,6 +18,20 @@ endif()
 # Create executable
 add_executable(SAGESimpleGame main.cpp)
 
+# Apply static build settings if enabled
+if(SAGE_STATIC_BUILD AND WIN32 AND MSVC)
+    # Use WIN32 in Release to hide console
+    set_target_properties(SAGESimpleGame PROPERTIES
+        WIN32_EXECUTABLE $<$<CONFIG:Release>:TRUE>
+    )
+    
+    # Static runtime linkage
+    target_compile_options(SAGESimpleGame PRIVATE
+        $<$<CONFIG:Release>:/MT>
+        $<$<CONFIG:Debug>:/MTd>
+    )
+endif()
+
 # Link SAGE Engine
 if(TARGET SAGE::SAGE_Engine)
     # Using installed SAGE

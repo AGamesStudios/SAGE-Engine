@@ -10,13 +10,17 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 option(SAGE_ENABLE_SANITIZERS "Enable Address Sanitizer for supported compilers" OFF)
+option(SAGE_STATIC_BUILD "Build static executables without external DLL dependencies" ON)
 
+# Static runtime linkage for standalone executables
 if(MSVC)
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
-endif()
-
-if(MSVC)
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+    if(SAGE_STATIC_BUILD)
+        # Use static runtime library (no MSVCR*.dll dependencies)
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+        message(STATUS "Building with static runtime (no DLL dependencies)")
+    else()
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+    endif()
 endif()
 
 if(SAGE_ENABLE_SANITIZERS AND NOT MSVC)
