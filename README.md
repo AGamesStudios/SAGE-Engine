@@ -6,10 +6,13 @@
 
 *Powerful and Simple 2D Game Engine in C++ with OpenGL*
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](docs/markdown/LICENSE)
+![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](docs/markdown/LICENSE)
 [![C++](https://img.shields.io/badge/C++-20-blue.svg)](https://en.cppreference.com/w/cpp/20)
 [![OpenGL](https://img.shields.io/badge/OpenGL-3.3+-green.svg)](https://www.opengl.org/)
 [![CMake](https://img.shields.io/badge/CMake-3.20+-blue.svg)](https://cmake.org/)
+![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)
+![Build](https://img.shields.io/badge/build-passing-brightgreen.svg)
 
 [Quick Start](#-quick-start) • [Documentation](#-documentation) • [Examples](#-examples) • [Features](#-features)
 
