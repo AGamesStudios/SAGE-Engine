@@ -2,160 +2,197 @@
 
 All notable changes to SAGE Engine will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
+> **⚠️ Alpha Status**: SAGE Engine is in early alpha development. Version numbers are not yet following semantic versioning.
 
 ## [Unreleased]
 
-### Added
+### In Progress (Alpha Development)
+- Stabilizing core engine systems
+- Bug fixes and performance improvements
+- Expanding test coverage
+- Improving documentation
+- Refining API design (breaking changes expected)
+
+### Recently Added
 - Professional installation system with CMake package config
 - Automated installation scripts for Windows, Linux, and macOS
 - Comprehensive documentation (INSTALL.md, EXAMPLES.md, CONTRIBUTING.md)
 - SimpleGame example demonstrating engine usage
-- CI/CD pipeline with GitHub Actions
+- Project reorganization (cleaner structure)
 
-## [0.1.0] - 2025-10-06
+## [Alpha] - Early Development (2025)
 
-### Added
-- **Core Systems**
-  - Application lifecycle management
-  - Window management with GLFW
-  - Event system with EventBus
-  - Logger with multiple log levels
-  - Profiler for performance monitoring
-  - GameObject entity system
-  - Scene and Stage management
+> **Note**: This is an early alpha release. Features are incomplete and subject to breaking changes.
 
-- **Graphics System**
-  - 2D batch renderer with OpenGL 3.3+
-  - Shader management and compilation
-  - Texture loading and management
-  - Material system
-  - Font rendering with embedded fonts
-  - Sprite rendering
-  - Particle system
-  - Color utilities
+### Core Systems (Unstable)
+- **Application**: Lifecycle management - ⚠️ Basic functionality, needs refinement
+- **Window**: GLFW integration - ✅ Stable
+- **Event System**: EventBus - 🚧 In development
+- **Logger**: Multi-level logging - ✅ Stable
+- **Profiler**: Performance monitoring - 🚧 Basic implementation
+- **GameObject**: Entity system - 🚧 In development
+- **Scene/Stage**: Management - 🚧 Basic implementation
 
-- **Physics System**
-  - AABB (Box) collision detection
-  - Circle collision detection
-  - Raycast functionality
-  - Gravity simulation
-  - Velocity and force application
-  - Friction and bounciness
-  - Static/dynamic objects
+### Graphics System (In Development)
+- **Renderer**: 2D batch rendering with OpenGL 3.3+ - 🚧 Core works, needs optimization
+- **Shader**: Management and compilation - 🚧 Basic functionality
+- **Texture**: Loading and management - 🚧 Works but needs improvement
+- **Material**: Material system - 🚧 Basic implementation
+- **Font**: Embedded font rendering - 🚧 Experimental
+- **Sprite**: Sprite rendering - 🚧 In development
+- **Particles**: Particle system - 🚧 Early prototype
+- **Color**: Utilities - ✅ Stable
 
-- **Audio System**
-  - Multi-channel audio playback
-  - Sound loading and management
-  - Volume control
-  - Audio streaming support
+### Physics System (Experimental)
+- **Collision**: AABB and Circle detection - 🚧 Basic implementation
+- **Raycast**: Raycasting - 🚧 Experimental
+- **Forces**: Gravity, velocity, friction - 🚧 In development
+- **Static/Dynamic**: Object types - 🚧 Basic support
 
-- **Input System**
-  - Keyboard input (pressed, just pressed, released)
-  - Mouse input (buttons, position, delta)
-  - Gamepad support (buttons, axes)
-  - Input binding system (actions and axes)
-  - Configurable input mappings
+### Audio System (Basic)
+- **Playback**: Multi-channel audio - 🚧 Basic implementation
+- **Sound**: Loading and management - 🚧 Works but limited
+- **Volume**: Control - 🚧 Basic support
+- **Streaming**: Audio streaming - 🚧 Experimental
 
-- **Resource Management**
-  - AssetManager with async loading
-  - Texture caching and streaming
-  - Sound management
-  - Font management
-  - Resource registry
-  - Memory usage tracking
+### Input System (Functional)
+- **Keyboard**: Pressed, just pressed, released - ✅ Stable
+- **Mouse**: Buttons, position, delta - ✅ Stable
+- **Gamepad**: Buttons and axes support - 🚧 Basic support
+- **Bindings**: Input actions and axes - 🚧 In development
+- **Mappings**: Configurable inputs - 🚧 Early implementation
 
-- **UI System**
-  - Button components
-  - Label components
-  - Panel containers
-  - Event callbacks
-  - Layout management
+### Resource Management (In Development)
+- **AssetManager**: Async loading - 🚧 Basic implementation
+- **Textures**: Caching and streaming - 🚧 In development
+- **Sounds**: Management - 🚧 Basic support
+- **Fonts**: Font management - 🚧 Experimental
+- **Registry**: Resource tracking - 🚧 Basic implementation
+- **Memory Tracking**: Usage monitoring - 🚧 In development
 
-- **Memory Management**
-  - Vault allocator for efficient resource management
-  - Smart pointer utilities (CreateRef, CreateScope)
-  - Resource pooling
+### UI System (Experimental)
+- **Button**: Components - 🚧 Basic functionality
+- **Label**: Text components - 🚧 In development
+- **Panel**: Containers - 🚧 Experimental
+- **Events**: Callbacks - 🚧 Basic support
+- **Layout**: Management - 🚧 Early prototype
 
-- **Math Library**
-  - Vector2 with comprehensive operations
-  - Rect structure
-  - Transform utilities
-  - Collision detection helpers
+### Memory Management (Basic)
+- **Vault**: Custom allocator - 🚧 In development
+- **Smart Pointers**: CreateRef, CreateScope - ✅ Functional
+- **Pooling**: Resource pooling - 🚧 Experimental
 
-- **Build System**
-  - CMake 3.20+ build configuration
-  - Visual Studio 2022 support
-  - GCC and Clang support
-  - Cross-platform compatibility (Windows, Linux, macOS)
-  - Package configuration for find_package()
-  - Installation targets
+### Math Library (Stable)
+- **Vector2**: Comprehensive operations - ✅ Stable
+- **Rect**: Structure - ✅ Stable
+- **Transform**: Utilities - ✅ Stable
+- **Collision Helpers**: Detection helpers - 🚧 In development
 
-- **Testing**
-  - Custom test framework
-  - 30+ comprehensive unit tests
-  - Core systems tests
-  - Physics tests
-  - Renderer smoke tests
-  - Input binding tests
-  - Resource management tests
-  - UI system tests
-  - Integration tests
+### Build System (Functional)
+- **CMake**: 3.20+ configuration - ✅ Stable
+- **Visual Studio**: 2022 support - ✅ Works
+- **GCC/Clang**: Support - ✅ Works
+- **Cross-platform**: Windows, Linux, macOS - 🚧 Tested on Windows, Linux/macOS needs testing
+- **Package Config**: find_package() support - ✅ Functional
+- **Installation**: Targets - ✅ Works
 
-- **Documentation**
-  - README with quick start guide
-  - INSTALL.md with detailed installation instructions
-  - EXAMPLES.md with code tutorials
-  - CONTRIBUTING.md with contributor guidelines
-  - QUICKSTART.md for API reference
-  - GETTING_STARTED.md for beginners
-  - ROADMAP.md for future plans
-  - PROJECT_STATUS.md showing capabilities
+### Testing (Functional)
+- **Framework**: Custom test framework - ✅ Works
+- **Unit Tests**: 30+ tests - ✅ Most passing
+- **Core Tests**: Systems tests - 🚧 Some failures expected
+- **Physics Tests**: Physics validation - 🚧 In development
+- **Renderer Tests**: Smoke tests - 🚧 Basic coverage
+- **Input Tests**: Binding tests - 🚧 Partial coverage
+- **Resource Tests**: Management tests - 🚧 Basic coverage
+- **UI Tests**: System tests - 🚧 Limited coverage
+- **Integration Tests**: System integration - 🚧 Early stage
 
-- **Third-Party Libraries**
-  - GLFW 3.3+ for windowing
-  - GLAD for OpenGL loading
-  - stb_image for image loading
-  - stb_truetype for font rendering
-  - miniaudio for audio playback
+### Documentation (In Progress)
+- **README**: Quick start guide - ✅ Updated
+- **INSTALL**: Installation instructions - ✅ Complete
+- **EXAMPLES**: Code tutorials - 🚧 Basic examples
+- **CONTRIBUTING**: Guidelines - ✅ Complete
+- **QUICKSTART**: API reference - 🚧 Needs expansion
+- **GETTING_STARTED**: Beginner guide - 🚧 Basic coverage
+- **STRUCTURE**: Architecture docs - ✅ Complete
 
-### Changed
-- N/A (Initial release)
-
-### Deprecated
-- N/A (Initial release)
-
-### Removed
-- N/A (Initial release)
-
-### Fixed
-- N/A (Initial release)
-
-### Security
-- N/A (Initial release)
+### Third-Party Libraries (Integrated)
+- **GLFW**: 3.3+ windowing - ✅ Integrated
+- **GLAD**: OpenGL loading - ✅ Integrated
+- **stb_image**: Image loading - ✅ Integrated
+- **stb_truetype**: Font rendering - 🚧 Experimental
+- **miniaudio**: Audio playback - 🚧 Basic integration
 
 ---
 
-## Release Notes
+## Known Issues (Alpha)
 
-### Version 0.1.0 - Initial Release
+### Critical Bugs
+- ⚠️ Renderer may have memory leaks in batch rendering
+- ⚠️ Particle system crashes on certain configurations
+- ⚠️ Physics collision detection has edge case failures
+- ⚠️ Audio system may crash on rapid sound loading
 
-This is the first official release of SAGE Engine, a modern 2D game engine built with C++20 and OpenGL. The engine provides a comprehensive set of features for creating 2D games, including advanced graphics, physics simulation, audio playback, and more.
+### Missing Features
+- 🚧 No scene serialization yet
+- 🚧 No tilemap system
+- 🚧 No sprite animation system
+- 🚧 Limited UI widget set
+- 🚧 No ECS architecture yet
 
-**Highlights:**
-- ✅ Production-ready 2D rendering with batch optimization
-- ✅ Complete physics system with collision detection
-- ✅ Multi-channel audio with streaming support
-- ✅ Flexible input system with customizable bindings
-- ✅ Efficient resource management with async loading
-- ✅ Comprehensive test coverage (30+ tests, 100% pass rate)
-- ✅ Professional installation system with CMake
-- ✅ Cross-platform support (Windows, Linux, macOS)
-- ✅ Complete documentation and examples
+### Platform Issues
+- ⚠️ Linux/macOS builds not thoroughly tested
+- ⚠️ Gamepad support incomplete on non-Windows platforms
+- 🚧 OpenGL compatibility issues on some hardware
 
-**Known Issues:**
-- Minor C4244 conversion warnings from STL (non-critical)
+### API Instability
+- ⚠️ Breaking changes expected in future updates
+- 🚧 API design still being refined
+- 🚧 Function signatures may change
+
+---
+
+## Alpha Development Notes
+
+**Current Status**: This engine is in **early alpha**. It is **not production-ready**.
+
+### What Works
+- ✅ Basic window creation and event handling
+- ✅ Simple 2D sprite rendering
+- ✅ Basic keyboard and mouse input
+- ✅ Math utilities (vectors, transforms)
+- ✅ Logging system
+- ✅ CMake build system
+
+### What's Unstable
+- 🚧 Advanced rendering features (particles, materials)
+- 🚧 Physics system (collision detection unreliable)
+- 🚧 Audio system (crashes possible)
+- 🚧 Resource management (memory leaks possible)
+- 🚧 UI system (very basic)
+- 🚧 Gamepad input
+
+### What's Missing
+- ❌ Scene serialization
+- ❌ Tilemap support
+- ❌ Animation system
+- ❌ Networking
+- ❌ Scripting support
+- ❌ Advanced editor tools
+
+**Recommendation**: Use for learning, prototyping, and experimentation only. Not suitable for production games.
+
+---
+
+## Version History
+
+### Alpha (2025-01-06)
+- Initial alpha release
+- Core systems implemented but unstable
+- Breaking changes expected
+- Active development ongoing
 - LNK4098 library linking warning on Windows (non-critical)
 
 **System Requirements:**
