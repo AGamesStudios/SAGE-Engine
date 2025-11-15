@@ -22,6 +22,7 @@ Modern 2D game engine with Entity Component System architecture, Box2D physics i
 
 Comprehensive documentation is available in the `docs/` directory:
 
+- [CLI Guide](docs/CLI_GUIDE.md) - SAGE CLI command-line tool
 - [Architecture Overview](docs/ARCHITECTURE.md) - Engine design and core systems
 - [API Reference](docs/API_REFERENCE.md) - Complete API documentation
 - [User Guide](docs/USER_GUIDE.md) - Tutorials and examples
@@ -42,6 +43,7 @@ Comprehensive documentation is available in the `docs/` directory:
 - 500 MB disk space
 
 **Build Tools:**
+- Python 3.6+ (for SAGE CLI)
 - CMake 3.15 or higher
 - C++17 compatible compiler:
   - Visual Studio 2022 (Windows)
@@ -49,16 +51,53 @@ Comprehensive documentation is available in the `docs/` directory:
   - Clang 10+ (macOS)
 - Git
 
-### Installation
+### Installation with SAGE CLI (Recommended)
 
-1. Clone the repository with submodules:
+SAGE CLI simplifies installation, building, and project management:
+
+**1. Install SAGE CLI:**
+
+```bash
+cd SAGE-Engine/tools
+python install_cli.py
+```
+
+**2. Install SAGE Engine:**
+
+```bash
+sage install
+```
+
+**3. Verify installation:**
+
+```bash
+sage test
+sage info
+```
+
+**4. Create your first project:**
+
+```bash
+sage create MyGame
+cd ../SAGEProjects/MyGame
+sage project build
+sage project run
+```
+
+See [CLI Guide](docs/CLI_GUIDE.md) for complete documentation.
+
+### Manual Installation
+
+If you prefer manual installation without CLI:
+
+**1. Clone the repository with submodules:**
 
 ```bash
 git clone --recursive https://github.com/AGamesStudios/SAGE-Engine.git
 cd SAGE-Engine
 ```
 
-2. Configure and build:
+**2. Configure and build:**
 
 **Windows (Visual Studio):**
 ```powershell
@@ -72,13 +111,13 @@ cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build
 ```
 
-3. Run tests:
+**3. Run tests:**
 
 ```bash
 ./build/bin/Release/SAGETests
 ```
 
-4. Run examples:
+**4. Run examples:**
 
 ```bash
 ./build/bin/Release/Box2DPhysicsDemo
