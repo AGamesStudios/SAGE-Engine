@@ -340,7 +340,7 @@ set_target_properties({args.name} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${{CMAKE_BINARY_DIR}}/bin
 )
 """
-        (project_dir / "CMakeLists.txt").write_text(cmake_content)
+        (project_dir / "CMakeLists.txt").write_text(cmake_content, encoding='utf-8')
         
         # Create main.cpp
         main_content = """#include <SAGE/SAGE.h>
@@ -381,7 +381,7 @@ int main() {
     return 0;
 }
 """
-        (project_dir / "src" / "main.cpp").write_text(main_content)
+        (project_dir / "src" / "main.cpp").write_text(main_content, encoding='utf-8')
         
         # Create README
         engine_path = self.config.get('engine_path', str(self.engine_root))
@@ -496,7 +496,7 @@ sage project build
 
 For more help: https://github.com/AGamesStudios/SAGE-Engine/issues
 """
-        (project_dir / "README.md").write_text(readme_content)
+        (project_dir / "README.md").write_text(readme_content, encoding='utf-8')
         
         # Create .gitignore
         gitignore_content = """# Build directories
@@ -521,7 +521,7 @@ lib/
 CMakeCache.txt
 CMakeFiles/
 """
-        (project_dir / ".gitignore").write_text(gitignore_content)
+        (project_dir / ".gitignore").write_text(gitignore_content, encoding='utf-8')
         
         self.print_success(f"Project created: {project_dir}")
         
