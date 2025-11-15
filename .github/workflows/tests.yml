@@ -1,0 +1,89 @@
+name: SAGE Engine Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    - name: Setup CMake
+      uses: microsoft/setup-msbuild@v1.1
+
+    - name: Configure CMake
+      run: cmake -S . -B build -G "Visual Studio 17 2022"
+
+    - name: Build Project (Release)
+      run: cmake --build build --config Release
+
+    - name: Run Tests
+      run: |
+        cd build/bin/Release
+        ./SAGETests.exe
+      continue-on-error: false
+
+    - name: Upload Test Results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: build/bin/Release/test_results.txt
+
+  test-debug:
+    name: Run Debug Tests
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    - name: Setup CMake
+      uses: microsoft/setup-msbuild@v1.1
+
+    - name: Configure CMake
+      run: cmake -S . -B build -G "Visual Studio 17 2022"
+
+    - name: Build Project (Debug)
+      run: cmake --build build --config Debug
+
+    - name: Run Tests (Debug)
+      run: |
+        cd build/bin/Debug
+        ./SAGETests.exe
+      continue-on-error: false
+
+  memory-check:
+    name: Memory Leak Check
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    - name: Setup CMake
+      uses: microsoft/setup-msbuild@v1.1
+
+    - name: Configure CMake with Sanitizers
+      run: cmake -S . -B build -G "Visual Studio 17 2022" -DSAGE_ENABLE_SANITIZERS=ON
+
+    - name: Build with Sanitizers
+      run: cmake --build build --config Debug
+
+    - name: Run Memory Check
+      run: |
+        cd build/bin/Debug
+        ./SAGETests.exe

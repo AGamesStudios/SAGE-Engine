@@ -1,219 +1,195 @@
 # SAGE Engine
 
-Simple Advanced Game Engine
+**Version:** Alpha  
+**License:** MIT  
+**Platform:** Windows, Linux, macOS  
+**Language:** C++17
 
-A modern 2D game engine built with C++20 and OpenGL 3.3+
+Modern 2D game engine with Entity Component System architecture, Box2D physics integration, and OpenGL rendering.
 
-Version: Early Alpha  
-Status: In Development  
-License: MIT  
-Platform: Windows, Linux, macOS
+## Features
 
-EARLY ALPHA WARNING: This engine is in early alpha development. Expect bugs, missing features, and breaking changes. Report issues via GitHub.
+- **ECS Architecture** - Flexible Entity Component System design
+- **Box2D Physics** - Full 2D physics simulation (v3.x)
+- **OpenGL Rendering** - Hardware-accelerated 2D graphics with batching
+- **Audio System** - Spatial audio powered by miniaudio
+- **Input Management** - Keyboard, mouse, and gamepad support
+- **Resource Manager** - Efficient asset loading and caching
+- **Event System** - Decoupled event-driven architecture
+- **Serialization** - JSON-based scene save/load system
 
----
+## Documentation
 
-## About
+Comprehensive documentation is available in the `docs/` directory:
 
-SAGE Engine is a 2D game engine for learning C++20 and rapid prototyping. Built with modern C++ and OpenGL, it provides a clean API and transparent codebase.
-
-Alpha Status: APIs may change. Features are incomplete. Bugs exist. Feedback welcome.
-
-
-## Key Features
-
-In Development - Core systems are functional but incomplete:
-
-- 2D Graphics - OpenGL 3.3+ batch rendering
-- Physics Engine - AABB collision detection
-- Audio System - Multi-channel sound playback
-- Input System - Keyboard and mouse support
-- Asset Management - Texture and sound loading
-- Scene System - Basic scene management
-- UI Framework - Simple button and label widgets
-- Math Library - Vector2, Rect, Transform (stable)
-- Logging System - Multi-level debug output (stable)
-- CMake Build - Cross-platform compilation (stable)
-
-Stable features marked. Others are experimental.
+- [Architecture Overview](docs/ARCHITECTURE.md) - Engine design and core systems
+- [API Reference](docs/API_REFERENCE.md) - Complete API documentation
+- [User Guide](docs/USER_GUIDE.md) - Tutorials and examples
+- [Build Guide](docs/BUILD_GUIDE.md) - Build instructions for all platforms
+- [Component Reference](docs/COMPONENT_REFERENCE.md) - Component documentation
+- [System Reference](docs/SYSTEM_REFERENCE.md) - System API reference
+- [Math API](docs/MATH_API_REFERENCE.md) - Mathematical utilities
+- [Performance Guide](docs/PERFORMANCE_GUIDE.md) - Optimization techniques
 
 ## Quick Start
 
-Installation takes approximately 5-10 minutes.
+### Requirements
 
-Windows:
-```
-git clone https://github.com/AGamesStudios/SAGE-Engine.git
+**System Requirements:**
+- Windows 10/11, Ubuntu 20.04+, or macOS 10.15+
+- OpenGL 3.3 compatible GPU
+- 2 GB RAM minimum
+- 500 MB disk space
+
+**Build Tools:**
+- CMake 3.15 or higher
+- C++17 compatible compiler:
+  - Visual Studio 2022 (Windows)
+  - GCC 9+ (Linux)
+  - Clang 10+ (macOS)
+- Git
+
+### Installation
+
+1. Clone the repository with submodules:
+
+```bash
+git clone --recursive https://github.com/AGamesStudios/SAGE-Engine.git
 cd SAGE-Engine
-.\tools\install.bat
 ```
 
-Linux/macOS:
-```
-git clone https://github.com/AGamesStudios/SAGE-Engine.git
-cd SAGE-Engine
-chmod +x tools/install.sh
-./tools/install.sh
-```
+2. Configure and build:
 
-Manual installation: See INSTALL.md
-
-
-## Example Code
-
-Basic game structure:
-
-```cpp
-#include <SAGE.h>
-
-class MyGame : public SAGE::Application {
-public:
-    MyGame() : Application("My Game") {}
-    
-    void OnInit() override {
-        SAGE::Renderer::Init();
-    }
-    
-    void OnRender() override {
-        SAGE::Renderer::Clear(0.2f, 0.3f, 0.8f);
-        SAGE::Renderer::BeginScene();
-        
-        SAGE::QuadDesc quad;
-        quad.position = {100.0f, 100.0f};
-        quad.size = {200.0f, 200.0f};
-        quad.color = SAGE::Color::Red();
-        SAGE::Renderer::DrawQuad(quad);
-        
-        SAGE::Renderer::EndScene();
-    }
-    
-    void OnShutdown() override {
-        SAGE::Renderer::Shutdown();
-    }
-};
-
-SAGE::Application* SAGE::CreateApplication() {
-    return new MyGame();
-}
-
-int main() {
-    auto app = SAGE::CreateApplication();
-    app->Run();
-    delete app;
-    return 0;
-}
-```
-
-Build:
-```
-cmake -S . -B build
+**Windows (Visual Studio):**
+```powershell
+cmake -S . -B build -G "Visual Studio 17 2022"
 cmake --build build --config Release
 ```
 
-More examples in Examples/ directory.
+**Linux/macOS:**
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build
+```
 
-## System Requirements
+3. Run tests:
 
-| Component | Minimum | Recommended |
-|-----------|---------|-------------|
-| OS | Windows 10, Linux, macOS 10.14 | Windows 11, Latest Linux, macOS 12+ |
-| Compiler | MSVC 2019, GCC 9+, Clang 10+ | MSVC 2022, GCC 11+, Clang 14+ |
-| CMake | 3.20 | 3.25+ |
-| OpenGL | 3.3 | 4.6 |
-| RAM | 2 GB | 4 GB+ |
+```bash
+./build/bin/Release/SAGETests
+```
 
+4. Run examples:
+
+```bash
+./build/bin/Release/Box2DPhysicsDemo
+```
+
+## Examples
+
+The engine includes 16 working examples demonstrating all major features:
+
+- **Box2DPhysicsDemo** - Physics simulation showcase
+- **BatchTextureExample** - Texture batching demonstration
+- **AnimationExample** - Sprite animation system
+- **AudioExample** - Spatial audio features
+- And more in `Examples/` directory
+
+## Testing
+
+SAGE Engine includes comprehensive test coverage with 70+ unit and integration tests:
+
+- ECS core functionality tests
+- Physics integration tests
+- Graphics and camera tests
+- Audio system tests
+- Input management tests
+- Serialization tests
+- Performance stress tests
+
+Run all tests:
+```bash
+./build/bin/Release/SAGETests
+```
 
 ## Project Structure
 
 ```
 SAGE-Engine/
-├── Engine/              # Core engine code
-│   ├── Core/           # Application, Window, Logger
-│   ├── Graphics/       # Renderer, Shader, Texture
-│   ├── Physics/        # Collision, Forces
-│   ├── Audio/          # Audio System
-│   ├── Input/          # Input handling
-│   ├── Resources/      # Asset management
-│   ├── UI/             # UI widgets
-│   ├── Math/           # Math utilities
-│   └── SAGE.h          # Main header
-│
-├── ThirdParty/         # External libraries
-│   ├── glfw/           # GLFW 3.3.8
-│   ├── glad/           # OpenGL loader
-│   └── stb/            # STB libraries
-│
-├── Examples/           # Example projects
-│   ├── SimpleGame/     # Basic example
-│   └── PongTest/       # Pong game test
-│
-├── Tests/              # Unit tests
-├── docs/               # Documentation
-└── CMakeLists.txt      # Build configuration
+├── Engine/          # Core engine source code
+│   ├── ECS/         # Entity Component System
+│   ├── Graphics/    # Rendering systems
+│   ├── Physics/     # Physics integration
+│   ├── Audio/       # Audio systems
+│   └── ...
+├── Examples/        # Example projects
+├── Tests/           # Unit and integration tests
+├── ThirdParty/      # External dependencies
+├── docs/            # Documentation
+└── CMakeLists.txt   # Build configuration
 ```
-
-## Development Roadmap
-
-Alpha Stage (Current):
-- Stabilize core systems
-- Fix critical bugs
-- Improve documentation
-- Expand test coverage
-
-Beta Goals (Future):
-- Tilemap system
-- Sprite animation
-- Scene serialization
-- Audio effects
-
-v1.0 Goals (Long-term):
-- Full ECS architecture
-- Advanced physics
-- Networking support
-- Scripting integration
-
-
-## CMake Build Options
-
-- SAGE_BUILD_TESTS (default ON) - Build unit tests
-- SAGE_BUILD_EXAMPLES (default ON) - Build examples
-- SAGE_STATIC_BUILD (default ON) - Standalone executable
-- SAGE_ENABLE_SANITIZERS - AddressSanitizer for Clang/GCC
-
-## Contributing
-
-Engine is in alpha - breaking changes expected. Read CONTRIBUTING.md before submitting pull requests.
-
-Development workflow:
-1. Fork repository
-2. Create feature branch
-3. Commit changes
-4. Push to branch
-5. Open pull request
-
-Include tests for new features.
-
-## License
-
-MIT License - see LICENSE file for details.
-
-Copyright (c) 2025 A Games Studios
 
 ## Dependencies
 
-- GLFW - Window and input handling
-- GLAD - OpenGL loader
-- stb_image - Image loading
-- miniaudio - Audio playback
+All dependencies are included as git submodules:
 
-## Contact
+- **GLFW** 3.3+ - Window and input management
+- **GLAD** - OpenGL loader
+- **Box2D** 3.0+ - Physics engine
+- **miniaudio** 0.11.23+ - Audio playback
+- **stb_image** - Image loading
+- **nlohmann/json** - JSON parsing
+- **Catch2** - Testing framework
 
-Bug Reports: GitHub Issues
-Discussions: GitHub Discussions
-Repository: github.com/AGamesStudios/SAGE-Engine
+## Contributing
 
----
+Contributions are welcome! Please read the contribution guidelines before submitting pull requests.
 
-SAGE Engine is early alpha software. Expect bugs and breaking changes.
+## License
 
-Made by A Games Studios
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Status
+
+**Current Version:** Alpha  
+**Test Coverage:** 70+ tests  
+**Examples:** 16 working demos  
+**Platform Support:** Windows, Linux, macOS
+
+The engine is in active development and suitable for creating 2D games and prototypes.
+🔴 **Build** - требуется sol2 для сборки
+
+### Using Object Pools
+
+```cpp
+#include "ECS/MemoryPool.h"
+
+ObjectPool<Bullet> bulletPool(100);
+
+// Spawn
+Bullet* bullet = bulletPool.Acquire();
+
+// Destroy
+bulletPool.Release(bullet);
+```
+
+## Documentation
+
+- **[ECS_OPTIMIZATION_GUIDE.md](ECS_OPTIMIZATION_GUIDE.md)** - Performance optimizations
+- **[LOW_END_OPTIMIZATION.md](LOW_END_OPTIMIZATION.md)** - Low-end device support
+- **[SYSTEMS_CLEANUP_SUMMARY.md](SYSTEMS_CLEANUP_SUMMARY.md)** - Removed systems info
+- **[MIGRATION_QUICK.md](MIGRATION_QUICK.md)** - Quick migration guide
+- **[Engine/ECS/Systems/README.md](Engine/ECS/Systems/README.md)** - System creation guide
+
+## Core Components
+
+- `CoreSystem.h` - Template-based system base class
+- `MemoryPool.h` - Object pooling and component allocation
+- `ChunkedStorage.h` - Chunk-based entity storage
+- `ComponentArray.h` - Sparse-set component storage
+- `VectorMath.h` - Batch vector operations
+- `PhysicsSystem2D.h` - Lightweight 2D physics
+- `LightweightSystems.h` - Example systems
+
+## License
+
+See LICENSE file.
