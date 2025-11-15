@@ -81,16 +81,23 @@ class SAGECLI:
         """Print info message"""
         print(f"{Colors.OKCYAN}ℹ {text}{Colors.ENDC}")
     
-    def run_command(self, cmd: List[str], cwd: Optional[Path] = None) -> bool:
+    def run_command(self, cmd: List[str], cwd: Optional[Path] = None, show_output: bool = False) -> bool:
         """Run shell command and return success status"""
         try:
-            result = subprocess.run(cmd, cwd=cwd, check=True, 
-                                  capture_output=True, text=True)
+            if show_output:
+                result = subprocess.run(cmd, cwd=cwd, check=True)
+            else:
+                result = subprocess.run(cmd, cwd=cwd, check=True, 
+                                      capture_output=True, text=True)
             return True
         except subprocess.CalledProcessError as e:
             self.print_error(f"Command failed: {' '.join(cmd)}")
-            if e.stderr:
+            if hasattr(e, 'stderr') and e.stderr:
                 print(e.stderr)
+            return False
+        except FileNotFoundError:
+            self.print_error(f"Command not found: {cmd[0]}")
+            self.print_info(f"Make sure {cmd[0]} is installed and in PATH")
             return False
     
     # ============================================================
@@ -149,12 +156,28 @@ class SAGECLI:
     
     def cmd_build(self, args):
         """Build SAGE Engine"""
-        self.print_header(f"Building SAGE Engine ({args.config})")
+        config = args.config if hasattr(args, 'config') else 'Release'
+        parallel = args.parallel if hasattr(args, 'parallel') else None
+        
+        self.print_header(f"Building SAGE Engine ({config})")
         
         build_dir = self.engine_root / "build"
         if not build_dir.exists():
-            self.print_error("Build directory not found. Run 'sage install' first.")
+            self.print_warning("Build directory not found. Running install first...")
+            if not self.cmd_install(args):
+                return False
+        
+        self.print_info(f"Building {config} configuration...")
+        
+        build_cmd = ['cmake', '--build', 'build', '--config', config]
+        if parallel:
+            build_cmd.extend(['-j', str(parallel)])
+        
+        if not self.run_command(build_cmd, cwd=self.engine_root, show_output=True):
             return False
+        
+        self.print_success(f"Build complete: {config}")
+        return True
         
         self.print_info(f"Building {args.config} configuration...")
         
@@ -295,6 +318,9 @@ class SAGECLI:
         
         # Create CMakeLists.txt
         engine_path = self.config.get('engine_path', str(self.engine_root))
+        # Normalize path for CMake (forward slashes)
+        engine_path_normalized = str(engine_path).replace('\\', '/')
+        
         cmake_content = f"""cmake_minimum_required(VERSION 3.15)
 project({args.name})
 
@@ -303,7 +329,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # SAGE Engine path (can be overridden with -DSAGE_ENGINE_DIR=...)
 if(NOT DEFINED SAGE_ENGINE_DIR)
-    set(SAGE_ENGINE_DIR "{engine_path}")
+    set(SAGE_ENGINE_DIR "{engine_path_normalized}")
 endif()
 
 message(STATUS "SAGE Engine directory: ${{SAGE_ENGINE_DIR}}")
@@ -316,20 +342,25 @@ endif()
 # SAGE Engine build directory
 set(SAGE_BUILD_DIR "${{SAGE_ENGINE_DIR}}/build")
 
-# Find SAGE Engine library
+# Find SAGE Engine library (configuration-aware)
 if(WIN32)
-    set(SAGE_LIB "${{SAGE_BUILD_DIR}}/lib/Release/SAGE_Engine.lib")
+    set(SAGE_LIB "${{SAGE_BUILD_DIR}}/lib/$<CONFIG>/SAGE_Engine.lib")
+    set(SAGE_THIRD_PARTY "${{SAGE_BUILD_DIR}}/lib/$<CONFIG>")
 else()
     set(SAGE_LIB "${{SAGE_BUILD_DIR}}/lib/libSAGE_Engine.a")
+    set(SAGE_THIRD_PARTY "${{SAGE_BUILD_DIR}}/lib")
 endif()
 
-# Check if SAGE Engine is built
-if(NOT EXISTS "${{SAGE_LIB}}")
+# Check if SAGE Engine is built (at configure time check Release)
+if(WIN32)
+    set(SAGE_LIB_CHECK "${{SAGE_BUILD_DIR}}/lib/Release/SAGE_Engine.lib")
+else()
+    set(SAGE_LIB_CHECK "${{SAGE_BUILD_DIR}}/lib/libSAGE_Engine.a")
+endif()
+
+if(NOT EXISTS "${{SAGE_LIB_CHECK}}")
     message(FATAL_ERROR "SAGE Engine not built. Run 'sage build' first.")
 endif()
-
-# Third-party libraries from SAGE Engine
-set(SAGE_THIRD_PARTY "${{SAGE_BUILD_DIR}}/lib/Release")
 
 # Project executable
 add_executable({args.name}
@@ -344,18 +375,35 @@ target_include_directories({args.name} PRIVATE
     ${{SAGE_ENGINE_DIR}}/ThirdParty/glfw/include
     ${{SAGE_ENGINE_DIR}}/ThirdParty/box2d/include
     ${{SAGE_ENGINE_DIR}}/ThirdParty/imgui
+    ${{SAGE_ENGINE_DIR}}/ThirdParty/nlohmann
 )
 
 # Link with SAGE Engine and dependencies
-target_link_libraries({args.name} PRIVATE
-    ${{SAGE_LIB}}
-    ${{SAGE_THIRD_PARTY}}/box2d.lib
-    ${{SAGE_THIRD_PARTY}}/glad.lib
-    ${{SAGE_THIRD_PARTY}}/glfw3.lib
-    ${{SAGE_THIRD_PARTY}}/imgui.lib
-    ${{SAGE_THIRD_PARTY}}/tinyxml2.lib
-    opengl32
-)
+if(WIN32)
+    # Use generator expressions for Debug/Release library suffixes
+    target_link_libraries({args.name} PRIVATE
+        ${{SAGE_LIB}}
+        $<$<CONFIG:Debug>:${{SAGE_THIRD_PARTY}}/box2dd.lib>
+        $<$<NOT:$<CONFIG:Debug>>:${{SAGE_THIRD_PARTY}}/box2d.lib>
+        ${{SAGE_THIRD_PARTY}}/glad.lib
+        ${{SAGE_THIRD_PARTY}}/glfw3.lib
+        ${{SAGE_THIRD_PARTY}}/imgui.lib
+        ${{SAGE_THIRD_PARTY}}/tinyxml2.lib
+        opengl32
+    )
+else()
+    target_link_libraries({args.name} PRIVATE
+        ${{SAGE_LIB}}
+        ${{SAGE_THIRD_PARTY}}/libbox2d.a
+        ${{SAGE_THIRD_PARTY}}/libglad.a
+        ${{SAGE_THIRD_PARTY}}/libglfw3.a
+        ${{SAGE_THIRD_PARTY}}/libimgui.a
+        ${{SAGE_THIRD_PARTY}}/libtinyxml2.a
+        GL
+        dl
+        pthread
+    )
+endif()
 
 # Copy assets to build directory
 add_custom_command(TARGET {args.name} POST_BUILD
@@ -584,7 +632,7 @@ CMakeFiles/
         if args.parallel:
             build_cmd.extend(['--parallel', str(args.parallel)])
         
-        if not self.run_command(build_cmd, cwd=project_dir):
+        if not self.run_command(build_cmd, cwd=project_dir, show_output=True):
             return False
         
         self.print_success("Project build complete!")
