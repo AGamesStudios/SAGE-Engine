@@ -313,20 +313,49 @@ if(NOT EXISTS "${{SAGE_ENGINE_DIR}}/CMakeLists.txt")
     message(FATAL_ERROR "SAGE Engine not found at: ${{SAGE_ENGINE_DIR}}")
 endif()
 
-# Add SAGE Engine as subdirectory
-# Binary dir prevents conflicts with engine's own build
-add_subdirectory(${{SAGE_ENGINE_DIR}} ${{CMAKE_BINARY_DIR}}/sage_engine EXCLUDE_FROM_ALL)
+# SAGE Engine build directory
+set(SAGE_BUILD_DIR "${{SAGE_ENGINE_DIR}}/build")
+
+# Find SAGE Engine library
+if(WIN32)
+    set(SAGE_LIB "${{SAGE_BUILD_DIR}}/lib/Release/SAGE_Engine.lib")
+else()
+    set(SAGE_LIB "${{SAGE_BUILD_DIR}}/lib/libSAGE_Engine.a")
+endif()
+
+# Check if SAGE Engine is built
+if(NOT EXISTS "${{SAGE_LIB}}")
+    message(FATAL_ERROR "SAGE Engine not built. Run 'sage build' first.")
+endif()
+
+# Third-party libraries from SAGE Engine
+set(SAGE_THIRD_PARTY "${{SAGE_BUILD_DIR}}/lib/Release")
 
 # Project executable
 add_executable({args.name}
     src/main.cpp
 )
 
-# Link with SAGE Engine
-target_link_libraries({args.name} PRIVATE SAGEEngine)
-
 # Include SAGE headers
-target_include_directories({args.name} PRIVATE ${{SAGE_ENGINE_DIR}}/Engine)
+target_include_directories({args.name} PRIVATE
+    ${{SAGE_ENGINE_DIR}}/Engine/include
+    ${{SAGE_ENGINE_DIR}}/Engine
+    ${{SAGE_ENGINE_DIR}}/ThirdParty
+    ${{SAGE_ENGINE_DIR}}/ThirdParty/glfw/include
+    ${{SAGE_ENGINE_DIR}}/ThirdParty/box2d/include
+    ${{SAGE_ENGINE_DIR}}/ThirdParty/imgui
+)
+
+# Link with SAGE Engine and dependencies
+target_link_libraries({args.name} PRIVATE
+    ${{SAGE_LIB}}
+    ${{SAGE_THIRD_PARTY}}/box2d.lib
+    ${{SAGE_THIRD_PARTY}}/glad.lib
+    ${{SAGE_THIRD_PARTY}}/glfw3.lib
+    ${{SAGE_THIRD_PARTY}}/imgui.lib
+    ${{SAGE_THIRD_PARTY}}/tinyxml2.lib
+    opengl32
+)
 
 # Copy assets to build directory
 add_custom_command(TARGET {args.name} POST_BUILD
@@ -343,43 +372,20 @@ set_target_properties({args.name} PROPERTIES
         (project_dir / "CMakeLists.txt").write_text(cmake_content, encoding='utf-8')
         
         # Create main.cpp
-        main_content = """#include <SAGE/SAGE.h>
+        main_content = f"""#include <SAGE/SAGE.h>
 #include <iostream>
 
-using namespace SAGE;
-
-class MyGame : public Application {
-public:
-    MyGame() : Application("SAGE Game", 1280, 720) {}
+int main() {{
+    std::cout << "{args.name} - SAGE Engine Project" << std::endl;
+    std::cout << "SAGE Engine Version: " << SAGE::Version::GetString() << std::endl;
+    std::cout << "\\nThis is a template project." << std::endl;
+    std::cout << "Edit src/main.cpp to implement your game logic." << std::endl;
     
-    void OnInit() override {
-        std::cout << "Game Initialized!" << std::endl;
-        
-        // Create a simple entity
-        auto entity = registry.CreateEntity();
-        registry.AddComponent<TransformComponent>(entity, Vector2(400, 300));
-        
-        std::cout << "Entity created: " << entity << std::endl;
-    }
+    std::cout << "\\nPress Enter to exit..." << std::endl;
+    std::cin.get();
     
-    void OnUpdate(float deltaTime) override {
-        // Game logic here
-    }
-    
-    void OnRender() override {
-        // Rendering here
-    }
-    
-    void OnShutdown() override {
-        std::cout << "Game Shutdown" << std::endl;
-    }
-};
-
-int main() {
-    MyGame game;
-    game.Run();
     return 0;
-}
+}}
 """
         (project_dir / "src" / "main.cpp").write_text(main_content, encoding='utf-8')
         
@@ -599,13 +605,20 @@ CMakeFiles/
         project_dir = Path.cwd()
         project_name = project_dir.name
         
-        # Try bin directory first (new structure)
+        # Try bin/config directory first (CMake default: build/bin/Release)
         if sys.platform == 'win32':
-            exe_path = project_dir / "build" / "bin" / f"{project_name}.exe"
+            exe_path = project_dir / "build" / "bin" / args.config / f"{project_name}.exe"
         else:
-            exe_path = project_dir / "build" / "bin" / project_name
+            exe_path = project_dir / "build" / "bin" / args.config / project_name
         
-        # Fallback to old structure
+        # Fallback to bin directory without config
+        if not exe_path.exists():
+            if sys.platform == 'win32':
+                exe_path = project_dir / "build" / "bin" / f"{project_name}.exe"
+            else:
+                exe_path = project_dir / "build" / "bin" / project_name
+        
+        # Fallback to old structure (build/config)
         if not exe_path.exists():
             if sys.platform == 'win32':
                 exe_path = project_dir / "build" / args.config / f"{project_name}.exe"
