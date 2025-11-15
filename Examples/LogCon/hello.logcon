@@ -1,0 +1,54 @@
+// ============================================
+// HELLO WORLD на LogCon
+// Самая простая программа на SAGE Engine
+// ============================================
+
+// Настройка окна
+window("Hello LogCon!", 800, 600)
+background(0.1, 0.1, 0.15)
+
+log("=== Hello World LogCon Example ===")
+log("Press ESC to quit")
+
+// Переменные
+var message = "Hello, SAGE Engine!"
+var x = 400
+var y = 300
+var time = 0
+
+// === ОБНОВЛЕНИЕ (каждый кадр) ===
+on("Update", "updateGame")
+
+func updateGame() {
+    time = getTime()
+    
+    // Движение текста
+    x = 400 + Math.sin(time) * 100
+    y = 300 + Math.cos(time * 0.5) * 50
+    
+    // Выход по ESC
+    if isKeyPressed("Escape") {
+        log("Goodbye!")
+        closeWindow()
+    }
+}
+
+// === ОТРИСОВКА (каждый кадр) ===
+on("Render", "renderGame")
+
+func renderGame() {
+    // Цветной прямоугольник
+    drawRect(350, 250, 100, 100, 0.2, 0.6, 1.0, 1.0)
+    
+    // Текст с цветом
+    drawTextColored(message, x - 100, y, 1.0, 1.0, 1.0, 1.0)
+    
+    // Инструкции
+    drawText("Press ESC to quit", 10, 10)
+    
+    // FPS counter
+    var fps = 1.0 / getDeltaTime()
+    drawText("FPS: " + Math.floor(fps), 10, 30)
+}
+
+log("Hello World script loaded!")

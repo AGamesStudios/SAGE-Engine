@@ -5,14 +5,26 @@
 #include <functional>
 #include <memory>
 #include <unordered_set>
+#include <unordered_map>
 
 #include "Color.h"
+#include "StringID.h"
 #include "../Math/Vector2.h"
 
 namespace SAGE {
 
+    class Scene;
+
+    enum class PhysicsContactState {
+        Enter,
+        Stay,
+        Exit
+    };
+
     class GameObject {
     public:
+        virtual ~GameObject() = default;
+        
         // 🏷️ Базовая информация
         std::string name;
         bool active = true;
@@ -52,6 +64,7 @@ namespace SAGE {
         // 💥 Коллизия
         bool collision = false; // Включить столкновения
         bool solid = true;      // Твёрдый (блокирует движение)
+        bool isTrigger = false;
         std::string hitboxType = "box"; // "box" или "circle"
         
         // 🎯 События (лямбды)
@@ -61,6 +74,9 @@ namespace SAGE {
         std::function<void(GameObject*)> OnCollisionEnter;     // Альтернатива OnCollision: событие начала контакта
         std::function<void(GameObject*)> OnCollisionStay;      // Срабатывает каждый кадр, пока есть контакт
         std::function<void(GameObject*)> OnCollisionExit;      // Срабатывает при выходе из контакта
+        std::function<void(GameObject*)> OnTriggerEnter;
+        std::function<void(GameObject*)> OnTriggerStay;
+        std::function<void(GameObject*)> OnTriggerExit;
         std::function<void()> OnDestroy;
         
         // 🛠️ Методы
@@ -83,6 +99,7 @@ namespace SAGE {
         Vector2 GetVelocity() const { return Vector2(speedX, speedY); }
         void SetVelocity(const Vector2& velocity);
         void Jump();
+    void SetOwnerScene(Scene* scene);
         
         bool IsTouching(GameObject* other);
         bool IsOnScreen();
@@ -96,12 +113,37 @@ namespace SAGE {
         static GameObject* Find(const std::string& name);
         static std::vector<GameObject*> FindAll(const std::string& name);
         static int Count();
+        static void DestroySceneObjects(SceneID sceneID);
+        static const std::vector<GameObject*>& GetAllObjects() { return allObjects; }
+        
+        // Tag system with StringID for fast comparisons
+        void SetTag(const std::string& tag) { 
+            m_Tag = tag; 
+            m_TagID = StringID(tag.c_str()); 
+        }
+        const std::string& GetTag() const { return m_Tag; }
+        StringID GetTagID() const { return m_TagID; }
+        bool HasTag(const char* tag) const { return m_TagID == StringID(tag); }
+        bool HasTag(StringID tagID) const { return m_TagID == tagID; }
+        
+        // Fast tag-based queries
+        static GameObject* FindByTag(const char* tag);
+        static GameObject* FindByTag(StringID tagID);
+        static std::vector<GameObject*> FindAllByTag(const char* tag);
+        static std::vector<GameObject*> FindAllByTag(StringID tagID);
+
+    void HandlePhysicsContact(GameObject* other, PhysicsContactState state, bool isTriggerContact);
+    SceneID GetOwnerSceneID() const { return m_OwnerSceneID; }
         
     private:
         bool markedForDestruction = false;
         bool grounded = false;
         float prevX = 0;
         float prevY = 0;
+        
+        // Tag data
+        std::string m_Tag;
+        StringID m_TagID;
         
     float inverseMass = 1.0f;
     Vector2 accumulatedForces = Vector2::Zero();
@@ -110,18 +152,22 @@ namespace SAGE {
     float pendingJumpVelocity = 0.0f;
     bool jumpQueued = false;
     bool wasGroundedLastFrame = false;
+    SceneID m_OwnerSceneID = 0;
+    bool m_OnCreateDispatched = false;
 
     void BeginPhysicsStep(float deltaTime);
     void HandleJumpRequest();
         void UpdatePhysics(float deltaTime);
         void UpdatePosition(float deltaTime);
-        void CheckCollisions(float deltaTime);
+        void CheckCollisions();
         void ResolveCollision(GameObject* other, float overlapX, float overlapY);
         void ClearCollision(GameObject* other);
         
         static std::vector<GameObject*> allObjects;
         static std::vector<GameObject*> objectsToDestroy;
+        static std::unordered_map<SceneID, std::vector<GameObject*>> sceneObjects;
         std::unordered_set<GameObject*> currentContacts;
+        std::unordered_set<GameObject*> currentTriggerContacts;
     };
 
 } // namespace SAGE

@@ -1,125 +1,116 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.15)
+project(SAGEEngine VERSION 1.0.0 LANGUAGES CXX C)
 
-# Force dynamic runtime library for all targets (MSVC)
-if(POLICY CMP0091)
-    cmake_policy(SET CMP0091 NEW)
-endif()
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
-
-project(SAGE_Engine VERSION 0.1.0 LANGUAGES CXX)
-
-# C++20 standard
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+
+# UTF-8 support for MSVC - автодетекцию включаем для всех файлов с кириллицей
+if(MSVC)
+    # Принудительная компиляция с UTF-8 (включает source и execution charset)
+    add_compile_options(/utf-8)
+    # Отключаем предупреждения о non-ASCII символах
+    add_compile_options(/wd4819)
+    add_compile_options(/W3)
+    add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
+endif()
 
 # Output directories
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
-# MSVC settings
-if(MSVC)
-    # Set global policy to use MultiThreadedDLL runtime for all targets
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
-    # Suppress macro redefinition warning (APIENTRY) from Windows/minwindef vs glad
-    add_compile_options(/wd4005)
-endif()
+# Multi-config generators (Visual Studio, Xcode)
+foreach(CONFIG ${CMAKE_CONFIGURATION_TYPES})
+    string(TOUPPER ${CONFIG} CONFIG_UPPER)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${CONFIG_UPPER} ${CMAKE_BINARY_DIR}/bin/${CONFIG})
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_${CONFIG_UPPER} ${CMAKE_BINARY_DIR}/lib/${CONFIG})
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${CONFIG_UPPER} ${CMAKE_BINARY_DIR}/lib/${CONFIG})
+endforeach()
 
 # Options
-option(SAGE_BUILD_TESTS "Build SAGE tests" ON)
-option(SAGE_BUILD_EXAMPLES "Build SAGE examples" ON)
-option(SAGE_ENABLE_PROFILING "Enable profiling support" OFF)
-option(SAGE_STRICT_WARNINGS "Treat warnings as errors" OFF)
-set(SAGE_PHYSICS_BACKEND "PRIMITIVE" CACHE STRING "Physics backend: PRIMITIVE or BOX2D")
-set_property(CACHE SAGE_PHYSICS_BACKEND PROPERTY STRINGS PRIMITIVE BOX2D)
-if(NOT SAGE_PHYSICS_BACKEND IN_LIST CMAKE_CACHE_STRINGS)
-    # Basic validation
-    if(NOT SAGE_PHYSICS_BACKEND MATCHES "^(PRIMITIVE|BOX2D)$")
-        message(FATAL_ERROR "Invalid SAGE_PHYSICS_BACKEND='${SAGE_PHYSICS_BACKEND}'. Use PRIMITIVE or BOX2D")
-    endif()
-endif()
+option(SAGE_BUILD_EXAMPLES "Build SAGE Engine examples" ON)
+option(SAGE_BUILD_EDITOR "Build SAGE Engine editor" ON)
+option(SAGE_BUILD_TESTS "Build SAGE Engine tests" ON)
+option(SAGE_BUILD_PLUGINS "Build SAGE Engine plugins" ON)
+option(SAGE_ENABLE_LUA "Enable Lua scripting via sol2" OFF)
 
-if(SAGE_PHYSICS_BACKEND STREQUAL "BOX2D")
-    add_compile_definitions(SAGE_USE_BOX2D)
-    # Mirror compile definition in a variable for generator expressions
-    set(SAGE_USE_BOX2D ON)
-    message(STATUS "Using Box2D physics backend")
+if(SAGE_ENABLE_LUA)
+    add_compile_definitions(SAGE_ENABLE_LUA=1)
 else()
-    set(SAGE_USE_BOX2D OFF)
-    message(STATUS "Using primitive physics backend")
+    add_compile_definitions(SAGE_ENABLE_LUA=0)
 endif()
 
-# Third-party dependencies
+# ThirdParty libraries
 add_subdirectory(ThirdParty)
-
-if(SAGE_TINYXML2_AVAILABLE)
-    add_compile_definitions(SAGE_HAS_TINYXML2)
-    message(STATUS "TinyXML2 enabled for TMX tilemap loading")
-else()
-    message(WARNING "TinyXML2 not available; TMX tilemap loading disabled")
-endif()
 
 # Engine library
 add_subdirectory(Engine)
 
-# Tests
+# Examples
+if(SAGE_BUILD_EXAMPLES)
+    add_subdirectory(Examples)
+endif()
+
+# # LogCon Launcher - DISABLED: tools/ removed
+# add_executable(LogConLauncher
+#     Tools/LogConLauncher/main.cpp
+#     Engine/Scripting/LogCon/LogConRuntime.cpp
+# )
+# target_link_libraries(LogConLauncher PRIVATE SAGE_Engine)
+
+# # Editor - DISABLED: missing RigidBodyComponent.h
+# if(SAGE_BUILD_EDITOR)
+#     add_subdirectory(Editor)
+# endif()
+
+# Tests - ENABLED for comprehensive testing
 if(SAGE_BUILD_TESTS)
-    enable_testing()
     add_subdirectory(Tests)
 endif()
 
-# Editor
-add_subdirectory(Editor)
-
-# Examples
-if(SAGE_BUILD_EXAMPLES)
-    message(STATUS "Building examples: TextureLoadingExample")
-    add_executable(TextureLoadingExample Examples/TextureLoadingExample.cpp)
-    target_link_libraries(TextureLoadingExample PRIVATE SAGE_Engine)
-    set_target_properties(TextureLoadingExample PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin FOLDER "Examples" MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
-
-    add_executable(TextureRenderExample Examples/TextureRenderExample.cpp)
-    target_link_libraries(TextureRenderExample PRIVATE SAGE_Engine)
-    set_target_properties(TextureRenderExample PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin FOLDER "Examples" MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
-
-    add_executable(BatchTextureExample Examples/BatchTextureExample.cpp)
-    target_link_libraries(BatchTextureExample PRIVATE SAGE_Engine)
-    set_target_properties(BatchTextureExample PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin FOLDER "Examples" MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
-
-    add_executable(CharacterSheetDemo Examples/CharacterSheetDemo.cpp)
-    target_link_libraries(CharacterSheetDemo PRIVATE SAGE_Engine)
-    set_target_properties(CharacterSheetDemo PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin FOLDER "Examples" MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+# Plugins
+if(SAGE_BUILD_PLUGINS)
+    add_subdirectory(Plugins)
 endif()
 
-# Tools (SpriteSheetAnalyzer)
-add_executable(SpriteSheetAnalyzer tools/SpriteSheetAnalyzer.cpp)
-target_link_libraries(SpriteSheetAnalyzer PRIVATE SAGE_Engine)
-if(MSVC)
-    set_target_properties(SpriteSheetAnalyzer PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-endif()
-set_target_properties(SpriteSheetAnalyzer PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin FOLDER "Tools")
-
-# Apply strict warnings globally (after targets exist) by iterating over targets if enabled
-if(SAGE_STRICT_WARNINGS)
-    get_property(_sage_targets DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY BUILDSYSTEM_TARGETS)
-    foreach(_t ${_sage_targets})
-        if(TARGET ${_t})
-            if(MSVC)
-                target_compile_options(${_t} PRIVATE /WX)
-            else()
-                target_compile_options(${_t} PRIVATE -Werror)
-            endif()
-        endif()
-    endforeach()
-    message(STATUS "SAGE_STRICT_WARNINGS enabled: treating all warnings as errors")
-endif()
+# # SAGE CLI Tool - DISABLED: tools/ removed
+# add_executable(sage_cli
+#     tools/sage_cli_main.cpp
+# )
+# 
+# target_compile_features(sage_cli PRIVATE cxx_std_17)
+# 
+# target_include_directories(sage_cli PRIVATE
+#     ${CMAKE_SOURCE_DIR}/tools
+# )
+# 
+# # No dependencies needed - header-only implementation
+# # SAGE CLI Tool - DISABLED: tools/ removed
+# set_target_properties(sage_cli PROPERTIES
+#     OUTPUT_NAME "sage"
+#     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+# )
+# 
+# # Copy to root bin/ directory for easy access
+# add_custom_command(TARGET sage_cli POST_BUILD
+#     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/bin
+#     COMMAND ${CMAKE_COMMAND} -E copy
+#         $<TARGET_FILE:sage_cli>
+#         ${CMAKE_SOURCE_DIR}/bin/sage$<$<PLATFORM_ID:Windows>:.exe>
+#     COMMENT "Installing SAGE CLI to bin/"
+# )
 
 # Installation
-include(GNUInstallDirs)
-
-install(EXPORT SAGETargets
-    FILE SAGETargets.cmake
-    NAMESPACE SAGE::
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/SAGE
+install(TARGETS SAGE_Engine
+    RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
 )
+
+# install(TARGETS sage_cli
+#     RUNTIME DESTINATION bin
+# )
+
+# Copy assets
+install(DIRECTORY assets/ DESTINATION bin/assets)

@@ -1,83 +1,154 @@
 #include "GameObject.h"
 #include "Logger.h"
 #include "Application.h"
-#include "../Graphics/Renderer.h"
+#include "Graphics/API/Renderer.h"
+#include "ECS/GameObjectECSBridge.h"
 #include <algorithm>
+#include <vector>
 #include <cmath>
 #include <unordered_set>
+#include <unordered_map>
 
 namespace SAGE {
 
     namespace {
         constexpr float DEFAULT_GRAVITY = 1200.0f;
+        constexpr float DEFAULT_MAX_FALL_SPEED = 1500.0f;
+        constexpr float DEFAULT_COYOTE_TIME = 0.08f;
+        constexpr float DEFAULT_JUMP_BUFFER = 0.1f;
+        constexpr float DEFAULT_JUMP_STRENGTH = 650.0f;
     }
 
-    // Статические переменные
+    // ��T¦-T¦�TǦ�T������� ����T����-���-�-T˦�
     std::vector<GameObject*> GameObject::allObjects;
     std::vector<GameObject*> GameObject::objectsToDestroy;
+    std::unordered_map<SceneID, std::vector<GameObject*>> GameObject::sceneObjects;
 
-    // Создание объекта
+    // ��-���+�-�-���� �-�-Tʦ���T¦-
     GameObject* GameObject::Create(const std::string& name) {
         GameObject* obj = new GameObject();
         obj->name = name;
         obj->color = Color::White();
         obj->prevX = obj->x;
         obj->prevY = obj->y;
-        allObjects.push_back(obj);
-        
-        // Вызвать OnCreate если установлен
-        if (obj->OnCreate) {
-            obj->OnCreate();
+        obj->m_OnCreateDispatched = false;
+        obj->markedForDestruction = false;
+        obj->maxFallSpeed = DEFAULT_MAX_FALL_SPEED;
+        obj->coyoteTime = DEFAULT_COYOTE_TIME;
+        obj->jumpBuffer = DEFAULT_JUMP_BUFFER;
+        obj->jumpStrength = DEFAULT_JUMP_STRENGTH;
+
+        SceneID ownerSceneID = 0;
+        Scene* ownerScene = nullptr;
+        if (Application::HasInstance()) {
+            ownerScene = Application::Get().GetSceneStack().GetTopScene();
+            if (ownerScene) {
+                ownerSceneID = ownerScene->GetID();
+            }
         }
-        
+        obj->m_OwnerSceneID = ownerSceneID;
+
+        allObjects.push_back(obj);
+        sceneObjects[ownerSceneID].push_back(obj);
+
+        // Создаём ECS сущность для объекта (ленивое создание)
+        if (ownerScene) {
+            ECS::GameObjectECSBridge::EnsureEntity(ownerScene, obj);
+        }
+
         SAGE_INFO("GameObject created: {0}", name);
         return obj;
     }
 
-    // Обновление всех объектов
+    void GameObject::SetOwnerScene(Scene* scene) {
+        SceneID newSceneID = scene ? scene->GetID() : 0;
+        if (m_OwnerSceneID == newSceneID) {
+            return;
+        }
+
+        auto removeIt = sceneObjects.find(m_OwnerSceneID);
+        if (removeIt != sceneObjects.end()) {
+            auto& perScene = removeIt->second;
+            perScene.erase(std::remove(perScene.begin(), perScene.end(), this), perScene.end());
+            if (perScene.empty()) {
+                sceneObjects.erase(removeIt);
+            }
+        }
+
+        m_OwnerSceneID = newSceneID;
+        sceneObjects[newSceneID].push_back(this);
+    }
+
+    // �ަ-�-�-�-�����-���� �-T���T� �-�-Tʦ���T¦-�-
     void GameObject::UpdateAll(float deltaTime) {
-        // Обновить физику и позицию
-        for (auto* obj : allObjects) {
-            if (!obj->active) continue;
+        // Защита от обработки новых объектов, созданных во время update
+        const size_t objectCount = allObjects.size();
+        
+        for (size_t index = 0; index < objectCount; ++index) {
+            GameObject* obj = allObjects[index];
+            if (!obj) continue;  // nullptr check
+
+            if (!obj->m_OnCreateDispatched && obj->OnCreate) {
+                obj->m_OnCreateDispatched = true;
+                obj->OnCreate();
+            }
+
+            if (!obj->active) {
+                continue;
+            }
+
+            obj->prevX = obj->x;
+            obj->prevY = obj->y;
+            obj->wasGroundedLastFrame = obj->grounded;
+
             obj->BeginPhysicsStep(deltaTime);
-            
-            // Физика
+
             if (obj->physics) {
                 obj->UpdatePhysics(deltaTime);
             }
-            
-            // Позиция
+
             obj->UpdatePosition(deltaTime);
-            
-            // Пользовательское обновление
+
             if (obj->OnUpdate) {
                 obj->OnUpdate(deltaTime);
             }
+
+            // ECS синхронизация после пользовательской логики
+            Scene* ownerScene = nullptr;
+            if (Application::HasInstance()) {
+                auto& sceneStack = Application::Get().GetSceneStack();
+                ownerScene = sceneStack.FindSceneByID(obj->m_OwnerSceneID);
+            }
+            
+            if (ownerScene) {
+                ECS::GameObjectECSBridge::Sync(ownerScene, obj);
+            }
         }
-        
-        // Проверка коллизий
-        for (auto* obj : allObjects) {
-            if (!obj->active || !obj->collision) continue;
-            obj->CheckCollisions(deltaTime);
+
+        // Проверка коллизий только для объектов, существовавших до update
+        for (size_t i = 0; i < objectCount; ++i) {
+            GameObject* obj = allObjects[i];
+            if (!obj || !obj->active || !obj->collision) {
+                continue;
+            }
+            obj->CheckCollisions();
         }
-        
-        // Удалить помеченные объекты
+
         DestroyMarked();
     }
 
-    // Рендеринг всех объектов
-    void GameObject::RenderAll() {
-        // Сортировка по слоям
+void GameObject::RenderAll() {
+        // ��-T�T¦�T��-�-���- ���- T����-TϦ-
         std::vector<GameObject*> sorted = allObjects;
         std::sort(sorted.begin(), sorted.end(), [](GameObject* a, GameObject* b) {
             return a->layer < b->layer;
         });
         
-        // Отрисовка
+        // ��T�T���T��-�-���-
         for (auto* obj : sorted) {
             if (!obj->active || !obj->visible) continue;
             
-            // Пока просто рисуем квадраты (позже добавим текстуры)
+            // �ߦ-���- ��T��-T�T¦- T���T�Tæ��- ���-�-�+T��-T�T� (���-������ �+�-�-�-�-���- T¦���T�T�T�T�T�)
             QuadDesc quad;
             quad.position = Float2(obj->x, obj->y);
             quad.size = Float2(obj->width, obj->height);
@@ -86,24 +157,49 @@ namespace SAGE {
         }
     }
 
-    // Удаление помеченных объектов
+    // ��+�-�����-���� ���-�-��TǦ��-�-T�T� �-�-Tʦ���T¦-�-
     void GameObject::DestroyMarked() {
         if (objectsToDestroy.empty()) return;
         
         for (auto* obj : objectsToDestroy) {
-            // Вызвать OnDestroy
+            if (!obj) {
+                continue;
+            }
+            
+            const SceneID ownerSceneID = obj->m_OwnerSceneID;
+            auto mapIt = sceneObjects.find(ownerSceneID);
+            if (mapIt != sceneObjects.end()) {
+                auto& perScene = mapIt->second;
+                perScene.erase(std::remove(perScene.begin(), perScene.end(), obj), perScene.end());
+                if (perScene.empty()) {
+                    sceneObjects.erase(mapIt);
+                }
+            }
+
+            // Удаляем ECS сущность
+            Scene* ownerScene = nullptr;
+            if (Application::HasInstance()) {
+                ownerScene = Application::Get().GetSceneStack().FindSceneByID(ownerSceneID);
+            }
+            
+            if (ownerScene) {
+                ECS::GameObjectECSBridge::Remove(ownerScene, obj);
+            }
+
+            // ��T˦��-�-T�T� OnDestroy
             if (obj->OnDestroy) {
                 obj->OnDestroy();
             }
             
-            // Удалить из списка
+            // ��+�-����T�T� ���� T�����T����-
             auto it = std::find(allObjects.begin(), allObjects.end(), obj);
             if (it != allObjects.end()) {
                 allObjects.erase(it);
             }
 
+            // Очищаем коллизии с nullptr проверкой
             for (auto* other : allObjects) {
-                if (other == obj) continue;
+                if (!other || other == obj) continue;
                 other->ClearCollision(obj);
             }
             
@@ -114,7 +210,7 @@ namespace SAGE {
         objectsToDestroy.clear();
     }
 
-    // Удалить все объекты
+    // ��+�-����T�T� �-T��� �-�-Tʦ���T�T�
     void GameObject::DestroyAll() {
         for (auto* obj : allObjects) {
             if (obj->OnDestroy) {
@@ -128,10 +224,11 @@ namespace SAGE {
         }
         allObjects.clear();
         objectsToDestroy.clear();
+        sceneObjects.clear();
         SAGE_INFO("All GameObjects destroyed");
     }
 
-    // Найти объект по имени
+    // �ݦ-��T¦� �-�-Tʦ���T� ���- ���-���-��
     GameObject* GameObject::Find(const std::string& name) {
         for (auto* obj : allObjects) {
             if (obj->name == name) {
@@ -141,7 +238,7 @@ namespace SAGE {
         return nullptr;
     }
 
-    // Найти все объекты с именем
+    // �ݦ-��T¦� �-T��� �-�-Tʦ���T�T� T� ���-���-���-
     std::vector<GameObject*> GameObject::FindAll(const std::string& name) {
         std::vector<GameObject*> result;
         for (auto* obj : allObjects) {
@@ -152,12 +249,32 @@ namespace SAGE {
         return result;
     }
 
-    // Количество объектов
+    // �ڦ-����TǦ�T�T¦-�- �-�-Tʦ���T¦-�-
     int GameObject::Count() {
         return static_cast<int>(allObjects.size());
     }
 
-    // Движение к позиции
+    void GameObject::DestroySceneObjects(SceneID sceneID) {
+        std::vector<GameObject*> toDestroy;
+        while (true) {
+            auto it = sceneObjects.find(sceneID);
+            if (it == sceneObjects.end() || it->second.empty()) {
+                sceneObjects.erase(sceneID);
+                break;
+            }
+
+            toDestroy = it->second;
+            for (auto* obj : toDestroy) {
+                if (obj) {
+                    obj->Destroy();
+                }
+            }
+
+            DestroyMarked();
+        }
+    }
+
+    // �Ԧ-�������-���� �� ���-����TƦ���
     void GameObject::MoveTo(float newX, float newY) {
         prevX = x;
         prevY = y;
@@ -165,7 +282,7 @@ namespace SAGE {
         y = newY;
     }
 
-    // Движение на смещение
+    // �Ԧ-�������-���� �-�- T��-��Tɦ��-����
     void GameObject::MoveBy(float deltaX, float deltaY) {
         prevX = x;
         prevY = y;
@@ -173,7 +290,7 @@ namespace SAGE {
         y += deltaY;
     }
 
-    // Прыжок
+    // ��T�T˦��-��
     void GameObject::Jump(float force) {
         if (!physics) {
             return;
@@ -188,19 +305,19 @@ namespace SAGE {
         Jump(jumpStrength);
     }
 
-    // Толкнуть
+    // ��-�����-T�T�T�
     void GameObject::Push(float forceX, float forceY) {
         ApplyImpulse(Vector2(forceX, forceY));
     }
 
-    // Остановить
+    // ��T�T¦-�-�-�-��T�T�
     void GameObject::Stop() {
         speedX = 0;
         speedY = 0;
         accumulatedForces = Vector2::Zero();
     }
 
-    // Пометить для удаления
+    // �ߦ-�-��T¦�T�T� �+��T� Tæ+�-�����-��T�
     void GameObject::Destroy() {
         if (!markedForDestruction) {
             markedForDestruction = true;
@@ -246,11 +363,11 @@ namespace SAGE {
         speedY = velocity.y;
     }
 
-    // Проверка касания
+    // ��T��-�-��T����- ���-T��-�-��T�
     bool GameObject::IsTouching(GameObject* other) {
         if (!other || !collision || !other->collision) return false;
         
-        // AABB коллизия (box vs box)
+        // AABB ���-����������T� (box vs box)
         if (hitboxType == "box" && other->hitboxType == "box") {
             return !(x + width < other->x ||
                      x > other->x + other->width ||
@@ -258,11 +375,12 @@ namespace SAGE {
                      y > other->y + other->height);
         }
         
-        // TODO: Circle и Circle vs Box
+        // Note: Circle-to-Circle and Circle-to-Box collision detection
+        // will be implemented when needed (currently only AABB is used)
         return false;
     }
 
-    // На экране
+    // �ݦ- Tͦ�T��-�-��
     bool GameObject::IsOnScreen() {
         auto& window = Application::Get().GetWindow();
         float screenWidth = static_cast<float>(window.GetWidth());
@@ -272,7 +390,7 @@ namespace SAGE {
                  y + height < 0 || y > screenHeight);
     }
 
-    // Обновление физики
+    // �ަ-�-�-�-�����-���� TĦ���������
     void GameObject::BeginPhysicsStep(float deltaTime) {
         prevX = x;
         prevY = y;
@@ -345,77 +463,95 @@ namespace SAGE {
         }
     }
 
-    // Обновление позиции
+    // �ަ-�-�-�-�����-���� ���-����TƦ���
     void GameObject::UpdatePosition(float deltaTime) {
         x += speedX * deltaTime;
         y += speedY * deltaTime;
     }
 
-    // Проверка коллизий
-    void GameObject::CheckCollisions(float deltaTime) {
-        (void)deltaTime;
+    // ��T��-�-��T����- ���-������������
+    void GameObject::CheckCollisions() {
+    std::unordered_set<GameObject*> newCollisionContacts;
+    std::unordered_set<GameObject*> newTriggerContacts;
 
-        std::unordered_set<GameObject*> newContacts;
+    float left = x;
+    float right = x + width;
+    float top = y;
+    float bottom = y + height;
 
-        float left = x;
-        float right = x + width;
-        float top = y;
-        float bottom = y + height;
-
-        for (auto* other : allObjects) {
-            if (other == this || !other->active || !other->collision) {
-                continue;
-            }
-
-            float otherLeft = other->x;
-            float otherRight = other->x + other->width;
-            float otherTop = other->y;
-            float otherBottom = other->y + other->height;
-
-            float overlapX = std::min(right, otherRight) - std::max(left, otherLeft);
-            float overlapY = std::min(bottom, otherBottom) - std::max(top, otherTop);
-
-            if (overlapX > 0.0f && overlapY > 0.0f) {
-                newContacts.insert(other);
-
-                ResolveCollision(other, overlapX, overlapY);
-
-                left = x;
-                right = x + width;
-                top = y;
-                bottom = y + height;
-            }
+    for (auto* other : allObjects) {
+        if (!other || other == this || !other->active || !other->collision) {
+            continue;
         }
 
-        for (auto* other : newContacts) {
-            bool wasColliding = currentContacts.count(other) > 0;
+        float otherLeft = other->x;
+        float otherRight = other->x + other->width;
+        float otherTop = other->y;
+        float otherBottom = other->y + other->height;
 
-            if (!wasColliding) {
-                if (OnCollisionEnter) {
-                    OnCollisionEnter(other);
-                }
-                if (OnCollision) {
-                    OnCollision(other);
-                }
-            }
+        float overlapX = std::min(right, otherRight) - std::max(left, otherLeft);
+        float overlapY = std::min(bottom, otherBottom) - std::max(top, otherTop);
 
-            if (OnCollisionStay) {
-                OnCollisionStay(other);
-            }
-        }
+        if (overlapX > 0.0f && overlapY > 0.0f) {
+            const bool triggerInteraction = isTrigger || other->isTrigger || !solid || !other->solid;
+            const bool skipResolution = false;
 
-        if (OnCollisionExit) {
-            for (auto* other : currentContacts) {
-                if (!newContacts.count(other)) {
-                    OnCollisionExit(other);
+            if (triggerInteraction) {
+                newTriggerContacts.insert(other);
+            } else {
+                newCollisionContacts.insert(other);
+
+                if (!skipResolution) {
+                    ResolveCollision(other, overlapX, overlapY);
+
+                    left = x;
+                    right = x + width;
+                    top = y;
+                    bottom = y + height;
                 }
             }
         }
-
-        currentContacts = std::move(newContacts);
     }
 
-    void GameObject::ResolveCollision(GameObject* other, float overlapX, float overlapY) {
+    for (auto* other : newCollisionContacts) {
+        if (!other) continue;
+        const bool wasColliding = currentContacts.count(other) > 0;
+        HandlePhysicsContact(other, wasColliding ? PhysicsContactState::Stay : PhysicsContactState::Enter, false);
+    }
+
+    for (auto* other : newTriggerContacts) {
+        if (!other) continue;
+        const bool wasTriggering = currentTriggerContacts.count(other) > 0;
+        HandlePhysicsContact(other, wasTriggering ? PhysicsContactState::Stay : PhysicsContactState::Enter, true);
+    }
+
+    std::vector<GameObject*> removedCollisions;
+    removedCollisions.reserve(currentContacts.size());
+    for (GameObject* other : currentContacts) {
+        if (!other || !newCollisionContacts.count(other)) {
+            removedCollisions.push_back(other);
+        }
+    }
+    for (GameObject* other : removedCollisions) {
+        if (other) {
+            HandlePhysicsContact(other, PhysicsContactState::Exit, false);
+        }
+    }
+
+    std::vector<GameObject*> removedTriggers;
+    removedTriggers.reserve(currentTriggerContacts.size());
+    for (GameObject* other : currentTriggerContacts) {
+        if (!other || !newTriggerContacts.count(other)) {
+            removedTriggers.push_back(other);
+        }
+    }
+    for (GameObject* other : removedTriggers) {
+        if (other) {
+            HandlePhysicsContact(other, PhysicsContactState::Exit, true);
+        }
+    }
+}
+void GameObject::ResolveCollision(GameObject* other, float overlapX, float overlapY) {
         if (!(solid && other->solid)) {
             return;
         }
@@ -424,7 +560,7 @@ namespace SAGE {
         const bool otherDynamic = other->physics;
 
         if (!selfDynamic && otherDynamic) {
-            // Статичные объекты оставляют разрешение динамическому собеседнику
+            // ��T¦-T¦�TǦ-T˦� �-�-Tʦ���T�T� �-T�T¦-�-��T�T�T� T��-��T���TȦ��-���� �+���-�-�-��TǦ�T����-�-T� T��-�-��T����+�-����T�
             return;
         }
 
@@ -459,13 +595,18 @@ namespace SAGE {
         } else {
             if (prevY + height <= other->y) {
                 y = other->y - height;
-                grounded = selfDynamic ? true : grounded;
+                // Только устанавливаем grounded если падаем вниз
+                if (selfDynamic && speedY >= 0.0f) {
+                    grounded = true;
+                }
             } else if (prevY >= other->y + other->height) {
                 y = other->y + other->height;
             } else {
                 if (y < other->y) {
                     y = other->y - height;
-                    grounded = selfDynamic ? true : grounded;
+                    if (selfDynamic && speedY >= 0.0f) {
+                        grounded = true;
+                    }
                 } else {
                     y = other->y + other->height;
                 }
@@ -489,9 +630,110 @@ namespace SAGE {
     }
 
     void GameObject::ClearCollision(GameObject* other) {
-        if (currentContacts.erase(other) > 0 && OnCollisionExit) {
-            OnCollisionExit(other);
+    if (!other) {
+        return;
+    }
+
+    if (currentContacts.count(other) > 0) {
+        HandlePhysicsContact(other, PhysicsContactState::Exit, false);
+    }
+
+    if (currentTriggerContacts.count(other) > 0) {
+        HandlePhysicsContact(other, PhysicsContactState::Exit, true);
+    }
+}
+
+    void GameObject::HandlePhysicsContact(GameObject* other, PhysicsContactState state, bool isTriggerContact) {
+    if (!other) {
+        return;
+    }
+
+    if (isTriggerContact) {
+        switch (state) {
+        case PhysicsContactState::Enter:
+            if (currentTriggerContacts.insert(other).second) {
+                if (OnTriggerEnter) {
+                    OnTriggerEnter(other);
+                }
+            }
+            break;
+        case PhysicsContactState::Stay:
+            currentTriggerContacts.insert(other);
+            if (OnTriggerStay) {
+                OnTriggerStay(other);
+            }
+            break;
+        case PhysicsContactState::Exit:
+            if (currentTriggerContacts.erase(other) > 0) {
+                if (OnTriggerExit) {
+                    OnTriggerExit(other);
+                }
+            }
+            break;
+        }
+    } else {
+        switch (state) {
+        case PhysicsContactState::Enter:
+            if (currentContacts.insert(other).second) {
+                if (OnCollisionEnter) {
+                    OnCollisionEnter(other);
+                }
+                if (OnCollision) {
+                    OnCollision(other);
+                }
+            }
+            break;
+        case PhysicsContactState::Stay:
+            currentContacts.insert(other);
+            if (OnCollisionStay) {
+                OnCollisionStay(other);
+            }
+            break;
+        case PhysicsContactState::Exit:
+            if (currentContacts.erase(other) > 0) {
+                if (OnCollisionExit) {
+                    OnCollisionExit(other);
+                }
+            }
+            break;
         }
     }
+}
+
+// ==================== TAG SYSTEM IMPLEMENTATION ====================
+
+// Find first object with tag (O(n) but with O(1) string comparison)
+GameObject* GameObject::FindByTag(const char* tag) {
+    StringID tagID(tag);
+    return FindByTag(tagID);
+}
+
+GameObject* GameObject::FindByTag(StringID tagID) {
+    for (auto* obj : allObjects) {
+        if (obj->m_TagID == tagID) {
+            return obj;
+        }
+    }
+    return nullptr;
+}
+
+// Find all objects with tag
+std::vector<GameObject*> GameObject::FindAllByTag(const char* tag) {
+    StringID tagID(tag);
+    return FindAllByTag(tagID);
+}
+
+std::vector<GameObject*> GameObject::FindAllByTag(StringID tagID) {
+    std::vector<GameObject*> result;
+    result.reserve(32); // Reserve space to avoid reallocations
+    
+    for (auto* obj : allObjects) {
+        if (obj->m_TagID == tagID) {
+            result.push_back(obj);
+        }
+    }
+    
+    return result;
+}
 
 } // namespace SAGE

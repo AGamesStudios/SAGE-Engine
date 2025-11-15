@@ -18,6 +18,10 @@ namespace SAGE {
         Vector2 operator-(const Vector2& other) const {
             return Vector2(x - other.x, y - other.y);
         }
+
+        Vector2 operator-() const {
+            return Vector2(-x, -y);
+        }
         
         Vector2 operator*(float scalar) const {
             return Vector2(x * scalar, y * scalar);
@@ -57,6 +61,14 @@ namespace SAGE {
             return *this;
         }
         
+        bool operator==(const Vector2& other) const {
+            return std::abs(x - other.x) < 0.00001f && std::abs(y - other.y) < 0.00001f;
+        }
+        
+        bool operator!=(const Vector2& other) const {
+            return !(*this == other);
+        }
+        
         float Length() const {
             return std::sqrt(x * x + y * y);
         }
@@ -82,6 +94,11 @@ namespace SAGE {
         
         static float Dot(const Vector2& a, const Vector2& b) {
             return a.x * b.x + a.y * b.y;
+        }
+        
+        // Cross product for 2D vectors (returns scalar z-component)
+        float Cross(const Vector2& other) const {
+            return x * other.y - y * other.x;
         }
         
         static Vector2 Zero() { return Vector2(0.0f, 0.0f); }

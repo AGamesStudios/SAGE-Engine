@@ -1,19 +1,16 @@
+// Legacy Math.h kept for backward compatibility; prefer Constants.h
 #pragma once
 
 #include "Vector2.h"
+#include "Math/Constants.h"
 
 namespace SAGE {
-    namespace Math {
-        
-        constexpr float PI = 3.14159265358979323846f;
-        
-        inline float ToRadians(float degrees) {
-            return degrees * PI / 180.0f;
-        }
-        
-        inline float ToDegrees(float radians) {
-            return radians * 180.0f / PI;
-        }
-        
-    }
-}
+namespace Math {
+
+// Deprecated: use Math::Constants::PI instead
+constexpr float PI = Constants::PI;
+
+// Conversion helpers removed (use Math::ToRadians/ToDegrees from Constants.h)
+
+} // namespace Math
+} // namespace SAGE

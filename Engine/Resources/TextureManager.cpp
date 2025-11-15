@@ -1,92 +1,121 @@
 #include "TextureManager.h"
 
-#include "../Graphics/Texture.h"
-#include "../Core/Logger.h"
+#include "Core/Logger.h"
+#include "Core/FileSystem.h"
 
-#include <unordered_map>
+#include <algorithm>
 
 namespace SAGE {
 
-    namespace {
-        std::unordered_map<std::string, Ref<Texture>> s_Textures;
-    }
+TextureManager& TextureManager::Get() {
+	static TextureManager instance;
+	return instance;
+}
 
-    Ref<Texture> TextureManager::Load(const std::string& name, const std::string& path) {
-        // Защита от повторной загрузки
-        if (auto it = s_Textures.find(name); it != s_Textures.end()) {
-            SAGE_WARNING("[TextureManager] Текстура '{}' уже загружена, возвращаем существующую.", name);
-            return it->second;
-        }
+void TextureManager::Init() {
+	std::lock_guard<std::mutex> lock(m_Mutex);
+	if (m_Initialized) {
+		SAGE_WARNING("TextureManager already initialized");
+		return;
+	}
+	m_Textures.clear();
+	m_Initialized = true;
+	SAGE_INFO("TextureManager initialized");
+}
 
-        SAGE_INFO("[TextureManager] Загрузка текстуры '{}' из '{}'...", name, path);
-        
-        Ref<Texture> texture = CreateRef<Texture>(path);
-        if (!texture || !texture->IsLoaded()) {
-            SAGE_ERROR("[TextureManager] Не удалось загрузить текстуру '{}' из '{}'.", name, path);
-            return texture;
-        }
+void TextureManager::Shutdown() {
+	std::lock_guard<std::mutex> lock(m_Mutex);
+	if (!m_Initialized) {
+		return;
+	}
+	m_Textures.clear();
+	m_Initialized = false;
+	SAGE_INFO("TextureManager shutdown");
+}
 
-        s_Textures[name] = texture;
-        SAGE_INFO("[TextureManager] Текстура '{}' загружена успешно ({}x{}).", 
-                  name, texture->GetWidth(), texture->GetHeight());
-        return texture;
-    }
+Ref<Texture> TextureManager::Load(const std::string& name, const std::string& filepath) {
+	std::lock_guard<std::mutex> lock(m_Mutex);
+	if (name.empty() || filepath.empty()) {
+		SAGE_WARNING("TextureManager::Load: Invalid name or filepath");
+		return nullptr;
+	}
+	if (!FileSystem::IsSafePath(filepath)) {
+		SAGE_ERROR("TextureManager::Load: Unsafe path detected '{}' (potential directory traversal)", filepath);
+		return nullptr;
+	}
+	auto it = m_Textures.find(name);
+	if (it != m_Textures.end()) {
+		return it->second.texture;
+	}
+	auto texture = CreateRef<Texture>(filepath);
+	if (!texture->IsLoaded()) {
+		SAGE_ERROR("TextureManager::Load: Failed to load texture '{}' from '{}'", name, filepath);
+		return nullptr;
+	}
+	TextureEntry entry{texture, filepath};
+	m_Textures[name] = entry;
+	SAGE_TRACE("TextureManager::Load: Loaded texture '{}' from '{}' ({}x{})", name, filepath, texture->GetWidth(), texture->GetHeight());
+	return texture;
+}
 
-    Ref<Texture> TextureManager::Get(const std::string& name) {
-        if (auto it = s_Textures.find(name); it != s_Textures.end()) {
-            return it->second;
-        }
-        SAGE_WARNING("[TextureManager] Текстура '{}' не найдена.", name);
-        return nullptr;
-    }
+Ref<Texture> TextureManager::Get(const std::string& name) const {
+	std::lock_guard<std::mutex> lock(m_Mutex);
+	auto it = m_Textures.find(name);
+	if (it != m_Textures.end()) return it->second.texture;
+	return nullptr;
+}
 
-    bool TextureManager::Exists(const std::string& name) {
-        return s_Textures.find(name) != s_Textures.end();
-    }
+bool TextureManager::Reload(const std::string& name) {
+	std::lock_guard<std::mutex> lock(m_Mutex);
+	auto it = m_Textures.find(name);
+	if (it == m_Textures.end()) {
+		SAGE_WARNING("TextureManager::Reload: Texture '{}' not found", name);
+		return false;
+	}
+	const std::string& filepath = it->second.filepath;
+	SAGE_INFO("TextureManager::Reload: Reloading texture '{}' from '{}'", name, filepath);
+	auto newTexture = CreateRef<Texture>(filepath);
+	if (!newTexture->IsLoaded()) {
+		SAGE_ERROR("TextureManager::Reload: Failed to reload texture '{}' from '{}'", name, filepath);
+		return false;
+	}
+	it->second.texture = newTexture;
+	SAGE_TRACE("TextureManager::Reload: Successfully reloaded texture '{}'", name);
+	return true;
+}
 
-    void TextureManager::Unload(const std::string& name) {
-        auto it = s_Textures.find(name);
-        if (it != s_Textures.end()) {
-            SAGE_INFO("[TextureManager] Выгрузка текстуры '{}'...", name);
-            s_Textures.erase(it);
-        }
-    }
+void TextureManager::Remove(const std::string& name) {
+	std::lock_guard<std::mutex> lock(m_Mutex);
+	m_Textures.erase(name);
+}
 
-    void TextureManager::Clear() {
-        SAGE_INFO("[TextureManager] Очистка всех текстур ({} загружено)...", s_Textures.size());
-        s_Textures.clear();
-    }
+void TextureManager::Clear() {
+	std::lock_guard<std::mutex> lock(m_Mutex);
+	m_Textures.clear();
+}
 
-    size_t TextureManager::GetLoadedCount() {
-        return s_Textures.size();
-    }
+size_t TextureManager::GetLoadedCount() const {
+	std::lock_guard<std::mutex> lock(m_Mutex);
+	return m_Textures.size();
+}
 
-    void TextureManager::UnloadUnused() {
-        size_t unloadedCount = 0;
-        for (auto it = s_Textures.begin(); it != s_Textures.end();) {
-            // use_count == 1 означает, что текстура хранится только в кэше
-            if (it->second.use_count() == 1) {
-                SAGE_INFO("[TextureManager] Выгрузка неиспользуемой текстуры '{}'...", it->first);
-                it = s_Textures.erase(it);
-                ++unloadedCount;
-            } else {
-                ++it;
-            }
-        }
-        if (unloadedCount > 0) {
-            SAGE_INFO("[TextureManager] Выгружено {} неиспользуемых текстур.", unloadedCount);
-        }
-    }
+void TextureManager::UnloadUnused() {
+	std::lock_guard<std::mutex> lock(m_Mutex);
+	std::vector<std::string> toRemove;
+	for (const auto& [name, entry] : m_Textures) {
+		if (entry.texture.use_count() == 1) {
+			toRemove.push_back(name);
+		}
+	}
+	for (const auto& name : toRemove) {
+		SAGE_TRACE("TextureManager::UnloadUnused: Removing unused texture '{}'", name);
+		m_Textures.erase(name);
+	}
+}
 
-    void TextureManager::LogStatus() {
-        SAGE_INFO("[TextureManager] Загружено текстур: {}", s_Textures.size());
-        for (const auto& [name, texture] : s_Textures) {
-            SAGE_INFO("  - '{}': {}x{}, ref_count={}", 
-                      name, 
-                      texture->GetWidth(), 
-                      texture->GetHeight(),
-                      texture.use_count());
-        }
-    }
+bool TextureManager::IsLoaded(const std::string& name) const {
+	std::lock_guard<std::mutex> lock(m_Mutex);
+	return m_Textures.find(name) != m_Textures.end();
+}
 
 } // namespace SAGE

@@ -5,6 +5,11 @@
 # Build Directories
 build/
 !build/.gitkeep
+build_new/
+build_clean/
+build_fresh/
+build_release/
+build_old_to_delete/
 out/
 bin/
 lib/
@@ -16,6 +21,9 @@ build/temp/
 # Visual Studio
 .vs/
 *.user
+
+# ImGui temporary files
+imgui.ini
 *.suo
 *.sln.docstates
 *.vcxproj.filters
@@ -89,7 +97,16 @@ _deps/
 
 # Testing
 Testing/
+Temporary/
 CTestCostData.txt
+
+# Temporary and debug files
+temp_*.txt
+demo_*.txt
+*.diff
+build_errors.txt
+*_backup.*
+*.ps1.bak
 
 # Logs and Temporary Files
 *.log

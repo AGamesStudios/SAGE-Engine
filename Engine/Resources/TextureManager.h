@@ -1,26 +1,47 @@
 #pragma once
 
+#include "Core/Core.h"
+#include "Graphics/Core/Resources/Texture.h"
+#include "Memory/Ref.h"
+
+#include <mutex>
 #include <string>
 #include <unordered_map>
 
-#include "../Memory/Ref.h"
-
 namespace SAGE {
 
-    class Texture;
+/// @brief Texture manager with caching and hot-reload support
+class TextureManager {
+public:
+    TextureManager() = default;
+    ~TextureManager() = default;
 
-    class TextureManager {
-    public:
-        static Ref<Texture> Load(const std::string& name, const std::string& path);
-        static Ref<Texture> Get(const std::string& name);
-        static bool Exists(const std::string& name);
-        static void Unload(const std::string& name);
-        static void Clear();
-        
-        // Новые функции для управления ресурсами
-        static size_t GetLoadedCount();
-        static void UnloadUnused(); // Выгрузить текстуры с use_count == 1 (только в кэше)
-        static void LogStatus();    // Лог всех загруженных текстур
+    TextureManager(const TextureManager&) = delete;
+    TextureManager& operator=(const TextureManager&) = delete;
+
+    static TextureManager& Get();
+
+    void Init();
+    void Shutdown();
+
+    Ref<Texture> Load(const std::string& name, const std::string& filepath);
+    Ref<Texture> Get(const std::string& name) const;
+    bool Reload(const std::string& name);
+    void Remove(const std::string& name);
+    void Clear();
+    void UnloadUnused();
+    size_t GetLoadedCount() const;
+    bool IsLoaded(const std::string& name) const;
+
+private:
+    struct TextureEntry {
+        Ref<Texture> texture;
+        std::string filepath;
     };
+
+    std::unordered_map<std::string, TextureEntry> m_Textures;
+    bool m_Initialized = false;
+    mutable std::mutex m_Mutex;
+};
 
 } // namespace SAGE

@@ -4,6 +4,9 @@ set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
 
+# Ensure GLFW follows the dynamic MSVC runtime like the rest of the project
+set(USE_MSVC_RUNTIME_LIBRARY_DLL ON CACHE BOOL "Use MSVC runtime library DLL" FORCE)
+
 add_subdirectory(glfw)
 
 # No MSVC-specific runtime setting - controlled by root CMakeLists.txt via CMAKE_MSVC_RUNTIME_LIBRARY
@@ -170,21 +173,17 @@ target_include_directories(sage_thirdparty_headers INTERFACE
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/SAGE/ThirdParty>
 )
 
-# Box2D (optional physics backend)
-if(SAGE_PHYSICS_BACKEND STREQUAL "BOX2D")
-    include(FetchContent)
-    FetchContent_Declare(
-        box2d
-        GIT_REPOSITORY https://github.com/erincatto/box2d.git
-        GIT_TAG v2.4.1
-    )
-    set(BOX2D_BUILD_TESTS OFF CACHE BOOL "Disable Box2D tests" FORCE)
-    set(BOX2D_BUILD_TESTBED OFF CACHE BOOL "Disable Box2D testbed (avoids glad/glfw duplication)" FORCE)
-    FetchContent_MakeAvailable(box2d)
-    # Ensure consistent runtime on MSVC
-    if(MSVC AND TARGET box2d)
-        set_property(TARGET box2d PROPERTY MSVC_RUNTIME_LIBRARY ${CMAKE_MSVC_RUNTIME_LIBRARY})
-    endif()
+# Box2D physics engine
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/box2d/CMakeLists.txt)
+    message(STATUS "Box2D found - enabling physics engine")
+    set(BOX2D_BUILD_UNIT_TESTS OFF CACHE BOOL "" FORCE)
+    set(BOX2D_BUILD_TESTBED OFF CACHE BOOL "" FORCE)
+    set(BOX2D_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+    add_subdirectory(box2d)
+    set(SAGE_BOX2D_AVAILABLE TRUE)
+else()
+    message(WARNING "Box2D not found. Physics will be limited.")
+    set(SAGE_BOX2D_AVAILABLE FALSE)
 endif()
 
 # ImGui (if available)
@@ -193,4 +192,31 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/imgui/imgui.h)
     add_subdirectory(imgui)
 else()
     message(WARNING "ImGui not found. Download from https://github.com/ocornut/imgui and copy to ThirdParty/imgui/")
+endif()
+
+# Sol2 Lua binding library (header-only)
+option(SAGE_ENABLE_LUA "Enable Lua scripting support with sol2" OFF)
+if(SAGE_ENABLE_LUA)
+    set(SOL2_DIR ${THIRDPARTY_GENERATED_DIR}/sol2)
+    file(MAKE_DIRECTORY ${SOL2_DIR}/sol)
+    set(SOL2_HEADER ${SOL2_DIR}/sol/sol.hpp)
+    download_header("https://github.com/ThePhD/sol2/releases/download/v3.3.0/sol.hpp" ${SOL2_HEADER})
+    
+    set(SOL2_INCLUDE_DIR ${SOL2_DIR})
+    if(EXISTS ${SOL2_HEADER})
+        file(SIZE ${SOL2_HEADER} SOL2_SIZE)
+    else()
+        set(SOL2_SIZE 0)
+    endif()
+    if(SOL2_SIZE EQUAL 0)
+        message(WARNING "sol2 header unavailable; Lua scripting will be disabled")
+        set(SAGE_ENABLE_LUA OFF)
+    else()
+        message(STATUS "Sol2 Lua binding found - enabling Lua scripting")
+        add_library(sol2 INTERFACE)
+        target_include_directories(sol2 INTERFACE 
+            $<BUILD_INTERFACE:${SOL2_INCLUDE_DIR}>
+            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/SAGE/ThirdParty>
+        )
+    endif()
 endif()

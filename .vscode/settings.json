@@ -7,6 +7,8 @@
     "files.associations": {
         "*.h": "cpp",
         "*.cpp": "cpp",
+        "*.tsx": "xml",
+        "*.tmx": "xml",
         "cmath": "cpp",
         "vector": "cpp",
         "algorithm": "cpp",
@@ -73,8 +75,38 @@
         "xmemory": "cpp",
         "xstring": "cpp",
         "xtr1common": "cpp",
-        "xutility": "cpp"
+        "xutility": "cpp",
+        "cassert": "cpp",
+        "thread": "cpp",
+        "typeindex": "cpp",
+        "shared_mutex": "cpp",
+        "valarray": "cpp",
+        "any": "cpp",
+        "bitset": "cpp",
+        "codecvt": "cpp",
+        "condition_variable": "cpp",
+        "csignal": "cpp",
+        "cstdarg": "cpp",
+        "deque": "cpp",
+        "coroutine": "cpp",
+        "resumable": "cpp",
+        "future": "cpp",
+        "map": "cpp",
+        "mutex": "cpp",
+        "numeric": "cpp",
+        "queue": "cpp",
+        "ranges": "cpp",
+        "set": "cpp",
+        "span": "cpp",
+        "stack": "cpp",
+        "stop_token": "cpp",
+        "variant": "cpp",
+        "xtree": "cpp",
+        "string_view": "cpp"
     },
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
-    "cmake.generator": "Visual Studio 17 2022"
+    "cmake.generator": "Visual Studio 17 2022",
+    "files.readonlyInclude": {
+        "{**/.c4z/.extsrcs/*.PROTSYM.cbl,**/.c4z/.extsrcs/*.PROTSYM.listing}": true
+    }
 }

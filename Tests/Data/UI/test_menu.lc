@@ -1,0 +1,4 @@
+СОЗДАТЬ_ПАНЕЛЬ: "test_panel", { layer: "MENU", anchor: "center", размер: { width: 200, height: 120 } }
+СОЗДАТЬ_ТЕКСТ: "test_label", "test_panel", { текст: "UI Test", позиция: { x: 32, y: 24 } }
+СОЗДАТЬ_КНОПКУ: "test_button", "test_panel", { текст: "Click", позиция: { x: 48, y: 64 }, стиль: "primary" }
+ПРИВЯЗАТЬ_СОБЫТИЕ: "test_button", "CLICK", "HandleTestButton"

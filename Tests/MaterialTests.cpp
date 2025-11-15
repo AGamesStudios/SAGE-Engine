@@ -1,6 +1,6 @@
-﻿#include "TestFramework.h"
-#include "../Engine/Graphics/Material.h"
-#include "../Engine/Graphics/Shader.h"
+#include "TestFramework.h"
+#include "Engine/Graphics/Core/Resources/Material.h"
+#include "Engine/Graphics/Core/Resources/Shader.h"
 #include <glad/glad.h>
 
 using namespace SAGE;

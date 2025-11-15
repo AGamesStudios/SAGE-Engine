@@ -1,3 +1,3 @@
 #pragma once
 
-#include "../Graphics/Color.h"
+#include "Graphics/Core/Types/Color.h"

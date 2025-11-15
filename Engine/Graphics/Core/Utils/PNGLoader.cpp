@@ -25,8 +25,6 @@
 
 namespace SAGE::Image {
 
-namespace {
-
 #ifdef _WIN32
 using Microsoft::WRL::ComPtr;
 
@@ -105,12 +103,18 @@ PNGDecodedImage DecodeWithWIC(const uint8_t* data, std::size_t size) {
         result.height = static_cast<uint32_t>(h);
     }
 
-    if (needUninit) {
-        CoUninitialize();
-    }
+    // Explicitly release COM objects before returning
+    converter.Reset();
+    frame.Reset();
+    decoder.Reset();
+    stream.Reset();
+    factory.Reset();
+    
     return result;
 }
 #endif
+
+namespace {
 
 constexpr std::array<uint8_t, 8> kPngSignature{137, 80, 78, 71, 13, 10, 26, 10};
 
@@ -678,7 +682,7 @@ std::vector<uint8_t> DecompressZlib(const uint8_t* data, std::size_t size, std::
                 SAGE_ERROR("[PNGImageDecoder] Stored block length mismatch");
                 return {};
             }
-            if (bits.Exhausted() || (bits.Ok() == false)) {
+            if (bits.Exhausted() || !bits.Ok()) {
                 SAGE_ERROR("[PNGImageDecoder] Stored block truncated");
                 return {};
             }
@@ -1336,6 +1340,10 @@ PNGDecodedImage PNGImageDecoder::LoadFromFile(const std::string& path) {
 }
 
 PNGDecodedImage PNGImageDecoder::LoadFromMemory(const uint8_t* data, std::size_t size) {
+#ifdef _WIN32
+    // Use WIC decoder directly on Windows
+    return DecodeWithWIC(data, size);
+#else
     if (size < kPngSignature.size()) {
         return Fail("Payload too small for PNG signature");
     }
@@ -1559,25 +1567,9 @@ PNGDecodedImage PNGImageDecoder::LoadFromMemory(const uint8_t* data, std::size_t
     }
 
     const std::size_t expectedBufferSize = ExpectedScanlineBufferSize(ihdr);
-#ifdef _WIN32
-    auto TryWICFallback = [&](const char* reason) -> PNGDecodedImage {
-        SAGE_WARNING("[PNGImageDecoder] {}. Falling back to WIC decoder.", reason);
-        PNGDecodedImage fallback = DecodeWithWIC(data, size);
-        if (fallback.IsValid()) {
-            fallback.profile = ToPublicProfile(profile);
-        }
-        return fallback;
-    };
-#endif
 
     auto decompressed = DecompressZlib(compressed.data(), compressed.size(), expectedBufferSize);
     if (decompressed.empty()) {
-#ifdef _WIN32
-        auto fallback = TryWICFallback("Failed to decompress IDAT payload");
-        if (fallback.IsValid()) {
-            return fallback;
-        }
-#endif
         return {};
     }
 
@@ -1585,23 +1577,11 @@ PNGDecodedImage PNGImageDecoder::LoadFromMemory(const uint8_t* data, std::size_t
         ? ApplyScanlineFilters(decompressed, ihdr)
         : ApplyInterlacedScanlineFilters(decompressed, ihdr);
     if (scanlines.empty()) {
-#ifdef _WIN32
-        auto fallback = TryWICFallback("Failed to reconstruct filtered scanlines");
-        if (fallback.IsValid()) {
-            return fallback;
-        }
-#endif
         return {};
     }
 
     auto rgba = ConvertToRGBA(scanlines, ihdr, palette, transparency);
     if (rgba.empty()) {
-#ifdef _WIN32
-        auto fallback = TryWICFallback("Failed to convert scanlines to RGBA");
-        if (fallback.IsValid()) {
-            return fallback;
-        }
-#endif
         return {};
     }
 
@@ -1611,6 +1591,7 @@ PNGDecodedImage PNGImageDecoder::LoadFromMemory(const uint8_t* data, std::size_t
     image.pixels = std::move(rgba);
     image.profile = ToPublicProfile(profile);
     return image;
+#endif // !_WIN32
 }
 
 } // namespace SAGE::Image

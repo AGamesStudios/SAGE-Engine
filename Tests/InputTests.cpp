@@ -1,4 +1,4 @@
-﻿#include "TestFramework.h"
+#include "TestFramework.h"
 #include "../Engine/Input/Input.h"
 #include "../Engine/Input/InputBindings.h"
 #include <GLFW/glfw3.h>

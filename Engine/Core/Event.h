@@ -10,9 +10,31 @@ namespace SAGE {
         None = 0,
         WindowClose,
         WindowResize,
+        WindowFocus,
+        WindowMove,
+        WindowMinimize,
+        WindowMaximize,
+        WindowContentScale,
+        WindowFileDrop,
         AppTick,
         AppUpdate,
-        AppRender
+        AppRender,
+        GamepadConnected,
+        GamepadDisconnected,
+        CursorModeChanged,
+    PhysicsCollision,
+    CollisionBegin,
+    CollisionEnd,
+    CollisionPreSolve,
+    CollisionPostSolve,
+    TriggerEnter,
+    TriggerExit,
+    PhysicsStep,
+    PhysicsTransformUpdated,
+        CameraMoved,
+        CameraZoomed,
+        CameraRotated,
+        Custom
     };
 
     enum EventCategory {
@@ -21,7 +43,12 @@ namespace SAGE {
         EventCategoryInput = 1 << 1,
         EventCategoryKeyboard = 1 << 2,
         EventCategoryMouse = 1 << 3,
-        EventCategoryMouseButton = 1 << 4
+        EventCategoryMouseButton = 1 << 4,
+        EventCategoryGamepad = 1 << 5,
+        EventCategoryCursor = 1 << 6,
+        EventCategoryPhysics = 1 << 7,
+        EventCategoryCamera = 1 << 8,
+        Gameplay = 1 << 9
     };
 
 #define EVENT_CLASS_TYPE(type) static EventType GetStaticType() { return EventType::type; }\
@@ -45,6 +72,10 @@ namespace SAGE {
         bool IsInCategory(EventCategory category) const {
             return (GetCategoryFlags() & category) != 0;
         }
+
+        // Coalescing support: override to enable deduplication in queue
+        virtual bool CanCoalesce() const { return false; }
+        virtual std::size_t GetCoalescingKey() const { return 0; }
     };
 
     class EventDispatcher {

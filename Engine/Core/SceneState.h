@@ -35,4 +35,10 @@ namespace SAGE {
         }
     };
 
+    struct SceneParameters : SceneState {
+        SceneParameters() = default;
+        SceneParameters(const SceneState& other) : SceneState(other) {}
+        SceneParameters(SceneState&& other) noexcept : SceneState(std::move(other)) {}
+    };
+
 } // namespace SAGE

@@ -59,8 +59,8 @@ namespace SAGE {
         s_LastFrameTime = s_FrameStart;
         s_FPSUpdateTime = s_FrameStart;
 
-        // TODO: GPU профилирование требует GL 3.3+ с расширением ARB_timer_query
-        // Будет добавлено после обновления GLAD
+        // Note: GPU profiling requires OpenGL 3.3+ with ARB_timer_query extension
+        // This will be added when GLAD is updated to support GL 3.3+
 
         SAGE_INFO("Profiler инициализирован");
         s_Initialized = true;
@@ -71,7 +71,7 @@ namespace SAGE {
             return;
         }
 
-        // TODO: Очистка GPU query объектов после добавления GPU профилирования
+        // Note: GPU query cleanup will be added with GPU profiling support
 
         SAGE_INFO("Profiler завершён");
         s_Metrics.clear();
@@ -232,11 +232,11 @@ namespace SAGE {
     }
 
     void Profiler::BeginGPUFrame() {
-        // TODO: Реализовать после обновления GLAD с GL 3.3+ поддержкой
+        // Note: GPU profiling will be implemented after GLAD upgrade to GL 3.3+
     }
 
     void Profiler::EndGPUFrame() {
-        // TODO: Реализовать после обновления GLAD с GL 3.3+ поддержкой
+        // Note: GPU profiling will be implemented after GLAD upgrade to GL 3.3+
     }
 
     float Profiler::GetGPUTime() {
@@ -244,7 +244,7 @@ namespace SAGE {
     }
 
     size_t Profiler::GetGPUMemoryUsed() {
-        // TODO: Реализовать после обновления GLAD
+        // Note: GPU memory query will be implemented after GLAD upgrade
         return 0;
     }
 

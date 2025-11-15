@@ -1,11 +1,17 @@
 # SAGE Engine
 
-**Version:** Alpha  
+**Version:** Alpha (Early Development)  
 **License:** MIT  
 **Platform:** Windows, Linux, macOS  
 **Language:** C++17
 
 Modern 2D game engine with Entity Component System architecture, Box2D physics integration, and OpenGL rendering.
+
+## ⚠️ Alpha Status Warning
+
+This engine is in **active development** and not yet production-ready. Features may be incomplete, APIs may change, and some systems require additional configuration. Use for learning, prototyping, and experimentation.
+
+**See [KNOWN_ISSUES.md](KNOWN_ISSUES.md) for current limitations and workarounds.**
 
 ## Features
 
@@ -125,25 +131,28 @@ cmake --build build
 
 ## Examples
 
-The engine includes 16 working examples demonstrating all major features:
+The engine includes 17 example projects (requires `SAGE_BUILD_EXAMPLES=ON`):
 
-- **Box2DPhysicsDemo** - Physics simulation showcase
-- **BatchTextureExample** - Texture batching demonstration
-- **AnimationExample** - Sprite animation system
-- **AudioExample** - Spatial audio features
-- And more in `Examples/` directory
+- **Box2DPhysicsDemo** - Physics simulation with Box2D v3.x
+- **PhysicsSandbox** - Interactive physics playground
+- **UISystemTest** - UI rendering and interaction
+- **AdvancedPostProcessDemo** - Post-processing effects
+- **LogConDemo** - Console logging system
+- **MusicSystemExample** - Music playback features
+- And 11 more in `Examples/` directory
+
+**Note:** Examples are currently in Alpha state and may require additional configuration.
 
 ## Testing
 
-SAGE Engine includes comprehensive test coverage with 70+ unit and integration tests:
+SAGE Engine includes comprehensive test coverage with unit and integration tests:
 
 - ECS core functionality tests
-- Physics integration tests
+- Physics integration tests  
 - Graphics and camera tests
 - Audio system tests
 - Input management tests
 - Serialization tests
-- Performance stress tests
 
 Run all tests:
 ```bash
