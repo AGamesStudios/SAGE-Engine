@@ -32,8 +32,9 @@ class SAGECLI:
     
     def __init__(self):
         self.engine_root = Path(__file__).parent.parent.absolute()
-        self.projects_dir = self.engine_root.parent / "SAGEProjects"
-        self.config_file = self.engine_root / "tools" / "sage_config.json"
+        # Projects OUTSIDE of engine directory
+        self.projects_dir = Path.home() / "SAGEProjects"
+        self.config_file = Path.home() / ".sage" / "config.json"
         self.config = self.load_config()
     
     def load_config(self) -> dict:
@@ -41,10 +42,15 @@ class SAGECLI:
         if self.config_file.exists():
             with open(self.config_file, 'r') as f:
                 return json.load(f)
+        
+        # Default projects in user home directory
+        default_projects = str(Path.home() / "SAGEProjects")
+        
         return {
             "default_compiler": "auto",
             "default_build_type": "Release",
-            "projects_directory": str(self.projects_dir)
+            "projects_directory": default_projects,
+            "engine_path": str(self.engine_root)
         }
     
     def save_config(self):
@@ -288,29 +294,50 @@ class SAGECLI:
         (project_dir / "assets" / "shaders").mkdir()
         
         # Create CMakeLists.txt
+        engine_path = self.config.get('engine_path', str(self.engine_root))
         cmake_content = f"""cmake_minimum_required(VERSION 3.15)
 project({args.name})
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# SAGE Engine path
-set(SAGE_ENGINE_DIR "{self.engine_root.as_posix()}")
+# SAGE Engine path (can be overridden with -DSAGE_ENGINE_DIR=...)
+if(NOT DEFINED SAGE_ENGINE_DIR)
+    set(SAGE_ENGINE_DIR "{engine_path}")
+endif()
 
-# Add SAGE Engine
-add_subdirectory(${{SAGE_ENGINE_DIR}} sage_engine)
+message(STATUS "SAGE Engine directory: ${{SAGE_ENGINE_DIR}}")
+
+# Check if SAGE Engine exists
+if(NOT EXISTS "${{SAGE_ENGINE_DIR}}/CMakeLists.txt")
+    message(FATAL_ERROR "SAGE Engine not found at: ${{SAGE_ENGINE_DIR}}")
+endif()
+
+# Add SAGE Engine as subdirectory
+# Binary dir prevents conflicts with engine's own build
+add_subdirectory(${{SAGE_ENGINE_DIR}} ${{CMAKE_BINARY_DIR}}/sage_engine EXCLUDE_FROM_ALL)
 
 # Project executable
 add_executable({args.name}
     src/main.cpp
 )
 
+# Link with SAGE Engine
 target_link_libraries({args.name} PRIVATE SAGEEngine)
 
-# Copy assets
+# Include SAGE headers
+target_include_directories({args.name} PRIVATE ${{SAGE_ENGINE_DIR}}/Engine)
+
+# Copy assets to build directory
 add_custom_command(TARGET {args.name} POST_BUILD
     COMMAND ${{CMAKE_COMMAND}} -E copy_directory
     ${{CMAKE_SOURCE_DIR}}/assets $<TARGET_FILE_DIR:{args.name}>/assets
+    COMMENT "Copying assets to build directory"
+)
+
+# Set output directory
+set_target_properties({args.name} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${{CMAKE_BINARY_DIR}}/bin
 )
 """
         (project_dir / "CMakeLists.txt").write_text(cmake_content)
@@ -357,36 +384,117 @@ int main() {
         (project_dir / "src" / "main.cpp").write_text(main_content)
         
         # Create README
+        engine_path = self.config.get('engine_path', str(self.engine_root))
         readme_content = f"""# {args.name}
 
-SAGE Engine project created with SAGE CLI.
+SAGE Engine game project.
 
-## Build Instructions
+## Quick Start
+
+Build and run with SAGE CLI:
 
 ```bash
-# Configure
+# Build project
+sage project build
+
+# Run project
+sage project run
+```
+
+## Manual Build
+
+```bash
+# Configure (SAGE Engine path is auto-detected)
 cmake -S . -B build
+
+# Or specify custom engine location:
+cmake -S . -B build -DSAGE_ENGINE_DIR=/path/to/SAGE-Engine
 
 # Build
 cmake --build build --config Release
 
-# Run
-./build/{args.name}
+# Run (Windows)
+.\\build\\bin\\{args.name}.exe
+
+# Run (Linux/macOS)
+./build/bin/{args.name}
 ```
 
 ## Project Structure
 
-- `src/` - Source code
-- `assets/` - Game assets
-  - `textures/` - Image files
-  - `audio/` - Sound files
-  - `shaders/` - Shader files
+```
+{args.name}/
+├── src/
+│   └── main.cpp          # Main application code
+├── assets/
+│   ├── textures/         # Image files (.png, .jpg)
+│   ├── audio/            # Sound files (.wav, .ogg)
+│   └── shaders/          # GLSL shader files
+├── CMakeLists.txt        # Build configuration
+└── README.md            # This file
+```
+
+## Development
+
+### Adding New Source Files
+
+Edit `CMakeLists.txt`:
+
+```cmake
+add_executable({args.name}
+    src/main.cpp
+    src/Player.cpp        # Add new files here
+    src/Enemy.cpp
+)
+```
+
+### Adding Assets
+
+Place assets in respective folders:
+- Textures: `assets/textures/`
+- Audio: `assets/audio/`
+- Shaders: `assets/shaders/`
+
+Assets are automatically copied to build directory.
 
 ## SAGE Engine
 
-This project uses SAGE Engine from: {self.engine_root}
+**Engine Location:** `{engine_path}`
 
-See engine documentation: {self.engine_root}/docs/
+**Documentation:**
+- [API Reference]({engine_path}/docs/API_REFERENCE.md)
+- [User Guide]({engine_path}/docs/USER_GUIDE.md)
+- [CLI Guide]({engine_path}/docs/CLI_GUIDE.md)
+
+**Repository:** https://github.com/AGamesStudios/SAGE-Engine
+
+## CLI Commands
+
+```bash
+sage project build           # Build project
+sage project build --config Debug  # Debug build
+sage project run             # Run project
+sage project clean           # Clean build files
+```
+
+## Troubleshooting
+
+**Problem:** CMake can't find SAGE Engine
+
+**Solution:**
+```bash
+# Set engine path in CMake
+cmake -S . -B build -DSAGE_ENGINE_DIR=/path/to/SAGE-Engine
+```
+
+**Problem:** Missing assets in game
+
+**Solution:** Assets are copied during build. Rebuild project:
+```bash
+sage project build
+```
+
+For more help: https://github.com/AGamesStudios/SAGE-Engine/issues
 """
         (project_dir / "README.md").write_text(readme_content)
         
@@ -416,10 +524,20 @@ CMakeFiles/
         (project_dir / ".gitignore").write_text(gitignore_content)
         
         self.print_success(f"Project created: {project_dir}")
+        
+        self.print_info(f"\nProject location:")
+        print(f"  {project_dir}")
+        
         self.print_info(f"\nNext steps:")
         print(f"  cd {project_dir}")
         print(f"  sage project build")
         print(f"  sage project run")
+        
+        self.print_info(f"\nProject files:")
+        print(f"  src/main.cpp      - Main application")
+        print(f"  assets/           - Game assets")
+        print(f"  CMakeLists.txt    - Build configuration")
+        print(f"  README.md         - Project documentation")
         
         return True
     
@@ -429,6 +547,7 @@ CMakeFiles/
         
         if not (project_dir / "CMakeLists.txt").exists():
             self.print_error("Not a SAGE project directory")
+            self.print_info("Run this command from a project directory created with 'sage create'")
             return False
         
         self.print_header(f"Building Project: {project_dir.name}")
@@ -438,20 +557,41 @@ CMakeFiles/
         if not build_dir.exists() or args.reconfigure:
             self.print_info("Configuring CMake...")
             cmake_args = ['cmake', '-S', '.', '-B', 'build']
+            
+            # Add generator for Windows
             if sys.platform == 'win32':
                 cmake_args.extend(['-G', 'Visual Studio 17 2022'])
             
+            # Pass engine path from config
+            engine_path = self.config.get('engine_path', str(self.engine_root))
+            cmake_args.append(f'-DSAGE_ENGINE_DIR={engine_path}')
+            
             if not self.run_command(cmake_args, cwd=project_dir):
+                self.print_error("CMake configuration failed")
+                self.print_info(f"Check that SAGE Engine exists at: {engine_path}")
                 return False
         
         # Build
         self.print_info(f"Building {args.config}...")
         build_cmd = ['cmake', '--build', 'build', '--config', args.config]
         
+        if args.parallel:
+            build_cmd.extend(['--parallel', str(args.parallel)])
+        
         if not self.run_command(build_cmd, cwd=project_dir):
             return False
         
         self.print_success("Project build complete!")
+        
+        # Show executable location
+        if sys.platform == 'win32':
+            exe_path = project_dir / "build" / "bin" / f"{project_dir.name}.exe"
+        else:
+            exe_path = project_dir / "build" / "bin" / project_dir.name
+        
+        if exe_path.exists():
+            self.print_info(f"Executable: {exe_path}")
+        
         return True
     
     def cmd_project_run(self, args):
@@ -459,20 +599,34 @@ CMakeFiles/
         project_dir = Path.cwd()
         project_name = project_dir.name
         
+        # Try bin directory first (new structure)
         if sys.platform == 'win32':
-            exe_path = project_dir / "build" / args.config / f"{project_name}.exe"
+            exe_path = project_dir / "build" / "bin" / f"{project_name}.exe"
         else:
-            exe_path = project_dir / "build" / args.config / project_name
+            exe_path = project_dir / "build" / "bin" / project_name
+        
+        # Fallback to old structure
+        if not exe_path.exists():
+            if sys.platform == 'win32':
+                exe_path = project_dir / "build" / args.config / f"{project_name}.exe"
+            else:
+                exe_path = project_dir / "build" / args.config / project_name
         
         if not exe_path.exists():
             self.print_error(f"Executable not found: {exe_path}")
             self.print_info("Build the project first: sage project build")
             return False
         
-        self.print_info(f"Running: {exe_path}")
+        self.print_info(f"Running: {project_name}")
+        print(f"Location: {exe_path}")
+        print()
         
         try:
+            # Run in the build/bin directory so assets are found
             subprocess.run([str(exe_path)], cwd=exe_path.parent)
+            return True
+        except KeyboardInterrupt:
+            self.print_info("\nGame stopped by user")
             return True
         except Exception as e:
             self.print_error(f"Failed to run project: {e}")
@@ -584,6 +738,7 @@ Examples:
                            default='Release', help='Build configuration')
     proj_build.add_argument('--reconfigure', action='store_true',
                            help='Reconfigure CMake')
+    proj_build.add_argument('--parallel', type=int, help='Parallel build jobs')
     
     proj_run = project_subparsers.add_parser('run', help='Run project')
     proj_run.add_argument('--config', choices=['Debug', 'Release'],
