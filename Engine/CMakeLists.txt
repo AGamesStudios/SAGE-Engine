@@ -39,8 +39,7 @@ set(SAGE_ENGINE_HEADERS
     include/SAGE/Scripting/ScriptableEntity.h
     include/SAGE/Scripting/ScriptEngine.h
     
-    # Legacy ECS removed
-    include/SAGE/Core/ECS.h
+    # Plugin System
     include/SAGE/Plugin/IPlugin.h
     include/SAGE/Plugin/PluginManager.h
     
