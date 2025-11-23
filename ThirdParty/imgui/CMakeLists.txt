@@ -70,6 +70,8 @@ set_target_properties(imgui PROPERTIES
 # Disable warnings for third-party code
 if(MSVC)
     target_compile_options(imgui PRIVATE /W0)
+    # Disable precompiled headers for ImGui (external library)
+    set_target_properties(imgui PROPERTIES COMPILE_FLAGS "/Y-")
     # Use MultiThreadedDLL runtime to match SAGE_Engine
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         set_property(TARGET imgui PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreadedDebugDLL")

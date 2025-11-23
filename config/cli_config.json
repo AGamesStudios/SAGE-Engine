@@ -1,0 +1,80 @@
+{
+    "defaults": {
+        "SAGE_BUILD_EXAMPLES": false
+    },
+    "commands": {
+        "build": {
+            "description": "Собрать движок одной командой",
+            "steps": [
+                {
+                    "name": "configure",
+                    "command": "cmake",
+                    "args": ["-S", ".", "-B", "build", "-G", "Visual Studio 17 2022", "-C", "BuildPresets.cmake", "-DPRESET=${preset:FULL}"]
+                },
+                {
+                    "name": "compile",
+                    "command": "cmake",
+                    "args": ["--build", "build", "--config", "${config:Release}", "--target", "SAGE_Engine", "-j", "${jobs:8}"]
+                }
+            ]
+        },
+        "build-game": {
+            "description": "Собрать игру полностью (движок + примеры)",
+            "steps": [
+                {
+                    "name": "configure",
+                    "command": "cmake",
+                    "args": ["-S", ".", "-B", "build", "-G", "Visual Studio 17 2022", "-C", "BuildPresets.cmake", "-DPRESET=${preset:FULL}", "-DSAGE_BUILD_EXAMPLES=ON"]
+                },
+                {
+                    "name": "compile",
+                    "command": "cmake",
+                    "args": ["--build", "build", "--config", "${config:Release}", "-j", "${jobs:8}"]
+                }
+            ]
+        },
+        "quick-build": {
+            "description": "Быстрая сборка для тестов (минимальная конфигурация)",
+            "steps": [
+                {
+                    "name": "configure",
+                    "command": "cmake",
+                    "args": ["-S", ".", "-B", "build", "-G", "Visual Studio 17 2022", "-C", "BuildPresets.cmake", "-DPRESET=MINIMAL"]
+                },
+                {
+                    "name": "compile",
+                    "command": "cmake",
+                    "args": ["--build", "build", "--config", "${config:Release}", "--target", "SAGE_Engine", "-j", "${jobs:8}"]
+                }
+            ]
+        },
+        "clean-build": {
+            "description": "Полная пересборка (clean + configure + build)",
+            "steps": [
+                {
+                    "name": "clean",
+                    "command": "cmake",
+                    "args": ["--build", "build", "--target", "clean"],
+                    "ignore_errors": true
+                },
+                {
+                    "name": "configure",
+                    "command": "cmake",
+                    "args": ["-S", ".", "-B", "build", "-G", "Visual Studio 17 2022", "-C", "BuildPresets.cmake", "-DPRESET=${preset:FULL}"]
+                },
+                {
+                    "name": "compile",
+                    "command": "cmake",
+                    "args": ["--build", "build", "--config", "${config:Release}", "--target", "SAGE_Engine", "-j", "${jobs:8}"]
+                }
+            ]
+        }
+    },
+    "presets": {
+        "MINIMAL": "Минимальная сборка (core только)",
+        "FAST_BUILD": "Быстрая сборка (physics + audio)",
+        "FULL": "Полная сборка всех компонентов",
+        "RELEASE_SIZE": "Релиз с минимальным размером",
+        "RELEASE_SPEED": "Релиз с максимальной скоростью"
+    }
+}

@@ -17,6 +17,16 @@ install/
 *.dir/
 build/temp/
 
+# Configuration Files (runtime generated)
+config/imgui.ini
+
+# Python Virtual Environment
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+
 # IDE and Editor Files
 # Visual Studio
 .vs/

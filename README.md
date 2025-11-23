@@ -1,243 +1,401 @@
-# SAGE Engine
+# SAGE Engine - Simple And Game Engine
 
-**Version:** Alpha (Early Development)  
-**License:** MIT  
-**Platform:** Windows, Linux, macOS  
-**Language:** C++17
+<div align="center">
 
-Modern 2D game engine with Entity Component System architecture, Box2D physics integration, and OpenGL rendering.
+![SAGE Engine](https://img.shields.io/badge/SAGE-Engine-v0.1.0_Alpha-blue)
+![C++](https://img.shields.io/badge/C++-20-blue.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
+![Platform](https://img.shields.io/badge/platform-Windows-lightgrey.svg)
+![OpenGL](https://img.shields.io/badge/OpenGL-4.5-green.svg)
 
-## ⚠️ Alpha Status Warning
+**Современный 2D игровой движок на C++20**
 
-This engine is in **active development** and not yet production-ready. Features may be incomplete, APIs may change, and some systems require additional configuration. Use for learning, prototyping, and experimentation.
+[Features](#features) • [Quick Start](#quick-start) • [Documentation](#documentation) • [Examples](#examples) • [Building](#building) • [Download](#download)
 
-**See [KNOWN_ISSUES.md](KNOWN_ISSUES.md) for current limitations and workarounds.**
+</div>
 
-## Features
+---
 
-- **ECS Architecture** - Flexible Entity Component System design
-- **Box2D Physics** - Full 2D physics simulation (v3.x)
-- **OpenGL Rendering** - Hardware-accelerated 2D graphics with batching
-- **Audio System** - Spatial audio powered by miniaudio
-- **Input Management** - Keyboard, mouse, and gamepad support
-- **Resource Manager** - Efficient asset loading and caching
-- **Event System** - Decoupled event-driven architecture
-- **Serialization** - JSON-based scene save/load system
+## 🎮 Features
 
-## Documentation
+### Core Systems
+- ✅ **Modern Architecture** - ECS-inspired design with modular components
+- ✅ **Scene Management** - Scene stack, transitions, and lifecycle management
+- ✅ **Resource Management** - Automatic caching and cleanup
+- ✅ **Plugin System** - Dynamic loading of DLL/SO plugins
+- ✅ **Event System** - Type-safe global event bus
+- ✅ **Save System** - JSON-based save/load with slots
 
-Comprehensive documentation is available in the `docs/` directory:
+### Graphics
+- ✅ **OpenGL 4.5** - Modern rendering pipeline
+- ✅ **Sprite Batching** - Efficient 2D rendering with automatic batching
+- ✅ **Animation System** - Spritesheet animations with clips
+- ✅ **Particle System** - Advanced particle emitters (Fire, Smoke, Rain, etc.)
+- ✅ **Camera 2D** - With shake, smooth follow, and bounds
+- ✅ **Tilemap** - Grid-based maps with layers and parallax
+- ✅ **UV Coordinates** - Texture atlas and spritesheet support
+- ✅ **Shader Loading** - From strings or files
 
-- [CLI Guide](docs/CLI_GUIDE.md) - SAGE CLI command-line tool
-- [Architecture Overview](docs/ARCHITECTURE.md) - Engine design and core systems
-- [API Reference](docs/API_REFERENCE.md) - Complete API documentation
-- [User Guide](docs/USER_GUIDE.md) - Tutorials and examples
-- [Build Guide](docs/BUILD_GUIDE.md) - Build instructions for all platforms
-- [Component Reference](docs/COMPONENT_REFERENCE.md) - Component documentation
-- [System Reference](docs/SYSTEM_REFERENCE.md) - System API reference
-- [Math API](docs/MATH_API_REFERENCE.md) - Mathematical utilities
-- [Performance Guide](docs/PERFORMANCE_GUIDE.md) - Optimization techniques
+### Physics & Math
+- ✅ **Box2D Integration** - Full 2D physics simulation
+- ✅ **QuadTree** - Spatial partitioning for efficient collision detection
+- ✅ **Math Library** - Vector2, Matrix3, Rect, Color
 
-## Quick Start
+### Performance
+- ✅ **Profiler** - Built-in performance profiling with RAII macros
+- ✅ **Timer System** - Delayed and repeating callbacks
+- ✅ **FPS Tracking** - Real-time performance monitoring
 
-### Requirements
+### Audio
+- ✅ **miniaudio** - Cross-platform audio playback
+- ✅ **Sound Management** - Play, stop, loop, volume control
 
-**System Requirements:**
-- Windows 10/11, Ubuntu 20.04+, or macOS 10.15+
-- OpenGL 3.3 compatible GPU
-- 2 GB RAM minimum
-- 500 MB disk space
+### Input
+- ✅ **Keyboard** - Key press/release/hold detection
+- ✅ **Mouse** - Button and position tracking
+- ✅ **Gamepad** - Controller support (via GLFW)
 
-**Build Tools:**
-- Python 3.6+ (for SAGE CLI)
-- CMake 3.15 or higher
-- C++17 compatible compiler:
-  - Visual Studio 2022 (Windows)
-  - GCC 9+ (Linux)
-  - Clang 10+ (macOS)
-- Git
+### Tools
+- ✅ **ImGui Integration** - Built-in debug UI
+- ✅ **Logging** - Multi-level logging (Trace, Info, Warn, Error, Critical)
+- ✅ **Dev Mode** - Runtime debugging tools
 
-### Installation with SAGE CLI (Recommended)
+---
 
-SAGE CLI simplifies installation, building, and project management:
+## 🚀 Quick Start
 
-**1. Install SAGE CLI:**
+### Prerequisites
+- **Visual Studio 2022** (or compatible C++20 compiler)
+- **CMake 3.23+**
+- **Git**
 
-```bash
-cd SAGE-Engine/tools
-python install_cli.py
-```
-
-**2. Install SAGE Engine:**
-
-```bash
-sage install
-```
-
-**3. Verify installation:**
+### Installation
 
 ```bash
-sage test
-sage info
-```
-
-**4. Create your first project:**
-
-```bash
-sage create MyGame
-cd ../SAGEProjects/MyGame
-sage project build
-sage project run
-```
-
-See [CLI Guide](docs/CLI_GUIDE.md) for complete documentation.
-
-### Manual Installation
-
-If you prefer manual installation without CLI:
-
-**1. Clone the repository with submodules:**
-
-```bash
-git clone --recursive https://github.com/AGamesStudios/SAGE-Engine.git
+# Clone the repository
+git clone https://github.com/AGamesStudios/SAGE-Engine.git
 cd SAGE-Engine
-```
 
-**2. Configure and build:**
-
-**Windows (Visual Studio):**
-```powershell
+# Configure with CMake
 cmake -S . -B build -G "Visual Studio 17 2022"
+
+# Build
 cmake --build build --config Release
 ```
 
-**Linux/macOS:**
-```bash
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build
+### Your First Game
+
+```cpp
+#include <SAGE/SAGE.h>
+
+using namespace SAGE;
+
+class MyGame : public Game {
+public:
+    MyGame() : Game({.window = {.title = "My First Game"}}) {}
+
+    void OnGameInit() override {
+        // Load resources
+        m_Texture = Texture::Create("assets/player.png");
+    }
+
+    void OnGameUpdate(float deltaTime) override {
+        // Update game logic
+        if (Input::IsKeyDown(Key::Escape)) {
+            Quit();
+        }
+    }
+
+    void OnGameRender() override {
+        Renderer::Clear(Color::Black());
+        Renderer::DrawQuad({100, 100}, {64, 64}, m_Texture.get());
+    }
+
+private:
+    std::shared_ptr<Texture> m_Texture;
+};
+
+int main() {
+    MyGame game;
+    game.Run();
+    return 0;
+}
 ```
 
-**3. Run tests:**
+---
 
-```bash
-./build/bin/Release/SAGETests
+## 🎮 Примеры
+
+В папке `Examples/` находятся два небольших демо, которые помогают быстро проверить отрисовку примитивов и настройку проекции:
+
+1. **🖼 Pixel Canvas Demo** (`PixelCanvasDemo.cpp`)
+    - Живая сцена с полосами, сеткой и HUD без 3D иллюзий
+    - Демонстрирует пиксельную проекцию и разные толщины линий
+    - Показывает, как комбинировать квадраты и линии для UI-оверлеев
+
+2. **🟦 Shapes Demo** (`ShapesDemo.cpp`)
+    - Анимированные квадраты, треугольник и многоугольник
+    - Имитация осей координат и сетки
+    - Использует `Renderer::DrawQuad`/`DrawLine`
+
+**Руководство по разработке:** См. [docs/GAME_DEVELOPMENT_GUIDE.md](docs/GAME_DEVELOPMENT_GUIDE.md)
+
+---
+
+## 📚 Documentation
+
+### Core Concepts
+
+#### 1. Application Lifecycle
+
+```cpp
+class MyGame : public Game {
+    void OnGameInit() override;      // Called once at startup
+    void OnGameUpdate(float dt) override;  // Called every frame
+    void OnGameRender() override;    // Called after update
+    void OnGameShutdown() override;  // Called before exit
+};
 ```
 
-**4. Run examples:**
+#### 2. Scene Management
 
-```bash
-./build/bin/Release/Box2DPhysicsDemo
+```cpp
+// Register scenes
+SceneManager::Get().RegisterScene<MainMenuScene>("MainMenu");
+SceneManager::Get().RegisterScene<GameScene>("Game");
+
+// Switch scenes
+SceneManager::Get().SwitchToScene("MainMenu");
+
+// Push/Pop scenes (for overlays)
+SceneManager::Get().PushScene("Pause");
+SceneManager::Get().PopScene();
 ```
 
-## Examples
+#### 3. Resource Management
 
-The engine includes 17 example projects (requires `SAGE_BUILD_EXAMPLES=ON`):
+```cpp
+// Load and cache resources
+auto texture = ResourceManager::Get().Load<Texture>("sprite.png");
+auto shader = Shader::CreateFromFiles("vertex.glsl", "fragment.glsl");
 
-- **Box2DPhysicsDemo** - Physics simulation with Box2D v3.x
-- **PhysicsSandbox** - Interactive physics playground
-- **UISystemTest** - UI rendering and interaction
-- **AdvancedPostProcessDemo** - Post-processing effects
-- **LogConDemo** - Console logging system
-- **MusicSystemExample** - Music playback features
-- And 11 more in `Examples/` directory
-
-**Note:** Examples are currently in Alpha state and may require additional configuration.
-
-## Testing
-
-SAGE Engine includes comprehensive test coverage with unit and integration tests:
-
-- ECS core functionality tests
-- Physics integration tests  
-- Graphics and camera tests
-- Audio system tests
-- Input management tests
-- Serialization tests
-
-Run all tests:
-```bash
-./build/bin/Release/SAGETests
+// Resources are automatically cached and shared
 ```
 
-## Project Structure
+#### 4. Particle Emitters
+
+```cpp
+// Create fire emitter
+auto emitter = std::make_unique<ParticleEmitter>(500);
+auto config = ParticleEmitter::CreateFireEmitter();
+config.position = {100, 200};
+emitter->SetConfig(config);
+emitter->Start();
+
+// Custom emitter
+ParticleEmitterConfig custom;
+custom.shape = EmitterShape::Cone;
+custom.coneAngle = 45.0f;
+custom.startColor = Color::Red();
+custom.endColor = Color{1,1,1,0};
+```
+
+#### 5. Performance Profiling
+
+```cpp
+void MyFunction() {
+    SAGE_PROFILE_FUNCTION();  // Automatically profiles this function
+    
+    {
+        SAGE_PROFILE_SCOPE("Heavy Operation");
+        // Your code here
+    }
+}
+
+// Get results
+auto results = Profiler::Get().GetResults();
+for (const auto& result : results) {
+    std::cout << result.name << ": " << result.averageMs << "ms\n";
+}
+```
+
+#### 6. Spatial Partitioning
+
+```cpp
+// Create QuadTree
+QuadTree<GameObject*> quadtree(
+    Rect{0, 0, 1280, 720},
+    10,  // Max objects per node
+    5    // Max depth
+);
+
+// Insert objects
+for (auto& obj : gameObjects) {
+    quadtree.Insert({obj.bounds, &obj});
+}
+
+// Query nearby objects
+auto nearby = quadtree.Retrieve(player.bounds);
+for (auto* obj : nearby) {
+    CheckCollision(player, *obj);
+}
+```
+
+---
+
+## 📖 Examples
+
+### Pixel Canvas Demo
+- Покрывает окно горизонтальными градиентами, сеткой и HUD
+- Использует авто-настройку пиксельной проекции и разные толщины линий
+- Подходит для отладки 2D-координат, цветов и анимаций
+
+### Shapes Demo
+- Примеры анимированных квадов и линий
+- Демонстрирует изменение масштаба/угла на лету
+- Удобно для отладки цвета, альфа и толщины линий
+
+---
+
+## 🔧 Building
+
+### Windows (Visual Studio)
+
+```powershell
+# Configure
+cmake -S . -B build -G "Visual Studio 17 2022"
+
+# Build Debug
+cmake --build build --config Debug
+
+# Build Release
+cmake --build build --config Release
+
+# Run tests
+.\build\bin\Debug\SAGE_Tests.exe
+```
+
+### CMake Options
+
+```cmake
+cmake -B build -DSAGE_BUILD_EXAMPLES=ON
+-DSAGE_BUILD_TESTS=ON        # Build unit tests
+-DSAGE_BUILD_EDITOR=ON       # Build editor (WIP)
+```
+
+---
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+.\build\bin\Release\SAGE_Tests.exe
+
+# Run specific test
+.\build\bin\Release\SAGE_Tests.exe "Camera2D Tests"
+```
+
+Current test coverage: **~70%**
+
+---
+
+## 📦 Project Structure
 
 ```
 SAGE-Engine/
-├── Engine/          # Core engine source code
-│   ├── ECS/         # Entity Component System
-│   ├── Graphics/    # Rendering systems
-│   ├── Physics/     # Physics integration
-│   ├── Audio/       # Audio systems
-│   └── ...
-├── Examples/        # Example projects
-├── Tests/           # Unit and integration tests
-├── ThirdParty/      # External dependencies
-├── docs/            # Documentation
-└── CMakeLists.txt   # Build configuration
+├── Engine/              # Core engine library
+│   ├── include/SAGE/   # Public headers
+│   └── src/            # Implementation
+├── Editor/             # Level editor (WIP)
+├── Sandbox/            # Development testbed
+├── Tests/              # Unit tests
+├── Examples/           # Minimal render demos
+├── ThirdParty/         # Dependencies
+│   ├── glad/          # OpenGL loader
+│   ├── glfw/          # Window management
+│   ├── glm/           # Math library
+│   ├── box2d/         # Physics
+│   ├── imgui/         # UI
+│   ├── miniaudio/     # Audio
+│   └── stb_image/     # Image loading
+└── assets/            # Resources
+
 ```
 
-## Dependencies
+---
 
-All dependencies are included as git submodules:
+## 🎯 Roadmap
 
-- **GLFW** 3.3+ - Window and input management
-- **GLAD** - OpenGL loader
-- **Box2D** 3.0+ - Physics engine
-- **miniaudio** 0.11.23+ - Audio playback
-- **stb_image** - Image loading
-- **nlohmann/json** - JSON parsing
-- **Catch2** - Testing framework
+### ✅ Completed
+- [x] Core rendering system
+- [x] Scene management
+- [x] Particle emitters
+- [x] Performance profiler
+- [x] Spatial partitioning
+- [x] Shader from files
+- [x] Multiple image formats (PNG, JPG, BMP, TGA)
 
-## Contributing
+### 🚧 In Progress
+- [ ] Comprehensive API documentation
+- [ ] More example projects
+- [ ] Level editor
 
-Contributions are welcome! Please read the contribution guidelines before submitting pull requests.
+### 📋 Planned
+- [ ] Networking (client/server)
+- [ ] Mobile platforms (Android, iOS)
+- [ ] Scripting (Lua integration)
+- [ ] Advanced lighting (2D normal maps)
 
-## License
+---
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+## 🤝 Contributing
 
-## Status
+Contributions are welcome! Please:
 
-**Current Version:** Alpha  
-**Test Coverage:** 70+ tests  
-**Examples:** 16 working demos  
-**Platform Support:** Windows, Linux, macOS
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-The engine is in active development and suitable for creating 2D games and prototypes.
-🔴 **Build** - требуется sol2 для сборки
+### Code Style
+- C++20 standard
+- Use RAII and smart pointers
+- Follow existing naming conventions
+- Add comments for complex logic
 
-### Using Object Pools
+---
 
-```cpp
-#include "ECS/MemoryPool.h"
+## 📄 License
 
-ObjectPool<Bullet> bulletPool(100);
+MIT License - see [LICENSE](LICENSE) file
 
-// Spawn
-Bullet* bullet = bulletPool.Acquire();
+---
 
-// Destroy
-bulletPool.Release(bullet);
-```
+## 🙏 Acknowledgments
 
-## Documentation
+- **GLFW** - Window and input handling
+- **glad** - OpenGL function loading
+- **GLM** - Math library
+- **Box2D** - Physics engine
+- **Dear ImGui** - UI framework
+- **miniaudio** - Audio playback
+- **STB** - Image loading
+- **Catch2** - Unit testing
 
-- **[ECS_OPTIMIZATION_GUIDE.md](ECS_OPTIMIZATION_GUIDE.md)** - Performance optimizations
-- **[LOW_END_OPTIMIZATION.md](LOW_END_OPTIMIZATION.md)** - Low-end device support
-- **[SYSTEMS_CLEANUP_SUMMARY.md](SYSTEMS_CLEANUP_SUMMARY.md)** - Removed systems info
-- **[MIGRATION_QUICK.md](MIGRATION_QUICK.md)** - Quick migration guide
-- **[Engine/ECS/Systems/README.md](Engine/ECS/Systems/README.md)** - System creation guide
+---
 
-## Core Components
+## 📞 Contact
 
-- `CoreSystem.h` - Template-based system base class
-- `MemoryPool.h` - Object pooling and component allocation
-- `ChunkedStorage.h` - Chunk-based entity storage
-- `ComponentArray.h` - Sparse-set component storage
-- `VectorMath.h` - Batch vector operations
-- `PhysicsSystem2D.h` - Lightweight 2D physics
-- `LightweightSystems.h` - Example systems
+- **GitHub**: [AGamesStudios/SAGE-Engine](https://github.com/AGamesStudios/SAGE-Engine)
+- **Issues**: [Report Bug](https://github.com/AGamesStudios/SAGE-Engine/issues)
 
-## License
+---
 
-See LICENSE file.
+<div align="center">
+
+Made with ❤️ by AGamesStudios
+
+**SAGE Engine** - Build Amazing 2D Games!
+
+</div>

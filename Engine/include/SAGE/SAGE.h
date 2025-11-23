@@ -1,50 +1,56 @@
 #pragma once
 
-/**
- * @file SAGE.h
- * @brief Main header for SAGE Engine public API
- * 
- * Include this file to access all engine functionality.
- * 
- * Example usage:
- * @code
- * #include <SAGE/SAGE.h>
- * 
- * int main() {
- *     SAGE::EngineConfig config;
- *     config.windowTitle = "My Game";
- *     
- *     SAGE::IEngine* engine = SAGE::CreateEngine();
- *     engine->Initialize(config);
- *     engine->Run();
- *     SAGE::DestroyEngine(engine);
- *     
- *     return 0;
- * }
- * @endcode
- */
+// ============================================
+// SAGE Engine - Alpha v0.1.0
+// Simple And Game Engine for 2D Games
+// ============================================
 
-// Core types
-#include "Types.h"
+// Core Systems
+#include "SAGE/Application.h"
+#include "SAGE/ApplicationConfig.h"
+#include "SAGE/DevMode.h"
+#include "SAGE/Log.h"
+#include "SAGE/Logger.h"
+#include "SAGE/Time.h"
+#include "SAGE/Window.h"
+#include "SAGE/WindowConfig.h"
 
-// Main interfaces
-#include "IEngine.h"
-#include "IScene.h"
+// Math
+#include "SAGE/Math/Vector2.h"
+#include "SAGE/Math/Color.h"
+#include "SAGE/Math/Matrix3.h"
+#include "SAGE/Math/Rect.h"
 
-// Editor API (optional, only for editor tools)
-#include "Editor/EditorAPI.h"
+// Input
+#include "SAGE/Input/Input.h"
 
-namespace SAGE {
+// Graphics
+#include "SAGE/Graphics/Renderer.h"
+#include "SAGE/Graphics/Shader.h"
+#include "SAGE/Graphics/ShaderLibrary.h"
+#include "SAGE/Graphics/Texture.h"
+#include "SAGE/Graphics/Camera2D.h"
+#include "SAGE/Graphics/Sprite.h"
+#include "SAGE/Graphics/Animation.h"
+#include "SAGE/Graphics/ParticleSystem.h"
+#include "SAGE/Graphics/ParticleEmitter.h"
+#include "SAGE/Graphics/Font.h"
+#include "SAGE/Graphics/Tilemap.h"
 
-/**
- * @brief Engine version information
- */
-struct Version {
-    static constexpr int Major = 1;
-    static constexpr int Minor = 0;
-    static constexpr int Patch = 0;
-    
-    static const char* GetString() { return "1.0.0"; }
-};
+// Audio
+#include "SAGE/Audio/Audio.h"
 
-} // namespace SAGE
+// Core Game Systems
+#include "SAGE/Core/ResourceManager.h"
+#include "SAGE/Core/Scene.h"
+#include "SAGE/Core/SceneManager.h"
+#include "SAGE/Core/Game.h"
+#include "SAGE/Core/ECS.h"
+#include "SAGE/Core/ECSComponents.h"
+#include "SAGE/Core/ECSSystems.h"
+#include "SAGE/Core/ECSGame.h"
+#include "SAGE/Graphics/Gizmo.h"
+
+// Plugin System
+#include "SAGE/Plugin/IPlugin.h"
+#include "SAGE/Plugin/PluginManager.h"

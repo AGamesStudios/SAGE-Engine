@@ -1,116 +1,79 @@
-cmake_minimum_required(VERSION 3.15)
-project(SAGEEngine VERSION 1.0.0 LANGUAGES CXX C)
+cmake_minimum_required(VERSION 3.23)
+project(SAGEEngine VERSION 0.1.0 LANGUAGES CXX C)
 
-set(CMAKE_CXX_STANDARD 17)
+# ============================================
+# SAGE Engine - 2D Game Engine
+# Version: 0.1.0 Alpha
+# ============================================
+
+# C++ Standard
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# UTF-8 support for MSVC - автодетекцию включаем для всех файлов с кириллицей
+# Compiler Warnings
 if(MSVC)
-    # Принудительная компиляция с UTF-8 (включает source и execution charset)
-    add_compile_options(/utf-8)
-    # Отключаем предупреждения о non-ASCII символах
-    add_compile_options(/wd4819)
-    add_compile_options(/W3)
+    add_compile_options(/W4 /permissive- /utf-8)
     add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
+else()
+    add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-# Output directories
+# Output Directories
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
-# Multi-config generators (Visual Studio, Xcode)
-foreach(CONFIG ${CMAKE_CONFIGURATION_TYPES})
-    string(TOUPPER ${CONFIG} CONFIG_UPPER)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${CONFIG_UPPER} ${CMAKE_BINARY_DIR}/bin/${CONFIG})
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_${CONFIG_UPPER} ${CMAKE_BINARY_DIR}/lib/${CONFIG})
-    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${CONFIG_UPPER} ${CMAKE_BINARY_DIR}/lib/${CONFIG})
-endforeach()
-
-# Options
-option(SAGE_BUILD_EXAMPLES "Build SAGE Engine examples" ON)
-option(SAGE_BUILD_EDITOR "Build SAGE Engine editor" ON)
-option(SAGE_BUILD_TESTS "Build SAGE Engine tests" ON)
-option(SAGE_BUILD_PLUGINS "Build SAGE Engine plugins" ON)
-option(SAGE_ENABLE_LUA "Enable Lua scripting via sol2" OFF)
-
-if(SAGE_ENABLE_LUA)
-    add_compile_definitions(SAGE_ENABLE_LUA=1)
-else()
-    add_compile_definitions(SAGE_ENABLE_LUA=0)
-endif()
-
-# ThirdParty libraries
+# Subdirectories
 add_subdirectory(ThirdParty)
-
-# Engine library
 add_subdirectory(Engine)
+add_subdirectory(Sandbox)
+add_subdirectory(Tests)
+add_subdirectory(Examples/PluginExample)
 
 # Examples
-if(SAGE_BUILD_EXAMPLES)
-    add_subdirectory(Examples)
-endif()
+add_executable(SceneDemo Examples/SceneDemo.cpp)
+target_link_libraries(SceneDemo SAGE_Engine)
 
-# # LogCon Launcher - DISABLED: tools/ removed
-# add_executable(LogConLauncher
-#     Tools/LogConLauncher/main.cpp
-#     Engine/Scripting/LogCon/LogConRuntime.cpp
-# )
-# target_link_libraries(LogConLauncher PRIVATE SAGE_Engine)
+add_executable(TilemapDemo Examples/TilemapDemo.cpp)
+target_link_libraries(TilemapDemo SAGE_Engine)
 
-# # Editor - DISABLED: missing RigidBodyComponent.h
-# if(SAGE_BUILD_EDITOR)
-#     add_subdirectory(Editor)
-# endif()
+add_executable(ScriptingDemo Examples/ScriptingDemo.cpp)
+target_link_libraries(ScriptingDemo SAGE_Engine)
 
-# Tests - ENABLED for comprehensive testing
-if(SAGE_BUILD_TESTS)
-    add_subdirectory(Tests)
-endif()
+add_executable(UIDemo Examples/UIDemo.cpp)
+target_link_libraries(UIDemo SAGE_Engine)
 
-# Plugins
-if(SAGE_BUILD_PLUGINS)
-    add_subdirectory(Plugins)
-endif()
+add_executable(ShapesAndParticlesDemo Examples/ShapesAndParticlesDemo.cpp)
+target_link_libraries(ShapesAndParticlesDemo SAGE_Engine)
 
-# # SAGE CLI Tool - DISABLED: tools/ removed
-# add_executable(sage_cli
-#     tools/sage_cli_main.cpp
-# )
-# 
-# target_compile_features(sage_cli PRIVATE cxx_std_17)
-# 
-# target_include_directories(sage_cli PRIVATE
-#     ${CMAKE_SOURCE_DIR}/tools
-# )
-# 
-# # No dependencies needed - header-only implementation
-# # SAGE CLI Tool - DISABLED: tools/ removed
-# set_target_properties(sage_cli PROPERTIES
-#     OUTPUT_NAME "sage"
-#     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-# )
-# 
-# # Copy to root bin/ directory for easy access
-# add_custom_command(TARGET sage_cli POST_BUILD
-#     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/bin
-#     COMMAND ${CMAKE_COMMAND} -E copy
-#         $<TARGET_FILE:sage_cli>
-#         ${CMAKE_SOURCE_DIR}/bin/sage$<$<PLATFORM_ID:Windows>:.exe>
-#     COMMENT "Installing SAGE CLI to bin/"
-# )
+add_executable(PathDemo Examples/PathDemo.cpp)
+target_link_libraries(PathDemo SAGE_Engine)
 
-# Installation
+add_executable(AnimationDemo Examples/AnimationDemo.cpp)
+target_link_libraries(AnimationDemo SAGE_Engine)
+
+add_executable(TextDemo Examples/TextDemo.cpp)
+target_link_libraries(TextDemo SAGE_Engine)
+
+add_executable(PhysicsDemo Examples/PhysicsDemo.cpp)
+target_link_libraries(PhysicsDemo SAGE_Engine)
+
+add_executable(TicTacToe Examples/TicTacToe.cpp)
+target_link_libraries(TicTacToe SAGE_Engine)
+
+add_executable(TMXDemo Examples/TMXDemo.cpp)
+target_link_libraries(TMXDemo SAGE_Engine)
+
+add_executable(CursorAndUIDemo Examples/CursorAndUIDemo.cpp)
+target_link_libraries(CursorAndUIDemo SAGE_Engine)
+
+add_executable(CatAnimationDemo Examples/CatAnimationDemo.cpp)
+target_link_libraries(CatAnimationDemo SAGE_Engine)
+
+# Installation Rules
 install(TARGETS SAGE_Engine
-    RUNTIME DESTINATION bin
-    LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin
 )
-
-# install(TARGETS sage_cli
-#     RUNTIME DESTINATION bin
-# )
-
-# Copy assets
-install(DIRECTORY assets/ DESTINATION bin/assets)
