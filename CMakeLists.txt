@@ -29,47 +29,6 @@ add_subdirectory(ThirdParty)
 add_subdirectory(Engine)
 add_subdirectory(Sandbox)
 add_subdirectory(Tests)
-add_subdirectory(Examples/PluginExample)
-
-# Examples
-add_executable(SceneDemo Examples/SceneDemo.cpp)
-target_link_libraries(SceneDemo SAGE_Engine)
-
-add_executable(TilemapDemo Examples/TilemapDemo.cpp)
-target_link_libraries(TilemapDemo SAGE_Engine)
-
-add_executable(ScriptingDemo Examples/ScriptingDemo.cpp)
-target_link_libraries(ScriptingDemo SAGE_Engine)
-
-add_executable(UIDemo Examples/UIDemo.cpp)
-target_link_libraries(UIDemo SAGE_Engine)
-
-add_executable(ShapesAndParticlesDemo Examples/ShapesAndParticlesDemo.cpp)
-target_link_libraries(ShapesAndParticlesDemo SAGE_Engine)
-
-add_executable(PathDemo Examples/PathDemo.cpp)
-target_link_libraries(PathDemo SAGE_Engine)
-
-add_executable(AnimationDemo Examples/AnimationDemo.cpp)
-target_link_libraries(AnimationDemo SAGE_Engine)
-
-add_executable(TextDemo Examples/TextDemo.cpp)
-target_link_libraries(TextDemo SAGE_Engine)
-
-add_executable(PhysicsDemo Examples/PhysicsDemo.cpp)
-target_link_libraries(PhysicsDemo SAGE_Engine)
-
-add_executable(TicTacToe Examples/TicTacToe.cpp)
-target_link_libraries(TicTacToe SAGE_Engine)
-
-add_executable(TMXDemo Examples/TMXDemo.cpp)
-target_link_libraries(TMXDemo SAGE_Engine)
-
-add_executable(CursorAndUIDemo Examples/CursorAndUIDemo.cpp)
-target_link_libraries(CursorAndUIDemo SAGE_Engine)
-
-add_executable(CatAnimationDemo Examples/CatAnimationDemo.cpp)
-target_link_libraries(CatAnimationDemo SAGE_Engine)
 
 # Installation Rules
 install(TARGETS SAGE_Engine
